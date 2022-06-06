@@ -1,6 +1,8 @@
 # Logs
 logs
 *.log
+todo.md
+OfflineChangeLog.md
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
