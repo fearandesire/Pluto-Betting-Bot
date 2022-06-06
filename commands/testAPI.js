@@ -46,9 +46,9 @@ export class testAPI extends Command {
         logthis(json[0].bookmakers[0]) //? Returns the 'Draft Kings' Bookmarker
         logthis(magentaBright(bold(cborder)));
         logthis(green(bold(`Markets:`)));
-        logthis(json[0].bookmakers[0].markets) //? Returns the 'Draft Kings' h2h outcome odds for the first 'market' (a market is a game)       
+        logthis(json[0].bookmakers[0].markets.outcomes[0]) //? Returns all H2H Games on Draft Kings aka all the 'outcomes'       
         logthis(green(bold(`Outcome 0:`)));
-        logthis(json[0].bookmakers[0].markets[0].outcomes[0])
+        logthis(json[0].bookmakers[0].markets[0].outcomes[0]) //? Returns the 'Draft Kings' h2h outcome odds for the first 'market' (a market is a game) 
         
         
         //  console.log(json[0].bookmakers[4].markets[0]) //? Lists all 'markets' from Draft Kings
