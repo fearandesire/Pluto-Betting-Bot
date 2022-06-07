@@ -12,7 +12,9 @@ import fetch from "node-fetch";
 import {
   logthis
 } from '../lib/PlutoConfig.js';
-import { AddPlusToPositive } from '../utils/AddPlusToPositive.js';
+import {
+  AddPlusToPositive
+} from '../utils/AddPlusToPositive.js';
 import {
   LogBorder,
   LogGreen,
@@ -21,7 +23,9 @@ import {
 import {
   OddOrNot
 } from '../utils/OddorEven.js';
-import { SendEmbedResp } from '../utils/SendEmbed.js';
+import {
+  SendEmbedResp
+} from '../utils/SendEmbed.js';
 const url = 'https://api.the-odds-api.com/v4/sports/basketball_nba/odds?apiKey=969c5995918207426c467b3c0f18206b&regions=us&markets=h2h%2Cspreads&dateFormat=iso&oddsFormat=american';
 const options = {
   method: 'GET',
@@ -59,16 +63,17 @@ export class odds extends Command {
       .then(json => {
         const teamToSearchFor = container.teamToSearchFor;
         logthis(yellow(bold(`Running odds.js`)));
-        var ListOfGames = json[0].bookmakers[0].markets;
-        //? Iterate through ListOfGames Object
-        for (let apIndex = 0; apIndex < ListOfGames.length; apIndex++) {
-          //? Iterate the Team Names via .outcomes
-          var TeamNames = ListOfGames[apIndex].outcomes[apIndex];
-          for (var key in TeamNames) {
-            if (TeamNames[key] === teamToSearchFor) {
-              container.Team1 = TeamNames[key];
-              container.Team1Odds = AddPlusToPositive(ListOfGames[0].outcomes[apIndex].price)
-              //container.Team1Odds = TeamNames.price;
+        //? Returns the list of matchups
+        var apiGamesList = json[0].bookmakers[0].markets[0].outcomes
+        //? Iterate through apiGamesList Object
+        for (let apIndex = 0; apIndex < apiGamesList.length; apIndex++) {
+          var apiMatchups = apiGamesList[apIndex];
+          //? Iterate through list & stop when we find the team the user is looking for
+          for (var key in apiMatchups) {
+            if (apiMatchups[key] === teamToSearchFor) {
+              container.Team1 = apiMatchups[key];
+              container.Team1Odds = AddPlusToPositive(apiGamesList[apIndex].price)
+              //container.Team1Odds = apiMatchups.price;
               LogGreen(`[odds.js] Team 1: ${container.Team1} odds: ${container.Team1Odds}`);
               //LogGreen(`[odds.js] Team 1 Index: ${apIndex}`);
               LogBorder();
@@ -87,16 +92,16 @@ export class odds extends Command {
               **/
               if (OddOrNot(apIndex) === 0) {
                 var AdjustedIndexOdd = apIndex + 1;
-                LogYellow(`[odds.js] Team 1 Index is Odd, adding 1. Adjusted Index: ${AdjustedIndexOdd}`);
-                container.Team2 = ListOfGames[0].outcomes[AdjustedIndexOdd].name;
-                container.Team2Odds = AddPlusToPositive(ListOfGames[0].outcomes[AdjustedIndexOdd].price);
+                LogYellow(`[odds.js] Team 1 Index is Odd, adding 1 to it's value to find it's matchup. Adjusted Index: ${AdjustedIndexOdd}`);
+                container.Team2 = apiGamesList[AdjustedIndexOdd].name;
+                container.Team2Odds = AddPlusToPositive(apiGamesList[AdjustedIndexOdd].price);
                 LogBorder();
                 LogGreen(`[odds.js] Team 2: ${container.Team2} odds: ${container.Team2Odds}`);
               } else if (OddOrNot(apIndex) === 1) {
                 var AdjustedIndexEven = apIndex - 1;
-                LogYellow(`[odds.js] Team 1 Index is Odd, substracting 1. Adjusted Index: ${AdjustedIndexEven}`);
-                container.Team2 = ListOfGames[0].outcomes[AdjustedIndexEven].name;
-                container.Team2Odds = AddPlusToPositive(ListOfGames[0].outcomes[AdjustedIndexEven].price);
+                LogYellow(`[odds.js] Team 1 Index is Odd, substracting 1 to it's value to find it's matchup. Adjusted Index: ${AdjustedIndexEven}`);
+                container.Team2 = apiGamesList[AdjustedIndexEven].name;
+                container.Team2Odds = AddPlusToPositive(apiGamesList[AdjustedIndexEven].price);
                 LogBorder();
                 LogGreen(`[odds.js] Team 2: ${container.Team2} odds: ${container.Team2Odds}`);
 
@@ -104,8 +109,8 @@ export class odds extends Command {
             }
           }
         }
-            //? Sending teams and odds into embed reply
-    SendEmbedResp(message, container.Team1, container.Team1Odds, container.Team2, container.Team2Odds);
+        //? Sending teams and odds into embed reply
+        SendEmbedResp(message, container.Team1, container.Team1Odds, container.Team2, container.Team2Odds);
       })
       .catch(err => {
         console.log(err);

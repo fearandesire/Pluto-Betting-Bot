@@ -2,6 +2,7 @@
 logs
 *.log
 todo.md
+workflow.md
 OfflineChangeLog.md
 npm-debug.log*
 yarn-debug.log*
