@@ -21,6 +21,7 @@ const SapDiscClient = new SapphireClient({
 SapDiscClient.fetchPrefix = () => "?";
 
 async function LoginPluto() {
+  // eslint-disable-next-line
   const envTOKEN = process.env.TOKEN
    SapDiscClient.login(envTOKEN)
    logthis(green(`[Startup] Pluto is now online!`))

@@ -10,7 +10,7 @@ import {
 } from 'colorette';
 import fetch from "node-fetch";
 import {
-  logthis
+  logthis, TeamList
 } from '../lib/PlutoConfig.js';
 import { AddPlusToPositive } from '../utils/AddPlusToPositive.js';
 import {
@@ -30,45 +30,34 @@ const options = {
     'X-RapidAPI-Key': 'd5dcd70f44241e623b2c18a9b84a9941'
   }
 };
-export class odds extends Command {
+export class gatherOdds extends Command {
   constructor(context, options) {
     super(context, {
       ...options,
-      name: 'odds',
-      aliases: ['oddsfor'],
-      description: 'return odds for specified team',
+      name: 'gatherOdds',
+      aliases: ['godds', 'getodds', 'listodds', 'matchups', 'matches', 'listgames'],
+      description: 'return matchups & odds for all available teams',
       requiredUserPermissions: ['KICK_MEMBERS']
     });
   }
 
-  async messageRun(message, args) {
-    const userInput = await args.rest("string").catch(() => null);
-    container.teamToSearchFor = userInput;
-    if (userInput === null) {
-      message.channel.send("Please specify a team");
-      return;
-    }
-    if (userInput.toLowerCase() === "celtics") {
-      container.teamToSearchFor = "Boston Celtics";
-    }
-    if (userInput.toLowerCase() === "warriors") {
-      container.teamToSearchFor = "Golden State Warriors";
-    }
+  async messageRun(message) {
     fetch(url, options)
       .then(res => res.json())
       .then(json => {
-        const teamToSearchFor = container.teamToSearchFor;
         logthis(yellow(bold(`Running odds.js`)));
+        //? 'Markets' returns the list of teams
         var ListOfGames = json[0].bookmakers[0].markets;
         //? Iterate through ListOfGames Object
         for (let apIndex = 0; apIndex < ListOfGames.length; apIndex++) {
           //? Iterate the Team Names via .outcomes
-          var TeamNames = ListOfGames[apIndex].outcomes[apIndex];
-          for (var key in TeamNames) {
-            if (TeamNames[key] === teamToSearchFor) {
-              container.Team1 = TeamNames[key];
-              container.Team1Odds = AddPlusToPositive(ListOfGames[0].outcomes[apIndex].price)
-              //container.Team1Odds = TeamNames.price;
+          var Team1Data = ListOfGames[0].outcomes[apIndex];
+          for (var key in Team1Data) {
+            //if (Team1Data[key] === teamToSearchFor) {
+              //var Team1Odds = Team1Data[key].price;
+              TeamList.push(Team1Data[key]);
+              //container.Team1Odds = AddPlusToPositive(ListOfGames[0].outcomes[apIndex].price)
+              //container.Team1Odds = Team1Data.price;
               LogGreen(`[odds.js] Team 1: ${container.Team1} odds: ${container.Team1Odds}`);
               //LogGreen(`[odds.js] Team 1 Index: ${apIndex}`);
               LogBorder();
@@ -103,7 +92,6 @@ export class odds extends Command {
               }
             }
           }
-        }
             //? Sending teams and odds into embed reply
     SendEmbedResp(message, container.Team1, container.Team1Odds, container.Team2, container.Team2Odds);
       })

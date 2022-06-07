@@ -1,5 +1,4 @@
-import { MessageEmbed } from "discord.js"
-
+import { MessageEmbed } from "discord.js";
 export const SendEmbedResp = function(message, Team1, Team1Odds, Team2, Team2Odds){
     const PlutoPlainEmbed = new MessageEmbed()
       .setTitle("NBA H2H Betting Odds")
@@ -13,7 +12,7 @@ export const SendEmbedResp = function(message, Team1, Team1Odds, Team2, Team2Odd
         },
         {
             name: `**${Team2}**`,
-            value: `Odds: **+${Team2Odds}**`,
+            value: `Odds: **${Team2Odds}**`,
             inline: false
         }
       )
