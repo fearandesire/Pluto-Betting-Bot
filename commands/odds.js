@@ -4,10 +4,22 @@ import {
 import {
   container
 } from '@sapphire/pieces';
-import { bold, green, magentaBright, yellow } from 'colorette';
+import {
+  bold,
+  yellow
+} from 'colorette';
 import fetch from "node-fetch";
-import { cborder, logthis } from '../lib/PlutoConfig.js';
-import { OddOrNot } from '../utils/OddorEven.js';
+import {
+  logthis
+} from '../lib/PlutoConfig.js';
+import {
+  LogBorder,
+  LogGreen,
+  LogYellow
+} from '../utils/ConsoleLogging.js';
+import {
+  OddOrNot
+} from '../utils/OddorEven.js';
 const url = 'https://api.the-odds-api.com/v4/sports/basketball_nba/odds?apiKey=969c5995918207426c467b3c0f18206b&regions=us&markets=h2h%2Cspreads&dateFormat=iso&oddsFormat=american';
 const options = {
   method: 'GET',
@@ -28,7 +40,14 @@ export class odds extends Command {
   }
 
   async messageRun(message, args) {
-      const userInput = await args.rest("string").catch(() => null);
+    const userInput = await args.rest("string").catch(() => null);
+    // if (userInput === null) {
+    //   message.channel.send("Please specify a team");
+    //   return;
+    // }
+    // if (userInput.toLowerCase() === "celtics") {
+    // let userInput = "Boston Celtics";
+    // }
     fetch(url, options)
       .then(res => res.json())
       .then(json => {
@@ -36,40 +55,49 @@ export class odds extends Command {
         //? 'Markets' returns the list of teams
         var ListOfGames = json[0].bookmakers[0].markets;
         //? Iterate through ListOfGames Object
-        for (let apIndex=0; apIndex<ListOfGames.length; apIndex++) {
+        for (let apIndex = 0; apIndex < ListOfGames.length; apIndex++) {
           //? Iterate the Team Names via .outcomes
           var TeamNames = ListOfGames[apIndex].outcomes[apIndex];
           for (var key in TeamNames) {
-            if (TeamNames[key] === userInput) { 
+            if (TeamNames[key] === userInput) {
               container.Team1 = TeamNames[key];
-              container.Team1Odds = TeamNames.price;
-              logthis(green(bold(`Team Name found:`)));
-            logthis(green(bold(container.Team1)));
-            logthis(magentaBright(bold(cborder)));
-            logthis(green(bold(`Team Odds:`)));
-            logthis(green(bold(container.Team1Odds)));
-            logthis(magentaBright(bold(cborder)));
-            logthis(green(bold(`Index:`)));
-            logthis(green(bold(apIndex)));
-            //? Odd = 1, Even = 0
-            if (OddOrNot(apIndex) === 0) {
-              console.log('+1')
-              //var NextResult = 
-             // container.Team2 = ListOfGames[apIndex].outcomes[]
+              container.Team1Odds = ListOfGames[0].outcomes[apIndex].price
+              //container.Team1Odds = TeamNames.price;
+              LogGreen(`[odds.js] Team 1: ${container.Team1} odds: ${container.Team1Odds}`);
+              //LogGreen(`[odds.js] Team 1 Index: ${apIndex}`);
+              LogBorder();
+              /**  
+              Odd = 1, Even = 0
+              A team found would either be indexed as an even or odd number. 
+              Starting at 0, the first team is odd, the second team is even, etc.
+              This is why we use the OddOrNot function to determine if the team is odd or even.
+              For example, currently the Boston Celtics are going against the Golden State Warriors.
+              The Celtics are at the top of the response, or '0' index within 'outcomes'.
+              The Warriors would be the next response, or '1' index within 'outcomes'.
+              If there was another matchup, the following teams would be 3, and then 4.
+              We want the command to return the odds for the team specified AND the opposing team,
+              so we catch the index from the team that matches the input (above) and add 1 to it if it is even.
+              If the index is odd, we take away 1 from it.
+              **/
+              if (OddOrNot(apIndex) === 0) {
+                var AdjustedIndexOdd = apIndex + 1;
+                LogYellow(`[odds.js] Team 1 Index is Odd, adding 1. Adjusted Index: ${AdjustedIndexOdd}`);
+                container.Team2 = ListOfGames[apIndex].outcomes[AdjustedIndexOdd].name;
+                container.Team2Odds = ListOfGames[apIndex].outcomes[AdjustedIndexOdd].price;
+                LogBorder();
+                LogGreen(`[odds.js] Team 2: ${container.Team2} odds: ${container.Team2Odds}`);
+              } else if (OddOrNot(apIndex) === 1) {
+                var AdjustedIndexEven = apIndex - 1;
+                LogYellow(`[odds.js] Team 1 Index is Odd, substracting 1. Adjusted Index: ${AdjustedIndexEven}`);
+                container.Team2 = ListOfGames[0].outcomes[AdjustedIndexEven].name;
+                container.Team2Odds = ListOfGames[0].outcomes[AdjustedIndexEven].price;
+                LogBorder();
+                LogGreen(`[odds.js] Team 2: ${container.Team2} odds: ${container.Team2Odds}`);
+              }
             }
           }
-          
-       }
-      }
-        //  console.log(json[0].bookmakers[4].markets[0]) //? Lists all 'markets' from Draft Kings
-        // var FavoredTeam = json[0].bookmakers[0].markets[0].outcomes[0].name
-        // var Team1Odds = json[0].bookmakers[0].markets[0].outcomes[0].price
-        // var Team2 = json[0].bookmakers[0].markets[0].outcomes[1].name
-        // var Team2Odds = json[0].bookmakers[0].markets[0].outcomes[1].price
-        // var Team1 = FavoredTeam;
-        // SendEmbedResp(message, Team1, Team1Odds, Team2, Team2Odds)
+        }
 
       })
-
   }
 }
