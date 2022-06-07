@@ -7,6 +7,7 @@ import {
 import { bold, green, magentaBright, yellow } from 'colorette';
 import fetch from "node-fetch";
 import { cborder, logthis } from '../lib/PlutoConfig.js';
+import { OddOrNot } from '../utils/OddorEven.js';
 const url = 'https://api.the-odds-api.com/v4/sports/basketball_nba/odds?apiKey=969c5995918207426c467b3c0f18206b&regions=us&markets=h2h%2Cspreads&dateFormat=iso&oddsFormat=american';
 const options = {
   method: 'GET',
@@ -32,9 +33,10 @@ export class odds extends Command {
       .then(res => res.json())
       .then(json => {
         logthis(yellow(bold(`Running odds.js`)));
+        //? 'Markets' returns the list of teams
         var ListOfGames = json[0].bookmakers[0].markets;
         //? Iterate through ListOfGames Object
-        for (var apIndex=0; apIndex<ListOfGames.length; apIndex++) {
+        for (let apIndex=0; apIndex<ListOfGames.length; apIndex++) {
           //? Iterate the Team Names via .outcomes
           var TeamNames = ListOfGames[apIndex].outcomes[apIndex];
           for (var key in TeamNames) {
@@ -49,7 +51,12 @@ export class odds extends Command {
             logthis(magentaBright(bold(cborder)));
             logthis(green(bold(`Index:`)));
             logthis(green(bold(apIndex)));
-         //   if (apIndex )
+            //? Odd = 1, Even = 0
+            if (OddOrNot(apIndex) === 0) {
+              console.log('+1')
+              //var NextResult = 
+             // container.Team2 = ListOfGames[apIndex].outcomes[]
+            }
           }
           
        }
