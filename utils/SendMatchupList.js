@@ -13,7 +13,7 @@ export function SendMatchupList(message, MatchupList) {
     var embedFooter = 'Provided by Pluto';
     LogYellow("[SendMatchupList.js] Compiling Matchup List Embed");
     LogBorder();
-    //? May use a map later  on for formatting
+    //? May use a map later on for formatting
     // // const PlutoPlainEmbed = new MessageEmbed()
     // //   .setTitle("NBA H2H Betting Odds")
     // //   .setColor("#FFFF00")
