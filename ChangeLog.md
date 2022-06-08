@@ -6,7 +6,7 @@
     - Sort collected matchups for displaying (SortGatheredOdds)[./utils/SortGatheredOdds.js]
 + Collect/Gather all matchups/odds cmd (gatherOdds.js)[./commands/gatherOdds.js]
 + Collect/Gather odds for specific team & their matchup cmd (odds.js)[./commands/odds.js]
-+ Established Bot on Discord
++ Established Bot on Discord 
 
 
 # :penguin: Kowalski Summary (detailed)
