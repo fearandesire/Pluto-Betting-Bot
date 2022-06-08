@@ -9,10 +9,12 @@ import {
     LogGreen,
     LogYellow
 } from "./ConsoleLogging.js";
+
 export function SendMatchupList(message, MatchupList) {
     var embedFooter = 'Provided by Pluto';
     LogYellow("[SendMatchupList.js] Compiling Matchup List Embed");
     LogBorder();
+
     //? May use a map later on for formatting
     // // const PlutoPlainEmbed = new MessageEmbed()
     // //   .setTitle("NBA H2H Betting Odds")
@@ -20,7 +22,9 @@ export function SendMatchupList(message, MatchupList) {
     // //   .addFields(
     // //   MatchupList.map((item, index) => {
     // //   })
+
     const MatchupListEmbed = new MessageEmbed()
+
         .setTitle("Today's NBA H2H Betting Odds")
         .setColor("#FFFF00")
         .setDescription(MatchupList.join('\n \n'))
@@ -32,7 +36,10 @@ export function SendMatchupList(message, MatchupList) {
     message.reply({
         embeds: [MatchupListEmbed]
     })
+
     LogGreen(`[SendMatchupList.js] Sent Matchup List Embed`);
     LogBorder();
+
     return;
+
 }

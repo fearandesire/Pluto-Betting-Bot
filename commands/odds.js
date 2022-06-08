@@ -34,6 +34,7 @@ const options = {
     'X-RapidAPI-Key': 'd5dcd70f44241e623b2c18a9b84a9941'
   }
 };
+
 export class odds extends Command {
   constructor(context, options) {
     super(context, {
@@ -58,27 +59,34 @@ export class odds extends Command {
     if (userInput.toLowerCase() === "warriors") {
       container.teamToSearchFor = "Golden State Warriors";
     }
+
     fetch(url, options)
       .then(res => res.json())
       .then(json => {
+
+
         const teamToSearchFor = container.teamToSearchFor;
         logthis(yellow(bold(`Running odds.js`)));
-        //? Returns the list of matchups
+
+        //* RETURNS THE LIST OF MATCHUPS »»»»»»»»» */
         var apiGamesList = json[0].bookmakers[0].markets[0].outcomes
-        //? Iterate through apiGamesList Object
+
+        //* ITERATE THROUGH APIGAMESLIST OBJECT »»»»»»» */
         for (let apIndex = 0; apIndex < apiGamesList.length; apIndex++) {
           var apiMatchups = apiGamesList[apIndex];
+
           //? Iterate through list & stop when we find the team the user is looking for
           for (var key in apiMatchups) {
+
             if (apiMatchups[key] === teamToSearchFor) {
+
               container.Team1 = apiMatchups[key];
               container.Team1Odds = AddPlusToPositive(apiGamesList[apIndex].price)
-              //container.Team1Odds = apiMatchups.price;
               LogGreen(`[odds.js] Team 1: ${container.Team1} odds: ${container.Team1Odds}`);
-              //LogGreen(`[odds.js] Team 1 Index: ${apIndex}`);
               LogBorder();
+
               /**  
-              Odd = 1, Even = 0
+              !Odd = 1, Even = 0
               A team found would either be indexed as an even or odd number. 
               Starting at 0, the first team is odd, the second team is even, etc.
               This is why we use the OddOrNot function to determine if the team is odd or even.
@@ -90,20 +98,25 @@ export class odds extends Command {
               so we catch the index from the team that matches the input (above) and add 1 to it if it is even.
               If the index is odd, we take away 1 from it.
               **/
+
               if (OddOrNot(apIndex) === 0) {
+
                 var AdjustedIndexOdd = apIndex + 1;
                 LogYellow(`[odds.js] Team 1 Index is Odd, adding 1 to it's value to find it's matchup. Adjusted Index: ${AdjustedIndexOdd}`);
                 container.Team2 = apiGamesList[AdjustedIndexOdd].name;
                 container.Team2Odds = AddPlusToPositive(apiGamesList[AdjustedIndexOdd].price);
                 LogBorder();
                 LogGreen(`[odds.js] Team 2: ${container.Team2} odds: ${container.Team2Odds}`);
+
               } else if (OddOrNot(apIndex) === 1) {
+
                 var AdjustedIndexEven = apIndex - 1;
                 LogYellow(`[odds.js] Team 1 Index is Odd, substracting 1 to it's value to find it's matchup. Adjusted Index: ${AdjustedIndexEven}`);
                 container.Team2 = apiGamesList[AdjustedIndexEven].name;
                 container.Team2Odds = AddPlusToPositive(apiGamesList[AdjustedIndexEven].price);
                 LogBorder();
                 LogGreen(`[odds.js] Team 2: ${container.Team2} odds: ${container.Team2Odds}`);
+
 
               }
             }

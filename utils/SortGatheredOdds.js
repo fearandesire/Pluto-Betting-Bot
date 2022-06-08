@@ -12,6 +12,7 @@ export function SortGatheredOdds(Team1List, Team1Odds, Team2List, Team2Odds, mes
     LogBorder();
     LogYellow("[SortGatheredOdds.js] Sorting Gathered Odds");
     LogBorder();
+
     //? The way it is organized, the matching index for each matchup is the same. So for example:
     //? Index 0 in Team1List would be the opponent of Team2List[0]. Identical for the Odds as well
     for (let index = 0; index < Team1List.length; index++) {
