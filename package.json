@@ -15,8 +15,11 @@
     "@sapphire/plugin-hmr": "^1.2.0",
     "@sapphire/ratelimits": "^2.4.4",
     "colorette": "^2.0.17",
+    "discord": "^0.8.2",
     "discord.js": "^13.8.0",
-    "dotenv": "^16.0.1"
+    "dotenv": "^16.0.1",
+    "postgresql": "^0.0.1",
+    "sapphire": "^0.0.3"
   },
   "devDependencies": {
     "eslint": "^8.17.0"

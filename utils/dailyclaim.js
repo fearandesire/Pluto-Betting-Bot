@@ -1,70 +1,74 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable no-undef */
 import {
+    Command,
     container
 } from '@sapphire/framework';
-import 'dotenv/config';
-import {
-    LogBorder,
-    LogGreen,
-    LogRed,
-    LogYellow
-} from './../utils/ConsoleLogging.js';
-container.dbVal = {};
+import { updateclaim } from '../utils/addClaimTime.js';
+import { LogBorder, LogGreen, LogYellow } from '../utils/ConsoleLogging.js';
+import { useridentity } from '../utils/useridentity.js';
+export class DailyClaimCMD extends Command {
+    constructor(context, options) {
+        super(context, {
+            ...options,
+            name: 'dailyclaim',
+            aliases: ['claim', 'daily'],
+            description: 'Daily Claim',
+            requiredUserPermissions: ['KICK_MEMBERS']
+        });
+    }
 
-var dbUser = process.env.SQLusername
-var dbIP = process.env.SQLiPAddress
-var dbPass = process.env.SQLPass
-var dbPort = process.env.SQLPort
-//* ACCESSING POSTGRE DB WITH NODE-POSTGRES »»»»»»»»» */
-import * as pg from 'pg';
-const {
-    Pool
-} = pg.default
-export const nodepool = new Pool({
-    user: dbUser,
-    host: dbIP,
-    database: 'plutodb',
-    password: dbPass,
-    port: dbPort
-})
+    async messageRun(message) {
+        const ClaimCooldown = 86400000 //* 24 hours in milliseconds
+        var limit = 5000;
+        const lastTime = container.lastTime
+        var currentTime = new Date().getTime();
+        let notOnCooldown = currentTime - container.lastTime > limit;
+        const userid = message.author.id;
+        LogBorder();
+        LogYellow(`[dailyclaim.js] Running Daily Claim Command!`);
 
-export function dailyclaim() {
-    const ClaimCooldown = 86400000 //* 24 hours in milliseconds
-    LogBorder()
-    LogYellow(`[dailyclaim.js] Loading User Daily Claim Status from Database`)
+        //? Check if user exists in database, if not create them and then process claim.
+        if (useridentity(userid) == false) 
+        {
+            LogYellow(`[dailyclaimCMD.js] User claim status was false in the database. Processing request`)
+            container.lastTime = currentTime;
+            //? push lasttime to db
 
-    /**
-     - @QueryDB - settings to query the postgreSQL server
-     ////SELECT * FROM currency -- queries database for all rows in currency table
-     */
-    const QueryDB = {
-        name: 'dailyclaimDB',
-        text: `SELECT dailyclaim FROM currency WHERE userid = '208016830491525120'`,
+            updateclaim(userid, lastTime)
+            return;
+        }
+
+        //? Check if user has ever used claim cmd
+        //TODO: Verify null/empty/undefined for last claim time
+        //* E.G of TODO: verifyClaim(userid) -> Check 'lastclaimtime' cell in currency table for userid
+        if (container.lastTime == null || container.lastTime == undefined) 
+        {
+            container.lastTime = currentTime;
+            return
+        }
+
+        //? Check if user is on cooldown
+        if (notOnCooldown == false) 
+        {
+            LogBorder();
+            message.reply('You are on cooldown!')
+            return
+        }
+
+        //? User is NOT on cooldown, process claim
+        if (notOnCooldown == true)
+         {
+            LogBorder();
+            container.lastTime = currentTime;
+            message.reply('Successfuly Claimed Currency!')
+            updateclaim(userid, container.lastTime)
+            return
+        } else
+        
+         {
+            message.reply('Something went wrong!')
+            LogGreen(container.lastTime)
+            LogGreen(notOnCooldown)
+        }
 
     }
-    //? A Promise is required to process these kinds of requests.
-    const nodepoolPromise = new Promise((err, res) => {
-
-        nodepool.query(QueryDB, (err, res) => {
-            if (err) {
-                LogBorder()
-                LogRed(`[dailyclaim.js] Error: ${err}`)
-                console.log(err)
-            } else {
-                const dbresp = res.rows[0]
-                if (dbresp == false) {
-                    LogBorder()
-                    LogRed(`[dailyclaim.js] Daily Claim Status for user is false.`)
-                    return;
-                } else {
-                    LogBorder()
-                    LogGreen(`[dailyclaim.js] User Found in Database`)
-                    LogGreen(JSON.stringify(dbresp))
-                }
-            }
-
-
-        })
-    })
 }

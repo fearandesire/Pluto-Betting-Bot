@@ -32,20 +32,18 @@ export const nodepool = new Pool({
     port: dbPort
 })
 
-export function createuser(userid) {
+export function updateclaim(userid, lastTime) {
 
     LogBorder()
-    LogYellow(`[createuser.js] Creating User Identity`)
+    LogYellow(`[updateclaim.js] Creating User Identity`)
 
     /**
      - @QueryDB - settings to query the postgreSQL server
      - @text INSERT query -- inserts a new row into the currency table
      */
     const QueryDB = {
-        name: 'createuserDB',
-        text: `INSERT INTO currency (userid, balance, )
-        VALUES (${userid}, 100, );`,
-    }
+        name: 'updateDB',
+        text: `UPDATE currency SET lastclaimtime = '${lastTime}' WHERE userid = '${userid}'`}
     //? A Promise is required to process these kinds of requests.
     const nodepoolPromise = new Promise((err, res) => {
 
@@ -53,11 +51,12 @@ export function createuser(userid) {
             //? If DB connects, but an error in the query occurs
             if (err) {
                 LogBorder()
-                LogRed(`[createuser.js] Error: ${err}`)
+                LogRed(`[updateclaim.js] Error: ${err}`)
                 console.log(err)
             } else {
                 //? If DB connects, and the user ID was not found in the user identity table, creates a new user
-                LogGreen(`[createuser.js] User Created ID: ${userid}`)
+                LogGreen(`[updateclaim.js] User ID: ${userid}`)
+                LogGreen(`[updateclaim.js] User Claim Time: ${lastTime}`)
             }
 
 
