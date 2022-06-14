@@ -1,5 +1,7 @@
 import { Listener } from '@sapphire/framework';
 import { LogGreen } from '../utils/ConsoleLogging.js';
+import { dailyclaim } from '../utils/dailyclaim.js';
+import { useridentity } from '../utils/useridentity.js';
 export class ReadyListener extends Listener {
   run(SapDiscClient) {
     const {
@@ -9,6 +11,7 @@ export class ReadyListener extends Listener {
   }
 }
 
+useridentity();
 
-
+dailyclaim();
 LogGreen(`[Startup]: ready.js has loaded!`);

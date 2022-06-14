@@ -117,7 +117,6 @@ export class odds extends Command {
                 LogBorder();
                 LogGreen(`[odds.js] Team 2: ${container.Team2} odds: ${container.Team2Odds}`);
 
-
               }
             }
           }
