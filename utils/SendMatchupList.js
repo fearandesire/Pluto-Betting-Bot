@@ -22,7 +22,6 @@ export function SendMatchupList(message, MatchupList) {
     // //   .addFields(
     // //   MatchupList.map((item, index) => {
     // //   })
-
     const MatchupListEmbed = new MessageEmbed()
 
         .setTitle("Today's NBA H2H Betting Odds")

@@ -86,7 +86,7 @@ export class odds extends Command {
               LogBorder();
 
               /**  
-              !Odd = 1, Even = 0
+              Odd = 1, Even = 0
               A team found would either be indexed as an even or odd number. 
               Starting at 0, the first team is odd, the second team is even, etc.
               This is why we use the OddOrNot function to determine if the team is odd or even.
