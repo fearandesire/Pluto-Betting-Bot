@@ -5,7 +5,6 @@ import {
 import { updateclaim } from '../utils/addClaimTime.js';
 import { LogBorder, LogGreen, LogYellow } from '../utils/ConsoleLogging.js';
 import { useridentity } from '../utils/useridentity.js';
-import { verifyClaim } from '../utils/verifyClaim.js';
 export class DailyClaimCMD extends Command {
     constructor(context, options) {
         super(context, {
@@ -33,16 +32,17 @@ export class DailyClaimCMD extends Command {
             LogYellow(`[dailyclaimCMD.js] User claim status was false in the database. Processing request`)
             container.lastTime = currentTime;
             //? push lasttime to db
-            message.reply('Successfuly Claimed Currency!')
+
             updateclaim(userid, lastTime)
             return;
         }
 
-        //? Check if user has ever used claim cmd [assumption: user exists in database, we know this from the prior if statement]
-        if (verifyClaim(userid) == false) 
+        //? Check if user has ever used claim cmd
+        //TODO: Verify null/empty/undefined for last claim time
+        //* E.G of TODO: verifyClaim(userid) -> Check 'lastclaimtime' cell in currency table for userid
+        if (container.lastTime == null || container.lastTime == undefined) 
         {
             container.lastTime = currentTime;
-            updateclaim(userid, lastTime)
             return
         }
 

@@ -1,5 +1,5 @@
 import {
-    Command
+  Command
 } from '@sapphire/framework';
   export class PingCommand extends Command {
     constructor(context, options) {

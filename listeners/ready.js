@@ -1,14 +1,17 @@
 import { Listener } from '@sapphire/framework';
-import { logthis } from "../lib/PlutoConfig.js";
+import { LogGreen } from '../utils/ConsoleLogging.js';
+import { dailyclaim } from '../utils/dailyclaim.js';
+import { useridentity } from '../utils/useridentity.js';
 export class ReadyListener extends Listener {
   run(SapDiscClient) {
     const {
-      username,
-      id
+      username, // eslint-disable-line 
+      id // eslint-disable-line
     } = SapDiscClient.user;
   }
 }
 
+useridentity();
 
-
-logthis(`readyjs loaded`);
+dailyclaim();
+LogGreen(`[Startup]: ready.js has loaded!`);
