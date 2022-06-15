@@ -5,9 +5,7 @@ import {
 } from '@sapphire/framework';
 import 'dotenv/config';
 import {
-    LogBorder,
-    LogGreen,
-    LogRed,
+    LogBorder, LogRed,
     LogYellow
 } from './ConsoleLogging.js';
 container.dbVal = {};
@@ -29,17 +27,16 @@ export const nodepool = new Pool({
     port: dbPort
 })
 
-export function verifyClaim(userid) {
+export async function retrieveClaimTime(userid) {
 
     LogBorder()
-    LogYellow(`[verifyClaim.js] Loading User Last Daily Claim Time from Database`)
-
+    LogYellow(`[retrieveClaimTime.js] Loading User Last Daily Claim Time from Database`)
     /**
      - @QueryDB - settings to query the postgreSQL server
      - @text SELECT cell lastclaimtime in the currency table via the userid -> so we can check if the user has ever used claim
      */
     const QueryDB = {
-        name: 'verifyclaimtime',
+        name: 'retrieveClaimTime',
         text: `SELECT lastclaimtime FROM currency WHERE userid = '${userid}'`,
 
     }
@@ -49,24 +46,17 @@ export function verifyClaim(userid) {
         nodepool.query(QueryDB, (err, res) => {
             if (err) {
                 LogBorder()
-                LogRed(`[verifyClaim.js] Error: ${err}`)
+                LogRed(`[retrieveClaimTime.js] Error: ${err}`)
                 console.log(err)
             } else {
                 const dbresp = res.rows[0]
-                if (dbresp == false || dbresp == undefined || dbresp == null) {
-                    LogBorder()
-                    LogRed(`[verifyClaim.js] User ${userid} has no record of using the claim command in the databse.`)
-                    return false;
-                } else {
-                    LogBorder()
-                    LogGreen(`[verifyClaim.js] User [${userid}] has used the claim command prior!`)
-                    //LogGreen(`DB Response: ${dbresp.lastclaimtime}`)
-                    let dbRespClaimTime = parseInt(dbresp.lastclaimtime)
-                    return dbRespClaimTime;
+                    container.lastuserTime = parseInt(dbresp.lastclaimtime)
+                    var lastusertime = container.lastuserTime
+                    LogYellow(`[retrieveClaimTime.js] User ${userid} last claim time is ${lastusertime}`)
+                    //return;
                 }
-            }
-
-
-        })
+            
+        });
     })
+
 }

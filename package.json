@@ -18,6 +18,11 @@
     "discord": "^0.8.2",
     "discord.js": "^13.8.0",
     "dotenv": "^16.0.1",
+<<<<<<< Updated upstream
+=======
+    "express-promise-router": "^4.1.1",
+    "pg": "^8.7.3",
+>>>>>>> Stashed changes
     "postgresql": "^0.0.1",
     "sapphire": "^0.0.3"
   },
