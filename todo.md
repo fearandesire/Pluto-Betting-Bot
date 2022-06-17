@@ -12,3 +12,14 @@ Commands / Functions
 [ ] Organize how SQL DB will be used&what is needed
 [ ] Setup SQL Databases
 [ ] Test betting
+
+---
+
+RESOLVE CALL TIME // RESOLVE NODE POSTGRE FETCH
+
+--
+
+My current idea:
+LoadDatabase() will load all static information such as currency, etc.
+File system (JSON) for storing on-demand info
+Set Interval to upload to DB?

@@ -1,27 +1,35 @@
 import {
     container
-} from "@sapphire/pieces";
+} from '@sapphire/framework';
+import Router from "express-promise-router";
 import {
-    LogBorder,
-    LogGreen,
-    LogYellow
+    LogGreen
 } from './ConsoleLogging.js';
-import {
-    retrieveClaimTime
-} from "./retrieveClaimTime.js";
+import { retrieveClaimTimes } from './retrieveClaimTimes.js';
+const router = Router();
+
 export async function ClaimCooldown() {
+    LogGreen(`[cooldownmath.js] Running Cooldown Math!`)
     const lastTime = container.lastTime
     const userid = 208016830491525120
     var currentTime = new Date().getTime();
     var limit = 5000;
-    const retrieveTime = retrieveClaimTime(userid)
+    if (!container.ClaimTimes[`${userid}`]) {
+        const getClaimTime = async () => {
+            try {
+                retrieveClaimTimes(userid);
+            } catch (error) {
+                console.log(error)
+            }
+            return;
+        }
+        getClaimTime().then((res) => {
+        return res;
+        })
+    }
+    return container.ClaimTimes[`${userid}`];
     //let notOnCooldown = currentTime - retrieveTime > limit;
-    LogBorder();
-    LogGreen(`[cooldownmath.js] Running Cooldown Math!`)
-    retrieveTime.then(() => {
-        LogYellow(`Variables: ${currentTime}, ${container.lastusertime}`)
-        LogYellow(`Equation: ${currentTime - container.lastusertime} > ${limit}`)
-    })
-
-
+    // LogBorder();
+    // LogYellow(`Variables: ${currentTime}, ${container.lastclaimtime}`)
+    // LogYellow(`Equation: ${currentTime - container.lastuserTime} > ${limit}`)
 }

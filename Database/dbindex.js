@@ -1,11 +1,16 @@
 /* eslint-disable no-undef */
 import 'dotenv/config';
 import * as pg from 'pg';
+//? Importing pg-promise -- this is how it is done for ES6
+import pgPromise from 'pg-promise';
+const pgp = pgPromise({});
+
 var dbUser = process.env.SQLusername
 var dbIP = process.env.SQLiPAddress
 var dbPass = process.env.SQLPass
 var dbPort = process.env.SQLPort
 
+//? node post-gres connection [depricated]
 const {
     Pool
 } = pg.default
@@ -18,5 +23,26 @@ export const nodepool = new Pool({
     port: dbPort
 })
 
-export { Pool };
+export {
+    Pool
+};
+
+
+/* ««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««« */
+
+//* PG PROMISE SETUP »»»»» */
+// const cn = {
+//     host: process.env.SQLiPAddress,
+//     port: process.env.SQLPort,
+//     database: 'plutodb',
+//     user: process.env.SQLusername,
+//     password: process.env.SQLPass,
+//     max: 30 // use up to 30 connections
+
+//     // "types" - in case you want to set custom type parsers on the pool level
+// };
+
+const cnString = `postgres://${process.env.SQLusername}:${process.env.SQLPass}@${process.env.SQLiPAddress}:${process.env.SQLPort}/plutodb`;
+
+export const db = pgp(cnString);
 

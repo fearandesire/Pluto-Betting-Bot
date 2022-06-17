@@ -32,7 +32,7 @@ export const nodepool = new Pool({
     port: dbPort
 })
 
-export function updateclaim(userid, lastTime) {
+export function updateclaim(userid, claimtime) {
 
     LogBorder()
     LogYellow(`[updateclaim.js] Creating User Identity`)
@@ -43,7 +43,7 @@ export function updateclaim(userid, lastTime) {
      */
     const QueryDB = {
         name: 'updateDB',
-        text: `UPDATE currency SET lastclaimtime = '${lastTime}' WHERE userid = '${userid}'`}
+        text: `UPDATE currency SET lastclaimtime = '${claimtime}' WHERE userid = '${userid}'`}
     //? A Promise is required to process these kinds of requests.
     const nodepoolPromise = new Promise((err, res) => {
 
@@ -56,7 +56,7 @@ export function updateclaim(userid, lastTime) {
             } else {
                 //? If DB connects, and the user ID was not found in the user identity table, creates a new user
                 LogGreen(`[updateclaim.js] User ID: ${userid}`)
-                LogGreen(`[updateclaim.js] User Claim Time: ${lastTime}`)
+                LogGreen(`[updateclaim.js] User Claim Time: ${claimtime}`)
             }
 
 

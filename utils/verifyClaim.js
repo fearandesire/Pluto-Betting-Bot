@@ -52,7 +52,7 @@ export function verifyClaim(userid) {
                 LogRed(`[verifyClaim.js] Error: ${err}`)
                 console.log(err)
             } else {
-                const dbresp = res.rows[0]
+                const dbresp = res.rows[0].lastclaimtime
                 if (dbresp == false || dbresp == undefined || dbresp == null) {
                     LogBorder()
                     LogRed(`[verifyClaim.js] User ${userid} has no record of using the claim command in the databse.`)
