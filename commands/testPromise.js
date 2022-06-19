@@ -1,6 +1,6 @@
 import * as config from '../lib/PlutoConfig.js';
 import { Log } from '../utils/ConsoleLogging.js';
-import { isUser } from '../utils/isUser.js';
+import { processClaim } from '../utils/processClaim.js';
 export class TestPromise extends config.Command {
     constructor(context, options) {
         super(context, {
@@ -16,8 +16,11 @@ export class TestPromise extends config.Command {
         Log.LogBorder();
         Log.LogYellow(`[testpromise.js] Running Test Promise!`)
         const userid = message.author.id;
-        isUser(userid, message);
+        var currentTime = new Date().getTime();
+        processClaim(userid, message, currentTime);
         
         
     }
 }
+
+

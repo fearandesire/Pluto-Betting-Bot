@@ -2,8 +2,20 @@
 import 'dotenv/config';
 import * as pg from 'pg';
 //? Importing pg-promise -- this is how it is done for ES6
+import monitor from 'pg-monitor';
 import pgPromise from 'pg-promise';
-const pgp = pgPromise({});
+const initOptions = {
+    connect: true,
+    disconnect: true,
+    query: true,
+    error: true,
+    task: true,
+    transact: true,
+};
+const pgp = pgPromise(initOptions);
+
+//* Logging pg-promise events with pg-monitor */
+monitor.attach(initOptions);
 
 var dbUser = process.env.SQLusername
 var dbIP = process.env.SQLiPAddress
@@ -45,4 +57,3 @@ export {
 const cnString = `postgres://${process.env.SQLusername}:${process.env.SQLPass}@${process.env.SQLiPAddress}:${process.env.SQLPort}/plutodb`;
 
 export const db = pgp(cnString);
-

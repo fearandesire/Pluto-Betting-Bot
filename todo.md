@@ -8,18 +8,15 @@ Commands / Functions
 [ ] Erase gathered daily odds CMD
 [ ] Daily erasing of daily odds gathered function
 [ ] Assign ID to matches/matchups
-[ ] Define & establish virtual currency
-[ ] Organize how SQL DB will be used&what is needed
+[√] Define & establish virtual currency
+[√] Organize how SQL DB will be used&what is needed
 [ ] Setup SQL Databases
 [ ] Test betting
 
 ---
 
-RESOLVE CALL TIME // RESOLVE NODE POSTGRE FETCH
+[√] RESOLVE CALL TIME // RESOLVE NODE POSTGRE FETCH
 
 --
 
-My current idea:
-LoadDatabase() will load all static information such as currency, etc.
-File system (JSON) for storing on-demand info
-Set Interval to upload to DB?
+[ ] BET COMMAND
