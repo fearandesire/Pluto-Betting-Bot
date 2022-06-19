@@ -10,50 +10,14 @@ export async function processClaim(inputuserid, message, currentTime) {
 
     Log.LogYellow(`[processClaim.js] Running processClaim!`)
 
-    //! Basic, single query to check if user exists in database
-    // await db.any("SELECT * FROM currency WHERE userid = $1", [inputuserid]).then((dbData) => { 
-    //     Log.LogBrightBlue(`[processClaim.js] User ${inputuserid} is in the database || ${dbData[0].userid}`)
-    //     if (dbData[0].userid === inputuserid) {
-    //         message.reply('User exists in the database!')
-    //         return;
-    //     }
-    // })
-    //     .catch(error => {
-    //         Log.LogBorder(`[processClaim.js] Something went wrong...`)
-    //         Log.LogError(error)
-    //         return false;
-    //     })
-    //! ««««««««««««««««««««««««« */
-
-    //TODO: Compile entire function into a much cleaner, seamless function.
-
-    //TODO: Required functions: collectUser (maybe check if user is in db, if not create them) and then push into new batch functions with the rest of the code//requirements
-    //TODO: Required functions after collectUser is processed: collectClaimTime, collectBalance
-    //TODO  Something like this:
-/**
-        db.task(t => {
-            return t.batch([checkUserName(t), checkEmail(t), checkWhateverElse(t)]);
-        })
-        .then(data => {
-            // data = result of the batch operation;
-        })
-        .catch(error => {
-            // error
-        });
-
-        existsUsername(username) {
-        return this.db.oneOrNone('SELECT * FROM users WHERE username = $1 LIMIT 1', username, a => !!a);
-        }
-        **/
-
 
     db.tx('processClaim-Transaction', async t => {
             //? Search for user via their Discord ID in the database
-            const findUser = await t.oneOrNone("SELECT * FROM currency WHERE userid = $1", [inputuserid]);
+            const findUser = await t.oneOrNone("SELECT * FROM currency WHERE userid = $1", [inputuserid]); //
             if (!findUser) {
                 Log.LogBrightBlue(`[processClaim.js] User ${inputuserid} is not in the database, creating user`)
                 //? add user to DB & process claim in 1 query to minimize DB load
-                message.reply(`I see this is your first time using Pluto, welcome! I've created an account for you and completed your daily claim request of 100 credits.`)
+                message.reply(`I see this is your first time using Pluto, welcome! I've created an account for you and completed your daily claim request of 100 credits yessirrr.`)
                 return t.any("INSERT INTO currency (userid, balance, lastclaimtime) VALUES ($1, $2, $3) RETURNING *", [inputuserid, '100', currentTime]);
             }
             
