@@ -125,6 +125,7 @@ export class gatherOdds extends Command {
       })
       .catch(err => {
         console.log(err);
+        message.reply('No odds were found.')
       })
 
       container.CollectedOdds = true;

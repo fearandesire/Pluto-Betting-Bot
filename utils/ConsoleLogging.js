@@ -1,4 +1,4 @@
-import { bold, cborder, green, magentaBright, red, yellow } from "../lib/PlutoConfig.js";
+import { blue, blueBright, bold, cborder, green, magentaBright, red, yellow } from "../lib/PlutoConfig.js";
 export function LogBorder(){
     return console.log(magentaBright(bold(cborder)));
 }
@@ -13,4 +13,29 @@ export function LogYellow(text){
 
 export function LogRed(text){
     return console.log(red(bold(text)));
+}
+
+export function LogBlue(text){
+    return console.log(blue(bold(text)));
+}
+
+export function LogBrightBlue(text){
+    return console.log(blueBright(bold(text)));
+}
+
+export function LogError(text){
+    console.log(red(bold(cborder)))
+    console.log(red(bold(text)))
+    console.log(red(bold(cborder)))
+    return;
+}
+
+export const Log = {
+    LogBorder,
+    LogGreen,
+    LogYellow,
+    LogRed,
+    LogBlue,
+    LogBrightBlue,
+    LogError
 }

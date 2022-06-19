@@ -1,17 +1,13 @@
 import { Listener } from '@sapphire/framework';
-import { LogGreen } from '../utils/ConsoleLogging.js';
-import { dailyclaim } from '../utils/dailyclaim.js';
-import { useridentity } from '../utils/useridentity.js';
+import { Log } from '../utils/ConsoleLogging.js';
+// eslint-disable-next-line no-unused-vars
 export class ReadyListener extends Listener {
   run(SapDiscClient) {
     const {
-      username, // eslint-disable-line 
-      id // eslint-disable-line
+      username,
+      id
     } = SapDiscClient.user;
   }
 }
 
-useridentity();
-
-dailyclaim();
-LogGreen(`[Startup]: ready.js has loaded!`);
+Log.LogGreen(`[Startup]: ready.js has loaded!`);

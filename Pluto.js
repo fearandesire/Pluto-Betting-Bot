@@ -1,4 +1,3 @@
-
 import { SapphireClient } from '@sapphire/framework';
 import '@sapphire/plugin-hmr/register';
 import { RateLimitManager } from '@sapphire/ratelimits';

@@ -43,8 +43,8 @@ export function createuser(userid) {
      */
     const QueryDB = {
         name: 'createuserDB',
-        text: `INSERT INTO currency (userid, balance, )
-        VALUES (${userid}, 100, );`,
+        text: `INSERT INTO currency (userid, balance)
+        VALUES (${userid}, 100);`,
     }
     //? A Promise is required to process these kinds of requests.
     const nodepoolPromise = new Promise((err, res) => {
@@ -55,6 +55,7 @@ export function createuser(userid) {
                 LogBorder()
                 LogRed(`[createuser.js] Error: ${err}`)
                 console.log(err)
+                return;
             } else {
                 //? If DB connects, and the user ID was not found in the user identity table, creates a new user
                 LogGreen(`[createuser.js] User Created ID: ${userid}`)

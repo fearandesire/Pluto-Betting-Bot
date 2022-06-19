@@ -36,10 +36,10 @@ export function verifyClaim(userid) {
 
     /**
      - @QueryDB - settings to query the postgreSQL server
-     ////SELECT * FROM currency -- queries database for all rows in currency table
+     - @text SELECT cell lastclaimtime in the currency table via the userid -> so we can check if the user has ever used claim
      */
     const QueryDB = {
-        name: 'claimTimeStatus',
+        name: 'verifyclaimtime',
         text: `SELECT lastclaimtime FROM currency WHERE userid = '${userid}'`,
 
     }
@@ -52,7 +52,7 @@ export function verifyClaim(userid) {
                 LogRed(`[verifyClaim.js] Error: ${err}`)
                 console.log(err)
             } else {
-                const dbresp = res.rows[0]
+                const dbresp = res.rows[0].lastclaimtime
                 if (dbresp == false || dbresp == undefined || dbresp == null) {
                     LogBorder()
                     LogRed(`[verifyClaim.js] User ${userid} has no record of using the claim command in the databse.`)
@@ -60,8 +60,9 @@ export function verifyClaim(userid) {
                 } else {
                     LogBorder()
                     LogGreen(`[verifyClaim.js] User [${userid}] has used the claim command prior!`)
-                    LogGreen(`DB Response: ${dbresp.lastclaimtime}`)
-                    return true;
+                    //LogGreen(`DB Response: ${dbresp.lastclaimtime}`)
+                    let dbRespClaimTime = parseInt(dbresp.lastclaimtime)
+                    return dbRespClaimTime;
                 }
             }
 
