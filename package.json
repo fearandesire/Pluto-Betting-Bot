@@ -2,7 +2,8 @@
   "name": "bettingbot",
   "version": "1.0.0",
   "description": "",
-  "main": "testAPI.js",
+  "main": "Pluto.js",
+  "prettier": "fenix-js-prettier-config",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -21,6 +22,7 @@
     "edit-json-file": "^1.7.0",
     "express-async-router": "^0.1.15",
     "express-promise-router": "^4.1.1",
+    "fenix-js-prettier-config": "^1.0.1",
     "pg": "^8.7.3",
     "pg-monitor": "^1.4.1",
     "pg-promise": "^10.11.1",

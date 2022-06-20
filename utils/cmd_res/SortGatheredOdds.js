@@ -1,6 +1,7 @@
+import { Log } from '../bot_res/send_functions/consoleLog.js'
+import { SendMatchupList } from '../bot_res/send_functions/SendMatchupList.js'
 import { container } from '@sapphire/pieces'
-import { LogBorder, LogGreen, LogYellow } from './ConsoleLogging.js'
-import { SendMatchupList } from './SendMatchupList.js'
+
 container.MatchupList = []
 export function SortGatheredOdds(
 	Team1List,
@@ -9,9 +10,9 @@ export function SortGatheredOdds(
 	Team2Odds,
 	message,
 ) {
-	LogBorder()
-	LogYellow('[SortGatheredOdds.js] Sorting Gathered Odds')
-	LogBorder()
+	Log.Border()
+	Log.Yellow('[SortGatheredOdds.js] Sorting Gathered Odds')
+	Log.Border()
 
 	//? The way it is organized, the matching index for each matchup is the same. So for example:
 	//? Index 0 in Team1List would be the opponent of Team2List[0]. Identical for the Odds as well
@@ -29,9 +30,9 @@ export function SortGatheredOdds(
 			`**[__Matchup #${container.sortedIndex}__]** \n **${SelectTeam1Name}** \n Odds: **${SelectTeam1Odds}** \n vs. \n **${SelectTeam2Name}** \n Odds: **${SelectTeam2Odds}**`,
 		)
 	}
-	LogGreen("[SortGatheredOdds.js] Today's Odds Array")
-	LogGreen(container.MatchupList.join('\n \n'))
-	LogBorder()
+	Log.Green("[SortGatheredOdds.js] Today's Odds Array")
+	Log.Green(container.MatchupList.join('\n \n'))
+	Log.Border()
 	SendMatchupList(message, container.MatchupList)
 	return
 }

@@ -1,32 +1,32 @@
-import { SapphireClient } from '@sapphire/framework';
-import '@sapphire/plugin-hmr/register';
-import { RateLimitManager } from '@sapphire/ratelimits';
-import 'dotenv/config';
-import { bold, green, logthis, yellowBright } from './lib/PlutoConfig.js';
+import '@sapphire/plugin-hmr/register'
+import 'dotenv/config'
 
-console.log(yellowBright(bold(`[Startup]: Launching Pluto`)))
+import { Log } from './utils/bot_res/send_functions/consoleLog.js'
+import { RateLimitManager } from '@sapphire/ratelimits'
+import { SapphireClient } from '@sapphire/framework'
+
+Log.Yellow('Starting Pluto...')
 
 // Sapphire framework
 const SapDiscClient = new SapphireClient({
-  caseInsensitiveCommands: true,
-  ignoreBots: false,
-  intents: ["GUILDS", "GUILD_MESSAGES"],
-  presence: {
-    status: 'Online!'
-  },
-  typing: true
-});
+	caseInsensitiveCommands: true,
+	ignoreBots: false,
+	intents: ['GUILDS', 'GUILD_MESSAGES'],
+	presence: {
+		status: 'Online!',
+	},
+	typing: true,
+})
 
-SapDiscClient.fetchPrefix = () => "?";
+SapDiscClient.fetchPrefix = () => '?'
 
 async function LoginPluto() {
-  // eslint-disable-next-line
-  const envTOKEN = process.env.TOKEN
-   SapDiscClient.login(envTOKEN)
-   logthis(green(`[Startup] Pluto is now online!`))
+	// eslint-disable-next-line
+	const envTOKEN = process.env.TOKEN
+	SapDiscClient.login(envTOKEN)
+	Log.Green('Pluto logged in!')
 }
-LoginPluto();
+LoginPluto()
 
-export { SapDiscClient };
-export { RateLimitManager };
-
+export { SapDiscClient }
+export { RateLimitManager }

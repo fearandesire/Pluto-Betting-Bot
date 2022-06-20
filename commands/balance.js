@@ -1,20 +1,21 @@
 import { Command } from '@sapphire/framework'
-import { checkbalance } from '../utils/checkbalance.js'
-import { Log } from '../utils/ConsoleLogging.js'
+import { Log } from '../utils/bot_res/send_functions/consoleLog.js'
+import { checkbalance } from '../utils/cmd_res/checkbalance.js'
+
 export class balance extends Command {
 	constructor(context, options) {
 		super(context, {
 			...options,
 			name: 'balance',
-			aliases: ['balance', 'cb', 'bal'],
+			aliases: ['checkbalance', 'cb', 'bal', 'bank', 'credits'],
 			description: 'check balance',
 			requiredUserPermissions: ['KICK_MEMBERS'],
 		})
 	}
 	async messageRun(message, args) {
 		const targetbalance = await args.rest('string').catch(() => null)
-		Log.LogBorder()
-		Log.LogYellow(`[balance.js] Running Test Promise!`)
+		Log.Border()
+		Log.Yellow(`[balance.js] Running Test Promise!`)
 		const userid = message.author.id
 		if (targetbalance != null) {
 			// if user is checking their own balance

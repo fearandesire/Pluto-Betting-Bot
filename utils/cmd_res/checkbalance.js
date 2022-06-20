@@ -1,26 +1,28 @@
 //See DB index.Js And ProcessClaim.js
-import { db } from '../Database/dbindex.js'
-import { Log } from './ConsoleLogging.js'
+
+import { Log } from '../bot_res/send_functions/consoleLog.js'
+import { db } from '../../Database/dbindex.js'
+
 export async function checkbalance(inputuserid, message, notuser) {
-	Log.LogYellow(`[checkbalance.js] Running checkbalance!`)
-	Log.LogBorder()
-	const notusercheck = notuser || false //if another user is being called on, this is true. Otherwise, it is false.
+	Log.Yellow(`[checkbalance.js] Running checkbalance!`)
+	Log.Border()
+	const notusercheck = notuser || false //? if another user is being called on, this is true. Otherwise, it is false.
 	db.tx('checkbalance-Transaction', async (t) => {
 		const findings = await t.oneOrNone(
 			'SELECT * FROM currency WHERE userid = $1',
 			[inputuserid],
 		)
+		//? Checks if user not in DB and not Self user ( whoever is calling the command )
 		if (!findings && notusercheck == false) {
-			// Checks if user not in DB and not Self user ( whoever is calling the command )
 			message.reply('User has no Betting history')
-			Log.LogError('User has no Betting history')
+			Log.Error('User has no Betting history')
 			return
 		}
 
 		if (!findings) {
-			// if user is not in DB but is calling upon their own balance "!balance"
-			Log.LogBrightBlue(
-				`[checkbalance.js]User ${inputuserid} is not in the database, creating user`,
+			//? if user is not in DB but is calling upon their own balance "!balance"
+			Log.BrightBlue(
+				`[checkbalance.js] User ${inputuserid} is not in the database, creating user`,
 			)
 
 			message.reply(
@@ -32,16 +34,16 @@ export async function checkbalance(inputuserid, message, notuser) {
 			)
 		}
 		if (findings.userid === inputuserid) {
-			// User in database return balance
+			//? User in database return balance
 			const usersbalance = findings.balance
 			message.reply(`Balance: ${usersbalance}`)
-			Log.LogBrightBlue(usersbalance)
+			Log.BrightBlue(usersbalance)
 		}
 	})
 		//? Catching connection errors, not database data/table/error errors.
 		.catch((error) => {
-			Log.LogBorder(`[checkbalance.js] Something went wrong...`)
-			Log.LogError(error)
+			Log.Border(`[checkbalance.js] Something went wrong...`)
+			Log.Error(error)
 			return
 		})
 }
