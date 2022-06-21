@@ -12,17 +12,17 @@ export function confirmBetEmbed(message, betslip) {
 		.addFields(
 			{
 				name: `Amount: `,
-				value: `${betslip.betdata[0].amount}`,
+				value: `${betslip.amount}`,
 				inline: true,
 			},
 			{
 				name: `Team: `,
-				value: `${betslip.betdata[0].teamID}`,
+				value: `${betslip.teamid}`,
 				inline: true,
 			},
 			{
 				name: `Match: `,
-				value: `${betslip.betdata[0].matchID}`,
+				value: `${betslip.matchid}`,
 				inline: true,
 			},
 		)

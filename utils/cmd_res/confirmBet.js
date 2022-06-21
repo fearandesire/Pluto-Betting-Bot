@@ -23,20 +23,19 @@ export async function ConfirmBet(message, betslip) {
 		if (m.content.toLowerCase() === 'yes') {
 			collector.stop()
 			var setBetID = AssignBetID()
-			betslip.betdata[0].betID = setBetID
+			betslip.betid = setBetID
 			Log.Green(
 				`[confirmBet.js] ${
-					betslip.userID
+					betslip.userid
 				} confirmed a bet!\n Bet Slip:\n ${JSON.stringify(betslip)}`,
 			)
-			addActiveBet(betslip)
-
+			addActiveBet(betslip) //? Add bet to active bet list in DB
 			//? Passing confirmation message into an embed with the following embed content:
 			var embedcontent = {
 				title: 'Bet Slip Confirmed',
 				description:
 					'Congratulations! Your bet has been placed! You may view your active bets with the `?activebets` (W.I.P) command.',
-				color: '#e0ff19',
+				color: '#00FF00',
 			}
 			await embedReply(message, embedcontent)
 			return

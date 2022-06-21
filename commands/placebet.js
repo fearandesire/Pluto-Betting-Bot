@@ -2,6 +2,7 @@ import { CmdRunning } from '../utils/bot_res/classes/RunCmd.js'
 import { Command } from '@sapphire/framework'
 import { ConfirmBet } from '../utils/cmd_res/confirmBet.js'
 import { Log } from '../utils/bot_res/send_functions/consoleLog.js'
+import { isMatchExist } from '../utils/cmd_res/isMatchExist.js'
 
 export class placebet extends Command {
 	constructor(context, options) {
@@ -28,16 +29,18 @@ export class placebet extends Command {
 		await Log.Blue(
 			`Bet Slip:\nAmount: ${inputAmount}\nTeamID: ${inputTeamID}\nMatchID: ${inputMatchID}`,
 		)
-		let betslip = {}
-		betslip = { userID: user }
-		betslip['betdata'] = []
-		betslip.betdata.push({
-			amount: inputAmount,
-			teamID: inputTeamID,
-			matchID: inputMatchID,
-		})
-		Log.Yellow(JSON.stringify(betslip)) //? Debug purposes, this will likely be removed later. For now, it's intended to confirm the user's input
-		//? For now, adding an option for the user to confirm their bet before it is placed.
-		ConfirmBet(message, betslip, args)
+		if (await isMatchExist(inputTeamID, inputMatchID)) {
+			var betslip = {}
+			betslip.userid = user
+			betslip.amount = inputAmount
+			betslip.teamid = inputTeamID
+			betslip.matchid = inputMatchID
+			Log.Yellow(JSON.stringify(betslip)) //? Debug purposes, this will likely be removed later. For now, it's intended to confirm the user's input
+			//? For now, adding an option for the user to confirm their bet before it is placed.
+			ConfirmBet(message, betslip, args)
+		} else {
+			message.reply(`The match you are betting on does not exist.`)
+			return
+		}
 	}
 }

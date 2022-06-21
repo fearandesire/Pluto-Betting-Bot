@@ -4,13 +4,15 @@ import { db } from '../../Database/dbindex.js'
 
 //? Add user Bet Slip into DB as JSONB (Binary JSON)
 export function addActiveBet(betslip) {
-	//? betslip object should be structured as follows: { userID: '⁡⁣⁣⁢𝙣⁡', betdata: [{ amount: '⁡⁣⁣⁢𝘯⁡', teamID: '⁡⁣⁣⁢𝘯⁡', matchID: '⁡⁣⁣⁢𝘯⁡', betID: '⁡⁣⁣⁢𝙣⁡' }] }
+	//? betslip object should be structured as follows: { userid: '⁡⁣⁣⁢𝙣⁡', betdata: [{ amount: '⁡⁣⁣⁢𝘯⁡', teamid: '⁡⁣⁣⁢𝘯⁡', matchid: '⁡⁣⁣⁢𝘯⁡', betid: '⁡⁣⁣⁢𝙣⁡' }] }
 	new CmdRunning('addActiveBet')
 	//? insert betslip JSON into PostgreSQL JSONB column
-	db.oneOrNone('INSERT INTO activebets (betjson) VALUES ($1)', [betslip])
-		.then((data) => {
+	db.none(
+		'INSERT INTO activebets (userid, teamid, betid, amount) VALUES ($1, $2, $3, $4)',
+		[betslip.userid, betslip.teamid, betslip.betid, betslip.amount],
+	)
+		.then(() => {
 			Log.Green(`[addActiveBet.js] Successfully added bet to activebets table`)
-			//Log.BrightBlue(`[addActiveBet.js] Data: ${data}`)
 		})
 		.catch((err) => {
 			Log.Error(
