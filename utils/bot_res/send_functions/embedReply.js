@@ -1,6 +1,50 @@
+import { Log } from './consoleLog.js'
+import { MessageEmbed } from 'discord.js'
+import { embedfooter as defaultFooter } from '../../../lib/PlutoConfig.js'
+
+/**
+ * @description {*} This function is used to send an embed to the channel that originated the message.
+ * @param {message} message The message object that was sent.
+ * @param {embedcontent} embedcontent Object supplied by the caller to be converted into an embed.
+ * Example resposne should be something along the lines of:
+ *
+ * embedcontent = { title: '', description: '', color: '', footer: '', fields: [ { name: '', value: '', inline: '' }, etc. ] }
+ * @returns {*} embedWithFields or noFieldsEmbed - self-descriptive return values.
+ */
+
 export function embedReply(message, embedcontent) {
-	var embedColor = embedcontent?.color ?? '#0099ff'
+	var embedColor = embedcontent?.color ?? '#e0ff19'
 	var embedTitle = embedcontent?.title ?? 'no title'
 	var embedDescription = embedcontent?.description ?? 'no description'
-	var embedFields = embedcontent?.fields ?? []
+	var embedFields = embedcontent?.fields
+	var embedFooter = embedcontent?.footer ?? defaultFooter
+	var hasFields = embedFields ?? false
+	var confirmFields = hasFields ? true : false
+	//? if the supplied embed has fields, return embeds with fields
+	if (hasFields !== false) {
+		const embedWithFields = new MessageEmbed()
+			.setColor(embedColor)
+			.setTitle(embedTitle)
+			.setDescription(embedDescription)
+			.addFields(...embedcontent.fields)
+			.setTimestamp()
+			.setFooter({ text: embedFooter })
+		message.reply({ embeds: [embedWithFields] })
+		return
+	}
+	//? if the supplied embed has no fields, return embed with no fields
+	if (confirmFields == false) {
+		const noFieldsEmbed = new MessageEmbed()
+			.setColor(embedColor)
+			.setTitle(embedTitle)
+			.setDescription(embedDescription)
+			.setTimestamp()
+			.setFooter({ text: embedFooter })
+		message.reply({ embeds: [noFieldsEmbed] })
+		return
+	} else {
+		return Log.Error(
+			`[embedReply.js] Error: Something went wrong with the embedReply function.`,
+		)
+	}
 }

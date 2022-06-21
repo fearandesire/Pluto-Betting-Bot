@@ -1,6 +1,7 @@
 import { AssignBetID } from '../bot_res/AssignIDs.js'
 import { Log } from '../bot_res/send_functions/consoleLog.js'
-import { confirmBetEmbed } from '../bot_res/send_functions/confirmBetEmbed.js'
+import { embedReply } from '../bot_res/send_functions/embedReply.js'
+import { confirmBetEmbed as pleaseConfirmEmbed } from '../bot_res/send_functions/confirmBetEmbed.js'
 
 /**
 	 * @ConfirmedBet - a function to determine if the user will confirm their bet, or not via message collection on a 60 second timer. 
@@ -8,26 +9,34 @@ import { confirmBetEmbed } from '../bot_res/send_functions/confirmBetEmbed.js'
 	 
      */
 export async function ConfirmBet(message, betoptions) {
-	//await message.reply(`Please confirm your bet:`)
-	await confirmBetEmbed(message, betoptions)
-	//?  Listen to message using awaitMessages and confirm bet from user
+	await pleaseConfirmEmbed(message, betoptions)
+	//?  Listen for the user to confirm their bet via message collection [Discord.js] on a 60 second timer.
 	const filter = (m) => m.author.id === message.author.id
 	Log.Yellow(`[confirmBet.js] Started timer!`)
 	const collector = message.channel.createMessageCollector(filter, {
 		time: 60000,
-		error: 'timeout',
+		error: 'time',
 	})
 	collector.on('collect', async (m) => {
 		if (m.content.toLowerCase() === 'yes') {
 			collector.stop()
-			await message.reply('Bet Placed!')
 			var setBetID = AssignBetID()
+			var user = message.author.username
+			betoptions['userID'] = message.author.id
 			betoptions['betID'] = setBetID
 			Log.Green(
-				`[confirmBet.js] Bet Placed!\n Bet Slip:\n ${JSON.stringify(
+				`[confirmBet.js] ${user} confirmed a bet!\n Bet Slip:\n ${JSON.stringify(
 					betoptions,
 				)}`,
 			)
+			//? Passing confirmation message into an embed with the following embed content:
+			var embedcontent = {
+				title: 'Bet Slip Confirmed',
+				description:
+					'Congratulations! Your bet has been placed! You may view your active bets with the `?activebets` (W.I.P) command.',
+				color: '#e0ff19',
+			}
+			await embedReply(message, embedcontent)
 			return
 		}
 		if (m.content.toLowerCase() === 'no') {
@@ -43,7 +52,8 @@ export async function ConfirmBet(message, betoptions) {
 			)
 		}
 	})
-	var timeout = setTimeout(() => {
+	//? 60 Second Timer to confirm bet
+	setTimeout(() => {
 		collector.stop('time')
 	}, 60000)
 }

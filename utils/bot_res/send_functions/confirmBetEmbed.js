@@ -10,9 +10,9 @@ export function confirmBetEmbed(message, betoptions) {
 			`Below, you will find your bet slip. Please confirm your bet slip by typing **yes** or **no**`,
 		)
 		.addFields(
-			{ name: `Amount: `, value: `${betoptions.amount}`, inline: false },
-			{ name: `Team: `, value: `${betoptions.teamID}`, inline: false },
-			{ name: `Match: `, value: `${betoptions.matchID}`, inline: false },
+			{ name: `Amount: `, value: `${betoptions.amount}`, inline: true },
+			{ name: `Team: `, value: `${betoptions.teamID}`, inline: true },
+			{ name: `Match: `, value: `${betoptions.matchID}`, inline: true },
 		)
 		.setTimestamp()
 		.setFooter({ text: customerFooter })
