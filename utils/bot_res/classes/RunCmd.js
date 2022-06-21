@@ -1,6 +1,6 @@
 //? Utility Class to console log when a new command is being run
 
-import { Log } from './send_functions/consoleLog.js'
+import { Log } from '../send_functions/consoleLog.js'
 
 export class CmdRunning {
 	constructor(cmdname) {

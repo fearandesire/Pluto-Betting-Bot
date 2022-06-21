@@ -1,4 +1,4 @@
-import { CmdRunning } from '../utils/bot_res/RunCmd.js'
+import { CmdRunning } from '../utils/bot_res/classes/RunCmd.js'
 import { Command } from '@sapphire/framework'
 import { ConfirmBet } from '../utils/cmd_res/confirmBet.js'
 import { Log } from '../utils/bot_res/send_functions/consoleLog.js'
@@ -19,7 +19,7 @@ export class placebet extends Command {
 		var inputAmount = await args.pick('number').catch(() => null) //? Amount user wants to bet
 		//? The 'teamID' is the identifier for the 'team' the user wants to bet on
 		var inputTeamID = await args.pick('number').catch(() => null) //! A list will be in place (gatherodds embed) with assosciated team IDs, and we will need to possibly setup flags to stop invalid teamID input
-
+		var user = message.author.id //? user id
 		var inputMatchID = await args.pick('number').catch(() => null) //? The 'matchID' is the identifier for the 'match' the user wants to bet on (also will be listed with the gatherodds embed-like cmd)
 
 		await Log.Yellow(
@@ -28,12 +28,16 @@ export class placebet extends Command {
 		await Log.Blue(
 			`Bet Slip:\nAmount: ${inputAmount}\nTeamID: ${inputTeamID}\nMatchID: ${inputMatchID}`,
 		)
-		const placedbetoptions = {
+		let betslip = {}
+		betslip = { userID: user }
+		betslip['betdata'] = []
+		betslip.betdata.push({
 			amount: inputAmount,
 			teamID: inputTeamID,
 			matchID: inputMatchID,
-		}
+		})
+		Log.Yellow(JSON.stringify(betslip)) //? Debug purposes, this will likely be removed later. For now, it's intended to confirm the user's input
 		//? For now, adding an option for the user to confirm their bet before it is placed.
-		ConfirmBet(message, placedbetoptions, args)
+		ConfirmBet(message, betslip, args)
 	}
 }

@@ -1,15 +1,17 @@
 import { AssignBetID } from '../bot_res/AssignIDs.js'
 import { Log } from '../bot_res/send_functions/consoleLog.js'
+import { addActiveBet } from './addActiveBet.js'
 import { embedReply } from '../bot_res/send_functions/embedReply.js'
 import { confirmBetEmbed as pleaseConfirmEmbed } from '../bot_res/send_functions/confirmBetEmbed.js'
 
 /**
 	 * @ConfirmedBet - a function to determine if the user will confirm their bet, or not via message collection on a 60 second timer. 
-	@obj betoptions: { 𝗮𝗺𝗼𝘂𝗻𝘁: ⁡⁣⁣⁢100⁡, 𝘁𝗲𝗮𝗺𝗜𝗗: ⁡⁣⁣⁢𝘯⁡, 𝗺𝗮𝘁𝗰𝗵𝗜𝗗: ⁡⁣⁣⁢𝙣⁡ } - the options for the bet to be placed, prior gathered from the user's input [placedbet.js]
+	@obj betslip: { 𝗮𝗺𝗼𝘂𝗻𝘁: ⁡⁣⁣⁢100⁡, 𝘁𝗲𝗮𝗺𝗜𝗗: ⁡⁣⁣⁢𝘯⁡, 𝗺𝗮𝘁𝗰𝗵𝗜𝗗: ⁡⁣⁣⁢𝙣⁡ } - the options for the bet to be placed, prior gathered from the user's input [placedbet.js]
 	 
      */
-export async function ConfirmBet(message, betoptions) {
-	await pleaseConfirmEmbed(message, betoptions)
+export async function ConfirmBet(message, betslip) {
+	//? Sending Embed of bet slip to user to confirm bet
+	await pleaseConfirmEmbed(message, betslip)
 	//?  Listen for the user to confirm their bet via message collection [Discord.js] on a 60 second timer.
 	const filter = (m) => m.author.id === message.author.id
 	Log.Yellow(`[confirmBet.js] Started timer!`)
@@ -21,14 +23,14 @@ export async function ConfirmBet(message, betoptions) {
 		if (m.content.toLowerCase() === 'yes') {
 			collector.stop()
 			var setBetID = AssignBetID()
-			var user = message.author.username
-			betoptions['userID'] = message.author.id
-			betoptions['betID'] = setBetID
+			betslip.betdata[0].betID = setBetID
 			Log.Green(
-				`[confirmBet.js] ${user} confirmed a bet!\n Bet Slip:\n ${JSON.stringify(
-					betoptions,
-				)}`,
+				`[confirmBet.js] ${
+					betslip.userID
+				} confirmed a bet!\n Bet Slip:\n ${JSON.stringify(betslip)}`,
 			)
+			addActiveBet(betslip)
+
 			//? Passing confirmation message into an embed with the following embed content:
 			var embedcontent = {
 				title: 'Bet Slip Confirmed',
