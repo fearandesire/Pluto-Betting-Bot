@@ -3,8 +3,8 @@
 import { CmdRunning } from '../utils/bot_res/classes/RunCmd.js'
 import { Command } from '@sapphire/framework'
 import { Log } from '../utils/bot_res/send_functions/consoleLog.js'
-import { hasActiveBet } from '../utils/cmd_res/hasActiveBet.js'
 import { isExistingUser } from '../utils/cmd_res/isExistingUser.js'
+import { listMyBets } from '../utils/cmd_res/listMyBets.js'
 
 export class listbets extends Command {
 	constructor(context, options) {
@@ -22,7 +22,7 @@ export class listbets extends Command {
 		//? Ensure that the user exists in the database before we attempt to retrieve their active bets.
 		if (user) {
 			if (await isExistingUser(user)) {
-				await hasActiveBet(user, message)
+				await listMyBets(user, message)
 				Log.Green(`[${this.name}.js] User ${user} is registered with Pluto`)
 				return
 			} else {
@@ -30,7 +30,7 @@ export class listbets extends Command {
 				return
 			}
 		}
-		if (await hasActiveBet(user)) {
+		if (await listMyBets(user)) {
 			message.reply(`You have an active bet!`)
 			return
 		} else {

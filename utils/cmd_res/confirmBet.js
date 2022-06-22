@@ -1,6 +1,6 @@
 import { AssignBetID } from '../bot_res/AssignIDs.js'
 import { Log } from '../bot_res/send_functions/consoleLog.js'
-import { addActiveBet } from './addActiveBet.js'
+import { addNewBet } from './addNewBet.js'
 import { embedReply } from '../bot_res/send_functions/embedReply.js'
 import { confirmBetEmbed as pleaseConfirmEmbed } from '../bot_res/send_functions/confirmBetEmbed.js'
 
@@ -29,12 +29,12 @@ export async function ConfirmBet(message, betslip) {
 					betslip.userid
 				} confirmed a bet!\n Bet Slip:\n ${JSON.stringify(betslip)}`,
 			)
-			addActiveBet(betslip) //? Add bet to active bet list in DB
+			addNewBet(betslip) //? Add bet to active bet list in DB
 			//? Passing confirmation message into an embed with the following embed content:
 			var embedcontent = {
 				title: 'Bet Slip Confirmed',
 				description:
-					'Congratulations! Your bet has been placed! You may view your active bets with the `?activebets` (W.I.P) command.',
+					'Congratulations! Your bet has been placed! You may view your active bets with the `?betslips` (W.I.P) command.',
 				color: '#00FF00',
 			}
 			await embedReply(message, embedcontent)

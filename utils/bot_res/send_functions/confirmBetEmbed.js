@@ -20,11 +20,6 @@ export function confirmBetEmbed(message, betslip) {
 				value: `${betslip.teamid}`,
 				inline: true,
 			},
-			{
-				name: `Match: `,
-				value: `${betslip.matchid}`,
-				inline: true,
-			},
 		)
 		.setTimestamp()
 		.setFooter({ text: customerFooter })
