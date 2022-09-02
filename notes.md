@@ -1,3 +1,9 @@
+---
+noteId: "b7e652802b0111eda4b07961458fe194"
+tags: []
+
+---
+
 - Bet Odds can be retrieved when closing all bets from activematchups
 
 Closing Bets Function:

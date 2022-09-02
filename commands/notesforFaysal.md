@@ -1,3 +1,9 @@
+---
+noteId: "b7e6c7b02b0111eda4b07961458fe194"
+tags: []
+
+---
+
 <!--
 ​‌‌‍⁡⁢⁢⁢𝗡𝗼𝘁𝗲𝘀:​⁡
 If curious about any database related functions, take a look through our current files on how they work

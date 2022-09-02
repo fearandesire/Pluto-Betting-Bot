@@ -1,3 +1,9 @@
+---
+noteId: "b7e6a0a22b0111eda4b07961458fe194"
+tags: []
+
+---
+
 <!-- gatherOdds:
 
 Store Team 1 & Team 2 names into respective Arrays

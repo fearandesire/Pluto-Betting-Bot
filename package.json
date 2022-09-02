@@ -1,37 +1,4 @@
 {
-<<<<<<< Updated upstream
-  "name": "bettingbot",
-  "version": "1.0.0",
-  "description": "",
-  "main": "testAPI.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "type": "module",
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "@sapphire/framework": "^2.5.0",
-    "@sapphire/pieces": "^3.3.3",
-    "@sapphire/plugin-hmr": "^1.2.0",
-    "@sapphire/ratelimits": "^2.4.4",
-    "colorette": "^2.0.17",
-    "discord": "^0.8.2",
-    "discord.js": "^13.8.0",
-    "dotenv": "^16.0.1",
-    "edit-json-file": "^1.7.0",
-    "express-async-router": "^0.1.15",
-    "express-promise-router": "^4.1.1",
-    "pg": "^8.7.3",
-    "pg-monitor": "^1.4.1",
-    "pg-promise": "^10.11.1",
-    "postgresql": "^0.0.1",
-    "sapphire": "^0.0.3"
-  },
-  "devDependencies": {
-    "eslint": "^8.17.0"
-  }
-=======
     "name": "bettingbot",
     "version": "1.0.0",
     "description": "",
@@ -92,5 +59,4 @@
     "devDependencies": {
         "eslint": "^8.17.0"
     }
->>>>>>> Stashed changes
 }
