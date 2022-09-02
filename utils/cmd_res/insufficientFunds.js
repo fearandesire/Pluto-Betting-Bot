@@ -13,10 +13,10 @@ import { db } from '../../Database/dbindex.js'
  */
 
 export function insufficientFunds(message, userid) {
-    new FileRunning(`insufficientFunds`)
-    return db.oneOrNone(
-        'SELECT * FROM currency WHERE userid = $1',
-        [userid],
-        (a) => a?.balance,
-    )
+	new FileRunning(`insufficientFunds`)
+	return db.oneOrNone(
+		'SELECT * FROM currency WHERE userid = $1',
+		[userid],
+		(a) => a.balance,
+	)
 }

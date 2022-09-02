@@ -23,7 +23,8 @@
         "util": "./utils/**/*",
         "#QuickErr": "./utils/bot_res/send_functions/embedReply.js",
         "#validateUser": "./utils/cmd_res/validateUser.js",
-        "#api/*": "./utils/api/*.js"
+        "#api/*": "./utils/api/*.js",
+        "#utilDB/*": "./utils/db/*.js"
     },
     "type": "module",
     "author": "",

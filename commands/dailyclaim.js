@@ -1,6 +1,7 @@
-import { Command } from '@sapphire/framework';
-import { Log } from '../utils/ConsoleLogging.js';
-import { processClaim } from '../utils/processClaim.js';
+import { Command } from '@sapphire/framework'
+import { Log } from '../utils/bot_res/send_functions/consoleLog.js'
+import { processClaim } from '#utilDB/processClaim'
+
 export class dailyclaim extends Command {
     constructor(context, options) {
         super(context, {
@@ -8,19 +9,15 @@ export class dailyclaim extends Command {
             name: 'dailyclaim',
             aliases: ['claim', 'dc'],
             description: 'Daily Claim',
-            requiredUserPermissions: ['KICK_MEMBERS']
-        });
+            requiredUserPermissions: ['KICK_MEMBERS'],
+        })
     }
 
     async messageRun(message) {
-        Log.LogBorder();
+        Log.LogBorder()
         Log.LogYellow(`[dailyclaim.js] Running Test Promise!`)
-        const userid = message.author.id;
-        var currentTime = new Date().getTime();
-        processClaim(userid, message, currentTime);
-        
-        
+        const userid = message.author.id
+        var currentTime = new Date().getTime()
+        processClaim(userid, message, currentTime)
     }
 }
-
-

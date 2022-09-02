@@ -1,6 +1,5 @@
 import { Log } from '../bot_res/send_functions/consoleLog.js'
 import { QuickError } from '../bot_res/send_functions/embedReply.js'
-import { globalLog } from '#Logger'
 import { isExistingUser } from './isExistingUser.js'
 
 /**
@@ -14,21 +13,15 @@ import { isExistingUser } from './isExistingUser.js'
  * - {@link listbets.js} - The invoker of this module is listbets.js
  */
 export async function validateUser(message, userid) {
-    await isExistingUser(userid).then(function handleResp(data) {
-        if (data) {
-            globalLog.info(
-                `[validateExistingUser.js] User ${userid} is already registered with the bot.`,
-            )
-            Log.Green(`[validateUser.js] User ${userid} is registered with Pluto.`)
-            return
-        } else {
-            QuickError(message, `You are not registered with Pluto.`)
-            globalLog.error(
-                `[validateUser.js] User ${userid} is not registered with Pluto.`,
-            )
-            throw new Error(
-                `[validateUser.js] User ${userid} is not registered with Pluto.`,
-            )
-        }
-    })
+	await isExistingUser(userid).then(function handleResp(data) {
+		if (data) {
+			Log.Green(`[validateUser.js] User ${userid} is registered with Pluto.`)
+			return
+		} else {
+			QuickError(message, `You are not registered with Pluto.`)
+			throw Log.Red(
+				`[validateUser.js] User ${userid} is not registered with Pluto.`,
+			)
+		}
+	})
 }

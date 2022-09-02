@@ -15,14 +15,14 @@ import { isDuplicateBet } from './isDuplicateBet.js'
 //? Check if the user is duplicating their existing bet
 
 export async function verifyDupBet(userid, teamid, message) {
-    new FileRunning(`verifyDupBet`)
-    await isDuplicateBet(userid, teamid).then((data) => {
-        if (data) {
-            QuickError(message, `You have already placed a bet on this team.`)
-            throw Log.Error(
-                `[verifyDupBet.js] User ${userid} has already placed a bet on ${teamid} - ended event`,
-            )
-        }
-        return
-    })
+	new FileRunning(`verifyDupBet`)
+	await isDuplicateBet(userid, teamid).then((data) => {
+		if (data) {
+			QuickError(message, `You have already placed a bet on this team.`)
+			throw Log.Error(
+				`[verifyDupBet.js] User ${userid} has already placed a bet on ${teamid} - ended event`,
+			)
+		}
+		return
+	})
 }

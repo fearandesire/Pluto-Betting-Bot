@@ -29,7 +29,7 @@ export async function setupBet(message, teamid, betamount) {
             betslip.userid = user
             betslip.amount = betamount
             betslip.teamid = teamid
-            Log.Yellow(JSON.stringify(betslip)) // debugging: intended to confirm the user's input
+            Log.Yellow(JSON.stringify(betslip)) //? Debug purposes, this will likely be removed later. For now, it's intended to confirm the user's input
             confirmBet(message, betslip)
             return true
             //? Otherwise, throw error

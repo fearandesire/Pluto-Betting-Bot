@@ -11,7 +11,7 @@ import { db } from '../../Database/dbindex.js'
 
 export function isMatchExist(teamid) {
     return db.oneOrNone(
-        `SELECT * FROM activematchups WHERE teamone = $1 OR teamtwo = $1`,
+        `SELECT * FROM activematchups WHERE teamone = $1 OR teamtwo = $1 OR matchid = $1`,
         [teamid],
     )
 }

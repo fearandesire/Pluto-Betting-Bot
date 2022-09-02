@@ -16,46 +16,38 @@ container.MatchupList = []
  * @return {obj} container.Matchuplist - A global container (containers from @sapphire/pieces pkg) that starts as an empty array, and is filled with the compiled list of matchups.
  * @references
  * - {@link SendMatchupList} - A module that uses Discord's embed builder to create a list of matchups and displays it.
- * - {@link gatherOdds.js} - A module that gathers odds for all matchups from the API and puts them into an array.
+ * - {@link gatherOdds.js} - A module that gathers the odds from the API and puts them into an array.
  */
 export function SortGatheredOdds(
-    Team1List,
-    Team1Odds,
-    Team2List,
-    Team2Odds,
-    message,
+	Team1List,
+	Team1Odds,
+	Team2List,
+	Team2Odds,
+	message,
 ) {
-    Log.Border()
-    Log.Yellow('[SortGatheredOdds.js] Sorting Gathered Odds')
-    Log.Border()
+	Log.Border()
+	Log.Yellow('[SortGatheredOdds.js] Sorting Gathered Odds')
+	Log.Border()
 
-    //? The way it is organized, the matching index for each matchup is the same. So for example:
-    //? Index 0 in Team1List would be the opponent of Team2List[0]. Identical for the Odds as well
-    for (let index = 0; index < Team1List.length; index++) {
-        const SelectTeam1Name = Team1List[index]
-        const SelectTeam1Odds = Team1Odds[index]
-        const SelectTeam2Name = Team2List[index]
-        const SelectTeam2Odds = Team2Odds[index]
-        container.sortedIndex = index
-        if (index == 0) {
-            //? For displaying purposes, if the index is '0', it should be '1' as that's when we normally start counting from as humans.
-            container.sortedIndex = 1
-        }
-        //? Setting up object in memory with our matchup data. [This is all theory for now, as we haven't updated the sport in the API yet, but it should work.]
-        container.TodaysMatchups[`${index}`] = index
-        container.TodaysMatchups[`${index}`].Team1 = SelectTeam1Name
-        container.TodaysMatchups[`${index}`].Team1Odds = SelectTeam1Odds
-        container.TodaysMatchups[`${index}`].Team2 = SelectTeam2Name
-        container.TodaysMatchups[`${index}`].Team2Odds = SelectTeam2Odds
-
-        //? Formatting each matchup to be displayed in an embed
-        container.MatchupList.push(
-            `**[__Matchup #${container.sortedIndex}__]** \n **${SelectTeam1Name}** \n Odds: **${SelectTeam1Odds}** \n vs. \n **${SelectTeam2Name}** \n Odds: **${SelectTeam2Odds}**`,
-        )
-    }
-    Log.Green("[SortGatheredOdds.js] Today's Odds Array")
-    Log.Green(container.MatchupList.join('\n \n'))
-    Log.Border()
-    SendMatchupList(message, container.MatchupList)
-    return
+	//? The way it is organized, the matching index for each matchup is the same. So for example:
+	//? Index 0 in Team1List would be the opponent of Team2List[0]. Identical for the Odds as well
+	for (let index = 0; index < Team1List.length; index++) {
+		const SelectTeam1Name = Team1List[index]
+		const SelectTeam1Odds = Team1Odds[index]
+		const SelectTeam2Name = Team2List[index]
+		const SelectTeam2Odds = Team2Odds[index]
+		container.sortedIndex = index
+		if (index == 0) {
+			container.sortedIndex = 1
+		}
+		//? Formatting each matchup to be displayed in an embed
+		container.MatchupList.push(
+			`**[__Matchup #${container.sortedIndex}__]** \n **${SelectTeam1Name}** \n Odds: **${SelectTeam1Odds}** \n vs. \n **${SelectTeam2Name}** \n Odds: **${SelectTeam2Odds}**`,
+		)
+	}
+	Log.Green("[SortGatheredOdds.js] Today's Odds Array")
+	Log.Green(container.MatchupList.join('\n \n'))
+	Log.Border()
+	SendMatchupList(message, container.MatchupList)
+	return
 }
