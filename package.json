@@ -1,4 +1,5 @@
 {
+<<<<<<< Updated upstream
   "name": "bettingbot",
   "version": "1.0.0",
   "description": "",
@@ -30,4 +31,66 @@
   "devDependencies": {
     "eslint": "^8.17.0"
   }
+=======
+    "name": "bettingbot",
+    "version": "1.0.0",
+    "description": "",
+    "main": "Pluto.js",
+    "prettier": "fenix-js-prettier-config",
+    "scripts": {
+        "dev": "run-p watch start",
+        "watch": "nodemon -L --watch ./",
+        "start": "node ./Pluto.js",
+        "format": "prettier --write \"src/**/*.js\"",
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "docs": "jsdoc2md lib/*.js > addNewBet.js"
+    },
+    "imports": {
+        "#db": "./Database/dbindex.js",
+        "#LogColor": "./utils/bot_res/send_functions/consoleLog.js",
+        "#Logger": "./utils/logging.js",
+        "#FileRun": "./utils/bot_res/classes/FileRunning.js",
+        "#embed": "./utils/bot_res/send_functions/embedReply.js",
+        "#register": "./utils/cmd_res/registerUser.js",
+        "#utils/**": "./utils/**",
+        "util": "./utils/**/*",
+        "#QuickErr": "./utils/bot_res/send_functions/embedReply.js",
+        "#validateUser": "./utils/cmd_res/validateUser.js",
+        "#api/*": "./utils/api/*.js"
+    },
+    "type": "module",
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@sapphire/framework": "^2.5.0",
+        "@sapphire/pieces": "^3.3.3",
+        "@sapphire/plugin-hmr": "^1.2.0",
+        "@sapphire/ratelimits": "^2.4.4",
+        "async": "^3.2.4",
+        "colorette": "^2.0.17",
+        "discord": "^0.8.2",
+        "discord.js": "^13.8.0",
+        "dotenv": "^16.0.1",
+        "edit-json-file": "^1.7.0",
+        "express-async-router": "^0.1.15",
+        "express-promise-router": "^4.1.1",
+        "fenix-js-prettier-config": "^1.0.1",
+        "flat-cache": "^3.0.4",
+        "jsdoc-to-markdown": "^7.1.1",
+        "JSONStream": "^1.3.5",
+        "lodash": "^4.17.21",
+        "lodash.pullat": "^4.6.0",
+        "node-persist": "^3.1.0",
+        "nodemon": "^2.0.18",
+        "pg": "^8.7.3",
+        "pg-monitor": "^1.4.1",
+        "pg-promise": "^10.11.1",
+        "postgresql": "^0.0.1",
+        "sapphire": "^0.0.3",
+        "winston": "^3.8.1"
+    },
+    "devDependencies": {
+        "eslint": "^8.17.0"
+    }
+>>>>>>> Stashed changes
 }

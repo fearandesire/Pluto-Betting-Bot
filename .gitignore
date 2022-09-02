@@ -108,3 +108,7 @@ dist
 
 # TernJS port file
 .tern-port
+
+# JSDOC outfile
+.out/**/*
+.out/
