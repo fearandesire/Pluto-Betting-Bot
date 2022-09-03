@@ -5,7 +5,7 @@ import 'dotenv/config'
 
 import * as pg from 'pg'
 
-import { LogBorder, LogGreen, LogYellow } from '#LogColor'
+import { Log, LogBorder, LogGreen } from '#LogColor'
 
 import { container } from '@sapphire/framework'
 
@@ -19,37 +19,37 @@ var dbPort = process.env.SQLPort
 
 const { Pool } = pg.default
 export const nodepool = new Pool({
-    user: dbUser,
-    host: dbIP,
-    database: 'plutodb',
-    password: dbPass,
-    port: dbPort,
+	user: dbUser,
+	host: dbIP,
+	database: 'plutodb',
+	password: dbPass,
+	port: dbPort,
 })
 
 export async function LoadDBs() {
-    LogBorder()
-    LogYellow(`[LoadDB.js] Loading Daily Schedule from Database`)
-    /**
+	LogBorder()
+	Log.Yellow(`[LoadDB.js] Loading Daily Schedule from Database`)
+	/**
    - @QueryDB - settings to query the postgreSQL server
   
    */
 
-    const QueryDB = {
-        name: 'accessdb',
-        text: 'SELECT * FROM test1',
-    }
-    //? A Promise is required to process these kinds of requests.
-    const nodepoolPromise = new Promise((err, res) => {
-        nodepool.query(QueryDB, (err, res) => {
-            if (err) {
-                LogGreen(`[LoadDB.js] Error: ${err}`)
-                console.log(err)
-            } else {
-                const dbre = res.rows[0].botName
-                LogGreen(dbre)
-                const dbres = res.rows[1].botName
-                LogGreen(dbres)
-            }
-        })
-    })
+	const QueryDB = {
+		name: 'accessdb',
+		text: 'SELECT * FROM test1',
+	}
+	//? A Promise is required to process these kinds of requests.
+	const nodepoolPromise = new Promise((err, res) => {
+		nodepool.query(QueryDB, (err, res) => {
+			if (err) {
+				LogGreen(`[LoadDB.js] Error: ${err}`)
+				console.log(err)
+			} else {
+				const dbre = res.rows[0].botName
+				LogGreen(dbre)
+				const dbres = res.rows[1].botName
+				LogGreen(dbres)
+			}
+		})
+	})
 }

@@ -24,7 +24,9 @@
         "#QuickErr": "./utils/bot_res/send_functions/embedReply.js",
         "#validateUser": "./utils/cmd_res/validateUser.js",
         "#api/*": "./utils/api/*.js",
-        "#utilDB/*": "./utils/db/*.js"
+        "#utilDB/*": "./utils/db/*.js",
+        "#lib/*": "./lib/*.js",
+        "#cmdUtil/*": "./utils/cmd_res/*.js"
     },
     "type": "module",
     "author": "",
@@ -44,6 +46,7 @@
         "express-promise-router": "^4.1.1",
         "fenix-js-prettier-config": "^1.0.1",
         "flat-cache": "^3.0.4",
+        "fuse.js": "^6.6.2",
         "jsdoc-to-markdown": "^7.1.1",
         "JSONStream": "^1.3.5",
         "lodash": "^4.17.21",

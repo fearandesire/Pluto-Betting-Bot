@@ -1,7 +1,7 @@
 //? cmd for quick testing of functions
 
 import { Command } from '@sapphire/framework'
-import { verifyDate } from '#api/verifyDate'
+import { resolveTeam } from '#cmdUtil/resolveTeam'
 
 //import { sortCancelBet } from '../utils/cmd_res/CancelBet/sortCancelBet.js'
 
@@ -15,8 +15,10 @@ export class testCMD extends Command {
             requiredUserPermissions: ['KICK_MEMBERS'],
         })
     }
-    async messageRun(message) {
-        var verifyIso = await verifyDate(`2022-09-11T17:00:00Z`)
-        console.log(verifyIso)
+    async messageRun(message, args) {
+        var input = await args.rest('string').catch(() => null)
+        var findT = await resolveTeam(input)
+        console.log(findT)
+        message.reply(findT)
     }
 }

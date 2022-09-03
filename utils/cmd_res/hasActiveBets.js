@@ -1,5 +1,5 @@
 import { FileRunning } from '../bot_res/classes/FileRunning.js'
-import { db } from '../../Database/dbindex.js'
+import { db } from '#db'
 
 /**
  * @module hasActiveBets -
@@ -10,6 +10,6 @@ import { db } from '../../Database/dbindex.js'
  * @references {@link listBets.js} - This module will resolve the promise within hasActiveBet.js
  */
 export function hasActiveBets(userid) {
-	new FileRunning('queryUserBets')
-	return db.any(`SELECT * FROM activebets WHERE userid = $1`, [userid])
+    new FileRunning('queryUserBets')
+    return db.any(`SELECT * FROM activebets WHERE userid = $1`, [userid])
 }

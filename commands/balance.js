@@ -14,8 +14,7 @@ export class balance extends Command {
     }
     async messageRun(message, args) {
         const targetbalance = await args.rest('string').catch(() => null)
-        Log.LogBorder()
-        Log.LogYellow(`[balance.js] Running Test Promise!`)
+        Log.Yellow(`[balance.js] Running Test Promise!`)
         const userid = message.author.id
         if (targetbalance != null) {
             // if user is checking their own balance

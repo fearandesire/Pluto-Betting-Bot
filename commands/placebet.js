@@ -22,24 +22,16 @@ export class placebet extends Command {
 
     async messageRun(message, args) {
         new FileRunning(this.name) //? Log command running
-        //* Gather user input
-        var inputAmount = await args.pick('number').catch(() => null) //? Amount user wants to bet
-        //? The 'teamID' is the identifier for the 'team' the user wants to bet on
-        var inputTeamID = await args.pick('string').catch(() => null) //! A list will be in place (gatherodds embed) with assosciated team IDs, and we will need to possibly setup flags to stop invalid teamID input
+        var betAmount = await args.pick('number').catch(() => null)
+        var betOnTeam = await args.rest('string').catch(() => null)
+        if (!betOnTeam) {
+            QuickError(message, 'Please enter a team or match id')
+        }
         var user = message.author.id //? user id
         await Log.Yellow(
             `[${this.name}.js] User ${message.author.username} (${message.author.id}) is getting a bet ready!`, //? Debug purposes, this will likely be removed later. For now, it's intended to confirm the user's input
         )
-        await Log.Blue(`Bet Slip:\nAmount: ${inputAmount}\nTeamID: ${inputTeamID}`)
-        // //? register user if they are not already registered
-        // await registerUser(user)
-        // //* Check if user is duplicating their bet // throws error if user has already placed a bet on that team
-        // await verifyDupBet(user, inputTeamID, message)
-        // //* Check if user has sufficient funds // throws error if user does not have sufficient funds to place their bet
-        // await verifyFunds(message, user, inputAmount, inputTeamID)
-        // //* Initiate process to place the bet
-        // await setupBet(message, inputTeamID, inputAmount)
-        //? run all of the above functions within an async series of actions
+        await Log.Blue(`Bet Slip:\nAmount: ${betAmount}\nTeam: ${betOnTeam}`)
         async.series(
             [
                 async function valUser() {
@@ -47,7 +39,7 @@ export class placebet extends Command {
                     return
                 },
                 async function verDup() {
-                    await verifyDupBet(user, inputTeamID, message)
+                    await verifyDupBet(user, betOnTeam, message)
                     return
                 },
                 async function insufFunds() {
@@ -64,17 +56,11 @@ export class placebet extends Command {
                     return
                 },
                 async function procTran(insufFunds) {
-                    await processTrans(
-                        message,
-                        user,
-                        insufFunds,
-                        inputAmount,
-                        inputTeamID,
-                    )
+                    await processTrans(message, user, insufFunds, betAmount, betOnTeam)
                     return
                 },
                 async function setBet() {
-                    await setupBet(message, inputTeamID, inputAmount)
+                    await setupBet(message, betOnTeam, betAmount)
                     return
                 },
             ],

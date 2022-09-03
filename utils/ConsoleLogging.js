@@ -7,7 +7,7 @@ export function LogGreen(text){
     return console.log(green(bold(text)));
 }
 
-export function LogYellow(text){
+export function Log.Yellow(text){
     return console.log(yellow(bold(text)));
 }
 
@@ -33,7 +33,7 @@ export function LogError(text){
 export const Log = {
     LogBorder,
     LogGreen,
-    LogYellow,
+    Log.Yellow,
     LogRed,
     LogBlue,
     LogBrightBlue,

@@ -13,15 +13,18 @@ import { isExistingUser } from './isExistingUser.js'
  * - {@link listbets.js} - The invoker of this module is listbets.js
  */
 export async function validateUser(message, userid) {
-	await isExistingUser(userid).then(function handleResp(data) {
-		if (data) {
-			Log.Green(`[validateUser.js] User ${userid} is registered with Pluto.`)
-			return
-		} else {
-			QuickError(message, `You are not registered with Pluto.`)
-			throw Log.Red(
-				`[validateUser.js] User ${userid} is not registered with Pluto.`,
-			)
-		}
-	})
+    await isExistingUser(userid).then(function handleResp(data) {
+        if (data) {
+            Log.Green(`[validateUser.js] User ${userid} is registered with Pluto.`)
+            return
+        } else {
+            QuickError(
+                message,
+                `You are not registered with Pluto. Type \`?register\` to register yourself!`,
+            )
+            throw Log.Red(
+                `[validateUser.js] User ${userid} is not registered with Pluto.`,
+            )
+        }
+    })
 }

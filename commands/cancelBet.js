@@ -1,8 +1,7 @@
 import { Command } from '@sapphire/framework'
 import { FileRunning } from '../utils/bot_res/classes/FileRunning.js'
 import { Log } from '../utils/bot_res/send_functions/consoleLog.js'
-import { QuickError } from '#QuickErr'
-import { deleteBet } from '../utils/cmd_res/CancelBet/dbDeleteBet.js'
+import { QueryBets } from '../utils/cmd_res/CancelBet/queryBets.js'
 import { deleteBetFromArray } from '../utils/cmd_res/CancelBet/deleteBetArr.js'
 import { storage } from '../lib/PlutoConfig.js'
 import { verifyBetAuthor } from '../utils/cmd_res/CancelBet/verifyBetAuthor.js'
@@ -14,12 +13,12 @@ import { verifyBetAuthor } from '../utils/cmd_res/CancelBet/verifyBetAuthor.js'
  * @var userid - The Discord user Id of who called the command.
  * @var betid - The Id of the bet being requested to be cancelled / manipulated.
  * @function verifyBetAuthor - Verifies the author of the bet being requested to be cancelled / manipulated.
- * @function deleteBet - Queries the database for the bet being requested to be cancelled / manipulated - deletes if found from relevant locations (see for more info)
+ * @function QueryBets - Queries the database for the bet being requested to be cancelled / manipulated - deletes if found from relevant locations (see for more info)
  * @function deleteBetFromArray - Deletes the bet from local storage.
  */
 
 //TODO: error catch betid for null argument;
-//TODO: update currency when the bet is cancelled (within deleteBet)
+//TODO: update currency when the bet is cancelled (within QueryBets)
 export class cancelBet extends Command {
     constructor(context, options) {
         super(context, {
@@ -32,19 +31,12 @@ export class cancelBet extends Command {
     }
     async messageRun(message, args) {
         new FileRunning(this.name) //? Log file running
-        if (args == null || args.length == 0 || args == undefined) {
-            QuickError(
-                message,
-                `No Bet ID specified\nView your bets with \`\`\`>mybets\`\`\``,
-            )
-            return
-        }
         storage.init()
         Log.Border
         var betid = await args.pick('number').catch(() => null)
         var userid = message.author.id
         await verifyBetAuthor(message, userid, betid) //? Verify the bet belongs to the user
-        await deleteBet(userid, betid) //? Query DB & delete specified bet
+        await QueryBets(userid, betid) //? Query DB & delete specified bet
         await deleteBetFromArray(userid, betid, message) //? Update our local storage with the new betslip for the user (for displaying info to user)
     }
 }

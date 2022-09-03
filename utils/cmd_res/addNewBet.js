@@ -19,46 +19,53 @@ import { embedReply } from '../bot_res/send_functions/embedReply.js'
  */
 
 export function addNewBet(message, betslip) {
-	new FileRunning('addNewBet')
-	/*
-	Querying DB using db.tx since we are handling multiple transactions
-	First query: Selecting the 'matchid' from the database as this information isn't privy to the user, but is required for us to store the betslip information in the DB.
-	*/
-	db.tx('createNewBet', (t) => {
-		return t
-			.one(
-				`SELECT matchid from activematchups WHERE teamone = $1 OR teamtwo = $1`,
-				/**@property {Object} betslip.teamid - The team name the user has input */
-				[betslip.teamid],
-			)
-			.then((data) => {
-				return t.none(
-					`INSERT INTO betslips (userid, teamid, betid, amount, matchid, hasactivebet, dateofbet) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-					[
-						betslip.userid,
-						betslip.teamid,
-						betslip.betid,
-						betslip.amount,
-						data.matchid,
-						'valid',
-						TodaysDate(),
-					], //? Insert betslip information into the database
-				)
-			})
-			.then(() => {
-				Log.Green(`[addNewBet.js] Successfully added bet to betslips table`)
-				var embedcontent = {
-					//? Compiling the properties of the embed to return to the user: confirming their bet has been added to DB
-					title: `Bet #${betslip.betid} Slip Confirmed`,
-					description:
-						'Congratulations! Your bet has been placed! You may view your active bets by typing ```?mybets```',
-					color: '#00FF00',
-					footer: 'For more commands, type ```?help```',
-				}
-				embedReply(message, embedcontent) //? Sending the embed to the user via our embedReply function in [embedReply.js]
-			})
-			.catch((err) => {
-				Log.Error(`[addNewBet.js] Error adding bet to betslips table\n${err}`)
-			})
-	})
+    new FileRunning('addNewBet')
+    /*
+    Querying DB using db.tx since we are handling multiple transactions
+    First query: Selecting the 'matchid' from the database as this information isn't privy to the user, but is required for us to store the betslip information in the DB.
+    */
+    db.tx('createNewBet', (t) => {
+        return t
+            .one(
+                `SELECT matchid from activematchups WHERE teamone = $1 OR teamtwo = $1`,
+                /**@property {Object} betslip.teamid - The team name the user has input */
+                [betslip.teamid],
+            )
+            .then((data) => {
+                return t.none(
+                    `INSERT INTO betslips (userid, teamid, betid, amount, matchid, hasactivebet, dateofbet) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+                    [
+                        betslip.userid,
+                        betslip.teamid,
+                        betslip.betid,
+                        betslip.amount,
+                        data.matchid,
+                        'valid',
+                        TodaysDate(),
+                    ], //? Insert betslip information into the database
+                )
+            })
+            .then((data) => {
+                console.log(`storing into activebets`)
+                return t.none(
+                    `INSERT INTO activebets (betid, userid, teamid) VALUES ($1, $2, $3)`,
+                    [betslip.betid, betslip.userid, betslip.teamid], //? Insert betslip information into the database
+                )
+            })
+            .then(() => {
+                Log.Green(`[addNewBet.js] Successfully added bet to betslips table`)
+                var embedcontent = {
+                    //? Compiling the properties of the embed to return to the user: confirming their bet has been added to DB
+                    title: `Bet #${betslip.betid} Slip Confirmed`,
+                    description:
+                        'Congratulations! Your bet has been placed! You may view your active bets by typing ```?mybets```',
+                    color: '#00FF00',
+                    footer: 'For more commands, type ```?help```',
+                }
+                embedReply(message, embedcontent) //? Sending the embed to the user via our embedReply function in [embedReply.js]
+            })
+            .catch((err) => {
+                Log.Error(`[addNewBet.js] Error adding bet to betslips table\n${err}`)
+            })
+    })
 }

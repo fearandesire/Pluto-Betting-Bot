@@ -112,3 +112,4 @@ dist
 # JSDOC outfile
 .out/**/*
 .out/
+commands/notes.md
