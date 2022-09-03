@@ -5,6 +5,7 @@ import { QuickError } from '../utils/bot_res/send_functions/embedReply.js'
 import async from 'async'
 import { insufficientFunds } from '../utils/cmd_res/insufficientFunds.js'
 import { processTrans } from '../utils/cmd_res/processTrans.js'
+import { resolveTeam } from '#cmdUtil/resolveTeam'
 import { setupBet } from '../utils/cmd_res/setupBet.js'
 import { validateUser } from '../utils/cmd_res/validateExistingUser.js'
 import { verifyDupBet } from '../utils/cmd_res/verifyDuplicateBet.js'
@@ -25,7 +26,13 @@ export class placebet extends Command {
         var betAmount = await args.pick('number').catch(() => null)
         var betOnTeam = await args.rest('string').catch(() => null)
         if (!betOnTeam) {
+            //# null input
             QuickError(message, 'Please enter a team or match id')
+        }
+        betOnTeam = await resolveTeam(betOnTeam)
+        if (!betOnTeam) {
+            //# failure to match team
+            QuickError(message, 'Please enter a valid team or match id')
         }
         var user = message.author.id //? user id
         await Log.Yellow(

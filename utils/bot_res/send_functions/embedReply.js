@@ -15,8 +15,8 @@ import { helpfooter } from './../../../lib/PlutoConfig.js'
 
 export function embedReply(message, embedcontent) {
     var embedColor = embedcontent?.color ?? '#e0ff19'
-    var embedTitle = embedcontent?.title ?? 'no title'
-    var embedDescription = embedcontent?.description ?? 'no description'
+    var embedTitle = embedcontent?.title ?? ''
+    var embedDescription = embedcontent?.description ?? ''
     var embedFields = embedcontent?.fields
     var embedFooter = embedcontent?.footer ?? defaultFooter
     var hasFields = embedFields ?? false

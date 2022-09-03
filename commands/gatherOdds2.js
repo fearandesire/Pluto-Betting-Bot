@@ -23,7 +23,8 @@ const options = {
     method: 'GET',
     headers: {
         'X-RapidAPI-Host': 'api.the-odds-api.com',
-        'X-RapidAPI-Key': 'd5dcd70f44241e623b2c18a9b84a9941',
+        // eslint-disable-next-line no-undef
+        'X-RapidAPI-Key': process.env.odds_API_XKEY2,
     },
 }
 //TODO: Adjust API to in-season sport
@@ -81,13 +82,14 @@ export class nflodds extends Command {
                     home_odds = 'n/a'
                     away_odds = 'n/a'
                 }
+                let matchupId = await assignMatchID()
                 matchups[key] = {
                     [`home_team`]: home_team,
                     [`away_team`]: away_team,
                     [`home_teamOdds`]: home_odds,
                     [`away_teamOdds`]: away_odds,
+                    [`matchupId`]: matchupId,
                 }
-                let matchupId = await assignMatchID()
                 console.log(matchupId)
                 await matchupscreate(
                     message,

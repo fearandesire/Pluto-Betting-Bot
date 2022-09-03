@@ -26,7 +26,8 @@
         "#api/*": "./utils/api/*.js",
         "#utilDB/*": "./utils/db/*.js",
         "#lib/*": "./lib/*.js",
-        "#cmdUtil/*": "./utils/cmd_res/*.js"
+        "#cmdUtil/*": "./utils/cmd_res/*.js",
+        "#config": "./lib/PlutoConfig.js"
     },
     "type": "module",
     "author": "",

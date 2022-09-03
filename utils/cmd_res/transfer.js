@@ -11,19 +11,19 @@ import { db } from '../../Database/dbindex.js'
 //import { updateclaim } from './addClaimTime.js';
 
 export async function transferbalance(message, inputuserid, transferammount) {
-	Log.Yellow(`[transfer.js] Running transfer!`)
+    Log.Yellow(`[transfer.js] Running transfer!`)
 
-	db.tx('processClaim-Transaction', async (t) => {
-		const findUser = await t.oneOrNone(
-			'SELECT * FROM currency WHERE userid = $1',
-			[inputuserid],
-		)
-		var currentBalance = findUser.balance
-		var updatebalance = parseInt(currentBalance) + parseInt(transferammount)
-		message.reply(`User has been sent ${transferammount} credits.`)
-		return t.any(
-			'UPDATE currency SET balance = $1 WHERE userid = $2 RETURNING *',
-			[updatebalance, inputuserid],
-		)
-	})
+    db.tx('processClaim-Transaction', async (t) => {
+        const findUser = await t.oneOrNone(
+            'SELECT * FROM currency WHERE userid = $1',
+            [inputuserid],
+        )
+        var currentBalance = findUser.balance
+        var updatebalance = parseInt(currentBalance) + parseInt(transferammount)
+        message.reply(`<@${inputuserid}> has been sent ${transferammount} credits.`)
+        return t.any(
+            'UPDATE currency SET balance = $1 WHERE userid = $2 RETURNING *',
+            [updatebalance, inputuserid],
+        )
+    })
 }

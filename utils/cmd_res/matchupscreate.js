@@ -31,7 +31,7 @@ export async function matchupscreate(
         .then((output) => {
             var matchupEmbedObj = {
                 title: 'Matchup Created',
-                description: `**__Matchup Details__**\n__Matchup ID:__ **${assignMatchupIds}**\n\n**__Teams - Odds__**\n__Home Team:__ **__${teamone}__** - *${teamoneodds}*\n__Away Team:__ **__${teamtwo}__** - *${teamtwoodds}*`,
+                description: `**__Matchup Details__**\n__Matchup ID:__ **${assignMatchupIds}**\n\n**__Teams @ Odds__**\n__Home Team:__ **__${teamone}__** @ *${teamoneodds}*\n__Away Team:__ **__${teamtwo}__** - *${teamtwoodds}*`,
                 color: 'GREEN',
             }
             embedReply(message, matchupEmbedObj)
