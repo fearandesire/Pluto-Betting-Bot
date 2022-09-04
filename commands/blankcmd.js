@@ -19,16 +19,13 @@ export class testCMD extends Command {
     }
     async messageRun(message, args) {
         var input = await args.rest('string').catch(() => null)
-        var firstTeam = input
         var findT = await resolveTeam(input)
         let oppTeam = ''
         await findOpponent(message, findT).then((data) => {
-            console.log(data)
             Log.Yellow(`[findOpponent.js] Located matching row`)
-            //console.log(`${key}: ${value}`)
-            if (data.teamone === firstTeam) {
+            if (data.teamone === findT) {
                 oppTeam = data.teamtwo
-            } else if (data.teamtwo === firstTeam) {
+            } else if (data.teamtwo === findT) {
                 oppTeam = data.teamone
             }
         })

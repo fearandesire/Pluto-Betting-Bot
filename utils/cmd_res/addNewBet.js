@@ -1,6 +1,7 @@
 import { FileRunning } from '../bot_res/classes/FileRunning.js'
 import { Log } from '../bot_res/send_functions/consoleLog.js'
 import { TodaysDate } from './TodaysDate.js'
+import { container } from '#config'
 import { db } from '../../Database/dbindex.js'
 import { embedReply } from '../bot_res/send_functions/embedReply.js'
 
@@ -22,7 +23,7 @@ export function addNewBet(message, betslip) {
     new FileRunning('addNewBet')
     /*
     Querying DB using db.tx since we are handling multiple transactions
-    First query: Selecting the 'matchid' from the database as this information isn't privy to the user, but is required for us to store the betslip information in the DB.
+    First query: Selecting the 'matchid' as its required for us to store the betslip information in the DB.
     */
     db.tx('createNewBet', (t) => {
         return t
@@ -32,28 +33,40 @@ export function addNewBet(message, betslip) {
                 [betslip.teamid],
             )
             .then((data) => {
+                console.log(data)
+                console.log(betslip)
+                console.log(`--`)
+                container.temp_matchId = data.matchid
                 return t.none(
-                    `INSERT INTO betslips (userid, teamid, betid, amount, matchid, hasactivebet, dateofbet) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+                    `INSERT INTO betslips (userid, teamid, betid, amount, matchid, dateofbet) VALUES ($1, $2, $3, $4, $5, $6)`,
                     [
                         betslip.userid,
                         betslip.teamid,
                         betslip.betid,
                         betslip.amount,
                         data.matchid,
-                        'valid',
                         TodaysDate(),
                     ], //? Insert betslip information into the database
                 )
             })
             .then((data) => {
+                console.log(data)
+                console.log(betslip)
+                console.log(`--`)
                 console.log(`storing into activebets`)
+
                 return t.none(
-                    `INSERT INTO activebets (betid, userid, teamid) VALUES ($1, $2, $3)`,
-                    [betslip.betid, betslip.userid, betslip.teamid], //? Insert betslip information into the database
+                    `INSERT INTO activebets (betid, userid, teamid, matchid) VALUES ($1, $2, $3, $4)`,
+                    [
+                        betslip.betid,
+                        betslip.userid,
+                        betslip.teamid,
+                        container.temp_matchId,
+                    ], //? Insert betslip information into the database
                 )
             })
             .then(() => {
-                Log.Green(`[addNewBet.js] Successfully added bet to betslips table`)
+                Log.Green(`[addNewBet.js] Successfully added bet to activebets table`)
                 var embedcontent = {
                     //? Compiling the properties of the embed to return to the user: confirming their bet has been added to DB
                     title: `Bet #${betslip.betid} Slip Confirmed`,
@@ -65,7 +78,7 @@ export function addNewBet(message, betslip) {
                 embedReply(message, embedcontent) //? Sending the embed to the user via our embedReply function in [embedReply.js]
             })
             .catch((err) => {
-                Log.Error(`[addNewBet.js] Error adding bet to betslips table\n${err}`)
+                Log.Error(`[addNewBet.js] Error adding bet to activebets table\n${err}`)
             })
     })
 }
