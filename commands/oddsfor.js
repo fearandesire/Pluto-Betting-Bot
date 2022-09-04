@@ -35,7 +35,7 @@ export class oddsfor extends Command {
             QuickError(message, 'No odds available')
             return
         }
-        _.forEach(matchupCache, (matches, key) => {
+        _.forEach(matchupCache, (matches) => {
             console.log(matches)
             if (matches.home_team === teamName || matches.away_team === teamName) {
                 var hTome = matches.home_team

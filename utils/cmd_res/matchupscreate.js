@@ -28,7 +28,7 @@ export async function matchupscreate(
         `INSERT INTO activematchups (matchid, teamone, teamtwo, teamoneodds, teamtwoodds) VALUES ($1, $2, $3, $4, $5)`,
         [assignMatchupIds, teamone, teamtwo, teamoneodds, teamtwoodds],
     )
-        .then((output) => {
+        .then(() => {
             var matchupEmbedObj = {
                 title: 'Matchup Created',
                 description: `**__Matchup Details__**\n__Matchup ID:__ **${assignMatchupIds}**\n\n**__Teams @ Odds__**\n__Home Team:__ **__${teamone}__** @ *${teamoneodds}*\n__Away Team:__ **__${teamtwo}__** - *${teamtwoodds}*`,

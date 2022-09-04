@@ -1,5 +1,5 @@
 import { container } from '@sapphire/pieces'
-import { db } from '../../Database/dbindex.js'
+import { db } from '#db'
 
 export function leaderboard(message) {
     container.memory_balance = {}

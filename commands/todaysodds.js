@@ -1,6 +1,6 @@
 import 'dotenv/config'
 
-import { Log, _, embedReply, flatcache } from '#config'
+import { Log, QuickError, _, embedReply, flatcache } from '#config'
 
 import { Command } from '@sapphire/framework'
 
@@ -18,9 +18,13 @@ export class todaysodds extends Command {
     async messageRun(message) {
         Log.Yellow(`[todaysodds.js] Running todaysodds.js!`)
         let oddsCache = flatcache.create(`oddsCache.json`, './cache/todaysOdds')
-        var matchupOdds = oddsCache.getKey(`matchups`)
+        var matchupCache = oddsCache.getKey(`matchups`)
+        if (!matchupCache || Object.keys(matchupCache).length === 0) {
+            QuickError(message, 'No odds available to view.')
+            return
+        }
         var oddsFields = []
-        await _.forEach(matchupOdds, (matchFound) => {
+        await _.forEach(matchupCache, (matchFound) => {
             var hTeam = matchFound.home_team
             var aTeam = matchFound.away_team
             var hOdds = matchFound.home_teamOdds

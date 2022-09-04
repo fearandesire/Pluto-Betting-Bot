@@ -1,8 +1,8 @@
 //? Delete bet from array
 
 import {
-	QuickError,
-	embedReply,
+    QuickError,
+    embedReply,
 } from '../../bot_res/send_functions/embedReply.js'
 
 import { Log } from '../../bot_res/send_functions/consoleLog.js'
@@ -37,60 +37,61 @@ import { storage } from '../../../lib/PlutoConfig.js'
  * {@link cancelBet}
  * {@link }
  */
+
 //todo: add in Lodash .findIndex
 export async function deleteBetFromArray(userid, betid, message) {
-	await storage.init()
-	try {
-		//todo: change betslipArray to call from local storage
-		//var betslipArray = Memory_Betslips[`${userid}`].betslip
-		//? Get the betslip array from local storage linked to the user via their ID
-		var betslipArray = await storage.get(`${userid}-activeBetslips`)
-		//? Setting up a variable to hold the betslip Array we retrieve from local storage
-		var MemoryArray = []
-		MemoryArray.push(betslipArray)
-		//? Find Index of the specified bet in the betslip array so we can remove it
-		const betIndex = _.findIndex(MemoryArray[0], {
-			// prettier-ignore
-			'value': `${betid}`,
-		})
-		//? To verify our data is correct, logging the index of the bet and the 'MemoryArray'
-		Log.Yellow(`[deleteBetArr.js] Index of Bet ${betid} in Array: ${betIndex}`)
-		Log.Yellow(`[deleteBetArr.js] MemoryArray: ${JSON.stringify(MemoryArray)}`)
-		//? I forgot why I put this into an arrow function, but:
-		//? We flatten the 'MemoryArray' as we have no further use for the data being nested
-		var updateArray = async (userid, betslipArray, betIndex, MemoryArray) => {
-			var flat = _.flatten(MemoryArray)
-			//? Using the index of the bet ID, we will remove all related data from the array. We utilize Lodash's .pullAt function to remove them while keeping the array in tact.
-			var pulled = await _.pullAt(flat, [betIndex, betIndex + 1, betIndex + 2])
-			var storeBetLocally = await storage.set(`${userid}-activeBetslips`, flat)
-			await Log.BrightBlue(
-				`[deleteBetArr.js] Flattened Array:` +
-					JSON.stringify(flat) +
-					`\n` +
-					`[deleteBetArr.js] Pulled Array:` +
-					JSON.stringify(pulled),
-			)
-		}
-		updateArray(userid, betslipArray, betIndex, MemoryArray)
-		Log.Yellow(
-			`[deleteBetFromArray.js] Collected Betslip for ${userid}` +
-				`\n` +
-				JSON.stringify(betslipArray),
-		)
-		Log.Green(
-			`[deleteBetArr.js] Successfully deleted bet #${betid} from Local Storage Betslips array for ${userid}`,
-		)
-		var embedcontents = {
-			title: `Bet Cancellation`,
-			description: `Successfully deleted bet #${betid} from your betslip`,
-			color: 'GREEN',
-		}
-		embedReply(message, embedcontents)
-	} catch (err) {
-		QuickError(message, `Unable to locate bet #${betid}`)
-		Log.Red(err)
-		throw Log.Error(
-			`[deleteBetFromArray.js] Error: Unable to locate bet #${betid} for deletion. -- requested by: ${userid}\n${err}`,
-		)
-	}
+    await storage.init()
+    try {
+        //todo: change betslipArray to call from local storage
+        //var betslipArray = Memory_Betslips[`${userid}`].betslip
+        //? Get the betslip array from local storage linked to the user via their ID
+        var betslipArray = await storage.get(`${userid}-activeBetslips`)
+        //? Setting up a variable to hold the betslip Array we retrieve from local storage
+        var MemoryArray = []
+        MemoryArray.push(betslipArray)
+        //? Find Index of the specified bet in the betslip array so we can remove it
+        const betIndex = _.findIndex(MemoryArray[0], {
+            // prettier-ignore
+            'value': `${betid}`,
+        })
+        //? To verify our data is correct, logging the index of the bet and the 'MemoryArray'
+        Log.Yellow(`[deleteBetArr.js] Index of Bet ${betid} in Array: ${betIndex}`)
+        Log.Yellow(`[deleteBetArr.js] MemoryArray: ${JSON.stringify(MemoryArray)}`)
+        //? I forgot why I put this into an arrow function, but:
+        //? We flatten the 'MemoryArray' as we have no further use for the data being nested
+        var updateArray = async (userid, betslipArray, betIndex, MemoryArray) => {
+            var flat = _.flatten(MemoryArray)
+            //? Using the index of the bet ID, we will remove all related data from the array. We utilize Lodash's .pullAt function to remove them while keeping the array in tact.
+            var pulled = await _.pullAt(flat, [betIndex, betIndex + 1, betIndex + 2])
+            var storeBetLocally = await storage.set(`${userid}-activeBetslips`, flat)
+            await Log.BrightBlue(
+                `[deleteBetArr.js] Flattened Array:` +
+                    JSON.stringify(flat) +
+                    `\n` +
+                    `[deleteBetArr.js] Pulled Array:` +
+                    JSON.stringify(pulled),
+            )
+        }
+        updateArray(userid, betslipArray, betIndex, MemoryArray)
+        Log.Yellow(
+            `[deleteBetFromArray.js] Collected Betslip for ${userid}` +
+                `\n` +
+                JSON.stringify(betslipArray),
+        )
+        Log.Green(
+            `[deleteBetArr.js] Successfully deleted bet #${betid} from Local Storage Betslips array for ${userid}`,
+        )
+        var embedcontents = {
+            title: `Bet Cancellation`,
+            description: `Successfully deleted bet #${betid} from your betslip`,
+            color: 'GREEN',
+        }
+        embedReply(message, embedcontents)
+    } catch (err) {
+        QuickError(message, `Unable to locate bet #${betid}`)
+        Log.Red(err)
+        throw Log.Error(
+            `[deleteBetFromArray.js] Error: Unable to locate bet #${betid} for deletion. -- requested by: ${userid}\n${err}`,
+        )
+    }
 }
