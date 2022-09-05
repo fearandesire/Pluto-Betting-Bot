@@ -56,12 +56,13 @@ export function addNewBet(message, betslip) {
                 console.log(`storing into activebets`)
 
                 return t.none(
-                    `INSERT INTO activebets (betid, userid, teamid, matchid) VALUES ($1, $2, $3, $4)`,
+                    `INSERT INTO activebets (betid, userid, teamid, matchid, amount) VALUES ($1, $2, $3, $4, $5)`,
                     [
                         betslip.betid,
                         betslip.userid,
                         betslip.teamid,
                         container.temp_matchId,
+                        betslip.amount,
                     ], //? Insert betslip information into the database
                 )
             })

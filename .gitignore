@@ -114,3 +114,5 @@ dist
 .out/
 commands/notes.md
 cache/todaysOdds/oddsCache.json
+commands/blankcmd2.js
+commands/blankcmd.js
