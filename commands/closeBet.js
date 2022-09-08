@@ -1,4 +1,9 @@
+//? cmd for quick testing of functions
+
 import { Command } from '@sapphire/framework'
+import { QuickError } from '#config'
+
+//import { sortCancelBet } from '../utils/cmd_res/CancelBet/sortCancelBet.js'
 
 export class closeBet extends Command {
     constructor(context, options) {
@@ -6,11 +11,17 @@ export class closeBet extends Command {
             ...options,
             name: 'closeBet',
             aliases: [''],
-            description: 'Close a specific bet event',
+            description:
+                'Close a matchup via the match ID, payout the winners & update the database accordingly.',
             requiredUserPermissions: ['KICK_MEMBERS'],
         })
     }
     async messageRun(message, args) {
-        var input = await args.pick('string').catch(() => null)
+        let matchId = await args.pick('number').catch(() => null)
+        let teamThatWon = await args.rest('string').catch(() => null)
+        if (!matchId || !teamThatWon) {
+            QuickError(message, `Please provide a match ID and the team that won.`)
+            return
+        }
     }
 }

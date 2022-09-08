@@ -1,7 +1,6 @@
 ---
-noteId: "b7e6a0a02b0111eda4b07961458fe194"
+noteId: 'b7e6a0a02b0111eda4b07961458fe194'
 tags: []
-
 ---
 
 [x] Create function to allow team names nicknames? (possibly) post_beta
@@ -13,5 +12,3 @@ tags: []
 [ ] Leaderboard sorting (TBD) - post_beta
 
 [ ] Retract All (cancel all active bets) - post_beta
-
-[ ]

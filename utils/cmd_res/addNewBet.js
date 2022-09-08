@@ -38,7 +38,7 @@ export function addNewBet(message, betslip) {
                 console.log(`--`)
                 container.temp_matchId = data.matchid
                 return t.none(
-                    `INSERT INTO betslips (userid, teamid, betid, amount, matchid, dateofbet) VALUES ($1, $2, $3, $4, $5, $6)`,
+                    `INSERT INTO betslips (userid, teamid, betid, amount, matchid, dateofbet, betresult) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
                     [
                         betslip.userid,
                         betslip.teamid,
@@ -46,6 +46,7 @@ export function addNewBet(message, betslip) {
                         betslip.amount,
                         data.matchid,
                         TodaysDate(),
+                        'pending',
                     ], //? Insert betslip information into the database
                 )
             })

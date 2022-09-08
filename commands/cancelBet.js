@@ -36,7 +36,7 @@ export class cancelBet extends Command {
         var betid = await args.pick('number').catch(() => null)
         var userid = message.author.id
         await verifyBetAuthor(message, userid, betid) //? Verify the bet belongs to the user
-        await QueryBets(userid, betid) //? Query DB & delete specified bet
-        await deleteBetFromArray(userid, betid, message) //? Update our local storage with the new betslip for the user (for displaying bet info to user)
+        await QueryBets(message, userid, betid) //? Query DB & delete specified bet
+        await deleteBetFromArray(message, userid, betid) //? Update our local storage with the new betslip for the user (for displaying bet info to user)
     }
 }

@@ -5,12 +5,12 @@ import 'dotenv/config'
 
 import { Command, container } from '@sapphire/framework'
 
-import { Log } from '../utils/bot_res/send_functions/consoleLog.js'
 import _ from 'lodash'
 import { assignMatchID } from '../utils/bot_res/AssignIDs.js'
+import { createMatchups } from '../utils/cmd_res/createMatchups.js'
 import fetch from 'node-fetch'
 import flatcache from 'flat-cache'
-import { matchupscreate } from '../utils/cmd_res/matchupscreate.js'
+import { gatherOddsLog } from '../utils/logging.js'
 import { verifyDate } from '#api/verifyDate'
 
 let oddsCache = flatcache.create(`oddsCache.json`, './cache/todaysOdds')
@@ -44,6 +44,7 @@ export class nflodds extends Command {
     async messageRun(message) {
         let matchups = {} //# to store matchups into cache
         container.allNflOdds = {}
+        container.err = 1
         //* for caching and sending the cache
         // if (container.CollectedOdds === true) {
         //     SendMatchupList(message, container.MatchupList)
@@ -53,13 +54,14 @@ export class nflodds extends Command {
         await fetch(url, options)
             .then((res) => res.json())
             .then((json) => {
-                Log.Yellow(`[gatherOdds.js] Running gatherOdds.js!`)
+                gatherOddsLog.info(
+                    `Initializing API Call for gathering NFL odds information`,
+                )
                 //? Returns the list of matchups
                 var apiGamesList = json
                 container.allNflOdds = apiGamesList
             })
         var allNflOdds = container.allNflOdds
-        //console.log(allNflOdds)
         container.matchupCount = 0
         await _.forEach(allNflOdds, async function (value, key) {
             //TODO: Remove today's date being 9-11 before going into Production
@@ -72,6 +74,7 @@ export class nflodds extends Command {
                 let away_odds
                 var home_team = value.home_team
                 var away_team = value.away_team
+                let matchupId = await assignMatchID()
                 var selectedOdds = value?.bookmakers[0]?.markets[0].outcomes
                     ? value.bookmakers[0]?.markets[0].outcomes
                     : null
@@ -82,7 +85,7 @@ export class nflodds extends Command {
                     home_odds = 'n/a'
                     away_odds = 'n/a'
                 }
-                let matchupId = await assignMatchID()
+
                 matchups[key] = {
                     [`home_team`]: home_team,
                     [`away_team`]: away_team,
@@ -90,8 +93,7 @@ export class nflodds extends Command {
                     [`away_teamOdds`]: away_odds,
                     [`matchupId`]: matchupId,
                 }
-                console.log(matchupId)
-                await matchupscreate(
+                await createMatchups(
                     message,
                     home_team,
                     away_team,
@@ -99,13 +101,24 @@ export class nflodds extends Command {
                     away_odds,
                     matchupId,
                 )
+
+                // end of map
             }
-            // end of map
         })
-        console.log(matchups)
+
+        gatherOddsLog.info(
+            `Matchups Stored into Cache (# Of Matches ${container.matchupCount}):`,
+        )
+        if (_.isEmpty(matchups)) {
+            message.reply(`Error occured while collecting & storing matchups.`)
+            return
+        }
+        gatherOddsLog.info(JSON.stringify(matchups))
         oddsCache.setKey(`matchups`, matchups)
         oddsCache.save(true)
-        message.reply(`Odds stored into cache & db. (${container.matchupCount})`)
+        message.reply(
+            `Odds stored into cache & db. (# Of Matches: ${container.matchupCount})`,
+        )
         //container.CollectedOdds = true
     }
 }

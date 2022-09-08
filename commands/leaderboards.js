@@ -12,6 +12,6 @@ export class leaderboarding extends Command {
 		})
 	}
 	async messageRun(message) {
-		leaderboard(message)
+		await leaderboard(message)
 	}
 }
