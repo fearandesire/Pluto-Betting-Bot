@@ -1,9 +1,9 @@
 import { Command } from '@sapphire/framework'
+import { storage } from '../lib/PlutoConfig.js'
 import { FileRunning } from '../utils/bot_res/classes/FileRunning.js'
 import { Log } from '../utils/bot_res/send_functions/consoleLog.js'
-import { QueryBets } from '../utils/cmd_res/CancelBet/queryBets.js'
 import { deleteBetFromArray } from '../utils/cmd_res/CancelBet/deleteBetArr.js'
-import { storage } from '../lib/PlutoConfig.js'
+import { QueryBets } from '../utils/cmd_res/CancelBet/queryBets.js'
 import { verifyBetAuthor } from '../utils/cmd_res/CancelBet/verifyBetAuthor.js'
 
 /**
@@ -20,23 +20,22 @@ import { verifyBetAuthor } from '../utils/cmd_res/CancelBet/verifyBetAuthor.js'
 //TODO: error catch betid for null argument;
 //TODO: update currency when the bet is cancelled (within QueryBets)
 export class cancelBet extends Command {
-    constructor(context, options) {
-        super(context, {
-            ...options,
-            name: 'cancelbet',
-            aliases: ['cbet', 'cancel'],
-            description: 'Cancel a specified bet.',
-            requiredUserPermissions: ['KICK_MEMBERS'],
-        })
-    }
-    async messageRun(message, args) {
-        new FileRunning(this.name) //? Log file running
-        storage.init()
-        Log.Border
-        var betid = await args.pick('number').catch(() => null)
-        var userid = message.author.id
-        await verifyBetAuthor(message, userid, betid) //? Verify the bet belongs to the user
-        await QueryBets(message, userid, betid) //? Query DB & delete specified bet
-        await deleteBetFromArray(message, userid, betid) //? Update our local storage with the new betslip for the user (for displaying bet info to user)
-    }
+	constructor(context, options) {
+		super(context, {
+			...options,
+			name: 'cancelbet',
+			aliases: ['cbet', 'cancel'],
+			description: 'Cancel a specified bet.',
+		})
+	}
+	async messageRun(message, args) {
+		new FileRunning(this.name) //? Log file running
+		storage.init()
+		Log.Border
+		var betid = await args.pick('number').catch(() => null)
+		var userid = message.author.id
+		await verifyBetAuthor(message, userid, betid) //? Verify the bet belongs to the user
+		await QueryBets(message, userid, betid) //? Query DB & delete specified bet
+		await deleteBetFromArray(message, userid, betid) //? Update our local storage with the new betslip for the user (for displaying bet info to user)
+	}
 }

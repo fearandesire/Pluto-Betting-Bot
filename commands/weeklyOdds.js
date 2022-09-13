@@ -3,6 +3,7 @@ import 'dotenv/config'
 import { embedReply, flatcache, Log, QuickError, _ } from '#config'
 
 import { Command } from '@sapphire/framework'
+import { formatOdds } from '../utils/bot_res/formatOdds.js'
 
 export class weeklyOdds extends Command {
 	constructor(context, options) {
@@ -18,33 +19,36 @@ export class weeklyOdds extends Command {
 				'weekly',
 			],
 			description: 'Returns all odds stored.',
-			requiredUserPermissions: ['KICK_MEMBERS'],
 		})
 	}
 
 	async messageRun(message) {
-		Log.Yellow(`[todaysodds.js] Running todaysodds.js!`)
-		let oddsCache = flatcache.create(`oddsCache.json`, './cache/todaysOdds')
+		Log.Yellow(`[todaysodds.js] Running weeklyOdds.js!`)
+		let oddsCache = flatcache.create(`oddsCache.json`, './cache/weeklyOdds')
 		var matchupCache = oddsCache.getKey(`matchups`)
 		if (!matchupCache || Object.keys(matchupCache).length === 0) {
 			QuickError(message, 'No odds available to view.')
 			return
 		}
 		var oddsFields = []
-		await _.forEach(matchupCache, (matchFound) => {
+		await _.forEach(matchupCache, async (matchFound) => {
 			var hTeam = matchFound.home_team
 			var aTeam = matchFound.away_team
 			var hOdds = matchFound.home_teamOdds
 			var aOdds = matchFound.away_teamOdds
 			var matchupId = matchFound.matchupId
+			var dateTitle = matchFound.dateView
+			let oddsFormat = await formatOdds(hOdds, aOdds)
+			hOdds = oddsFormat.homeOdds
+			aOdds = oddsFormat.awayOdds
 			oddsFields.push({
-				name: `Matchup #${matchupId}`,
-				value: `Home Team:\n**${hTeam}**\nOdds: *${hOdds}*\nAway Team:\n**${aTeam}**\nOdds: *${aOdds}*`,
+				name: `${dateTitle}`,
+				value: `**${hTeam}**\nOdds: *${hOdds}*\n**${aTeam}**\nOdds: *${aOdds}*`,
 				inline: true,
 			})
 		})
 		var embedObj = {
-			title: `Today's H2H Odds`,
+			title: `Weekly H2H Odds`,
 			fields: oddsFields,
 			footer:
 				'Favored teams have a - negative number | Pluto - Designed by FENIX#7559',

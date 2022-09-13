@@ -1,20 +1,20 @@
-import _ from 'lodash'
-import { checkCompletedLog } from '../logging.js'
 import { container } from '#config'
+import _ from 'lodash'
 import fetch from 'node-fetch'
-import { findMatchup } from '#utilDB/findMatchup'
+import { resovleMatchup } from '../cache/resolveMatchup.js'
 import { initCloseBets } from '../closeBets/initCloseBets.js'
+import { checkCompletedLog } from '../logging.js'
 
 const url =
-    // eslint-disable-next-line no-undef
-    process.env.odds_API_NFLSCORE
+	// eslint-disable-next-line no-undef
+	process.env.odds_API_NFLSCORE
 const options = {
-    method: 'GET',
-    headers: {
-        'X-RapidAPI-Host': 'api.the-odds-api.com',
-        // eslint-disable-next-line no-undef
-        'X-RapidAPI-Key': process.env.odds_API_XKEY2,
-    },
+	method: 'GET',
+	headers: {
+		'X-RapidAPI-Host': 'api.the-odds-api.com',
+		// eslint-disable-next-line no-undef
+		'X-RapidAPI-Key': process.env.odds_API_XKEY2,
+	},
 }
 
 /* 
@@ -53,48 +53,52 @@ const options = {
  */
 
 export async function checkCompleted() {
-    checkCompletedLog.info(`Initilization API Call for completed games`)
-    await fetch(url, options)
-        .then((res) => res.json())
-        .then((json) => {
-            checkCompletedLog.info(`API Connection successful`)
-            var apiCompletedResult = json
-            container.apiCompResult = apiCompletedResult
-        })
-    var compResults = container.apiCompResult
-    await _.forEach(compResults, async function (value, key) {
-        if (value.completed === true) {
-            checkCompletedLog.info(
-                `Completed Game Found: ${value.home_team} vs ${value.away_team}`,
-            )
-            //#retrieve matchId with the team's found
-            var dbMatchId = await findMatchup(value.home_team)
-            if (!dbMatchId) {
-                checkCompletedLog.info(
-                    `Unable to find a matchup ID for ${value.home_team}`,
-                )
-                return
-            }
-            dbMatchId = Number(dbMatchId)
-            checkCompletedLog.info(
-                `MatchId Found: ${dbMatchId} - ${value.home_team} vs ${value.away_team}`,
-            )
-            //# determine winner based on the scores
-            var homeScore = value.scores[0].score
-            var awayScore = value.scores[1].score
-            var winner = ''
-            if (homeScore > awayScore) {
-                winner = value.home_team
-                checkCompletedLog.info(`Winner: - Home Team: ${winner} - ${homeScore}`)
-            } else if (homeScore < awayScore) {
-                winner = value.away_team
-                checkCompletedLog.info(`Winner: - Away Team: ${winner} - ${awayScore}`)
-            }
-            //# init the closeBets opeeration
-            var message = null
-            await initCloseBets(message, dbMatchId, winner)
-        } else {
-            checkCompletedLog.info(`Skipped game as it was not completed yet.`)
-        }
-    })
+	checkCompletedLog.info(`Initilization API Call for completed games`)
+	await fetch(url, options)
+		.then((res) => res.json())
+		.then((json) => {
+			checkCompletedLog.info(`API Connection successful`)
+			var apiCompletedResult = json
+			container.apiCompResult = apiCompletedResult
+		})
+	var compResults = container.apiCompResult
+	await _.forEach(compResults, async function (value, key) {
+		if (value.completed === true) {
+			checkCompletedLog.info(
+				`Completed Game Found: ${value.home_team} vs ${value.away_team}`,
+			)
+			//#retrieve matchId with the team's found
+			var hTeam = value.home_team
+			var aTeam = value.away_team
+			var dbMatchId = (await resovleMatchup(hTeam).matchupId)
+				? await resovleMatchup(hTeam).matchupId
+				: await resovleMatchup(aTeam).matchupId
+			if (!dbMatchId) {
+				checkCompletedLog.info(
+					`Unable to find a matchup ID for ${value.home_team}`,
+				)
+				return
+			}
+			dbMatchId = Number(dbMatchId)
+			checkCompletedLog.info(
+				`MatchId Found: ${dbMatchId} - ${value.home_team} vs ${value.away_team}`,
+			)
+			//# determine winner based on the scores
+			var homeScore = value.scores[0].score
+			var awayScore = value.scores[1].score
+			var winner = ''
+			if (homeScore > awayScore) {
+				winner = value.home_team
+				checkCompletedLog.info(`Winner: - Home Team: ${winner} - ${homeScore}`)
+			} else if (homeScore < awayScore) {
+				winner = value.away_team
+				checkCompletedLog.info(`Winner: - Away Team: ${winner} - ${awayScore}`)
+			}
+			//# init the closeBets opeeration
+			var message = null
+			await initCloseBets(message, dbMatchId, winner)
+		} else {
+			checkCompletedLog.info(`Skipped game as it was not completed yet.`)
+		}
+	})
 }

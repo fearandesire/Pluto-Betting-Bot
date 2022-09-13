@@ -1,6 +1,7 @@
-import { container } from '@sapphire/pieces'
-import { db } from '#db'
 import { embedReply } from '#config'
+import { db } from '#db'
+import { container } from '@sapphire/pieces'
+
 /**
  * Retrieve the data from the currency table in the DB - sort by the highest values to the lowest.
  * @param {Message} message - The Discord message object

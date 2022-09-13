@@ -1,4 +1,3 @@
-import { verifyDate } from '#api/verifyDate'
 import { container } from '#config'
 import flatcache from 'flat-cache'
 import _ from 'lodash'
@@ -6,14 +5,21 @@ import fetch from 'node-fetch'
 import { assignMatchID } from '../bot_res/AssignIDs.js'
 import { msgBotChan } from '../bot_res/send_functions/msgBotChan.js'
 import { createMatchups } from '../cmd_res/createMatchups.js'
+import { resolveIso } from '../date/resolveIso.js'
+import { resolveToday } from '../date/resolveToday.js'
 import { collectOddsLog } from './../logging.js'
 
-let oddsCache = flatcache.create(`oddsCache.json`, './cache/todaysOdds')
+let oddsCache = flatcache.create(`oddsCache.json`, './cache/weeklyOdds')
+
 /**
+ * @module collectOdds
  * Call the API and store the matchup odds for the week into the database & cache
  */
-export async function collectOdds() {
-	var message = null
+
+export async function collectOdds(message) {
+	if (!message) {
+		message == null
+	}
 	const url =
 		// eslint-disable-next-line no-undef
 		process.env.odds_API_NFLODDS
@@ -26,6 +32,7 @@ export async function collectOdds() {
 		},
 	}
 	let matchups = {} //# to store matchups into cache
+	let matchupCount = 0
 	container.allNflOdds = {}
 	//* for caching and sending the cache
 
@@ -40,11 +47,36 @@ export async function collectOdds() {
 	var allNflOdds = container.allNflOdds
 	container.matchupCount = 0
 	await _.forEach(allNflOdds, async function (value, key) {
-		//TODO: Remove today's date being 9-11 before going into Production
-		//* only return by specified date
-		var isoDate = value.commence_time
-		if (verifyDate(isoDate)) {
-			container.matchupCount = container.matchupCount + 1
+		//* only store games that are scheduled for this week
+		let isoDate = value.commence_time
+		let todayDateInfo = new resolveToday()
+		let weekNum = todayDateInfo.weekNum
+		let apiDateInfo = new resolveIso(isoDate)
+		let apiWeekNum = apiDateInfo.weekNum
+		var gameDay = apiDateInfo.dayNum
+		var monthNum = apiDateInfo.month
+		var gameYear = apiDateInfo.year
+		var apiDoW = apiDateInfo.dayOfWeek
+		var nextWeek = parseInt(weekNum) + 1
+		var gameDate = `${monthNum}/${gameDay}/${gameYear}`
+		console.log(
+			`Today's Week: ${weekNum} | API Week: ${apiWeekNum} | Game Day: ${apiDoW}`,
+		)
+		if (
+			weekNum === apiWeekNum ||
+			(nextWeek === apiWeekNum && apiDoW === 'Mon')
+		) {
+			container.matchupCount++
+			//# the current day and time
+			let currentDay = todayDateInfo.dayNum
+			let currentHour = todayDateInfo.hour
+			let currentMinute = todayDateInfo.minute
+			//# game start day & time
+			let apiStartDay = apiDateInfo.dayNum
+			let apiStartHour = apiDateInfo.hour
+			let apiStartMin = apiDateInfo.minute
+			let gameStartTime = `${apiStartDay}${apiStartHour}${apiStartMin}`
+			let fullStartTime = `DAY: ${apiStartDay} HOUR: ${apiStartHour} MINUTE: ${apiStartMin}`
 			matchups[key] = value
 			let home_odds
 			let away_odds
@@ -67,8 +99,16 @@ export async function collectOdds() {
 				[`home_teamOdds`]: home_odds,
 				[`away_teamOdds`]: away_odds,
 				[`matchupId`]: matchupId,
+				[`startTime`]: gameStartTime,
+				[`fulStartTime`]: fullStartTime,
+				[`dateView`]: gameDate,
+				[`dayNum`]: apiStartDay,
+				[`dayOfWeek`]: gameDay,
+				[`hour`]: apiStartHour,
+				[`minute`]: apiStartMin,
+				[`gameDayName`]: apiDoW,
 			}
-			console.log(matchupId)
+			console.log(`Matchup ID: ${matchupId}`)
 			await createMatchups(
 				message,
 				home_team,
@@ -76,6 +116,7 @@ export async function collectOdds() {
 				home_odds,
 				away_odds,
 				matchupId,
+				gameDate,
 			)
 		}
 		// end of map
@@ -92,11 +133,27 @@ export async function collectOdds() {
 	}
 
 	collectOddsLog.info(`All Matchup information collected:`)
-	collectOddsLog.info(matchups)
+	collectOddsLog.info(JSON.stringify(matchups))
 	oddsCache.setKey(`matchups`, matchups)
 	oddsCache.save(true)
 	collectOddsLog.info(
 		`Successfully gathered odds for the week.\nOdds are stored into cache & db\n# Of Matchups Stored: (${container.matchupCount})`,
 	)
+	if (message !== null) {
+		setTimeout(() => {
+			message.reply(
+				`Odds stored into cache & db. (# Of Matches: ${container.matchupCount})`,
+			)
+		}, 6500)
+		return
+	}
+	if (message == null) {
+		setTimeout(() => {
+			msgBotChan(
+				`Odds stored into cache & db. (# Of Matches: ${container.matchupCount})`,
+			)
+		}, 6500)
+		return
+	}
 	//container.CollectedOdds = true
 }

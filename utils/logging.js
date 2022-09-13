@@ -369,3 +369,43 @@ export const completedReqLog = winston.createLogger({
 		new winston.transports.File({ filename: 'logs/completedReq.log' }),
 	],
 })
+export const resolveMatchupLog = winston.createLogger({
+	level: 'info',
+	format: winston.format.combine(
+		winston.format.colorize(),
+		splat(),
+		winston.format.prettyPrint({
+			colorize: true,
+			depth: 5,
+		}),
+		timestamp,
+		customWinstonFormat,
+	),
+	transports: [
+		new winston.transports.File({
+			filename: 'logs/resolveMatchupErr.log',
+			level: 'error',
+		}),
+		new winston.transports.File({ filename: 'logs/resolveMatchup.log' }),
+	],
+})
+export const resolveOddsLog = winston.createLogger({
+	level: 'info',
+	format: winston.format.combine(
+		winston.format.colorize(),
+		splat(),
+		winston.format.prettyPrint({
+			colorize: true,
+			depth: 5,
+		}),
+		timestamp,
+		customWinstonFormat,
+	),
+	transports: [
+		new winston.transports.File({
+			filename: 'logs/resolveOddsErr.log',
+			level: 'error',
+		}),
+		new winston.transports.File({ filename: 'logs/resolveOdds.log' }),
+	],
+})

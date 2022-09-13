@@ -8,7 +8,6 @@ export class register extends Command {
 			name: 'register',
 			aliases: ['reg'],
 			description: 'Register a new user.',
-			requiredUserPermissions: ['KICK_MEMBERS'],
 		})
 	}
 	async messageRun(message) {

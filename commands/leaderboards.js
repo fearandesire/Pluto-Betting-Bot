@@ -8,7 +8,6 @@ export class leaderboarding extends Command {
 			name: 'leaderboard',
 			aliases: ['leaderboard'],
 			description: 'leaderboard command',
-			requiredUserPermissions: ['KICK_MEMBERS'],
 		})
 	}
 	async messageRun(message) {

@@ -2,9 +2,9 @@
 //? This can also be used to create custom matchups for fun, to test the bot, or for sports that we have not integrated for the bot yet.
 
 import { Command } from '@sapphire/framework'
+import { assignMatchID } from '../utils/bot_res/AssignIDs.js'
 import { FileRunning } from '../utils/bot_res/classes/FileRunning.js'
 import { Log } from '../utils/bot_res/send_functions/consoleLog.js'
-import { assignMatchID } from '../utils/bot_res/AssignIDs.js'
 import { createMatchups } from '../utils/cmd_res/createMatchups.js'
 
 export class creatematchup extends Command {
@@ -14,7 +14,6 @@ export class creatematchup extends Command {
 			name: 'creatematchup',
 			aliases: ['create', 'cm', 'cmatchup'],
 			description: 'Create Matchup',
-			requiredUserPermissions: ['KICK_MEMBERS'],
 		})
 	}
 	async messageRun(message, args) {

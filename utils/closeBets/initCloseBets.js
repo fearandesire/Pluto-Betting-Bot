@@ -10,7 +10,6 @@ import { msgBotChan } from '../bot_res/send_functions/msgBotChan.js'
 import { deleteBetFromArray } from '../cmd_res/CancelBet/deleteBetArr.js'
 import { initCloseBetLog } from '../logging.js'
 import { resolvePayouts } from '../payouts/resolvePayouts.js'
-import { NoDataFoundError } from './../bot_res/classes/Errors.js'
 import { closeBets } from './closeBets.js'
 
 export async function initCloseBets(message, matchId, teamThatWon) {
@@ -37,9 +36,11 @@ export async function initCloseBets(message, matchId, teamThatWon) {
 				initCloseBetLog.error(
 					`== ERROR: == \nUnable to locate bets for Match ID: ${matchId} from the Database.\n`,
 				)
-				throw new Error(
-					`\n== ERROR: == \nUnable to locate bet for Match ID: ${matchId} from the Database.\n`,
+				await msgBotChan(
+					`Unable to locate bets for Match ID: ${matchId}`,
+					`error`,
 				)
+				return
 			}
 			/* 
             # iterate through array of bets found with the matchId provided
@@ -73,12 +74,12 @@ export async function initCloseBets(message, matchId, teamThatWon) {
 				)
 			}
 		})
-		.catch(() => {
-			throw new NoDataFoundError(
-				`Unable to locate any bets for Matchup: ${matchId}`,
-				`initCloseBets.js`,
-				`true`,
+		.catch(async (error) => {
+			await msgBotChan(
+				`Unable to locate bets for Match ID: ${matchId}`,
+				`error`,
 			)
+			return
 		})
 	container.memoryCollection = pendingSlips.getKey(`Collection-${collectionId}`)
 	console.log(container.memoryCollection)
@@ -105,7 +106,7 @@ export async function initCloseBets(message, matchId, teamThatWon) {
 				await initCloseBetLog.info(
 					`User <@${userId}> lost their bet - Skipping retrieval of their matchup odds.`,
 				)
-				await closeBets(message, userId, betId, wonOrLost)
+				await closeBets(userId, betId, wonOrLost)
 				await deleteBetFromArray(message, userId, betId, silent)
 			} else {
 				await initCloseBetLog.info(

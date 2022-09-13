@@ -1,15 +1,14 @@
-import { transferbalance } from '#cmdUtil/transfer'
+import { giveBalance } from '#cmdUtil/giveBalance'
 import { QuickError } from '#config'
 import { Command } from '@sapphire/framework'
 
-export class transfer extends Command {
+export class give extends Command {
 	constructor(context, options) {
 		super(context, {
 			...options,
-			name: 'transfer',
-			aliases: ['transfer', 'give'],
+			name: 'give',
+			aliases: [``],
 			description: 'Give credits to a specified user',
-			requiredUserPermissions: ['KICK_MEMBERS'],
 		})
 	}
 	async messageRun(message, args) {
@@ -39,6 +38,6 @@ export class transfer extends Command {
 				return
 			}
 		}
-		var transferModule = await transferbalance(message, targetUser, balance)
+		await giveBalance(message, targetUser, balance)
 	}
 }

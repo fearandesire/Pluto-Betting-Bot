@@ -8,12 +8,11 @@ const require = createRequire(import.meta.url)
 
 const cron = require('cronitor')(`f9f7339479104e79bf2b52eb9c2242bf`)
 cron.wraps(require('node-cron'))
-// tuesday scheduling: `0 2 * * tue`,
 
 /** 
 @module scheduleReq 
 Per NFL Schedule - Setup API calls to gather the odds for upcoming NFL Games
-We will call for the odds per week on; Currently set to Tuesday Mornings @ 2:00 AM EST
+We will call for the odds per week; Currently set to Tuesday Mornings @ 2:00 AM EST
 */
 
 export async function scheduleReq() {

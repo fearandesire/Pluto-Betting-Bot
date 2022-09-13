@@ -5,11 +5,13 @@ import _ from 'lodash'
 import { FileRunning } from '../utils/bot_res/classes/FileRunning.js'
 import { Log } from '../utils/bot_res/send_functions/consoleLog.js'
 import { QuickError } from '../utils/bot_res/send_functions/embedReply.js'
+import { resovleMatchup } from '../utils/cache/resolveMatchup.js'
 import { insufficientFunds } from '../utils/cmd_res/insufficientFunds.js'
 import { processTrans } from '../utils/cmd_res/processTrans.js'
 import { setupBet } from '../utils/cmd_res/setupBet.js'
 import { validateUser } from '../utils/cmd_res/validateExistingUser.js'
 import { verifyDupBet } from '../utils/cmd_res/verifyDuplicateBet.js'
+import { gameActive } from '../utils/date/gameActive.js'
 
 export class placebet extends Command {
 	constructor(context, options) {
@@ -18,7 +20,6 @@ export class placebet extends Command {
 			name: 'placebet',
 			aliases: ['bet', 'pbet'],
 			description: 'Place Bet (test',
-			requiredUserPermissions: ['KICK_MEMBERS'],
 		})
 	}
 
@@ -46,6 +47,16 @@ export class placebet extends Command {
 			return
 		}
 		var user = message.author.id //? user id
+		var matchInfo = await resovleMatchup(betOnTeam)
+		var matchupId = parseInt(matchInfo.matchupId)
+		var activeCheck = await gameActive(betOnTeam)
+		if (activeCheck === true) {
+			QuickError(
+				message,
+				`This match has already started, you are unable to place a bet on active games.`,
+			)
+			return
+		}
 		await Log.Yellow(
 			`[${this.name}.js] User ${message.author.username} (${message.author.id}) is getting a bet ready!`, //? Debug purposes, this will likely be removed later. For now, it's intended to confirm the user's input
 		)
@@ -57,7 +68,7 @@ export class placebet extends Command {
 					return
 				},
 				async function verDup() {
-					await verifyDupBet(user, betOnTeam, message)
+					await verifyDupBet(message, user, matchupId)
 					return
 				},
 				async function insufFunds() {
@@ -85,6 +96,7 @@ export class placebet extends Command {
 			function (err) {
 				if (err) {
 					Log.Red(err)
+					return
 				}
 			},
 		)

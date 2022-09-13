@@ -4,16 +4,16 @@
  * @return {Array} Returns an array containing all of the active/current matchup IDs
  */
 
-import _ from 'lodash'
 import flatcache from 'flat-cache'
+import _ from 'lodash'
 
-let oddsCache = flatcache.create(`oddsCache.json`, './cache/todaysOdds')
+let oddsCache = flatcache.create(`oddsCache.json`, './cache/weeklyOdds')
 export function fetchAllMatchIds(message) {
-    let allMatchups = []
-    let allMatchupsCache = oddsCache.getKey('matchups')
-    _.forIn(allMatchupsCache, function (matchups, key) {
-        //console.log(matchups)
-        allMatchups.push(matchups.matchupId)
-    })
-    return allMatchups
+	let allMatchups = []
+	let allMatchupsCache = oddsCache.getKey('matchups')
+	_.forIn(allMatchupsCache, function (matchups, key) {
+		//console.log(matchups)
+		allMatchups.push(matchups.matchupId)
+	})
+	return allMatchups
 }
