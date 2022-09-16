@@ -1,6 +1,7 @@
 //TODO: Eliminate 'have enough credits' check as we have an official module to handle that now - verifyFunds.js
 
 import { Log } from '../bot_res/send_functions/consoleLog.js'
+import { container } from '#config'
 import { db } from '../../Database/dbindex.js'
 
 /**
@@ -16,6 +17,7 @@ import { db } from '../../Database/dbindex.js'
  * - {@link confirmBet.js} - Invoked from confirmBet.js - a function that asks the user to confirm their bet
  */
 export function sortBalance(message, userid, betamount, addOrSub) {
+    let newBalance
     if (addOrSub == 'sub') {
         //? Using DB transactions to make more than 1 query.
         db.tx('sortBalance-Transaction', async (t) => {
@@ -37,7 +39,9 @@ export function sortBalance(message, userid, betamount, addOrSub) {
                 )
                 return
             }
-            const newBalance = parseInt(currentBalance) - parseInt(betamount)
+            Log.Green(`[sortBalance.js] User ${userid} has ${currentBalance} credits`)
+            newBalance = parseInt(currentBalance) - parseInt(betamount)
+            container.newBal[`${userid}`] = newBalance
             return t.any(
                 'UPDATE currency SET balance = $1 WHERE userid = $2 RETURNING *',
                 [newBalance, userid],
@@ -46,12 +50,10 @@ export function sortBalance(message, userid, betamount, addOrSub) {
             if (data) {
                 //? Data here returns in array format, so accessing first result (and should be the only result as its 1 identity per user)
                 //? Not all pg-promise queries return an array, so be sure to check if data is an array before accessing it via pg-promise docs
-                Log.Green(
-                    `[sortBalance.js] User ${userid} has ${data[0].balance} credits`,
-                )
+
                 Log.BrightBlue(JSON.stringify(data))
                 Log.Green(
-                    `[sortBalance.js] Successfully subtracted ${betamount} credits from user ${userid}. New Balance: ${data[0].balance}`,
+                    `[sortBalance.js] Successfully subtracted ${betamount} credits from user ${userid}. New Balance: ${newBalance}`,
                 )
                 return data[0].balance
             }

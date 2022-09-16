@@ -1,6 +1,9 @@
 import { Log } from '../bot_res/send_functions/consoleLog.js'
+import { SapDiscClient } from '#main'
 import { closeBetsLog } from '../logging.js'
 import { db } from '../../Database/dbindex.js'
+import { msgBotChan } from '../bot_res/send_functions/msgBotChan.js'
+import { removeMatch } from '../db/removeMatchup.js'
 import { storage } from '../../lib/PlutoConfig.js'
 
 /**
@@ -11,9 +14,21 @@ import { storage } from '../../lib/PlutoConfig.js'
  * @param {string} wonOrLost - Whether the bet was won or lost
  * @param {integer} payout - The payout amount
  * @param {integer} betAmount - The amount the user bet
+ * @param {string} teamBetOn - The team the user bet on
+ * @param {string} oppsingTeam - The team going against the team the user has bet on
  *
  */
-export async function closeBets(userid, betid, wonOrLost, payout, profit) {
+export async function closeBets(
+    userid,
+    betid,
+    wonOrLost,
+    payout,
+    profit,
+    teamBetOn,
+    opposingTeam,
+    onLastBet,
+    matchId,
+) {
     closeBetsLog.info(`Launching [closeBets.js]`)
     await storage.init()
     if (wonOrLost === 'won') {
@@ -65,9 +80,27 @@ export async function closeBets(userid, betid, wonOrLost, payout, profit) {
                 closeBetsLog.info(
                     `User <@${userid}>'s Bet ${betid} has been closed (Won Bet).`,
                 )
+                var embObj = {
+                    title: `Bet #${betid} has been closed :white_check_mark:`,
+                    description: `**Matchup:** ${teamBetOn} vs. ${opposingTeam}\n**Result:** **__${teamBetOn}__** won!\n:moneybag: **Payment details:**\n**Payout:** $${payoutAmount}\n**Profit:** $${profitAmount}\n**New Balance:** $${newUserBal}\n*See an issue here? Let a mod know in NFL Chat | Pluto - Designed by FENIX#7559*`,
+                    color: `#3abc2c`,
+                }
+                await SapDiscClient.users.fetch(`${userid}`).then((user) => {
+                    try {
+                        user.send({ embeds: [embObj] })
+                        closeBetsLog.info(`DM'd ${userid} successfully`)
+                    } catch (err) {
+                        closeBetsLog.info(`Failed to send DM to ${user.tag} (${user.id})`)
+                    }
+                })
             }
-        }).then((data) => {
+        }).then(async (data) => {
             closeBetsLog.info(`[closeBets.js] Operations for ${userid} completed.`)
+            if (onLastBet === true) {
+                var rm = await removeMatch(matchId)
+                console.log(rm)
+                msgBotChan(`All bets for ${matchId} have been closed.`)
+            }
             return data
         })
     }
@@ -109,6 +142,20 @@ export async function closeBets(userid, betid, wonOrLost, payout, profit) {
                 closeBetsLog.info(
                     `User <@${userid}>'s Bet ${betid} has been closed (Lost Bet).`,
                 )
+                var embObj = {
+                    title: `Bet #${betid} has been closed`,
+                    description: `Your bet between ${teamBetOn} and ${opposingTeam} has been closed\n${teamBetOn} lost, so nothing has been paid out to you.`,
+                    color: `GREEN`,
+                    footer: `See an issue here? Let Staff know in NFL Chat! | Pluto - Designed by FENIX#7559`,
+                }
+                await SapDiscClient.users.fetch(`${userid}`).then((user) => {
+                    try {
+                        user.send({ embeds: [embObj] })
+                        closeBetsLog.info(`DM'd ${userid} successfully`)
+                    } catch (err) {
+                        closeBetsLog.info(`Failed to send DM to ${user.tag} (${user.id})`)
+                    }
+                })
             }
         }).then((data) => {
             closeBetsLog.info(`[closeBets.js] Operations for ${userid} completed.`)

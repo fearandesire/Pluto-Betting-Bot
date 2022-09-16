@@ -1,5 +1,5 @@
-import { resovleMatchup } from '../cache/resolveMatchup.js'
 import { resolveToday } from './resolveToday.js'
+import { resovleMatchup } from '../cache/resolveMatchup.js'
 
 /**
  * @module gameActive.js
@@ -11,29 +11,36 @@ import { resolveToday } from './resolveToday.js'
  */
 
 export async function gameActive(teamName) {
-	var match = await resovleMatchup(teamName)
-	var matchDay = match.dayNum
-	var matchHour = match.hour
-	var matchMinute = match.minute
-	var todayDateInfo = await new resolveToday()
-	var currentDay = todayDateInfo.dayNum
-	var currentHour = todayDateInfo.hour
-	var currentMinute = todayDateInfo.minute
-	if (currentDay === matchDay) {
-		if (currentHour > matchHour) {
-			//# hour is currently past game time
-			return true
-		} else if (currentHour === matchHour) {
-			//# hour matches, lets verify the minutes
-			if (currentMinute > matchMinute) {
-				//# game has already started
-				return true
-			}
-		} else {
-			return false
-		}
-	}
-	if (currentDay < matchDay) {
-		return false
-	}
+    var match = await resovleMatchup(teamName)
+    var matchDay = match.dayNum
+    var matchHour = match.hour
+    var matchMinute = match.minute
+    var todayDateInfo = await new resolveToday()
+    console.log(todayDateInfo)
+    var currentDay = todayDateInfo.todaysDate.dayNum
+    var currentHour = todayDateInfo.hour
+    var currentMinute = todayDateInfo.minute
+    console.log(
+        `Match Details:\nDay: ${matchDay}\nHour: ${matchHour}\nMinute: ${matchMinute}`,
+    )
+    console.log(
+        `Current Details:\nDay: ${currentDay}\nHour: ${currentHour}\nMinute: ${currentMinute}`,
+    )
+    if (currentDay === matchDay) {
+        if (currentHour > matchHour) {
+            //# hour is currently past game time
+            return true
+        } else if (currentHour === matchHour) {
+            //# hour matches, lets verify the minutes
+            if (currentMinute > matchMinute) {
+                //# game has already started
+                return true
+            }
+        } else {
+            return false
+        }
+    }
+    if (currentDay < matchDay) {
+        return false
+    }
 }

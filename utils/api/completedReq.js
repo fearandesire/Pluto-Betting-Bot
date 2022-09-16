@@ -1,6 +1,6 @@
-import { createRequire } from 'module'
-import { completedReqLog } from './../logging.js'
 import { checkCompleted } from './checkCompleted.js'
+import { completedReqLog } from './../logging.js'
+import { createRequire } from 'module'
 
 const require = createRequire(import.meta.url)
 const cron = require('cronitor')(`f9f7339479104e79bf2b52eb9c2242bf`)
@@ -18,42 +18,43 @@ const compGameMonitor = new cron.Monitor('Completed Game Monitor')
  */
 
 export async function completedReq() {
-	completedReqLog.info(`Running completedReq.js - Initializing Cron Jobs`)
-	compGameMonitor.ping({
-		state: `ok`,
-		message: `Initializing schedule check Cron Job`,
-	})
-	let thursTimer = `*/15 22-23 * * thur`
-	cron.schedule(
-		`thursdayCheckGames`,
-		`${thursTimer}`,
-		async () => {
-			completedReqLog.info(`Checking for completed games..`)
-			compGameMonitor.ping({ state: 'run' })
-			await checkCompleted()
-		},
-		{ timezone: 'America/New_York' },
-	)
-	let sundayTimer = `*/15 14-23 * * sun`
-	cron.schedule(
-		`sundayCheckGames`,
-		`${sundayTimer}`,
-		async () => {
-			completedReqLog.info(`Checking for completed games..`)
-			compGameMonitor.ping({ state: 'run' })
-			await checkCompleted()
-		},
-		{ timezone: 'America/New_York' },
-	)
-	let monTimer = `*/15 14-23 * * mon`
-	cron.schedule(
-		`mondayCheckGames`,
-		`${monTimer}`,
-		async () => {
-			completedReqLog.info(`Checking for completed games..`)
-			compGameMonitor.ping({ state: 'run' })
-			await checkCompleted()
-		},
-		{ timezone: 'America/New_York' },
-	)
+    completedReqLog.info(`Running completedReq.js - Initializing Cron Jobs`)
+    compGameMonitor.ping({
+        state: `ok`,
+        message: `Initializing schedule check Cron Job`,
+    })
+    //let thursTimer = `*/1 * * * *`
+    let thursTimer = `*/15 22-23 * * thur`
+    cron.schedule(
+        `thursdayCheckGames`,
+        `${thursTimer}`,
+        async () => {
+            completedReqLog.info(`Checking for completed games..`)
+            compGameMonitor.ping({ state: 'run' })
+            await checkCompleted()
+        },
+        { timezone: 'America/New_York' },
+    )
+    let sundayTimer = `*/15 14-23 * * sun`
+    cron.schedule(
+        `sundayCheckGames`,
+        `${sundayTimer}`,
+        async () => {
+            completedReqLog.info(`Checking for completed games..`)
+            compGameMonitor.ping({ state: 'run' })
+            await checkCompleted()
+        },
+        { timezone: 'America/New_York' },
+    )
+    let monTimer = `*/15 14-23 * * mon`
+    cron.schedule(
+        `mondayCheckGames`,
+        `${monTimer}`,
+        async () => {
+            completedReqLog.info(`Checking for completed games..`)
+            compGameMonitor.ping({ state: 'run' })
+            await checkCompleted()
+        },
+        { timezone: 'America/New_York' },
+    )
 }
