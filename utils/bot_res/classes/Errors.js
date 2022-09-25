@@ -1,5 +1,5 @@
-import { Log } from '../send_functions/consoleLog.js'
-import { msgBotChan } from '../send_functions/msgBotChan.js'
+import { Log } from '#config'
+import { msgBotChan } from '#botUtil/msgBotChan'
 /**
  * @class NoDataFound -
  * Class to handle errors when no data is found

@@ -1,7 +1,7 @@
 import { Command } from '@sapphire/framework'
 import { QuickError } from '#config'
-import { giveBalance } from '#cmdUtil/giveBalance'
-import { transferTo } from '../utils/db/transferBetween.js'
+import { giveBalance } from '#utilCurrency/giveBalance'
+import { transferTo } from '#utilCurrency/transferBetween'
 export class give extends Command {
     constructor(context, options) {
         super(context, {

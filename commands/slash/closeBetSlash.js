@@ -1,6 +1,6 @@
 import { Command } from '@sapphire/framework'
-import { initCloseMatchups } from '../../utils/closeMatchups/initCloseMatchups.js'
-import { isModSlash } from '../../utils/bot_res/isModSlash.js'
+import { initCloseMatchups } from '#utilMatchups/initCloseMatchups'
+import { isModSlash } from '#botUtil/isModSlash'
 
 export class closeMatchupSlash extends Command {
     constructor(context, options) {

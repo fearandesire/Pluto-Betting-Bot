@@ -8,7 +8,7 @@ import { resolveMatchupLog } from '../logging.js'
  * @return {ReturnValueDataTypeHere} Brief description of the returning value here.
  */
 
-export function resovleMatchup(teamName, reqInfo) {
+export function resolveMatchup(teamName, reqInfo) {
     let oddsCache = flatcache.create(`oddsCache.json`, './cache/weeklyOdds')
     var weeklyOdds = oddsCache.getKey(`matchups`)
     console.log(`Searching for: ${teamName}`)

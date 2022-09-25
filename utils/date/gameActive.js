@@ -1,5 +1,5 @@
+import { resolveMatchup } from '#cacheUtil/resolveMatchup'
 import { resolveToday } from './resolveToday.js'
-import { resovleMatchup } from '../cache/resolveMatchup.js'
 
 /**
  * @module gameActive.js
@@ -11,7 +11,7 @@ import { resovleMatchup } from '../cache/resolveMatchup.js'
  */
 
 export async function gameActive(teamName) {
-    var match = await resovleMatchup(teamName)
+    var match = await resolveMatchup(teamName)
     var matchDay = match.dayNum
     var matchHour = match.hour
     var matchMinute = match.minute

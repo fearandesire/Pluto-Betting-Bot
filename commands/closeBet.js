@@ -1,9 +1,9 @@
 //? cmd for quick testing of functions
 
-import { QuickError } from '#config'
 import { Command } from '@sapphire/framework'
+import { QuickError } from '#config'
 
-//import { sortCancelBet } from '../utils/cmd_res/CancelBet/sortCancelBet.js'
+//import { sortCancelBet } from '#utilBetOps/sortCancelBet.js'
 
 export class closeBet extends Command {
 	constructor(context, options) {

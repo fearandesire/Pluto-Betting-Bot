@@ -1,7 +1,7 @@
 import { Command } from '@sapphire/framework'
-import { QueryBets } from '../../utils/cmd_res/CancelBet/queryBets.js'
-import { deleteBetFromArray } from '../../utils/cmd_res/CancelBet/deleteBetArr.js'
-import { verifyBetAuthor } from '../../utils/cmd_res/CancelBet/verifyBetAuthor.js'
+import { QueryBets } from '#utilBetOps/queryBets'
+import { deleteBetFromArray } from '#utilBetOps/deleteBetArr'
+import { verifyBetAuthor } from '#utilValidate/verifyBetAuthor'
 
 export class cancelBetSlash extends Command {
     constructor(context, options) {

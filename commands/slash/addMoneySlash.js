@@ -1,5 +1,5 @@
 import { Command } from '@sapphire/framework'
-import { giveBalance } from '#cmdUtil/giveBalance'
+import { giveBalance } from '#utilCurrency/giveBalance'
 
 export class addMoneySlash extends Command {
     constructor(context, options) {

@@ -1,6 +1,6 @@
 import { QuickError, _, embedReply, flatcache } from '#config'
 
-import { formatOdds } from '../bot_res/formatOdds.js'
+import { formatOdds } from '#cmdUtil/formatOdds'
 
 /**
  * @module returnWeeklyOdds

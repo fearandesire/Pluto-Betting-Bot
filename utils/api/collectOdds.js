@@ -1,13 +1,13 @@
 import _ from 'lodash'
-import { assignMatchID } from '../bot_res/AssignIDs.js'
-import { collectOddsLog } from './../logging.js'
+import { assignMatchID } from '#botUtil/AssignIDs'
+import { collectOddsLog } from '../logging.js'
 import { container } from '#config'
-import { createMatchups } from '../cmd_res/createMatchups.js'
+import { createMatchups } from '#utilMatchups/createMatchups'
 import fetch from 'node-fetch'
 import flatcache from 'flat-cache'
-import { msgBotChan } from '../bot_res/send_functions/msgBotChan.js'
-import { resolveIso } from '../date/resolveIso.js'
-import { resolveToday } from '../date/resolveToday.js'
+import { msgBotChan } from '#botUtil/msgBotChan'
+import { resolveIso } from '#dateUtil/resolveIso'
+import { resolveToday } from '#dateUtil/resolveToday'
 
 let oddsCache = flatcache.create(`oddsCache.json`, './cache/weeklyOdds')
 

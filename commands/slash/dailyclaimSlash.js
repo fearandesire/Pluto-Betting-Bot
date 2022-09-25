@@ -1,5 +1,5 @@
 import { Command } from '@sapphire/framework'
-import { processClaim } from '#utilDB/processClaim'
+import { processClaim } from '#utilBetOps/processClaim'
 
 export class dailyClaimSlash extends Command {
     constructor(context, options) {

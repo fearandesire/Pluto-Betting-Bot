@@ -1,5 +1,5 @@
 import { Command } from '@sapphire/framework'
-import { transferTo } from '../../utils/db/transferBetween.js'
+import { transferTo } from '#utilCurrency/transferBetween'
 
 export class giveMoneySlash extends Command {
     constructor(context, options) {

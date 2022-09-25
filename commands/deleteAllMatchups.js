@@ -1,5 +1,5 @@
 import { Command } from '@sapphire/framework'
-import { removeAllMatchups } from '../utils/db/removeAllMatchups.js'
+import { removeAllMatchups } from '#utilMatchups/removeAllMatchups'
 
 export class deleteAllMatchups extends Command {
     constructor(context, options) {

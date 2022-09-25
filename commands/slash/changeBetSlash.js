@@ -1,7 +1,7 @@
 import { Command } from '@sapphire/framework'
-import { modifyAmount } from '../../utils/cmd_res/modifyBet/modifyAmount.js'
-import { validateUser } from '#cmdUtil/validateExistingUser'
-import { verifyBetAuthor } from '../../utils/cmd_res/CancelBet/verifyBetAuthor.js'
+import { modifyAmount } from '#utilBetOps/modifyAmount'
+import { validateUser } from '#utilValidate/validateExistingUser'
+import { verifyBetAuthor } from '#utilValidate/verifyBetAuthor'
 
 export class changeBetSlash extends Command {
     constructor(context, options) {

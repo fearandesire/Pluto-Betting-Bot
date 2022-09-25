@@ -1,7 +1,7 @@
 import { Command } from '@sapphire/framework'
-import { FileRunning } from '../utils/bot_res/classes/FileRunning.js'
-import { Log } from '../utils/bot_res/send_functions/consoleLog.js'
-import { modifyAmount } from '../utils/cmd_res/modifyBet/modifyAmount.js'
+import { FileRunning } from '#botClasses/FileRunning'
+import { Log } from '#config'
+import { modifyAmount } from '#utilBetOps/modifyAmount'
 
 export class modifyBet extends Command {
     constructor(context, options) {

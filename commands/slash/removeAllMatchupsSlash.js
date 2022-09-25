@@ -1,6 +1,6 @@
 import { Command } from '@sapphire/framework'
-import { msgBotChan } from '../../utils/bot_res/send_functions/msgBotChan.js'
-import { removeAllMatchups } from '#utilDB/removeAllMatchups'
+import { msgBotChan } from '#botUtil/msgBotChan'
+import { removeAllMatchups } from '#utilMatchups/removeAllMatchups'
 
 export class removeAllMatchupsSlash extends Command {
     constructor(context, options) {

@@ -1,5 +1,5 @@
 import { Command } from '@sapphire/framework'
-import { leaderboard } from '../../utils/cmd_res/leaderboard.js'
+import { leaderboard } from '#utilCurrency/leaderboard'
 
 export class leaderboardSlash extends Command {
     constructor(context, options) {

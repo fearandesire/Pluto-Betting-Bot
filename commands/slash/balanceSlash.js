@@ -1,5 +1,5 @@
 import { Command } from '@sapphire/framework'
-import { checkbalance } from '../../utils/db/checkbalance.js'
+import { checkbalance } from '#utilValidate/checkbalance'
 
 export class balanceSlash extends Command {
     constructor(context, options) {

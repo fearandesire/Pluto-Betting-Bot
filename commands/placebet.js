@@ -1,8 +1,8 @@
 import { Command } from '@sapphire/framework'
-import { FileRunning } from '../utils/bot_res/classes/FileRunning.js'
-import { QuickError } from '../utils/bot_res/send_functions/embedReply.js'
+import { FileRunning } from '#botClasses/FileRunning'
+import { QuickError } from '#embed'
 import _ from 'lodash'
-import { newBet } from '../utils/db/newBet.js'
+import { newBet } from '#utilBetOps/newBet'
 import { resolveTeam } from '#cmdUtil/resolveTeam'
 
 export class placebet extends Command {

@@ -1,5 +1,5 @@
 import { Command } from '@sapphire/framework'
-import { newBet } from '../../utils/db/newBet.js'
+import { newBet } from '#utilBetOps/newBet'
 
 export class placeBetSlash extends Command {
     constructor(context, options) {

@@ -1,9 +1,9 @@
 import { Log, QuickError, embedReply, flatcache } from '#config'
 
 import { NoDataFoundError } from '#botClasses/Errors'
-import { hasActiveBets } from '#cmdUtil/hasActiveBets'
-import { listMyBets } from '#cmdUtil/listMyBets'
-import { validateUser } from '#cmdUtil/validateExistingUser'
+import { hasActiveBets } from '#utilValidate/hasActiveBets'
+import { listMyBets } from '#utilDB/listMyBets'
+import { validateUser } from '#utilValidate/validateExistingUser'
 
 /**
  * Check betslips in local cache for list of user bets. If there is no data for the user stored in cache, then retrieve the bets for the user via the activebets table in the databse.
