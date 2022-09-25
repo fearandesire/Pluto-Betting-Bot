@@ -14,7 +14,7 @@ import { helpfooter } from './../../../lib/PlutoConfig.js'
  * @returns {embed} embedWithFields or noFieldsEmbed - self-descriptive returns.
  */
 
-export async function embedReply(message, embedContent) {
+export async function embedReply(message, embedContent, interactionEph) {
     var embedColor = embedContent?.color ?? '#e0ff19'
     var embedTitle = embedContent?.title ?? ''
     var embedDescription = embedContent?.description ?? ''
@@ -23,6 +23,9 @@ export async function embedReply(message, embedContent) {
     var hasFields = embedFields ?? false
     var confirmFields = hasFields ? true : false
     var target = embedContent?.target || 'reply'
+    var isSilent = embedContent?.silent || false
+    console.log(`EMBED OBJECT: ===>>`, embedContent)
+    var reqChan
     //? if the supplied embed has fields, return embeds with fields
     if (hasFields !== false) {
         const embedWithFields = new MessageEmbed()
@@ -32,16 +35,36 @@ export async function embedReply(message, embedContent) {
             .addFields(...embedContent.fields)
             .setTimestamp()
             .setFooter({ text: embedFooter })
-        if (target == 'reply') {
-            message.reply({ embeds: [embedWithFields] })
+        if (
+            (target == 'reply' && interactionEph == true) ||
+            (target == 'reply' && isSilent === true)
+        ) {
+            console.log(`SILENT REPLY REQUESTED [FIELDS] [DEBUG]`)
+            await message.reply({
+                embeds: [embedWithFields],
+                ephemeral: true,
+            })
             return
-        } else {
-            var reqChan = await fetchChanId(target)
-            reqChan.send({ embeds: [embedWithFields] })
+        } else if (target == 'reply' && !interactionEph) {
+            console.log(`NON SILENT REQUESTED [FIELDS] [DEBUG]`)
+            await message.reply({
+                embeds: [embedWithFields],
+            })
             return
+
+            //# Embed Destination is not a reply, but to a specific channel
+        } else if (target !== 'reply') {
+            if (isSilent == false || isSilent === false) {
+                reqChan = await fetchChanId(target)
+                reqChan.send({ embeds: [embedWithFields] })
+                return
+            } else if (isSilent === true) {
+                reqChan.send({ embeds: [embedWithFields], ephemeral: true })
+                return
+            }
         }
     }
-    //? if the supplied embed has no fields, return embed with no fields
+    //& Embed with no fields response
     if (confirmFields == false) {
         const noFieldsEmbed = new MessageEmbed()
             .setColor(embedColor)
@@ -49,11 +72,16 @@ export async function embedReply(message, embedContent) {
             .setDescription(embedDescription)
             .setTimestamp()
             .setFooter({ text: embedFooter })
-        if (target == 'reply') {
-            message.reply({ embeds: [noFieldsEmbed] })
+        if (target == 'reply' && isSilent === true) {
+            console.log(`SILENT REQUESTED [NO-FIELDS] [DEBUG]`)
+            await message.reply({ embeds: [noFieldsEmbed], ephemeral: true })
+            return
+        } else if (target == 'reply' && isSilent === false) {
+            console.log(`NON SILENT REQUESTED [NO-FIELDS] [DEBUG]`)
+            await message.reply({ embeds: [noFieldsEmbed], ephemeral: true })
             return
         } else if (target !== 'reply') {
-            var reqChan = await fetchChanId(target)
+            reqChan = await Promise.resolve(fetchChanId(target))
             reqChan.send({ embeds: [noFieldsEmbed] })
             return
         }
@@ -64,12 +92,18 @@ export async function embedReply(message, embedContent) {
     }
 }
 
-export function QuickError(message, text) {
+export function QuickError(message, text, interactionEph) {
     const embed = new MessageEmbed()
         .setColor('#ff0000')
         .setTitle('Error')
         .setDescription(text)
         .setTimestamp()
         .setFooter({ text: helpfooter })
-    message.reply({ embeds: [embed] })
+    if (interactionEph === true) {
+        message.reply({ embeds: [embed], ephemeral: true })
+        return
+    } else if (!interactionEph) {
+        message.reply({ embeds: [embed] })
+        return
+    }
 }

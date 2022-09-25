@@ -12,8 +12,8 @@ const compGameMonitor = new cron.Monitor('Completed Game Monitor')
  * Setup a sequence of  API Calls to check for completed games every 15 minutes starting from the earliest NFL Game Times.
  * According to the NFL Schedule. Mondays, Thursdays & Sundays are game days
  * Schedule Times stay consistent:
- * - Monday: 8:00  PM
- * - Sunday; 1:00 PM
+ * - Monday: 2:00  PM
+ * - Sunday; 3:00 PM
  * - Thursday 10:00 PM
  */
 
@@ -24,7 +24,7 @@ export async function completedReq() {
         message: `Initializing schedule check Cron Job`,
     })
     //let thursTimer = `*/1 * * * *`
-    let thursTimer = `*/15 22-23 * * thur`
+    let thursTimer = `*/5 22-23 * * thur`
     cron.schedule(
         `thursdayCheckGames`,
         `${thursTimer}`,
@@ -35,7 +35,7 @@ export async function completedReq() {
         },
         { timezone: 'America/New_York' },
     )
-    let sundayTimer = `*/15 14-23 * * sun`
+    let sundayTimer = `*/5 15-23 * * sun`
     cron.schedule(
         `sundayCheckGames`,
         `${sundayTimer}`,
@@ -46,7 +46,7 @@ export async function completedReq() {
         },
         { timezone: 'America/New_York' },
     )
-    let monTimer = `*/15 14-23 * * mon`
+    let monTimer = `*/5 22-23 * * mon`
     cron.schedule(
         `mondayCheckGames`,
         `${monTimer}`,

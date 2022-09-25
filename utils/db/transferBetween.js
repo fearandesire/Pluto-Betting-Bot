@@ -1,12 +1,13 @@
 import { db } from '#db'
 import { embedReply } from '#config'
+import { validateUser } from '#cmdUtil/validateExistingUser'
 
 /**
- * Transfer credits between two users
+ * Transfer money between two users
  * @param {object} message - The Discord Message Object
  * @param {integer} userId - The ID of the user
  * @param {integer} targetId - The ID of the target user
- * @param {integer} transferAmount - The amount of credits to transfer
+ * @param {integer} transferAmount - The amount of money to transfer
  */
 
 export async function transferTo(
@@ -14,12 +15,14 @@ export async function transferTo(
     userid,
     targetUserId,
     transferAmount,
+    interactionEph,
 ) {
     let newUserBal
     let newTargetUserBal
     console.log(
-        `Transferring ${transferAmount} credits from ${userid} to ${targetUserId}`,
+        `Transferring ${transferAmount} from ${userid} to ${targetUserId}`,
     )
+    await validateUser(message, targetUserId, interactionEph) //? Validate User in DB
     transferAmount = Number(transferAmount)
     db.tx(`transferTo`, async (t) => {
         const getUserBal = await t.oneOrNone(
@@ -30,7 +33,7 @@ export async function transferTo(
             !getUserBal ||
             parseInt(getUserBal.balance) < parseInt(transferAmount)
         ) {
-            return message.reply(`You don't have enough credits to transfer.`)
+            return message.reply(`You don't have enough money to transfer.`)
         }
         const getTargetUserBal = await t.oneOrNone(
             `SELECT balance FROM currency WHERE userid = $1`,
@@ -54,11 +57,13 @@ export async function transferTo(
             [newTargetUserBal, targetUserId],
         )
     }).then(() => {
+        var isSilent = interactionEph ? true : false
         var embObj = {
             title: `:moneybag: Credit Transfer :moneybag:`,
-            description: `You have successfully transferred $${transferAmount} credits to <@${targetUserId}>\nYour balance is now: $${newUserBal}`,
+            description: `You have successfully transferred **$${transferAmount}** to <@${targetUserId}>\nYour balance is now: **$${newUserBal}**`,
             color: `GREEN`,
             target: `reply`,
+            silent: isSilent,
         }
         embedReply(message, embObj)
     })

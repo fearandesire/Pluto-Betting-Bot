@@ -1,7 +1,7 @@
+import { QuickError, flatcache } from '#config'
+
 import { Log } from '../../bot_res/send_functions/consoleLog.js'
-import { QuickError } from '#config'
 import { db } from '../../../Database/dbindex.js'
-import { storage } from '../../../lib/PlutoConfig.js'
 
 /**
  * @module QueryBets -
@@ -16,7 +16,10 @@ import { storage } from '../../../lib/PlutoConfig.js'
  * @references {@link cancelBet.js}
  */
 export async function QueryBets(message, userid, betid) {
-    await storage.init()
+    var allbetSlipsCache = await flatcache.load(
+        'allbetSlipsCache.json',
+        './cache/betslips',
+    )
     db.tx('queryCancelBet', async (t) => {
         const getBetCount = await t.manyOrNone(
             `SELECT count(*) FROM betslips WHERE userid = $1`,
@@ -67,7 +70,8 @@ export async function QueryBets(message, userid, betid) {
                     [userid, betid],
                 ),
             ])
-            await storage.set(`${userid}-hasBetsEmbed`, false)
+            await allbetSlipsCache.setKey(`${userid}-hasBetsEmbed`, false)
+            await allbetSlipsCache.save(true)
             Log.Green(
                 `[queryBets.js] User ${userid} has cancelled bet ${betid}\nSuccessfully updated their balance, and removed the bet from the activebets & betslips table`,
             )

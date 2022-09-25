@@ -6,17 +6,13 @@ import { registerUserLog } from '#Logger'
 
 //import { Log } from '#LogColor'
 
-
-
-
-
 /**
  * Create a new user in the database. By default, we will store their userID (required) and their default balance: 100 (optional)
  * Balance is an optional argument as the default value of 'balance' will be set to 100.
  * @param {integer | string} userid - The ID of the user to be created.
  */
 
-export function registerUser(message, userid, inform) {
+export function registerUser(message, userid, inform, interactionEph) {
     new FileRunning(`registerUser`)
     db.tx(`registerUser-Transaction`, async (t) => {
         let findUser = await t.oneOrNone(
@@ -28,11 +24,13 @@ export function registerUser(message, userid, inform) {
             registerUserLog.info(
                 `Created user account for ${userid} in the database.`,
             )
+            var isSilent = interactionEph ? true : false
             var embedObj = {
                 title: `Welcome to Pluto!`,
-                description: `Successfully created an account for you - you'll start with 100 credits.`,
+                description: `Successfully created an account for you - you'll start with 100 dollars.`,
                 color: 'GREEN',
                 footer: `Pluto - Developed by FENIX#7559`,
+                silent: isSilent,
             }
             embedReply(message, embedObj)
             return t.any(
@@ -47,7 +45,7 @@ export function registerUser(message, userid, inform) {
                 `User ${userid} is in the database, skipping creation`,
             )
             if (inform === true) {
-                QuickError(message, `You are already registered!`)
+                QuickError(message, `You are already registered!`, interactionEph)
             }
             return findUser
         }

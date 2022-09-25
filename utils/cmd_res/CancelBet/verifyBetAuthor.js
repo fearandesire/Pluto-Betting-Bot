@@ -18,30 +18,31 @@ import { retrieveBetAuthor } from '../retrieveBetAuthor.js'
  * @returns N/A - Will throw an error if the bet does not belong to the user.
  */
 
-export async function verifyBetAuthor(message, userid, betid) {
-	new FileRunning(`verifyBetAuthor`) //? Log file running
-	await retrieveBetAuthor(userid, betid)
-		.then(async (result) => {
-			if (result.length === 0) {
-				Log.Red(
-					`[verifyBetAuthor.js] Error: Unable to locate bet ${betid} for deletion. -- requested by: ${userid}`,
-				)
-				return false
-			} else {
-				Log.Green(
-					`[verifyBetAuthor.js] Successfully located bet ${betid} for deletion. -- requested by: ${userid}`,
-				)
-				return true
-			}
-		})
-		.catch((err) => {
-			QuickError(
-				message,
-				`Unable to locate bet: #**${betid}** for deletion. *Either this is not your bet, or the bet does not exist.*`,
-			)
-			throw new NoDataFoundError(
-				`Unable to retrieve any data for bet ${betid} in the database`,
-				'verifyBetAuthor.js',
-			)
-		})
+export async function verifyBetAuthor(message, userid, betid, interactionEph) {
+    new FileRunning(`verifyBetAuthor`) //? Log file running
+    await retrieveBetAuthor(userid, betid)
+        .then(async (result) => {
+            if (result.length === 0) {
+                Log.Red(
+                    `[verifyBetAuthor.js] Error: Unable to locate bet ${betid} for deletion/modification. -- requested by: ${userid}`,
+                )
+                return false
+            } else {
+                Log.Green(
+                    `[verifyBetAuthor.js] Successfully located bet ${betid} for deletion/modification. -- requested by: ${userid}`,
+                )
+                return true
+            }
+        })
+        .catch((err) => {
+            QuickError(
+                message,
+                `Unable to locate bet: #**${betid}** for deletion. *Either this is not your bet, or the bet does not exist.*`,
+                interactionEph,
+            )
+            throw new NoDataFoundError(
+                `Unable to retrieve any data for bet ${betid} in the database`,
+                'verifyBetAuthor.js',
+            )
+        })
 }

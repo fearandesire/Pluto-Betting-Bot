@@ -1,14 +1,15 @@
-import { embedReply } from '#config'
-import { db } from '#db'
 import { container } from '@sapphire/pieces'
+import { db } from '#db'
+import { embedReply } from '#config'
 
 /**
  * Retrieve the data from the currency table in the DB - sort by the highest values to the lowest.
- * @param {Message} message - The Discord message object
+ * @param {message} message - The Discord message object
+ * @param {boolean} interactionEph - Whether the interaction is ephemeral or not (silent response)
  * @returns {object} - Returns an embed containing the leaderboard information with user tags and their balances.
  */
 
-export async function leaderboard(message) {
+export async function leaderboard(message, interactionEph) {
 	container.memory_balance = {}
 	container.memory_balance.leaderboard = []
 	return db
@@ -34,9 +35,11 @@ export async function leaderboard(message) {
 				title: `Betting Leaderboard`,
 				description: userBalance,
 				color: `#ffff00`,
-				footer: `Sorted by highest credits balance | Pluto - Developed by Fenix#7559`,
+				footer: `Sorted by highest dollars balance | Pluto - Developed by Fenix#7559`,
 				target: `reply`,
+				silent: interactionEph,
 			}
-			await embedReply(message, embObj)
+			await embedReply(message, embObj, true)
+			return
 		})
 }

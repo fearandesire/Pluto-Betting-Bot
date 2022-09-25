@@ -1,6 +1,6 @@
 import { Log } from '../../bot_res/send_functions/consoleLog.js'
 import { db } from '../../../Database/dbindex.js'
-import { storage } from '../../../lib/PlutoConfig.js'
+import { flatcache } from '#config'
 
 /**
  * @module modifyAmount -
@@ -12,7 +12,7 @@ import { storage } from '../../../lib/PlutoConfig.js'
  * @param {integer} amount
  */
 
-export function modifyAmount(message, userid, betid, amount) {
+export function modifyAmount(message, userid, betid, amount, interactionEph) {
     db.tx('modifyAmount', async (t) => {
         const currentAmount = await t.oneOrNone(
             `SELECT amount FROM betslips WHERE userid = $1 AND betid = $2`,
@@ -36,17 +36,29 @@ export function modifyAmount(message, userid, betid, amount) {
         )
     }).then(() => {
         var allowCollection = async (userid) => {
-            await storage.init()
-            await storage.setItem(`${userid}-hasBetEmbed`, false)
-            await storage.setItem(`${userid}-activeBetslips`, null)
+            let allbetSlipsCache = flatcache.create(
+                `allbetSlipsCache.json`,
+                './cache/betslips',
+            )
+            await allbetSlipsCache.setKey(`${userid}-hasBetEmbed`, false)
+            allbetSlipsCache.save(true)
+            await allbetSlipsCache.setKey(`${userid}-activeBetslips`, null)
+            allbetSlipsCache.save(true)
             Log.BrightBlue(
                 `${userid}'s betslips have been locally cleared - We will collect their bets the next time they request to view them`,
             )
         }
         allowCollection(userid)
         Log.Green(
-            `[modifyAmount.js] Successfully modified bet #${betid} to ${amount}.`,
+            `[modifyAmount.js] Successfully modified bet #${betid} to $${amount}.`,
         )
-        message.reply(`Successfully modified bet #${betid} to ${amount}.`)
+        if (interactionEph) {
+            message.reply({
+                content: `Successfully modified bet #${betid} to $${amount}.`,
+                ephemeral: true,
+            })
+        } else {
+            message.reply(`Successfully modified bet #${betid} to $${amount}.`)
+        }
     })
 }

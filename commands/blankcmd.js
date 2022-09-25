@@ -1,7 +1,7 @@
 //? cmd for quick testing of functions
 
 import { Command } from '@sapphire/framework'
-import { handleComp } from '../utils/bot_res/classes/matchupComp.js'
+import { msgBotChan } from '../utils/bot_res/send_functions/msgBotChan.js'
 
 //import { sortCancelBet } from '../utils/cmd_res/CancelBet/sortCancelBet.js'
 export class testCMD extends Command {
@@ -15,6 +15,6 @@ export class testCMD extends Command {
         })
     }
     async messageRun(message, args) {
-        await new handleComp()
+        await msgBotChan(`test`)
     }
 }

@@ -27,16 +27,20 @@
         "#utilDB/*": "./utils/db/*.js",
         "#lib/*": "./lib/*.js",
         "#cmdUtil/*": "./utils/cmd_res/*.js",
+        "#botUtil/*": "./utils/bot_res/*.js",
+        "#botClasses/*": "./utils/bot_res/classes/*.js",
         "#config": "./lib/PlutoConfig.js",
+        "#dateUtil/*": "./utils/date/*.js",
+        "#cacheUitl/*": "./utils/cache/*.js",
         "#main": "./Pluto.js"
     },
     "type": "module",
     "author": "",
     "license": "ISC",
     "dependencies": {
-        "@sapphire/framework": "^2.5.0",
+        "@sapphire/framework": "^3.1.1",
         "@sapphire/pieces": "^3.3.3",
-        "@sapphire/plugin-hmr": "^1.2.0",
+        "@sapphire/plugin-hmr": "^2.0.0",
         "@sapphire/ratelimits": "^2.4.4",
         "async": "^3.2.4",
         "colorette": "^2.0.17",
@@ -66,7 +70,6 @@
         "pg-monitor": "^1.4.1",
         "pg-promise": "^10.11.1",
         "postgresql": "^0.0.1",
-        "sapphire": "^0.0.3",
         "winston": "^3.8.1"
     },
     "devDependencies": {

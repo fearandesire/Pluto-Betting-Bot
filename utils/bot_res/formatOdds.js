@@ -5,17 +5,19 @@
  * @return {string} Returns the replaced string of odds
  */
 export async function formatOdds(homeOdds, awayOdds) {
-	console.log(`homeOdds: ${homeOdds} | awayOdds: ${awayOdds}`)
-	homeOdds = homeOdds.toString()
-	awayOdds = awayOdds.toString()
-	if (homeOdds.includes('-')) {
-		awayOdds = `+${awayOdds}`
-	}
-	if (awayOdds.includes('-')) {
-		homeOdds = `+${homeOdds}`
-	}
-	return {
-		homeOdds: homeOdds,
-		awayOdds: awayOdds,
-	}
+    console.log(`homeOdds: ${homeOdds} | awayOdds: ${awayOdds}`)
+    homeOdds = homeOdds.toString()
+    awayOdds = awayOdds.toString()
+    if (homeOdds.includes(`-`) && awayOdds.includes(`-`)) {
+        homeOdds = `${homeOdds}`
+        awayOdds = `${awayOdds}`
+    } else if (homeOdds.includes('-') && !awayOdds.includes('-')) {
+        awayOdds = `+${awayOdds}`
+    } else if (awayOdds.includes('-') && !homeOdds.includes(`-`)) {
+        homeOdds = `+${homeOdds}`
+    }
+    return {
+        homeOdds: homeOdds,
+        awayOdds: awayOdds,
+    }
 }

@@ -12,16 +12,20 @@ import { isExistingUser } from './isExistingUser.js'
  * - {@link isExistingUser} - DB Query promise function to check if the user is registered in the database
  * - {@link listbets.js} - The invoker of this module is listbets.js
  */
-export async function validateUser(message, userid) {
+export async function validateUser(message, userid, interactionEph) {
     await isExistingUser(userid).then(function handleResp(data) {
         if (data) {
             Log.Green(`[validateUser.js] User ${userid} is registered with Pluto.`)
             return
         } else {
-            QuickError(
-                message,
-                `You are not registered with Pluto. Type \`?register\` to register yourself!`,
-            )
+            var errorMsg
+            var currentUser = message?.author?.id || message?.user?.id
+            if (currentUser == userid) {
+                errorMsg = `You are not registered with Pluto. Please register with the command: \`/register\``
+            } else {
+                errorMsg = `User <@${userid}> is not registered with Pluto.`
+            }
+            QuickError(message, errorMsg, interactionEph)
             throw Log.Red(
                 `[validateUser.js] User ${userid} is not registered with Pluto.`,
             )

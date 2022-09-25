@@ -2,17 +2,27 @@ import { container, flatcache } from '#config'
 
 import _ from 'lodash'
 import { assignMatchID } from '../bot_res/AssignIDs.js'
-import { closeBets } from './closeBets.js'
+import { closeMatchups } from './closeMatchups.js'
 import { deleteBetFromArray } from '../cmd_res/CancelBet/deleteBetArr.js'
 import { findMatchup } from '#utilDB/findMatchup'
 import { getBetsFromId } from '#utilDB/getBetsFromId'
 import { initCloseBetLog } from '../logging.js'
 import merge from 'deepmerge'
-import { msgBotChan } from '../bot_res/send_functions/msgBotChan.js'
 import { resolvePayouts } from '../payouts/resolvePayouts.js'
 import { resolveTeam } from '#cmdUtil/resolveTeam'
 
-export async function initCloseBets(message, matchId, teamThatWon) {
+/**
+ * @module initCloseMatchups
+ * @summary Initializing closing all bets for a specified matchup via the match ID.
+ * Using the matchup ID, it checks the database for all bets that are open with the specified match ID
+ * I utilize local cache to store this bet information so it can be iterated over easily.
+ * As we iterate through the bets, we send each one we find to {@link closeMatchups} to close the bet.
+ * @param {object} message - The Discord Message Object
+ * @param {integer} matchId - The ID of the matchup
+ * @param {string} teamThatWon - The team that won. This is currently input manually and not verified with the API
+ */
+
+export async function initCloseMatchups(message, matchId, teamThatWon) {
     initCloseBetLog.info(
         `Initilization - Closing Matchup Operation Started!\nMatch ID: ${matchId}, Winning Team: ${teamThatWon}`,
     )
@@ -24,7 +34,7 @@ export async function initCloseBets(message, matchId, teamThatWon) {
         './cache/pendingSlipCache',
     )
     matchId = parseInt(matchId)
-    await msgBotChan(`Closing Bets for Matchup ID: ${matchId}`)
+    initCloseBetLog.info(`Closing Bets for Matchup ID: ${matchId}`)
     let collectionId = await assignMatchID()
     container.betSlipCount = 0
     await pendingSlips.setKey(`Collection-${collectionId}`, {})
@@ -36,11 +46,7 @@ export async function initCloseBets(message, matchId, teamThatWon) {
         .then(async (data) => {
             if (!data) {
                 initCloseBetLog.error(
-                    `== ERROR: == \nUnable to locate bets for Match ID: ${matchId} from the Database.\n`,
-                )
-                await msgBotChan(
-                    `Unable to locate bets for Match ID: ${matchId}`,
-                    `error`,
+                    `== ERROR: == \nUnable to locate bets for Match ID: ${matchId} from the Database.\nLikely, there are no bets for this match.\nPlease verify this is accurate in the databse [activebets table]`,
                 )
                 return
             }
@@ -84,9 +90,8 @@ export async function initCloseBets(message, matchId, teamThatWon) {
             }
         })
         .catch(async (error) => {
-            await msgBotChan(
-                `Unable to locate bets for Match ID: ${matchId}`,
-                `error`,
+            initCloseBetLog.info(
+                `Unable to locate bets for Match ID: ${matchId}\nLikely, there are no bets for placed on this match\nPlease verify this is accurate in the database [activebets table]`,
             )
             return
         })
@@ -117,7 +122,15 @@ export async function initCloseBets(message, matchId, teamThatWon) {
                 await initCloseBetLog.info(
                     `User <@${userId}> lost their bet - Skipping retrieval of their matchup odds.`,
                 )
-                await closeBets(userId, betId, wonOrLost)
+                await closeMatchups(
+                    userId,
+                    betId,
+                    wonOrLost,
+                    null,
+                    null,
+                    teamBetOn,
+                    teamThatWon,
+                )
                 await deleteBetFromArray(message, userId, betId, silent)
             } else {
                 await initCloseBetLog.info(
@@ -142,17 +155,19 @@ export async function initCloseBets(message, matchId, teamThatWon) {
                     `User ID: ${userId}\nTeam Bet On: ${teamBetOn}\nBet Amount: ${betAmount}\nBet ID: ${betId}\nMatch Odds: ${matchOdds}\nPayout: ${payout}\nProfit: ${profit}`,
                 )
                 wonOrLost = 'won'
-                await closeBets(
-                    userId,
-                    betId,
-                    wonOrLost,
-                    payout,
-                    profit,
-                    teamBetOn,
-                    opposingTeam,
-                    onLastBet,
-                    matchId,
-                )
+                var betInformation = await {
+                    [`userId`]: userId,
+                    [`betId`]: betId,
+                    [`wonOrLost`]: wonOrLost,
+                    [`matchOdds`]: matchOdds,
+                    [`payout`]: payout,
+                    [`profit`]: profit,
+                    [`teamBetOn`]: teamBetOn,
+                    [`opposingTeam`]: opposingTeam,
+                    [`onLastBet`]: onLastBet,
+                    [`matchId`]: matchId,
+                }
+                await closeMatchups(betInformation)
                 await deleteBetFromArray(message, userId, betId, silent)
             }
         })

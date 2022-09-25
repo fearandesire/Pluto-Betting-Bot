@@ -1,9 +1,9 @@
-import { container } from '#config'
 import _ from 'lodash'
-import fetch from 'node-fetch'
-import { resovleMatchup } from '../cache/resolveMatchup.js'
-import { initCloseBets } from '../closeBets/initCloseBets.js'
 import { checkCompletedLog } from '../logging.js'
+import { container } from '#config'
+import fetch from 'node-fetch'
+import { initCloseMatchups } from '../closeMatchups/initCloseMatchups.js'
+import { resovleMatchup } from '../cache/resolveMatchup.js'
 
 const url =
 	// eslint-disable-next-line no-undef
@@ -49,7 +49,7 @@ const options = {
 
 /**
  * @module checkCompleted -
- * Call the odds-api and check for completed games via 'get' score. Completed games have their score compared and the winning team and matchup is sent to be closed via [initCloseBets.js](../closeBets/initCloseBets.js)
+ * Call the odds-api and check for completed games via 'get' score. Completed games have their score compared and the winning team and matchup is sent to be closed via [initCloseMatchups.js](../closeMatchups/initCloseMatchups.js)
  */
 
 export async function checkCompleted() {
@@ -94,9 +94,9 @@ export async function checkCompleted() {
 				winner = value.away_team
 				checkCompletedLog.info(`Winner: - Away Team: ${winner} - ${awayScore}`)
 			}
-			//# init the closeBets opeeration
+			//# init the closeMatchups opeeration
 			var message = null
-			await initCloseBets(message, dbMatchId, winner)
+			await initCloseMatchups(message, dbMatchId, winner)
 		} else {
 			checkCompletedLog.info(`Skipped game as it was not completed yet.`)
 		}

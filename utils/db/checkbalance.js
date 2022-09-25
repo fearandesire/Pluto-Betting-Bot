@@ -14,7 +14,12 @@ import { db } from '../../Database/dbindex.js'
  * @references {@link balance.js} - balance.js calls this function to retrieve the balance of a user.
  */
 
-export async function checkbalance(inputuserid, message, notuser) {
+export async function checkbalance(
+	inputuserid,
+	message,
+	notuser,
+	interactionEph,
+) {
 	Log.Yellow(`[checkbalance.js] Running checkbalance!`)
 	Log.Border()
 	const notusercheck = notuser || false //? inherited from: balance.js: if another user is being called on, this is true. Otherwise, it is false.
@@ -26,7 +31,7 @@ export async function checkbalance(inputuserid, message, notuser) {
 		)
 		//? Findings will return null (!findings) if the user does not exist in the database
 		//? In this instance, since 'notusercheck' is true; which means we are checking for another user's information. This is relevant for our response message
-		if (!findings && notusercheck == true) {
+		if (!findings) {
 			QuickError(message, `User ${inputuserid} is not registered with Pluto.`)
 			Log.Error('User has no Betting history')
 			return
@@ -37,7 +42,7 @@ export async function checkbalance(inputuserid, message, notuser) {
 				`[checkbalance.js] User ${inputuserid} is not in the database, creating user`,
 			)
 			message.reply(
-				`I see this is your first time using Pluto, welcome! I've created an account for you and assigned 100 credits.`,
+				`I see this is your first time using Pluto, welcome! I've created an account for you and assigned 100 dollars.`,
 			)
 			return t.any(
 				'INSERT INTO currency (userid, balance) VALUES ($1, $2) RETURNING *',
@@ -49,11 +54,22 @@ export async function checkbalance(inputuserid, message, notuser) {
 			const usersbalance = findings.balance
 			var userName = await SapDiscClient.users.fetch(inputuserid) //? Fetching the username of the user via Discord.js API cache
 			userName = userName || 'User'
+			var description
+			var title
+			if (notusercheck) {
+				title = `Viewing ${userName.username}'s Balance`
+				description = `${userName.username} current balance: :moneybag: **$${usersbalance}**`
+			} else if (!notusercheck || notusercheck === false) {
+				title = `Your balance`
+				description = `Current balance: :moneybag: **$${usersbalance}**\nTo claim your daily $100, type /dailyclaim!`
+			}
+			var isSilent = interactionEph ? true : false
 			var embedcontent = {
-				title: `${userName.username}'s Balance`,
-				description: `You currently have: **${usersbalance} credits**.\n To claim your daily 100 credits, *type ?claim*`,
+				title: title,
+				description: description,
 				color: '#00FF00',
-				footer: 'For more commands, type ?help',
+				footer: 'Pluto | Designed by FENIX#7559',
+				silent: isSilent,
 			}
 			embedReply(message, embedcontent) //? Sending embed with balance to user
 			Log.BrightBlue(usersbalance)

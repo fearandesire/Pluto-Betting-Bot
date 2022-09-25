@@ -1,6 +1,6 @@
 /** @module listMyBets*/
 
-import { Memory_Betslips, storage } from '#config'
+import { Memory_Betslips, flatcache } from '#config'
 import { QuickError, embedReply } from '../bot_res/send_functions/embedReply.js'
 
 import { FileRunning } from '../bot_res/classes/FileRunning.js'
@@ -8,14 +8,15 @@ import { Log } from '../bot_res/send_functions/consoleLog.js'
 import { db } from '../../Database/dbindex.js'
 
 /**
- * ⁡⁣⁣⁢@summary -⁡
- * ⁡⁣⁣⁢Queries DB 'betslips' table & lists all active bets the user has via an embed reply.⁡⁡
-    1. Executes out a query to the DB using the db.map method to retrieve all active bets for the user from the 'betslips' table, afterwards:
+ * @module listMyBets
+ * ⁡⁣⁣⁢@summary⁡ - ⁡⁣⁣⁢Queries DB 'betslips' table & lists all active bets the user has via an embed reply.⁡⁡
+@description    
+ 1. Executes out a query to the DB using the db.map method to retrieve all active bets for the user from the 'betslips' table, afterwards:
  * 2. After collecting the user's bet information from the query, this function will use our pre-defined empty `Memory_Betslips` object.
  * 3. Within `Memory_Betslips`, we estbalish a set of dynamic properties and push the user's betslips information as nested objects (obj) into an array (arr).
  * 4. We then use this nested arr of objs to utilize Discord's Embed 'Fields' capabilities returning our data to the user (using {@linkcode embedReply}); see: {@link https://discord.js.org/#/docs/main/stable/typedef/MessageEmbedOptions Discord Docs}.
- * 5. After sending the user's betslips in an embed, we use {@linkcode storage} to store the user's betslips in a local storage file.
- * @function storage: A package to uses local storage with persistence. Why?:
+ * 5. After sending the user's betslips in an embed, we use {@linkcode flatcache} to store the user's betslips in a local storage file.
+ * @pkg flatcache: A package to use local storage with persistence. Why?:
  * - By storing our users' betslips in a local storage file, we can access them without having to query the DB every time the user wants to view their active bets.
  * - For details on how we use local storage in this file, there is a section commented below.
  * @property  {method} db.map - A simpler way to iterate over a query result. Handles a function for each row retrieved from the query. See: ***{@link http://vitaly-t.github.io/pg-promise/Database.html#map pg-promise Map}***
@@ -28,6 +29,10 @@ import { db } from '../../Database/dbindex.js'
  *
  */
 export function listMyBets(userid, message) {
+    let allbetSlipsCache = flatcache.create(
+        `allbetSlipsCache.json`,
+        './cache/betslips',
+    )
     new FileRunning('listMyBets')
     //? This arrow function used in⁡⁣⁣⁢ 𝙙𝙗⁡⁣⁣⁢.𝙢𝙖𝙥⁡ is to declare what we want to do with ⁡⁢⁣⁣𝙚𝙖𝙘𝙝⁡ row of the query result (see pg-promise db.Map method).
     return db
@@ -66,7 +71,7 @@ export function listMyBets(userid, message) {
                         inline: true,
                     },
                     {
-                        name: 'Team ID',
+                        name: 'Team',
                         value: `${teamID} \n \u200B`, //? `\𝙪𝟮𝟬𝟬𝘽` is a zero-width space (blank space) to placed @ the end to create space between each bet list
                         inline: true,
                     },
@@ -78,14 +83,28 @@ export function listMyBets(userid, message) {
         .then(async function handleResp() {
             Log.Green(`[listMyBets.js] Collected User (${userid}) Bet Information:`)
             Log.BrightBlue(JSON.stringify(Memory_Betslips[`${userid}`].betslip))
+            var userName = message?.author?.username
+                ? message?.author?.username
+                : message?.user?.id
+            var isSelf =
+                message?.author?.id === userid
+                    ? true
+                    : message?.user?.id === userid
+                    ? true
+                    : false
+            var title
+            if (isSelf == true) {
+                title = `Your Active Bet Slips`
+            } else {
+                title = `${userName}'s Active Bet Slips`
+            }
             var embedcontent = {
-                title: `${message.author.username}'s Bet Slips`,
-                description: `Here are the active bets for ${message.author.username}`,
+                title: title,
                 color: '#00FF00',
                 fields: Memory_Betslips[`${userid}`].betslip,
             }
             await embedReply(message, embedcontent) // LINK SendEmbedReply
-            await storage.init() //? `storage` pkg required it's options to be loaded before we can use it
+            //await storage.init() //? `storage` pkg required it's options to be loaded before we can use it
 
             //SECTION LOCALSTORAGE⁡
             /*
@@ -97,11 +116,18 @@ export function listMyBets(userid, message) {
             * ? Additionally, the `${userid}-hasBetsEmbed is created with the boolean true - this is intended to keep track of whether the user has requested betslips embed or not, for the same reason
              */
 
-            await storage.set(
+            // await storage.set(
+            //     `${userid}-activeBetslips`,
+            //     Memory_Betslips[`${userid}`].betslip,
+            // )
+            await allbetSlipsCache.setKey(
                 `${userid}-activeBetslips`,
                 Memory_Betslips[`${userid}`].betslip,
             )
-            await storage.set(`${userid}-hasBetsEmbed`, true) //? Setting a flag to indicate that the user has used this command, so we can return them the embed without compiling it again - causing the embed to stack, and unnecessarily the DB
+            await allbetSlipsCache.setKey(`${userid}-hasBetsEmbed`, true)
+            await allbetSlipsCache.save(true)
+            //await storage.set(`${userid}-hasBetsEmbed`, true) //? Setting a flag to indicate that the user has used this command, so we can return them the embed without compiling it again - causing the embed to stack, and unnecessarily the DB
+
             //!SECTION
             Log.Green(
                 `[listMyBets.js] Storing User (${userid}) collected Array of Bet Information.`,

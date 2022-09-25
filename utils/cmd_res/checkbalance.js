@@ -37,7 +37,7 @@ export async function checkbalance(inputuserid, message, notuser) {
 				`[checkbalance.js] User ${inputuserid} is not in the database, creating user`,
 			)
 			message.reply(
-				`I see this is your first time using Pluto, welcome! I've created an account for you and assigned 100 credits.`,
+				`I see this is your first time using Pluto, welcome! I've created an account for you and assigned 100 dollars.`,
 			)
 			return t.any(
 				'INSERT INTO currency (userid, balance) VALUES ($1, $2) RETURNING *',
@@ -51,7 +51,7 @@ export async function checkbalance(inputuserid, message, notuser) {
 			userName = userName || 'User'
 			var embedcontent = {
 				title: `${userName.username}'s Balance`,
-				description: `You currently have: **${usersbalance} credits**.\n To claim your daily 100 credits, *type ?claim*`,
+				description: `You currently have: **${usersbalance} dollars**.\n To claim your daily 100 dollars, *type ?claim*`,
 				color: '#00FF00',
 				footer: 'For more commands, type ?help',
 			}

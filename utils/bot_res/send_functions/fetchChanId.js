@@ -8,7 +8,10 @@ import { SapDiscClient } from '#main'
  */
 
 export async function fetchChanId(reqId) {
-    var ID = process.env[`${reqId}`]
-    var reqChan = await SapDiscClient.channels.fetch(ID)
-    return reqChan
+    return new Promise((resolve, reject) => {
+        //debug: console.log(`FETCHING ${reqId}`)
+        var ID = process.env[`${reqId}`]
+        var reqChan = SapDiscClient.channels.fetch(ID)
+        resolve(reqChan)
+    })
 }

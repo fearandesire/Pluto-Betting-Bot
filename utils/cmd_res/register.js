@@ -16,7 +16,7 @@ export async function registeruser(message, inputuserid) {
 			)
 			//? add user to DB & process claim in 1 query to minimize DB load
 			message.reply(
-				`I see this is your first time using Pluto, welcome! I've created an account for you and completed your daily claim request of 100 credits yessirrr.`,
+				`I see this is your first time using Pluto, welcome! I've created an account for you and completed your daily claim request of 100 dollars yessirrr.`,
 			)
 			return t.any(
 				'INSERT INTO currency (userid, balance) VALUES ($1, $2) RETURNING *',

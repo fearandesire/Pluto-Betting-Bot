@@ -1,54 +1,67 @@
-import { Log } from '../bot_res/send_functions/consoleLog.js'
 import { SapDiscClient } from '#main'
-import { closeBetsLog } from '../logging.js'
+import { closeMatchupsLog } from '../logging.js'
 import { db } from '../../Database/dbindex.js'
+import { flatcache } from '#config'
 import { msgBotChan } from '../bot_res/send_functions/msgBotChan.js'
 import { removeMatch } from '../db/removeMatchup.js'
-import { storage } from '../../lib/PlutoConfig.js'
 
 /**
- * @module closeBets -
+ * @module closeMatchups -
  * 'Closes' a specified bet - Intended for 'closing' a bet event, so the bet will only be removed from the 'activebets' table
- * @param {integer} userid - The user's ID
- * @param {integer} betid - The bet's ID
- * @param {string} wonOrLost - Whether the bet was won or lost
- * @param {integer} payout - The payout amount
- * @param {integer} betAmount - The amount the user bet
- * @param {string} teamBetOn - The team the user bet on
- * @param {string} oppsingTeam - The team going against the team the user has bet on
+ * @param {object} betInformation - Object containing all the information about the bet to close out.
  *
  */
-export async function closeBets(
-    userid,
-    betid,
-    wonOrLost,
-    payout,
-    profit,
-    teamBetOn,
-    opposingTeam,
-    onLastBet,
-    matchId,
-) {
-    closeBetsLog.info(`Launching [closeBets.js]`)
+
+export async function closeMatchups(betInformation) {
+    /**
+     * @var {integer} userid - The Discord ID of the user whose bet we are closing
+     * @var {integer} betid - The bet's ID
+     * @var {string} wonOrLost - Whether the bet was won or lost
+     * @var {integer} profit - The profit amount to be payed out
+     * @var {integer} payout - The total amount of money the user will receive
+     * @var {integer} betAmount - The amount the user bet
+     * @var {string} teamBetOn - The team the user bet on
+     * @var {string} oppsingTeam - The team going against the team the user has bet on
+     */
+    var userid = betInformation.userid
+    var betid = betInformation.betid
+    var wonOrLost = betInformation.wonOrLost
+    var payout = betInformation.payout
+    var profit = betInformation.profit
+    var teamBetOn = betInformation.teamBetOn
+    var opposingTeam = betInformation.opposingTeam
+    var onLastBet = betInformation.onLastBet
+    var matchId = betInformation.matchId
+    closeMatchupsLog.info(`Launching [closeMatchups.js]`)
     await storage.init()
+    let allbetSlipsCache = flatcache.create(
+        `allbetSlipsCache.json`,
+        './cache/betslips',
+    )
+    //& Operations for a bet that was won
     if (wonOrLost === 'won') {
-        db.tx('closeBets', async (t) => {
+        db.tx('closeMatchups', async (t) => {
             const getBetCount = await t.manyOrNone(
                 `SELECT count(*) FROM activebets WHERE userid = $1`,
                 [userid],
                 (c) => c.count,
             )
             const betCount = parseInt(getBetCount[0].count) //? convert count of bets to integer
-            closeBetsLog.info(
-                `[closeBets.js] User ${userid} has ` + betCount + ` active bet(s).`,
+            closeMatchupsLog.info(
+                `[closeMatchups.js] User ${userid} has ` + betCount + ` active bet(s).`,
             )
             if (betCount === 0) {
-                await closeBetsLog.error(
+                await closeMatchupsLog.error(
                     `User ${userid} has no active bets\nCeased closing bet operations - no data has been changed,`,
                 )
-                throw Log.Error(`[closeBets.js] User ${userid} has no active bets.`)
+                await msgBotChan(
+                    `User ${userid} has no active bets - Unable to close their bet. Moving onto the next bet, but please verify this information is true.`,
+                    true,
+                )
+                return
             }
             if (betCount > 0) {
+                //# retrieve balance of user
                 const userBal = await t.oneOrNone(
                     `SELECT balance FROM currency WHERE userid = $1`,
                     [userid],
@@ -65,19 +78,22 @@ export async function closeBets(
                         betid,
                     ],
                 ),
-                    await closeBetsLog.info(
-                        `[closeBets.js] Deleted ${betid} from 'activebets' table.`,
+                    await closeMatchupsLog.info(
+                        `[closeMatchups.js] Deleted ${betid} from 'activebets' table.`,
                     )
                 await t.oneOrNone(
                     `UPDATE currency SET balance = $1 WHERE userid = $2`,
                     [newUserBal, userid],
                 )
+                //# update table containing all bets [betslips] for record purposes (bet history)
                 await t.oneOrNone(
                     `UPDATE betslips SET payout = $1, profit = $2, betresult = $3 WHERE userid = $4 AND betid = $5`,
                     [payoutAmount, profitAmount, `${wonOrLost}`, userid, betid],
                 )
-                await storage.set(`${userid}-hasBetsEmbed`, false)
-                closeBetsLog.info(
+
+                await allbetSlipsCache.setKey(`${userid}-hasBetsEmbed`, false)
+                await allbetSlipsCache.save(true)
+                closeMatchupsLog.info(
                     `User <@${userid}>'s Bet ${betid} has been closed (Won Bet).`,
                 )
                 var embObj = {
@@ -86,41 +102,48 @@ export async function closeBets(
                     color: `#3abc2c`,
                 }
                 await SapDiscClient.users.fetch(`${userid}`).then((user) => {
+                    //# DM the user the result of their bet
                     try {
                         user.send({ embeds: [embObj] })
-                        closeBetsLog.info(`DM'd ${userid} successfully`)
+                        closeMatchupsLog.info(`DM'd ${userid} successfully`)
                     } catch (err) {
-                        closeBetsLog.info(`Failed to send DM to ${user.tag} (${user.id})`)
+                        closeMatchupsLog.info(
+                            `Failed to send DM to ${user.tag} (${user.id})`,
+                        )
                     }
                 })
             }
         }).then(async (data) => {
-            closeBetsLog.info(`[closeBets.js] Operations for ${userid} completed.`)
+            closeMatchupsLog.info(
+                `[closeMatchups.js] Operations for ${userid} completed.`,
+            )
             if (onLastBet === true) {
-                var rm = await removeMatch(matchId)
-                console.log(rm)
-                msgBotChan(`All bets for ${matchId} have been closed.`)
+                await removeMatch(matchId) //& Remove the matchup from activematchups table so the bot doesn't constantly check an already closed matchup.
+                msgBotChan(`All bets for ${matchId} have been closed.`) //& Notify mod channel that we are done closing matchups
             }
             return data
         })
-    }
-
-    if (wonOrLost === 'lost') {
-        db.tx('closeBets', async (t) => {
+        //& Operations for a bet that was lost
+    } else if (wonOrLost === 'lost') {
+        db.tx('closeMatchups', async (t) => {
             const getBetCount = await t.manyOrNone(
                 `SELECT count(*) FROM activebets WHERE userid = $1`,
                 [userid],
                 (c) => c.count,
             )
             const betCount = parseInt(getBetCount[0].count) //? convert count of bets to integer
-            closeBetsLog.info(
-                `[closeBets.js] User ${userid} has ` + betCount + ` active bet(s).`,
+            closeMatchupsLog.info(
+                `[closeMatchups.js] User ${userid} has ` + betCount + ` active bet(s).`,
             )
             if (betCount === 0) {
-                await closeBetsLog.error(
+                await closeMatchupsLog.error(
                     `User ${userid} has no active bets\nCeased closing bet operations - no data has been changed,`,
                 )
-                throw Log.Error(`[closeBets.js] User ${userid} has no active bets.`)
+                await msgBotChan(
+                    `User ${userid} has no active bets - Unable to close their bet. Moving onto the next bet, but please verify this information is true.`,
+                    true,
+                )
+                return
             }
             if (betCount > 0) {
                 await t.oneOrNone(
@@ -131,15 +154,16 @@ export async function closeBets(
                         betid,
                     ],
                 ),
-                    await closeBetsLog.info(
-                        `[closeBets.js] Deleted ${betid} from 'activebets' table.`,
+                    await closeMatchupsLog.info(
+                        `[closeMatchups.js] Deleted ${betid} from 'activebets' table.`,
                     )
                 await t.oneOrNone(
                     `UPDATE betslips SET betresult = $1 WHERE userid = $2 AND betid = $3`,
                     [wonOrLost, userid, betid],
                 )
-                await storage.set(`${userid}-hasBetsEmbed`, false)
-                closeBetsLog.info(
+                await allbetSlipsCache.setKey(`${userid}-hasBetsEmbed`, false)
+                await allbetSlipsCache.save(true)
+                closeMatchupsLog.info(
                     `User <@${userid}>'s Bet ${betid} has been closed (Lost Bet).`,
                 )
                 var embObj = {
@@ -148,17 +172,22 @@ export async function closeBets(
                     color: `GREEN`,
                     footer: `See an issue here? Let Staff know in NFL Chat! | Pluto - Designed by FENIX#7559`,
                 }
+                //# DM the user the result of their bet
                 await SapDiscClient.users.fetch(`${userid}`).then((user) => {
                     try {
                         user.send({ embeds: [embObj] })
-                        closeBetsLog.info(`DM'd ${userid} successfully`)
+                        closeMatchupsLog.info(`DM'd ${userid} successfully`)
                     } catch (err) {
-                        closeBetsLog.info(`Failed to send DM to ${user.tag} (${user.id})`)
+                        closeMatchupsLog.info(
+                            `Failed to send DM to ${user.tag} (${user.id})`,
+                        )
                     }
                 })
             }
         }).then((data) => {
-            closeBetsLog.info(`[closeBets.js] Operations for ${userid} completed.`)
+            closeMatchupsLog.info(
+                `[closeMatchups.js] Operations for ${userid} completed.`,
+            )
             return data
         })
     }

@@ -16,7 +16,7 @@ export async function gameActive(teamName) {
     var matchHour = match.hour
     var matchMinute = match.minute
     var todayDateInfo = await new resolveToday()
-    console.log(todayDateInfo)
+    //console.log(todayDateInfo)
     var currentDay = todayDateInfo.todaysDate.dayNum
     var currentHour = todayDateInfo.hour
     var currentMinute = todayDateInfo.minute
@@ -39,6 +39,9 @@ export async function gameActive(teamName) {
         } else {
             return false
         }
+    }
+    if (currentDay > matchDay) {
+        return true
     }
     if (currentDay < matchDay) {
         return false

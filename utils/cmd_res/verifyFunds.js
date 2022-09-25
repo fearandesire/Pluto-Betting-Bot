@@ -8,7 +8,7 @@ import { fetchBalance } from './fetchBalance.js'
  * Handles the verification of funds for a user via our DB query promise with {@link fetchBalance}
  * @param {obj} message - The message object from discord.js
  * @param {integer} user - The user's ID
- * @param {integer} betamount - The amount of credits the user is trying to bet.
+ * @param {integer} betamount - The amount of dollars the user is trying to bet.
  * @param {integer} teamid - The team that the user is betting on.
  * @references {@link placeBet.js} - Invoked via placeBet.js
  */
@@ -21,7 +21,7 @@ export async function verifyFunds(message, user, betamount, teamid) {
 		if (balance < betamount) {
 			var embedcontent = {
 				title: 'Insufficient Funds',
-				description: `You do not have sufficient funds to place this bet. Your current balance is **${balance} credits**`,
+				description: `You do not have sufficient funds to place this bet. Your current balance is **${balance} dollars**`,
 				color: 'RED',
 			}
 			embedReply(message, embedcontent)
