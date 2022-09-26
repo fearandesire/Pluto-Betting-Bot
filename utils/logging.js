@@ -202,10 +202,12 @@ export const checkCompletedLog = winston.createLogger({
     ),
     transports: [
         new winston.transports.File({
-            filename: 'logs/checkCompletedErr.log',
+            filename: 'logs/closeBetOp/err/2. checkCompletedErr.log',
             level: 'error',
         }),
-        new winston.transports.File({ filename: 'logs/checkCompleted.log' }),
+        new winston.transports.File({
+            filename: 'logs/closeBetOp/2. checkCompleted.log',
+        }),
     ],
 })
 export const initCloseBetLog = winston.createLogger({
@@ -222,10 +224,12 @@ export const initCloseBetLog = winston.createLogger({
     ),
     transports: [
         new winston.transports.File({
-            filename: 'logs/initCloseBetErr.log',
+            filename: 'logs/closeBetOp/err/3. initCloseBetErr.log',
             level: 'error',
         }),
-        new winston.transports.File({ filename: 'logs/initCloseBet.log' }),
+        new winston.transports.File({
+            filename: 'logs/closeBetOp/3. initCloseBet.log',
+        }),
     ],
 })
 export const closeMatchupsLog = winston.createLogger({
@@ -242,11 +246,11 @@ export const closeMatchupsLog = winston.createLogger({
     ),
     transports: [
         new winston.transports.File({
-            filename: 'logs/err/matchups/closeMatchups.log',
+            filename: 'logs/closeBetOp/4. closeMatchups.log',
             level: 'error',
         }),
         new winston.transports.File({
-            filename: 'logs/matchups/closeMatchups.log',
+            filename: 'logs/closeBetOp/4. closeMatchups.log',
         }),
     ],
 })
@@ -264,10 +268,12 @@ export const deleteBetArrLog = winston.createLogger({
     ),
     transports: [
         new winston.transports.File({
-            filename: 'logs/deleteBetArrErr.log',
+            filename: 'logs/closeBetOp/Err/5. deleteBetArrErr.log',
             level: 'error',
         }),
-        new winston.transports.File({ filename: 'logs/deleteBetArr.log' }),
+        new winston.transports.File({
+            filename: 'logs/closeBetOp/5. deleteBetArr.log',
+        }),
     ],
 })
 export const collectOddsLog = winston.createLogger({
@@ -365,10 +371,12 @@ export const completedReqLog = winston.createLogger({
     ),
     transports: [
         new winston.transports.File({
-            filename: 'logs/completedReqErr.log',
+            filename: 'logs/closeBetOp/Err/completedReqErr.log',
             level: 'error',
         }),
-        new winston.transports.File({ filename: 'logs/completedReq.log' }),
+        new winston.transports.File({
+            filename: 'logs/closeBetOp/1. completedReq.log',
+        }),
     ],
 })
 export const resolveMatchupLog = winston.createLogger({
@@ -430,6 +438,28 @@ export const resolveTeamLog = winston.createLogger({
         }),
         new winston.transports.File({
             filename: 'logs/resolveTeam/resolveTeam.log',
+        }),
+    ],
+})
+export const betsFromIdLog = winston.createLogger({
+    level: 'info',
+    format: winston.format.combine(
+        winston.format.colorize(),
+        splat(),
+        winston.format.prettyPrint({
+            colorize: true,
+            depth: 5,
+        }),
+        timestamp,
+        customWinstonFormat,
+    ),
+    transports: [
+        new winston.transports.File({
+            filename: 'logs/closeBetOp/Err/3.5 betsFromIdErr.log',
+            level: 'error',
+        }),
+        new winston.transports.File({
+            filename: 'logs/closeBetOp/3.5 betsFromId.log',
         }),
     ],
 })

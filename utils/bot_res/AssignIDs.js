@@ -2,13 +2,13 @@ import { Log } from '#LogColor'
 
 //? Util functions to generate unique IDs
 export function AssignBetID() {
-	const id = Math.floor(Math.random() * 10000)
-	Log.BrightBlue(`[AssignID.js] Assigned Bet ID: ${id}`)
-	return id
+    const id = Math.floor(Math.random() * 10000)
+    Log.BrightBlue(`[AssignID.js] Assigned Bet ID: ${id}`)
+    return id
 }
 
 export function assignMatchID() {
-	const matchId = Math.floor(Math.random() * 10000)
-	Log.BrightBlue(`[assignMatchID.js] Assigned Bet ID: ${matchId}`)
-	return matchId
+    const matchId = Math.floor(Math.random() * 10000)
+    Log.BrightBlue(`[AssignIDs.js] Assigned ID: ${matchId}`)
+    return matchId
 }

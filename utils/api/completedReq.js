@@ -35,7 +35,7 @@ export async function completedReq() {
         },
         { timezone: 'America/New_York' },
     )
-    let sundayTimer = `*/5 15-23 * * sun`
+    let sundayTimer = `*/2 15-23 * * sun`
     cron.schedule(
         `sundayCheckGames`,
         `${sundayTimer}`,

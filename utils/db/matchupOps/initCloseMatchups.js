@@ -96,14 +96,16 @@ export async function initCloseMatchups(message, matchId, teamThatWon) {
             return
         })
     container.memoryCollection = pendingSlips.getKey(`Collection-${collectionId}`)
-    console.log(container.memoryCollection)
+    initCloseBetLog.info(`Collected Bet Slips`)
+    await initCloseBetLog.info(container.memoryCollection)
+    console.log(`Collected Bet Slips:`, container.memoryCollection)
     //& With the betslips collected, we can now iterate through the collection
     //& As we iterate, we will 'close' the bet, payout the winners, and update the relevant info in the database
-    await _.forIn(container.memoryCollection, (value, key) => {
+    await _.forIn(container.memoryCollection, async (value, key) => {
         //# assign variable to each betslip obj
         var usersBet = value
         //# iterate through each users bet object found
-        _.forIn(usersBet, async (value, key) => {
+        await _.forIn(usersBet, async (value, key) => {
             let userId = value.userId
             let teamBetOn = value.teamBetOn
             let betAmount = value.betAmount
@@ -122,15 +124,28 @@ export async function initCloseMatchups(message, matchId, teamThatWon) {
                 await initCloseBetLog.info(
                     `User <@${userId}> lost their bet - Skipping retrieval of their matchup odds.`,
                 )
-                await closeMatchups(
-                    userId,
-                    betId,
-                    wonOrLost,
-                    null,
-                    null,
-                    teamBetOn,
-                    teamThatWon,
-                )
+                // await closeMatchups(
+                //     userId,
+                //     betId,
+                //     wonOrLost,
+                //     null,
+                //     null,
+                //     teamBetOn,
+                //     teamThatWon,
+                // )
+                var betInformation = await {
+                    [`userId`]: userId,
+                    [`betId`]: betId,
+                    [`wonOrLost`]: wonOrLost,
+                    [`matchOdds`]: matchOdds,
+                    [`payout`]: payout,
+                    [`profit`]: profit,
+                    [`teamBetOn`]: teamBetOn,
+                    [`opposingTeam`]: opposingTeam,
+                    [`onLastBet`]: onLastBet,
+                    [`matchId`]: matchId,
+                }
+                await closeMatchups(betInformation)
                 await deleteBetFromArray(message, userId, betId, silent)
             } else {
                 await initCloseBetLog.info(
@@ -138,14 +153,14 @@ export async function initCloseMatchups(message, matchId, teamThatWon) {
                 )
                 //# retrieve the odds of the winning team (teamThatWon)  by retrieving the matchup and comparing it to the team in the user's betslip (teamBetOn) collected prior
                 matchOdds = await findMatchup(value.teamBetOn).then(async (data) => {
-                    if (data.teamone == teamBetOn) {
-                        await initCloseBetLog.info(`Odds: ${data.teamoneodds}`)
-                        opposingTeam = data.teamtwo
-                        return data.teamoneodds
-                    } else if (data.teamtwo == teamBetOn) {
-                        await initCloseBetLog.info(`Odds: ${data.teamtwoodds}`)
-                        opposingTeam = data.teamone
-                        return data.teamtwoodds
+                    if (data?.teamone == teamBetOn) {
+                        await initCloseBetLog.info(`Odds: ${data?.teamoneodds}`)
+                        opposingTeam = data?.teamtwo
+                        return data?.teamoneodds
+                    } else if (data?.teamtwo == teamBetOn) {
+                        await initCloseBetLog.info(`Odds: ${data?.teamtwoodds}`)
+                        opposingTeam = data?.teamone
+                        return data?.teamtwoodds
                     }
                 })
                 var payAndProfit = await resolvePayouts(matchOdds, betAmount)

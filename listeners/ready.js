@@ -35,17 +35,17 @@ setTimeout(async () => {
         completedCheckTime = `<t:1664132400:t>` //* 3:00 PM EST
         gameDay = true
     } else if (todayInfo.dayOfWeek.toLowerCase() === `mon`) {
-        completedCheckTime = `<t:1664128800:f>` //* 2:00 PM EST
+        completedCheckTime = `<t:1664244000:T>` //* 2:00 PM EST
         gameDay = true
     } else if (todayInfo.dayOfWeek.toLowerCase() === `thur`) {
-        completedCheckTime = `<t:1664157600:t>` //* 10:00 PM EST
+        completedCheckTime = `<t:1664244000:T>` //* 10:00 PM EST
         gameDay = true
     }
     await scheduleReq().then(() => {
         var embedObj = {
             title: `Schedule Queue`,
             description: `Weekly Schedule Gathering Information: **Every <t:1664258400:F>**`,
-            color: 'GREEN',
+            color: '#00ff00',
             target: 'modBotSpamID',
             footer: 'Pluto | Designed by FENIX#7559',
         }
@@ -55,8 +55,8 @@ setTimeout(async () => {
         await completedReq().then(() => {
             var embedObj = {
                 title: `Game Day Queue`,
-                description: `Initiated the game completed queue!\nChecking for completed games today: **every 15 minutes after ${completedCheckTime}**`,
-                color: '#00ffff',
+                description: `Initiated the game completed queue!\nChecking for completed games today: **every 5 minutes after ${completedCheckTime}**`,
+                color: '#00ff00',
                 target: 'modBotSpamID',
                 footer: 'Pluto | Designed by FENIX#7559',
             }

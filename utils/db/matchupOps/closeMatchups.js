@@ -23,17 +23,18 @@ export async function closeMatchups(betInformation) {
      * @var {string} teamBetOn - The team the user bet on
      * @var {string} oppsingTeam - The team going against the team the user has bet on
      */
-    var userid = betInformation.userid
-    var betid = betInformation.betid
-    var wonOrLost = betInformation.wonOrLost
-    var payout = betInformation.payout
-    var profit = betInformation.profit
-    var teamBetOn = betInformation.teamBetOn
-    var opposingTeam = betInformation.opposingTeam
-    var onLastBet = betInformation.onLastBet
-    var matchId = betInformation.matchId
+    var userid = betInformation?.userId
+    var betid = betInformation?.betId
+    var wonOrLost = betInformation?.wonOrLost
+    var payout = betInformation?.payout
+    var profit = betInformation?.profit
+    var teamBetOn = betInformation?.teamBetOn
+    var opposingTeam = betInformation?.opposingTeam
+    var onLastBet = betInformation?.onLastBet
+    var matchId = betInformation?.matchId
     closeMatchupsLog.info(`Launching [closeMatchups.js]`)
-    await storage.init()
+    closeMatchupsLog.info(`Betslip Information Received:`)
+    closeMatchupsLog.info(betInformation)
     let allbetSlipsCache = flatcache.create(
         `allbetSlipsCache.json`,
         './cache/betslips',
@@ -168,8 +169,8 @@ export async function closeMatchups(betInformation) {
                 )
                 var embObj = {
                     title: `Bet #${betid} has been closed`,
-                    description: `Your bet between ${teamBetOn} and ${opposingTeam} has been closed\n${teamBetOn} lost, so nothing has been paid out to you.`,
-                    color: `GREEN`,
+                    description: `Your bet between **${teamBetOn}** and **${opposingTeam}** has been closed\n**${teamBetOn}** lost, so nothing has been paid out to you.`,
+                    color: `#00ff00`,
                     footer: `See an issue here? Let Staff know in NFL Chat! | Pluto - Designed by FENIX#7559`,
                 }
                 //# DM the user the result of their bet

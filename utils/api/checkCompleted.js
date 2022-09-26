@@ -4,6 +4,7 @@ import { container } from '#config'
 import fetch from 'node-fetch'
 import { initCloseMatchups } from '#utilMatchups/initCloseMatchups'
 import { resolveMatchup } from '#cacheUtil/resolveMatchup'
+import stringifyObject from 'stringify-object'
 
 const url =
     // eslint-disable-next-line no-undef
@@ -13,7 +14,7 @@ const options = {
     headers: {
         'X-RapidAPI-Host': 'api.the-odds-api.com',
         // eslint-disable-next-line no-undef
-        'X-RapidAPI-Key': process.env.odds_API_XKEY2,
+        'X-RapidAPI-Key': process.env.odds_API_XKEY,
     },
 }
 
@@ -62,6 +63,8 @@ export async function checkCompleted() {
             container.apiCompResult = apiCompletedResult
         })
     var compResults = container.apiCompResult
+    checkCompletedLog.info(`API Connection Information:`)
+    checkCompletedLog.info(stringifyObject(compResults))
     await _.forEach(compResults, async function (value, key) {
         if (value.completed === true) {
             checkCompletedLog.info(
