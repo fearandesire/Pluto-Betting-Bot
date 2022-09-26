@@ -1,6 +1,7 @@
 import { Log } from '#LogColor'
 import { db } from '#db'
 import { embedReply } from '#config'
+import { giveMoneyLog } from '#winstonLogger'
 
 /**
  * @module giveBalance - Give money / dollars to a specified user
@@ -32,6 +33,9 @@ export async function giveBalance(
             silent: isSilent,
         }
         await embedReply(message, embObj)
+        giveMoneyLog.info(
+            `${message.user.username} gave ${inputuserid} $${transferammount}!`,
+        )
         return t.any(
             'UPDATE currency SET balance = $1 WHERE userid = $2 RETURNING *',
             [updatebalance, inputuserid],

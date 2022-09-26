@@ -8,6 +8,7 @@ export class deleteAllMatchups extends Command {
             name: 'deleteAllMatchups',
             aliases: ['clearmatchups'],
             description: 'Delete all matchups in the database & cache',
+            requiredUserPermissions: ['MANAGE_MESSAGES'],
         })
     }
     async messageRun(message) {

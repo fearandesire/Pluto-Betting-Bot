@@ -8,6 +8,7 @@ export class viewAllMatchups extends Command {
             name: 'viewAllMatchups',
             aliases: ['viewmatches', 'allmatchups'],
             description: '',
+            requiredUserPermissions: ['MANAGE_MESSAGES'],
         })
     }
     async messageRun(message, args) {

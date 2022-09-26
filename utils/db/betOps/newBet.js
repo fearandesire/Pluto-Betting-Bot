@@ -23,7 +23,7 @@ export async function newBet(message, betOnTeam, betAmount, interactionEph) {
         QuickError(message, 'Please enter a valid team or match id')
         return
     }
-    if (activeCheck !== true) {
+    if (activeCheck == true) {
         QuickError(
             message,
             `This match has already started. You are unable to place a bet on active games.`,

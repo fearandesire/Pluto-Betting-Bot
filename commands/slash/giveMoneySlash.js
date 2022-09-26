@@ -1,5 +1,7 @@
 import { Command } from '@sapphire/framework'
+import { statcord } from '#main'
 import { transferTo } from '#utilCurrency/transferBetween'
+import { validateUser } from '#utilValidate/validateExistingUser'
 
 export class giveMoneySlash extends Command {
     constructor(context, options) {
@@ -39,8 +41,10 @@ export class giveMoneySlash extends Command {
     }
     async chatInputRun(interaction) {
         var userId = interaction.user.id
+        statcord.postCommand(`Give Money`, userId)
         var targetId = interaction.options.getMentionable('user').user.id
         var amount = interaction.options.getInteger('amount')
+        await validateUser(interaction, userId)
         await transferTo(interaction, userId, targetId, amount, true)
     }
 }

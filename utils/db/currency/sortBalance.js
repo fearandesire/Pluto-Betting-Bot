@@ -31,11 +31,11 @@ export function sortBalance(message, userid, betamount, addOrSub) {
             //? Now we check funds with verifyFunds.js
             if (parseInt(currentBalance) < parseInt(betamount)) {
                 Log.Error(
-                    `[sortBalance.js] User ${userid} does not have enough dollars to bet ${betamount}\n Current Balance:`,
+                    `[sortBalance.js] User ${userid} does not have enough money to bet ${betamount}\n Current Balance:`,
                 )
                 Log.BrightBlue(JSON.stringify(currentBalance))
                 message.reply(
-                    `You do not have enough dollars to bet ${betamount} dollars.`,
+                    `You do not have enough money to bet ${betamount} dollars.`,
                 )
                 return
             }
@@ -70,11 +70,11 @@ export function sortBalance(message, userid, betamount, addOrSub) {
             //# failsafe verify balance of user
             if (parseInt(currentBalance) < parseInt(betamount)) {
                 Log.Error(
-                    `[sortBalance.js] User ${userid} does not have enough dollars to bet ${betamount}\n Current Balance:`,
+                    `[sortBalance.js] User ${userid} does not have enough money to bet ${betamount}\n Current Balance:`,
                 )
                 Log.BrightBlue(JSON.stringify(currentBalance))
                 message.reply(
-                    `You do not have enough dollars to bet ${betamount} dollars.`,
+                    `You do not have enough money to bet ${betamount} dollars.`,
                 )
                 return
             }

@@ -1,5 +1,6 @@
 import { Command } from '@sapphire/framework'
 import { registerUser } from '#register'
+import { statcord } from '#main'
 
 export class registerSlash extends Command {
     constructor(context, options) {
@@ -25,6 +26,7 @@ export class registerSlash extends Command {
     }
     async chatInputRun(interaction) {
         var userid = interaction.user.id
+        statcord.postCommand(`Daily Claim`, userid)
         var inform = true
         var interactionEph = true
         await registerUser(interaction, userid, inform, interactionEph)

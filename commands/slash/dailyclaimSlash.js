@@ -1,5 +1,7 @@
 import { Command } from '@sapphire/framework'
 import { processClaim } from '#utilBetOps/processClaim'
+import { statcord } from '#main'
+import { validateUser } from '#utilValidate/validateExistingUser'
 
 export class dailyClaimSlash extends Command {
     constructor(context, options) {
@@ -25,7 +27,10 @@ export class dailyClaimSlash extends Command {
     }
     async chatInputRun(interaction) {
         var userid = interaction.user.id
+        statcord.postCommand(`Daily Claim`, userid)
+        statcord
         var currentTime = new Date().getTime()
-        processClaim(userid, interaction, currentTime)
+        await validateUser(interaction, userid)
+        await processClaim(userid, interaction, currentTime)
     }
 }

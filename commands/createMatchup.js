@@ -14,6 +14,7 @@ export class creatematchup extends Command {
             name: 'creatematchup',
             aliases: ['create', 'cm', 'cmatchup'],
             description: 'Create Matchup',
+            requiredUserPermissions: ['MANAGE_MESSAGES'],
         })
     }
     async messageRun(message, args) {

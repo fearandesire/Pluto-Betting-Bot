@@ -1,6 +1,7 @@
 import { Command } from '@sapphire/framework'
 import { msgBotChan } from '#botUtil/msgBotChan'
 import { removeAllMatchups } from '#utilMatchups/removeAllMatchups'
+import { statcord } from '#main'
 
 export class removeAllMatchupsSlash extends Command {
     constructor(context, options) {
@@ -25,6 +26,8 @@ export class removeAllMatchupsSlash extends Command {
         )
     }
     async chatInputRun(interaction) {
+        var userid = interaction.user.id
+        statcord.postCommand(`Remove All Matchups`, userid)
         await msgBotChan(
             `Clearing all matchups -- Requested by ${interaction.user.username}`,
         )

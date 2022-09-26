@@ -5,6 +5,7 @@ import { LogLevel, SapphireClient } from '@sapphire/framework'
 import { bold, green, logthis, yellowBright } from './lib/PlutoConfig.js'
 
 import { RateLimitManager } from '@sapphire/ratelimits'
+import Statcord from 'statcord.js'
 
 console.log(yellowBright(bold(`[Startup]: Launching Pluto`)))
 
@@ -41,7 +42,13 @@ async function LoginPluto() {
     SapDiscClient.login(envTOKEN)
     logthis(green(`[Startup] Pluto is now online!`))
 }
-LoginPluto()
-
+await LoginPluto()
+export const statcord = new Statcord.Client({
+    client: SapDiscClient,
+    key: process.env.STATCORD_KEY,
+    postCpuStatistics: true,
+    postMemoryStatistics: true,
+    postGpuStatistics: true,
+})
 export { SapDiscClient }
 export { RateLimitManager }

@@ -11,15 +11,15 @@ let oddsCache = flatcache.create(`oddsCache.json`, './cache/weeklyOdds')
 //import { SendMatchupList } from '../utils/bot_res/send_functions/SendMatchupList.js'
 
 const url =
-	// eslint-disable-next-line no-undef
-	process.env.odds_API_NFLODDS
+    // eslint-disable-next-line no-undef
+    process.env.odds_API_NFLODDS
 const options = {
-	method: 'GET',
-	headers: {
-		'X-RapidAPI-Host': 'api.the-odds-api.com',
-		// eslint-disable-next-line no-undef
-		'X-RapidAPI-Key': process.env.odds_API_XKEY,
-	},
+    method: 'GET',
+    headers: {
+        'X-RapidAPI-Host': 'api.the-odds-api.com',
+        // eslint-disable-next-line no-undef
+        'X-RapidAPI-Key': process.env.odds_API_XKEY,
+    },
 }
 /**
  * @module nflOdds
@@ -27,16 +27,17 @@ const options = {
  */
 
 export class nflOdds extends Command {
-	constructor(context, options) {
-		super(context, {
-			...options,
-			name: 'nflOdds',
-			aliases: ['getnflodds', 'getodds', 'gatherodds'],
-			description: 'Retrieve all odds for the week via the-odds-API',
-		})
-	}
+    constructor(context, options) {
+        super(context, {
+            ...options,
+            name: 'nflOdds',
+            aliases: ['getnflodds', 'getodds', 'gatherodds'],
+            description: 'Retrieve all odds for the week via the-odds-API',
+            requiredUserPermissions: ['MANAGE_MESSAGES'],
+        })
+    }
 
-	async messageRun(message) {
-		await collectOdds(message)
-	}
+    async messageRun(message) {
+        await collectOdds(message)
+    }
 }

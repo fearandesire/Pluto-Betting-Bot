@@ -75,6 +75,7 @@
         "pg-monitor": "^1.4.1",
         "pg-promise": "^10.11.1",
         "postgresql": "^0.0.1",
+        "statcord.js": "^3.4.3",
         "stringify-object": "^4.0.1",
         "winston": "^3.8.1"
     },

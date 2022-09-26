@@ -1,5 +1,6 @@
 import { Command } from '@sapphire/framework'
 import { leaderboard } from '#utilCurrency/leaderboard'
+import { statcord } from '#main'
 
 export class leaderboardSlash extends Command {
     constructor(context, options) {
@@ -24,6 +25,8 @@ export class leaderboardSlash extends Command {
         )
     }
     async chatInputRun(interaction) {
+        var userid = interaction.user.id
+        statcord.postCommand(`Leaderboard`, userid)
         var interactionEph = true
         await leaderboard(interaction, interactionEph)
     }

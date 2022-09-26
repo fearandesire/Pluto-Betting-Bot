@@ -5,6 +5,7 @@ import { createRequire } from 'module'
 import { embedReply } from '#config'
 import { resolveToday } from './../utils/date/resolveToday.js'
 import { scheduleReq } from '#api/scheduleReq'
+import { statcord } from '#main'
 
 const require = createRequire(import.meta.url)
 const cron = require('cronitor')(`f9f7339479104e79bf2b52eb9c2242bf`)
@@ -26,6 +27,8 @@ export class ReadyListener extends Listener {
         } = SapDiscClient.user
     }
 }
+
+statcord.autopost() //? Autoposting to Statcord
 
 setTimeout(async () => {
     var todayInfo = await new resolveToday()

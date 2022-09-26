@@ -1,5 +1,6 @@
 import { Command } from '@sapphire/framework'
 import { returnWeeklyOdds } from '../../utils/cache/returnWeeklyOdds.js'
+import { statcord } from '#main'
 
 export class weeklyOddsSlash extends Command {
     constructor(context, options) {
@@ -24,6 +25,8 @@ export class weeklyOddsSlash extends Command {
         )
     }
     async chatInputRun(interaction) {
+        var userid = interaction.user.id
+        statcord.postCommand(`Daily Claim`, userid)
         var interactionEph = true
         await returnWeeklyOdds(interaction, interactionEph)
     }

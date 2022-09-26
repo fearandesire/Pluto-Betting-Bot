@@ -1,5 +1,6 @@
 import { Command } from '@sapphire/framework'
 import { modifyAmount } from '#utilBetOps/modifyAmount'
+import { statcord } from '#main'
 import { validateUser } from '#utilValidate/validateExistingUser'
 import { verifyBetAuthor } from '#utilValidate/verifyBetAuthor'
 
@@ -43,6 +44,7 @@ export class changeBetSlash extends Command {
     }
     async chatInputRun(interaction) {
         var userid = interaction.user.id
+        statcord.postCommand(`Change Bet`, userid)
         var betId = interaction.options.getInteger('betid')
         var amount = interaction.options.getInteger('amount')
         await validateUser(interaction, userid) //? Validate the user exists in our DB

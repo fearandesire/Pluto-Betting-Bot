@@ -1,5 +1,6 @@
 import { Command } from '@sapphire/framework'
 import { giveBalance } from '#utilCurrency/giveBalance'
+import { statcord } from '#main'
 
 export class addMoneySlash extends Command {
     constructor(context, options) {
@@ -37,6 +38,7 @@ export class addMoneySlash extends Command {
     }
     async chatInputRun(interaction) {
         var userid = interaction.user.id
+        statcord.postCommand(`Add Money`, userid)
         var target = interaction.options.getMentionable('user').user.id
         var amount = interaction.options.getInteger('amount')
         if (amount < 1) {

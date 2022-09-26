@@ -1,5 +1,6 @@
 import { Command } from '@sapphire/framework'
 import { collectOdds } from '../../utils/api/collectOdds.js'
+import { statcord } from '#main'
 
 export class fetchOddsSlash extends Command {
     constructor(context, options) {
@@ -25,6 +26,8 @@ export class fetchOddsSlash extends Command {
         )
     }
     async chatInputRun(interaction) {
+        var userid = interaction.user.id
+        statcord.postCommand(`Fetch Odds`, userid)
         await collectOdds(interaction)
     }
 }

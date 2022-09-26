@@ -1,5 +1,6 @@
 import { Command } from '@sapphire/framework'
 import { newBet } from '#utilBetOps/newBet'
+import { statcord } from '#main'
 
 export class placeBetSlash extends Command {
     constructor(context, options) {
@@ -38,6 +39,8 @@ export class placeBetSlash extends Command {
     }
     async chatInputRun(interaction) {
         //console.log(interaction.user.id)
+        var userid = interaction.user.id
+        statcord.postCommand(`Daily Claim`, userid)
         if (!interaction.options.getString('team')) {
             interaction.reply({
                 content: `**Please provide a team to bet on.**`,

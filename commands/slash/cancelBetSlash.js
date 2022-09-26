@@ -1,6 +1,8 @@
 import { Command } from '@sapphire/framework'
 import { QueryBets } from '#utilBetOps/queryBets'
 import { deleteBetFromArray } from '#utilBetOps/deleteBetArr'
+import { statcord } from '#main'
+import { validateUser } from '#utilValidate/validateExistingUser'
 import { verifyBetAuthor } from '#utilValidate/verifyBetAuthor'
 
 export class cancelBetSlash extends Command {
@@ -33,7 +35,8 @@ export class cancelBetSlash extends Command {
         )
     }
     async chatInputRun(interaction) {
-        //console.log(interaction.user.id)
+        var userid = interaction.user.id
+        statcord.postCommand(`Cancel Bet`, userid)
         if (!interaction.options.getInteger('betid')) {
             interaction.reply({
                 content: `**Please provide a bet to cancel via the ID`,
@@ -41,9 +44,9 @@ export class cancelBetSlash extends Command {
             })
             return
         }
-        var userid = interaction.user.id
-        var betId = interaction.options.getInteger('betid')
 
+        var betId = interaction.options.getInteger('betid')
+        await validateUser(interaction, userid)
         await verifyBetAuthor(interaction, userid, betId) //? Verify the bet belongs to the user
         await QueryBets(interaction, userid, betId) //? Query DB & delete specified bet
         await deleteBetFromArray(interaction, userid, betId) //? Update our local storage with the new betslip for the user (for displaying bet info to user)

@@ -1,5 +1,7 @@
 import { Command } from '@sapphire/framework'
 import { checkbalance } from '#utilValidate/checkbalance'
+import { statcord } from '#main'
+import { validateUser } from '#utilValidate/validateExistingUser'
 
 export class balanceSlash extends Command {
     constructor(context, options) {
@@ -32,14 +34,15 @@ export class balanceSlash extends Command {
     }
     async chatInputRun(interaction) {
         var userOption = interaction.options.getMentionable('user')
-        var userid = interaction.user.id
+        const userid = interaction.user.id
+        statcord.postCommand(`Balance`, userid)
         if (!userOption) {
+            await validateUser(interaction, userid)
             await checkbalance(userid, interaction)
             return
         }
         if (userOption) {
             const notuser = true
-            const userid = userOption.user.id
             await checkbalance(userid, interaction, notuser) // reinstalls checkbalance function
             return
         }
