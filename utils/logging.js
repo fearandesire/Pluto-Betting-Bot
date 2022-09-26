@@ -100,10 +100,12 @@ export const deleteBetLog = winston.createLogger({
     ),
     transports: [
         new winston.transports.File({
-            filename: 'logs/deleteBetLogError.log',
+            filename: 'logs/closeBetOp/5. deleteBetLogError.log',
             level: 'error',
         }),
-        new winston.transports.File({ filename: 'logs/deleteBetLog.' }),
+        new winston.transports.File({
+            filename: 'logs/closeBetOp/5. deleteBetLog.',
+        }),
     ],
 })
 
