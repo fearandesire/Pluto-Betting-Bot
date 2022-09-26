@@ -1,7 +1,7 @@
 <div align="center" id="top"> 
   <!-- <img src="https://www.legalsportsbetting.com/wp-content/uploads/2019/04/nba-1.jpg" alt="NBAC LOGO" /> -->
 
-  &#xa0;
+&#xa0;
 
 </div>
 
@@ -19,16 +19,14 @@
   <!-- <img alt="Github forks" src="https://img.shields.io/github/forks/fearandesire/src?color=56BEB8" /> -->
 
   <!-- <img alt="Github stars" src="https://img.shields.io/github/stars/fearandesire/src?color=56BEB8" /> -->
-<!-- </p> 
+<!-- </p>
 -->
 
-
-
 <h4 align="center">
-	🚧  Pluto is currently under construction.  🚧 
-</h4> 
+Released! Current Version: v1.0.0
+</h4>
 
-<hr> 
+<hr>
 
 <p align="center">
   <a href="#dart-about">About</a> &#xa0; | &#xa0; 
@@ -42,54 +40,50 @@
 
 <br>
 
-## :dart: About ##
+## :dart: About
 
-Pluto is a full-fledged betting bot with a strong focus on simplicity. Users are able to securely place NBA Bets and engage
-with the online betting scene without using real currency. Pluto utilizies APIs & secure SQL Databases to ensure that
-we consistently deliver accurate odds as well as smooth, worry-free redemption of said bets when users want to cash in.
-For details on each file and their purpose - please review the full [About Page](About.md)
+Pluto is a full-fledged betting bot with a strong focus on simplicity. Users are able to securely place NFL Bets and particpate
+in the online betting scene without using real-life currency. Pluto utilizies an API _([the-odds-api](the-odds-api.com/))_ & secure SQL Databases to ensure that we consistently deliver accurate odds as well as smooth, worry-free redemption of bets.
 
-## :sparkles: Current Roadmap ##
+## :sparkles: Current Roadmap
 
 Progress will be reflected in the Change Log. Finished milestones will be removed from this list.
 
-- Daily odds collecting w/o command
-- Clear daily odds
-- Establish SQL DB Models/Schemas
-- Define & established user virtual currency (SQL Database)
-- Place & redeem bets (SQL Database)
-- Balance check
-- Usage Stats
+- Parlay Bets
+- Handle Ties
+- Odds for the day, not just the week
 
-## Statistics: ##
+## Statistics:
 
 Pluto will capture usage statistics for the following commands:
 
 🚧 TBD - Under Construction 🚧
 
-## :rocket: Technologies ##
+## :rocket: Technologies
 
 Sources of vital resources used in this project
 
 - [Sapphire Framework](https://github.com/sapphiredev/framework)
 - [Node.js](https://nodejs.org/en/)
 - [postgreSQL](https://www.postgresql.org)
+- [pg-pool](https://www.npmjs.com/package/pg-pool)
+- [the-odds-api](the-odds-api.com/)
 
-## :white_check_mark: Change Log ##
+## :white_check_mark: Change Log
 
 You can view the [Change Log here](ChangeLog.md)
 
-## :checkered_flag: Starting ##
+## :checkered_flag: Starting
 
 🚧 TBD - Under Construction 🚧
 
-## :memo: License ##
+## :memo: License
 
 🚧 TBD - Under Construction 🚧
 
-## :scientist: Authors ##
+## :scientist: Authors
 
-Developed by [Faysal](https://github.com/Faysal19999) & [FENIX](https://github.com/fearandesire)
+Developed by [FENIX](https://github.com/fearandesire)
 
 &#xa0;
 
