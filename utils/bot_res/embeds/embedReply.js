@@ -39,14 +39,12 @@ export async function embedReply(message, embedContent, interactionEph) {
             (target == 'reply' && interactionEph == true) ||
             (target == 'reply' && isSilent === true)
         ) {
-            console.log(`SILENT REPLY REQUESTED [FIELDS] [DEBUG]`)
             await message.reply({
                 embeds: [embedWithFields],
                 ephemeral: true,
             })
             return
         } else if (target == 'reply' && !interactionEph) {
-            console.log(`NON SILENT REQUESTED [FIELDS] [DEBUG]`)
             await message.reply({
                 embeds: [embedWithFields],
             })
@@ -73,11 +71,9 @@ export async function embedReply(message, embedContent, interactionEph) {
             .setTimestamp()
             .setFooter({ text: embedFooter })
         if (target == 'reply' && isSilent === true) {
-            console.log(`SILENT REQUESTED [NO-FIELDS] [DEBUG]`)
             await message.reply({ embeds: [noFieldsEmbed], ephemeral: true })
             return
         } else if (target == 'reply' && isSilent === false) {
-            console.log(`NON SILENT REQUESTED [NO-FIELDS] [DEBUG]`)
             await message.reply({ embeds: [noFieldsEmbed], ephemeral: true })
             return
         } else if (target !== 'reply') {

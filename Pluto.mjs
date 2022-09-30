@@ -1,3 +1,4 @@
+import '@kaname-png/plugin-statcord/register'
 import '@sapphire/plugin-hmr/register'
 import 'dotenv/config'
 
@@ -5,7 +6,6 @@ import { LogLevel, SapphireClient } from '@sapphire/framework'
 
 import { Log } from '#config'
 import { RateLimitManager } from '@sapphire/ratelimits'
-import Statcord from 'statcord.js'
 
 Log.Magenta(`[Startup]: Initializing Pluto`)
 
@@ -14,7 +14,7 @@ const SapDiscClient = new SapphireClient({
     defaultPrefix: process.env.PREFIX,
     caseInsensitiveCommands: true,
     ignoreBots: false,
-    shards: 'auto',
+    shards: `auto`,
     intents: [
         'GUILDS',
         'GUILD_MEMBERS',
@@ -34,6 +34,13 @@ const SapDiscClient = new SapphireClient({
     },
     typing: true,
     loadMessageCommandListeners: true,
+    statcord: {
+        client_id: `983432174361534474`,
+        key: process.env.STATCORD_KEY,
+        autopost: true, // (Optional) Allows automatic posting of statistics.
+        debug: false, // (Optional) Show debug messages.
+        sharding: false, // (Optional) Activate the sharding mode, it is important to read the notes below.
+    },
 })
 
 const loginClient = async () => {
@@ -50,15 +57,6 @@ const loginClient = async () => {
     }
 }
 loginClient()
-
-//# Stat cord login
-export const statcord = new Statcord.Client({
-    client: SapDiscClient,
-    key: process.env.STATCORD_KEY,
-    postCpuStatistics: true,
-    postMemoryStatistics: true,
-    postGpuStatistics: true,
-})
 
 export { SapDiscClient }
 export { RateLimitManager }

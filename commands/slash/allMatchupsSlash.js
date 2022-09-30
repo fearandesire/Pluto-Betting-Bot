@@ -1,7 +1,6 @@
 import { Command } from '@sapphire/framework'
 import { isModSlash } from './../../utils/bot_res/isModSlash.js'
 import { returnAllMatchups } from '../../utils/cache/returnAllMatchups.js'
-import { statcord } from '#main'
 
 export class allMatchupsSlash extends Command {
     constructor(context, options) {
@@ -35,7 +34,6 @@ export class allMatchupsSlash extends Command {
     }
     async chatInputRun(interaction) {
         var userid = interaction.user.id
-        statcord.postCommand(`Daily Claim`, userid)
         if ((await isModSlash(interaction)) === false) {
             await interaction.reply({
                 content: `**You do not have permission to use this command.**`,

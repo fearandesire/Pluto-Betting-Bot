@@ -43,6 +43,7 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
+        "@kaname-png/plugin-statcord": "^2.1.4",
         "@sapphire/framework": "^3.1.1",
         "@sapphire/pieces": "^3.3.3",
         "@sapphire/plugin-hmr": "^2.0.0",
