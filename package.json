@@ -36,7 +36,7 @@
         "#config": "./lib/PlutoConfig.js",
         "#dateUtil/*": "./utils/date/*.js",
         "#cacheUtil/*": "./utils/cache/*.js",
-        "#main": "./Pluto.js",
+        "#main": "./Pluto.mjs",
         "#winstonLogger": "./utils/logging.js"
     },
     "type": "module",

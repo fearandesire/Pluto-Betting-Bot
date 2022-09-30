@@ -2,17 +2,19 @@ import '@sapphire/plugin-hmr/register'
 import 'dotenv/config'
 
 import { LogLevel, SapphireClient } from '@sapphire/framework'
-import { bold, green, logthis, yellowBright } from './lib/PlutoConfig.js'
 
+import { Log } from '#config'
 import { RateLimitManager } from '@sapphire/ratelimits'
 import Statcord from 'statcord.js'
 
-console.log(yellowBright(bold(`[Startup]: Launching Pluto`)))
+Log.Magenta(`[Startup]: Initializing Pluto`)
 
 // Sapphire framework
 const SapDiscClient = new SapphireClient({
+    defaultPrefix: process.env.PREFIX,
     caseInsensitiveCommands: true,
     ignoreBots: false,
+    shards: 'auto',
     intents: [
         'GUILDS',
         'GUILD_MEMBERS',
@@ -34,15 +36,22 @@ const SapDiscClient = new SapphireClient({
     loadMessageCommandListeners: true,
 })
 
-SapDiscClient.fetchPrefix = () => '?'
-
-async function LoginPluto() {
-    // eslint-disable-next-line
-    const envTOKEN = process.env.TOKEN
-    SapDiscClient.login(envTOKEN)
-    logthis(green(`[Startup] Pluto is now online!`))
+const loginClient = async () => {
+    try {
+        Log.Yellow(`[Startup]: Logging in Pluto to Discord..`)
+        await SapDiscClient.login(process.env.TOKEN)
+        Log.Green(
+            `[Startup]: Logged in successfully!\nID: ${SapDiscClient.user.id}`,
+        )
+    } catch (error) {
+        SapDiscClient.logger.fatal(error)
+        SapDiscClient.destroy()
+        process.exit(1)
+    }
 }
-await LoginPluto()
+loginClient()
+
+//# Stat cord login
 export const statcord = new Statcord.Client({
     client: SapDiscClient,
     key: process.env.STATCORD_KEY,
@@ -50,5 +59,6 @@ export const statcord = new Statcord.Client({
     postMemoryStatistics: true,
     postGpuStatistics: true,
 })
+
 export { SapDiscClient }
 export { RateLimitManager }
