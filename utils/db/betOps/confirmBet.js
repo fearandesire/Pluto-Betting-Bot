@@ -101,14 +101,7 @@ export async function confirmBet(message, betslip, userId, interactionEph) {
     })
     collector.on('end', async (collected, reason) => {
         if (reason === 'time') {
-            var embObj = {
-                title: `Bet Cancellation`,
-                description: `Your bet has been cancelled. Your balance has not been affected.`,
-                color: `#ffff00`,
-                isSilent: true,
-                target: `reply`,
-            }
-            await embedReply(message, embObj, true)
+            setupBetLog.info(`Betslip timed out for ${userId}`)
             return
         }
     })
