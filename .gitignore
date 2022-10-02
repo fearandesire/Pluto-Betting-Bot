@@ -121,3 +121,5 @@ commands/balance.js
 commands/blankcmd.js
 PlutoFAQ.md
 Setup.md
+cache/**
+.node-persist/**/*
