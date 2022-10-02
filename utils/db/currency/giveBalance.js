@@ -1,6 +1,7 @@
+import { QuickError, embedReply } from '#config'
+
 import { Log } from '#LogColor'
 import { db } from '#db'
-import { embedReply } from '#config'
 import { giveMoneyLog } from '#winstonLogger'
 
 /**
@@ -24,6 +25,10 @@ export async function giveBalance(
             [inputuserid],
         )
         var currentBalance = findUser.balance
+        if (Number(currentBalance) < Number(transferammount)) {
+            QuickError(message, `You do not have enough money to transfer!`, true)
+            return
+        }
         var updatebalance = parseInt(currentBalance) + parseInt(transferammount)
         var isSilent = interactionEph ? true : false
         var embObj = {
