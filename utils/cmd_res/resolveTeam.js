@@ -1,4 +1,5 @@
 import Fuse from 'fuse.js'
+import { resolveTeamLog } from '../logging.js'
 import { teamList } from '#lib/teamList'
 
 /**
@@ -17,8 +18,9 @@ export async function resolveTeam(teamName) {
     const result = fuse.search(`${teamName}`)
     var foundTeam = result[0]
     if (!foundTeam) {
-        throw new Error(`Team ${teamName} not found.`)
+        resolveTeamLog.error(`Unable to resolve team: ${teamName}`)
     }
+    resolveTeamLog.info(`Resolved team: ${teamName} to ${foundTeam.item.name}`)
     //console.log(foundTeam)
     return foundTeam.item.name
 }
