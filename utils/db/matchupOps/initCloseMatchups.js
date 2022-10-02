@@ -223,17 +223,6 @@ export async function initCloseMatchups(message, matchId, teamThatWon) {
     }
     initCloseBet().then(async () => {
         await msgBotChan(`All bets for Match ID: ${matchId} have been closed.`)
-        var lastBetCache = flatcache.create(
-            `lastBetCache.json`,
-            `./cache/lastBetProcessing`,
-        )
-        var lastBetArr = lastBetCache.getKey(`lastBetData`)
-        if (lastBetArr == undefined) {
-            await lastBetCache.setKey(`lastBetData`, [])
-            await lastBetCache.save(true)
-        }
-        await lastBetArr.push(matchId)
-        await lastBetCache.save(true)
         await clearProgress(matchId)
         await removeMatch(matchId)
     })
