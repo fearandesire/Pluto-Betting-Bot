@@ -71,7 +71,7 @@ export function addNewBet(message, betslip, interactionEph) {
                 var embedcontent = {
                     //? Compiling the properties of the embed to return to the user: confirming their bet has been added to DB
                     title: `Bet #${betslip.betid} Slip Confirmed`,
-                    description: `Congratulations <@${betslip.userid}>! Your bet has been placed! You may view your active bets by typing: \`/mybets\``,
+                    description: `Congratulations <@${betslip.userid}>! Your bet has been placed! You may view all of your active bets by typing: \`/mybets\`\n\n**__Betslip Details__**\n**Bet ID:** ${betslip.betid}\n**Team:** ${betslip.teamid}\n**Amount:** ${betslip.amount}\n**Match ID:** ${container.temp_matchId}`,
                     color: '#00FF00',
                     //footer: 'For more commands, type: ?help',
                     silent: isSilent,
