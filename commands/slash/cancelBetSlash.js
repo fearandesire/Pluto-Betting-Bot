@@ -44,7 +44,7 @@ export class cancelBetSlash extends Command {
 		}
 
 		var betId = interaction.options.getInteger('betid')
-		await validateUser(interaction, userid)
+		await validateUser(interaction, userid, true)
 		await verifyBetAuthor(interaction, userid, betId) //? Verify the bet belongs to the user
 		await QueryBets(interaction, userid, betId) //? Query DB & delete specified bet
 		await deleteBetFromArray(interaction, userid, betId) //? Update our local storage with the new betslip for the user (for displaying bet info to user)

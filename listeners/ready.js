@@ -31,7 +31,7 @@ setTimeout(async () => {
     await scheduleReq().then(() => {
         var embedObj = {
             title: `Schedule Queue`,
-            description: `Weekly Schedule Gathering Information: **Every <t:1664258400:F>**`,
+            description: `Weekly Schedule Gathering Information: **Every Tuesday @ <t:1664863200:T>**`,
             color: '#00ff00',
             target: 'modBotSpamID',
             footer: 'Pluto | Designed by FENIX#7559',

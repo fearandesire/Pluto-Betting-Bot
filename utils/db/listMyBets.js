@@ -1,11 +1,12 @@
 /** @module listMyBets*/
 
-import { Memory_Betslips, flatcache } from '#config'
-import { QuickError, embedReply } from '#embed'
+import { Memory_Betslips as betslipsMem, embedReply, flatcache } from '#config'
 
 import { FileRunning } from '#botClasses/FileRunning'
 import { Log } from '#LogColor'
+import { QuickError } from '#embed'
 import { db } from '#db'
+import stringifyObject from 'stringify-object'
 
 /**
  * @module listMyBets
@@ -22,7 +23,7 @@ import { db } from '#db'
  * @property  {method} db.map - A simpler way to iterate over a query result. Handles a function for each row retrieved from the query. See: ***{@link http://vitaly-t.github.io/pg-promise/Database.html#map pg-promise Map}***
  * @param {integer} userid - user ID
  * @param {obj} message - The message object containing the user & their message - also used to reference a direct reply to the user with message.reply()
- * @param {obj} Memory_Betslips - An empty object to push the user's betslips into. This object is created within memory && cleared at the end of this function to preserve memory. 
+ * @param {obj} betslipsMem - An empty object to push the user's betslips into. This object is created within memory && cleared at the end of this function to preserve memory. 
  * Initilization of the object is within the config file to retain it's empty value on startup.
  * @returns {obj} embedReply - A Discord embed reply object containing the user's betslips.
  * @references {@link listBets.js} - listBets.js is the `invoker` that will que this function to retrieve the user's betslips.
@@ -35,54 +36,55 @@ export function listMyBets(userid, message) {
     )
     new FileRunning('listMyBets')
     //? This arrow function used in⁡⁣⁣⁢ 𝙙𝙗⁡⁣⁣⁢.𝙢𝙖𝙥⁡ is to declare what we want to do with ⁡⁢⁣⁣𝙚𝙖𝙘𝙝⁡ row of the query result (see pg-promise db.Map method).
-    return db
-        .map(`SELECT * FROM betslips WHERE userid = $1`, [userid], (row) => {
-            var amount = row.amount
-            var teamID = row.teamid
-            var betid = row.betid
-            var result = row.betresult
-            if (
-                row == null ||
-                row.length == 0 ||
-                row.length < 1 ||
-                row == undefined
-            ) {
-                throw Log.Error(`[listMyBets.js] No bets found for user ${userid}`)
-            }
-            if (result.toLowerCase() == 'pending') {
-                Log.Red(result)
-                Log.Green(`[listMyBets.js] Bets Collected for ${userid}:`)
-                Log.BrightBlue(`[listMyBets.js]` + JSON.stringify(row))
-                Memory_Betslips[`${userid}`] = Memory_Betslips[`${userid}`] || {}
-                Memory_Betslips[`${userid}`].betslip =
-                    Memory_Betslips[`${userid}`].betslip || [] //? Creating an array for the objects (bets info) to be pushed into
-                Memory_Betslips[`${userid}`].betslip.push(
-                    //? Bet information is placed into the 'betslip' array in this format.
-                    //? The way Discord will display the information, each object here will be it's own column.
-                    //? This is important when it comes to manipulating the array for cancellations/modifying bets.
-                    {
-                        name: 'Bet ID',
-                        value: `${betid}`,
-                        inline: true,
-                    },
-                    {
-                        name: 'Amount',
-                        value: `${amount}`,
-                        inline: true,
-                    },
-                    {
-                        name: 'Team',
-                        value: `${teamID} \n \u200B`, //? `\𝙪𝟮𝟬𝟬𝘽` is a zero-width space (blank space) to placed @ the end to create space between each bet list
-                        inline: true,
-                    },
-                )
-            } else {
-                return
-            }
-        })
+    db.map(`SELECT * FROM betslips WHERE userid = $1`, [userid], (row) => {
+        var amount = row.amount
+        var teamID = row.teamid
+        var betid = row.betid
+        var result = row.betresult
+        if (row == null || row.length == 0 || row.length < 1 || row == undefined) {
+            throw Log.Error(
+                `[listMyBets.js] No bets found for user ${userid} [init stage]`,
+            )
+        }
+        if (result.toLowerCase() == 'pending') {
+            Log.Red(`Pending bet found for user ${userid}`)
+            Log.Green(
+                `[listMyBets.js] Bets Collected for ${userid}:\n${stringifyObject(
+                    row,
+                )}`,
+            )
+            betslipsMem[`${userid}`] = betslipsMem[`${userid}`] || {}
+            betslipsMem[`${userid}`].betslip = betslipsMem[`${userid}`].betslip || [] //? Creating an array for the objects (bets info) to be pushed into
+            betslipsMem[`${userid}`].betslip.push(
+                //? Bet information is placed into the 'betslip' array in this format.
+                //? The way Discord will display the information, each object here will be it's own column.
+                //? This is important when it comes to manipulating the array for cancellations/modifying bets.
+                {
+                    name: 'Bet ID',
+                    value: `${betid}`,
+                    inline: true,
+                },
+                {
+                    name: 'Amount',
+                    value: `$${amount}`,
+                    inline: true,
+                },
+                {
+                    name: 'Team',
+                    value: `${teamID} \n \u200B`, //? `\𝙪𝟮𝟬𝟬𝘽` is a zero-width space (blank space) to placed @ the end to create space between each bet list
+                    inline: true,
+                },
+            )
+        } else {
+            Log.Red(`Something went wrong when listing bets for user ${userid}`)
+            return
+        }
+    })
         .then(async function handleResp() {
-            Log.Green(`[listMyBets.js] Collected User (${userid}) Bet Information:`)
-            Log.BrightBlue(JSON.stringify(Memory_Betslips[`${userid}`].betslip))
+            Log.Green(
+                `[listMyBets.js] Collected User (${userid}) Bet Information [Memory - Stage 2]:`,
+            )
+            Log.BrightBlue(stringifyObject(betslipsMem[`${userid}`].betslip))
             var userName = message?.author?.username
                 ? message?.author?.username
                 : message?.user?.id
@@ -94,52 +96,37 @@ export function listMyBets(userid, message) {
                     : false
             var title
             if (isSelf == true) {
-                title = `Your Active Bet Slips`
+                title = `Your Active Bet Slips :tickets: `
             } else {
                 title = `${userName}'s Active Bet Slips`
             }
             var embedcontent = {
                 title: title,
                 color: '#00FF00',
-                fields: Memory_Betslips[`${userid}`].betslip,
+                fields: betslipsMem[`${userid}`].betslip,
+                target: `reply`,
             }
-            await embedReply(message, embedcontent) // LINK SendEmbedReply
-            //await storage.init() //? `storage` pkg required it's options to be loaded before we can use it
-
-            //SECTION LOCALSTORAGE⁡
-            /*
-            * ? Local Persistence is being used to:
-                - 1: Lower DB queries
-                - 2: Keep information stored in an efficient format through restarts.
-            * ? The 'betslips' array of objects (sourced from parent: Memory_Betslips) that was sent to the user are cloned into a new object to reserve/minimize our DB queries (while also trading memory for local persistance storage of the data)
-            * ? We use the `{userid}` as a key to keep individual objects for each user + with 'activeBetslips' at the end (${userid}-activeBetslips).
-            * ? Additionally, the `${userid}-hasBetsEmbed is created with the boolean true - this is intended to keep track of whether the user has requested betslips embed or not, for the same reason
-             */
-
-            // await storage.set(
-            //     `${userid}-activeBetslips`,
-            //     Memory_Betslips[`${userid}`].betslip,
-            // )
+            await Log.Yellow(`Sending ${userid} their betslips - Embed`)
+            await embedReply(message, embedcontent)
             await allbetSlipsCache.setKey(
                 `${userid}-activeBetslips`,
-                Memory_Betslips[`${userid}`].betslip,
+                betslipsMem[`${userid}`].betslip,
             )
             await allbetSlipsCache.setKey(`${userid}-hasBetsEmbed`, true)
             await allbetSlipsCache.save(true)
-            //await storage.set(`${userid}-hasBetsEmbed`, true) //? Setting a flag to indicate that the user has used this command, so we can return them the embed without compiling it again - causing the embed to stack, and unnecessarily the DB
-
             //!SECTION
             Log.Green(
                 `[listMyBets.js] Storing User (${userid}) collected Array of Bet Information.`,
             )
+            return
         })
         .catch((err) => {
             Log.Error(`[listMyBets.js] Error checking for active bet\n${err}`)
-            QuickError(message, `You currently have no active bets`)
+            QuickError(message, `You currently have no active bets`, true)
             return false
         })
         .finally(() => {
             //? Clearing the array from memory to preserve our memory usage
-            delete Memory_Betslips[`${userid}`]
+            delete betslipsMem[`${userid}`]
         })
 }
