@@ -1,9 +1,9 @@
-import { FileRunning } from '#botClasses/FileRunning'
 import { Log } from '#LogColor'
 import { TodaysDate } from '#cmdUtil/TodaysDate'
 import { container } from '#config'
 import { db } from '#db'
 import { embedReply } from '#embed'
+import { setupBetLog } from '#winstonLogger'
 
 /**
  * @module addNewBet -
@@ -20,8 +20,7 @@ import { embedReply } from '#embed'
  */
 
 export function addNewBet(message, betslip, interactionEph) {
-    Log.Red(`INTERACTION: ${interactionEph}`)
-    new FileRunning('addNewBet')
+    //Log.Red(`INTERACTION: ${interactionEph}`)
     /*
     Querying DB using db.tx since we are handling multiple transactions
     First query: Selecting the 'matchid' as its required for us to store the betslip information in the DB.
@@ -52,11 +51,9 @@ export function addNewBet(message, betslip, interactionEph) {
                 )
             })
             .then((data) => {
-                console.log(data)
-                console.log(betslip)
-                console.log(`--`)
-                console.log(`storing into activebets`)
-
+                setupBetLog.info(
+                    `Storing betslip into database - activebets\nData: ${data}\nBetslip: ${betslip}`,
+                )
                 return t.none(
                     `INSERT INTO activebets (betid, userid, teamid, matchid, amount) VALUES ($1, $2, $3, $4, $5)`,
                     [
@@ -70,8 +67,7 @@ export function addNewBet(message, betslip, interactionEph) {
             })
             .then(() => {
                 var isSilent = interactionEph ? true : false
-                Log.Yellow(`INTERACTION EPH, SHOW RESPONSE? ${isSilent}`)
-                Log.Green(`[addNewBet.js] Successfully added bet to activebets table`)
+                setupBetLog.info(`Successfully added betslip into the database.`)
                 var embedcontent = {
                     //? Compiling the properties of the embed to return to the user: confirming their bet has been added to DB
                     title: `Bet #${betslip.betid} Slip Confirmed`,
@@ -84,11 +80,13 @@ export function addNewBet(message, betslip, interactionEph) {
                 if (isSilent === true) {
                     return embedReply(message, embedcontent, true)
                 } else {
-                    embedReply(message, embedcontent) //? Sending the embed to the user via our embedReply function in [embedReply.js]
+                    return embedReply(message, embedcontent) //? Sending the embed to the user via our embedReply function in [embedReply.js]
                 }
             })
             .catch((err) => {
                 Log.Error(`[addNewBet.js] Error adding bet to activebets table\n${err}`)
+                setupBetLog.error(`Error adding bet to activebets table\n${err}`)
+                return
             })
     })
 }

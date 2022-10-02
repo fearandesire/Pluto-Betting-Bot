@@ -1,10 +1,13 @@
 import { AssignBetID } from '#botUtil/AssignIDs'
-import { Log } from '#LogColor'
 import { addNewBet } from '#utilBetOps/addNewBet'
+import { embedReply } from '#config'
 import flatcache from 'flat-cache'
 import merge from 'deepmerge'
 import { confirmBetEmbed as pleaseConfirmEmbed } from '../../bot_res/embeds/confirmBetEmbed.js'
+import { setupBetLog } from '#winstonLogger'
 import { sortBalance } from '#utilCurrency/sortBalance'
+import stringifyObject from 'stringify-object'
+
 let allbetSlipsCache = flatcache.create(
     `allbetSlipsCache.json`,
     './cache/betslips',
@@ -33,7 +36,7 @@ export async function confirmBet(message, betslip, userId, interactionEph) {
     const filter = (user) => {
         return user.id === userId
     }
-    Log.Yellow(`[confirmBet.js] Started timer!`)
+    setupBetLog.info(`Started bet confirmation timer for ${userId}`)
     //?  Create collection listener for the user to confirm their bet via message collection [Discord.js] on a 60 second timer.
     const collector = message.channel.createMessageCollector(filter, {
         time: 60000,
@@ -47,15 +50,17 @@ export async function confirmBet(message, betslip, userId, interactionEph) {
             (message.content.toLowerCase() === 'confirm' &&
                 message.author.id === userId)
         ) {
-            console.log(`collected ID:`)
-            console.log(message.author.id)
             collector.stop()
             var setBetID = AssignBetID()
             betslip.betid = setBetID
-            Log.Green(
-                `[confirmBet.js] ${
-                    betslip.userid
-                } confirmed a bet!\n Bet Slip:\n ${JSON.stringify(betslip)}`,
+            // Log.Green(
+            //     `[confirmBet.js] ${
+            //         betslip.userid
+            //     } confirmed a bet!\n Bet Slip:\n ${JSON.stringify(betslip)}`,
+            // )
+
+            setupBetLog.info(
+                `Betslip confirmed for ${userId}\n${stringifyObject(betslip)}`,
             )
             //? If user already has collected their list of bets via 'listBets', we need to allow them to retrieve a new list since they are adding to it.
             var cacheTitle = `${betslip.userid}`
@@ -82,18 +87,32 @@ export async function confirmBet(message, betslip, userId, interactionEph) {
                 message.author.id === userId)
         ) {
             collector.stop()
-            await message.reply('Bet Cancelled!')
+            setupBetLog.info(`Betslip cancelled for ${userId}`)
+            var embObj = {
+                title: `Bet Cancellation`,
+                description: `Your bet has been cancelled. Your balance has not been affected.`,
+                color: `#ffff00`,
+                isSilent: true,
+                target: `reply`,
+            }
+            await embedReply(message, embObj, true)
             return
         }
     })
-    collector.on('end', (collected, reason) => {
+    collector.on('end', async (collected, reason) => {
         if (reason === 'time') {
-            message.reply(
-                'Bet Cancelled! You did not confirm your bet in time [60 seconds].',
-            )
+            var embObj = {
+                title: `Bet Cancellation`,
+                description: `Your bet has been cancelled. Your balance has not been affected.`,
+                color: `#ffff00`,
+                isSilent: true,
+                target: `reply`,
+            }
+            await embedReply(message, embObj, true)
+            return
         }
     })
-    //? 60 Second Timer to confirm bet
+    //& 60 Second Timer to confirm bet
     setTimeout(() => {
         collector.stop('time')
     }, 60000)

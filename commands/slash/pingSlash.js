@@ -23,7 +23,7 @@ export class pingSlash extends Command {
         )
     }
     async chatInputRun(interaction) {
-        console.log(interaction)
+        //console.log(interaction)
         await interaction.reply({ content: 'Pong!', ephemeral: true })
         var userid = interaction.user.id
     }

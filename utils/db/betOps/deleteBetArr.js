@@ -50,7 +50,7 @@ export async function deleteBetFromArray(
         `Launching [deleteBetFromArray.js]\nSearching for betid: #${betid} associated with userid: ${userid}`,
     )
     let allbetSlipsCache = await flatcache.load(
-        'allbetSlipsCache',
+        'allbetSlipsCache.json',
         './cache/betslips',
     )
     let flat

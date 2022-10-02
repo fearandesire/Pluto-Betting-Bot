@@ -488,3 +488,47 @@ export const giveMoneyLog = winston.createLogger({
         }),
     ],
 })
+export const setupBetLog = winston.createLogger({
+    level: 'info',
+    format: winston.format.combine(
+        winston.format.colorize(),
+        splat(),
+        winston.format.prettyPrint({
+            colorize: true,
+            depth: 5,
+        }),
+        timestamp,
+        customWinstonFormat,
+    ),
+    transports: [
+        new winston.transports.File({
+            filename: 'logs/err/setupBetErr.log',
+            level: 'error',
+        }),
+        new winston.transports.File({
+            filename: 'logs/setupBe.log',
+        }),
+    ],
+})
+export const valUserLog = winston.createLogger({
+    level: 'info',
+    format: winston.format.combine(
+        winston.format.colorize(),
+        splat(),
+        winston.format.prettyPrint({
+            colorize: true,
+            depth: 5,
+        }),
+        timestamp,
+        customWinstonFormat,
+    ),
+    transports: [
+        new winston.transports.File({
+            filename: 'logs/err/valUserErr.log',
+            level: 'error',
+        }),
+        new winston.transports.File({
+            filename: 'logs/valUserLog.log',
+        }),
+    ],
+})

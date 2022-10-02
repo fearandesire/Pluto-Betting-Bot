@@ -42,7 +42,7 @@ export class giveMoneySlash extends Command {
 		var userId = interaction.user.id
 		var targetId = interaction.options.getMentionable('user').user.id
 		var amount = interaction.options.getInteger('amount')
-		await validateUser(interaction, userId)
+		await validateUser(interaction, userId, true)
 		await transferTo(interaction, userId, targetId, amount, true)
 	}
 }

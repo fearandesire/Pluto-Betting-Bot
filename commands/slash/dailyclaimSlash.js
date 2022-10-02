@@ -28,7 +28,7 @@ export class dailyClaimSlash extends Command {
 		var userid = interaction.user.id
 		statcord
 		var currentTime = new Date().getTime()
-		await validateUser(interaction, userid)
+		await validateUser(interaction, userid, true)
 		await processClaim(userid, interaction, currentTime)
 	}
 }

@@ -26,7 +26,7 @@ export async function checkBetsCache(message, userId, interactionEph) {
             : false
     var usersBetSlips =
         (await allbetSlipsCache.getKey(`${user}-activeBetslips`)) || null //? get user's active bet slips embed from local storage
-    console.log(`Bet Slip For User: >>`, usersBetSlips)
+    //console.log(`Bet Slip For User: >>`, usersBetSlips)
     //? Ensure that the user exists in the database before we attempt to retrieve their active bets.
     await validateUser(message, user, interactionEph) //? Validate User in DB
     //? Validate if user has any active bets
@@ -55,7 +55,7 @@ export async function checkBetsCache(message, userId, interactionEph) {
         var isSilent = interactionEph ? true : false
         var title
         if (isSelf === true) {
-            title = `Your Active Bet Slips [debug]`
+            title = `Your Active Bet Slips :tickets: `
         } else if (isSelf === false) {
             title = `${userName}'s Active Bet Slips`
         }
