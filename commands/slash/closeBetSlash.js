@@ -38,7 +38,6 @@ export class closeMatchupSlash extends Command {
         )
     }
     async chatInputRun(interaction) {
-        console.log(`ABC ABC ABC`)
         var userid = interaction.user.id
         if ((await isModSlash(interaction)) === false) {
             interaction.reply({

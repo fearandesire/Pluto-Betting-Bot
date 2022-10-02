@@ -6,7 +6,6 @@ import { container, flatcache } from '#config'
 import { Log } from '#LogColor'
 import _ from 'lodash'
 import { deleteBetArrLog } from '#winstonLogger'
-import { msgBotChan } from '#botUtil/msgBotChan'
 
 /**
  * @module deleteBetFromArray -
@@ -21,6 +20,7 @@ import { msgBotChan } from '#botUtil/msgBotChan'
  * Then we utilize the Lodash library to find the index of the bet via the 'betid', and use that to delete the relevant bet information.
  * To provide insight on why exactly we delete the index and the additional 2 indexs' following, it is important to understand the structure of the array.
  *import { msgBotChan } from '#botUtil//msgBotChan.js';
+import { deleteBetArrLog } from '#winstonLogger';
 
  *  The array is structured as follows:
  * ```key: 'userid-activeBetSlips', value: [`name: 'betid', value: 'integer'`, `name: 'amount', value: 'integer'`, `name: 'TeamID', value: 'text'`]```
@@ -149,8 +149,9 @@ export async function deleteBetFromArray(
                 `[deleteBetArr.js] Successfully deleted bet #${betid} from Local Storage Betslips array for ${userid}`,
             )
         } catch (err) {
-            msgBotChan(`Unable to locate bet #${betid}`)
-            deleteBetArrLog.info(err)
+            deleteBetArrLog.error(
+                `Error: Unable to locate bet #${betid} for deletion.\n${err}`,
+            )
             return
         }
     }

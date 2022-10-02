@@ -6,47 +6,14 @@ import { initCloseMatchups } from '#utilMatchups/initCloseMatchups'
 import { resolveMatchup } from '#cacheUtil/resolveMatchup'
 import stringifyObject from 'stringify-object'
 
-const url =
-    // eslint-disable-next-line no-undef
-    process.env.odds_API_NFLSCORE
+const url = process.env.odds_API_NFLSCORE
 const options = {
     method: 'GET',
     headers: {
         'X-RapidAPI-Host': 'api.the-odds-api.com',
-        // eslint-disable-next-line no-undef
         'X-RapidAPI-Key': process.env.odds_API_XKEY,
     },
 }
-
-/* 
-# API Scores Response Schema
-[    
-{
-        "id": "6bde759afa450fe673e70e555be88ba4",
-        "sport_key": "americanfootball_nfl",
-        "sport_title": "NFL",
-        "commence_time": "2022-09-09T00:20:00Z",
-        "completed": false,
-        "home_team": "Los Angeles Rams",
-        "away_team": "Buffalo Bills",
-        "scores": null,
-        "last_update": null
-    },
-    etc
-    
-    & If the game is live or completed, the score property will be an array containing the following information.
-    "scores": [
-        {
-        name: 'home_team_name',
-        score: 'integer'
-        },
-        {
-        name: 'away_team_name',
-        score: 'integer'
-        }
-    ]
-]
-*/
 
 /**
  * @module checkCompleted -

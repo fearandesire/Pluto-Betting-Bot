@@ -86,29 +86,6 @@ export const processDailyClaimLog = winston.createLogger({
         new winston.transports.File({ filename: 'logs/processDailyClaim.log' }),
     ],
 })
-export const deleteBetLog = winston.createLogger({
-    level: 'info',
-    format: winston.format.combine(
-        winston.format.colorize(),
-        splat(),
-        winston.format.prettyPrint({
-            colorize: true,
-            depth: 5,
-        }),
-        timestamp,
-        customWinstonFormat,
-    ),
-    transports: [
-        new winston.transports.File({
-            filename: 'logs/closeBetOp/5. deleteBetLogError.log',
-            level: 'error',
-        }),
-        new winston.transports.File({
-            filename: 'logs/closeBetOp/5. deleteBetLog.',
-        }),
-    ],
-})
-
 export const globalLog = winston.createLogger({
     level: 'info',
     format: winston.format.combine(
@@ -529,6 +506,50 @@ export const valUserLog = winston.createLogger({
         }),
         new winston.transports.File({
             filename: 'logs/valUserLog.log',
+        }),
+    ],
+})
+export const removeMatchLog = winston.createLogger({
+    level: 'info',
+    format: winston.format.combine(
+        winston.format.colorize(),
+        splat(),
+        winston.format.prettyPrint({
+            colorize: true,
+            depth: 5,
+        }),
+        timestamp,
+        customWinstonFormat,
+    ),
+    transports: [
+        new winston.transports.File({
+            filename: 'logs/err/removeMatchErr.log',
+            level: 'error',
+        }),
+        new winston.transports.File({
+            filename: 'logs/removeMatchLog.log',
+        }),
+    ],
+})
+export const trackProgressLog = winston.createLogger({
+    level: 'info',
+    format: winston.format.combine(
+        winston.format.colorize(),
+        splat(),
+        winston.format.prettyPrint({
+            colorize: true,
+            depth: 5,
+        }),
+        timestamp,
+        customWinstonFormat,
+    ),
+    transports: [
+        new winston.transports.File({
+            filename: 'logs/err/trackProgressErr.log',
+            level: 'error',
+        }),
+        new winston.transports.File({
+            filename: 'logs/trackProgres.log',
         }),
     ],
 })
