@@ -2,7 +2,7 @@
     "name": "bettingbot",
     "version": "1.0.0",
     "description": "",
-    "main": "Pluto.js",
+    "main": "Pluto.mjs",
     "prettier": "fenix-js-prettier-config",
     "scripts": {
         "dev": "run-p watch start",
