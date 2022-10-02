@@ -52,7 +52,7 @@ export async function embedReply(message, embedContent, interactionEph) {
 
             //# Embed Destination is not a reply, but to a specific channel
         } else if (target !== 'reply') {
-            if (isSilent == false || isSilent === false) {
+            if (isSilent == false) {
                 reqChan = await fetchChanId(target)
                 reqChan.send({ embeds: [embedWithFields] })
                 return
