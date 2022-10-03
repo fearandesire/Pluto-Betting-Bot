@@ -1,7 +1,6 @@
-import { Log, container, flatcache } from '#config'
+import { Log, container } from '#config'
 
 import _ from 'lodash'
-import { assignMatchID } from '#botUtil/AssignIDs'
 import { clearProgress } from './clearProgress.js'
 import { closeMatchups } from '#utilMatchups/closeMatchups'
 import { deleteBetFromArray } from '#utilBetOps/deleteBetArr'
@@ -9,9 +8,9 @@ import { findMatchup } from '#utilMatchups/findMatchup'
 import { getBetsFromId } from '#utilBetOps/getBetsFromId'
 import { inProgress } from './inProgress.js'
 import { initCloseBetLog } from '../../logging.js'
-import merge from 'deepmerge'
 import { msgBotChan } from '#botUtil/msgBotChan'
 import { removeMatch } from '#utilMatchups/removeMatchup'
+import { removeMatchupCache } from './removeMatchupCache.js'
 import { resolvePayouts } from '#utilBetOps/resolvePayouts'
 import { resolveTeam } from '#cmdUtil/resolveTeam'
 import { returnProgress } from './returnProgress.js'
@@ -29,6 +28,7 @@ import stringifyObject from 'stringify-object'
  */
 
 export async function initCloseMatchups(message, matchId, teamThatWon) {
+    // return new Promise(async (resolve, reject) => {
     await returnProgress(matchId)
         .then(async (res) => {
             if (res == true) {
@@ -45,164 +45,102 @@ export async function initCloseMatchups(message, matchId, teamThatWon) {
             }
         })
         .catch((err) => {
-            throw new Error(err)
+            return
         })
+
     let opposingTeam
-    let onLastBet
     teamThatWon = await resolveTeam(teamThatWon)
     await initCloseBetLog.info(
         `Initilization - Closing Matchup Operation Started!\nMatch ID: ${matchId}, Winning Team: ${teamThatWon}`,
     )
-    let pendingSlips = flatcache.create(
-        'pendingSlipCache.json',
-        './cache/pendingSlipCache',
-    )
     matchId = parseInt(matchId)
-    await initCloseBetLog.info(`Closing Bets for Matchup ID: ${matchId}`)
-    let collectionId = await assignMatchID()
     container.betSlipCount = 0
-    await pendingSlips.setKey(`Collection-${collectionId}`, {})
-    await initCloseBetLog.info(
-        `Pending Slip Cache Created for ${matchId}; Collection ID: ${collectionId}`,
-    )
-    container.tempObj = pendingSlips.getKey(`Collection-${collectionId}`)
-    var locateBets = await getBetsFromId(matchId)
+    await getBetsFromId(matchId)
         .then(async (data) => {
-            //console.log(`Data from getBetsFromId`, data)
             if (_.isEmpty(data)) {
                 initCloseBetLog.error(
                     `== ERROR: == \nUnable to locate bets for Match ID: ${matchId} from the Database.\nLikely, there are no bets for this match.\nPlease verify this is accurate in the databse [activebets table]`,
                 )
                 throw new Error(`No bets found for Match ID: ${matchId}`)
             }
+
+            //@remind - Change this to a separate log file
+            await initCloseBetLog.info(
+                `\n===Collected Betslips for Match #${matchId}\n\n${stringifyObject(
+                    data,
+                )}\n\n====`,
+            )
+
             /* 
             # iterate through array of bets found with the matchId provided
             # Store betslips into cache with a unique 'collectionId'
             */
-            await inProgress(matchId)
-            for (let i = 0; i < data.length; i++) {
+            await inProgress(matchId) //# verify if this match is already in progress to be closed
+            for await (let bet of data) {
                 container.betSlipCount += 1
-                const bet = data[i]
-                const betUserId = bet.userid
-                const teamUserBet = bet.teamid
+                const userId = bet.userid
+                const teamBetOn = bet.teamid
                 const betAmount = bet.amount
-                const betId = bet.betid
-                const betMatchId = bet.matchid
-                var usersSlip = {
-                    [betMatchId]: {
-                        [i]: {
-                            userId: betUserId,
-                            teamBetOn: teamUserBet,
-                            betAmount: betAmount,
-                            betId: betId,
-                        },
-                    },
-                }
-                //# merge the betslip into the collection - merging to avoid erasing prior data collected
-                var merged = await merge(container.tempObj, usersSlip)
-                container.tempObj = merged
-                //# update the cache
-                await pendingSlips.setKey(
-                    `Collection-${collectionId}`,
-                    container.tempObj,
-                )
-                //# inform when the last bet for the matchup has been closed
-                if (i === data.length - 1) {
-                    initCloseBetLog.info(
-                        `All bets for Match ID: ${matchId} have been closed.`,
-                    )
-                    onLastBet = true
-                }
-            }
-        })
-        .catch(async (error) => {
-            await initCloseBetLog.info(
-                `Unable to locate bets for Match ID: ${matchId}\nLikely, there are no bets for placed on this match\nPlease verify this is accurate in the database [activebets table]`,
-            )
-            await initCloseBetLog.error(
-                `Unable to locate bets for Match ID: ${matchId}\nLikely, there are no bets for placed on this match\nPlease verify this is accurate in the database [activebets table]`,
-            )
-            return false
-        })
-    if (locateBets === null) {
-        await initCloseBetLog.info(`No bets found for Match ID: ${matchId}`)
-        await initCloseBetLog.error(`No bets found for Match ID: ${matchId}`)
-        Log.Red(`No bets found for Match ID: ${matchId}`)
-        return
-    }
-    container.memoryCollection = pendingSlips.getKey(`Collection-${collectionId}`)
-    await initCloseBetLog.info(
-        `\n===Collected Betslips for ${matchId}\n\n${stringifyObject(
-            container.memoryCollection,
-        )}\n\n====`,
-    )
-    //& With the betslips collected, we can now iterate through the collection
-    //& As we iterate, we will 'close' the bet, payout the winners, and update the relevant info in the database
-    let initCloseBet = async () => {
-        for await (const [key, value] of Object.entries(
-            container.memoryCollection,
-        )) {
-            //# assign variable to each betslip obj
-            var usersBet = value
-            //# iterate through each users bet object found
-            for await (const [key, value] of Object.entries(usersBet)) {
-                let userId = value.userId
-                let teamBetOn = value.teamBetOn
-                let betAmount = value.betAmount
-                let betId = value.betId
-                betId = parseInt(betId)
-                let silent = true
-                /** @var {string} matchOdds - Will be populated with the odds of the winning bet */
-                let matchOdds
-                /** @var {string} wonOrLost - Will be updated with the result of the bet which is determined by the var `teamThatWon` - Used to update the 'betresult' column in the betslips (leaderboard) table */
+                const betId = Number(bet.betid)
+                const matchId = bet.matchid
+                const silent = true
+                /** @var {string} wonOrLost - Will be updated with the result of the bet which is determined by the var `teamThatWon` */
                 let wonOrLost
+                //& Process Bets
                 if (teamBetOn !== teamThatWon) {
-                    opposingTeam = teamThatWon
-                    //console.log(`Opp: ${opposingTeam}`)
-                    //# close all bets for those that lost
-                    wonOrLost = 'lost'
+                    //& «««««««« Lost Bet Operations «««««««««««««««««««««« */
                     await initCloseBetLog.info(
-                        `User <@${userId}> lost their bet - Skipping retrieval of their matchup odds.`,
+                        `User <@${userId}> lost their bet\nBet ID: ${betId}\nBet Amount: ${betAmount}\nTeam Bet On: ${teamBetOn}\nTeam that won: ${teamThatWon}\nMatch ID: ${matchId}`,
                     )
-
-                    var betInformation = await {
+                    opposingTeam = teamThatWon
+                    wonOrLost = 'lost'
+                    //# prepare bet info object for closing
+                    var lostBetInformation = await {
                         [`userId`]: userId,
                         [`betId`]: betId,
                         [`wonOrLost`]: wonOrLost,
-                        [`matchOdds`]: matchOdds,
-                        [`payout`]: payout,
-                        [`profit`]: profit,
+                        [`payout`]: 0,
+                        [`profit`]: 0,
                         [`teamBetOn`]: teamBetOn,
                         [`opposingTeam`]: opposingTeam,
-                        [`onLastBet`]: onLastBet,
                         [`matchId`]: matchId,
                     }
-                    await closeMatchups(betInformation)
+                    //# close the bet
+                    await closeMatchups(lostBetInformation)
+                    //# remove from bet array
                     await deleteBetFromArray(message, userId, betId, silent)
+                    //& «««««««« End of Lost Bet Operations «««««««« */
                 } else {
-                    await initCloseBetLog.info(
-                        `User <@${userId}> won their bet! Retrieving their matchup odds.`,
+                    //& «««««««« Won Bet Operations «««««««« */
+
+                    /** @var {string} matchOdds - Will be populated with the odds of the winning bet */
+                    let matchOdds
+                    matchOdds = await findMatchup(teamBetOn).then(
+                        async (matchOddsData) => {
+                            //# retrieve the odds of the winning team (teamThatWon) by retrieving the matchup and comparing it to the team in the user's betslip (teamBetOn) collected prior
+                            if (matchOddsData?.teamone == teamBetOn) {
+                                await initCloseBetLog.info(
+                                    `[Match #${matchId}] Odds: ${matchOddsData?.teamoneodds}`,
+                                )
+                                opposingTeam = matchOddsData?.teamtwo
+                                return matchOddsData?.teamoneodds
+                            } else if (matchOddsData?.teamtwo == teamBetOn) {
+                                await initCloseBetLog.info(
+                                    `[Match #${matchId}] Odds: ${matchOddsData?.teamtwoodds}`,
+                                )
+                                opposingTeam = matchOddsData?.teamone
+                                return matchOddsData?.teamtwoodds
+                            }
+                        },
                     )
-                    //# retrieve the odds of the winning team (teamThatWon)  by retrieving the matchup and comparing it to the team in the user's betslip (teamBetOn) collected prior
-                    matchOdds = await findMatchup(value.teamBetOn).then(async (data) => {
-                        if (data?.teamone == teamBetOn) {
-                            await initCloseBetLog.info(`Odds: ${data?.teamoneodds}`)
-                            opposingTeam = data?.teamtwo
-                            return data?.teamoneodds
-                        } else if (data?.teamtwo == teamBetOn) {
-                            await initCloseBetLog.info(`Odds: ${data?.teamtwoodds}`)
-                            opposingTeam = data?.teamone
-                            return data?.teamtwoodds
-                        }
-                    })
                     var payAndProfit = await resolvePayouts(matchOdds, betAmount)
                     var payout = payAndProfit.payout
                     var profit = payAndProfit.profit
                     await initCloseBetLog.info(
-                        `User ID: ${userId}\nTeam Bet On: ${teamBetOn}\nBet Amount: ${betAmount}\nBet ID: ${betId}\nMatch Odds: ${matchOdds}\nPayout: ${payout}\nProfit: ${profit}`,
+                        `User <@${userId}> won their bet!\nBet ID: ${betId}\nBet Amount: ${betAmount}\nPayout: ${payout}\nProfit: ${profit}\nTeam Bet On: ${teamBetOn}\nTeam that won: ${teamThatWon}\nMatch ID: ${matchId}`,
                     )
                     wonOrLost = 'won'
-                    var betInformation = await {
+                    var wonBetInformation = await {
                         [`userId`]: userId,
                         [`betId`]: betId,
                         [`wonOrLost`]: wonOrLost,
@@ -211,19 +149,26 @@ export async function initCloseMatchups(message, matchId, teamThatWon) {
                         [`profit`]: profit,
                         [`teamBetOn`]: teamBetOn,
                         [`opposingTeam`]: opposingTeam,
-                        [`onLastBet`]: onLastBet,
                         [`matchId`]: matchId,
                     }
-                    Log.Red(`SENDING MATCHUP TO BE CLOSED`)
-                    await closeMatchups(betInformation)
+                    await closeMatchups(wonBetInformation)
                     await deleteBetFromArray(message, userId, betId, silent)
                 }
-            }
-        }
-    }
-    initCloseBet().then(async () => {
-        await msgBotChan(`All bets for Match ID: ${matchId} have been closed.`)
-        await clearProgress(matchId)
-        await removeMatch(matchId)
-    })
+                //& «««««««« End of Won Bet Operations «««««««« */
+            } //# end of for loop
+            await msgBotChan(`All bets for Match ID: #${matchId} have been closed.`)
+            await clearProgress(matchId)
+            await removeMatch(matchId)
+            await removeMatchupCache(matchId)
+            return
+            //    resolve()
+        })
+        .catch(async (error) => {
+            await initCloseBetLog.error(
+                `Unable to locate bets for Match #${matchId} - Verify that this is accurate`,
+            )
+            await removeMatch(matchId)
+            return false
+        })
+    //    })
 }
