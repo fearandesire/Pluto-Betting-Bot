@@ -553,3 +553,25 @@ export const trackProgressLog = winston.createLogger({
         }),
     ],
 })
+export const dmLog = winston.createLogger({
+    level: 'info',
+    format: winston.format.combine(
+        winston.format.colorize(),
+        splat(),
+        winston.format.prettyPrint({
+            colorize: true,
+            depth: 5,
+        }),
+        timestamp,
+        customWinstonFormat,
+    ),
+    transports: [
+        new winston.transports.File({
+            filename: 'logs/err/dmErr.log',
+            level: 'error',
+        }),
+        new winston.transports.File({
+            filename: 'logs/dmLog.log',
+        }),
+    ],
+})

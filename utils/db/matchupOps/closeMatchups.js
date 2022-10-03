@@ -1,6 +1,5 @@
 import { Log, flatcache } from '#config'
 
-import { SapDiscClient } from '#main'
 import { closeMatchupsLog } from '#winstonLogger'
 import { db } from '#db'
 
@@ -14,7 +13,7 @@ import { db } from '#db'
  */
 
 export async function closeMatchups(betInformation) {
-    //# return as promise
+    //# resolve() as promise
     return new Promise(async (resolve, reject) => {
         Log.Yellow(`[closeMatchups.js] Closing Bet...`)
         /**
@@ -35,6 +34,7 @@ export async function closeMatchups(betInformation) {
         var teamBetOn = betInformation?.teamBetOn
         var opposingTeam = betInformation?.opposingTeam
         var matchId = betInformation?.matchId
+        var betAmount = betInformation?.betAmount
         closeMatchupsLog.info(
             `Launching [closeMatchups.js]\nBet Information: ${betInformation}`,
         )
@@ -70,8 +70,8 @@ export async function closeMatchups(betInformation) {
                     )
                     const payoutAmount = parseFloat(payout)
                     const profitAmount = parseFloat(profit)
-                    const currentUserBal = parseFloat(userBal.balance)
-                    const newUserBal = currentUserBal + profitAmount
+                    const currentUserBal = parseFloat(userBal?.balance)
+                    const newUserBal = currentUserBal + payoutAmount
                     await closeMatchupsLog.info(
                         `USER ${userid} HAS WON THEIR BET (ID: ${betid}) - PROCESSING PAYOUT\n\nBALANCE INFORMATION FOR USER ${userid}:\nCurrent Balance:$${currentUserBal}\nProfit Amount:$${profitAmount}\nNew Balance:$${newUserBal}`,
                     )
@@ -98,25 +98,6 @@ export async function closeMatchups(betInformation) {
 
                     await allbetSlipsCache.setKey(`${userid}-hasBetsEmbed`, false)
                     await allbetSlipsCache.save(true)
-                    var embObj = {
-                        title: `${teamBetOn} vs. ${opposingTeam}`,
-                        description: `You won your bet on the ${teamBetOn}!\nHere's your payout info :moneybag:\n\n**Payout:** $${payoutAmount}\n**Profit:** $${profitAmount}\n**Updated Balance**: $${newUserBal}`,
-                        footer: {
-                            text: `See an issue here? Please contact FENIX#7559 | Bet ID: ${betid}`,
-                        },
-                        color: `#3abc2c`,
-                    }
-                    await SapDiscClient.users.fetch(`${userid}`).then((user) => {
-                        //# DM the user the result of their bet
-                        try {
-                            user.send({ embeds: [embObj] })
-                            closeMatchupsLog.info(`DM'd ${userid} successfully`)
-                        } catch (err) {
-                            closeMatchupsLog.info(
-                                `Failed to send DM to ${user.tag} (${user.id})`,
-                            )
-                        }
-                    })
                 }
             }).then(async (data) => {
                 closeMatchupsLog.info(
@@ -165,24 +146,6 @@ export async function closeMatchups(betInformation) {
                     closeMatchupsLog.info(
                         `User <@${userid}>'s Bet ${betid} has been closed (Lost Bet).`,
                     )
-                    var embObj = {
-                        title: `${teamBetOn} vs. ${opposingTeam}`,
-                        description: `You lost your bet on the ${teamBetOn}. Sorry, better luck next time!`,
-                        color: `#ff0000`,
-                        footer: `See an issue here? Please contact FENIX#7559 | Bet ID: ${betid}`,
-                    }
-                    //# DM the user the result of their bet
-                    await SapDiscClient.users.fetch(`${userid}`).then((user) => {
-                        try {
-                            user.send({ embeds: [embObj] })
-                            closeMatchupsLog.info(`DM'd ${userid} successfully`)
-                        } catch (err) {
-                            closeMatchupsLog.info(
-                                `Failed to send DM to ${user.tag} (${user.id})`,
-                            )
-                            resolve()
-                        }
-                    })
                 }
             }).then((data) => {
                 closeMatchupsLog.info(
