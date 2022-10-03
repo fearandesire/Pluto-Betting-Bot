@@ -12,7 +12,7 @@ import { registerUserLog } from '#Logger'
  * @param {integer | string} userid - The ID of the user to be created.
  */
 
-export function registerUser(message, userid, inform, interactionEph) {
+export async function registerUser(message, userid, inform, interactionEph) {
     new FileRunning(`registerUser`)
     db.tx(`registerUser-Transaction`, async (t) => {
         let findUser = await t.oneOrNone(
@@ -32,7 +32,7 @@ export function registerUser(message, userid, inform, interactionEph) {
                 footer: `Pluto - Developed by FENIX#7559`,
                 silent: isSilent,
             }
-            embedReply(message, embedObj)
+            await embedReply(message, embedObj)
             return t.any(
                 `INSERT INTO currency (userid, balance) VALUES ($1, $2) RETURNING *`,
                 [userid, '100'],
