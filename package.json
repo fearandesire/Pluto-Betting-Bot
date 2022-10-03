@@ -1,6 +1,6 @@
 {
 	"name": "bettingbot",
-	"version": "1.2.3",
+	"version": "1.2.4",
 	"description": "",
 	"main": "Pluto.mjs",
 	"prettier": "fenix-js-prettier-config",
@@ -76,6 +76,7 @@
 		"pg": "^8.7.3",
 		"pg-monitor": "^1.4.1",
 		"pg-promise": "^10.11.1",
+		"pm2": "^5.2.0",
 		"postgresql": "^0.0.1",
 		"statcord.js": "^3.4.3",
 		"stringify-object": "^4.0.1",
