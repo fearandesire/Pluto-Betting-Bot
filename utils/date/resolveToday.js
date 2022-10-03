@@ -10,6 +10,7 @@ export function resolveToday() {
     this.todaysMonth = this.today.getMonth() + 1
     this.todaysYear = this.today.getFullYear()
     this.todayFull = `${this.todaysMonth} ${this.dayNum}, ${this.todaysYear}`
+    this.todayFullEasy = `${this.todaysYear}${this.todaysMonth}${this.dayNum}`
     this.currWeekNum = currentWeekNumber(this.todayFull)
     this.weekNum = parseInt(this.currWeekNum)
     this.weekDay = ['Sun', 'Mon', 'Tues', 'Wed', 'Thur', 'Fri', 'Sat']
