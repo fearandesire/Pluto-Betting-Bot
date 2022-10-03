@@ -3,7 +3,6 @@ import { Log, flatcache } from '#config'
 import { SapDiscClient } from '#main'
 import { closeMatchupsLog } from '#winstonLogger'
 import { db } from '#db'
-import { msgBotChan } from '#botUtil/msgBotChan'
 
 //import { removeMatch } from '#utilMatchups/removeMatchup'
 
@@ -35,16 +34,15 @@ export async function closeMatchups(betInformation) {
         var profit = betInformation?.profit
         var teamBetOn = betInformation?.teamBetOn
         var opposingTeam = betInformation?.opposingTeam
-        var onLastBet = betInformation?.onLastBet
         var matchId = betInformation?.matchId
-        closeMatchupsLog.info(`Launching [closeMatchups.js]`)
-        closeMatchupsLog.info(`Betslip Information Received:`)
-        closeMatchupsLog.info(betInformation)
+        closeMatchupsLog.info(
+            `Launching [closeMatchups.js]\nBet Information: ${betInformation}`,
+        )
         let allbetSlipsCache = flatcache.create(
             `allbetSlipsCache.json`,
             './cache/betslips',
         )
-        //& Operations for a bet that was won
+        //& Won Bet Ops
         if (wonOrLost === 'won') {
             db.tx('closeMatchups', async (t) => {
                 const getBetCount = await t.manyOrNone(
@@ -61,10 +59,6 @@ export async function closeMatchups(betInformation) {
                 if (betCount === 0) {
                     await closeMatchupsLog.error(
                         `User ${userid} has no active bets\nCeased closing bet operations - no data has been changed,`,
-                    )
-                    await msgBotChan(
-                        `User ${userid} has no active bets - Unable to close their bet. Moving onto the next bet, but please verify this information is true.`,
-                        true,
                     )
                     resolve()
                 }
@@ -105,9 +99,11 @@ export async function closeMatchups(betInformation) {
                     await allbetSlipsCache.setKey(`${userid}-hasBetsEmbed`, false)
                     await allbetSlipsCache.save(true)
                     var embObj = {
-                        title: `Match: ${teamBetOn} vs. ${opposingTeam}`,
-                        description: `You won your bet! Here's your payout info :moneybag:\n**Payout:** $${payoutAmount}\n**Profit:** $${profitAmount}\n**Updated Balance**: $${newUserBal}`,
-                        footer: `See an issue here? Please contact FENIX#7559 | Bet ID: ${betid}`,
+                        title: `${teamBetOn} vs. ${opposingTeam}`,
+                        description: `You won your bet on the ${teamBetOn}!\nHere's your payout info :moneybag:\n\n**Payout:** $${payoutAmount}\n**Profit:** $${profitAmount}\n**Updated Balance**: $${newUserBal}`,
+                        footer: {
+                            text: `See an issue here? Please contact FENIX#7559 | Bet ID: ${betid}`,
+                        },
                         color: `#3abc2c`,
                     }
                     await SapDiscClient.users.fetch(`${userid}`).then((user) => {
@@ -126,12 +122,9 @@ export async function closeMatchups(betInformation) {
                 closeMatchupsLog.info(
                     `[closeMatchups.js] Operations for ${userid} completed.`,
                 )
-                if (onLastBet === true) {
-                    closeMatchupsLog.info(`PROCESSED THE LAST BET FOR MATCH ${matchId}`)
-                }
                 resolve()
             })
-            //& Operations for a bet that was lost
+            //& Lost Bet Ops
         } else if (wonOrLost === 'lost') {
             db.tx('closeMatchups', async (t) => {
                 const getBetCount = await t.manyOrNone(
@@ -148,10 +141,6 @@ export async function closeMatchups(betInformation) {
                 if (betCount === 0) {
                     await closeMatchupsLog.error(
                         `User ${userid} has no active bets\nCeased closing bet operations - no data has been changed,`,
-                    )
-                    await msgBotChan(
-                        `User ${userid} has no active bets - Unable to close their bet. Moving onto the next bet, but please verify this information is true.`,
-                        true,
                     )
                     resolve()
                 }
@@ -177,8 +166,8 @@ export async function closeMatchups(betInformation) {
                         `User <@${userid}>'s Bet ${betid} has been closed (Lost Bet).`,
                     )
                     var embObj = {
-                        title: `Match: ${teamBetOn} vs. ${opposingTeam}`,
-                        description: `**__Result:__** ${teamBetOn} lost - sorry, better luck next time!`,
+                        title: `${teamBetOn} vs. ${opposingTeam}`,
+                        description: `You lost your bet on the ${teamBetOn}. Sorry, better luck next time!`,
                         color: `#ff0000`,
                         footer: `See an issue here? Please contact FENIX#7559 | Bet ID: ${betid}`,
                     }
@@ -191,12 +180,13 @@ export async function closeMatchups(betInformation) {
                             closeMatchupsLog.info(
                                 `Failed to send DM to ${user.tag} (${user.id})`,
                             )
+                            resolve()
                         }
                     })
                 }
             }).then((data) => {
                 closeMatchupsLog.info(
-                    `[closeMatchups.js] Operations for ${userid} completed.`,
+                    `[closeMatchups.js] Close Bet ${betid} Operations for ${userid} completed.`,
                 )
                 resolve()
             })

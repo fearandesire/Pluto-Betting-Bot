@@ -35,18 +35,22 @@ export async function checkCompleted() {
     await _.forEach(compResults, async function (value, key) {
         if (value.completed === true) {
             checkCompletedLog.info(
-                `Completed Game Found: ${value.home_team} vs ${value.away_team}`,
+                `Completed Game Found in API: ${value.home_team} vs ${value.away_team}`,
             )
             //#retrieve matchId with the team's found
             var hTeam = value.home_team
             var aTeam = value.away_team
-            var dbMatchId = (await resolveMatchup(hTeam).matchupId)
-                ? await resolveMatchup(hTeam).matchupId
-                : await resolveMatchup(aTeam).matchupId
-            if (!dbMatchId) {
-                checkCompletedLog.info(
-                    `Unable to find a matchup ID for ${value.home_team}`,
-                )
+            try {
+                var dbMatchId = (await resolveMatchup(hTeam).matchupId)
+                    ? await resolveMatchup(hTeam).matchupId
+                    : await resolveMatchup(aTeam).matchupId
+                if (!dbMatchId || dbMatchId == false) {
+                    checkCompletedLog.error(
+                        `Unable to find a matchup ID for ${value.home_team}`,
+                    )
+                    throw new Error(`Unable to find a matchup ID for ${value.home_team}`)
+                }
+            } catch (err) {
                 return
             }
             dbMatchId = Number(dbMatchId)

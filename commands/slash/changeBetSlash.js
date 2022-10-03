@@ -45,9 +45,15 @@ export class changeBetSlash extends Command {
         var userid = interaction.user.id
         var betId = interaction.options.getInteger('betid')
         var amount = interaction.options.getInteger('amount')
+        if (amount < 1) {
+            interaction.reply({
+                content: `You cannot bet less than $1.`,
+                ephemeral: true,
+            })
+        }
         await validateUser(interaction, userid, true) //? Validate the user exists in our DB
         var interactionEph = true //? client-side / silent reply
-        var betVerificaiton = verifyBetAuthor(
+        var betVerificaiton = await verifyBetAuthor(
             interaction,
             userid,
             betId,

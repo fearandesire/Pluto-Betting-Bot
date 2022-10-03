@@ -11,7 +11,7 @@ export async function processClaim(
     interactionEph,
 ) {
     Log.Yellow(`[processClaim.js] Running processClaim!`)
-
+    let embObj
     db.tx('processClaim-Transaction', async (t) => {
         //? Search for user via their Discord ID in the database
         const findUser = await t.oneOrNone(
@@ -19,31 +19,22 @@ export async function processClaim(
             [inputuserid],
         ) //
         if (!findUser) {
-            Log.BrightBlue(
-                `[processClaim.js] User ${inputuserid} is not in the database, creating user`,
-            )
-            //? add user to DB & process claim in 1 query to minimize DB load
-            message.reply(
-                `I see this is your first time using Pluto, welcome! I've created an account for you and completed your daily claim request of 100 dollars yessirrr.`,
-            )
-            return t.any(
-                'INSERT INTO currency (userid, balance, lastclaimtime) VALUES ($1, $2, $3) RETURNING *',
-                [inputuserid, '100', currentTime],
-            )
+            return
         }
-
         //? User exists in the DB, but has never used the claim command.
         //? Therefor we process the claim request (add 100 dollars to user's balance & save current time to lastclaimtime cell)
         else if (findUser.lastclaimtime == null) {
-            Log.BrightBlue(
-                `[processClaim.js] User ${inputuserid} is in the database, but has never used the claim command. Processing claim`,
-            )
-            message.reply(
-                `Welcome back! I've completed your daily claim request of 100 dollars.`,
-            )
+            var updatedBalance = parseInt(findUser.balance) + 100
+            embObj = {
+                title: 'Daily Claim',
+                description: `Welcome to Pluto! You have claimed your daily $100.\nYou can use this command again in 24 hours.\nYour new balance: $${updatedBalance}`,
+                color: `#00ff00`,
+            }
+            message.reply({ embeds: [embObj] })
+
             return t.any(
                 'UPDATE currency SET lastclaimtime = $1, balance = $2 WHERE userid = $3 RETURNING *',
-                [currentTime, '100', inputuserid],
+                [currentTime, updatedBalance, inputuserid],
             )
         }
 
@@ -65,37 +56,25 @@ export async function processClaim(
                 )
                 return
             } else {
-                //? User is not on cooldown, processing claim.
-                Log.BrightBlue(
-                    `[processClaim.js] User ${inputuserid} is not on cooldown.`,
-                )
-                Log.Yellow(
-                    `[processClaim.js] Math: ${cooldown} - (${currentTime} - ${
-                        findUser.lastclaimtime
-                    }) = 
-                    ${
-                                            cooldown - (currentTime - findUser.lastclaimtime) > 0
-                                        } which  
-                    is less than 0.`,
-                )
-                Log.BrightBlue(
-                    `[processClaim.js] User ${inputuserid} is in the database || ${findUser.userid}`,
-                )
-
                 var currentBalance = findUser.balance
                 var balance = parseInt(currentBalance) + parseInt(100)
                 var isSilent = interactionEph ? true : false
+                let embObj
                 if (isSilent) {
-                    message.reply({
-                        content: `Welcome back! Added your daily claim of $100 dollars. Your new balance is: **$${balance}**.`,
-                        ephemeral: true,
-                    })
+                    embObj = {
+                        title: 'Daily Claim',
+                        description: `Welcome back! You have claimed your daily $100.\nYou can use this command again in 24 hours.\nYour new balance is: **$${balance}**.`,
+                        color: `#00ff00`,
+                    }
+                    message.reply({ embeds: [embObj] })
                 } else if (!isSilent) {
-                    message.reply(
-                        `Welcome back! Added your daily claim of $100 dollars. Your new balance is: **$${balance}**.`,
-                    )
+                    embObj = {
+                        title: 'Daily Claim',
+                        description: `Welcome back! You have claimed your daily $100.\nYou can use this command again in 24 hours.\nYour new balance is: **$${balance}**.`,
+                        color: `#00ff00`,
+                    }
+                    message.reply({ embeds: [embObj] })
                 }
-
                 return t.any(
                     'UPDATE currency SET lastclaimtime = $1, balance = $2 WHERE userid = $3 RETURNING *',
                     [currentTime, balance, inputuserid],
