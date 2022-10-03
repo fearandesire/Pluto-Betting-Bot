@@ -50,6 +50,7 @@ export class changeBetSlash extends Command {
                 content: `You cannot bet less than $1.`,
                 ephemeral: true,
             })
+            return
         }
         await validateUser(interaction, userid, true) //? Validate the user exists in our DB
         var interactionEph = true //? client-side / silent reply
