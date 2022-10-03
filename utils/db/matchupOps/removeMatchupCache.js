@@ -1,3 +1,4 @@
+import _ from 'lodash'
 import flatcache from 'flat-cache'
 import { removeMatchLog } from '../../logging.js'
 
@@ -14,7 +15,11 @@ export async function removeMatchupCache(matchId) {
         return false
     }
     try {
-        delete matchupCache[matchId]
+        //# find key in matchupCache containing the matchId
+        var key = _.findKey(matchupCache, function (o) {
+            return o.matchId == matchId
+        })
+        delete matchupCache?.[`${key}`]
         oddsCache.save(true)
         removeMatchLog.info(`Successfully removed ${matchId} from the cache`)
         return true

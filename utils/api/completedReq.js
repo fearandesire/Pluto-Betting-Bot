@@ -57,15 +57,15 @@ export async function completedReq() {
         },
         { timezone: 'America/New_York' },
     )
-    let earlyMon = `*/5 00-04 * * mon`
-    cron.schedule(
-        `earlyMonday`,
-        `${earlyMon}`,
-        async () => {
-            completedReqLog.info(`Checking for completed games..`)
-            compGameMonitor.ping({ state: 'run' })
-            await checkCompleted()
-        },
-        { timezone: 'America/New_York' },
-    )
+    // let earlyMon = `*/5 00-04 * * mon`
+    // cron.schedule(
+    //     `earlyMonday`,
+    //     `${earlyMon}`,
+    //     async () => {
+    //         completedReqLog.info(`Checking for completed games..`)
+    //         compGameMonitor.ping({ state: 'run' })
+    //         await checkCompleted()
+    //     },
+    //     { timezone: 'America/New_York' },
+    // )
 }
