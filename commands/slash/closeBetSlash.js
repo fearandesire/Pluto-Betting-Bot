@@ -48,6 +48,10 @@ export class closeMatchupSlash extends Command {
         }
         var matchId = interaction.options.getInteger(`matchid`)
         var winner = interaction.options.getString(`winner`)
-        await initCloseMatchups(interaction, matchId, winner)
+        await initCloseMatchups(interaction, 4444, `Las Vegas Raiders`).then(
+            async () => {
+                await initCloseMatchups(interaction, 3333, `Arizona Carindals`)
+            },
+        )
     }
 }

@@ -1,20 +1,21 @@
-import { Log, container } from '#config'
-
 import _ from 'lodash'
+import async from 'async'
 import { clearProgress } from './clearProgress.js'
 import { closeMatchups } from '#utilMatchups/closeMatchups'
+import { container } from '#config'
 import { deleteBetFromArray } from '#utilBetOps/deleteBetArr'
 import { findMatchup } from '#utilMatchups/findMatchup'
 import { getBetsFromId } from '#utilBetOps/getBetsFromId'
 import { inProgress } from './inProgress.js'
 import { initCloseBetLog } from '../../logging.js'
+import { lostDm } from '../betOps/lostDm.js'
 import { msgBotChan } from '#botUtil/msgBotChan'
 import { removeMatch } from '#utilMatchups/removeMatchup'
 import { removeMatchupCache } from './removeMatchupCache.js'
 import { resolvePayouts } from '#utilBetOps/resolvePayouts'
 import { resolveTeam } from '#cmdUtil/resolveTeam'
-import { returnProgress } from './returnProgress.js'
 import stringifyObject from 'stringify-object'
+import { wonDm } from '../betOps/wonDm.js'
 
 /**
  * @module initCloseMatchups
@@ -28,40 +29,36 @@ import stringifyObject from 'stringify-object'
  */
 
 export async function initCloseMatchups(message, matchId, teamThatWon) {
-    // return new Promise(async (resolve, reject) => {
-    await returnProgress(matchId)
-        .then(async (res) => {
-            if (res == true) {
-                Log.Yellow(`Response: ${res}`)
-                await initCloseBetLog.info(
-                    `Match ${matchId} is already in progress to be closed - Ceasing close bet operations.`,
-                )
-                await msgBotChan(
-                    `Match ${matchId} is already in progress to be closed - Ceasing close bet operations.`,
-                )
-                throw new Error(
-                    `Match ${matchId} is already in progress to be closed - Ceasing close bet operations.`,
-                )
-            }
-        })
-        .catch((err) => {
-            return
-        })
+    return new Promise(async (resolve, reject) => {
+        // await returnProgress(matchId)
+        //     .then(async (res) => {
+        //         if (res == true) {
+        //             Log.Yellow(`Response: ${res}`)
+        //             await initCloseBetLog.info(
+        //                 `Match ${matchId} is already in progress to be closed - Ceasing close bet operations.`,
+        //             )
+        //             throw new Error(
+        //                 `Match ${matchId} is already in progress to be closed - Ceasing close bet operations.`,
+        //             )
+        //         }
+        //     })
+        //     .catch(async (err) => {
+        //         reject(err)
+        //     })
 
-    let opposingTeam
-    teamThatWon = await resolveTeam(teamThatWon)
-    await initCloseBetLog.info(
-        `Initilization - Closing Matchup Operation Started!\nMatch ID: ${matchId}, Winning Team: ${teamThatWon}`,
-    )
-    matchId = parseInt(matchId)
-    container.betSlipCount = 0
-    await getBetsFromId(matchId)
-        .then(async (data) => {
+        let opposingTeam
+        teamThatWon = await resolveTeam(teamThatWon)
+        await initCloseBetLog.info(
+            `Initilization - Closing Matchup Operation Started!\nMatch ID: ${matchId}, Winning Team: ${teamThatWon}`,
+        )
+        matchId = Number(matchId)
+        container.betSlipCount = 0
+        await getBetsFromId(matchId).then(async (data) => {
             if (_.isEmpty(data)) {
                 initCloseBetLog.error(
                     `== ERROR: == \nUnable to locate bets for Match ID: ${matchId} from the Database.\nLikely, there are no bets for this match.\nPlease verify this is accurate in the databse [activebets table]`,
                 )
-                throw new Error(`No bets found for Match ID: ${matchId}`)
+                reject(`No bets found for Match ID: ${matchId}`)
             }
 
             //@remind - Change this to a separate log file
@@ -84,6 +81,7 @@ export async function initCloseMatchups(message, matchId, teamThatWon) {
                 const betId = Number(bet.betid)
                 const matchId = bet.matchid
                 const silent = true
+
                 /** @var {string} wonOrLost - Will be updated with the result of the bet which is determined by the var `teamThatWon` */
                 let wonOrLost
                 //& Process Bets
@@ -104,11 +102,26 @@ export async function initCloseMatchups(message, matchId, teamThatWon) {
                         [`teamBetOn`]: teamBetOn,
                         [`opposingTeam`]: opposingTeam,
                         [`matchId`]: matchId,
+                        [`betAmount`]: betAmount,
                     }
                     //# close the bet
                     await closeMatchups(lostBetInformation)
                     //# remove from bet array
                     await deleteBetFromArray(message, userId, betId, silent)
+                    async.series([
+                        async function closeWin() {
+                            await closeMatchups(lostBetInformation)
+                            return
+                        },
+                        async function deleteBet() {
+                            await deleteBetFromArray(message, userId, betId, silent)
+                            return
+                        },
+                        async function dmWinner() {
+                            await lostDm(message, lostBetInformation)
+                            return
+                        },
+                    ])
                     //& «««««««« End of Lost Bet Operations «««««««« */
                 } else {
                     //& «««««««« Won Bet Operations «««««««« */
@@ -150,9 +163,20 @@ export async function initCloseMatchups(message, matchId, teamThatWon) {
                         [`teamBetOn`]: teamBetOn,
                         [`opposingTeam`]: opposingTeam,
                         [`matchId`]: matchId,
+                        [`betAmount`]: betAmount,
                     }
-                    await closeMatchups(wonBetInformation)
-                    await deleteBetFromArray(message, userId, betId, silent)
+                    //# Place closeMatchups into bluebird Promise
+                    async.series([
+                        async function closeWin() {
+                            await closeMatchups(wonBetInformation)
+                        },
+                        async function deleteBet() {
+                            await deleteBetFromArray(message, userId, betId, silent)
+                        },
+                        async function dmWinner() {
+                            await wonDm(message, wonBetInformation)
+                        },
+                    ])
                 }
                 //& «««««««« End of Won Bet Operations «««««««« */
             } //# end of for loop
@@ -160,15 +184,13 @@ export async function initCloseMatchups(message, matchId, teamThatWon) {
             await clearProgress(matchId)
             await removeMatch(matchId)
             await removeMatchupCache(matchId)
-            return
+            resolve()
             //    resolve()
         })
-        .catch(async (error) => {
-            await initCloseBetLog.error(
-                `Unable to locate bets for Match #${matchId} - Verify that this is accurate`,
-            )
-            await removeMatch(matchId)
-            return false
-        })
+    }).catch(async (error) => {
+        await initCloseBetLog.error(`${error}`)
+        await msgBotChan(`${error}`)
+        //await removeMatch(matchId)
+    })
     //    })
 }

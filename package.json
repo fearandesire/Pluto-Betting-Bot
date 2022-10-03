@@ -1,6 +1,6 @@
 {
 	"name": "bettingbot",
-	"version": "1.2.0",
+	"version": "1.2.1",
 	"description": "",
 	"main": "Pluto.mjs",
 	"prettier": "fenix-js-prettier-config",
@@ -49,6 +49,7 @@
 		"@sapphire/plugin-hmr": "^2.0.0",
 		"@sapphire/ratelimits": "^2.4.4",
 		"async": "^3.2.4",
+		"bluebird": "^3.7.2",
 		"colorette": "^2.0.17",
 		"cron": "^2.1.0",
 		"cron-job-manager": "^2.3.1",

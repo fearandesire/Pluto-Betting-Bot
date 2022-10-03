@@ -70,7 +70,9 @@ export async function checkCompleted() {
             }
             //# init the closeMatchups opeeration
             var message = null
-            await initCloseMatchups(message, dbMatchId, winner)
+            await initCloseMatchups(message, dbMatchId, winner).then(() => {
+                checkCompletedLog.info(`Sent matchup ${dbMatchId} to be closed`)
+            })
         } else {
             checkCompletedLog.info(`Skipped game as it was not completed yet.`)
         }
