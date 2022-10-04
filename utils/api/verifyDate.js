@@ -1,5 +1,5 @@
-import { resolveToday } from '../date/resolveToday.js'
 import { resolveIso } from './../date/resolveIso.js'
+import { resolveToday } from '../date/resolveToday.js'
 
 /**
  * Verify & Compare the week numbers of the game & current date.
@@ -8,16 +8,16 @@ import { resolveIso } from './../date/resolveIso.js'
  */
 
 export async function verifyDate(isoDate) {
-	let weekNum = new resolveToday().weekNum
-	let apiWeekNum = new resolveIso(isoDate).weekNum
-	console.log(
-		`Todays Week Number: ${weekNum} --> API Week Number: ${apiWeekNum}`,
-	)
-	if (weekNum === apiWeekNum) {
-		console.log(`Week Matches`)
-		return true
-	} else {
-		console.log(`Week does not match`)
-		return false
-	}
+    let weekNum = new resolveToday().weekNum
+    let apiWeekNum = new resolveIso(isoDate).weekNum
+    console.log(
+        `[verifyDate.js] Todays Week Number: ${weekNum} --> API Week Number: ${apiWeekNum}`,
+    )
+    if (weekNum === apiWeekNum) {
+        console.log(`[verifyDate.js] Week Matches`)
+        return true
+    } else {
+        console.log(`[verifyDate.js] Week does not match`)
+        return false
+    }
 }
