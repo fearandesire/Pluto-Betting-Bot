@@ -15,7 +15,10 @@ export async function saveMatchups() {
                 return false
             }
             //# activematchups Schema: matchid, teamone, teamtwo, teamoneodds, teamtwoodds, dateofmatchup
-            var cache = flatcache.create('dbMatchups.json', './cache/dbMatchups')
+            var cache = flatcache.create(
+                'dbMatchups.json',
+                './cache/backups/dbMatchups',
+            )
             _.forEach(data, (matchup) => {
                 const matchId = matchup.matchid
                 const teamOne = matchup.teamone

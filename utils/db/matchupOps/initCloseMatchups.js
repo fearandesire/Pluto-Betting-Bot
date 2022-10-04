@@ -10,12 +10,13 @@ import { inProgress } from './inProgress.js'
 import { initCloseBetLog } from '../../logging.js'
 import { lostDm } from '../betOps/lostDm.js'
 import { msgBotChan } from '#botUtil/msgBotChan'
-import { removeMatch } from '#utilMatchups/removeMatchup'
-import { removeMatchupCache } from './removeMatchupCache.js'
 import { resolvePayouts } from '#utilBetOps/resolvePayouts'
 import { resolveTeam } from '#cmdUtil/resolveTeam'
 import stringifyObject from 'stringify-object'
 import { wonDm } from '../betOps/wonDm.js'
+
+//import { removeMatch } from '#utilMatchups/removeMatchup'
+//import { removeMatchupCache } from './removeMatchupCache.js'
 
 /**
  * @module initCloseMatchups
@@ -83,7 +84,6 @@ export async function initCloseMatchups(message, matchId, teamThatWon) {
                 const silent = true
 
                 /** @var {string} wonOrLost - Will be updated with the result of the bet which is determined by the var `teamThatWon` */
-                let wonOrLost
                 //& Process Bets
                 if (teamBetOn !== teamThatWon) {
                     //& «««««««« Lost Bet Operations «««««««««««««««««««««« */
@@ -91,12 +91,11 @@ export async function initCloseMatchups(message, matchId, teamThatWon) {
                         `User <@${userId}> lost their bet\nBet ID: ${betId}\nBet Amount: ${betAmount}\nTeam Bet On: ${teamBetOn}\nTeam that won: ${teamThatWon}\nMatch ID: ${matchId}`,
                     )
                     opposingTeam = teamThatWon
-                    wonOrLost = 'lost'
                     //# prepare bet info object for closing
                     var lostBetInformation = await {
                         [`userId`]: userId,
                         [`betId`]: betId,
-                        [`wonOrLost`]: wonOrLost,
+                        [`wonOrLost`]: `lost`,
                         [`payout`]: 0,
                         [`profit`]: 0,
                         [`teamBetOn`]: teamBetOn,
@@ -123,7 +122,7 @@ export async function initCloseMatchups(message, matchId, teamThatWon) {
                         },
                     ])
                     //& «««««««« End of Lost Bet Operations «««««««« */
-                } else {
+                } else if (teamBetOn == teamThatWon) {
                     //& «««««««« Won Bet Operations «««««««« */
 
                     /** @var {string} matchOdds - Will be populated with the odds of the winning bet */
@@ -152,11 +151,10 @@ export async function initCloseMatchups(message, matchId, teamThatWon) {
                     await initCloseBetLog.info(
                         `User <@${userId}> won their bet!\nBet ID: ${betId}\nBet Amount: ${betAmount}\nPayout: ${payout}\nProfit: ${profit}\nTeam Bet On: ${teamBetOn}\nTeam that won: ${teamThatWon}\nMatch ID: ${matchId}`,
                     )
-                    wonOrLost = 'won'
                     var wonBetInformation = await {
                         [`userId`]: userId,
                         [`betId`]: betId,
-                        [`wonOrLost`]: wonOrLost,
+                        [`wonOrLost`]: `won`,
                         [`matchOdds`]: matchOdds,
                         [`payout`]: payout,
                         [`profit`]: profit,
@@ -182,15 +180,15 @@ export async function initCloseMatchups(message, matchId, teamThatWon) {
             } //# end of for loop
             await msgBotChan(`All bets for Match ID: #${matchId} have been closed.`)
             await clearProgress(matchId)
-            await removeMatch(matchId)
-            await removeMatchupCache(matchId)
+            //await removeMatch(matchId)
+            //await removeMatchupCache(matchId)
             resolve()
             //    resolve()
         })
     }).catch(async (error) => {
         await initCloseBetLog.error(`${error}`)
         await msgBotChan(`${error}`)
-        //await removeMatch(matchId)
+        // await removeMatch(matchId)
     })
     //    })
 }

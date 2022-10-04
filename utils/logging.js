@@ -575,3 +575,25 @@ export const dmLog = winston.createLogger({
         }),
     ],
 })
+export const locateMatchupIdLog = winston.createLogger({
+    level: 'info',
+    format: winston.format.combine(
+        winston.format.colorize(),
+        splat(),
+        winston.format.prettyPrint({
+            colorize: true,
+            depth: 5,
+        }),
+        timestamp,
+        customWinstonFormat,
+    ),
+    transports: [
+        new winston.transports.File({
+            filename: 'logs/closeBetOp/err/locateMatchupId.log',
+            level: 'error',
+        }),
+        new winston.transports.File({
+            filename: 'logs/locateMatchupId.log',
+        }),
+    ],
+})

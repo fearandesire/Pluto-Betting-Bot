@@ -46,6 +46,7 @@ export async function registerUser(message, userid, inform, interactionEph) {
             )
             if (inform === true) {
                 QuickError(message, `You are already registered!`, interactionEph)
+                return
             }
             return findUser
         }

@@ -11,7 +11,7 @@ import { resolveMatchupLog } from '../logging.js'
 export function resolveMatchup(teamName, reqInfo) {
     let oddsCache = flatcache.create(`oddsCache.json`, './cache/weeklyOdds')
     var weeklyOdds = oddsCache.getKey(`matchups`)
-    console.log(`Searching for: ${teamName}`)
+    resolveMatchupLog.info(`Searching for: ${teamName} in cache`)
     let hOrAway
     let matchedInfo
     if (!weeklyOdds || Object.keys(weeklyOdds).length === 0) {
