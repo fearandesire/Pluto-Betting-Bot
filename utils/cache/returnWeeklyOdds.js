@@ -1,4 +1,4 @@
-import { QuickError, _, embedReply, flatcache } from '#config'
+import { QuickError, embedReply, flatcache } from '#config'
 
 import { formatOdds } from '#cmdUtil/formatOdds'
 
@@ -15,7 +15,9 @@ export async function returnWeeklyOdds(message, interactionEph) {
         return
     }
     var oddsFields = []
-    await _.forEach(matchupCache, async (matchFound) => {
+    //# iterate through matchupCache with a for loop so we can access the values of each nested object
+    for (const key in matchupCache) {
+        var matchFound = matchupCache[key]
         var hTeam = matchFound.home_team
         var aTeam = matchFound.away_team
         var hOdds = matchFound.home_teamOdds
@@ -30,7 +32,13 @@ export async function returnWeeklyOdds(message, interactionEph) {
             value: `**${hTeam}**\nOdds: *${hOdds}*\n**${aTeam}**\nOdds: *${aOdds}*\n──────`,
             inline: true,
         })
-    })
+    }
+    //# count # of objects in oddsFields - if the # is not divisible by 3, turn the last inline field to false
+    var oddsFieldCount = oddsFields.length
+    if (oddsFieldCount % 3 !== 0) {
+        oddsFields[oddsFieldCount - 1].inline = false
+    }
+    console.log(oddsFields)
     var embedObj = {
         title: `Weekly H2H Odds`,
         fields: oddsFields,
