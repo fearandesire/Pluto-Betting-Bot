@@ -46,7 +46,7 @@ export async function collectOdds(message) {
         })
     var allNflOdds = container.allNflOdds
     container.matchupCount = 0
-    await _.forEach(allNflOdds, async function (value, key) {
+    for (let [key, value] of Object.entries(allNflOdds)) {
         //* only store games that are scheduled for this week
         let isoDate = value.commence_time
         let todayDateInfo = new resolveToday()
@@ -62,13 +62,20 @@ export async function collectOdds(message) {
         // console.log(
         //  `Today's Week: ${weekNum} | API Week: ${apiWeekNum} | Next Week: ${nextWeek} Game Day: ${apiDoW}`,
         // )
-        collectOddsLog.info(
-            `Today's Week: ${weekNum} | API Week: ${apiWeekNum} | Next Week: ${nextWeek} Game Day: ${apiDoW}`,
-        )
+        // collectOddsLog.info(
+        //     `Today's Week: ${weekNum} | API Week: ${apiWeekNum} | Next Week: ${nextWeek} Game Day: ${apiDoW}`,
+        // )
+        // if (
+        //     weekNum === apiWeekNum ||
+        //     (nextWeek === apiWeekNum && apiDoW === 'Mon')
+        // ) {
         if (
-            weekNum === apiWeekNum ||
-            (nextWeek === apiWeekNum && apiDoW === 'Mon')
+            apiWeekNum === weekNum ||
+            (apiWeekNum === nextWeek && apiDoW === 'Mon')
         ) {
+            await collectOddsLog.info(
+                `Storing Matchup: ${value.home_team} vs ${value.away_team}\nToday's Week: ${weekNum} | API Week: ${apiWeekNum} | Next Week: ${nextWeek} Game Day: ${apiDoW}`,
+            )
             container.matchupCount++
             //# the current day and time
             let currentDay = todayDateInfo.dayNum
@@ -80,7 +87,7 @@ export async function collectOdds(message) {
             let apiStartMin = apiDateInfo.minute
             let gameStartTime = `${apiStartDay}${apiStartHour}${apiStartMin}`
             let fullStartTime = `DAY: ${apiStartDay} HOUR: ${apiStartHour} MINUTE: ${apiStartMin}`
-            matchups[key] = value
+            //matchups[key] = value
             let home_odds
             let away_odds
             var home_team = value.home_team
@@ -96,14 +103,14 @@ export async function collectOdds(message) {
                 away_odds = 'n/a'
             }
             let matchupId = await assignMatchID()
-            matchups[matchupId] = {
+            matchups[`${matchupId}`] = {
                 [`home_team`]: home_team,
                 [`away_team`]: away_team,
                 [`home_teamOdds`]: home_odds,
                 [`away_teamOdds`]: away_odds,
                 [`matchupId`]: matchupId,
                 [`startTime`]: gameStartTime,
-                [`fulStartTime`]: fullStartTime,
+                [`fullStartTime`]: fullStartTime,
                 [`dateView`]: gameDate, //* date formatted as month/day/year
                 [`dayNum`]: apiStartDay,
                 [`dayOfWeek`]: gameDay,
@@ -111,7 +118,7 @@ export async function collectOdds(message) {
                 [`minute`]: apiStartMin,
                 [`gameDayName`]: apiDoW,
             }
-            collectOddsLog.info(
+            await collectOddsLog.info(
                 `== Storing Matchup into cache: ==\n${stringifyObject(
                     matchups[matchupId],
                 )}`,
@@ -126,9 +133,14 @@ export async function collectOdds(message) {
                 matchupId,
                 gameDate,
             )
+        } else {
+            collectOddsLog.info(
+                `== Matchup not stored: ==\n${value.home_team} vs ${value.away_team}\nToday's Week: ${weekNum} | API Week: ${apiWeekNum} | Next Week: ${nextWeek} Game Day: ${apiDoW}`,
+            )
+            return
         }
         // end of map
-    })
+    }
     if (_.isEmpty(matchups)) {
         await msgBotChan(
             `Issue occured while collecting & storing matchups. No Information has been stored.`,
@@ -142,8 +154,8 @@ export async function collectOdds(message) {
     collectOddsLog.info(
         `All Matchup information collected:\n${stringifyObject(matchups)}`,
     )
-    oddsCache.setKey(`matchups`, matchups)
-    oddsCache.save(true)
+    await oddsCache.setKey(`matchups`, matchups)
+    await oddsCache.save(true)
     collectOddsLog.info(
         `Successfully gathered odds for the week.\nOdds are stored into cache & db\n# Of Matchups Stored: (${container.matchupCount})`,
     )
