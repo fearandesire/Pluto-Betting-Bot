@@ -96,7 +96,7 @@ export async function collectOdds(message) {
                 away_odds = 'n/a'
             }
             let matchupId = await assignMatchID()
-            matchups[key] = {
+            matchups[matchupId] = {
                 [`home_team`]: home_team,
                 [`away_team`]: away_team,
                 [`home_teamOdds`]: home_odds,
@@ -111,7 +111,12 @@ export async function collectOdds(message) {
                 [`minute`]: apiStartMin,
                 [`gameDayName`]: apiDoW,
             }
-            console.log(`Matchup ID: ${matchupId}`)
+            collectOddsLog.info(
+                `== Storing Matchup into cache: ==\n${stringifyObject(
+                    matchups[matchupId],
+                )}`,
+            )
+            //console.log(`Matchup ID: ${matchupId}`)
             await createMatchups(
                 message,
                 home_team,

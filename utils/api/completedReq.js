@@ -46,7 +46,7 @@ export async function completedReq() {
         },
         { timezone: 'America/New_York' },
     )
-    let monTimer = `*/5 22-23 * * mon`
+    let monTimer = `*/1 00-03 * * tues`
     cron.schedule(
         `mondayCheckGames`,
         `${monTimer}`,

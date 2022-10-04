@@ -30,7 +30,7 @@ const SapDiscClient = new SapphireClient({
         status: 'Online!',
     },
     logger: {
-        level: LogLevel.Debug,
+        level: LogLevel[`${process.env.logLevel}`],
     },
     typing: true,
     loadMessageCommandListeners: true,
