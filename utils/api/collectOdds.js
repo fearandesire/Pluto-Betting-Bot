@@ -60,7 +60,7 @@ export async function collectOdds(message) {
         var apiDoW = apiDateInfo.dayOfWeek
         var nextWeek = parseInt(weekNum) + 1 //# Fetch Monday Games
         var gameDate = `${monthNum}/${gameDay}/${gameYear}`
-        if ((await isMatchExist(value.home_team)) !== undefined) {
+        if ((await isMatchExist(value.home_team)) !== null) {
             collectOddsLog.info(
                 `Matchup already exists in database: ${value.home_team} vs ${value.away_team} || This matchup will not be stored.`,
             )
