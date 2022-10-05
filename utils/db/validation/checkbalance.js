@@ -50,7 +50,7 @@ export async function checkbalance(inputuserid, message, notuser) {
             userName = userName || 'User'
             var embedcontent = {
                 title: `${userName.username}'s Balance`,
-                description: `You currently have: **${usersbalance} dollars**.\n To claim your daily 100 dollars, *type ?claim*`,
+                description: `You currently have: **$${usersbalance} dollars**.\n To claim your daily 100 dollars, *type ?claim*`,
                 color: '#00FF00',
                 footer: 'For more commands, type ?help',
             }

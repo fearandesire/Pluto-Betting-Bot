@@ -6,6 +6,7 @@ import { collectOddsLog } from '../logging.js'
 import { createMatchups } from '#utilMatchups/createMatchups'
 import fetch from 'node-fetch'
 import flatcache from 'flat-cache'
+import { isMatchExist } from '#utilValidate/isMatchExist'
 import { msgBotChan } from '#botUtil/msgBotChan'
 import { resolveIso } from '#dateUtil/resolveIso'
 import { resolveToday } from '#dateUtil/resolveToday'
@@ -59,6 +60,12 @@ export async function collectOdds(message) {
         var apiDoW = apiDateInfo.dayOfWeek
         var nextWeek = parseInt(weekNum) + 1 //# Fetch Monday Games
         var gameDate = `${monthNum}/${gameDay}/${gameYear}`
+        if ((await isMatchExist(value.home_team)) !== undefined) {
+            collectOddsLog.info(
+                `Matchup already exists in database: ${value.home_team} vs ${value.away_team} || This matchup will not be stored.`,
+            )
+            continue
+        }
         if (
             apiWeekNum === weekNum ||
             (apiWeekNum === nextWeek && apiDoW === 'Mon')

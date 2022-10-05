@@ -52,13 +52,15 @@ export class createMatchupSlash extends Command {
                 .addIntegerOption((option) =>
                     option
                         .setName('day')
-                        .setDescription('Date of the month this matchup begins')
+                        .setDescription(
+                            'Date of the month this matchup begins (E.g, the 10th of this month - you would just write 10)',
+                        )
                         .setRequired(true),
                 )
                 .addIntegerOption((option) =>
                     option
                         .setName('hour')
-                        .setDescription('The hour this matchup begins')
+                        .setDescription('The hour this matchup begins (Eastern Timezone)')
                         .setRequired(true),
                 )
                 .addIntegerOption((option) =>
@@ -66,13 +68,29 @@ export class createMatchupSlash extends Command {
                         .setName('minute')
                         .setDescription('The minute this matchup begins')
                         .setRequired(true),
+                )
+                .addStringOption((option) =>
+                    option
+                        .setName('am_or_pm')
+                        .setDescription('AM or PM?')
+                        .addChoices(
+                            {
+                                name: 'AM',
+                                value: 'AM',
+                            },
+                            {
+                                name: 'PM',
+                                value: 'PM',
+                            },
+                        )
+                        .setRequired(true),
                 ),
         )
     }
     //    { idHints: [`1022940422974226432`] },
     async chatInputRun(interaction) {
         var userid = interaction.user.id
-        Log.Yellow(`${userid} has created a matchup.`)
+        Log.Yellow(`${userid} has created a custom matchup.`)
         var assignMatchupIds = await assignMatchID()
         var teamone = await interaction.options.getString('teamone')
         var teamtwo = await interaction.options.getString('teamtwo')
@@ -81,6 +99,11 @@ export class createMatchupSlash extends Command {
         var dayNum = await interaction.options.getInteger('day')
         var hourNum = await interaction.options.getInteger('hour')
         var minuteNum = await interaction.options.getInteger('minute')
+        var amOrPm = await interaction.options.getString('am_or_pm')
+        //# Convert the hour to 24 hour time if PM is selected
+        if (amOrPm == 'PM') {
+            hourNum = hourNum + 12
+        }
         var tDay = await new resolveToday()
         var year = tDay.todaysYear
         var month = tDay.todaysMonth
