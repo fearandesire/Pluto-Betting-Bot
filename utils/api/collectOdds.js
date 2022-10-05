@@ -157,7 +157,7 @@ export async function collectOdds(message) {
         setTimeout(async () => {
             var embObj = {
                 title: `Matchup Scheduling`,
-                description: `All Matchups have been scheduled for the week!\n# of Matchups: **${container.matchupCount}**`,
+                description: `**${container.matchupCount}** Matchups have been scheduled for the week!`,
                 color: `#8000ff`,
                 target: `modBotSpamID`,
             }
