@@ -6,6 +6,7 @@ import { collectOddsLog } from '../logging.js'
 import { createMatchups } from '#utilMatchups/createMatchups'
 import fetch from 'node-fetch'
 import flatcache from 'flat-cache'
+import { isMatchExist } from '#utilValidate/isMatchExist'
 import { msgBotChan } from '#botUtil/msgBotChan'
 import { resolveIso } from '#dateUtil/resolveIso'
 import { resolveToday } from '#dateUtil/resolveToday'
@@ -59,16 +60,12 @@ export async function collectOdds(message) {
         var apiDoW = apiDateInfo.dayOfWeek
         var nextWeek = parseInt(weekNum) + 1 //# Fetch Monday Games
         var gameDate = `${monthNum}/${gameDay}/${gameYear}`
-        // console.log(
-        //  `Today's Week: ${weekNum} | API Week: ${apiWeekNum} | Next Week: ${nextWeek} Game Day: ${apiDoW}`,
-        // )
-        // collectOddsLog.info(
-        //     `Today's Week: ${weekNum} | API Week: ${apiWeekNum} | Next Week: ${nextWeek} Game Day: ${apiDoW}`,
-        // )
-        // if (
-        //     weekNum === apiWeekNum ||
-        //     (nextWeek === apiWeekNum && apiDoW === 'Mon')
-        // ) {
+        if ((await isMatchExist(value.home_team)) !== undefined) {
+            collectOddsLog.info(
+                `Matchup already exists in database: ${value.home_team} vs ${value.away_team} || This matchup will not be stored.`,
+            )
+            continue
+        }
         if (
             apiWeekNum === weekNum ||
             (apiWeekNum === nextWeek && apiDoW === 'Mon')
@@ -87,7 +84,6 @@ export async function collectOdds(message) {
             let apiStartMin = apiDateInfo.minute
             let gameStartTime = `${apiStartDay}${apiStartHour}${apiStartMin}`
             let fullStartTime = `DAY: ${apiStartDay} HOUR: ${apiStartHour} MINUTE: ${apiStartMin}`
-            //matchups[key] = value
             let home_odds
             let away_odds
             var home_team = value.home_team
@@ -123,7 +119,6 @@ export async function collectOdds(message) {
                     matchups[matchupId],
                 )}`,
             )
-            //console.log(`Matchup ID: ${matchupId}`)
             await createMatchups(
                 message,
                 home_team,
@@ -139,7 +134,6 @@ export async function collectOdds(message) {
             )
             return
         }
-        // end of map
     }
     if (_.isEmpty(matchups)) {
         await msgBotChan(
