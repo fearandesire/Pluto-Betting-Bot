@@ -23,7 +23,7 @@
 -->
 
 <h4 align="center">
-Released! Current Version: v1.0.0
+Released! Current Version: v1.3.1
 </h4>
 
 <hr>
