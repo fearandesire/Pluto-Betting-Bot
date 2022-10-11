@@ -1,5 +1,6 @@
 import { embedReply, _ } from '#config'
 import { db } from '#db'
+import { SapDiscClient } from '#main'
 import { container } from '@sapphire/pieces'
 /**
  * Retrieve the data from the currency table in the DB - sort by the highest values to the lowest.
@@ -11,6 +12,7 @@ import { container } from '@sapphire/pieces'
 export async function leaderboard(message, interactionEph) {
     container.memory_balance = {}
     container.memory_balance.leaderboard = []
+    const server = SapDiscClient.guilds.cache.get(`${process.env.server_ID}`)
     return db
         .map(
             `SELECT userid,balance FROM currency ORDER BY balance DESC NULLS LAST`,
@@ -18,8 +20,9 @@ export async function leaderboard(message, interactionEph) {
             (row) => {
                 container.userid = row.userid
                 container.balance = row.balance
-
-                var leaderEntry = `<@${container.userid}>: $${container.balance}`
+                var userMention =
+                    server.members.cache.get(container.userid) || `<@${container.userid}>`
+                var leaderEntry = `${userMention}: $${container.balance}`
 
                 container.memory_balance = container.memory_balance || {}
                 container.memory_balance.leaderboard =
@@ -39,8 +42,13 @@ export async function leaderboard(message, interactionEph) {
             )
             //# add 1 to the position to make it 'accurate', since arrays start at 0
             userPosition = Number(userPosition) + 1
-
-            var userBalance = container.memory_balance.leaderboard.join('\n')
+            //# prefix each entry with the position in the leaderboard
+            var lbArr = container.memory_balance.leaderboard
+            lbArr = lbArr.map((entry, index) => {
+                return `**${index + 1}.** ${entry}`
+            })
+            //# join the array into a string
+            var userBalance = lbArr.join('\n')
             const embObj = {
                 title: `Betting Leaderboard`,
                 description: userBalance,
