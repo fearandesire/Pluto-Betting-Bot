@@ -80,8 +80,15 @@ export async function embedReply(message, embedContent, interactionEph) {
             .setTimestamp()
             .setFooter({ text: embedFooter })
         if (target == 'reply' && isSilent === true) {
-            await message.reply({ embeds: [noFieldsEmbed], ephemeral: true })
-            return
+            if (followUp === true) {
+                return await message.followUp({
+                    embeds: [noFieldsEmbed],
+                    ephemeral: true,
+                })
+            } else {
+                await message.reply({ embeds: [noFieldsEmbed], ephemeral: true })
+                return
+            }
         } else if (target == 'reply' && isSilent === false) {
             await message.reply({ embeds: [noFieldsEmbed], ephemeral: true })
             return
