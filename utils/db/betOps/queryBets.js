@@ -1,13 +1,13 @@
-import { QuickError, flatcache } from '#config'
+import { flatcache, QuickError } from '#config'
 
-import { Log } from '#LogColor'
 import { db } from '#db'
+import { Log } from '#LogColor'
 
 /**
- * @module QueryBets -
+ * @module queryBets -
  * Query the database to locate & delete the specified bet from the user.
  * @description - This is intended for when a user wants to cancel a bet, so it will remove the bet from the leaderboard table ('betslips') and the activebets table.
- * When initiated, QueryBets will verify if the user has any bets* (failsafe, but can definitely be removed as we verified prior)
+ * When initiated, queryBets will verify if the user has any bets* (failsafe, but can definitely be removed as we verified prior)
  * Following that, we will update the users balance wih how much they bet, since they are cancelling it.
  * The only reason for separation of the user's bets (```betCount```) being either 1 or higher than 1 is to update the `hasBetsEmbed` information;
  * As if the user has no bets remaining, we will need to make sure they are informed of such if they try to list them again, and `hasBetsEmbed` is apart of that check.
@@ -15,7 +15,7 @@ import { db } from '#db'
  * @param {integer} betid
  * @references {@link cancelBet.js}
  */
-export async function QueryBets(message, userid, betid) {
+export async function queryBets(message, userid, betid) {
     var allbetSlipsCache = await flatcache.load(
         'allbetSlipsCache.json',
         './cache/betslips',
@@ -33,7 +33,7 @@ export async function QueryBets(message, userid, betid) {
         if (betCount === 0) {
             await QuickError(
                 message,
-                `User ${userid} has no active bets\nCeased canceling bet operations - no data has been changed,`,
+                `You have no active bets\nCeased canceling bet operations - no data has been changed,`,
             )
             throw Log.Error(`[queryBets.js] User ${userid} has no active bets.`)
         }

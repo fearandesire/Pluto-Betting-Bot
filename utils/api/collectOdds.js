@@ -1,16 +1,16 @@
 import { container, embedReply } from '#config'
 
-import _ from 'lodash'
 import { assignMatchID } from '#botUtil/AssignIDs'
-import { collectOddsLog } from '../logging.js'
-import { createMatchups } from '#utilMatchups/createMatchups'
-import fetch from 'node-fetch'
-import flatcache from 'flat-cache'
-import { isMatchExist } from '#utilValidate/isMatchExist'
 import { msgBotChan } from '#botUtil/msgBotChan'
 import { resolveIso } from '#dateUtil/resolveIso'
 import { resolveToday } from '#dateUtil/resolveToday'
+import { createMatchups } from '#utilMatchups/createMatchups'
+import { isMatchExist } from '#utilValidate/isMatchExist'
+import flatcache from 'flat-cache'
+import _ from 'lodash'
+import fetch from 'node-fetch'
 import stringifyObject from 'stringify-object'
+import { collectOddsLog } from '../logging.js'
 
 let oddsCache = flatcache.create(`oddsCache.json`, './cache/weeklyOdds')
 
@@ -61,6 +61,7 @@ export async function collectOdds(message) {
         var nextWeek = parseInt(weekNum) + 1 //# Fetch Monday Games
         var gameDate = `${monthNum}/${gameDay}/${gameYear}`
         if ((await isMatchExist(value.home_team)) !== null) {
+            //# there is a unique-key constraint in the database, but this is to prevent the count of games scheduled from being incorrect
             collectOddsLog.info(
                 `Matchup already exists in database: ${value.home_team} vs ${value.away_team} || This matchup will not be stored.`,
             )

@@ -21,7 +21,7 @@ export async function gameActive(teamName) {
     var currentHour = todayDateInfo.hour
     var currentMinute = todayDateInfo.minute
     console.log(
-        `Match Details:\nDay: ${matchDay}\nHour: ${matchHour}\nMinute: ${matchMinute}`,
+        `${teamName} Match Details:\nDay: ${matchDay}\nHour: ${matchHour}\nMinute: ${matchMinute}`,
     )
     console.log(
         `Current Details:\nDay: ${currentDay}\nHour: ${currentHour}\nMinute: ${currentMinute}`,
