@@ -1,7 +1,7 @@
+import { fetchChanId } from '#botUtil/fetchChanId'
 import { Log } from '#LogColor'
 import { MessageEmbed } from 'discord.js'
 import { embedfooter as defaultFooter } from '../../../lib/PlutoConfig.js'
-import { fetchChanId } from '#botUtil/fetchChanId'
 import { helpfooter } from './../../../lib/PlutoConfig.js'
 
 /**
@@ -24,6 +24,7 @@ export async function embedReply(message, embedContent, interactionEph) {
     var confirmFields = hasFields ? true : false
     var target = embedContent?.target || 'reply'
     var isSilent = embedContent?.silent || false
+    var followUp = embedContent?.followUp || false
     //debug: console.log(`EMBED OBJECT: ===>>`, embedContent)
     var reqChan
     //? if the supplied embed has fields, return embeds with fields
@@ -39,11 +40,19 @@ export async function embedReply(message, embedContent, interactionEph) {
             (target == 'reply' && interactionEph == true) ||
             (target == 'reply' && isSilent === true)
         ) {
-            await message.reply({
-                embeds: [embedWithFields],
-                ephemeral: true,
-            })
-            return
+            //# switch .reply to .followUp if the followUp prop is true [deferred replies from slash commands]
+            if (followUp === true) {
+                return await message.followUp({
+                    embeds: [embedWithFields],
+                    ephemeral: true,
+                })
+            } else {
+                await message.reply({
+                    embeds: [embedWithFields],
+                    ephemeral: true,
+                })
+                return
+            }
         } else if (target == 'reply' && !interactionEph) {
             await message.reply({
                 embeds: [embedWithFields],
