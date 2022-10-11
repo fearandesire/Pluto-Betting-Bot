@@ -61,6 +61,7 @@ export async function leaderboard(message, interactionEph) {
                     footer: `You are currently #${userPosition} on the Leaderboard! | Page 1`,
                     target: `reply`,
                     silent: interactionEph,
+                    followUp: true,
                 }
                 var secondHalf = {
                     title: `Betting Leaderboard [Page 2]`,
@@ -69,6 +70,7 @@ export async function leaderboard(message, interactionEph) {
                     footer: `You are currently #${userPosition} on the Leaderboard! | Page 2`,
                     target: `reply`,
                     silent: interactionEph,
+                    followUp: true,
                 }
                 await embedReply(message, firstHalf, true)
                 await embedReply(message, secondHalf, true)
