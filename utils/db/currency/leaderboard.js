@@ -39,10 +39,6 @@ export async function leaderboard(message, interactionEph) {
             )
             //# add 1 to the position to make it 'accurate', since arrays start at 0
             userPosition = Number(userPosition) + 1
-<<<<<<< Updated upstream
-
-            var userBalance = container.memory_balance.leaderboard.join('\n')
-=======
             //# prefix each entry with the position in the leaderboard
             var lbArr = container.memory_balance.leaderboard
             lbArr = lbArr.map((entry, index) => {
@@ -77,7 +73,6 @@ export async function leaderboard(message, interactionEph) {
                 await embedReply(message, firstHalf, true)
                 await embedReply(message, secondHalf, true)
             }
->>>>>>> Stashed changes
             const embObj = {
                 title: `Betting Leaderboard`,
                 description: userBalance,
