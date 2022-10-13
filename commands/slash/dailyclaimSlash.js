@@ -1,6 +1,6 @@
-import { Command } from '@sapphire/framework'
 import { processClaim } from '#utilBetOps/processClaim'
 import { validateUser } from '#utilValidate/validateExistingUser'
+import { Command } from '@sapphire/framework'
 
 export class dailyClaimSlash extends Command {
     constructor(context, options) {
@@ -28,6 +28,6 @@ export class dailyClaimSlash extends Command {
         var userid = interaction.user.id
         var currentTime = new Date().getTime()
         await validateUser(interaction, userid, true)
-        await processClaim(userid, interaction, currentTime)
+        await processClaim(userid, interaction)
     }
 }
