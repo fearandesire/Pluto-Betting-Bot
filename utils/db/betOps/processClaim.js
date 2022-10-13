@@ -63,7 +63,7 @@ export async function processClaim(inputuserid, message) {
                 var timeLeft = await formatDistanceStrict(rightNowISO, cooldown)
                 Log.BrightBlue(`[processClaim.js] User ${inputuserid} is on cooldown.`)
                 message.reply({
-                    content: `You are on cooldown! You collect your daily $100 again in **${timeLeft}**`,
+                    content: `You are on cooldown! You can collect your daily $100 again in **${timeLeft}**`,
                     ephemeral: true,
                 })
                 return
