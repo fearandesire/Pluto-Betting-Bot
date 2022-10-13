@@ -1,16 +1,24 @@
 //import { updateclaim } from './addClaimTime.js';
 
-import { Log } from '#LogColor'
 import { db } from '#db'
+import { Log } from '#LogColor'
+import {
+    addHours,
+    format,
+    formatDistanceStrict,
+    fromUnixTime,
+    getUnixTime,
+    isAfter,
+    parseISO,
+} from 'date-fns'
 
-const cooldown = 86400000 //* 24 hours in milliseconds
-export async function processClaim(
-    inputuserid,
-    message,
-    currentTime,
-    interactionEph,
-) {
-    Log.Yellow(`[processClaim.js] Running processClaim!`)
+export async function processClaim(inputuserid, message) {
+    var today = new Date()
+    //# Convert the current time & last claim time to unix
+    var rightNow = await getUnixTime(fromUnixTime(today))
+    Log.Yellow(
+        `[processClaim.js] Processing daily claim request for ${inputuserid}`,
+    )
     let embObj
     db.tx('processClaim-Transaction', async (t) => {
         //? Search for user via their Discord ID in the database
@@ -34,50 +42,44 @@ export async function processClaim(
 
             return t.any(
                 'UPDATE currency SET lastclaimtime = $1, balance = $2 WHERE userid = $3 RETURNING *',
-                [currentTime, updatedBalance, inputuserid],
+                [rightNow, updatedBalance, inputuserid],
             )
         }
 
         //? At this point, the user has used the claim command at least once.
         //? Now we need to determine if the user is on cooldown.
         else if (findUser.userid === inputuserid) {
-            if (cooldown - (currentTime - findUser.lastclaimtime) > 0) {
+            var lastClaim = await getUnixTime(fromUnixTime(findUser.lastclaimtime))
+            //# Format the current time & last claim time
+            var formatRightNow = await format(rightNow, 'yyyy-MM-dd HH:mm:ss')
+            var formatLastClaim = await format(lastClaim, 'yyyy-MM-dd HH:mm:ss')
+            //# Parse the times to ISO to get the difference in hours
+            var rightNowISO = await parseISO(formatRightNow)
+            var lastClaimISO = await parseISO(formatLastClaim)
+            //# add 24 hours to the last claim time
+            var cooldown = addHours(lastClaimISO, 24)
+            var passedCooldown = await isAfter(rightNowISO, cooldown)
+            if (passedCooldown == false) {
+                var timeLeft = await formatDistanceStrict(rightNowISO, cooldown)
                 Log.BrightBlue(`[processClaim.js] User ${inputuserid} is on cooldown.`)
-                Log.Yellow(
-                    `[processClaim.js] Math: ${cooldown} - (${currentTime} - ${
-                        findUser.lastclaimtime
-                    }) = 
-                        ${
-                                                    cooldown - (currentTime - findUser.lastclaimtime) > 0
-                                                } which is less than 0.`,
-                )
-                message.reply(
-                    'You are on cooldown. Please wait 24 hours before using the claim command again.',
-                )
+                message.reply({
+                    content: `You are on cooldown! You collect your daily $100 again in **${timeLeft}**`,
+                    ephemeral: true,
+                })
                 return
             } else {
                 var currentBalance = findUser.balance
                 var balance = parseInt(currentBalance) + parseInt(100)
-                var isSilent = interactionEph ? true : false
                 let embObj
-                if (isSilent) {
-                    embObj = {
-                        title: 'Daily Claim',
-                        description: `Welcome back! You have claimed your daily $100.\nYou can use this command again in 24 hours.\nYour new balance is: **$${balance}**.`,
-                        color: `#00ff00`,
-                    }
-                    message.reply({ embeds: [embObj] })
-                } else if (!isSilent) {
-                    embObj = {
-                        title: 'Daily Claim',
-                        description: `Welcome back! You have claimed your daily $100.\nYou can use this command again in 24 hours.\nYour new balance is: **$${balance}**.`,
-                        color: `#00ff00`,
-                    }
-                    message.reply({ embeds: [embObj] })
+                embObj = {
+                    title: 'Daily Claim',
+                    description: `Welcome back! You have claimed your daily $100.\nYou can use this command again in 24 hours.\nYour new balance is: **$${balance}**.`,
+                    color: `#00ff00`,
                 }
+                message.reply({ embeds: [embObj], ephemeral: true })
                 return t.any(
                     'UPDATE currency SET lastclaimtime = $1, balance = $2 WHERE userid = $3 RETURNING *',
-                    [currentTime, balance, inputuserid],
+                    [rightNow, balance, inputuserid],
                 )
             }
         }
