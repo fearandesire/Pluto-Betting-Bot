@@ -597,3 +597,47 @@ export const locateMatchupIdLog = winston.createLogger({
         }),
     ],
 })
+export const createChanLog = winston.createLogger({
+    level: 'info',
+    format: winston.format.combine(
+        winston.format.colorize(),
+        splat(),
+        winston.format.prettyPrint({
+            colorize: true,
+            depth: 5,
+        }),
+        timestamp,
+        customWinstonFormat,
+    ),
+    transports: [
+        new winston.transports.File({
+            filename: 'logs/gameChan/err/createChannel.log',
+            level: 'error',
+        }),
+        new winston.transports.File({
+            filename: 'logs/gameChan/createChannel.log',
+        }),
+    ],
+})
+export const scheduleChanLog = winston.createLogger({
+    level: 'info',
+    format: winston.format.combine(
+        winston.format.colorize(),
+        splat(),
+        winston.format.prettyPrint({
+            colorize: true,
+            depth: 5,
+        }),
+        timestamp,
+        customWinstonFormat,
+    ),
+    transports: [
+        new winston.transports.File({
+            filename: 'logs/gameChan/err/scheduleChan.log',
+            level: 'error',
+        }),
+        new winston.transports.File({
+            filename: 'logs/gameChan/scheduleChan.log',
+        }),
+    ],
+})

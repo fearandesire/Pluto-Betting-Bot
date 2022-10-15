@@ -6,22 +6,14 @@ import { embedReply } from '#config'
  * Message mod bot channel a specified message
  */
 
-export async function msgBotChan(msg, error) {
-    var ID = `modBotSpamID`
-    //var modBotSpam = await SapDiscClient.channels.fetch(ID)
-    var emColor = `#8000ff`
-    switch (true) {
-        case error === 'error':
-            msg = `**Error:** ${msg}`
-            emColor = 'RED'
-            break
-    }
+export async function msgBotChan(msg, color, title) {
+    var embColor = color ?? `#8000ff`
+    var embTitle = title ?? `Alert`
     var embObj = {
-        title: `Alert`,
+        title: embTitle,
         description: msg,
-        color: emColor,
+        color: embColor,
         target: `modBotSpamID`,
     }
     await embedReply(null, embObj)
-    //    await modBotSpam.send(msg)
 }

@@ -11,7 +11,7 @@ export async function removeAllMatchups() {
     var oddsCache = flatcache.create(`oddsCache.json`, './cache/weeklyOdds')
     var matchupCache = oddsCache.getKey(`matchups`)
     if (!matchupCache || Object.keys(matchupCache).length === 0) {
-        msgBotChan(
+        await msgBotChan(
             `Unable to delete matchups from cache, but the database has been cleared.`,
             `error`,
         )
@@ -19,6 +19,6 @@ export async function removeAllMatchups() {
     }
     await oddsCache.removeKey(`matchups`)
     oddsCache.save(true)
-    msgBotChan(`Successfully cleared all matchups in the DB & cache`)
+    await msgBotChan(`Successfully cleared all matchups in the DB & cache`)
     return
 }

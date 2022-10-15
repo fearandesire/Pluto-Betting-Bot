@@ -1,4 +1,3 @@
-import _ from 'lodash'
 import { checkCompletedLog } from '#winstonLogger'
 import { container } from '#config'
 import fetch from 'node-fetch'
@@ -26,7 +25,8 @@ const options = {
  * 3. Once the winner is determined, the information is sent to {@link initCloseMatchups} to close the bets for the matchup
  */
 
-export async function checkCompleted() {
+export async function checkCompleted(compGameMonitor) {
+    container.processQueue = 0
     checkCompletedLog.info(`Initilization API Call for completed games`)
     await fetch(url, options)
         .then((res) => res.json())
@@ -38,7 +38,8 @@ export async function checkCompleted() {
     var compResults = container.apiCompResult
     checkCompletedLog.info(`API Connection Information:`)
     checkCompletedLog.info(stringifyObject(compResults))
-    await _.forEach(compResults, async function (value, key) {
+    for await (let [key, value] of Object.entries(compResults)) {
+        // await _.forEach(compResults, async function (value, key) {
         if (value.completed === true) {
             checkCompletedLog.info(
                 `Completed Game Found in API: ${value.home_team} vs ${value.away_team}`,
@@ -61,7 +62,7 @@ export async function checkCompleted() {
             }
             dbMatchId = Number(dbMatchId)
             checkCompletedLog.info(
-                `MatchId Found: ${dbMatchId} - ${value.home_team} vs ${value.away_team}`,
+                `MatchId Found in Database: ${dbMatchId} - ${value.home_team} vs ${value.away_team}`,
             )
             //# determine which prop is the home team's score and away team's score by matching the team name
             let hScoreProp
@@ -88,11 +89,16 @@ export async function checkCompleted() {
             var message = null
             await initCloseMatchups(message, dbMatchId, winner).then(() => {
                 checkCompletedLog.info(`Sent matchup ${dbMatchId} to be closed`)
+                container.processQueue++
             })
         } else {
             checkCompletedLog.error(
                 `Skipped game between ${value.home_team} vs. ${value.away_team} as it was not completed yet.`,
             )
         }
+    }
+    await compGameMonitor.ping({
+        state: 'complete',
+        message: `Completed Finished Game Checks | Sent ${container.processQueue} Games to be closed`,
     })
 }

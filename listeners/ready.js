@@ -29,22 +29,21 @@ export class ReadyListener extends Listener {
 }
 
 setTimeout(async () => {
+    await scheduleReq()
     await sentSchEmb().then(async (res) => {
-        if (res === false) {
-            await scheduleReq().then(async () => {
-                var embedObj = {
-                    title: `Schedule Queue`,
-                    description: `Weekly Schedule Gathering Information: **Every Tuesday @ <t:1664863200:T>**`,
-                    color: '#00ff00',
-                    target: 'modBotSpamID',
-                    footer: 'Pluto | Designed by FENIX#7559',
-                }
-                await embedReply(null, embedObj)
-            })
+        if (res == false) {
+            var embedObj = {
+                title: `Schedule Queue`,
+                description: `Weekly Schedule Gathering Information: **Every Tuesday @ <t:1664863200:T>**`,
+                color: '#00ff00',
+                target: 'modBotSpamID',
+                footer: 'Pluto | Designed by FENIX#7559',
+            }
+            await embedReply(null, embedObj)
         }
     })
     await completedReq().then(() => {
-        Log.Green(`Game Complete Check Cron Que Initiated`)
+        Log.Green(`Game Completed Check Cron Job Initiated`)
     })
     await gameDayCron()
 }, 5000)

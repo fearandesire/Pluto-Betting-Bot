@@ -1,7 +1,7 @@
-import { fetchChanId } from '#botUtil/fetchChanId'
 import { Log } from '#LogColor'
 import { MessageEmbed } from 'discord.js'
 import { embedfooter as defaultFooter } from '../../../lib/PlutoConfig.js'
+import { fetchChanId } from '#botUtil/fetchChanId'
 import { helpfooter } from './../../../lib/PlutoConfig.js'
 
 /**
@@ -27,7 +27,8 @@ export async function embedReply(message, embedContent, interactionEph) {
     var followUp = embedContent?.followUp || false
     //debug: console.log(`EMBED OBJECT: ===>>`, embedContent)
     var reqChan
-    //? if the supplied embed has fields, return embeds with fields
+
+    //# Embeds with fields response
     if (hasFields !== false) {
         const embedWithFields = new MessageEmbed()
             .setColor(embedColor)
@@ -59,7 +60,7 @@ export async function embedReply(message, embedContent, interactionEph) {
             })
             return
 
-            //# Embed Destination is not a reply, but to a specific channel
+            //# Non-Field Embed Destination to a specific channel
         } else if (target !== 'reply') {
             if (isSilent == false) {
                 reqChan = await fetchChanId(target)
@@ -71,6 +72,7 @@ export async function embedReply(message, embedContent, interactionEph) {
             }
         }
     }
+
     //& Embed with no fields response
     if (confirmFields == false) {
         const noFieldsEmbed = new MessageEmbed()
@@ -90,9 +92,15 @@ export async function embedReply(message, embedContent, interactionEph) {
                 return
             }
         } else if (target == 'reply' && isSilent === false) {
-            await message.reply({ embeds: [noFieldsEmbed], ephemeral: true })
-            return
-        } else if (target !== 'reply') {
+            if (followUp == true) {
+                return await message.followUp({ embeds: [noFieldsEmbed] })
+            } else {
+                await message.reply({ embeds: [noFieldsEmbed] })
+                return
+            }
+        }
+        //# Fields-Embed Destination to a specific channel
+        else if (target !== 'reply') {
             reqChan = await Promise.resolve(fetchChanId(target))
             reqChan.send({ embeds: [noFieldsEmbed] })
             return
