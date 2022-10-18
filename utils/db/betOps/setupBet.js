@@ -29,7 +29,7 @@ export async function setupBet(
 ) {
     new FileRunning(`setupBet`)
     await isMatchExist(teamid).then(async (data) => {
-        //? if team user wishes to bet on exists in the matchups, Do:
+        //? if team user wishes to bet on exists in the matchups DB, Do:
         if (data) {
             var matchid = data.matchid
             await setupBetLog.info(
@@ -75,10 +75,8 @@ export async function setupBet(
             betslip.teamid = teamid
             betslip.payout = potentialPayout.payout
             betslip.profit = potentialPayout.profit
-            //debug: Log.Yellow(JSON.stringify(betslip))
             confirmBet(message, betslip, user, interactionEph) //# ask user to confirm their bet
             return true
-
             //? Otherwise, throw error
         } else {
             var isSilent = interactionEph ? true : false

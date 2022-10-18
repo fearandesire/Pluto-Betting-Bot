@@ -47,7 +47,7 @@ export async function createMatchups(
             teamOneOdds = oddsFormat.awayOdds
             var matchupEmbedObj = {
                 title: 'Matchup Created; Details:',
-                description: `ID:* ${matchupId}\n*Date:* ${gameDate}\n**Game Channel Scheduled:** ${legibleStartTime}\n\n**Home Team:** **${teamOne}** *@* *${teamOneOdds}*\n**Away Team:** **${teamTwo}** *@* *${teamTwoOdds}*`,
+                description: `ID: ${matchupId}\nDate: ${gameDate}\n**Game Channel Scheduled:** ${legibleStartTime}\n\n**Home Team:** **${teamOne}** *@* *${teamOneOdds}*\n**Away Team:** **${teamTwo}** *@* *${teamTwoOdds}*`,
                 color: 'GREEN',
                 target: 'modBotSpamID',
             }

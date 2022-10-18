@@ -7,6 +7,7 @@ import { collectOddsLog } from '../logging.js'
 import { createMatchups } from '#utilMatchups/createMatchups'
 import fetch from 'node-fetch'
 import flatcache from 'flat-cache'
+import { gameDaysCache } from '../cache/gameDaysCache.js'
 import { isMatchExist } from '#utilValidate/isMatchExist'
 import { msgBotChan } from '#botUtil/msgBotChan'
 import { resolveDayName } from '../bot_res/resolveDayName.js'
@@ -145,6 +146,7 @@ export async function collectOdds(message) {
                 startHour = startHour - 12
             }
             var legibleStartTime = `${dayName}, ${startHour}:${startMin} ${amOrPm}`
+            //# matchups to DB
             await createMatchups(
                 message,
                 home_team,
@@ -156,12 +158,15 @@ export async function collectOdds(message) {
                 cronStartTime,
                 legibleStartTime,
             )
+            //# game channel creation
             await scheduleChannels(
                 home_team,
                 away_team,
                 cronStartTime,
                 legibleStartTime,
             )
+            //# save day of the week names to cache for daily embeds to staff
+            await gameDaysCache(dayName)
         } else {
             collectOddsLog.info(
                 `== Matchup not stored: ==\n${value.home_team} vs ${value.away_team}\nToday's Week: ${weekNum} | API Week: ${apiWeekNum} | Next Week: ${nextWeek} Game Day: ${apiDoW}`,
@@ -196,9 +201,6 @@ export async function collectOdds(message) {
                 target: `modBotSpamID`,
             }
             await embedReply(message, embObj)
-            // message.editReply(
-            //     `**Odds stored into cache & db. (# Of Matches: ${container.matchupCount})**`,
-            // )
         }, 10000)
         return
     }
@@ -210,5 +212,4 @@ export async function collectOdds(message) {
         }, 10000)
         return
     }
-    //container.CollectedOdds = true
 }

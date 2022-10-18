@@ -1,4 +1,5 @@
-import { Log } from '#config'
+import { Log, gamesScheduled } from '#config'
+
 import { createChannel } from './createChannel.js'
 import { createRequire } from 'module'
 import { scheduleChanLog } from '#winstonLogger'
@@ -14,7 +15,12 @@ const schedChanMonitor = new cron.Monitor('Schedule Game Channels')
  * If the bot is reset, another function will be made to fetch the cron times from the database and pass them to this function.
  */
 
-export async function scheduleChannels(homeTeam, awayTeam, cronStartTime) {
+export async function scheduleChannels(
+    homeTeam,
+    awayTeam,
+    cronStartTime,
+    legibleStartTime,
+) {
     await schedChanMonitor.ping({
         state: `run`,
         message: `Creating a Cron Job to create a game channel for: ${homeTeam} vs ${awayTeam} | Cron Time: ${cronStartTime}`,
@@ -27,7 +33,7 @@ export async function scheduleChannels(homeTeam, awayTeam, cronStartTime) {
     )
     var createCron = async () => {
         await cron.schedule(
-            `createGameChannel`,
+            `${homeTeam} vs ${awayTeam}`,
             `${cronStartTime}`,
             async () => {
                 await createChannel(homeTeam, awayTeam)
@@ -46,6 +52,7 @@ export async function scheduleChannels(homeTeam, awayTeam, cronStartTime) {
         await scheduleChanLog.info(
             `Successfully created Cron Job to create a game channel for: ${homeTeam} vs ${awayTeam} | Cron Time: ${cronStartTime}`,
         )
+        gamesScheduled.push(`• ${homeTeam} vs ${awayTeam} | ${legibleStartTime}`)
         return
     })
 }

@@ -1,11 +1,12 @@
 import { checkCompletedLog } from '#winstonLogger'
 import { container } from '#config'
 import fetch from 'node-fetch'
+import flatcache from 'flat-cache'
 import { initCloseMatchups } from '#utilMatchups/initCloseMatchups'
 import { locateMatchup } from '../db/matchupOps/locateMatchup.js'
 import stringifyObject from 'stringify-object'
 
-const url = process.env.odds_API_NFLSCORE
+const url = process.env.odds_API_NBASCORE
 const options = {
     method: 'GET',
     headers: {
@@ -26,75 +27,95 @@ const options = {
  */
 
 export async function checkCompleted(compGameMonitor) {
+    let inProgressCache = flatcache.create(
+        `inProgress.json`,
+        './cache/closingMatches',
+    )
     container.processQueue = 0
-    checkCompletedLog.info(`Initilization API Call for completed games`)
+    await checkCompletedLog.info(`Initilization API Call for completed games`)
     await fetch(url, options)
         .then((res) => res.json())
-        .then((json) => {
-            checkCompletedLog.info(`API Connection successful`)
+        .then(async (json) => {
+            await checkCompletedLog.info(`API Connection successful`)
             var apiCompletedResult = json
             container.apiCompResult = apiCompletedResult
         })
     var compResults = container.apiCompResult
-    checkCompletedLog.info(`API Connection Information:`)
-    checkCompletedLog.info(stringifyObject(compResults))
+    await checkCompletedLog.info(`API Connection Information:`)
+    await checkCompletedLog.info(stringifyObject(compResults))
     for await (let [key, value] of Object.entries(compResults)) {
         // await _.forEach(compResults, async function (value, key) {
         if (value.completed === true) {
-            checkCompletedLog.info(
+            await checkCompletedLog.info(
                 `Completed Game Found in API: ${value.home_team} vs ${value.away_team}`,
             )
-            //#retrieve matchId with the team's found
-            var hTeam = `${value.home_team}`
-            var aTeam = `${value.away_team}`
-            try {
-                var dbMatchId = await locateMatchup(hTeam, aTeam)
-                if (!dbMatchId || dbMatchId == false || dbMatchId == undefined) {
-                    checkCompletedLog.error(
-                        `Unable to find a matchup matchup / ID for ${value.home_team}`,
+            if (
+                inProgressCache.getKey(value.home_team) === null ||
+                inProgressCache.getKey(value.home_team) === undefined
+            ) {
+                //#retrieve matchId with the team's found
+                var hTeam = `${value.home_team}`
+                var aTeam = `${value.away_team}`
+                try {
+                    var dbMatchId = await locateMatchup(hTeam, aTeam)
+                    if (!dbMatchId || dbMatchId == false || dbMatchId == undefined) {
+                        await checkCompletedLog.error(
+                            `Unable to find a matchup matchup / ID for ${value.home_team} vs. ${value.away_team}`,
+                        )
+                        throw new Error(
+                            `Unable to find a matchup / ID for ${value.home_team} vs. ${value.away_team}`,
+                        )
+                    }
+                } catch (err) {
+                    continue
+                }
+                dbMatchId = Number(dbMatchId)
+                await checkCompletedLog.info(
+                    `MatchId Found in Database: ${dbMatchId} - ${value.home_team} vs ${value.away_team}`,
+                )
+                //# determine which prop is the home team's score and away team's score by matching the team name
+                let hScoreProp
+                let awScoreProp
+                if (value.scores[0].name === value.home_team) {
+                    hScoreProp = value.scores[0]
+                    awScoreProp = value.scores[1]
+                } else if (value.scores[0].name === value.away_team) {
+                    hScoreProp = value.scores[1]
+                    awScoreProp = value.scores[0]
+                }
+                //# determine winner based on the scores
+                var homeScore = hScoreProp.score
+                var awayScore = awScoreProp.score
+                var winner = ''
+                if (Number(homeScore) > Number(awayScore)) {
+                    winner = value.home_team
+                    await checkCompletedLog.info(
+                        `Winner: Home Team: ${winner} - ${homeScore}`,
                     )
-                    throw new Error(
-                        `Unable to find a matchup / ID for ${value.home_team}`,
+                } else if (Number(homeScore) < Number(awayScore)) {
+                    winner = value.away_team
+                    await checkCompletedLog.info(
+                        `Winner: Away Team: ${winner} - ${awayScore}`,
                     )
                 }
-            } catch (err) {
-                return
+                //# init the closeMatchups opeeration
+                inProgressCache.setKey(value.home_team, true)
+                var message = null
+                await initCloseMatchups(message, dbMatchId, winner).then(async () => {
+                    await checkCompletedLog.info(`Sent matchup ${dbMatchId} to be closed`)
+                    container.processQueue++
+                })
+            } else {
+                await checkCompletedLog.info(
+                    `Bets for Matchup: ${value.home_team} vs. ${value.away_team} are already being closed. This game will not be queued to be processed.`,
+                )
+                continue
             }
-            dbMatchId = Number(dbMatchId)
-            checkCompletedLog.info(
-                `MatchId Found in Database: ${dbMatchId} - ${value.home_team} vs ${value.away_team}`,
-            )
-            //# determine which prop is the home team's score and away team's score by matching the team name
-            let hScoreProp
-            let awScoreProp
-            if (value.scores[0].name === value.home_team) {
-                hScoreProp = value.scores[0]
-                awScoreProp = value.scores[1]
-            } else if (value.scores[0].name === value.away_team) {
-                hScoreProp = value.scores[1]
-                awScoreProp = value.scores[0]
-            }
-            //# determine winner based on the scores
-            var homeScore = hScoreProp.score
-            var awayScore = awScoreProp.score
-            var winner = ''
-            if (Number(homeScore) > Number(awayScore)) {
-                winner = value.home_team
-                checkCompletedLog.info(`Winner: Home Team: ${winner} - ${homeScore}`)
-            } else if (Number(homeScore) < Number(awayScore)) {
-                winner = value.away_team
-                checkCompletedLog.info(`Winner: Away Team: ${winner} - ${awayScore}`)
-            }
-            //# init the closeMatchups opeeration
-            var message = null
-            await initCloseMatchups(message, dbMatchId, winner).then(() => {
-                checkCompletedLog.info(`Sent matchup ${dbMatchId} to be closed`)
-                container.processQueue++
-            })
         } else {
-            checkCompletedLog.error(
+            await checkCompletedLog.error(
                 `Skipped game between ${value.home_team} vs. ${value.away_team} as it was not completed yet.`,
             )
+            continue
         }
     }
     await compGameMonitor.ping({

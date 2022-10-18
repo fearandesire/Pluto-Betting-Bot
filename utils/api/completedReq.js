@@ -1,7 +1,10 @@
+import { NFL_CRON_MON, NFL_CRON_SUN, NFL_CRON_THUR } from '#config'
+
 import { checkCompleted } from './checkCompleted.js'
 import { completedReqLog } from './../logging.js'
 import { createRequire } from 'module'
 
+//import { NBA_CRON_9PM, NBA_CRON5TO7PM } from '#config'
 const require = createRequire(import.meta.url)
 const cron = require('cronitor')(`f9f7339479104e79bf2b52eb9c2242bf`)
 cron.wraps(require('node-cron'))
@@ -24,7 +27,7 @@ export async function completedReq() {
         message: `Initializing finished game check Cron Job [completedReq.js]`,
     })
     //let thursTimer = `*/1 * * * *`
-    let thursTimer = `*/5 22-23 * * thur`
+    let thursTimer = `${NFL_CRON_THUR}`
     cron.schedule(
         `thursdayCheckGames`,
         `${thursTimer}`,
@@ -38,7 +41,7 @@ export async function completedReq() {
         },
         { timezone: 'America/New_York' },
     )
-    let sundayTimer = `*/2 15-23 * * sun`
+    let sundayTimer = `${NFL_CRON_SUN}`
     cron.schedule(
         `sundayCheckGames`,
         `${sundayTimer}`,
@@ -52,7 +55,7 @@ export async function completedReq() {
         },
         { timezone: 'America/New_York' },
     )
-    let monTimer = `*/5 22-23 * * mon`
+    let monTimer = `${NFL_CRON_MON}`
     cron.schedule(
         `mondayCheckGames`,
         `${monTimer}`,
