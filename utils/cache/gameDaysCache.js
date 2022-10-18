@@ -1,14 +1,16 @@
 import { Log, flatcache } from '#config'
 
 export async function gameDaysCache(dayName) {
-    var gameDayCache = flatcache.load('gameDaysCache.json', './cache/')
+    var gameDayCache = flatcache.create('gameDaysCache.json', './cache/')
     if (gameDayCache.getKey('gameDays') == undefined) {
         var gameDays = gameDayCache.setKey(`gameDays`, [])
-        Log.Yellow(`Created Game Days Cache: ${gameDays}`)
+        gameDayCache.save(true)
+        Log.Yellow(`Created Game Days Cache`)
         return gameDays
     } else {
         gameDays = gameDayCache.getKey('gameDays')
-        gameDays.push(dayName)
+        gameDayCache.push(dayName)
+        gameDayCache.save(true)
         Log.Green(`Added ${dayName} to Game Days Cache: ${gameDays}`)
         return
     }
