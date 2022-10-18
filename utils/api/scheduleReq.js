@@ -1,8 +1,9 @@
-import { flatcache } from '#config'
-import currentWeekNumber from 'current-week-number'
-import { createRequire } from 'module'
-import { scheduleReqLog } from '../logging.js'
 import { collectOdds } from './collectOdds.js'
+import { createRequire } from 'module'
+import currentWeekNumber from 'current-week-number'
+import { flatcache } from '#config'
+import { removeAllMatchups } from '#utilMatchups/removeAllMatchups'
+import { scheduleReqLog } from '../logging.js'
 
 const require = createRequire(import.meta.url)
 
@@ -16,31 +17,38 @@ We will call for the odds per week; Currently set to Tuesday Mornings @ 2:00 AM 
 */
 
 export async function scheduleReq() {
-	let schReqCache = await flatcache.create(
-		`lastWeekCalled.json`,
-		'./cache/scheduleReq',
-	)
-	let lastWeekCalled = schReqCache.getKey('lastWeekCalled')
-		? schReqCache.getKey('weekCalledLast')
-		: schReqCache.setKey(`weekCalledLast`, 'empty')
+    let schReqCache = await flatcache.create(
+        `lastWeekCalled.json`,
+        './cache/scheduleReq',
+    )
+    let lastWeekCalled = schReqCache.getKey('lastWeekCalled')
+        ? schReqCache.getKey('weekCalledLast')
+        : schReqCache.setKey(`weekCalledLast`, 'empty')
 
-	cron.schedule(
-		`collectMatchupsReq`,
-		`0 2 * * tue`,
-		async () => {
-			scheduleReqLog.info(`Verifying if we have reached a new week...`)
-			var currentWeek = currentWeekNumber()
-			if (lastWeekCalled !== currentWeek) {
-				scheduleReqLog.info(
-					`Detected a new week! Currently calling this week's odds from the API`,
-				)
-				await collectOdds()
-				lastWeekCalled = currentWeek
-				schReqCache.setKey(`weekCalledLast`, currentWeek)
-				schReqCache.save(true)
-				return
-			}
-		},
-		{ timezone: 'America/New_York' },
-	)
+    cron.schedule(
+        `collectMatchupsReq`,
+        `0 2 * * tue`,
+        async () => {
+            scheduleReqLog.info(`Verifying if we have reached a new week...`)
+            var currentWeek = currentWeekNumber()
+            if (lastWeekCalled !== currentWeek) {
+                scheduleReqLog.info(
+                    `Detected a new week! Currently calling this week's odds from the API`,
+                )
+                await removeAllMatchups().then(async () => {
+                    await collectOdds()
+                    lastWeekCalled = currentWeek
+                    schReqCache.setKey(`weekCalledLast`, currentWeek)
+                    schReqCache.save(true)
+                    return
+                })
+            } else {
+                scheduleReqLog.info(
+                    `This week is the same as last week collected. No need to call the API for new games`,
+                )
+                return
+            }
+        },
+        { timezone: 'America/New_York' },
+    )
 }
