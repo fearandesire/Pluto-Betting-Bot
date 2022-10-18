@@ -1,6 +1,6 @@
 {
 	"name": "bettingbot",
-	"version": "1.4.1",
+	"version": "1.4.2",
 	"description": "",
 	"main": "Pluto.mjs",
 	"prettier": "fenix-js-prettier-config",
