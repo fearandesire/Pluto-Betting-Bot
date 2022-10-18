@@ -3,6 +3,7 @@ import { Log } from '#LogColor'
 import { completedReq } from '../utils/api/completedReq.js'
 import { createRequire } from 'module'
 import { dailyOps } from '../utils/bot_res/dailyOps.js'
+import { fetchSchedule } from '../utils/db/gameSchedule/fetchSchedule.js'
 import { scheduleReq } from '#api/scheduleReq'
 
 const require = createRequire(import.meta.url)
@@ -29,12 +30,12 @@ export class ReadyListener extends Listener {
 setTimeout(async () => {
     //# Queue checking for weekly games schedule
     await scheduleReq()
-
+    //# Queue game channel scheduling
+    await fetchSchedule()
     //# Queue checking for completed games
     await completedReq().then(() => {
         Log.Green(`Game Completed Check Cron Job Initiated`)
     })
-
     //# Daily Embeds
     await dailyOps().then(() => {
         Log.Green(`Daily Embeds Initiated`)

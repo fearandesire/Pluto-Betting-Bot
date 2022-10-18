@@ -5,6 +5,8 @@ import { Log, _ } from '#config'
 import { MessageEmbed } from 'discord.js'
 import { container } from '#config'
 import { db } from '#db'
+import { embedReply } from '#embed'
+import { msgBotChan } from '#botUtil/msgBotChan'
 import { scheduleChannels } from './scheduleChannels.js'
 
 /**
@@ -15,6 +17,12 @@ import { scheduleChannels } from './scheduleChannels.js'
 
 export async function fetchSchedule(interaction) {
     if (container.fetchedAlready == true) {
+        if (!interaction) {
+            await msgBotChan(
+                `Game channels have already been queued to be created for the week.`,
+            )
+            return
+        }
         await interaction.followUp({
             content: `Game channels have already been scheduled.`,
         })
@@ -43,7 +51,17 @@ export async function fetchSchedule(interaction) {
             `${container.numOfMatchups} game channels will be created | This is based on the current matchups in the database.`,
         )
         .setColor(`#00FF00`)
-    await interaction.followUp({ embeds: [embed] })
+    var embObj = {
+        title: `Game Channels Queue`,
+        description: `Successfully queued game channels to be created for the games in the week at their scheduled times :white_check_mark: `,
+        footer: `${container.numOfMatchups} game channels will be created | This is based on the current matchups in the database.`,
+        target: `modBotSpamID`,
+    }
+    if (!interaction) {
+        await embedReply(null, embObj)
+    } else {
+        await interaction.followUp({ embeds: [embed] })
+    }
     container.fetchedAlready = true
     Log.Green(
         `Successfully fetched the game data from the DB and scheduled the game channels`,
