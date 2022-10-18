@@ -1,9 +1,8 @@
-import { Log, QuickError, embedReply, flatcache } from '#config'
+import { Log, QuickError } from '#config'
 
 import { NoDataFoundError } from '#botClasses/Errors'
 import { hasActiveBets } from '#utilValidate/hasActiveBets'
 import { listMyBets } from '#utilDB/listMyBets'
-import { validateUser } from '#utilValidate/validateExistingUser'
 
 /**
  * Check betslips in local cache for list of user bets. If there is no data for the user stored in cache, then retrieve the bets for the user via the activebets table in the databse.
@@ -13,25 +12,9 @@ import { validateUser } from '#utilValidate/validateExistingUser'
  */
 
 export async function checkBetsCache(message, userId, interactionEph) {
-    var allbetSlipsCache = await flatcache.load(
-        'allbetSlipsCache.json',
-        './cache/betslips',
-    )
     var user = userId
-    var isSelf =
-        message?.author?.id === userId
-            ? true
-            : message?.user?.id === userId
-            ? true
-            : false
-    var usersBetSlips =
-        (await allbetSlipsCache.getKey(`${user}-activeBetslips`)) || null //? get user's active bet slips embed from local storage
-    //console.log(`Bet Slip For User: >>`, usersBetSlips)
-    //? Ensure that the user exists in the database before we attempt to retrieve their active bets.
-    await validateUser(message, user, interactionEph) //? Validate User in DB
     //? Validate if user has any active bets
     await hasActiveBets(user).then((data) => {
-        //console.log(data)
         if (data.length > 0) {
             Log.Yellow(`[hasActiveBet.js] User ${user} has active bets`)
             return true
@@ -43,32 +26,6 @@ export async function checkBetsCache(message, userId, interactionEph) {
             )
         }
     })
-    //? Check local storage for user's active bets to limit DB queries
-    if (
-        (await allbetSlipsCache.getKey(`${user}-hasBetsEmbed`)) == true &&
-        usersBetSlips !== null
-    ) {
-        // Log.Green(
-        //     `Collected User Betslip Embed Fields: ${JSON.stringify(usersBetSlips)}`,
-        // )
-        var userName = message?.author?.username || message?.user?.username
-        var isSilent = interactionEph ? true : false
-        var title
-        if (isSelf === true) {
-            title = `Your Active Bet Slips :tickets: `
-        } else if (isSelf === false) {
-            title = `${userName}'s Active Bet Slips`
-        }
-        var embedcontent = {
-            title: title,
-            color: '#00FF00',
-            fields: usersBetSlips,
-            silent: isSilent,
-        }
-        embedReply(message, embedcontent)
-        return
-    } else {
-        await listMyBets(user, message)
-        return
-    }
+    await listMyBets(user, message)
+    return
 }

@@ -2,10 +2,8 @@ import { Listener } from '@sapphire/framework'
 import { Log } from '#LogColor'
 import { completedReq } from '../utils/api/completedReq.js'
 import { createRequire } from 'module'
-import { embedReply } from '#config'
-import { gameDayCron } from '#botUtil/gameDayCron'
+import { dailyOps } from '../utils/bot_res/dailyOps.js'
 import { scheduleReq } from '#api/scheduleReq'
-import { sentSchEmb } from '../utils/cache/sentSchEmb.js'
 
 const require = createRequire(import.meta.url)
 const cron = require('cronitor')(`f9f7339479104e79bf2b52eb9c2242bf`)
@@ -29,24 +27,18 @@ export class ReadyListener extends Listener {
 }
 
 setTimeout(async () => {
-    await sentSchEmb().then(async (res) => {
-        if (res === false) {
-            await scheduleReq().then(async () => {
-                var embedObj = {
-                    title: `Schedule Queue`,
-                    description: `Weekly Schedule Gathering Information: **Every Tuesday @ <t:1664863200:T>**`,
-                    color: '#00ff00',
-                    target: 'modBotSpamID',
-                    footer: 'Pluto | Designed by FENIX#7559',
-                }
-                await embedReply(null, embedObj)
-            })
-        }
-    })
+    //# Queue checking for weekly games schedule
+    await scheduleReq()
+
+    //# Queue checking for completed games
     await completedReq().then(() => {
-        Log.Green(`Game Complete Check Cron Que Initiated`)
+        Log.Green(`Game Completed Check Cron Job Initiated`)
     })
-    await gameDayCron()
+
+    //# Daily Embeds
+    await dailyOps().then(() => {
+        Log.Green(`Daily Embeds Initiated`)
+    })
 }, 5000)
 
 Log.Green(`[Startup]: On-Load Processes started!`)

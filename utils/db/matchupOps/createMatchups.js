@@ -24,12 +24,22 @@ export async function createMatchups(
     teamTwoOdds,
     matchupId,
     gameDate,
+    cronStartTime,
+    legibleStartTime,
 ) {
     createMatchupsLog.info(`Initializing createMatchups!`)
 
     db.none(
-        `INSERT INTO activematchups (matchid, teamOne, teamTwo, teamOneOdds, teamTwoOdds, dateofmatchup) VALUES ($1, $2, $3, $4, $5, $6)`,
-        [matchupId, teamOne, teamTwo, teamOneOdds, teamTwoOdds, gameDate],
+        `INSERT INTO activematchups (matchid, teamOne, teamTwo, teamOneOdds, teamTwoOdds, dateofmatchup, cronstart) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [
+            matchupId,
+            teamOne,
+            teamTwo,
+            teamOneOdds,
+            teamTwoOdds,
+            gameDate,
+            cronStartTime,
+        ],
     )
         .then(async () => {
             let oddsFormat = await formatOdds(teamOneOdds, teamTwoOdds)
@@ -37,7 +47,7 @@ export async function createMatchups(
             teamOneOdds = oddsFormat.awayOdds
             var matchupEmbedObj = {
                 title: 'Matchup Created; Details:',
-                description: `**__ID:__** ${matchupId}\n**__Date__:** ${gameDate}\n\n**__Home Team:__** **${teamOne}** *@* *${teamOneOdds}*\n**__Away Team:__** **${teamTwo}** *@* *${teamTwoOdds}*`,
+                description: `ID: ${matchupId}\nDate: ${gameDate}\n**Game Channel Scheduled:** ${legibleStartTime}\n\n**Home Team:** **${teamOne}** *@* *${teamOneOdds}*\n**Away Team:** **${teamTwo}** *@* *${teamTwoOdds}*`,
                 color: 'GREEN',
                 target: 'modBotSpamID',
             }

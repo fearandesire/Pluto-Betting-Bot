@@ -1,16 +1,20 @@
 import { container, embedReply } from '#config'
+import { format, getDay, getHours, getMinutes, parseISO } from 'date-fns'
 
+import _ from 'lodash'
 import { assignMatchID } from '#botUtil/AssignIDs'
+import { collectOddsLog } from '../logging.js'
+import { createMatchups } from '#utilMatchups/createMatchups'
+import fetch from 'node-fetch'
+import flatcache from 'flat-cache'
+import { gameDaysCache } from '../cache/gameDaysCache.js'
+import { isMatchExist } from '#utilValidate/isMatchExist'
 import { msgBotChan } from '#botUtil/msgBotChan'
+import { resolveDayName } from '../bot_res/resolveDayName.js'
 import { resolveIso } from '#dateUtil/resolveIso'
 import { resolveToday } from '#dateUtil/resolveToday'
-import { createMatchups } from '#utilMatchups/createMatchups'
-import { isMatchExist } from '#utilValidate/isMatchExist'
-import flatcache from 'flat-cache'
-import _ from 'lodash'
-import fetch from 'node-fetch'
+import { scheduleChannels } from '../db/gameSchedule/scheduleChannels.js'
 import stringifyObject from 'stringify-object'
-import { collectOddsLog } from '../logging.js'
 
 let oddsCache = flatcache.create(`oddsCache.json`, './cache/weeklyOdds')
 
@@ -35,7 +39,6 @@ export async function collectOdds(message) {
         },
     }
     let matchups = {} //# to store matchups into cache
-    let matchupCount = 0
     container.allNflOdds = {}
     await fetch(url, options)
         .then((res) => res.json())
@@ -48,8 +51,8 @@ export async function collectOdds(message) {
     var allNflOdds = container.allNflOdds
     container.matchupCount = 0
     for (let [key, value] of Object.entries(allNflOdds)) {
-        //* only store games that are scheduled for this week
         let isoDate = value.commence_time
+        //# Storing games that are scheduled for this week || API can return games for the next week, but they have no odds.
         let todayDateInfo = new resolveToday()
         let weekNum = todayDateInfo.weekNum
         let apiDateInfo = new resolveIso(isoDate)
@@ -99,6 +102,17 @@ export async function collectOdds(message) {
                 home_odds = 'n/a'
                 away_odds = 'n/a'
             }
+            //# date-fns to parse the ISO, get the start time & format it for Cron Jobs
+            var gameTime = parseISO(isoDate)
+            var startHour = getHours(gameTime)
+            var startMin = getMinutes(gameTime)
+            var startDay = getDay(gameTime)
+            var startDayOfMonth = Number(format(gameTime, `d`))
+            var startMonth = Number(format(gameTime, `M`))
+            var cronStartTime = `${startMin} ${startHour} ${startDayOfMonth} ${startMonth} ${startDay}`
+            await collectOddsLog.info(
+                `Matchup: ${home_team} vs ${away_team} | Cron Start Time: ${cronStartTime}`,
+            )
             let matchupId = await assignMatchID()
             matchups[`${matchupId}`] = {
                 [`home_team`]: home_team,
@@ -114,12 +128,25 @@ export async function collectOdds(message) {
                 [`hour`]: apiStartHour,
                 [`minute`]: apiStartMin,
                 [`gameDayName`]: apiDoW,
+                [`cronStartTime`]: cronStartTime,
             }
             await collectOddsLog.info(
                 `== Storing Matchup into cache: ==\n${stringifyObject(
                     matchups[matchupId],
                 )}`,
             )
+            var dayName = await resolveDayName(startDay)
+            // date-fns will format '00' minutes as '0' | adding a zero to make it more legible
+            if (startMin.toString().length === 1) {
+                startMin = `${startMin}0`
+            }
+            var amOrPm
+            if (startHour > 12) {
+                amOrPm = 'PM'
+                startHour = startHour - 12
+            }
+            var legibleStartTime = `${dayName}, ${startHour}:${startMin} ${amOrPm}`
+            //# matchups to DB
             await createMatchups(
                 message,
                 home_team,
@@ -128,12 +155,23 @@ export async function collectOdds(message) {
                 away_odds,
                 matchupId,
                 gameDate,
+                cronStartTime,
+                legibleStartTime,
             )
+            //# game channel creation
+            await scheduleChannels(
+                home_team,
+                away_team,
+                cronStartTime,
+                legibleStartTime,
+            )
+            //# save day of the week names to cache for daily embeds to staff
+            await gameDaysCache(dayName)
         } else {
             collectOddsLog.info(
                 `== Matchup not stored: ==\n${value.home_team} vs ${value.away_team}\nToday's Week: ${weekNum} | API Week: ${apiWeekNum} | Next Week: ${nextWeek} Game Day: ${apiDoW}`,
             )
-            return
+            continue
         }
     }
     if (_.isEmpty(matchups)) {
@@ -163,9 +201,6 @@ export async function collectOdds(message) {
                 target: `modBotSpamID`,
             }
             await embedReply(message, embObj)
-            // message.editReply(
-            //     `**Odds stored into cache & db. (# Of Matches: ${container.matchupCount})**`,
-            // )
         }, 10000)
         return
     }
@@ -177,5 +212,4 @@ export async function collectOdds(message) {
         }, 10000)
         return
     }
-    //container.CollectedOdds = true
 }

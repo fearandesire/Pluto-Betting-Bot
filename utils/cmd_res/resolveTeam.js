@@ -19,7 +19,10 @@ export async function resolveTeam(teamName) {
     var foundTeam = result[0]
     if (!foundTeam) {
         resolveTeamLog.error(`Unable to resolve team: ${teamName}`)
+        return null
     }
+    console.log(`Resolved Teams:`, result)
+    console.log(`Team Found:`, foundTeam)
     resolveTeamLog.info(`Resolved team: ${teamName} to ${foundTeam.item.name}`)
     //console.log(foundTeam)
     return foundTeam.item.name

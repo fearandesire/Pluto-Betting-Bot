@@ -18,7 +18,7 @@ let timestamp = winston.format.timestamp({
 })
 const customWinstonFormat = printf(
     ({ level, message, timestamp, ...metadata }) => {
-        let msg = `${timestamp}: - Logging - \n${message}`
+        let msg = `${timestamp}: --------    -------- \n${message}\n--------    --------`
         if (JSON.stringify(metadata).length > 2) {
             msg += ` ${JSON.stringify(metadata)}`
         }
@@ -247,7 +247,7 @@ export const deleteBetArrLog = winston.createLogger({
     ),
     transports: [
         new winston.transports.File({
-            filename: 'logs/closeBetOp/Err/5. deleteBetArrErr.log',
+            filename: 'logs/closeBetOp/err/5. deleteBetArrErr.log',
             level: 'error',
         }),
         new winston.transports.File({
@@ -350,7 +350,7 @@ export const completedReqLog = winston.createLogger({
     ),
     transports: [
         new winston.transports.File({
-            filename: 'logs/closeBetOp/Err/completedReqErr.log',
+            filename: 'logs/closeBetOp/err/completedReqErr.log',
             level: 'error',
         }),
         new winston.transports.File({
@@ -434,7 +434,7 @@ export const betsFromIdLog = winston.createLogger({
     ),
     transports: [
         new winston.transports.File({
-            filename: 'logs/closeBetOp/Err/3.5 betsFromIdErr.log',
+            filename: 'logs/closeBetOp/err/3.5 betsFromIdErr.log',
             level: 'error',
         }),
         new winston.transports.File({
@@ -594,6 +594,50 @@ export const locateMatchupIdLog = winston.createLogger({
         }),
         new winston.transports.File({
             filename: 'logs/locateMatchupId.log',
+        }),
+    ],
+})
+export const createChanLog = winston.createLogger({
+    level: 'info',
+    format: winston.format.combine(
+        winston.format.colorize(),
+        splat(),
+        winston.format.prettyPrint({
+            colorize: true,
+            depth: 5,
+        }),
+        timestamp,
+        customWinstonFormat,
+    ),
+    transports: [
+        new winston.transports.File({
+            filename: 'logs/gameChan/err/createChannel.log',
+            level: 'error',
+        }),
+        new winston.transports.File({
+            filename: 'logs/gameChan/createChannel.log',
+        }),
+    ],
+})
+export const scheduleChanLog = winston.createLogger({
+    level: 'info',
+    format: winston.format.combine(
+        winston.format.colorize(),
+        splat(),
+        winston.format.prettyPrint({
+            colorize: true,
+            depth: 5,
+        }),
+        timestamp,
+        customWinstonFormat,
+    ),
+    transports: [
+        new winston.transports.File({
+            filename: 'logs/gameChan/err/scheduleChan.log',
+            level: 'error',
+        }),
+        new winston.transports.File({
+            filename: 'logs/gameChan/scheduleChan.log',
         }),
     ],
 })
