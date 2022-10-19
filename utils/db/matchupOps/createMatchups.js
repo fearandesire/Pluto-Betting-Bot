@@ -26,11 +26,12 @@ export async function createMatchups(
     gameDate,
     cronStartTime,
     legibleStartTime,
+    startTime,
 ) {
     createMatchupsLog.info(`Initializing createMatchups!`)
 
     db.none(
-        `INSERT INTO activematchups (matchid, teamOne, teamTwo, teamOneOdds, teamTwoOdds, dateofmatchup, cronstart) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        `INSERT INTO "NBAactivematchups" (matchid, teamOne, teamTwo, teamOneOdds, teamTwoOdds, dateofmatchup, cronstart, "startTime") VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
         [
             matchupId,
             teamOne,
@@ -39,6 +40,7 @@ export async function createMatchups(
             teamTwoOdds,
             gameDate,
             cronStartTime,
+            startTime,
         ],
     )
         .then(async () => {
@@ -56,7 +58,7 @@ export async function createMatchups(
         })
         .catch((err) => {
             createMatchupsLog.error(
-                `Error adding matchup to activematchups table\nData received:\nHome Team (teamOne): ${teamOne} Away Team (teamTwo): ${teamTwo}\nHome Team Odds: ${teamOneOdds} - Away Team Odds: ${teamTwoOdds}\nError Details:\n${err}`,
+                `Error adding matchup to NBAactivematchups table\nData received:\nHome Team (teamOne): ${teamOne} Away Team (teamTwo): ${teamTwo}\nHome Team Odds: ${teamOneOdds} - Away Team Odds: ${teamTwoOdds}\nError Details:\n${err}`,
             )
             container.err = 0
         })

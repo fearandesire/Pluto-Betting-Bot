@@ -5,7 +5,7 @@ import { Log } from '#LogColor'
 import { confirmBet } from '#utilBetOps/confirmBet'
 import { fetchBalance } from '#utilCurrency/fetchBalance'
 import { isMatchExist } from '#utilValidate/isMatchExist'
-import { resolveMatchup } from '#cacheUtil/resolveMatchup'
+import { resolveOdds } from './../../cache/resolveOdds'
 import { resolvePayouts } from '#utilBetOps/resolvePayouts'
 import { setupBetLog } from '#winstonLogger'
 
@@ -14,7 +14,7 @@ import { setupBetLog } from '#winstonLogger'
  * @summary - Checks if the team the user wishes to bet on exists in the database, and if it does, it will send
  * the user's bet information to the next function (@link confirmBet)
  * @param {obj} message - The message object from the discord.js library
- * @param {obj} teamid - The team the user wishes to bet on.
+ * @param {obj} betOnTeamName - The team the user wishes to bet on.
  * @param {integer} betamount - The amount of money the user wishes to bet
  * @param {boolean} interactionEph - Whether the response should be visible to the user or not [slash cmd]
  * @references {@link placeBet.js} - The command that 'invokes' this function and passes in our parameters.
@@ -22,13 +22,14 @@ import { setupBetLog } from '#winstonLogger'
 
 export async function setupBet(
     message,
-    teamid,
+    betOnTeamName,
     betamount,
     user,
+    matchupId,
     interactionEph,
 ) {
     new FileRunning(`setupBet`)
-    await isMatchExist(teamid).then(async (data) => {
+    await isMatchExist(betOnTeamName).then(async (data) => {
         //? if team user wishes to bet on exists in the matchups DB, Do:
         if (data) {
             var matchid = data.matchid
@@ -57,22 +58,22 @@ export async function setupBet(
                 }
                 await embedReply(message, embedcontent, true)
                 throw Log.Error(
-                    `User ${user} does not have sufficient funds to place their desired bet ${betamount} on ${teamid}.\n Retrieved Balance: ${checkFunds}`,
+                    `User ${user} does not have sufficient funds to place their desired bet ${betamount} on ${betOnTeamName}.\n Retrieved Balance: ${checkFunds}`,
                 )
             }
 
-            var oddsForTeam = await resolveMatchup(teamid, `odds`)
+            var oddsForTeam = await resolveOdds(betOnTeamName, matchupId)
             console.log(`Odds: ${oddsForTeam}`)
-            console.log(`team ID: ${teamid}`)
+            console.log(`Team Name: ${betOnTeamName}`)
             setupBetLog.info(
-                `Betslip Matchup Information Located:\nOdds: ${oddsForTeam}\nTeam ID: ${teamid}`,
+                `Betslip Matchup Information Located:\nOdds: ${oddsForTeam}\nTeam ID: ${betOnTeamName}`,
             )
             var potentialPayout = await resolvePayouts(oddsForTeam, betamount)
             //? 'betslip' - object containing the user's bet information
             var betslip = {}
             betslip.userid = user
             betslip.amount = betamount
-            betslip.teamid = teamid
+            betslip.teamid = betOnTeamName
             betslip.payout = potentialPayout.payout
             betslip.profit = potentialPayout.profit
             confirmBet(message, betslip, user, interactionEph) //# ask user to confirm their bet
@@ -82,13 +83,13 @@ export async function setupBet(
             var isSilent = interactionEph ? true : false
             var embObj = {
                 title: 'Bet Error',
-                description: `Team containing ${teamid} is not available to bet on. Please review the active matchups.`,
+                description: `Team containing ${betOnTeamName} is not available to bet on. Please review the active matchups.`,
                 color: 'RED',
                 silent: isSilent,
             }
             embedReply(message, embObj)
             throw Log.Error(
-                `[setupBet.js] Team containing ${teamid} does not exist in the database`,
+                `[setupBet.js] Team containing ${betOnTeamName} does not exist in the database`,
             )
         }
     })

@@ -8,18 +8,19 @@ import { resolveMatchupLog } from '../logging.js'
  * @return {ReturnValueDataTypeHere} Brief description of the returning value here.
  */
 
-export function resolveMatchup(teamName, reqInfo) {
+export async function resolveMatchup(teamName, reqInfo, gameDate) {
     let oddsCache = flatcache.create(`oddsCache.json`, './cache/weeklyOdds')
     var weeklyOdds = oddsCache.getKey(`matchups`)
     resolveMatchupLog.info(`Searching for: ${teamName} in cache`)
     let hOrAway
     let matchedInfo
+    //# Ensure matchups exist in cache
     if (!weeklyOdds || Object.keys(weeklyOdds).length === 0) {
         resolveMatchupLog.error(`Unable to locate weekly odds in cache.`)
         return false
     }
     var matchupInfo = _.find(weeklyOdds, function (o) {
-        if (o.home_team === teamName) {
+        if (o.home_team === teamName && o.dateView == gameDate) {
             hOrAway = `home`
             resolveMatchupLog.info({
                 level: `info`,
@@ -27,7 +28,7 @@ export function resolveMatchup(teamName, reqInfo) {
                 matchupInfo: o,
             })
             return o
-        } else if (o.away_team === teamName) {
+        } else if (o.away_team === teamName && o.dateView == gameDate) {
             hOrAway = `away`
             resolveMatchupLog.info({
                 level: `info`,

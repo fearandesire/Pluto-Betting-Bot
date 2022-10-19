@@ -1,6 +1,14 @@
 import { container, embedReply } from '#config'
-import { format, getDay, getHours, getMinutes, parseISO } from 'date-fns'
+import {
+    format,
+    formatISO,
+    getDay,
+    getHours,
+    getMinutes,
+    parseISO,
+} from 'date-fns'
 
+import { ODDS_NBA } from '../../lib/PlutoConfig.js'
 import _ from 'lodash'
 import { assignMatchID } from '#botUtil/AssignIDs'
 import { collectOddsLog } from '../logging.js'
@@ -27,9 +35,7 @@ export async function collectOdds(message) {
     if (!message) {
         message == null
     }
-    const url =
-        // eslint-disable-next-line no-undef
-        process.env.odds_API_NFLODDS
+    const url = ODDS_NBA
     const options = {
         method: 'GET',
         headers: {
@@ -110,6 +116,8 @@ export async function collectOdds(message) {
             var startDayOfMonth = Number(format(gameTime, `d`))
             var startMonth = Number(format(gameTime, `M`))
             var cronStartTime = `${startMin} ${startHour} ${startDayOfMonth} ${startMonth} ${startDay}`
+            //# Format ISO to be used for game start times in a quick gameActive check
+            var formattedISO = formatISO(gameTime, { representation: 'complete' })
             await collectOddsLog.info(
                 `Matchup: ${home_team} vs ${away_team} | Cron Start Time: ${cronStartTime}`,
             )
@@ -157,6 +165,7 @@ export async function collectOdds(message) {
                 gameDate,
                 cronStartTime,
                 legibleStartTime,
+                formattedISO,
             )
             //# game channel creation
             await scheduleChannels(

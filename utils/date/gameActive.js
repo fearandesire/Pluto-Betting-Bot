@@ -1,49 +1,33 @@
-import { resolveMatchup } from '#cacheUtil/resolveMatchup'
-import { resolveToday } from './resolveToday.js'
+import { formatISO, isAfter } from 'date-fns'
+
+import { db } from '#db'
 
 /**
  * @module gameActive.js
- * Resolve game time from cache and compare it to the current time. Reject if the game has already started
- * @description - A current date vs Game Date comparison is written with the day, hour and minute all combined.
- * #For example: 15330 (15th of the month - 3 PM the hour - 30 past 3 PM)
- * @param {string} teamName - The team name we will check the matchup for to see if the game has started
- * @return {boolean} Returns true or false depending on if the game is active, or not.
+ * 1. Query DB to locate the matchup via the name of one of the teams, and the matchup ID.
+ * 2. Check the time of the game, and compare it to the current time.
+ * 3. If the game has already started, return true. Otherwise, return false
+ * @param {string} teamid - The team name to search for in the DB
+ * @param {integer} matchupId - The matchup ID to search for in the DB
+ * @returns {boolean} - True if the game has already started, false if it has not.
  */
 
-export async function gameActive(teamName) {
-    var match = await resolveMatchup(teamName)
-    var matchDay = match.dayNum
-    var matchHour = match.hour
-    var matchMinute = match.minute
-    var todayDateInfo = await new resolveToday()
-    //console.log(todayDateInfo)
-    var currentDay = todayDateInfo.todaysDate.dayNum
-    var currentHour = todayDateInfo.hour
-    var currentMinute = todayDateInfo.minute
-    console.log(
-        `${teamName} Match Details:\nDay: ${matchDay}\nHour: ${matchHour}\nMinute: ${matchMinute}`,
-    )
-    console.log(
-        `Current Details:\nDay: ${currentDay}\nHour: ${currentHour}\nMinute: ${currentMinute}`,
-    )
-    if (currentDay === matchDay) {
-        if (currentHour > matchHour) {
-            //# hour is currently past game time
-            return true
-        } else if (currentHour === matchHour) {
-            //# hour matches, lets verify the minutes
-            if (currentMinute > matchMinute) {
-                //# game has already started
+export async function gameActive(teamName, matchupId) {
+    var searchForActive = await db
+        .oneOrNone(
+            `SELECT * FROM "NBAactivematchups" WHERE "teamone" = $1 OR "teamtwo" = $1 AND "matchid" = $2`,
+            [teamName, matchupId],
+        )
+        .then((dbMatchup) => {
+            var gameStart = dbMatchup.startTime
+            var today = new Date()
+            var todayISO = formatISO(today, { representation: 'complete' })
+            var startedOrNot = isAfter(todayISO, gameStart)
+            if (startedOrNot) {
                 return true
+            } else {
+                return false
             }
-        } else {
-            return false
-        }
-    }
-    if (currentDay > matchDay) {
-        return true
-    }
-    if (currentDay < matchDay) {
-        return false
-    }
+        })
+    return searchForActive
 }

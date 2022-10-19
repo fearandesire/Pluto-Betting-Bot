@@ -9,9 +9,9 @@ import { db } from '#db'
  * @references {@link setupBet.js} - This module is called from setupBet.js - a function that is used to process a new bet.
  */
 
-export function isMatchExist(teamid) {
+export async function isMatchExist(teamid, dateSlashed) {
     return db.oneOrNone(
-        `SELECT * FROM activematchups WHERE teamone = $1 OR teamtwo = $1`,
-        [teamid],
+        `SELECT * FROM activematchups WHERE teamone = $1 OR teamtwo = $1 AND dateofmatchup = $2`,
+        [teamid, dateSlashed],
     )
 }

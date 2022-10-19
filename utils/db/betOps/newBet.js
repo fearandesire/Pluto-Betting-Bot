@@ -1,6 +1,7 @@
 import { Log, QuickError } from '#config'
 
 import async from 'async'
+import { formatDate } from '../../date/formatDate.js'
 import { gameActive } from '#dateUtil/gameActive'
 import { resolveMatchup } from '#cacheUtil/resolveMatchup'
 import { resolveTeam } from '#cmdUtil/resolveTeam'
@@ -9,14 +10,29 @@ import { setupBetLog } from '#winstonLogger'
 import { validateUser } from '#utilValidate/validateExistingUser'
 import { verifyDupBet } from '#utilValidate/verifyDuplicateBet'
 
-export async function newBet(message, betOnTeam, betAmount, interactionEph) {
+export async function newBet(
+    message,
+    betOnTeam,
+    betAmount,
+    gameDate,
+    interactionEph,
+) {
     var user = message?.author?.id || message.user.id
     var userName = message?.author?.tag || message.user.username
     betOnTeam = await resolveTeam(betOnTeam)
-    var matchInfo = await resolveMatchup(betOnTeam)
+    //# Format date to mm/dd/yyyy
+    gameDate = await formatDate(gameDate)
+    var matchInfo = await resolveMatchup(betOnTeam, null, gameDate)
+    if (!matchInfo) {
+        QuickError(
+            message,
+            `Unable to locate a match for ${betOnTeam} on ${gameDate}`,
+            true,
+        )
+        return
+    }
     var matchupId = parseInt(matchInfo.matchupId)
-    var activeCheck = await gameActive(betOnTeam)
-
+    var activeCheck = await gameActive(betOnTeam, gameDate, matchupId)
     if (!betOnTeam) {
         //# failure to match team
         QuickError(message, 'Please enter a valid team or match id', true)
@@ -30,10 +46,6 @@ export async function newBet(message, betOnTeam, betAmount, interactionEph) {
         )
         return
     }
-    // await Log.Yellow(
-    //  `[newBet.js] User ${userName} (${user}) is getting a bet ready!`, //? Debug purposes, this will likely be removed later. For now, it's intended to confirm the user's input
-    // )
-    //await Log.Blue(`Bet Slip:\nAmount: ${betAmount}\nTeam: ${betOnTeam}`)
     await setupBetLog.info(
         `User ${userName} (${user}) is getting a bet ready!\nBet Slip:\nAmount: ${betAmount}\nTeam: ${betOnTeam}`,
     )
@@ -48,7 +60,14 @@ export async function newBet(message, betOnTeam, betAmount, interactionEph) {
                 return
             },
             async function setBet() {
-                await setupBet(message, betOnTeam, betAmount, user, interactionEph)
+                await setupBet(
+                    message,
+                    betOnTeam,
+                    betAmount,
+                    user,
+                    matchupId,
+                    interactionEph,
+                )
                 return
             },
         ],
