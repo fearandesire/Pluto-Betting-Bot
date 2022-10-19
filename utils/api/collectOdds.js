@@ -16,7 +16,6 @@ import { createMatchups } from '#utilMatchups/createMatchups'
 import fetch from 'node-fetch'
 import flatcache from 'flat-cache'
 import { gameDaysCache } from '../cache/gameDaysCache.js'
-import { isMatchExist } from '#utilValidate/isMatchExist'
 import { msgBotChan } from '#botUtil/msgBotChan'
 import { resolveDayName } from '../bot_res/resolveDayName.js'
 import { resolveIso } from '#dateUtil/resolveIso'
@@ -69,13 +68,13 @@ export async function collectOdds(message) {
         var apiDoW = apiDateInfo.dayOfWeek
         var nextWeek = parseInt(weekNum) + 1 //# Fetch Monday Games
         var gameDate = `${monthNum}/${gameDay}/${gameYear}`
-        if ((await isMatchExist(value.home_team)) !== null) {
-            //# there is a unique-key constraint in the database, but this is to prevent the count of games scheduled from being incorrect
-            collectOddsLog.info(
-                `Matchup already exists in database: ${value.home_team} vs ${value.away_team} || This matchup will not be stored.`,
-            )
-            continue
-        }
+        // if ((await isMatchExist(value.home_team)) !== null) {
+        //     //# there is a unique-key constraint in the database, but this is to prevent the count of games scheduled from being incorrect
+        //     collectOddsLog.info(
+        //         `Matchup already exists in database: ${value.home_team} vs ${value.away_team} || This matchup will not be stored.`,
+        //     )
+        //     continue
+        // }
         if (
             apiWeekNum === weekNum ||
             (apiWeekNum === nextWeek && apiDoW === 'Mon')
