@@ -1,12 +1,13 @@
+import { NFL_SCORE, container } from '#config'
+
 import { checkCompletedLog } from '#winstonLogger'
-import { container } from '#config'
 import fetch from 'node-fetch'
 import flatcache from 'flat-cache'
 import { initCloseMatchups } from '#utilMatchups/initCloseMatchups'
 import { locateMatchup } from '../db/matchupOps/locateMatchup.js'
 import stringifyObject from 'stringify-object'
 
-const url = process.env.odds_API_NBASCORE
+const url = NFL_SCORE
 const options = {
     method: 'GET',
     headers: {
