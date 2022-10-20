@@ -16,6 +16,7 @@ import { createMatchups } from '#utilMatchups/createMatchups'
 import fetch from 'node-fetch'
 import flatcache from 'flat-cache'
 import { gameDaysCache } from '../cache/gameDaysCache.js'
+import { isExactMatchup } from '../db/validation/isExactMatchup.js'
 import { msgBotChan } from '#botUtil/msgBotChan'
 import { resolveDayName } from '../bot_res/resolveDayName.js'
 import { resolveIso } from '#dateUtil/resolveIso'
@@ -68,13 +69,20 @@ export async function collectOdds(message) {
         var apiDoW = apiDateInfo.dayOfWeek
         var nextWeek = parseInt(weekNum) + 1 //# Fetch Monday Games
         var gameDate = `${monthNum}/${gameDay}/${gameYear}`
-        // if ((await isMatchExist(value.home_team)) !== null) {
-        //     //# there is a unique-key constraint in the database, but this is to prevent the count of games scheduled from being incorrect
-        //     collectOddsLog.info(
-        //         `Matchup already exists in database: ${value.home_team} vs ${value.away_team} || This matchup will not be stored.`,
-        //     )
-        //     continue
-        // }
+        var dupeDBMatchup = await isExactMatchup(
+            value.home_team,
+            value.away_team,
+            gameDate,
+        )
+        if (dupeDBMatchup) {
+            collectOddsLog.info(
+                `Matchup already exists in DB: ${value.home_team} vs ${value.away_team} on date: ${gameDate} -- This matchup will not be stored.`,
+            )
+            await msgBotChan(
+                `**${value.home_team} vs ${value.away_team}** on date: **${gameDate}** already exists in DB -- This matchup will __not__ be stored.`,
+            )
+            continue
+        }
         if (
             apiWeekNum === weekNum ||
             (apiWeekNum === nextWeek && apiDoW === 'Mon')
@@ -92,7 +100,7 @@ export async function collectOdds(message) {
             let apiStartHour = apiDateInfo.hour
             let apiStartMin = apiDateInfo.minute
             let gameStartTime = `${apiStartDay}${apiStartHour}${apiStartMin}`
-            let fullStartTime = `DAY: ${apiStartDay} HOUR: ${apiStartHour} MINUTE: ${apiStartMin}`
+            let fullStartTime = `Start Info\nDay: ${apiStartDay} Hour: ${apiStartHour} Minute: ${apiStartMin}`
             let home_odds
             let away_odds
             var home_team = value.home_team
