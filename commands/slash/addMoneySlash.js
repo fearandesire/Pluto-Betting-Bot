@@ -20,6 +20,7 @@ export class addMoneySlash extends Command {
             (builder) =>
                 builder //
                     .setName('addmoney')
+                    .setDMPermission(false)
                     .setDescription(this.description)
                     .addMentionableOption((option) =>
                         option //
@@ -37,6 +38,13 @@ export class addMoneySlash extends Command {
         )
     }
     async chatInputRun(interaction) {
+        if (!interaction.guildId) {
+            interaction.reply({
+                content: `This command can only be used in a server.`,
+                ephemeral: true,
+            })
+            return
+        }
         var userid = interaction.user.id
         var target = interaction.options.getMentionable('user').user.id
         var amount = interaction.options.getInteger('amount')
