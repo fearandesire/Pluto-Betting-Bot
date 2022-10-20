@@ -76,10 +76,6 @@ export async function collectOdds(message) {
                 `Storing Matchup: ${value.home_team} vs ${value.away_team}\nToday's Week: ${weekNum} | API Week: ${apiWeekNum} | Next Week: ${nextWeek} Game Day: ${apiDoW}`,
             )
             container.matchupCount++
-            //# the current day and time
-            let currentDay = todayDateInfo.dayNum
-            let currentHour = todayDateInfo.hour
-            let currentMinute = todayDateInfo.minute
             //# game start day & time
             let apiStartDay = apiDateInfo.dayNum
             let apiStartHour = apiDateInfo.hour
