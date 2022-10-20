@@ -50,9 +50,9 @@ export async function checkbalance(inputuserid, message, notuser) {
             userName = userName || 'User'
             var embedcontent = {
                 title: `${userName.username}'s Balance`,
-                description: `You currently have: **$${usersbalance} dollars**.\n To claim your daily 100 dollars, *type /claim*`,
+                description: `You currently have: **$${usersbalance} dollars**.\n To claim your daily $100 dollars, *type /claim*`,
                 color: '#00FF00',
-                footer: 'For assistance, DM <@208016830491525120>',
+                footer: 'For assistance, DM FENIX#7559',
             }
             embedReply(message, embedcontent) //? Sending embed with balance to user
             Log.BrightBlue(usersbalance)
