@@ -68,7 +68,11 @@ export async function setupBet(
                 )
             }
 
-            var oddsForTeam = await resolveOdds(betOnTeamName, matchupId)
+            var oddsForTeam = await resolveOdds(data, betOnTeamName)
+            if (!oddsForTeam) {
+                await QuickError(`Unable to resolve odds for ${betOnTeamName}`)
+                throw new Error(`Unable to resolve odds for ${betOnTeamName}`)
+            }
             console.log(`Odds:`, oddsForTeam)
             console.log(`Team Name: ${betOnTeamName}`)
             setupBetLog.info(

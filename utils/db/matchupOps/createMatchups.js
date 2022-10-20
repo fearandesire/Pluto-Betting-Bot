@@ -24,14 +24,14 @@ export async function createMatchups(
     teamTwoOdds,
     matchupId,
     gameDate,
+    startTime,
     cronStartTime,
     legibleStartTime,
-    startTime,
 ) {
     createMatchupsLog.info(`Initializing createMatchups!`)
 
     db.none(
-        `INSERT INTO "NBAactivematchups" (matchid, teamOne, teamTwo, teamOneOdds, teamTwoOdds, dateofmatchup, cronstart, legiblestart) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        `INSERT INTO "NBAactivematchups" (matchid, teamOne, teamTwo, teamOneOdds, teamTwoOdds, dateofmatchup, "startTime", cronstart, legiblestart) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
         [
             matchupId,
             teamOne,
@@ -39,6 +39,7 @@ export async function createMatchups(
             teamOneOdds,
             teamTwoOdds,
             gameDate,
+            startTime,
             cronStartTime,
             legibleStartTime,
         ],

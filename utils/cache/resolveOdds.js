@@ -1,5 +1,3 @@
-import { _, flatcache } from '#config'
-
 import { resolveOddsLog } from '../logging.js'
 
 /**
@@ -8,36 +6,16 @@ import { resolveOddsLog } from '../logging.js'
  * @return {ReturnValueDataTypeHere} Brief description of the returning value here.
  */
 
-export async function resolveOdds(teamName, matchupId) {
-    let oddsCache = flatcache.create(`oddsCache.json`, './cache/weeklyOdds')
-    var weeklyOdds = oddsCache.getKey(`matchups`)
-    console.log(`Searching for: ${teamName}`)
-    if (!weeklyOdds || Object.keys(weeklyOdds).length === 0) {
-        resolveOddsLog.error(`Unable to locate weekly odds in cache.`)
-        return false
-    }
-    var matchupInfo = _.find(weeklyOdds, function (o) {
-        if (o.home_team === teamName && o.matchupId == matchupId) {
-            resolveOddsLog.info({
-                level: `info`,
-                message: `Matchup found for ${teamName}`,
-                matchupInfo: o,
-            })
-            return o.home_teamOdds
-        }
-        if (o.away_team === teamName && o.matchupId == matchupId) {
-            resolveOddsLog.info({
-                level: `info`,
-                message: `Matchup found for ${teamName}`,
-                matchupInfo: o,
-            })
-            return o.away_teamOdds
-        }
-    })
-    if (!matchupInfo) {
-        resolveOddsLog.error(`Unable to locate a matchup for team ${teamName}`)
-        return false
-    } else {
-        return matchupInfo
+export async function resolveOdds(data, betOnTeam) {
+    switch (true) {
+        case data.teamone == betOnTeam:
+            var homeOdds = data.teamoneodds
+            return homeOdds
+        case data.teamtwo == betOnTeam:
+            var awayOdds = data.teamtwoodds
+            return awayOdds
+        default:
+            resolveOddsLog(`No odds found for ${betOnTeam}`)
+            return
     }
 }

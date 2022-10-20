@@ -163,6 +163,7 @@ export async function collectOdds(message) {
                 away_odds,
                 matchupId,
                 gameDate,
+                gameStartTime,
                 cronStartTime,
                 legibleStartTime,
                 formattedISO,
