@@ -12,7 +12,7 @@ export async function gameDaysCache(dayName) {
         return
     } else {
         gameDays = gameDayCache.getKey('gameDays')
-        gameDayCache.push(dayName)
+        gameDays.push(dayName)
         gameDayCache.save(true)
         Log.Green(`Added ${dayName} to Game Days Cache: ${gameDays}`)
         return

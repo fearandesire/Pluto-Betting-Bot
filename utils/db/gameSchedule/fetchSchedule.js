@@ -29,7 +29,7 @@ export async function fetchSchedule(interaction) {
         return
     }
     var checkDB = await db
-        .manyOrNone(`SELECT * FROM activematchups`)
+        .manyOrNone(`SELECT * FROM "NBAactivematchups"`)
         .then(async (data) => {
             if (_.isEmpty(data)) {
                 Log.Red(`No active matchups found in the database.`)

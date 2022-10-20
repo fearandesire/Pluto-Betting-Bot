@@ -5,7 +5,7 @@ import { Log } from '#LogColor'
 import { confirmBet } from '#utilBetOps/confirmBet'
 import { fetchBalance } from '#utilCurrency/fetchBalance'
 import { isMatchExist } from '#utilValidate/isMatchExist'
-import { resolveOdds } from './../../cache/resolveOdds'
+import { resolveOdds } from '../../cache/resolveOdds.js'
 import { resolvePayouts } from '#utilBetOps/resolvePayouts'
 import { setupBetLog } from '#winstonLogger'
 
@@ -63,7 +63,7 @@ export async function setupBet(
             }
 
             var oddsForTeam = await resolveOdds(betOnTeamName, matchupId)
-            console.log(`Odds: ${oddsForTeam}`)
+            console.log(`Odds:`, oddsForTeam)
             console.log(`Team Name: ${betOnTeamName}`)
             setupBetLog.info(
                 `Betslip Matchup Information Located:\nOdds: ${oddsForTeam}\nTeam ID: ${betOnTeamName}`,

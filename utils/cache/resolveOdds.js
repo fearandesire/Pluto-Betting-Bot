@@ -8,7 +8,7 @@ import { resolveOddsLog } from '../logging.js'
  * @return {ReturnValueDataTypeHere} Brief description of the returning value here.
  */
 
-export function resolveOdds(teamName, matchupId) {
+export async function resolveOdds(teamName, matchupId) {
     let oddsCache = flatcache.create(`oddsCache.json`, './cache/weeklyOdds')
     var weeklyOdds = oddsCache.getKey(`matchups`)
     console.log(`Searching for: ${teamName}`)

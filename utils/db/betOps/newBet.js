@@ -32,7 +32,7 @@ export async function newBet(
         return
     }
     var matchupId = parseInt(matchInfo.matchupId)
-    var activeCheck = await gameActive(betOnTeam, gameDate, matchupId)
+    var activeCheck = await gameActive(betOnTeam, matchupId)
     if (!betOnTeam) {
         //# failure to match team
         QuickError(message, 'Please enter a valid team or match id', true)

@@ -11,7 +11,7 @@ import { db } from '#db'
 
 export async function isMatchExist(teamid, dateSlashed) {
     return db.oneOrNone(
-        `SELECT * FROM activematchups WHERE teamone = $1 OR teamtwo = $1 AND dateofmatchup = $2`,
+        `SELECT * FROM "NBAactivematchups" WHERE teamone = $1 OR teamtwo = $1 AND dateofmatchup = $2`,
         [teamid, dateSlashed],
     )
 }

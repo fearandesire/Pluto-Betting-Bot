@@ -1,6 +1,6 @@
 import Fuse from 'fuse.js'
 import { resolveTeamLog } from '../logging.js'
-import { teamList } from '#lib/teamList'
+import { teamList } from '#lib/nbaTeamList'
 
 /**
  * Resolve a team name using fuzzy search & comparison to the list of teams saved locally.
