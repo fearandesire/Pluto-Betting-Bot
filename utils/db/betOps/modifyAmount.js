@@ -42,7 +42,7 @@ export function modifyAmount(message, userid, betid, amount, interactionEph) {
         var allowCollection = async (userid) => {
             let allbetSlipsCache = flatcache.create(
                 `allbetSlipsCache.json`,
-                './cache/"NBAbetslips"',
+                './cache/NBAbetslips',
             )
             await allbetSlipsCache.setKey(`${userid}-hasBetEmbed`, false)
             allbetSlipsCache.save(true)

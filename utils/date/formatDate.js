@@ -7,6 +7,10 @@ import { format } from 'date-fns'
 
 export async function formatDate(date) {
     date = parseInt(date)
+    //# if the first character is a zero, remove it
+    if (date.toString().charAt(0) === '0') {
+        date = date.toString().slice(1)
+    }
     var todaysDate = new Date()
     var month = format(todaysDate, 'M')
     var year = format(todaysDate, 'yyyy')

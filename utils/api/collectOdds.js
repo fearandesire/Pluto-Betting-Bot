@@ -139,7 +139,7 @@ export async function collectOdds(message) {
                 [`matchupId`]: matchupId,
                 [`startTime`]: gameStartTime,
                 [`fullStartTime`]: fullStartTime,
-                [`dateView`]: gameDate, //* date formatted as month/day/year
+                [`mdyDate`]: gameDate, //* date formatted as month/day/year
                 [`dayNum`]: apiStartDay,
                 [`dayOfWeek`]: gameDay,
                 [`hour`]: apiStartHour,

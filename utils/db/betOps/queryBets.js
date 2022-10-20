@@ -18,7 +18,7 @@ import { db } from '#db'
 export async function queryBets(message, userid, betid) {
 	var allbetSlipsCache = await flatcache.load(
 		'allbetSlipsCache.json',
-		'./cache/"NBAbetslips"',
+		'./cache/NBAbetslips',
 	)
 	db.tx('queryCancelBet', async (t) => {
 		const getBetCount = await t.manyOrNone(

@@ -1,31 +1,39 @@
 import { Log, QuickError } from '#config'
 
 import async from 'async'
-import { formatDate } from '../../date/formatDate.js'
 import { gameActive } from '#dateUtil/gameActive'
 import { resolveMatchup } from '#cacheUtil/resolveMatchup'
 import { resolveTeam } from '#cmdUtil/resolveTeam'
+import { sanitizeToSlash } from './../../date/sanitizeToSlash.js'
 import { setupBet } from '#utilBetOps/setupBet'
 import { setupBetLog } from '#winstonLogger'
 import { validateUser } from '#utilValidate/validateExistingUser'
 import { verifyDupBet } from '#utilValidate/verifyDuplicateBet'
 
 export async function newBet(
-    message,
+    interaction,
     betOnTeam,
     betAmount,
     gameDate,
     interactionEph,
 ) {
-    var user = message?.author?.id || message.user.id
-    var userName = message?.author?.tag || message.user.username
+    var user = interaction?.author?.id || interaction.user.id
+    var userName = interaction?.author?.tag || interaction.user.username
     betOnTeam = await resolveTeam(betOnTeam)
     //# Format date to mm/dd/yyyy
-    gameDate = await formatDate(gameDate)
+    gameDate = await sanitizeToSlash(gameDate)
+    if (!gameDate || gameDate == false) {
+        QuickError(
+            interaction,
+            `Please provide a valid date number for the week. Please do not include the month or year.\nExamples of valid inputs: \`8\` or \`8th\`, \`9\` or \`9th\`, \`10\` or \`10t\`h, etc`,
+            true,
+        )
+        return
+    }
     var matchInfo = await resolveMatchup(betOnTeam, null, gameDate)
     if (!matchInfo) {
         QuickError(
-            message,
+            interaction,
             `Unable to locate a match for ${betOnTeam} on ${gameDate}`,
             true,
         )
@@ -35,12 +43,12 @@ export async function newBet(
     var activeCheck = await gameActive(betOnTeam, matchupId)
     if (!betOnTeam) {
         //# failure to match team
-        QuickError(message, 'Please enter a valid team or match id', true)
+        QuickError(interaction, 'Please enter a valid team or match id', true)
         return
     }
     if (activeCheck == true) {
         QuickError(
-            message,
+            interaction,
             `This match has already started. You are unable to place a bet on active games.`,
             true,
         )
@@ -52,16 +60,16 @@ export async function newBet(
     async.series(
         [
             async function valUser() {
-                await validateUser(message, user, true)
+                await validateUser(interaction, user, true)
                 return
             },
             async function verDup() {
-                await verifyDupBet(message, user, matchupId)
+                await verifyDupBet(interaction, user, matchupId)
                 return
             },
             async function setBet() {
                 await setupBet(
-                    message,
+                    interaction,
                     betOnTeam,
                     betAmount,
                     user,

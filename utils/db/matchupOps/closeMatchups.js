@@ -40,7 +40,7 @@ export async function closeMatchups(betInformation) {
 		)
 		let allbetSlipsCache = flatcache.create(
 			`allbetSlipsCache.json`,
-			'./cache/"NBAbetslips"',
+			'./cache/NBAbetslips',
 		)
 		//& Won Bet Ops
 		if (wonOrLost === 'won') {

@@ -51,7 +51,7 @@ export async function deleteBetFromArray(
 	)
 	let allbetSlipsCache = await flatcache.load(
 		'allbetSlipsCache.json',
-		'./cache/"NBAbetslips"',
+		'./cache/NBAbetslips',
 	)
 	let flat
 	let betslipTitle = `${userid}-activeBetslips`
