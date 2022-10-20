@@ -14,6 +14,7 @@ import { resolveDayName } from '../bot_res/resolveDayName.js'
 import { resolveIso } from '#dateUtil/resolveIso'
 import { resolveToday } from '#dateUtil/resolveToday'
 import { scheduleChannels } from '../db/gameSchedule/scheduleChannels.js'
+import stringifyObject from 'stringify-object'
 
 let oddsCache = flatcache.create(`oddsCache.json`, './cache/weeklyOdds')
 
