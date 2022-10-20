@@ -55,13 +55,14 @@ export function addNewBet(message, betslip, interactionEph) {
                     `Storing betslip into database - activebets\nData: ${data}\nBetslip: ${betslip}`,
                 )
                 return t.none(
-                    `INSERT INTO activebets (betid, userid, teamid, matchid, amount) VALUES ($1, $2, $3, $4, $5)`,
+                    `INSERT INTO activebets (betid, userid, teamid, matchid, amount, dateofbet) VALUES ($1, $2, $3, $4, $5, $6)`,
                     [
                         betslip.betid,
                         betslip.userid,
                         betslip.teamid,
                         container.temp_matchId,
                         betslip.amount,
+                        TodaysDate(),
                     ], //? Insert betslip information into the database
                 )
             })
