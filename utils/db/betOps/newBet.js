@@ -66,6 +66,7 @@ export async function newBet(
                     betAmount,
                     user,
                     matchupId,
+                    gameDate,
                     interactionEph,
                 )
                 return

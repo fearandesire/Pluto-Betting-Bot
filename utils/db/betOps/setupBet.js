@@ -3,6 +3,7 @@ import { QuickError, embedReply } from '#embed'
 import { FileRunning } from '#botClasses/FileRunning'
 import { Log } from '#LogColor'
 import { confirmBet } from '#utilBetOps/confirmBet'
+import { debugLogging as debug } from '../../bot_res/debugLogging.js'
 import { fetchBalance } from '#utilCurrency/fetchBalance'
 import { isMatchExist } from '#utilValidate/isMatchExist'
 import { resolveOdds } from '../../cache/resolveOdds.js'
@@ -26,17 +27,22 @@ export async function setupBet(
     betamount,
     user,
     matchupId,
+    gameDate,
     interactionEph,
 ) {
     new FileRunning(`setupBet`)
-    await isMatchExist(betOnTeamName).then(async (data) => {
+    await isMatchExist(betOnTeamName, gameDate).then(async (data) => {
         //? if team user wishes to bet on exists in the matchups DB, Do:
         if (data) {
             var matchid = data.matchid
             await setupBetLog.info(
                 `[isMatchExist.js] Match ${matchid} [${data.teamone} vs ${data.teamtwo}] exists in the database`,
             )
-
+            var dbgObj = {
+                msg: `Match ${matchid} [${data.teamone} vs ${data.teamtwo}] exists in the database`,
+                fileName: `setupBet.js`,
+            }
+            await debug(dbgObj)
             //# verify user has funds for the bet
             var checkFunds = await fetchBalance(message, user)
             if (!checkFunds) {
