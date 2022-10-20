@@ -89,6 +89,13 @@ export class createMatchupSlash extends Command {
     }
     //    { idHints: [`1022940422974226432`] },
     async chatInputRun(interaction) {
+        if (!interaction.guildId) {
+            interaction.reply({
+                content: `This command can only be used in a server.`,
+                ephemeral: true,
+            })
+            return
+        }
         var userid = interaction.user.id
         Log.Yellow(`${userid} has created a custom matchup.`)
         var assignMatchupIds = await assignMatchID()
