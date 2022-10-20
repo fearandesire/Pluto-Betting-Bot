@@ -2,7 +2,7 @@ import { db } from '#db'
 
 /**
  * @module isDuplicateBet -
- * ⁡⁣⁣⁢Query the DB table 'activebets' with the team the user wishes to bet on. Used to determine if the user has already placed a bet on that team. Resolves with .𝙩𝙝𝙚𝙣 outside of this function (See: **{@link verifyDuplicateBet.js}**)⁡
+ * ⁡⁣⁣⁢Query the DB table '"NBAactivebets"' with the team the user wishes to bet on. Used to determine if the user has already placed a bet on that team. Resolves with .𝙩𝙝𝙚𝙣 outside of this function (See: **{@link verifyDuplicateBet.js}**)⁡
  * @param {integer} userid - The user's ID
  * @param {integer} matchupId - The team the user has input to bet on, which we use to validate it's existence in the database.
  * @returns {obj} The result of the query.
@@ -10,8 +10,8 @@ import { db } from '#db'
  */
 
 export function isDuplicateBet(userid, matchupId) {
-    return db.oneOrNone(
-        `SELECT * FROM activebets WHERE userid = $1 AND matchid = $2`,
-        [userid, matchupId],
-    )
+	return db.oneOrNone(
+		`SELECT * FROM "NBAactivebets" WHERE userid = $1 AND matchid = $2`,
+		[userid, matchupId],
+	)
 }

@@ -6,9 +6,9 @@ import { db } from '#db'
  */
 
 export async function quickBalance(userid) {
-    var userBal = await db.oneOrNone(
-        `SELECT balance FROM currency WHERE userid = $1`,
-        [userid],
-    )
-    return userBal.balance
+	var userBal = await db.oneOrNone(
+		`SELECT balance FROM "NBAcurrency" WHERE userid = $1`,
+		[userid],
+	)
+	return userBal.balance
 }

@@ -10,8 +10,8 @@ import { db } from '#db'
  * CURRENTLY NOT REFERENCED ANYWHERE // NO USES
  */
 export function deleteBet(userid, betid) {
-	return db.oneOrNone(`DELETE FROM betslips WHERE userid = $1 AND betid = $2`, [
-		userid,
-		betid,
-	])
+	return db.oneOrNone(
+		`DELETE FROM "NBAbetslips" WHERE userid = $1 AND betid = $2`,
+		[userid, betid],
+	)
 }

@@ -36,7 +36,7 @@ export function listMyBets(userid, message) {
     )
     new FileRunning('listMyBets')
     //? This arrow function used in⁡⁣⁣⁢ 𝙙𝙗⁡⁣⁣⁢.𝙢𝙖𝙥⁡ is to declare what we want to do with ⁡⁢⁣⁣𝙚𝙖𝙘𝙝⁡ row of the query result (see pg-promise db.Map method).
-    db.map(`SELECT * FROM betslips WHERE userid = $1`, [userid], (row) => {
+    db.map(`SELECT * FROM "NBAbetslips" WHERE userid = $1`, [userid], (row) => {
         var amount = row.amount
         var teamID = row.teamid
         var betid = row.betid

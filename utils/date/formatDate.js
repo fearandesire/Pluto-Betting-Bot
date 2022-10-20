@@ -6,6 +6,7 @@ import { format } from 'date-fns'
  */
 
 export async function formatDate(date) {
+    date = parseInt(date)
     var todaysDate = new Date()
     var month = format(todaysDate, 'M')
     var year = format(todaysDate, 'yyyy')

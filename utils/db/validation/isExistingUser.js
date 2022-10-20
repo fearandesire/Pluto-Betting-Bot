@@ -14,5 +14,5 @@ import { db } from '#db'
 //? identify if the user exists in the database
 
 export function isExistingUser(userid) {
-	return db.oneOrNone(`SELECT * FROM currency WHERE userid = $1`, [userid])
+	return db.oneOrNone(`SELECT * FROM "NBAcurrency" WHERE userid = $1`, [userid])
 }

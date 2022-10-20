@@ -1,8 +1,7 @@
 import { FileRunning } from '#botClasses/FileRunning'
+import { Log } from '#LogColor'
+import { QuickError } from '#embed'
 import { isDuplicateBet } from '#utilValidate/isDuplicateBet'
-
-//import { QuickError } from '#embed'
-//import { Log } from '#LogColor'
 
 /**
  * @module verifyDuplicateBet - Handles promise for validation of a duplicate bet when invoked via {@link placeBet.js}
@@ -19,10 +18,10 @@ export async function verifyDupBet(message, userid, matchId) {
     new FileRunning(`verifyDupBet`)
     await isDuplicateBet(userid, matchId).then((data) => {
         if (data) {
-            //QuickError(message, `You have already placed a bet on this match`)
-            // throw Log.Error(
-            //     `[verifyDupBet.js] User ${userid} has already placed a bet on Matchup: ${matchId} - ended event`,
-            // )
+            QuickError(message, `You have already placed a bet on this match`)
+            throw Log.Error(
+                `[verifyDupBet.js] User ${userid} has already placed a bet on Matchup: ${matchId} - ended event`,
+            )
         }
         return
     })

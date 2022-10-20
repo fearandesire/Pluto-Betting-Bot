@@ -8,7 +8,7 @@ import { setupBetLog } from '#winstonLogger'
 /**
  * @module sortBalance - This is used to subtract a users bet amount from their current balance.
  * @summary - When a user places a bet, the amount they want to bet will be subtracted from their current balance.
- * In order to do such, we first query for their balance into the 'currency' table. Afterwords, we ensure that the user has enough funds to bet.
+ * In order to do such, we first query for their balance into the '"NBAcurrency"' table. Afterwords, we ensure that the user has enough funds to bet.
  * If they do, we subtract the bet amount from their balance and update the DB.
  * If they dont, we throw an error and tell them they dot have enough funds.
  * @param {obj} message - The mesage object containing the user & their message - also used to reference a direct reply to the user with message.reply()
@@ -23,7 +23,7 @@ export function sortBalance(message, userid, betamount, addOrSub) {
         //? Using DB transactions to make more than 1 query.
         db.tx('sortBalance-Transaction', async (t) => {
             const currentBalance = await t.oneOrNone(
-                'SELECT * FROM currency WHERE userid = $1',
+                'SELECT * FROM "NBAcurrency" WHERE userid = $1',
                 [userid],
                 (a) => a.balance,
             )
@@ -46,7 +46,7 @@ export function sortBalance(message, userid, betamount, addOrSub) {
             newBalance = parseInt(currentBalance) - parseInt(betamount)
             container.newBal[`${userid}`] = newBalance
             return t.any(
-                'UPDATE currency SET balance = $1 WHERE userid = $2 RETURNING *',
+                'UPDATE "NBAcurrency" SET balance = $1 WHERE userid = $2 RETURNING *',
                 [newBalance, userid],
             )
         }).then((data) => {
@@ -64,7 +64,7 @@ export function sortBalance(message, userid, betamount, addOrSub) {
         //? Using DB transactions to make more than 1 query.
         db.tx('sortBalance-Transaction', async (t) => {
             const currentBalance = await t.oneOrNone(
-                'SELECT * FROM currency WHERE userid = $1',
+                'SELECT * FROM "NBAcurrency" WHERE userid = $1',
                 [userid],
                 (a) => a.balance,
             )
@@ -82,7 +82,7 @@ export function sortBalance(message, userid, betamount, addOrSub) {
             }
             const newBalance = parseInt(currentBalance) - parseInt(betamount)
             return t.any(
-                'UPDATE currency SET balance = $1 WHERE userid = $2 RETURNING *',
+                'UPDATE "NBAcurrency" SET balance = $1 WHERE userid = $2 RETURNING *',
                 [newBalance, userid],
             )
         }).then((data) => {

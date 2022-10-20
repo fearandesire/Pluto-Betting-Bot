@@ -10,10 +10,10 @@ import { db } from '#db'
  */
 
 export function fetchBalance(message, userid) {
-    new FileRunning(`fetchBalance`)
-    return db.oneOrNone(
-        'SELECT * FROM currency WHERE userid = $1',
-        [userid],
-        (a) => a.balance,
-    )
+	new FileRunning(`fetchBalance`)
+	return db.oneOrNone(
+		'SELECT * FROM "NBAcurrency" WHERE userid = $1',
+		[userid],
+		(a) => a.balance,
+	)
 }
