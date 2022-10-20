@@ -39,13 +39,15 @@ export async function fetchSchedule(interaction) {
                 for await (let [key, value] of Object.entries(data)) {
                     var homeTeam = value.teamone
                     var awayTeam = value.teamtwo
-                    var startTime = value.cronstart
+                    var cronStartTime = value.cronstart
                     var legibleStartTime = value.legiblestart
+                    var startTimeISO = value.startTime
                     await scheduleChannels(
                         homeTeam,
                         awayTeam,
-                        startTime,
+                        cronStartTime,
                         legibleStartTime,
+                        startTimeISO,
                     )
                 }
             }
