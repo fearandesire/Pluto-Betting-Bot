@@ -26,6 +26,13 @@ export class backupCache extends Command {
         )
     }
     async chatInputRun(interaction) {
+        if (!interaction.guildId) {
+            interaction.reply({
+                content: `This command can only be used in a server.`,
+                ephemeral: true,
+            })
+            return
+        }
         var userid = interaction.user.id
         Log.Yellow(`Backup of Weekly Odds Cache File Initiated by ${userid}`)
         await backupOddsCache().then((res) => {

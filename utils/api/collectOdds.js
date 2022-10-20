@@ -121,6 +121,16 @@ export async function collectOdds(message) {
                 `Matchup: ${home_team} vs ${away_team} | Cron Start Time: ${cronStartTime}`,
             )
             let matchupId = await assignMatchID()
+            var dayName = await resolveDayName(startDay)
+            if (startMin.toString().length === 1) {
+                startMin = `${startMin}0`
+            }
+            var amOrPm
+            if (startHour > 12) {
+                amOrPm = 'PM'
+                startHour = startHour - 12
+            }
+            var legibleStartTime = `${dayName}, ${startHour}:${startMin} ${amOrPm}`
             matchups[`${matchupId}`] = {
                 [`home_team`]: home_team,
                 [`away_team`]: away_team,
@@ -136,23 +146,14 @@ export async function collectOdds(message) {
                 [`minute`]: apiStartMin,
                 [`gameDayName`]: apiDoW,
                 [`cronStartTime`]: cronStartTime,
+                [`legibleStartTime`]: legibleStartTime,
             }
             await collectOddsLog.info(
                 `== Storing Matchup into cache: ==\n${stringifyObject(
                     matchups[matchupId],
                 )}`,
             )
-            var dayName = await resolveDayName(startDay)
             // date-fns will format '00' minutes as '0' | adding a zero to make it more legible
-            if (startMin.toString().length === 1) {
-                startMin = `${startMin}0`
-            }
-            var amOrPm
-            if (startHour > 12) {
-                amOrPm = 'PM'
-                startHour = startHour - 12
-            }
-            var legibleStartTime = `${dayName}, ${startHour}:${startMin} ${amOrPm}`
             //# matchups to DB
             await createMatchups(
                 message,

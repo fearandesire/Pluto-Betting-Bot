@@ -40,7 +40,13 @@ export async function fetchSchedule(interaction) {
                     var homeTeam = value.teamone
                     var awayTeam = value.teamtwo
                     var startTime = value.cronstart
-                    await scheduleChannels(homeTeam, awayTeam, startTime)
+                    var legibleStartTime = value.legiblestart
+                    await scheduleChannels(
+                        homeTeam,
+                        awayTeam,
+                        startTime,
+                        legibleStartTime,
+                    )
                 }
             }
         })

@@ -26,6 +26,13 @@ export class callSchedule extends Command {
         )
     }
     async chatInputRun(interaction) {
+        if (!interaction.guildId) {
+            interaction.reply({
+                content: `This command can only be used in a server.`,
+                ephemeral: true,
+            })
+            return
+        }
         var userid = interaction.user.id
         Log.Yellow(`User ${userid} called the callSchedule cmd`)
         await interaction.deferReply()
