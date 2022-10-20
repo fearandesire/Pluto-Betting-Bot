@@ -15,7 +15,7 @@ import { db } from '#db'
 export async function gameActive(teamName, matchupId) {
     var searchForActive = await db
         .oneOrNone(
-            `SELECT * FROM "NBAactivematchups" WHERE "teamone" = $1 OR "teamtwo" = $1 AND "matchid" = $2`,
+            `SELECT * FROM "NBAactivematchups" WHERE "teamone" = $1 OR "teamtwo" = $1 AND "matchid" = $2 OR "teamone" = $1 OR "teamtwo" = $1`,
             [teamName, matchupId],
         )
         .then((dbMatchup) => {

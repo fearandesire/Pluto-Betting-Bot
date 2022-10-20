@@ -8,7 +8,7 @@ import { setupBetLog } from '#winstonLogger'
 /**
  * @module addNewBet -
  * Adds a new bet to the database with the provided information inside of the betslip object.⁡
- * ⁡⁣⁣⁢Queries the 'activematchups' table in the DB to gather the matchup ID using the provided team IDs⁡
+ * ⁡⁣⁣⁢Queries the '"NBAactivematchups"' table in the DB to gather the matchup ID using the provided team IDs⁡
  * @param {obj} message - The message object - contains the user info from Discord & allows us to reply to the user.
  * @param {obj} betslip - Object containing the user's bet information. The betslip object model is inherited from: placebet.js (command) > confirmbet.js (user confirms bet).
  * @returns {embed} - Resolves with an embed reply to the user that their bet has been placed.
@@ -28,7 +28,7 @@ export function addNewBet(message, betslip, interactionEph) {
 	db.tx('createNewBet', (t) => {
 		return t
 			.one(
-				`SELECT matchid from activematchups WHERE teamone = $1 OR teamtwo = $1`,
+				`SELECT matchid from "NBAactivematchups" WHERE teamone = $1 OR teamtwo = $1`,
 				/**@property {Object} betslip.teamid - The team name the user has input */
 				[betslip.teamid],
 			)

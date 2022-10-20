@@ -8,13 +8,15 @@ import { removeMatchLog } from '../../logging.js'
  */
 
 export async function removeMatch(matchId) {
-    try {
-        await db.none('DELETE FROM activematchups WHERE matchid = $1', [matchId])
-        Log.Green(`Successfully removed ${matchId} from the database`)
-        removeMatchLog.info(`Successfully removed ${matchId} from the database`)
-        return true
-    } catch (err) {
-        Log.Red(`Error occured removing ${matchId} from the database.`)
-        return false
-    }
+	try {
+		await db.none('DELETE FROM "NBAactivematchups" WHERE matchid = $1', [
+			matchId,
+		])
+		Log.Green(`Successfully removed ${matchId} from the database`)
+		removeMatchLog.info(`Successfully removed ${matchId} from the database`)
+		return true
+	} catch (err) {
+		Log.Red(`Error occured removing ${matchId} from the database.`)
+		return false
+	}
 }

@@ -1,7 +1,9 @@
 import { Command } from '@sapphire/framework'
+import { QuickError } from '#embed'
 import { modifyAmount } from '#utilBetOps/modifyAmount'
 import { validateUser } from '#utilValidate/validateExistingUser'
 import { verifyBetAuthor } from '#utilValidate/verifyBetAuthor'
+import { verifyCancellation } from '#utilBetOps/verifyCancellation'
 
 export class changeBetSlash extends Command {
     constructor(context, options) {
@@ -67,7 +69,26 @@ export class changeBetSlash extends Command {
             })
             return
         } else {
-            await modifyAmount(interaction, userid, betId, amount, interactionEph) //? Modify the bet amount
+            await verifyCancellation(userid, betId).then(async (response) => {
+                if (response == true) {
+                    QuickError(
+                        interaction,
+                        `It's too late to change your bet. This game has already started.`,
+                        true,
+                    )
+                    return
+                } else if (response == false) {
+                    await modifyAmount(interaction, userid, betId, amount, interactionEph) //? Modify the bet amount
+                    return
+                } else {
+                    QuickError(
+                        interaction,
+                        `Something went wrong. Please verify your information and try again.`,
+                        true,
+                    )
+                    return
+                }
+            })
         }
     }
 }
