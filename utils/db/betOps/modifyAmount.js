@@ -34,6 +34,10 @@ export function modifyAmount(message, userid, betid, amount, interactionEph) {
             `UPDATE betslips SET amount = $1 WHERE userid = $2 AND betid = $3`,
             [amount, userid, betid],
         )
+        await t.oneOrNone(
+            `UPDATE activebets SET amount = $1 WHERE userid = $2 AND betid = $3`,
+            [amount, userid, betid],
+        )
     }).then(() => {
         var allowCollection = async (userid) => {
             let allbetSlipsCache = flatcache.create(
@@ -54,7 +58,7 @@ export function modifyAmount(message, userid, betid, amount, interactionEph) {
         )
         if (interactionEph) {
             message.reply({
-                content: `Successfully modified bet #${betid} to $${amount}.`,
+                content: `Successfully modified your bet #${betid} to $${amount}.`,
                 ephemeral: true,
             })
         } else {
