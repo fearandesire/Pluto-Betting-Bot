@@ -1,4 +1,4 @@
-import { container, embedReply } from '#config'
+import { ODDS_NFL, container, embedReply } from '#config'
 import { format, getDay, getHours, getMinutes, parseISO } from 'date-fns'
 
 import _ from 'lodash'
@@ -14,7 +14,6 @@ import { resolveDayName } from '../bot_res/resolveDayName.js'
 import { resolveIso } from '#dateUtil/resolveIso'
 import { resolveToday } from '#dateUtil/resolveToday'
 import { scheduleChannels } from '../db/gameSchedule/scheduleChannels.js'
-import stringifyObject from 'stringify-object'
 
 let oddsCache = flatcache.create(`oddsCache.json`, './cache/weeklyOdds')
 
@@ -27,9 +26,7 @@ export async function collectOdds(message) {
     if (!message) {
         message == null
     }
-    const url =
-        // eslint-disable-next-line no-undef
-        process.env.odds_API_NFLODDS
+    const url = ODDS_NFL
     const options = {
         method: 'GET',
         headers: {
