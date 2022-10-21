@@ -1,5 +1,12 @@
 import { ODDS_NFL, container, embedReply } from '#config'
-import { format, getDay, getHours, getMinutes, parseISO } from 'date-fns'
+import {
+    format,
+    formatISO,
+    getDay,
+    getHours,
+    getMinutes,
+    parseISO,
+} from 'date-fns'
 
 import _ from 'lodash'
 import { assignMatchID } from '#botUtil/AssignIDs'
@@ -98,6 +105,7 @@ export async function collectOdds(message) {
             }
             //# date-fns to parse the ISO, get the start time & format it for Cron Jobs
             var gameTime = parseISO(isoDate)
+            var formattedISO = formatISO(gameTime, { representation: 'complete' })
             var startHour = getHours(gameTime)
             var startMin = getMinutes(gameTime)
             var startDay = getDay(gameTime)
@@ -150,6 +158,7 @@ export async function collectOdds(message) {
                 away_odds,
                 matchupId,
                 gameDate,
+                formattedISO,
                 cronStartTime,
                 legibleStartTime,
             )

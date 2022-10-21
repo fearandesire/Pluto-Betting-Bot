@@ -42,12 +42,14 @@ export async function fetchSchedule(interaction) {
                     var cronStartTime = value.cronstart
                     var legibleStartTime = value.legiblestart
                     var startTimeISO = value.startTime
+                    console.log(
+                        `Home Team: ${homeTeam}\nAway Team: ${awayTeam}\nCron Start Time: ${cronStartTime}\nLegible Start Time: ${legibleStartTime}\nStart Time ISO: ${startTimeISO}`,
+                    )
                     await scheduleChannels(
                         homeTeam,
                         awayTeam,
                         cronStartTime,
                         legibleStartTime,
-                        startTimeISO,
                     )
                 }
             }
