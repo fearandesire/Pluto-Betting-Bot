@@ -38,6 +38,7 @@ export class viewScheduled extends Command {
                 description: gamesScheduled.join(`\n`),
                 color: `#00FF00`,
                 target: `reply`,
+                footer: `Game Channels will be created an hour ahead of the game's start time. All times listed are in EST.`,
             }
             await embedReply(interaction, embObj)
             return

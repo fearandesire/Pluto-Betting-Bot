@@ -29,19 +29,19 @@ export async function gameActive(teamName) {
     if (currentDay === matchDay) {
         if (currentHour > matchHour) {
             //# hour is currently past game time
-            return true
+            return false
         } else if (currentHour === matchHour) {
             //# hour matches, lets verify the minutes
             if (currentMinute > matchMinute) {
                 //# game has already started
-                return true
+                return false
             }
         } else {
             return false
         }
     }
     if (currentDay > matchDay) {
-        return true
+        return false
     }
     if (currentDay < matchDay) {
         return false

@@ -35,7 +35,7 @@ export async function createChannel(homeTeam, awayTeam) {
         var goodLuck = Math.floor(Math.random() * teamChoices.length)
         await gameChan.send(`Good luck to the ${teamChoices[goodLuck]}!`)
         await msgBotChan(
-            `${channelName} Game Channel created successfully >> <#${gameChan.id}>`,
+            `${channelName} Game Channel created successfully\nDirect Link: <#${gameChan.id}>`,
             `#00ff00`,
             `Game Channel Creation`,
         )

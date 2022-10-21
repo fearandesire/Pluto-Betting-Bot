@@ -4,6 +4,7 @@ import { Log, _ } from '#config'
 
 import { MessageEmbed } from 'discord.js'
 import { container } from '#config'
+import { cronMath } from './cronMath.js'
 import { db } from '#db'
 import { embedReply } from '#embed'
 import { msgBotChan } from '#botUtil/msgBotChan'
@@ -42,15 +43,12 @@ export async function fetchSchedule(interaction) {
                     var cronStartTime = value.cronstart
                     var legibleStartTime = value.legiblestart
                     var startTimeISO = value.startTime
+                    //# Subtract 1 hour from the hour of the cron start time to open the game channel an hour before the game starts
+                    var newCron = await new cronMath(cronStartTime).subtract(1, `hours`)
                     console.log(
-                        `Home Team: ${homeTeam}\nAway Team: ${awayTeam}\nCron Start Time: ${cronStartTime}\nLegible Start Time: ${legibleStartTime}\nStart Time ISO: ${startTimeISO}`,
+                        `Home Team: ${homeTeam}\nAway Team: ${awayTeam}\nCron Start Time: ${newCron}\nLegible Start Time: ${legibleStartTime}\nStart Time ISO: ${startTimeISO}`,
                     )
-                    await scheduleChannels(
-                        homeTeam,
-                        awayTeam,
-                        cronStartTime,
-                        legibleStartTime,
-                    )
+                    await scheduleChannels(homeTeam, awayTeam, newCron, legibleStartTime)
                 }
             }
         })
