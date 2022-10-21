@@ -2,6 +2,7 @@ import { AssignBetID } from '#botUtil/AssignIDs'
 import { addNewBet } from '#utilBetOps/addNewBet'
 import { embedReply } from '#config'
 import flatcache from 'flat-cache'
+import { isBetIdExisting } from '../validation/isBetIdExisting.js'
 import merge from 'deepmerge'
 import { confirmBetEmbed as pleaseConfirmEmbed } from '../../bot_res/embeds/confirmBetEmbed.js'
 import { setupBetLog } from '#winstonLogger'
@@ -51,13 +52,9 @@ export async function confirmBet(message, betslip, userId, interactionEph) {
                 message.author.id === userId)
         ) {
             collector.stop()
-            var setBetID = AssignBetID()
+            var setBetID = await AssignBetID()
+            setBetID = await isBetIdExisting(setBetID)
             betslip.betid = setBetID
-            // Log.Green(
-            //     `[confirmBet.js] ${
-            //         betslip.userid
-            //     } confirmed a bet!\n Bet Slip:\n ${JSON.stringify(betslip)}`,
-            // )
 
             setupBetLog.info(
                 `Betslip confirmed for ${userId}\n${stringifyObject(betslip)}`,
