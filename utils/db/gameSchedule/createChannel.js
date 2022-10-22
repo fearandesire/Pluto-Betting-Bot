@@ -44,7 +44,7 @@ export async function createChannel(homeTeam, awayTeam) {
             state: `complete`,
             message: `${channelName} Game Channel created successfully`,
         })
-        return
+        return `${channelName} Game Channel created successfully\nDirect Link: <#${gameChan.id}>`
     } catch (error) {
         createChanLog.error(`Error Creating Game Channel: ${error}`)
         await gameCreateMonitor.ping({

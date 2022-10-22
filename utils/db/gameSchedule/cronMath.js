@@ -10,6 +10,17 @@ export function cronMath(cronTime) {
     this.dayOfMonth = Number(this.splitCron[2])
     this.month = Number(this.splitCron[3])
     this.dayOfWeek = Number(this.splitCron[4])
+    this.subtract30Mins = async function () {
+        if (this.minutes == 0) {
+            this.hours = this.hours - 1
+            this.minutes = 30
+        } else {
+            if (this.minutes == 30) {
+                this.minutes = 0
+            }
+        }
+        return `${this.minutes} ${this.hours} ${this.dayOfMonth} ${this.month} ${this.dayOfWeek}`
+    }
     this.subtract = async function (amount, timeUnit) {
         amount = Number(amount)
         switch (timeUnit) {
