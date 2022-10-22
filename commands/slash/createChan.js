@@ -36,13 +36,7 @@ export class createChan extends Command {
         )
     }
     async chatInputRun(interaction) {
-        if (!interaction.guildId) {
-            interaction.reply({
-                content: `This command can only be used in a server.`,
-                ephemeral: true,
-            })
-            return
-        }
+        var userid = interaction.user.id
         var homeTeam = interaction.options.getString('home_team')
         var awayTeam = interaction.options.getString('away_team')
         await createChannel(homeTeam, awayTeam)
