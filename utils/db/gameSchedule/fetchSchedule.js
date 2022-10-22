@@ -4,6 +4,7 @@ import { Log, _ } from '#config'
 
 import { MessageEmbed } from 'discord.js'
 import { container } from '#config'
+import { cronMath } from './cronMath.js'
 import { db } from '#db'
 import { embedReply } from '#embed'
 import { msgBotChan } from '#botUtil/msgBotChan'
@@ -29,7 +30,7 @@ export async function fetchSchedule(interaction) {
         return
     }
     var checkDB = await db
-        .manyOrNone(`SELECT * FROM "NBAactivematchups"`)
+        .manyOrNone(`SELECT * FROM activematchups`)
         .then(async (data) => {
             if (_.isEmpty(data)) {
                 Log.Red(`No active matchups found in the database.`)
@@ -39,14 +40,15 @@ export async function fetchSchedule(interaction) {
                 for await (let [key, value] of Object.entries(data)) {
                     var homeTeam = value.teamone
                     var awayTeam = value.teamtwo
-                    var startTime = value.cronstart
+                    var cronStartTime = value.cronstart
                     var legibleStartTime = value.legiblestart
-                    await scheduleChannels(
-                        homeTeam,
-                        awayTeam,
-                        startTime,
-                        legibleStartTime,
+                    var startTimeISO = value.startTime
+                    //# Subtract 1 hour from the the cron start time to open the game channel an hour before the game starts
+                    var newCron = await new cronMath(cronStartTime).subtract(1, `hours`)
+                    console.log(
+                        `Home Team: ${homeTeam}\nAway Team: ${awayTeam}\nCron Start Time: ${newCron}\nLegible Start Time: ${legibleStartTime}\nStart Time ISO: ${startTimeISO}`,
                     )
+                    await scheduleChannels(homeTeam, awayTeam, newCron, legibleStartTime)
                 }
             }
         })

@@ -2,6 +2,7 @@ import { Log, gamesScheduled } from '#config'
 
 import { createChannel } from './createChannel.js'
 import { createRequire } from 'module'
+import { getShortName } from './../../bot_res/getShortName.js'
 import { scheduleChanLog } from '#winstonLogger'
 
 const require = createRequire(import.meta.url)
@@ -21,6 +22,8 @@ export async function scheduleChannels(
     cronStartTime,
     legibleStartTime,
 ) {
+    homeTeam = await getShortName(homeTeam)
+    awayTeam = await getShortName(awayTeam)
     await schedChanMonitor.ping({
         state: `run`,
         message: `Creating a Cron Job to create a game channel for: ${homeTeam} vs ${awayTeam} | Cron Time: ${cronStartTime}`,

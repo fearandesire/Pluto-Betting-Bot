@@ -124,7 +124,7 @@ export async function collectOdds(message) {
             var startMonth = Number(format(gameTime, `M`))
             var cronStartTime = `${startMin} ${startHour} ${startDayOfMonth} ${startMonth} ${startDay}`
             //# Format ISO to be used for game start times in a quick gameActive check
-            var formattedISO = formatISO(gameTime, { representation: 'complete' })
+            var startTimeISO = formatISO(gameTime, { representation: 'complete' })
             await collectOddsLog.info(
                 `Matchup: ${home_team} vs ${away_team} | Cron Start Time: ${cronStartTime}`,
             )
@@ -171,10 +171,9 @@ export async function collectOdds(message) {
                 away_odds,
                 matchupId,
                 gameDate,
-                gameStartTime,
+                startTimeISO,
                 cronStartTime,
                 legibleStartTime,
-                formattedISO,
             )
             //# game channel creation
             await scheduleChannels(
