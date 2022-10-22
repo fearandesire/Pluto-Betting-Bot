@@ -30,22 +30,6 @@ import { wonDm } from '../betOps/wonDm.js'
 
 export async function initCloseMatchups(message, matchId, teamThatWon) {
     return new Promise(async (resolve, reject) => {
-        // await returnProgress(matchId)
-        //     .then(async (res) => {
-        //         if (res == true) {
-        //             Log.Yellow(`Response: ${res}`)
-        //             await initCloseBetLog.info(
-        //                 `Match ${matchId} is already in progress to be closed - Ceasing close bet operations.`,
-        //             )
-        //             throw new Error(
-        //                 `Match ${matchId} is already in progress to be closed - Ceasing close bet operations.`,
-        //             )
-        //         }
-        //     })
-        //     .catch(async (err) => {
-        //         reject(err)
-        //     })
-
         let opposingTeam
         teamThatWon = await resolveTeam(teamThatWon)
         await initCloseBetLog.info(
@@ -182,13 +166,11 @@ export async function initCloseMatchups(message, matchId, teamThatWon) {
             await removeMatch(matchId)
             await removeMatchupCache(matchId)
             resolve()
-            //    resolve()
         })
     }).catch(async (error) => {
         await initCloseBetLog.error(`${error}`)
         await msgBotChan(`${error}`)
-        //await removeMatch(matchId)
-        //await removeMatchupCache(matchId)
+        await removeMatch(matchId)
+        await removeMatchupCache(matchId)
     })
-    //    })
 }
