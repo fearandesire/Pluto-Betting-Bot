@@ -7,7 +7,7 @@ import flatcache from 'flat-cache'
  */
 
 export async function storeCustomMatchup(matchupObj) {
-    let oddsCache = flatcache.create(`oddsCache.json`, './cache/weeklyOdds')
+    let oddsCache = flatcache.create(`oddsCache.json`, './cache/dailyOdds')
     let matchupCache = oddsCache.getKey('matchups')
     try {
         var matchId = matchupObj.matchupId

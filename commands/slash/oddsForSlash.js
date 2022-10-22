@@ -47,7 +47,7 @@ export class oddsForSlash extends Command {
         if (!sanitize || sanitize == false) {
             QuickError(
                 interaction,
-                `Please provide a valid date number for the week. Please do not include the month or year.\nExamples of valid inputs: \`8\` or \`8th\`, \`9\` or \`9th\`, \`10\` or \`10t\`h, etc`,
+                `Please provide a valid date number for the day. Please do not include the month or year.\nExamples of valid inputs: \`8\` or \`8th\`, \`9\` or \`9th\`, \`10\` or \`10t\`h, etc`,
                 true,
             )
             return

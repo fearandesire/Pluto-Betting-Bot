@@ -24,11 +24,11 @@ import { resolveToday } from '#dateUtil/resolveToday'
 import { scheduleChannels } from '../db/gameSchedule/scheduleChannels.js'
 import stringifyObject from 'stringify-object'
 
-let oddsCache = flatcache.create(`oddsCache.json`, './cache/weeklyOdds')
+let oddsCache = flatcache.create(`oddsCache.json`, './cache/dailyOdds')
 
 /**
  * @module collectOdds
- * Call the API and store the matchup odds for the week into the database & cache
+ * Call the API and store the matchup odds for the day into the database & cache
  */
 
 export async function collectOdds(message) {

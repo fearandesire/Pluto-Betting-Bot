@@ -1,11 +1,11 @@
 import { Command } from '@sapphire/framework'
 import { returnDailyOdds } from '../../utils/cache/returnDailyOdds.js'
 
-export class odds extends Command {
+export class dailyOdds extends Command {
     constructor(context, options) {
         super(context, {
             ...options,
-            name: 'odds',
+            name: 'dailyOdds',
             aliases: [''],
             description: 'View the matchups & odds for the entire week',
             chatInputCommand: {
@@ -18,9 +18,9 @@ export class odds extends Command {
         registry.registerChatInputCommand(
             (builder) =>
                 builder //
-                    .setName('odds')
+                    .setName('dailyodds')
                     .setDescription(this.description),
-            //    { idHints: [`1022940422974226432`] },
+            { idHints: [`1033408964534214746`] },
         )
     }
     async chatInputRun(interaction) {

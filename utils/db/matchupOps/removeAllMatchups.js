@@ -8,7 +8,7 @@ export async function removeAllMatchups() {
 		.catch(() =>
 			msgBotChan(`Issue occured deleting matchups from DB.`, `error`),
 		)
-	var oddsCache = flatcache.create(`oddsCache.json`, './cache/weeklyOdds')
+	var oddsCache = flatcache.create(`oddsCache.json`, './cache/dailyOdds')
 	var matchupCache = oddsCache.getKey(`matchups`)
 	if (!matchupCache || Object.keys(matchupCache).length === 0) {
 		await msgBotChan(

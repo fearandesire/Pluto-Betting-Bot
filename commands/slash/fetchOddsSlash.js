@@ -8,7 +8,7 @@ export class fetchOddsSlash extends Command {
             name: 'fetchOddsSlash',
             aliases: [''],
             description:
-                'Fetch all odds for the week manually. Please note this is automatically performed every week.',
+                'Fetch all odds for the day manually. Please note this is automatically performed every daily.',
             chatInputCommand: {
                 register: true,
             },

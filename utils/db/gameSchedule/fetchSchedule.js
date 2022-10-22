@@ -1,9 +1,8 @@
 //import flatcache from 'flat-cache'
 
-import { Log, _ } from '#config'
+import { Log, _, container } from '#config'
 
 import { MessageEmbed } from 'discord.js'
-import { container } from '#config'
 import { cronMath } from './cronMath.js'
 import { db } from '#db'
 import { embedReply } from '#embed'
@@ -12,7 +11,7 @@ import { scheduleChannels } from './scheduleChannels.js'
 
 /**
  * @module fetchSchedule
- * 1. Retrieve all matchup information for the week via the weeklyOddds cache file
+ * 1. Retrieve all matchup information for the day via the dailyOdds cache file
  * 2. Iterate through the matchups and spawn the Cron Jobs to create a game channel for each matchup with the home team, away team and cronStartTime
  */
 
@@ -20,7 +19,7 @@ export async function fetchSchedule(interaction) {
     if (container.fetchedAlready == true) {
         if (!interaction) {
             await msgBotChan(
-                `Game channels have already been queued to be created for the week.`,
+                `Game channels have already been queued to be created for the day.`,
             )
             return
         }
@@ -61,7 +60,7 @@ export async function fetchSchedule(interaction) {
     var embed = new MessageEmbed()
         .setTitle(`Game Channels Queue`)
         .setDescription(
-            `Successfully queued game channels to be created for the games in the week at their scheduled times :white_check_mark: `,
+            `Successfully queued game channels to be created for the games in the day at their scheduled times :white_check_mark: `,
         )
         .setFooter(
             `${container.numOfMatchups} game channels will be created | This is based on the current matchups in the database.`,
@@ -69,7 +68,7 @@ export async function fetchSchedule(interaction) {
         .setColor(`#00FF00`)
     var embObj = {
         title: `Game Channels Queue`,
-        description: `Successfully queued game channels to be created for the games in the week at their scheduled times :white_check_mark: `,
+        description: `Successfully queued game channels to be created for the games in the day at their scheduled times :white_check_mark: `,
         footer: `${container.numOfMatchups} game channels will be created | This is based on the current matchups in the database.`,
         target: `modBotSpamID`,
     }

@@ -182,13 +182,11 @@ export async function initCloseMatchups(message, matchId, teamThatWon) {
             await removeMatch(matchId)
             await removeMatchupCache(matchId)
             resolve()
-            //    resolve()
         })
     }).catch(async (error) => {
         await initCloseBetLog.error(`${error}`)
         await msgBotChan(`${error}`)
-        //await removeMatch(matchId)
-        //await removeMatchupCache(matchId)
+        await removeMatch(matchId)
+        await removeMatchupCache(matchId)
     })
-    //    })
 }

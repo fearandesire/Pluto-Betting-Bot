@@ -13,8 +13,8 @@ export async function dailyOps() {
         await sentSchEmb().then(async (res) => {
             if (res == false) {
                 var embedObj = {
-                    title: `Schedule Queue`,
-                    description: `Weekly Schedule Gathering Information: **Every Tuesday @ <t:1664863200:T>**`,
+                    title: `Matchup & Schedule Queue`,
+                    description: `Daily Game Matchup/Schedule Gathering Information: **Everyday @ <t:1666443600:t> EST**`,
                     color: '#00ff00',
                     target: 'modBotSpamID',
                     footer: 'Pluto | Designed by FENIX#7559',
