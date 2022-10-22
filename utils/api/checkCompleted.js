@@ -3,8 +3,12 @@ import { NFL_SCORE, container } from '#config'
 import { checkCompletedLog } from '#winstonLogger'
 import fetch from 'node-fetch'
 import flatcache from 'flat-cache'
+import { getShortName } from '../bot_res/getShortName.js'
 import { initCloseMatchups } from '#utilMatchups/initCloseMatchups'
+import { locateChannel } from '../db/gameSchedule/locateChannel.js'
 import { locateMatchup } from '../db/matchupOps/locateMatchup.js'
+import { queueDeleteChannel } from '../db/gameSchedule/queueDeleteChannel.js'
+import { resolveToday } from '#dateUtil/resolveToday'
 import stringifyObject from 'stringify-object'
 
 const url = NFL_SCORE
@@ -42,17 +46,21 @@ export async function checkCompleted(compGameMonitor) {
             container.apiCompResult = apiCompletedResult
         })
     var compResults = container.apiCompResult
+    var todayFull = await new resolveToday().todayFullSlashes
     await checkCompletedLog.info(`API Connection Information:`)
     await checkCompletedLog.info(stringifyObject(compResults))
+    let skippedGames = []
     for await (let [key, value] of Object.entries(compResults)) {
-        // await _.forEach(compResults, async function (value, key) {
         if (value.completed === true) {
             await checkCompletedLog.info(
                 `Completed Game Found in API: ${value.home_team} vs ${value.away_team}`,
             )
+
+            //# Check if we are in the middle of processing bets
+
             if (
-                inProgressCache.getKey(value.home_team) === null ||
-                inProgressCache.getKey(value.home_team) === undefined
+                inProgressCache.getKey(`${value.home_team}-${todayFull}`) === null ||
+                inProgressCache.getKey(`${value.home_team}-${todayFull}`) === undefined
             ) {
                 //#retrieve matchId with the team's found
                 var hTeam = `${value.home_team}`
@@ -70,10 +78,21 @@ export async function checkCompleted(compGameMonitor) {
                 } catch (err) {
                     continue
                 }
+
+                //# Queue game channel to be closed in 30 minutes
+                var gameChan = `${value.home_team}-vs-${value.away_team}`
+                var hTeamShort = await getShortName(value.home_team)
+                var aTeamShort = await getShortName(value.away_team)
+                gameChan = `${hTeamShort}-vs-${aTeamShort}`
+                gameChan = await locateChannel(gameChan)
+                if (gameChan) {
+                    await queueDeleteChannel(gameChan)
+                }
                 dbMatchId = Number(dbMatchId)
                 await checkCompletedLog.info(
                     `MatchId Found in Database: ${dbMatchId} - ${value.home_team} vs ${value.away_team}`,
                 )
+
                 //# determine which prop is the home team's score and away team's score by matching the team name
                 let hScoreProp
                 let awScoreProp
@@ -84,7 +103,9 @@ export async function checkCompleted(compGameMonitor) {
                     hScoreProp = value.scores[1]
                     awScoreProp = value.scores[0]
                 }
+
                 //# determine winner based on the scores
+
                 var homeScore = hScoreProp.score
                 var awayScore = awScoreProp.score
                 var winner = ''
@@ -99,9 +120,13 @@ export async function checkCompleted(compGameMonitor) {
                         `Winner: Away Team: ${winner} - ${awayScore}`,
                     )
                 }
-                //# init the closeMatchups opeeration
-                inProgressCache.setKey(value.home_team, true)
+
+                //& Declare the matchup as being processed to prevent overlapping the process of closing bets
+
+                inProgressCache.setKey(`${value.home_team}-${todayFull}`, true)
+                inProgressCache.save(true)
                 var message = null
+                //& Start closing bets for this matchup
                 await initCloseMatchups(message, dbMatchId, winner).then(async () => {
                     await checkCompletedLog.info(`Sent matchup ${dbMatchId} to be closed`)
                     container.processQueue++
@@ -113,12 +138,11 @@ export async function checkCompleted(compGameMonitor) {
                 continue
             }
         } else {
-            await checkCompletedLog.error(
-                `Skipped game between ${value.home_team} vs. ${value.away_team} as it was not completed yet.`,
-            )
+            await skippedGames.push(`${value.home_team} vs. ${value.away_team}`)
             continue
         }
     }
+    await checkCompletedLog.info(`\nSkipped games: ${skippedGames.join(`\n`)}\n`)
     await compGameMonitor.ping({
         state: 'complete',
         message: `Completed Finished Game Checks | Sent ${container.processQueue} Games to be closed`,

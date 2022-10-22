@@ -10,12 +10,17 @@ import { inProgress } from './inProgress.js'
 import { initCloseBetLog } from '../../logging.js'
 import { lostDm } from '../betOps/lostDm.js'
 import { msgBotChan } from '#botUtil/msgBotChan'
-import { removeMatch } from '#utilMatchups/removeMatchup'
-import { removeMatchupCache } from './removeMatchupCache.js'
 import { resolvePayouts } from '#utilBetOps/resolvePayouts'
 import { resolveTeam } from '#cmdUtil/resolveTeam'
 import stringifyObject from 'stringify-object'
 import { wonDm } from '../betOps/wonDm.js'
+
+//import { removeMatch } from '#utilMatchups/removeMatchup'
+//import { removeMatchupCache } from './removeMatchupCache.js'
+
+
+
+
 
 /**
  * @module initCloseMatchups
@@ -179,16 +184,16 @@ export async function initCloseMatchups(message, matchId, teamThatWon) {
             } //# end of for loop
             await msgBotChan(`All bets for Match ID: #${matchId} have been closed.`)
             await clearProgress(matchId)
-            await removeMatch(matchId)
-            await removeMatchupCache(matchId)
+            //await removeMatch(matchId)
+            // await removeMatchupCache(matchId)
             resolve()
             //    resolve()
         })
     }).catch(async (error) => {
         await initCloseBetLog.error(`${error}`)
         await msgBotChan(`${error}`)
-        await removeMatch(matchId)
-        await removeMatchupCache(matchId)
+        //await removeMatch(matchId)
+        //await removeMatchupCache(matchId)
     })
     //    })
 }
