@@ -50,7 +50,6 @@ Pluto also features the ability to auto-create and delete game channels for the 
 
 Pluto will capture usage statistics for the following commands:
 
-
 ## :rocket: Technologies
 
 Sources of vital resources used in this project
