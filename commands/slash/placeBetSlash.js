@@ -8,7 +8,7 @@ export class placeBetSlash extends Command {
             name: 'placeBetSlash',
             aliases: [''],
             description:
-                "Place a bet on a matchup. Use the /odds command to view this week's NFL Games!",
+                "Place a bet on a matchup. Use the /odds command to view today's NBA Games & Odds!",
             chatInputCommand: {
                 register: true,
             },

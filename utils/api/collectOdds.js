@@ -45,18 +45,18 @@ export async function collectOdds(message) {
         },
     }
     let matchups = {} //# to store matchups into cache
-    container.allNflOdds = {}
+    container.allNbaOdds = {}
     await fetch(url, options)
         .then((res) => res.json())
         .then((json) => {
             collectOddsLog.info(`Initializing collection of odds for the week`)
             //? Returns the list of matchups
             var apiGamesList = json
-            container.allNflOdds = apiGamesList
+            container.allNbaOdds = apiGamesList
         })
-    var allNflOdds = container.allNflOdds
+    var allNbaOdds = container.allNbaOdds
     container.matchupCount = 0
-    for (let [key, value] of Object.entries(allNflOdds)) {
+    for (let [key, value] of Object.entries(allNbaOdds)) {
         let isoDate = value.commence_time
         //# Storing games that are scheduled for this week || API can return games for the next week, but they have no odds.
         let todayDateInfo = new resolveToday()
@@ -69,12 +69,13 @@ export async function collectOdds(message) {
         var apiDoW = apiDateInfo.dayOfWeek
         var nextWeek = parseInt(weekNum) + 1 //# Fetch Monday Games
         var gameDate = `${monthNum}/${gameDay}/${gameYear}`
+        //# Prevent duplication of matchups in the database
         var dupeDBMatchup = await isExactMatchup(
             value.home_team,
             value.away_team,
             gameDate,
         )
-        if (dupeDBMatchup) {
+        if (dupeDBMatchup == true) {
             collectOddsLog.info(
                 `Matchup already exists in DB: ${value.home_team} vs ${value.away_team} on date: ${gameDate} -- This matchup will not be stored.`,
             )

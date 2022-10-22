@@ -22,6 +22,7 @@ export async function scheduleChannels(
     cronStartTime,
     legibleStartTime,
 ) {
+    gamesScheduled == []
     homeTeam = await getShortName(homeTeam)
     awayTeam = await getShortName(awayTeam)
     await schedChanMonitor.ping({

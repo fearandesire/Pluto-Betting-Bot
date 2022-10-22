@@ -12,8 +12,7 @@ cron.wraps(require('node-cron'))
 
 /** 
 @module scheduleReq 
-Per NFL Schedule - Setup API calls to gather the odds for upcoming NFL Games
-We will call for the odds per week; Currently set to Tuesday Mornings @ 2:00 AM EST
+the-odds-api seems to only update their odds every day, and provide the odds for the same-day games, not the future, like the NFL version does.
 */
 
 export async function scheduleReq() {

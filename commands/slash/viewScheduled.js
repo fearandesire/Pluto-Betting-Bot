@@ -2,6 +2,7 @@ import { _, gamesScheduled } from '#config'
 
 import { Command } from '@sapphire/framework'
 import { embedReply } from '#embed'
+import { isMod } from '#botUtil/isMod'
 
 export class viewScheduled extends Command {
     constructor(context, options) {
@@ -26,11 +27,13 @@ export class viewScheduled extends Command {
         )
     }
     async chatInputRun(interaction) {
-        var userid = interaction.user.id
-        if (_.isEmpty(gamesScheduled)) {
+        if (_.isEmpty(gamesScheduled) && isMod(interaction)) {
             await interaction.reply(
                 `There are currently no game channels scheduled. If there should be, please run \`/callschedule\` to create the automatic game channel schedule for today's games.`,
             )
+            return
+        } else if (_.isEmpty(gamesScheduled) && !isMod(interaction)) {
+            await interaction.reply(`There are currently no game channels scheduled.`)
             return
         } else {
             var embObj = {
@@ -38,7 +41,7 @@ export class viewScheduled extends Command {
                 description: gamesScheduled.join(`\n`),
                 color: `#00FF00`,
                 target: `reply`,
-                footer: `Game Channels will be created an hour ahead of the game's start time. All times listed are in EST.`,
+                footer: `Above are the start time's the games will begin per the NBA schedule. The game channels will be created an hour ahead of the game's start time. All times listed are in EST.`,
             }
             await embedReply(interaction, embObj)
             return
