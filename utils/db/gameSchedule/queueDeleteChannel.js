@@ -9,7 +9,7 @@ import { msgBotChan } from '#botUtil/msgBotChan'
  */
 export async function queueDeleteChannel(gameChan) {
     var rn = new Date()
-    var currMin = addMinutes(rn, 2)
+    var currMin = addMinutes(rn, 30)
     var newMinRaw = format(currMin, 'HH:mm:dd')
     var splitTime = newMinRaw.split(':')
     var newMin = splitTime[1]
@@ -17,7 +17,7 @@ export async function queueDeleteChannel(gameChan) {
     var currDay = splitTime[2]
     var currMonth = splitTime[3]
     var cronString = `${newMin} ${newHour} ${currDay} ${currMonth} *`
-    await msgBotChan(`Deleting ${gameChan} in 2 minutes - Pre-Cron`)
+    await msgBotChan(`Deleting ${gameChan} in 30 minutes`)
     cron.schedule(cronString, async () => {
         await console.log(`Creating Cron Job to delete channel ${gameChan}`)
         try {
