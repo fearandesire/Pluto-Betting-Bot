@@ -17,15 +17,12 @@ export async function queueDeleteChannel(gameChan) {
     var currDay = splitTime[2]
     var currMonth = splitTime[3]
     var cronString = `${newMin} ${newHour} ${currDay} ${currMonth} *`
+    await msgBotChan(`Deleting ${gameChan} in 2 minutes - Pre-Cron`)
     cron.schedule(cronString, async () => {
         await console.log(`Creating Cron Job to delete channel ${gameChan}`)
-        msgBotChan(
-            `Deleting channel ${gameChan} in 2 minutes`,
-            `#0000ff`,
-            `Game Chan Deletion Queued`,
-        )
         try {
             await gameChan.delete()
+            await msgBotChan(`Deleted ${gameChan.name}`)
         } catch (error) {
             console.log(`Unable to delete game channel ${gameChan} >>\n`, error)
         }

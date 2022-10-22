@@ -43,7 +43,7 @@ export async function fetchSchedule(interaction) {
                     var cronStartTime = value.cronstart
                     var legibleStartTime = value.legiblestart
                     var startTimeISO = value.startTime
-                    //# Subtract 1 hour from the hour of the cron start time to open the game channel an hour before the game starts
+                    //# Subtract 1 hour from the the cron start time to open the game channel an hour before the game starts
                     var newCron = await new cronMath(cronStartTime).subtract(1, `hours`)
                     console.log(
                         `Home Team: ${homeTeam}\nAway Team: ${awayTeam}\nCron Start Time: ${newCron}\nLegible Start Time: ${legibleStartTime}\nStart Time ISO: ${startTimeISO}`,
