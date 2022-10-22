@@ -1,4 +1,5 @@
 import { SapDiscClient } from '#main'
+import { msgBotChan } from '#botUtil/msgBotChan'
 
 /**
  * @module locateChannel
@@ -16,6 +17,10 @@ export async function locateChannel(channelName) {
         (gameChan) => gameChan.name.toLowerCase() === channelName.toLowerCase(),
     )
     if (!gameChan) {
+        await msgBotChan(
+            `Unable to locate channel ${channelName} to delete.`,
+            `#ff0000`,
+        )
         return false
     } else {
         console.log(`Located channel ${gameChan.name} | ${gameChan.id}`)

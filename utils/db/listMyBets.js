@@ -17,9 +17,6 @@ import stringifyObject from 'stringify-object'
  * 3. Within `Memory_Betslips`, we estbalish a set of dynamic properties and push the user's betslips information as nested objects (obj) into an array (arr).
  * 4. We then use this nested arr of objs to utilize Discord's Embed 'Fields' capabilities returning our data to the user (using {@linkcode embedReply}); see: {@link https://discord.js.org/#/docs/main/stable/typedef/MessageEmbedOptions Discord Docs}.
  * 5. After sending the user's betslips in an embed, we use {@linkcode flatcache} to store the user's betslips in a local storage file.
- * @pkg flatcache: A package to use local storage with persistence. Why?:
- * - By storing our users' betslips in a local storage file, we can access them without having to query the DB every time the user wants to view their active bets.
- * - For details on how we use local storage in this file, there is a section commented below.
  * @property  {method} db.map - A simpler way to iterate over a query result. Handles a function for each row retrieved from the query. See: ***{@link http://vitaly-t.github.io/pg-promise/Database.html#map pg-promise Map}***
  * @param {integer} userid - user ID
  * @param {obj} message - The message object containing the user & their message - also used to reference a direct reply to the user with message.reply()
