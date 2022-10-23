@@ -24,7 +24,7 @@ export async function createChannel(homeTeam, awayTeam) {
     try {
         const guild = SapDiscClient.guilds.cache.get(`${process.env.server_ID}`)
         const category = guild.channels.cache.get(`${process.env.gameCat_ID}`)
-        const channelName = `${homeTeam} vs ${awayTeam}`
+        const channelName = `${homeTeam} at ${awayTeam}`
         var gameChan = await guild.channels.create(channelName, {
             type: 'text',
             topic: `Enjoy the Game!`,
