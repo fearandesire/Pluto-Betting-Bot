@@ -1,5 +1,5 @@
 import { Listener } from '@sapphire/framework'
-import { SapDiscClient } from '../../Pluto.mjs'
+import { SapDiscClient } from '#main'
 import { cyan } from 'colorette'
 
 const logthis = console.log

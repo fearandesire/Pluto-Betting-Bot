@@ -4,7 +4,6 @@ import async from 'async'
 import { gameActive } from '#dateUtil/gameActive'
 import { resolveMatchup } from '#cacheUtil/resolveMatchup'
 import { resolveTeam } from '#cmdUtil/resolveTeam'
-import { sanitizeToSlash } from './../../date/sanitizeToSlash.js'
 import { setupBet } from '#utilBetOps/setupBet'
 import { setupBetLog } from '#winstonLogger'
 import { validateUser } from '#utilValidate/validateExistingUser'
@@ -14,29 +13,14 @@ export async function newBet(
     interaction,
     betOnTeam,
     betAmount,
-    gameDate,
     interactionEph,
 ) {
     var user = interaction?.author?.id || interaction.user.id
     var userName = interaction?.author?.tag || interaction.user.username
     betOnTeam = await resolveTeam(betOnTeam)
-    //# Format date to mm/dd/yyyy
-    gameDate = await sanitizeToSlash(gameDate)
-    if (!gameDate || gameDate == false) {
-        QuickError(
-            interaction,
-            `Please provide a valid date number for the week. Please do not include the month or year.\nExamples of valid inputs: \`8\` or \`8th\`, \`9\` or \`9th\`, \`10\` or \`10t\`h, etc`,
-            true,
-        )
-        return
-    }
-    var matchInfo = await resolveMatchup(betOnTeam, null, gameDate)
+    var matchInfo = await resolveMatchup(betOnTeam, null)
     if (!matchInfo) {
-        QuickError(
-            interaction,
-            `Unable to locate a match for ${betOnTeam} on ${gameDate}`,
-            true,
-        )
+        QuickError(interaction, `Unable to locate a match for ${betOnTeam}`, true)
         return
     }
     var matchupId = parseInt(matchInfo.matchupId)
@@ -74,7 +58,6 @@ export async function newBet(
                     betAmount,
                     user,
                     matchupId,
-                    gameDate,
                     interactionEph,
                 )
                 return

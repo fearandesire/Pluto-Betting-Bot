@@ -32,14 +32,6 @@ export class placeBetSlash extends Command {
                             .setName('amount')
                             .setDescription('The amount of money you are betting')
                             .setRequired(true),
-                    )
-                    .addStringOption((option) =>
-                        option //
-                            .setName('date')
-                            .setDescription(
-                                'The date the game of the game. | E.g 8 or 8th, 9 or 9th, 10 or 10th, etc',
-                            )
-                            .setRequired(true),
                     ),
             { idHints: [`1022572274546651337`] },
         )
@@ -49,7 +41,6 @@ export class placeBetSlash extends Command {
         var userid = interaction.user.id
         var betOnTeam = interaction.options.getString('team')
         var betAmount = interaction.options.getInteger('amount')
-        var gameDate = interaction.options.getString('date')
         if (betOnTeam.match(/^[0-9]+$/) && betOnTeam.toLowerCase() !== `76ers`) {
             interaction.reply({
                 content: `**Please provide a valid team.**`,
@@ -58,6 +49,6 @@ export class placeBetSlash extends Command {
             return
         }
         var interactionEph = true
-        await newBet(interaction, betOnTeam, betAmount, gameDate, interactionEph)
+        await newBet(interaction, betOnTeam, betAmount, interactionEph)
     }
 }

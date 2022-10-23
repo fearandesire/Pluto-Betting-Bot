@@ -27,11 +27,10 @@ export async function setupBet(
     betamount,
     user,
     matchupId,
-    gameDate,
     interactionEph,
 ) {
     new FileRunning(`setupBet`)
-    await isMatchExist(betOnTeamName, gameDate).then(async (data) => {
+    await isMatchExist(betOnTeamName).then(async (data) => {
         //? if team user wishes to bet on exists in the matchups DB, Do:
         if (data) {
             var matchid = data.matchid

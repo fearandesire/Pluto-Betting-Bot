@@ -6,7 +6,7 @@ import { resolveMatchupLog } from '../logging.js'
  * Return matchup information from the CACHE.
  */
 
-export async function resolveMatchup(teamName, reqInfo, gameDate) {
+export async function resolveMatchup(teamName, reqInfo) {
     let oddsCache = flatcache.create(`oddsCache.json`, './cache/dailyOdds')
     var dailyOdds = oddsCache.getKey(`matchups`)
     resolveMatchupLog.info(`Searching for: ${teamName} in cache`)
@@ -18,7 +18,7 @@ export async function resolveMatchup(teamName, reqInfo, gameDate) {
         return false
     }
     var matchupInfo = _.find(dailyOdds, function (o) {
-        if (o.home_team === teamName && o.mdyDate == gameDate) {
+        if (o.home_team === teamName) {
             hOrAway = `home`
             resolveMatchupLog.info({
                 level: `info`,
@@ -26,7 +26,7 @@ export async function resolveMatchup(teamName, reqInfo, gameDate) {
                 matchupInfo: o,
             })
             return o
-        } else if (o.away_team === teamName && o.mdyDate == gameDate) {
+        } else if (o.away_team === teamName) {
             hOrAway = `away`
             resolveMatchupLog.info({
                 level: `info`,
