@@ -8,21 +8,30 @@ import { db } from '#db'
  */
 
 export async function isBetIdExisting(betId) {
-    betId = Number(betId)
-    return await db.tx(async (t) => {
-        var activeBetsCheck = await t.manyOrNone(
-            `SELECT * FROM activebets WHERE "betid" = $1`,
-            [betId],
-        )
-        var betslipsCheck = await t.manyOrNone(
-            `SELECT * FROM betslips WHERE "betid" = $1`,
-            [betId],
-        )
-        if (activeBetsCheck || betslipsCheck) {
-            var newBetId = await AssignBetID()
-            return newBetId
-        } else {
-            return betId
+    return new Promise((resolve, reject) => {
+        betId = Number(betId)
+        let search = (betId) => {
+            console.log(`Searching for betid: ${betId}`)
+            db.tx(async (t) => {
+                var activeBetsCheck = await t.oneOrNone(
+                    `SELECT * FROM activebets WHERE "betid" = $1`,
+                    [betId],
+                )
+                var betslipsCheck = await t.oneOrNone(
+                    `SELECT * FROM betslips WHERE "betid" = $1`,
+                    [betId],
+                )
+                //# recursively call the function if the betid already exists
+                if (activeBetsCheck || betslipsCheck) {
+                    console.log(`BetID ${betId} already exists!`)
+                    betId = await AssignBetID()
+                    return search(betId)
+                } else {
+                    console.log(`BetID ${betId} is available!`)
+                    resolve(betId)
+                }
+            })
         }
+        search(betId)
     })
 }
