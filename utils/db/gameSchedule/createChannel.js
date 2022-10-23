@@ -15,16 +15,16 @@ const gameCreateMonitor = new cron.Monitor('Create Game Channels')
 
 export async function createChannel(homeTeam, awayTeam) {
     createChanLog.info(
-        `Creating Game Channel | Title: ${homeTeam} vs ${awayTeam}`,
+        `Creating Game Channel | Title: ${awayTeam} at ${homeTeam}`,
     )
     await gameCreateMonitor.ping({
         state: `run`,
-        message: `Creating Game Channel for: ${homeTeam} vs ${awayTeam}`,
+        message: `Creating Game Channel for: ${awayTeam} at ${homeTeam}`,
     })
     try {
         const guild = SapDiscClient.guilds.cache.get(`${process.env.server_ID}`)
         const category = guild.channels.cache.get(`${process.env.gameCat_ID}`)
-        const channelName = `${homeTeam} at ${awayTeam}`
+        const channelName = `${awayTeam} at ${homeTeam}`
         var gameChan = await guild.channels.create(channelName, {
             type: 'text',
             topic: `Enjoy the Game!`,
