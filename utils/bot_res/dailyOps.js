@@ -14,7 +14,7 @@ export async function dailyOps() {
             if (res == false) {
                 var embedObj = {
                     title: `Matchup & Schedule Queue`,
-                    description: `Daily Game Matchup/Schedule Gathering Information: **Everyday @ <t:1666443600:t> EST**`,
+                    description: `Daily Game Matchup/Schedule Gathering Information: **Everyday @ <t:1666526400:t>**`,
                     color: '#00ff00',
                     target: 'modBotSpamID',
                     footer: 'Pluto | Designed by FENIX#7559',
