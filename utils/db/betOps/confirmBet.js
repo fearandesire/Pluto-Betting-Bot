@@ -1,6 +1,7 @@
+import { Log, embedReply } from '#config'
+
 import { AssignBetID } from '#botUtil/AssignIDs'
 import { addNewBet } from '#utilBetOps/addNewBet'
-import { embedReply } from '#config'
 import flatcache from 'flat-cache'
 import { isBetIdExisting } from '../validation/isBetIdExisting.js'
 import merge from 'deepmerge'
@@ -52,9 +53,12 @@ export async function confirmBet(message, betslip, userId, interactionEph) {
                 message.author.id === userId)
         ) {
             collector.stop()
-            var setBetID = await AssignBetID()
-            setBetID = await isBetIdExisting(setBetID)
-            betslip.betid = setBetID
+            var betId = await AssignBetID()
+            var validateID = await isBetIdExisting(betId)
+            Log.Green(
+                `Bet ID ${validateID} is unique and has been assigned to user: ${userId}.`,
+            )
+            betslip.betid = validateID
 
             setupBetLog.info(
                 `Betslip confirmed for ${userId}\n${stringifyObject(betslip)}`,
