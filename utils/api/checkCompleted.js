@@ -83,7 +83,7 @@ export async function checkCompleted(compGameMonitor) {
                 var gameChan = `${value.home_team}-vs-${value.away_team}`
                 var hTeamShort = await getShortName(value.home_team)
                 var aTeamShort = await getShortName(value.away_team)
-                gameChan = `${hTeamShort}-at-${aTeamShort}`
+                gameChan = `${aTeamShort}-at-${hTeamShort}`
                 gameChan = await locateChannel(gameChan)
                 if (gameChan) {
                     await queueDeleteChannel(gameChan)
