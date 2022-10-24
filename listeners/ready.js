@@ -31,7 +31,9 @@ setTimeout(async () => {
     //# Queue checking for weekly games schedule
     await scheduleReq()
     //# Queue game channel scheduling
-    await fetchSchedule()
+    if (process.env.envMode == 'Online') {
+        await fetchSchedule()
+    }
     //# Queue checking for completed games
     await completedReq().then(() => {
         Log.Green(`Game Completed Check Cron Job Initiated`)

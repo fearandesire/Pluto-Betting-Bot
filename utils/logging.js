@@ -593,7 +593,7 @@ export const locateMatchupIdLog = winston.createLogger({
             level: 'error',
         }),
         new winston.transports.File({
-            filename: 'logs/locateMatchupId.log',
+            filename: 'logs/closeBetOp/locateMatchupId.log',
         }),
     ],
 })
@@ -638,6 +638,29 @@ export const scheduleChanLog = winston.createLogger({
         }),
         new winston.transports.File({
             filename: 'logs/gameChan/scheduleChan.log',
+        }),
+    ],
+})
+
+export const completedDebug = winston.createLogger({
+    level: 'info',
+    format: winston.format.combine(
+        winston.format.colorize(),
+        splat(),
+        winston.format.prettyPrint({
+            colorize: true,
+            depth: 5,
+        }),
+        timestamp,
+        customWinstonFormat,
+    ),
+    transports: [
+        new winston.transports.File({
+            filename: 'logs/closeBetOp/err/completedDebug.log',
+            level: 'error',
+        }),
+        new winston.transports.File({
+            filename: 'logs/closeBetOp/completedDebug.log',
         }),
     ],
 })

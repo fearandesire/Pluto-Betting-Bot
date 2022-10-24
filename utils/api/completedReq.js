@@ -1,4 +1,4 @@
-import { NFL_CRON_MON, NFL_CRON_SUN, NFL_CRON_THUR } from '#config'
+import { NBA_CRON_11PM, NBA_CRON_5TO7PM, NBA_CRON_OVERNIGHT } from '#config'
 
 import { checkCompleted } from './checkCompleted.js'
 import { completedReqLog } from './../logging.js'
@@ -27,10 +27,10 @@ export async function completedReq() {
         message: `Initializing finished game check Cron Job [completedReq.js]`,
     })
     //let thursTimer = `*/1 * * * *`
-    let thursTimer = `${NFL_CRON_THUR}`
+    let lateNightTimer = `${NBA_CRON_11PM}`
     cron.schedule(
-        `thursdayCheckGames`,
-        `${thursTimer}`,
+        `11pmCheck`,
+        `${lateNightTimer}`,
         async () => {
             completedReqLog.info(`Checking for completed games..`)
             compGameMonitor.ping({
@@ -41,10 +41,10 @@ export async function completedReq() {
         },
         { timezone: 'America/New_York' },
     )
-    let sundayTimer = `${NFL_CRON_SUN}`
+    let overnightTimer = `${NBA_CRON_OVERNIGHT}`
     cron.schedule(
-        `sundayCheckGames`,
-        `${sundayTimer}`,
+        `overnightCheck`,
+        `${overnightTimer}`,
         async () => {
             completedReqLog.info(`Checking for completed games..`)
             compGameMonitor.ping({
@@ -55,10 +55,10 @@ export async function completedReq() {
         },
         { timezone: 'America/New_York' },
     )
-    let monTimer = `${NFL_CRON_MON}`
+    let afternoonTimer = `${NBA_CRON_5TO7PM}`
     cron.schedule(
-        `mondayCheckGames`,
-        `${monTimer}`,
+        `afternoonCheck`,
+        `${afternoonTimer}`,
         async () => {
             completedReqLog.info(`Checking for completed games..`)
             compGameMonitor.ping({

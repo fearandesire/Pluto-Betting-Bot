@@ -1,6 +1,6 @@
-import { NBA_SCORE, container } from '#config'
+import { NFL_SCORE, container } from '#config'
+import { checkCompletedLog, completedDebug } from '#winstonLogger'
 
-import { checkCompletedLog } from '#winstonLogger'
 import fetch from 'node-fetch'
 import flatcache from 'flat-cache'
 import { getShortName } from '../bot_res/getShortName.js'
@@ -11,7 +11,7 @@ import { queueDeleteChannel } from '../db/gameSchedule/queueDeleteChannel.js'
 import { resolveToday } from '#dateUtil/resolveToday'
 import stringifyObject from 'stringify-object'
 
-const url = NBA_SCORE
+const url = NFL_SCORE
 const options = {
     method: 'GET',
     headers: {
@@ -32,7 +32,7 @@ const options = {
  */
 
 export async function checkCompleted(compGameMonitor) {
-    let inProgressCache = flatcache.create(
+    let inProgressCache = await flatcache.create(
         `inProgress.json`,
         './cache/closingMatches',
     )
@@ -57,10 +57,11 @@ export async function checkCompleted(compGameMonitor) {
             )
 
             //# Check if we are in the middle of processing bets
-
             if (
-                inProgressCache.getKey(`${value.home_team}-${todayFull}`) === null ||
-                inProgressCache.getKey(`${value.home_team}-${todayFull}`) === undefined
+                (await inProgressCache.getKey(`${value.home_team}-${todayFull}`)) ===
+                    null ||
+                (await inProgressCache.getKey(`${value.home_team}-${todayFull}`)) ===
+                    undefined
             ) {
                 //#retrieve matchId with the team's found
                 var hTeam = `${value.home_team}`
@@ -78,9 +79,8 @@ export async function checkCompleted(compGameMonitor) {
                 } catch (err) {
                     continue
                 }
-
                 //# Queue game channel to be closed in 30 minutes
-                var gameChan = `${value.home_team}-vs-${value.away_team}`
+                var gameChan
                 var hTeamShort = await getShortName(value.home_team)
                 var aTeamShort = await getShortName(value.away_team)
                 gameChan = `${hTeamShort}-vs-${aTeamShort}`
@@ -122,15 +122,22 @@ export async function checkCompleted(compGameMonitor) {
                 }
 
                 //& Declare the matchup as being processed to prevent overlapping the process of closing bets
-
-                inProgressCache.setKey(`${value.home_team}-${todayFull}`, true)
-                inProgressCache.save(true)
+                await inProgressCache.setKey(`${value.home_team}-${todayFull}`, true)
+                await inProgressCache.save(true)
                 var message = null
                 //& Start closing bets for this matchup
-                await initCloseMatchups(message, dbMatchId, winner).then(async () => {
-                    await checkCompletedLog.info(`Sent matchup ${dbMatchId} to be closed`)
-                    container.processQueue++
+                completedDebug.info({
+                    message: `Match ID: ${dbMatchId}\nHome Team: ${
+                        value.home_team
+                    }\nAway Team: ${
+                        value.away_team
+                    }\nHome Score: ${homeScore}\nAway Score: ${awayScore}\nWinner: ${winner}\nIn Progress Status: ${inProgressCache.getKey(
+                        `${value.home_team}-${todayFull}`,
+                    )}\nSending Matchup to be closed.`,
                 })
+                await checkCompletedLog.info(`Sent matchup ${dbMatchId} to be closed`)
+                container.processQueue++
+                await initCloseMatchups(message, dbMatchId, winner)
             } else {
                 await checkCompletedLog.info(
                     `Bets for Matchup: ${value.home_team} vs. ${value.away_team} are already being closed. This game will not be queued to be processed.`,
@@ -142,7 +149,7 @@ export async function checkCompleted(compGameMonitor) {
             continue
         }
     }
-    await checkCompletedLog.info(`\nSkipped games: ${skippedGames.join(`\n`)}\n`)
+    await checkCompletedLog.info(`\nSkipped games:\n${skippedGames.join(`\n`)}\n`)
     await compGameMonitor.ping({
         state: 'complete',
         message: `Completed Finished Game Checks | Sent ${container.processQueue} Games to be closed`,
