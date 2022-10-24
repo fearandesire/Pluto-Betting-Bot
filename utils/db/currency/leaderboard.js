@@ -26,7 +26,7 @@ export async function leaderboard(message, interactionEph) {
                     usersBal = lb[i].balance
                 }
 
-                var membersId = server.members.cache.get(`${lbUserId}`)
+                var membersId = await server.members.cache.get(`${lbUserId}`)
                 var humanIndex = i + 1
                 var lbEntry = `**${humanIndex}.** ${membersId}: ${lbUserBal}`
                 lbArray.push(lbEntry)
@@ -60,18 +60,18 @@ export async function leaderboard(message, interactionEph) {
                 }
                 await embedReply(message, firstHalf, true)
                 await embedReply(message, secondHalf, true)
+            } else {
+                const embObj = {
+                    title: `Betting Leaderboard`,
+                    description: lbArray,
+                    color: `#ffff00`,
+                    footer: `You are currently #${usersIndex} on the Leaderboard!`,
+                    target: `reply`,
+                    silent: true,
+                    followUp: true,
+                }
+                await embedReply(message, embObj, true)
             }
-            const embObj = {
-                title: `Betting Leaderboard`,
-                description: lbArray,
-                color: `#ffff00`,
-                footer: `You are currently #${usersIndex} on the Leaderboard!`,
-                target: `reply`,
-                silent: true,
-                followUp: true,
-            }
-            //await message.reply({ embeds: [embObj] })
-            await embedReply(message, embObj, true)
         })
     })
 }
