@@ -14,7 +14,7 @@ export async function leaderboard(message, interactionEph) {
         const server = await SapDiscClient.guilds.cache.get(
             `${process.env.server_ID}`,
         )
-        await server.members.fetch().then(async () => {
+        await server.members.fetch().then(async (memberList) => {
             let lbArray = []
             let usersIndex
             let usersBal
@@ -25,10 +25,17 @@ export async function leaderboard(message, interactionEph) {
                     usersIndex = i + 1
                     usersBal = lb[i].balance
                 }
-
-                var membersId = await server.members.cache.get(`${lbUserId}`)
+                let mappedUserCache = memberList.map((m) => {
+                    //# return id that matches the user id that is using the command
+                    if (m.id == message?.user?.id) {
+                        var id = m.id
+                        return id
+                    }
+                })
+                var formatId = mappedUserCache.toString().replace(/,/gim, '')
+                console.log(`member id is: ${formatId}`)
                 var humanIndex = i + 1
-                var lbEntry = `**${humanIndex}.** ${membersId}: ${lbUserBal}`
+                var lbEntry = `**${humanIndex}.** ${formatId}: ${lbUserBal}`
                 lbArray.push(lbEntry)
             }
             var lbJoined = lbArray.join('\n')
@@ -63,7 +70,7 @@ export async function leaderboard(message, interactionEph) {
             } else {
                 const embObj = {
                     title: `Betting Leaderboard`,
-                    description: lbArray,
+                    description: lbString,
                     color: `#ffff00`,
                     footer: `You are currently #${usersIndex} on the Leaderboard!`,
                     target: `reply`,
