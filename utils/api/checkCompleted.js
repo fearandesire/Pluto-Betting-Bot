@@ -1,4 +1,4 @@
-import { NFL_SCORE, container } from '#config'
+import { NBA_SCORE, container } from '#config'
 import { checkCompletedLog, completedDebug } from '#winstonLogger'
 
 import fetch from 'node-fetch'
@@ -11,7 +11,7 @@ import { queueDeleteChannel } from '../db/gameSchedule/queueDeleteChannel.js'
 import { resolveToday } from '#dateUtil/resolveToday'
 import stringifyObject from 'stringify-object'
 
-const url = NFL_SCORE
+const url = NBA_SCORE
 const options = {
     method: 'GET',
     headers: {
