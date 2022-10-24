@@ -31,9 +31,10 @@ export async function leaderboard(message, interactionEph) {
                         return m
                     }
                 })
-                console.log(`member id is: ${mappedUserCache}`)
+                var formatId = mappedUserCache.toString().replace(/,/gim, '')
+                console.log(`member id is: ${formatId}`)
                 var humanIndex = i + 1
-                var lbEntry = `**${humanIndex}.** ${mappedUserCache}: ${lbUserBal}`
+                var lbEntry = `**${humanIndex}.** ${formatId}: ${lbUserBal}`
                 lbArray.push(lbEntry)
             }
             var lbJoined = lbArray.join('\n')
