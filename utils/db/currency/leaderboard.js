@@ -32,11 +32,12 @@ export async function leaderboard(message, interactionEph) {
                 lbArray.push(lbEntry)
             }
             lbArray = lbArray.join('\n')
-            var lbLength = lbArray.toString().length
+            var lbString = lbArray.toString()
+            var lbLength = lbString.length
             console.log(`Array Length: ${lbLength}`)
             if (lbLength > 4096) {
-                var lbArr1 = lbArray.slice(0, lbArray.length / 2)
-                var lbArr2 = lbArray.slice(lbArray.length / 2, lbArray.length)
+                var lbArr1 = lbString.slice(0, lbArray.length / 2)
+                var lbArr2 = lbString.slice(lbArray.length / 2, lbArray.length)
                 var half1Data = lbArr1.join('\n')
                 var half2Data = lbArr2.join('\n')
                 var firstHalf = {
