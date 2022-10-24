@@ -11,15 +11,6 @@ import { queueDeleteChannel } from '../db/gameSchedule/queueDeleteChannel.js'
 import { resolveToday } from '#dateUtil/resolveToday'
 import stringifyObject from 'stringify-object'
 
-const url = NBA_SCORE
-const options = {
-    method: 'GET',
-    headers: {
-        'X-RapidAPI-Host': 'api.the-odds-api.com',
-        'X-RapidAPI-Key': process.env.odds_API_XKEY,
-    },
-}
-
 /**
  * @module checkCompleted
  *
@@ -38,6 +29,15 @@ export async function checkCompleted(compGameMonitor) {
     )
     container.processQueue = 0
     await checkCompletedLog.info(`Initilization API Call for completed games`)
+    const url = NBA_SCORE
+    const options = {
+        method: 'GET',
+        headers: {
+            'X-RapidAPI-Host': 'api.the-odds-api.com',
+            // eslint-disable-next-line no-undef
+            'X-RapidAPI-Key': process.env.odds_API_XKEY,
+        },
+    }
     await fetch(url, options)
         .then((res) => res.json())
         .then(async (json) => {
