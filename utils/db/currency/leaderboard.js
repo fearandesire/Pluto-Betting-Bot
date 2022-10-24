@@ -26,12 +26,12 @@ export async function leaderboard(message, interactionEph) {
                     usersBal = lb[i].balance
                 }
                 let mappedUserCache = memberList.map((m) => {
-                    //# return id that matches the user id that is using the command
-                    if (m.id == message?.user?.id) {
+                    //# return id that matches the user id in the iteration
+                    if (Number(m.id) == Number(lbUserId)) {
                         return m
                     }
                 })
-                var formatId = mappedUserCache.toString().replace(/,/gim, '')
+                let formatId = mappedUserCache.toString().replace(/,/gim, '')
                 console.log(`member id is: ${formatId}`)
                 var humanIndex = i + 1
                 var lbEntry = `**${humanIndex}.** ${formatId}: ${lbUserBal}`
