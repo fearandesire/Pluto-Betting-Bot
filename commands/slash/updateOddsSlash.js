@@ -24,7 +24,13 @@ export class updateOddsSlash extends Command {
         )
     }
     async chatInputRun(interaction) {
-        var userid = interaction.user.id
+        if (!interaction.guildId) {
+            interaction.reply({
+                content: `This command can only be used in a server.`,
+                ephemeral: true,
+            })
+            return
+        }
         await updateOdds()
         await interaction.reply({
             content: `All Odds successfully updated!`,
