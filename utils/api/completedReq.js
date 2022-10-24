@@ -1,4 +1,9 @@
-import { NBA_CRON_11PM, NBA_CRON_5TO7PM, NBA_CRON_OVERNIGHT } from '#config'
+import {
+    NBA_AMCHECK,
+    NBA_CRON_11PM,
+    NBA_CRON_5TO7PM,
+    NBA_CRON_OVERNIGHT,
+} from '#config'
 
 import { checkCompleted } from './checkCompleted.js'
 import { completedReqLog } from './../logging.js'
@@ -59,6 +64,20 @@ export async function completedReq() {
     cron.schedule(
         `afternoonCheck`,
         `${afternoonTimer}`,
+        async () => {
+            completedReqLog.info(`Checking for completed games..`)
+            compGameMonitor.ping({
+                state: 'run',
+                message: `Checking for completed games..`,
+            })
+            await checkCompleted(compGameMonitor)
+        },
+        { timezone: 'America/New_York' },
+    )
+    let earlyAM = `${NBA_AMCHECK}`
+    cron.schedule(
+        `earlyAMCheck`,
+        `${NBA_AMCHECK}`,
         async () => {
             completedReqLog.info(`Checking for completed games..`)
             compGameMonitor.ping({

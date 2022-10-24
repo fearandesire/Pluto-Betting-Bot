@@ -20,7 +20,7 @@ export async function scheduleReq() {
     )
     cron.schedule(
         `collectMatchupsReq`,
-        `0 8 * * *`,
+        `0 10 * * *`,
         async () => {
             await removeAllMatchups().then(async () => {
                 await collectOdds()
