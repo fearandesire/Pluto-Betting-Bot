@@ -59,6 +59,9 @@ export async function updateOdds() {
         let cachedOdds = oddsCache.getKey(`matchups`)
 
         var locateMatchId = await locateMatchup(homeTeam, awayTeam)
+        if (!locateMatchId){
+            continue
+        }
         if (
             cachedOdds[`${locateMatchId}`].home_team == homeTeam &&
             cachedOdds[`${locateMatchId}`].away_team == awayTeam
