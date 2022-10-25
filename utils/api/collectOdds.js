@@ -110,8 +110,8 @@ export async function collectOdds(message) {
                 ? value.bookmakers[0]?.markets[0].outcomes
                 : null
             if (selectedOdds) {
-                home_odds = selectedOdds[0].price
-                away_odds = selectedOdds[1].price
+                home_odds = selectedOdds[1].price
+                away_odds = selectedOdds[0].price
             } else {
                 home_odds = 'n/a'
                 away_odds = 'n/a'
