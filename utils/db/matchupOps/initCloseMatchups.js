@@ -6,7 +6,6 @@ import { container } from '#config'
 import { deleteBetFromArray } from '#utilBetOps/deleteBetArr'
 import { findMatchup } from '#utilMatchups/findMatchup'
 import { getBetsFromId } from '#utilBetOps/getBetsFromId'
-import { inProgress } from './inProgress.js'
 import { initCloseBetLog } from '../../logging.js'
 import { lostDm } from '../betOps/lostDm.js'
 import { msgBotChan } from '#botUtil/msgBotChan'
@@ -30,22 +29,6 @@ import { wonDm } from '../betOps/wonDm.js'
 
 export async function initCloseMatchups(message, matchId, teamThatWon) {
     return new Promise(async (resolve, reject) => {
-        // await returnProgress(matchId)
-        //     .then(async (res) => {
-        //         if (res == true) {
-        //             Log.Yellow(`Response: ${res}`)
-        //             await initCloseBetLog.info(
-        //                 `Match ${matchId} is already in progress to be closed - Ceasing close bet operations.`,
-        //             )
-        //             throw new Error(
-        //                 `Match ${matchId} is already in progress to be closed - Ceasing close bet operations.`,
-        //             )
-        //         }
-        //     })
-        //     .catch(async (err) => {
-        //         reject(err)
-        //     })
-
         let opposingTeam
         teamThatWon = await resolveTeam(teamThatWon)
         await initCloseBetLog.info(
@@ -72,7 +55,6 @@ export async function initCloseMatchups(message, matchId, teamThatWon) {
             # iterate through array of bets found with the matchId provided
             # Store betslips into cache with a unique 'collectionId'
             */
-            await inProgress(matchId) //# verify if this match is already in progress to be closed
             for await (let bet of data) {
                 container.betSlipCount += 1
                 const userId = bet.userid
