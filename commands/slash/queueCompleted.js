@@ -9,7 +9,7 @@ export class queueCompleted extends Command {
             name: 'queueCompleted',
             aliases: [''],
             description:
-                "Used for when the bot restarts: Will collect the time's of today's games and generate the range of time to check for them to be completed.",
+                'Generate the range of time to check for them to be completed.',
             chatInputCommand: {
                 register: true,
             },
