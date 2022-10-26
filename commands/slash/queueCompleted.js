@@ -20,7 +20,7 @@ export class queueCompleted extends Command {
         registry.registerChatInputCommand(
             (builder) =>
                 builder //
-                    .setName('queueCompleted')
+                    .setName('queuecompleted')
                     .setDescription(this.description),
             //    { idHints: [`1022940422974226432`] },
         )
