@@ -1,4 +1,4 @@
-import { formatISO, isAfter } from 'date-fns'
+import { formatISO, isAfter, parseISO } from 'date-fns'
 
 import { db } from '#db'
 
@@ -21,8 +21,10 @@ export async function gameActive(teamName, matchupId) {
         .then((dbMatchup) => {
             var gameStart = dbMatchup.startTime
             var today = new Date()
+            var gameTimeIso = parseISO(gameStart)
+            gameTimeIso = formatISO(gameTimeIso)
             var todayISO = formatISO(today, { representation: 'complete' })
-            var startedOrNot = isAfter(todayISO, gameStart)
+            var startedOrNot = isAfter(todayISO, gameTimeIso)
             if (startedOrNot) {
                 return true
             } else {
