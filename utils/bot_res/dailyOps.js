@@ -1,6 +1,5 @@
 import cron from 'node-cron'
 import { embedReply } from '#config'
-import { gameDayCron } from '#botUtil/gameDayCron'
 import { sentSchEmb } from '../cache/sentSchEmb.js'
 
 /**
@@ -22,6 +21,5 @@ export async function dailyOps() {
                 await embedReply(null, embedObj)
             }
         })
-        await gameDayCron()
     })
 }

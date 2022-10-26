@@ -35,7 +35,7 @@ setTimeout(async () => {
         await fetchSchedule()
     }
     //# Queue checking for completed games
-    await completedReq().then(() => {
+    await new completedReq().dailyCheck().then(() => {
         Log.Green(`Game Completed Check Cron Job Initiated`)
     })
     //# Daily Embeds
