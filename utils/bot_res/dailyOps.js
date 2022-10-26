@@ -1,6 +1,5 @@
 import cron from 'node-cron'
 import { embedReply } from '#config'
-import { gameDayCron } from '#botUtil/gameDayCron'
 import { sentSchEmb } from '../cache/sentSchEmb.js'
 
 /**
@@ -13,8 +12,8 @@ export async function dailyOps() {
         await sentSchEmb().then(async (res) => {
             if (res == false) {
                 var embedObj = {
-                    title: `Matchup & Schedule Queue`,
-                    description: `Daily Game Matchup/Schedule Gathering Information: **Everyday @ <t:1666526400:t>**`,
+                    title: `Schedule Queue`,
+                    description: `Weekly Schedule Gathering Information: **Every Tuesday @ <t:1664863200:T>**`,
                     color: '#00ff00',
                     target: 'modBotSpamID',
                     footer: 'Pluto | Designed by FENIX#7559',
@@ -22,6 +21,5 @@ export async function dailyOps() {
                 await embedReply(null, embedObj)
             }
         })
-        await gameDayCron()
     })
 }

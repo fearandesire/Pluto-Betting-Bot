@@ -1,4 +1,4 @@
-import { formatISO, isAfter } from 'date-fns'
+import { formatISO, isAfter, parseISO } from 'date-fns'
 
 import { db } from '#db'
 
@@ -15,14 +15,16 @@ import { db } from '#db'
 export async function gameActive(teamName, matchupId) {
     var searchForActive = await db
         .oneOrNone(
-            `SELECT * FROM "NBAactivematchups" WHERE "teamone" = $1 OR "teamtwo" = $1 AND "matchid" = $2 OR "teamone" = $1 OR "teamtwo" = $1`,
+            `SELECT * FROM activematchups WHERE "teamone" = $1 OR "teamtwo" = $1 AND "matchid" = $2 OR "teamone" = $1 OR "teamtwo" = $1`,
             [teamName, matchupId],
         )
         .then((dbMatchup) => {
             var gameStart = dbMatchup.startTime
             var today = new Date()
+            var gameTimeIso = parseISO(gameStart)
+            gameTimeIso = formatISO(gameTimeIso)
             var todayISO = formatISO(today, { representation: 'complete' })
-            var startedOrNot = isAfter(todayISO, gameStart)
+            var startedOrNot = isAfter(todayISO, gameTimeIso)
             if (startedOrNot) {
                 return true
             } else {
