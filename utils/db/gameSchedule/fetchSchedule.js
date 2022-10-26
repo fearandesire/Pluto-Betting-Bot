@@ -1,18 +1,18 @@
 //import flatcache from 'flat-cache'
 
-import { Log, _ } from '#config'
+import { Log, NFL_ACTIVEMATCHUPS, _, container, flatcache } from '#config'
 
 import { MessageEmbed } from 'discord.js'
-import { container } from '#config'
 import { cronMath } from './cronMath.js'
 import { db } from '#db'
 import { embedReply } from '#embed'
 import { msgBotChan } from '#botUtil/msgBotChan'
+import { resolveToday } from '#dateUtil/resolveToday'
 import { scheduleChannels } from './scheduleChannels.js'
 
 /**
  * @module fetchSchedule
- * 1. Retrieve all matchup information for the week via the weeklyOddds cache file
+ * 1. Retrieve all matchup information for the day via the weeklyOdds cache file
  * 2. Iterate through the matchups and spawn the Cron Jobs to create a game channel for each matchup with the home team, away team and cronStartTime
  */
 
@@ -20,7 +20,7 @@ export async function fetchSchedule(interaction) {
     if (container.fetchedAlready == true) {
         if (!interaction) {
             await msgBotChan(
-                `Game channels have already been queued to be created for the week.`,
+                `Game channels have already been queued to be created for the day.`,
             )
             return
         }
@@ -30,7 +30,7 @@ export async function fetchSchedule(interaction) {
         return
     }
     var checkDB = await db
-        .manyOrNone(`SELECT * FROM activematchups`)
+        .manyOrNone(`SELECT * FROM "${NFL_ACTIVEMATCHUPS}"`)
         .then(async (data) => {
             if (_.isEmpty(data)) {
                 Log.Red(`No active matchups found in the database.`)
@@ -58,28 +58,39 @@ export async function fetchSchedule(interaction) {
         )
         return
     }
-    var embed = new MessageEmbed()
-        .setTitle(`Game Channels Queue`)
-        .setDescription(
-            `Successfully queued game channels to be created for the games in the week at their scheduled times :white_check_mark: `,
+    var today = await new resolveToday().todayFullSlashes
+    var cache = flatcache.create(`queuedEmbed.json`, `./cache`)
+    if (cache.getKey(`hasSent-${today}`)) {
+        console.log(
+            `[fetchSchedule.js] Game Channel Queue Embed has already been sent.`,
         )
-        .setFooter(
-            `${container.numOfMatchups} game channels will be created | This is based on the current matchups in the database.`,
-        )
-        .setColor(`#00FF00`)
-    var embObj = {
-        title: `Game Channels Queue`,
-        description: `Successfully queued game channels to be created for the games in the week at their scheduled times :white_check_mark: `,
-        footer: `${container.numOfMatchups} game channels will be created | This is based on the current matchups in the database.`,
-        target: `modBotSpamID`,
-    }
-    if (!interaction) {
-        await embedReply(null, embObj)
+        return
     } else {
-        await interaction.followUp({ embeds: [embed] })
+        var embed = new MessageEmbed()
+            .setTitle(`Game Channels Queue`)
+            .setDescription(
+                `Successfully queued game channels to be created for the games in the day at their scheduled times :white_check_mark: `,
+            )
+            .setFooter(
+                `${container.numOfMatchups} game channels will be created | This is based on the current matchups in the database.`,
+            )
+            .setColor(`#00FF00`)
+        var embObj = {
+            title: `Game Channels Queue`,
+            description: `Successfully queued game channels to be created for the games in the day at their scheduled times :white_check_mark: `,
+            footer: `${container.numOfMatchups} game channels will be created | This is based on the current matchups in the database.`,
+            target: `modBotSpamID`,
+        }
+        cache.setKey(`hasSent-${today}`, true)
+        cache.save()
+        if (!interaction) {
+            await embedReply(null, embObj)
+        } else {
+            await interaction.followUp({ embeds: [embed] })
+        }
+        container.fetchedAlready = true
+        Log.Green(
+            `Successfully fetched the game data from the DB and scheduled the game channels`,
+        )
     }
-    container.fetchedAlready = true
-    Log.Green(
-        `Successfully fetched the game data from the DB and scheduled the game channels`,
-    )
 }
