@@ -1,9 +1,8 @@
+import { NFL_NEWSCHED_CHECK, flatcache } from '#config'
+
 import { collectOdds } from './collectOdds.js'
 import { createRequire } from 'module'
-import currentWeekNumber from 'current-week-number'
-import { flatcache } from '#config'
 import { removeAllMatchups } from '#utilMatchups/removeAllMatchups'
-import { scheduleReqLog } from '../logging.js'
 
 const require = createRequire(import.meta.url)
 
@@ -12,8 +11,7 @@ cron.wraps(require('node-cron'))
 
 /** 
 @module scheduleReq 
-Per NFL Schedule - Setup API calls to gather the odds for upcoming NFL Games
-We will call for the odds per week; Currently set to Tuesday Mornings @ 2:00 AM EST
+the-odds-api seems to only update their odds every day, and provide the odds for the same-day games, not the future, like the NFL version does.
 */
 
 export async function scheduleReq() {
@@ -21,33 +19,14 @@ export async function scheduleReq() {
         `lastWeekCalled.json`,
         './cache/scheduleReq',
     )
-    let lastWeekCalled = schReqCache.getKey('lastWeekCalled')
-        ? schReqCache.getKey('weekCalledLast')
-        : schReqCache.setKey(`weekCalledLast`, 'empty')
-
     cron.schedule(
         `collectMatchupsReq`,
-        `0 2 * * tue`,
+        `${NFL_NEWSCHED_CHECK}`,
         async () => {
-            scheduleReqLog.info(`Verifying if we have reached a new week...`)
-            var currentWeek = currentWeekNumber()
-            if (lastWeekCalled !== currentWeek) {
-                scheduleReqLog.info(
-                    `Detected a new week! Currently calling this week's odds from the API`,
-                )
-                await removeAllMatchups().then(async () => {
-                    await collectOdds()
-                    lastWeekCalled = currentWeek
-                    schReqCache.setKey(`weekCalledLast`, currentWeek)
-                    schReqCache.save(true)
-                    return
-                })
-            } else {
-                scheduleReqLog.info(
-                    `This week is the same as last week collected. No need to call the API for new games`,
-                )
+            await removeAllMatchups().then(async () => {
+                await collectOdds()
                 return
-            }
+            })
         },
         { timezone: 'America/New_York' },
     )
