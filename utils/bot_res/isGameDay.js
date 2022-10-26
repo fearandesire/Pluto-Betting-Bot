@@ -1,24 +1,28 @@
-import { Log, _ } from '#config'
+import { Log, NBA_ACTIVEMATCHUPS, _ } from '#config'
 
-import flatcache from 'flat-cache'
-import { resolveDayName } from './resolveDayName.js'
+import { db } from '#db'
+import { resolveToday } from '#dateUtil/resolveToday'
 
 /**
  * @module isGameDay
- * Check if today is a game day. If it is, return true. If not, return false.
+ * Query database and check if there is any 'dateofmatchup' that matches today's date.
+ * @returns {boolean} true if there is a game today, false if there is not.
  */
 
 export async function isGameDay() {
-    var todaysDay = new Date().getDay()
-    var dayOfWeek = await resolveDayName(todaysDay)
-    var gameDayCache = flatcache.load('gameDaysCache.json', './cache/')
-    var gameDays = gameDayCache.getKey('gameDays')
-    //# iterate game days cache and check if today is a game day
-    if (_.includes(gameDays, dayOfWeek)) {
-        Log.Green(`[isGameDay.js] Today is a game day`)
-        return true
-    } else {
-        Log.Red(`[isGameDay.js] Today is not a game day`)
-        return false
-    }
+    var todaySlashed = await new resolveToday().todayFullSlashes
+    return await db
+        .manyOrNone(
+            `SELECT * FROM "${NBA_ACTIVEMATCHUPS}" WHERE dateofmatchup = $1`,
+            [todaySlashed],
+        )
+        .then(async (data) => {
+            if (_.isEmpty(data)) {
+                Log.Red(`No active matchups found in the database.`)
+                return false
+            } else {
+                Log.Green(`Active matchups found in the database.`)
+                return true
+            }
+        })
 }

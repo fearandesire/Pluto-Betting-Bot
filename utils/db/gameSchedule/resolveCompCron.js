@@ -10,13 +10,15 @@ import { resolveToday } from '#dateUtil/resolveToday'
 
 export async function resolveCompCron() {
     var todaySlash = await new resolveToday().todayFullSlashes
+    todaySlash = todaySlash.toString()
     Log.Green(`[resolveCompCron.js] Today is ${todaySlash}`)
     return await db
         .manyOrNone(
-            `SELECT * FROM activematchups WHERE dateofmatchup = $1 ORDER BY "startTime" ASC`,
+            `SELECT * FROM "NBAactivematchups" WHERE dateofmatchup = $1 ORDER BY "startTime" ASC`,
             [todaySlash],
         )
         .then(async (data) => {
+            console.log(`DATA =>>`, data)
             if (!data || data.length === 0) {
                 console.log(`[resolveCompCron.js] No Games Today`)
                 return false

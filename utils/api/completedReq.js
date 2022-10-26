@@ -1,4 +1,5 @@
-import { Log } from '#config'
+import { Log, NBA_COLLECT_CRONTIMES } from '#config'
+
 import { checkCompleted } from './checkCompleted.js'
 import { completedReqLog } from '#winstonLogger'
 import { createRequire } from 'module'
@@ -25,7 +26,7 @@ export function completedReq() {
     this.dailyCheck = async function () {
         cron.schedule(
             `initGameDay`,
-            '1 0 * * *',
+            `${NBA_COLLECT_CRONTIMES}`,
             async () => {
                 completedReqLog.info(`Running completedReq.js - Initializing Cron Jobs`)
                 compGameMonitor.ping({
@@ -98,6 +99,11 @@ export function completedReq() {
                 },
                 { timezone: 'America/New_York' },
             )
+            interaction.reply({
+                content: `Successfully collected the time range.`,
+                ephemeral: true,
+            })
+            return
         } else {
             completedReqLog.ping({
                 state: 'ok',

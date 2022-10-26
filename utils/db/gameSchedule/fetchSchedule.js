@@ -1,12 +1,13 @@
 //import flatcache from 'flat-cache'
 
-import { Log, _, container } from '#config'
+import { Log, _, container, flatcache } from '#config'
 
 import { MessageEmbed } from 'discord.js'
 import { cronMath } from './cronMath.js'
 import { db } from '#db'
 import { embedReply } from '#embed'
 import { msgBotChan } from '#botUtil/msgBotChan'
+import { resolveToday } from '#dateUtil/resolveToday'
 import { scheduleChannels } from './scheduleChannels.js'
 
 /**
@@ -57,28 +58,39 @@ export async function fetchSchedule(interaction) {
         )
         return
     }
-    var embed = new MessageEmbed()
-        .setTitle(`Game Channels Queue`)
-        .setDescription(
-            `Successfully queued game channels to be created for the games in the day at their scheduled times :white_check_mark: `,
+    var today = await new resolveToday().todayFullSlashes
+    var cache = flatcache.create(`queuedEmbed.json`, `./cache`)
+    if (cache.getKey(`hasSent-${today}`)) {
+        console.log(
+            `[fetchSchedule.js] Game Channel Queue Embed has already been sent.`,
         )
-        .setFooter(
-            `${container.numOfMatchups} game channels will be created | This is based on the current matchups in the database.`,
-        )
-        .setColor(`#00FF00`)
-    var embObj = {
-        title: `Game Channels Queue`,
-        description: `Successfully queued game channels to be created for the games in the day at their scheduled times :white_check_mark: `,
-        footer: `${container.numOfMatchups} game channels will be created | This is based on the current matchups in the database.`,
-        target: `modBotSpamID`,
-    }
-    if (!interaction) {
-        await embedReply(null, embObj)
+        return
     } else {
-        await interaction.followUp({ embeds: [embed] })
+        var embed = new MessageEmbed()
+            .setTitle(`Game Channels Queue`)
+            .setDescription(
+                `Successfully queued game channels to be created for the games in the day at their scheduled times :white_check_mark: `,
+            )
+            .setFooter(
+                `${container.numOfMatchups} game channels will be created | This is based on the current matchups in the database.`,
+            )
+            .setColor(`#00FF00`)
+        var embObj = {
+            title: `Game Channels Queue`,
+            description: `Successfully queued game channels to be created for the games in the day at their scheduled times :white_check_mark: `,
+            footer: `${container.numOfMatchups} game channels will be created | This is based on the current matchups in the database.`,
+            target: `modBotSpamID`,
+        }
+        cache.setKey(`hasSent-${today}`, true)
+        cache.save()
+        if (!interaction) {
+            await embedReply(null, embObj)
+        } else {
+            await interaction.followUp({ embeds: [embed] })
+        }
+        container.fetchedAlready = true
+        Log.Green(
+            `Successfully fetched the game data from the DB and scheduled the game channels`,
+        )
     }
-    container.fetchedAlready = true
-    Log.Green(
-        `Successfully fetched the game data from the DB and scheduled the game channels`,
-    )
 }

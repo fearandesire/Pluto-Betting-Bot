@@ -1,6 +1,7 @@
+import { NBA_NEWSCHED_CHECK, flatcache } from '#config'
+
 import { collectOdds } from './collectOdds.js'
 import { createRequire } from 'module'
-import { flatcache } from '#config'
 import { removeAllMatchups } from '#utilMatchups/removeAllMatchups'
 
 const require = createRequire(import.meta.url)
@@ -20,7 +21,7 @@ export async function scheduleReq() {
     )
     cron.schedule(
         `collectMatchupsReq`,
-        `0 10 * * *`,
+        `${NBA_NEWSCHED_CHECK}`,
         async () => {
             await removeAllMatchups().then(async () => {
                 await collectOdds()
