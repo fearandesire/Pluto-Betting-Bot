@@ -15,7 +15,7 @@ export async function resolveCompCron() {
 	Log.Green(`[resolveCompCron.js] Today is ${todaySlash}`)
 	return await db
 		.manyOrNone(
-			`SELECT * FROM ${NBA_ACTIVEMATCHUPS} WHERE dateofmatchup = $1 ORDER BY "startTime" ASC`,
+			`SELECT * FROM "${NBA_ACTIVEMATCHUPS}" WHERE dateofmatchup = $1 ORDER BY "startTime" ASC`,
 			[todaySlash],
 		)
 		.then(async (data) => {
