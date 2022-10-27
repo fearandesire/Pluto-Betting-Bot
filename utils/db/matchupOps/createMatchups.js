@@ -46,8 +46,8 @@ export async function createMatchups(
     )
         .then(async () => {
             let oddsFormat = await formatOdds(teamOneOdds, teamTwoOdds)
-            teamTwoOdds = oddsFormat.homeOdds
-            teamOneOdds = oddsFormat.awayOdds
+            teamOneOdds = oddsFormat.homeOdds
+            teamTwoOdds = oddsFormat.awayOdds
             var matchupEmbedObj = {
                 title: 'Matchup Created; Details:',
                 description: `ID: ${matchupId}\nDate: ${gameDate}\n**Game Channel Scheduled:** ${legibleStartTime}\n\n**Home Team:** **${teamOne}** *@* *${teamOneOdds}*\n**Away Team:** **${teamTwo}** *@* *${teamTwoOdds}*`,
