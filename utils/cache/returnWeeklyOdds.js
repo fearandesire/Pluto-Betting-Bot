@@ -1,5 +1,6 @@
-import { QuickError, embedReply, flatcache } from '#config'
+import { NFL_ACTIVEMATCHUPS, QuickError, embedReply, flatcache } from '#config'
 
+import { db } from '#db'
 import { formatOdds } from '#cmdUtil/formatOdds'
 
 /**
@@ -15,15 +16,17 @@ export async function returnWeeklyOdds(message, interactionEph) {
         return
     }
     var oddsFields = []
-    //# iterate through matchupCache with a for loop so we can access the values of each nested object
-    for (const key in matchupCache) {
-        var matchFound = matchupCache[key]
-        var hTeam = matchFound.home_team
-        var aTeam = matchFound.away_team
-        var hOdds = matchFound.home_teamOdds
-        var aOdds = matchFound.away_teamOdds
-        var matchupId = matchFound.matchupId
-        var dateTitle = matchFound.dateView
+    var matchupDb = await db.manyOrNone(`SELECT * FROM ${NFL_ACTIVEMATCHUPS}`)
+    console.log(matchupDb)
+    //# iterate through matchupDB with a for loop so we can access the values of each nested object
+    for (const key in matchupDb) {
+        var match = matchupDb[key]
+        var hTeam = match.teamone
+        var aTeam = match.teamtwo
+        var hOdds = match.teamoneodds
+        var aOdds = match.teamtwoodds
+        var matchupId = match.matchid
+        var dateTitle = match.dateofmatchup
         let oddsFormat = await formatOdds(hOdds, aOdds)
         hOdds = oddsFormat.homeOdds
         aOdds = oddsFormat.awayOdds
