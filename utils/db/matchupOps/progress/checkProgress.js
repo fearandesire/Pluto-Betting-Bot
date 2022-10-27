@@ -7,16 +7,19 @@
 import { inProgress } from './inProgress.js'
 
 export async function checkProgress(homeTeam, awayTeam) {
-    var progCheck = await inProgress(homeTeam, awayTeam).then((res) => {
-        var inProg = res[0].inprogress
-        console.log(
-            `[checkProgress.js] ${homeTeam} vs. ${awayTeam}: In Progress Result: ${inProg}`,
-        )
-        if (inProg == true) {
-            return true
-        } else {
-            return false
-        }
-    })
-    return progCheck
+	var progCheck = await inProgress(homeTeam, awayTeam).then((res) => {
+		var inProg = res[0]?.inprogress
+		if (!inProg) {
+			return true
+		}
+		console.log(
+			`[checkProgress.js] ${homeTeam} vs. ${awayTeam}: In Progress Result: ${inProg}`,
+		)
+		if (inProg == true) {
+			return true
+		} else {
+			return false
+		}
+	})
+	return progCheck
 }
