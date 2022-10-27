@@ -1,54 +1,35 @@
-import { _, flatcache } from '#config'
+import { Log, NFL_ACTIVEMATCHUPS, flatcache } from '#config'
 
+import { db } from '#db'
 import { resolveMatchupLog } from '../logging.js'
 
 /**
- * Return matchup information from the CACHE.
- * @param {ParamDataTypeHere} parameterNameHere - Brief description of the parameter here. Note: For other notations of data types, please refer to JSDocs: DataTypes command.
- * @return {ReturnValueDataTypeHere} Brief description of the returning value here.
+ * @module resolveMatchup
+ * Return matchup information from the database via the team's name
+ * @param {string} teamName - The team name to search for.
+ * @param {string} reqInfo - The information to return from the database about the matchup.
+ * @returns {object | string} - Returns the matchup information from the database, or specific information requested, e.g, odds
  */
 
-export function resolveMatchup(teamName, reqInfo) {
+export async function resolveMatchup(teamName, reqInfo) {
     let oddsCache = flatcache.create(`oddsCache.json`, './cache/weeklyOdds')
     var weeklyOdds = oddsCache.getKey(`matchups`)
-    resolveMatchupLog.info(`Searching for: ${teamName} in cache`)
-    let hOrAway
-    let matchedInfo
-    if (!weeklyOdds || Object.keys(weeklyOdds).length === 0) {
-        resolveMatchupLog.error(`Unable to locate weekly odds in cache.`)
+    resolveMatchupLog.info(`Searching for: ${teamName} in db`)
+    Log.Blue(`Searching for: ${teamName} in db`)
+    var dbMatchup = await db.manyOrNone(
+        `SELECT * FROM ${NFL_ACTIVEMATCHUPS} WHERE teamone = '${teamName}' OR teamtwo = '${teamName}'`,
+    )
+    if (!dbMatchup || Object.keys(dbMatchup).length === 0) {
+        resolveMatchupLog.info(`No match found for: ${teamName}`)
         return false
     }
-    var matchupInfo = _.find(weeklyOdds, function (o) {
-        if (o.home_team === teamName) {
-            hOrAway = `home`
-            resolveMatchupLog.info({
-                level: `info`,
-                message: `Matchup found for ${teamName}`,
-                matchupInfo: o,
-            })
-            return o
-        } else if (o.away_team === teamName) {
-            hOrAway = `away`
-            resolveMatchupLog.info({
-                level: `info`,
-                message: `Matchup found for ${teamName}`,
-                matchupInfo: o,
-            })
-            return o
-        }
-    })
-    if (!matchupInfo) {
-        resolveMatchupLog.error(`Unable to locate a matchup for team ${teamName}`)
-        return false
+    if (!reqInfo) {
+        return dbMatchup[0]
     } else if (reqInfo === 'odds') {
-        if (hOrAway === 'home') {
-            matchedInfo = matchupInfo.home_teamOdds
-            return matchedInfo
-        } else if (hOrAway === 'away') {
-            matchedInfo = matchupInfo.away_teamOdds
-            return matchedInfo
+        if (teamName === dbMatchup[0].teamone) {
+            return dbMatchup[0].teamoneodds
+        } else if (teamName === dbMatchup[0].teamtwo) {
+            return dbMatchup[0].teamtwoodds
         }
-    } else {
-        return matchupInfo
     }
 }
