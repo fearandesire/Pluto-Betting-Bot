@@ -1,5 +1,6 @@
-import { QuickError, embedReply, flatcache } from '#config'
+import { NBA_ACTIVEMATCHUPS, QuickError, embedReply } from '#config'
 
+import { db } from '#db'
 import { formatOdds } from '#cmdUtil/formatOdds'
 
 /**
@@ -8,42 +9,40 @@ import { formatOdds } from '#cmdUtil/formatOdds'
  */
 
 export async function returnDailyOdds(message, interactionEph) {
-    let oddsCache = flatcache.create(`oddsCache.json`, './cache/dailyOdds')
-    var matchupCache = oddsCache.getKey(`matchups`)
-    if (!matchupCache || Object.keys(matchupCache).length === 0) {
-        QuickError(message, 'No odds available to view.')
-        return
-    }
-    var oddsFields = []
-    //# iterate through matchupCache with a for loop so we can access the values of each nested object
-    for (const key in matchupCache) {
-        var matchFound = matchupCache[key]
-        var hTeam = matchFound.home_team
-        var aTeam = matchFound.away_team
-        var hOdds = matchFound.home_teamOdds
-        var aOdds = matchFound.away_teamOdds
-        var matchupId = matchFound.matchupId
-        var dateTitle = matchFound.mdyDate
-        let oddsFormat = await formatOdds(hOdds, aOdds)
-        hOdds = oddsFormat.homeOdds
-        aOdds = oddsFormat.awayOdds
-        oddsFields.push({
-            name: `• ${dateTitle}`,
-            value: `**${hTeam}**\nOdds: *${hOdds}*\n**${aTeam}**\nOdds: *${aOdds}*\n──────`,
-            inline: true,
-        })
-    }
-    //# count # of objects in oddsFields - if the # is not divisible by 3, turn the last inline field to false
-    var oddsFieldCount = oddsFields.length
-    if (oddsFieldCount % 3 !== 0) {
-        oddsFields[oddsFieldCount - 1].inline = false
-    }
-    console.log(oddsFields)
-    var embedObj = {
-        title: `Daily H2H Odds`,
-        fields: oddsFields,
-        footer:
-            'Favored teams have a - negative number | Pluto - Designed by FENIX#7559',
-    }
-    embedReply(message, embedObj, interactionEph)
+	var oddsFields = []
+	var matchupDb = await db.manyOrNone(`SELECT * FROM "${NBA_ACTIVEMATCHUPS}"`)
+	if (!matchupDb || Object.keys(matchupDb).length === 0) {
+		QuickError(message, 'No odds available to view.')
+		return
+	}
+	//# iterate through matchupDB with a for loop so we can access the values of each nested object
+	for (const key in matchupDb) {
+		var match = matchupDb[key]
+		var hTeam = match.teamone
+		var aTeam = match.teamtwo
+		var hOdds = match.teamoneodds
+		var aOdds = match.teamtwoodds
+		var dateTitle = match.dateofmatchup
+		let oddsFormat = await formatOdds(hOdds, aOdds)
+		hOdds = oddsFormat.homeOdds
+		aOdds = oddsFormat.awayOdds
+		oddsFields.push({
+			name: `• ${dateTitle}`,
+			value: `**${hTeam}**\nOdds: *${hOdds}*\n**${aTeam}**\nOdds: *${aOdds}*\n──────`,
+			inline: true,
+		})
+	}
+	//# count # of objects in oddsFields - if the # is not divisible by 3, turn the last inline field to false
+	var oddsFieldCount = oddsFields.length
+	if (oddsFieldCount % 3 !== 0) {
+		oddsFields[oddsFieldCount - 1].inline = false
+	}
+	console.log(oddsFields)
+	var embedObj = {
+		title: `Daily H2H Odds`,
+		fields: oddsFields,
+		footer:
+			'Favored teams have a - negative number | Pluto - Designed by FENIX#7559',
+	}
+	embedReply(message, embedObj, interactionEph)
 }
