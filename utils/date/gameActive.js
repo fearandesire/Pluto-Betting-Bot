@@ -23,9 +23,14 @@ export async function gameActive(teamName, matchupId) {
             var gameStart = dbMatchup.startTime
             var today = new Date()
             var gameTimeIso = parseISO(gameStart)
-            gameTimeIso = formatISO(gameTimeIso)
+            //gameTimeIso = formatISO(gameTimeIso)
             var todayISO = formatISO(today, { representation: 'complete' })
-            var startedOrNot = isAfter(todayISO, gameTimeIso)
+            var todayParsed = parseISO(todayISO)
+            var startedOrNot = isAfter(todayParsed, gameTimeIso)
+            console.log(
+                `Todays Iso formatted: ${todayISO} || Game time iso formatted: ${gameTimeIso}`,
+            )
+            console.log(`Started or not: ${startedOrNot}`)
             if (startedOrNot) {
                 return true
             } else {
