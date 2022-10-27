@@ -339,8 +339,6 @@ export const scheduleReqLog = winston.createLogger({
 export const completedReqLog = winston.createLogger({
     level: 'info',
     format: winston.format.combine(
-        winston.format.colorize(),
-        splat(),
         winston.format.prettyPrint({
             colorize: true,
             depth: 5,

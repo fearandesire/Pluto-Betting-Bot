@@ -105,7 +105,7 @@ export function completedReq() {
             })
             return
         } else {
-            completedReqLog.ping({
+            completedReqLog.log({
                 state: 'ok',
                 message: `No games today, skipping completed game check..`,
             })

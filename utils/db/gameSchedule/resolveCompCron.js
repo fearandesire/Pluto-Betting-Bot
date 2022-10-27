@@ -18,7 +18,7 @@ export async function resolveCompCron() {
             [todaySlash],
         )
         .then(async (data) => {
-            console.log(`DATA =>>`, data)
+            //console.log(`DATA =>>`, data)
             if (!data || data.length === 0) {
                 console.log(`[resolveCompCron.js] No Games Today`)
                 return false
@@ -49,13 +49,14 @@ export async function resolveCompCron() {
             var earlyCronMonth = parseInt(earliestCronSplit[3])
             var lateCronDay = parseInt(latestCronSplit[2])
             var lateCronMonth = parseInt(latestCronSplit[3])
+            var hourRange
             //# Near-Midnight Hour >> 30 Day Month & at the end of the month
             if (
                 earliestCronHour >= 22 &&
                 earlyCronDay == 30 &&
                 thirtyDayMonths.includes(earlyCronMonth)
             ) {
-                earliestCronHour = `0-3`
+                earliestCronHour = 0
                 earlyCronDay = `01`
                 earlyCronMonth += 1
             } else if (
@@ -63,7 +64,7 @@ export async function resolveCompCron() {
                 lateCronDay == 30 &&
                 thirtyDayMonths.includes(lateCronMonth)
             ) {
-                latestCronHour = `0-3`
+                latestCronHour = 3
                 lateCronDay = `01`
                 lateCronMonth += 1
             }
@@ -73,7 +74,7 @@ export async function resolveCompCron() {
                 earlyCronDay == 31 &&
                 thirtyOneDayMonths.includes(earlyCronMonth)
             ) {
-                earliestCronHour = `0-3`
+                earliestCronHour = 0
                 earlyCronDay = `01`
                 earlyCronMonth += 1
             } else if (
@@ -81,22 +82,23 @@ export async function resolveCompCron() {
                 lateCronDay == 31 &&
                 thirtyOneDayMonths.includes(lateCronMonth)
             ) {
-                latestCronHour = `0-3`
+                latestCronHour = 3
                 lateCronDay = `01`
                 lateCronMonth += 1
             } //# standard Near-Midnight Hour games, not at the end of the month - Just adding the next day
             else if (earliestCronHour >= 22) {
-                earliestCronHour = `0-3`
+                earliestCronHour = 0
                 earlyCronDay += 1
             } else if (latestCronHour >= 22) {
-                latestCronHour = `0-3`
+                latestCronHour = 3
                 lateCronDay += 1
             }
-            //# Not near-midnight, safe to add 2 hours to the hour value without reaching '24'/midnight which is ineligible for Cron
-            else {
-                earliestCronHour = `${earliestCronHour + 2}-${latestCronHour + 2}`
-                earliestCronSplit[1] = earliestCronHour
+            if (earliestCronHour == 0 || latestCronHour == 3) {
+                hourRange = `${earliestCronHour}-${latestCronHour}`
+            } else {
+                hourRange = `${earliestCronHour + 2}-${latestCronHour + 2}`
             }
+            earliestCronSplit[1] = hourRange
             //# Change the minute value to a 5 minute interval
             earliestCronSplit[0] = `*/5`
             //# Rejoin the split array into a string
