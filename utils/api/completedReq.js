@@ -5,6 +5,7 @@ import { completedReqLog } from '#winstonLogger'
 import { createRequire } from 'module'
 import { isGameDay } from '#botUtil/isGameDay'
 import { resolveCompCron } from '../db/gameSchedule/resolveCompCron.js'
+import stringifyObject from 'stringify-object'
 
 const require = createRequire(import.meta.url)
 const cron = require('cronitor')(`f9f7339479104e79bf2b52eb9c2242bf`)
@@ -13,17 +14,15 @@ const compGameMonitor = new cron.Monitor('Completed Game Monitor')
 
 /**
  * @module completedReq -
- * Setup a sequence of  API Calls to check for completed games every 15 minutes starting from the earliest NFL Game Times.
- * According to the NFL Schedule. Mondays, Thursdays & Sundays are game days
- * Schedule Times stay consistent:
- * - Monday: 10:00  PM
- * - Sunday; 3:00 PM
- * - Thursday 10:00 PM
+ * Setup a sequence of Cron Jobs to create API Calls to check for completed games based on the earliest and latest game times for the day.
  */
 
 export function completedReq() {
     Log.Yellow(`[Startup]: completedReq.js reached`)
+
     this.dailyCheck = async function () {
+        var checkGameDay = await isGameDay()
+        var completedCron = await resolveCompCron()
         cron.schedule(
             `initGameDay`,
             `${NBA_COLLECT_CRONTIMES}`,
@@ -33,18 +32,17 @@ export function completedReq() {
                     state: `ok`,
                     message: `Initializing finished game check Cron Job [completedReq.js]`,
                 })
-                var checkGameDay = await isGameDay()
-                if (checkGameDay == true) {
-                    var completedCron = await resolveCompCron()
-                    completedReqLog.info(
-                        `Checking for completed games between the hours: ${completedCron}`,
-                    )
-                    Log.Green(
-                        `Checking for completed games between the hours: ${completedCron}`,
-                    )
+                var cronRange1 = completedCron?.range1
+                var cronRange2 = completedCron?.range2
+                var stringified = stringifyObject(completedCron)
+                completedReqLog.info(`Cron Range Hours:\n${stringified}`)
+                Log.Blue(
+                    `[completedReq.js]\nGame Day!\nCron Range Hours: ${stringified}`,
+                )
+                if (checkGameDay == true && cronRange1 !== undefined) {
                     cron.schedule(
-                        `CompletedGameCheck`,
-                        `${completedCron}`,
+                        `compGamesRange1`,
+                        cronRange1,
                         async () => {
                             completedReqLog.info(`Checking for completed games..`)
                             compGameMonitor.ping({
@@ -56,6 +54,23 @@ export function completedReq() {
                         },
                         { timezone: 'America/New_York' },
                     )
+                    if (cronRange2 !== undefined) {
+                        Log.Green(`Checking for completed games between the hours:`)
+                        console.log(cronRange2)
+                        cron.schedule(
+                            `CompletedGameCheck`,
+                            cronRange2,
+                            async () => {
+                                compGameMonitor.ping({
+                                    state: 'run',
+                                    message: `Checking for completed games..`,
+                                })
+                                await checkCompleted(compGameMonitor)
+                                Log.Yellow(`Checking for completed games`)
+                            },
+                            { timezone: 'America/New_York' },
+                        )
+                    }
                 } else {
                     completedReqLog.ping({
                         state: 'ok',
@@ -74,31 +89,49 @@ export function completedReq() {
     this.forceCheck = async function (interaction) {
         await checkCompleted(compGameMonitor)
     }
-    //# to have a command linked to collect the cron string for the completed game checks for the day
+    //# Intended to be used on bot-restarts
     this.restartedCheck = async function (interaction) {
         var checkGameDay = await isGameDay()
         if (checkGameDay == true) {
             var completedCron = await resolveCompCron()
-            completedReqLog.info(
-                `Checking for completed games between the hours: ${completedCron}`,
-            )
-            Log.Green(
-                `Checking for completed games between the hours: ${completedCron}`,
-            )
-            cron.schedule(
-                `CompletedGameCheck`,
-                `${completedCron}`,
-                async () => {
-                    completedReqLog.info(`Checking for completed games..`)
-                    compGameMonitor.ping({
-                        state: 'run',
-                        message: `Checking for completed games..`,
-                    })
-                    await checkCompleted(compGameMonitor)
-                    Log.Yellow(`Checking for completed games`)
-                },
-                { timezone: 'America/New_York' },
-            )
+            var cronRange1 = completedCron?.range1
+            var cronRange2 = completedCron?.range2
+            var stringified = stringifyObject(completedCron)
+            completedReqLog.info(`Cron Range Hours:\n${stringified}`)
+            Log.Blue(`[completedReq.js]\nGame Day!\nCron Range Hours: ${stringified}`)
+            if (cronRange1) {
+                cron.schedule(
+                    `compGamesRange1`,
+                    cronRange1,
+                    async () => {
+                        completedReqLog.info(`Checking for completed games..`)
+                        compGameMonitor.ping({
+                            state: 'run',
+                            message: `Checking for completed games..`,
+                        })
+                        await checkCompleted(compGameMonitor)
+                        Log.Yellow(`Checking for completed games`)
+                    },
+                    { timezone: 'America/New_York' },
+                )
+                if (cronRange2) {
+                    Log.Green(`Checking for completed games between the hours:`)
+                    console.log(cronRange2)
+                    cron.schedule(
+                        `compRange2`,
+                        cronRange2,
+                        async () => {
+                            compGameMonitor.ping({
+                                state: 'run',
+                                message: `Checking for completed games..`,
+                            })
+                            await checkCompleted(compGameMonitor)
+                            Log.Yellow(`Checking for completed games`)
+                        },
+                        { timezone: 'America/New_York' },
+                    )
+                }
+            }
             interaction.reply({
                 content: `Successfully collected the time range.`,
                 ephemeral: true,

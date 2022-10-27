@@ -1,6 +1,7 @@
 import { Log } from '#config'
 import { db } from '#db'
-import { resolveToday } from '#dateUtil/resolveToday'
+
+//import { resolveToday } from '#dateUtil/resolveToday'
 
 /**
  * @module resolveCompCron
@@ -9,8 +10,9 @@ import { resolveToday } from '#dateUtil/resolveToday'
  */
 
 export async function resolveCompCron() {
-    var todaySlash = await new resolveToday().todayFullSlashes
-    todaySlash = todaySlash.toString()
+    //var todaySlash = await new resolveToday().todayFullSlashes
+    //todaySlash = todaySlash.toString()
+    var todaySlash = `10/26/2022`
     Log.Green(`[resolveCompCron.js] Today is ${todaySlash}`)
     return await db
         .manyOrNone(
@@ -33,6 +35,8 @@ export async function resolveCompCron() {
             var latestCronSplit = latestCron.split(' ')
             var earliestCronHour = Number(earliestCronSplit[1])
             var latestCronHour = Number(latestCronSplit[1])
+            var overnight
+            var overnightHours
             /*
             & Handle the cases where:
              - The hour is at or above 22
@@ -49,7 +53,11 @@ export async function resolveCompCron() {
             var earlyCronMonth = parseInt(earliestCronSplit[3])
             var lateCronDay = parseInt(latestCronSplit[2])
             var lateCronMonth = parseInt(latestCronSplit[3])
+            var dayOfWeek = parseInt(earliestCronSplit[4])
             var hourRange
+            var range1
+            var range2
+            var cronRanges
             //# Near-Midnight Hour >> 30 Day Month & at the end of the month
             if (
                 earliestCronHour >= 22 &&
@@ -92,18 +100,35 @@ export async function resolveCompCron() {
             } else if (latestCronHour >= 22) {
                 latestCronHour = 3
                 lateCronDay += 1
+                overnight = true
             }
-            if (earliestCronHour == 0 || latestCronHour == 3) {
-                hourRange = `${earliestCronHour}-${latestCronHour}`
+            if (latestCronHour == 3 && overnight == true) {
+                hourRange = `${earliestCronHour + 2}-23`
+                overnightHours = `0-3`
+                earliestCronSplit[1] = hourRange
+                earliestCronSplit[0] = `*/1`
+                range1 = earliestCronSplit.join(' ')
+                range2 = `*/1 0-3 ${lateCronDay} ${earlyCronMonth} ${dayOfWeek + 1}`
+                Log.Green(`[resolveCompCron.js] (2) Cron Ranges:`)
+                Log.Green(`[resolveCompCron.js] ${range1}`)
+                Log.Green(`[resolveCompCron.js] ${range2}`)
+                return {
+                    range1: `${range1}`,
+                    range2: `${range2}`,
+                }
             } else {
                 hourRange = `${earliestCronHour + 2}-${latestCronHour + 2}`
+                earliestCronSplit[1] = hourRange
+                //# Change the minute value to a 5 minute interval
+                earliestCronSplit[0] = `*/5`
+                //# Rejoin the split array into a string
+                range1 = earliestCronSplit.join(' ')
+                await console.log(`Cron Comp String:`, range1)
+                Log.Green(`[resolveCompCron.js] (1) Cron Ranges:`)
+                console.log(cronRanges)
+                return {
+                    range1: range1,
+                }
             }
-            earliestCronSplit[1] = hourRange
-            //# Change the minute value to a 5 minute interval
-            earliestCronSplit[0] = `*/5`
-            //# Rejoin the split array into a string
-            var completedCronRange = earliestCronSplit.join(' ')
-            await console.log(`Cron Comp String:`, completedCronRange)
-            return completedCronRange
         })
 }
