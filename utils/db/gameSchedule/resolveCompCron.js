@@ -1,7 +1,6 @@
 import { Log } from '#config'
 import { db } from '#db'
-
-//import { resolveToday } from '#dateUtil/resolveToday'
+import { resolveToday } from '#dateUtil/resolveToday'
 
 /**
  * @module resolveCompCron
@@ -10,9 +9,8 @@ import { db } from '#db'
  */
 
 export async function resolveCompCron() {
-    //var todaySlash = await new resolveToday().todayFullSlashes
-    //todaySlash = todaySlash.toString()
-    var todaySlash = `10/26/2022`
+    var todaySlash = await new resolveToday().todayFullSlashes
+    todaySlash = todaySlash.toString()
     Log.Green(`[resolveCompCron.js] Today is ${todaySlash}`)
     return await db
         .manyOrNone(
