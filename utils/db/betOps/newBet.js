@@ -23,7 +23,7 @@ export async function newBet(
         QuickError(interaction, `Unable to locate a match for ${betOnTeam}`, true)
         return
     }
-    var matchupId = parseInt(matchInfo.matchupId)
+    var matchupId = parseInt(matchInfo.matchid)
     var activeCheck = await gameActive(betOnTeam, matchupId)
     if (!betOnTeam) {
         //# failure to match team

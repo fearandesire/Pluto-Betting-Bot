@@ -108,9 +108,9 @@ export async function resolveCompCron() {
                 earliestCronSplit[0] = `*/1`
                 range1 = earliestCronSplit.join(' ')
                 range2 = `*/1 0-3 ${lateCronDay} ${earlyCronMonth} ${dayOfWeek + 1}`
-                Log.Green(`[resolveCompCron.js] (2) Cron Ranges:`)
-                Log.Green(`[resolveCompCron.js] ${range1}`)
-                Log.Green(`[resolveCompCron.js] ${range2}`)
+                await Log.Green(`[resolveCompCron.js] (2) Cron Ranges:`)
+                await Log.Green(`[resolveCompCron.js] ${range1}`)
+                await Log.Green(`[resolveCompCron.js] ${range2}`)
                 return {
                     range1: `${range1}`,
                     range2: `${range2}`,
@@ -123,8 +123,8 @@ export async function resolveCompCron() {
                 //# Rejoin the split array into a string
                 range1 = earliestCronSplit.join(' ')
                 await console.log(`Cron Comp String:`, range1)
-                Log.Green(`[resolveCompCron.js] (1) Cron Ranges:`)
-                console.log(cronRanges)
+                await Log.Green(`[resolveCompCron.js] (1) Cron Ranges:`)
+                await console.log(cronRanges)
                 return {
                     range1: range1,
                 }
