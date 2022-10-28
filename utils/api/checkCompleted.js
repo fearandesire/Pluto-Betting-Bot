@@ -1,4 +1,4 @@
-import { Log, container } from '#config'
+import { Log, NFL_SCORE, container } from '#config'
 
 import { checkCompletedLog } from '#winstonLogger'
 import { checkProgress } from '../db/matchupOps/progress/checkProgress.js'
