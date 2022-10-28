@@ -124,7 +124,7 @@ export async function resolveCompCron() {
 				range1 = earliestCronSplit.join(' ')
 				await console.log(`Cron Comp String:`, range1)
 				await Log.Green(`[resolveCompCron.js] (1) Cron Ranges:`)
-				await console.log(cronRanges)
+				await console.log(range1)
 				return {
 					range1: range1,
 				}
