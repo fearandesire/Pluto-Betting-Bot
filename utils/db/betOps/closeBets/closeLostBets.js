@@ -1,4 +1,5 @@
 import { Log } from '#config'
+import { NFL_ACTIVEMATCHUPS } from './../../../../lib/PlutoConfig'
 import { closeBetLog } from '../../../logging.js'
 import { db } from '#db'
 import { lostDm } from '../lostDm.js'
@@ -16,7 +17,7 @@ export async function closeLostBets(losingTeam, homeOrAway) {
 		var dbStack = await db.tx(async (t) => {
 			// Start a db transaction
 			var getMatchInfo = await t.oneOrNone(
-				`SELECT * FROM "NBAactivematchups" WHERE teamone = $1 OR teamtwo = $1`,
+				`SELECT * FROM "${NFL_ACTIVEMATCHUPS}" WHERE teamone = $1 OR teamtwo = $1`,
 				[losingTeam],
 			) // Query DB for matchup info
 			if (!getMatchInfo) {
@@ -24,7 +25,7 @@ export async function closeLostBets(losingTeam, homeOrAway) {
 				return reject(`No match found for ${losingTeam}`)
 			}
 			var getLosers = await t.manyOrNone(
-				`SELECT * FROM "NBAbetslips" WHERE teamid = $1 AND betresult = 'pending'`,
+				`SELECT * FROM "betslips" WHERE teamid = $1 AND betresult = 'pending'`,
 				[losingTeam],
 			)
 			if (getLosers) {
@@ -53,11 +54,11 @@ export async function closeLostBets(losingTeam, homeOrAway) {
 					)
 					//# update betslips table to reflect the user lost their bet
 					await t.none(
-						`UPDATE "NBAbetslips" SET betresult = 'lost' WHERE betid = $1`,
+						`UPDATE "betslips" SET betresult = 'lost' WHERE betid = $1`,
 						[betId],
 					)
 					//# Delete bet from activebets
-					await t.none(`DELETE FROM "NBAactivebets" WHERE betid = $1`, [betId])
+					await t.none(`DELETE FROM "activebets" WHERE betid = $1`, [betId])
 					var wonBetInformation = await {
 						[`userId`]: userid,
 						[`betId`]: betId,
