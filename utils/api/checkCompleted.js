@@ -23,7 +23,6 @@ const options = {
 }
 /**
  * @module checkCompleted
- *
  * Calls the odds-api and accesses current score information.
  * Finished games have the `completed` property set to true.
  * When evaluating a matchup, we:
