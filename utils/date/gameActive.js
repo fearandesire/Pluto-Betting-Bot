@@ -13,29 +13,29 @@ import { db } from '#db'
  */
 
 export async function gameActive(teamName, matchupId) {
-    var searchForActive = await db
-        .oneOrNone(
-            `SELECT * FROM "NBAactivematchups" WHERE "teamone" = $1 OR "teamtwo" = $1 AND "matchid" = $2 OR "teamone" = $1 OR "teamtwo" = $1`,
-            [teamName, matchupId],
-        )
-        .then((dbMatchup) => {
-            // console.log(dbMatchup)
-            var gameStart = dbMatchup.startTime
-            var today = new Date()
-            var gameTimeIso = parseISO(gameStart)
-            //gameTimeIso = formatISO(gameTimeIso)
-            var todayISO = formatISO(today, { representation: 'complete' })
-            var todayParsed = parseISO(todayISO)
-            var startedOrNot = isAfter(todayParsed, gameTimeIso)
-            console.log(
-                `Todays Iso formatted: ${todayISO} || Game time iso formatted: ${gameTimeIso}`,
-            )
-            console.log(`Started or not: ${startedOrNot}`)
-            if (startedOrNot) {
-                return true
-            } else {
-                return false
-            }
-        })
-    return searchForActive
+	var searchForActive = await db
+		.oneOrNone(
+			`SELECT * FROM "NBAactivematchups" WHERE "teamone" = $1 OR "teamtwo" = $1 AND "matchid" = $2 OR "teamone" = $1 OR "teamtwo" = $1`,
+			[teamName, matchupId],
+		)
+		.then((dbMatchup) => {
+			// console.log(dbMatchup)
+			var gameStart = dbMatchup.startTime
+			var today = new Date()
+			var gameTimeIso = parseISO(gameStart)
+			//gameTimeIso = formatISO(gameTimeIso)
+			var todayISO = formatISO(today, { representation: 'complete' })
+			var todayParsed = parseISO(todayISO)
+			var startedOrNot = isAfter(todayParsed, gameTimeIso)
+			console.log(
+				`Todays Iso formatted: ${todayISO} || Game time iso formatted: ${gameTimeIso}`,
+			)
+			console.log(`Started or not: ${startedOrNot}`)
+			if (startedOrNot) {
+				return true
+			} else {
+				return false
+			}
+		})
+	return searchForActive
 }

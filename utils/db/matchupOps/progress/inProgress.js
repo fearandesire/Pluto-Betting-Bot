@@ -2,13 +2,13 @@ import { db } from '#db'
 
 /**
  * @module inProgress
- * Query DB for in-progress matchups [from the 'inprogress' column]
+ * Query DB to see if the matchup is in progress of being closed
  */
-export async function inProgress(teamone, teamtwo) {
-    return await db.manyOrNone(
-        `
-  SELECT * FROM "NBAactivematchups" WHERE teamone = $1
-  `,
-        [teamone, teamtwo],
-    )
+export async function inProgress(homeTeam, awayTeam) {
+	return await db.oneOrNone(
+		`
+    SELECT inprogress FROM "NBAactivematchups" WHERE teamone = $1 OR teamtwo = $2
+    `,
+		[homeTeam, awayTeam],
+	)
 }
