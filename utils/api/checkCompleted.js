@@ -1,4 +1,4 @@
-import { Log, NFL_SCORE, container } from '#config'
+import { Log, NBA_SCORE, container } from '#config'
 
 import { checkCompletedLog } from '#winstonLogger'
 import { checkProgress } from '../db/matchupOps/progress/checkProgress.js'
@@ -7,12 +7,13 @@ import { closeWonBets } from '../db/betOps/closeBets/closeWonBets.js'
 import fetch from 'node-fetch'
 import { getShortName } from '../bot_res/getShortName.js'
 import { locateChannel } from '../db/gameSchedule/locateChannel.js'
+import { msgBotChan } from '#botUtil/msgBotChan'
 import { queueDeleteChannel } from '../db/gameSchedule/queueDeleteChannel.js'
 import { resolveToday } from '#dateUtil/resolveToday'
 import { setProgress } from '../db/matchupOps/progress/setProgress.js'
 import stringifyObject from 'stringify-object'
 
-const url = NFL_SCORE
+const url = NBA_SCORE
 const options = {
 	method: 'GET',
 	headers: {
@@ -121,6 +122,9 @@ export async function checkCompleted(compGameMonitor) {
 				await closeWonBets(winner, homeOrAwayWon)
 				//# Close the bets for the losers of the matchup
 				await closeLostBets(losingTeam, losingTeamHomeOrAway)
+				await msgBotChan(
+					`Closed Bets for ${value.home_team} vs ${value.away_team}`,
+				)
 			} else {
 				await checkCompletedLog.info(
 					`Bets for Matchup: ${value.home_team} vs. ${value.away_team} are already being closed. This game will not be queued to be processed.`,
