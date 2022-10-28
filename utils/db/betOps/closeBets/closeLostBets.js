@@ -1,5 +1,5 @@
-import { Log } from '#config'
-import { NFL_ACTIVEMATCHUPS } from './../../../../lib/PlutoConfig'
+import { Log, NFL_ACTIVEMATCHUPS } from '#config'
+
 import { closeBetLog } from '../../../logging.js'
 import { db } from '#db'
 import { lostDm } from '../lostDm.js'
