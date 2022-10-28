@@ -8,7 +8,7 @@ import { inProgress } from './inProgress.js'
 
 export async function checkProgress(homeTeam, awayTeam) {
 	var progCheck = await inProgress(homeTeam, awayTeam).then((res) => {
-		var inProg = res[0]?.inprogress
+		var inProg = res.inprogress
 		console.log(
 			`[checkProgress.js] ${homeTeam} vs. ${awayTeam}: In Progress Result: ${inProg}`,
 		)
