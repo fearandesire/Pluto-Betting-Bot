@@ -5,8 +5,6 @@ import { db } from '#db'
 import fetch from 'node-fetch'
 import { locateMatchup } from '../db/matchupOps/locateMatchup.js'
 
-locateMatchup
-
 let oddsCache = flatcache.create(`oddsCache.json`, './cache/weeklyOdds')
 
 /**
