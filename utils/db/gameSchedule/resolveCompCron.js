@@ -15,7 +15,7 @@ export async function resolveCompCron() {
 	Log.Green(`[resolveCompCron.js] Today is ${todaySlash}`)
 	return await db
 		.manyOrNone(
-			`SELECT * FROM "${NBA_ACTIVEMATCHUPS}" WHERE dateofmatchup = $1 ORDER BY "startTime" ASC`,
+			`SELECT * FROM ${NBA_ACTIVEMATCHUPS} WHERE dateofmatchup = $1 ORDER BY "startTime" ASC`,
 			[todaySlash],
 		)
 		.then(async (data) => {
@@ -107,7 +107,7 @@ export async function resolveCompCron() {
 				earliestCronSplit[1] = hourRange
 				earliestCronSplit[0] = `*/1`
 				range1 = earliestCronSplit.join(' ')
-				range2 = `*/1 0-3 ${lateCronDay} ${earlyCronMonth} ${dayOfWeek + 1}`
+				range2 = `*/5 0-3 ${lateCronDay} ${earlyCronMonth} ${dayOfWeek + 1}`
 				await Log.Green(`[resolveCompCron.js] (2) Cron Ranges:`)
 				await Log.Green(`[resolveCompCron.js] ${range1}`)
 				await Log.Green(`[resolveCompCron.js] ${range2}`)

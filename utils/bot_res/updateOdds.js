@@ -5,9 +5,7 @@ import { db } from '#db'
 import fetch from 'node-fetch'
 import { locateMatchup } from '../db/matchupOps/locateMatchup.js'
 
-locateMatchup
-
-let oddsCache = flatcache.create(`oddsCache.json`, './cache/dailyOdds')
+let oddsCache = flatcache.create(`oddsCache.json`, './cache/weeklyOdds')
 
 /**
  * @module updateOdds
@@ -25,17 +23,17 @@ const options = {
 }
 
 export async function updateOdds() {
-	container.allNbaOdds = {}
+	container.allNBAOdds = {}
 	await fetch(url, options)
 		.then((res) => res.json())
 		.then((json) => {
 			collectOddsLog.info(`Initializing odds collection - Update`)
 			//? Returns the list of matchups
 			var apiGamesList = json
-			container.allNbaOdds = apiGamesList
+			container.allNBAOdds = apiGamesList
 		})
-	var allNbaOdds = container.allNbaOdds
-	for (let [key, value] of Object.entries(allNbaOdds)) {
+	var allNBAOdds = container.allNBAOdds
+	for (let [key, value] of Object.entries(allNBAOdds)) {
 		let selectedOdds = value?.bookmakers[0]?.markets[0].outcomes
 			? value.bookmakers[0]?.markets[0].outcomes
 			: null
