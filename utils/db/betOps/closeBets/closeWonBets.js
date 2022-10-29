@@ -87,6 +87,7 @@ export async function closeWonBets(winningTeam, homeOrAway) {
 						[`teamBetOn`]: teamBetOn,
 						[`opposingTeam`]: opposingTeam,
 						[`betAmount`]: betAmount,
+						[`newBalance`]: newUserBal,
 					}
 					await wonDm(wonBetInformation)
 					await Log.Green(`Successfully closed bet ${betId} || ${userid}`)
