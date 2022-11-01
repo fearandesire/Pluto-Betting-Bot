@@ -1,3 +1,4 @@
+import { Log } from '#config'
 import { SapDiscClient } from '#main'
 import { dmLog } from '../../logging.js'
 import { isInServer } from '../../bot_res/isInServer.js'
@@ -30,20 +31,27 @@ export async function lostDm(betInformation) {
 		footer: `See an issue here? Please contact FENIX#7559 | Bet ID: ${betid}`,
 	}
 	//# DM the user the result of their bet
-	await SapDiscClient.users
-		.fetch(`${userid}`)
-		.then((user) => {
-			if (!user) {
-				dmLog.error(
-					`Failed to send DM to user ${userid} is no longer in the server.`,
-				)
-				return
-			}
-			user.send({ embeds: [embObj] })
-			dmLog.info(`DM'd ${userid} successfully`)
-		})
-		.catch((err) => {
-			dmLog.error(`Failed to send DM to user ${userid}. Error: ${err}`)
+	await SapDiscClient.users.fetch(`${userid}`).then((user) => {
+		if (!user) {
+			dmLog.error(
+				`Failed to send DM to user ${userid} is no longer in the server.`,
+			)
 			return
-		})
+		}
+		//# Catch any errors that may occur when sending the DM, like the user blocking the bot, having DMs disabled, etc
+		try {
+			user.send({ embeds: [embObj] }).catch(() => {
+				dmLog.error(`Failed to send DM to user ${userid}.`)
+				Log.Red(`Failed to send DM to user ${userid}.`)
+				return
+			})
+			dmLog.info(`DM'd ${userid} successfully`)
+		} catch (error) {
+			dmLog.error(
+				`Failed to send DM to user ${userid} is no longer in the server.`,
+			)
+			Log.Red(`Failed to send DM to user ${userid} is no longer in the server.`)
+			return
+		}
+	})
 }
