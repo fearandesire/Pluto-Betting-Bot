@@ -1,4 +1,4 @@
-import { Log, embedReply } from '#config'
+import { Log, container, embedReply } from '#config'
 
 import { AssignBetID } from '#botUtil/AssignIDs'
 import { addNewBet } from '#utilBetOps/addNewBet'
@@ -53,6 +53,7 @@ export async function confirmBet(message, betslip, userId, interactionEph) {
 				message.author.id === userId)
 		) {
 			collector.stop()
+			container.userIsBetting[`${userId}`] = false //? Resetting the userIsBetting flag to false so the user can bet again.
 			var betId = await AssignBetID()
 			var validateID = await isBetIdExisting(betId)
 			Log.Green(
@@ -89,6 +90,7 @@ export async function confirmBet(message, betslip, userId, interactionEph) {
 		) {
 			collector.stop()
 			setupBetLog.info(`Betslip cancelled for ${userId}`)
+			container.userIsBetting[`${userId}`] = false //? Resetting the userIsBetting flag to false so the user can bet again.
 			var embObj = {
 				title: `Bet Cancellation`,
 				description: `Your bet has been cancelled. Your balance has not been affected.`,
@@ -109,6 +111,7 @@ export async function confirmBet(message, betslip, userId, interactionEph) {
 				isSilent: true,
 				followUp: true,
 			}
+			container.userIsBetting[`${userId}`] = false //? Resetting the userIsBetting flag to false so the user can bet again.
 			await embedReply(message, embObj, true)
 			return
 		}

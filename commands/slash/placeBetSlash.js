@@ -1,4 +1,5 @@
 import { Command } from '@sapphire/framework'
+import { container } from '#config'
 import { newBet } from '#utilBetOps/newBet'
 
 export class placeBetSlash extends Command {
@@ -39,6 +40,17 @@ export class placeBetSlash extends Command {
 	async chatInputRun(interaction) {
 		//console.log(interaction.user.id)
 		var userid = interaction.user.id
+		if (
+			container.userIsBetting[`${userid}`] !== undefined &&
+			container.userIsBetting[`${userid}`] == true
+		) {
+			await interaction.reply({
+				content: `You are already betting on a game, complete that bet before placing another.`,
+				ephemeral: true,
+			})
+			return
+		}
+		container.userIsBetting[`${userid}`] = true
 		if (!interaction.options.getString('team')) {
 			interaction.reply({
 				content: `**Please provide a team to bet on.**`,
