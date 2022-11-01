@@ -58,6 +58,15 @@ export async function checkCompleted(compGameMonitor) {
 			//# Check if we are in the middle of processing bets
 			var checkProg = await checkProgress(value.home_team, value.away_team)
 			await Log.Blue(`Step 1.5: - Check Progress: ${checkProg}`)
+			if (checkProg == 'empty') {
+				await checkCompletedLog.info(
+					`Unable to find matchup in database: ${value.home_team} vs ${value.away_team}`,
+				)
+				await Log.Red(
+					`Unable to find matchup in database: ${value.home_team} vs ${value.away_team}`,
+				)
+				continue
+			}
 			if (checkProg == false) {
 				//# Queue game channel to be closed in 30 minutes
 				var gameChan
@@ -119,9 +128,19 @@ export async function checkCompleted(compGameMonitor) {
 					`Step 5: Progress Set to true || ${value.home_team} vs ${value.away_team}`,
 				)
 				//# Close the bets for the winners of the matchup
-				await closeWonBets(winner, homeOrAwayWon)
+				await closeWonBets(winner, homeOrAwayWon).catch((err) => {
+					checkCompletedLog.error(
+						`Error closing won bets for ${winner} || ${err}`,
+					)
+					return
+				})
 				//# Close the bets for the losers of the matchup
-				await closeLostBets(losingTeam, losingTeamHomeOrAway)
+				await closeLostBets(losingTeam, losingTeamHomeOrAway).catch((err) => {
+					checkCompletedLog.error(
+						`Error closing lost bets for ${losingTeam} || ${err}`,
+					)
+					return
+				})
 				await msgBotChan(
 					`Closed Bets for ${value.home_team} vs ${value.away_team}`,
 				)

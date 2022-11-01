@@ -92,6 +92,7 @@ export async function resolveCompCron() {
 				latestCronHour = 3
 				lateCronDay = `01`
 				lateCronMonth += 1
+				overnight = true
 			} //# standard Near-Midnight Hour games, not at the end of the month - Just adding the next day
 			else if (earliestCronHour >= 22) {
 				earliestCronHour = 0
@@ -105,7 +106,7 @@ export async function resolveCompCron() {
 				hourRange = `${earliestCronHour + 2}-23`
 				overnightHours = `0-3`
 				earliestCronSplit[1] = hourRange
-				earliestCronSplit[0] = `*/1`
+				earliestCronSplit[0] = `*/5`
 				range1 = earliestCronSplit.join(' ')
 				range2 = `*/5 0-3 ${lateCronDay} ${earlyCronMonth} ${dayOfWeek + 1}`
 				await Log.Green(`[resolveCompCron.js] (2) Cron Ranges:`)
@@ -124,7 +125,7 @@ export async function resolveCompCron() {
 				range1 = earliestCronSplit.join(' ')
 				await console.log(`Cron Comp String:`, range1)
 				await Log.Green(`[resolveCompCron.js] (1) Cron Ranges:`)
-				await console.log(cronRanges)
+				await console.log(range1)
 				return {
 					range1: range1,
 				}

@@ -1,5 +1,5 @@
+import { Log } from '#config'
 import { SapDiscClient } from '#main'
-import { msgBotChan } from '#botUtil/msgBotChan'
 
 /**
  * @module locateChannel
@@ -9,21 +9,21 @@ import { msgBotChan } from '#botUtil/msgBotChan'
  */
 
 export async function locateChannel(channelName) {
-    console.log(`Locating channel ${channelName.toLowerCase()}`)
-    const guild = SapDiscClient.guilds.cache.get(`${process.env.server_ID}`)
-    const category = guild.channels.cache.get(`${process.env.gameCat_ID}`)
-    //# Locate the channel by name in the category
-    var gameChan = guild.channels.cache.find(
-        (gameChan) => gameChan.name.toLowerCase() === channelName.toLowerCase(),
-    )
-    if (!gameChan) {
-        await msgBotChan(
-            `Unable to locate channel ${channelName} to delete.`,
-            `#ff0000`,
-        )
-        return false
-    } else {
-        console.log(`Located channel ${gameChan.name} | ${gameChan.id}`)
-        return gameChan
-    }
+	console.log(`Locating channel ${channelName.toLowerCase()}`)
+	const guild = SapDiscClient.guilds.cache.get(`${process.env.server_ID}`)
+	const category = guild.channels.cache.get(`${process.env.gameCat_ID}`)
+	//# Locate the channel by name in the category
+	var gameChan = guild.channels.cache.find(
+		(gameChan) => gameChan.name.toLowerCase() === channelName.toLowerCase(),
+	)
+	if (!gameChan) {
+		await Log.Red(
+			`Unable to locate channel ${channelName} to delete.`,
+			`#ff0000`,
+		)
+		return false
+	} else {
+		console.log(`Located channel ${gameChan.name} | ${gameChan.id}`)
+		return gameChan
+	}
 }
