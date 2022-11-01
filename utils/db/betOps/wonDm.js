@@ -1,6 +1,9 @@
+import { Log } from '#config'
 import { SapDiscClient } from '#main'
 import { dmLog } from '../../logging.js'
 import { isInServer } from '../../bot_res/isInServer.js'
+import { quickBalance } from '../validation/quickBalance.js'
+import { removeFromActive } from './removeFromActive.js'
 
 //import { removeUserProfile } from './removeUserProfile.js'
 
@@ -17,18 +20,22 @@ export async function wonDm(betInformation) {
 	var betAmount = betInformation?.betAmount
 	var payoutAmount = betInformation?.payout
 	var profitAmount = betInformation?.profit
-	var newBalance = betInformation?.newBalance
 	//# verify user is still in the server
 	var verifyUser = await isInServer(userid)
 	if (verifyUser == false) {
 		await dmLog.info(
 			`User ${userid} is no longer in the server. Removing bet ${betid} from the database.`,
 		)
+		// await msgBotChan(
+		//     `User ${userid} is no longer in the server. Removing bet ${betid} from the database.`,
+		// )
+		await removeFromActive(userid, betid)
 		return
 	}
+	var newUserBal = await quickBalance(userid)
 	var embObj = {
 		title: `${teamBetOn} vs. ${opposingTeam}`,
-		description: `You won your bet on the ${teamBetOn}!\nHere's your payout info\n\n**You had bet:** $${betAmount}\n**Profit:** $${profitAmount}\n**Payout:** $${payoutAmount}\n**:moneybag: Updated Balance**: $${newBalance.toFixed(
+		description: `You won your bet on the ${teamBetOn}!\nHere's your payout info\n\n**You had bet:** $${betAmount}\n**Profit:** $${profitAmount}\n**Payout:** $${payoutAmount}\n**:moneybag: Updated Balance**: $${newUserBal.toFixed(
 			2,
 		)}`,
 		footer: {
@@ -44,7 +51,20 @@ export async function wonDm(betInformation) {
 			)
 			return
 		}
-		user.send({ embeds: [embObj] })
-		dmLog.info(`DM'd ${userid} successfully`)
+		//# Catch any errors that may occur when sending the DM, like the user blocking the bot, having DMs disabled, etc
+		try {
+			user.send({ embeds: [embObj] }).catch(() => {
+				dmLog.error(`Failed to send DM to user ${userid}.`)
+				Log.Red(`Failed to send DM to user ${userid}.`)
+				return
+			})
+			dmLog.info(`DM'd ${userid} successfully`)
+		} catch (error) {
+			dmLog.error(
+				`Failed to send DM to user ${userid} is no longer in the server.`,
+			)
+			Log.Red(`Failed to send DM to user ${userid} is no longer in the server.`)
+			return
+		}
 	})
 }
