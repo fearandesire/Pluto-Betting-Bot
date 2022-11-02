@@ -74,7 +74,7 @@ export function completedReq() {
                 } else {
                     completedReqLog.ping({
                         state: 'ok',
-                        message: `No games today, skipping completed game check..`,
+                        message: `No games today, skipping completed game check.`,
                     })
                     Log.Red(
                         `[completedReq.js] No games today, skipping completed game check..`,
