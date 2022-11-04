@@ -1,5 +1,7 @@
 import { Log } from '#config'
+import { closeBetLog } from '#winstonLogger'
 import { db } from '#db'
+import { lostDm } from '../../lostDm.js'
 import { resolvePayouts } from '#utilBetOps/resolvePayouts'
 import { wonDm } from '../../wonDm.js'
 
@@ -67,9 +69,45 @@ export async function closeOldBets(winningTeam, losingTeam, odds, matchid) {
                         [`newBalance`]: newUserBal,
                     }
                     await wonDm(wonBetInformation)
-                    resolve()
                 }
             }
+            var getLosers = await t.manyOrNone(
+                `SELECT * FROM "NBAbetslips" WHERE teamid = $1 AND betresult = 'pending' AND matchid = $2`,
+                [losingTeam, matchid],
+            )
+            if (getLosers) {
+                for await (const betslip of getLosers) {
+                    //# bet information
+                    var betAmount = betslip.amount
+                    var betId = betslip.betid
+                    var userid = betslip.userid
+                    var betOdds = odds
+                    var opposingTeam = winningTeam
+                    var teamBetOn = losingTeam
+                    await Log.Yellow(
+                        `Bet ID: ${betId} || Bet Odds: ${betOdds} || Bet Amount: ${betAmount}`,
+                    )
+                    //# update betslip with bet result
+                    await t.none(
+                        `UPDATE "NBAbetslips" SET betresult = 'lost' WHERE betid = $1`,
+                        [betId],
+                    )
+                    await t.none(`DELETE FROM "NBAactivebets" WHERE betid = $1`, [betId])
+                    var lostBetInformation = await {
+                        [`userId`]: userid,
+                        [`betId`]: betId,
+                        [`wonOrLost`]: `lost`,
+                        [`teamBetOn`]: teamBetOn,
+                        [`opposingTeam`]: opposingTeam,
+                        [`betAmount`]: betAmount,
+                    }
+                    await lostDm(lostBetInformation)
+                    await closeBetLog.info(
+                        `Successfully closed bet ${betId} || ${userid}`,
+                    )
+                }
+            }
+            await resolve()
         })
     })
 }
