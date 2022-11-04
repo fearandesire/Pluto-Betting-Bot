@@ -16,7 +16,7 @@ export async function closeOldBets(winningTeam, losingTeam, odds, matchid) {
     return new Promise(async (resolve, reject) => {
         var dbStack = await db.tx(async (t) => {
             var getWinners = await t.manyOrNone(
-                `SELECT * FROM "betslips" WHERE teamid = $1 AND betresult = 'pending' AND matchid = $2`,
+                `SELECT * FROM "NBAbetslips" WHERE teamid = $1 AND betresult = 'pending' AND matchid = $2`,
                 [winningTeam, matchid],
             )
             if (getWinners) {
@@ -39,22 +39,22 @@ export async function closeOldBets(winningTeam, losingTeam, odds, matchid) {
                     const profitAmount = parseFloat(profit)
                     //# update betslip with bet result
                     await t.none(
-                        `UPDATE "betslips" SET betresult = 'won', payout = $1, profit = $2 WHERE betid = $3`,
+                        `UPDATE "NBAbetslips" SET betresult = 'won', payout = $1, profit = $2 WHERE betid = $3`,
                         [payoutAmount, profitAmount, betId],
                     )
                     //# get balance of the user to update it with the winnings
                     const userBal = await t.oneOrNone(
-                        `SELECT balance FROM "currency" WHERE userid = $1`,
+                        `SELECT balance FROM "NBAcurrency" WHERE userid = $1`,
                         [userid],
                     )
                     //# calc winnings
                     const currentUserBal = parseFloat(userBal?.balance)
                     const newUserBal = currentUserBal + payoutAmount
                     await t.oneOrNone(
-                        `UPDATE "currency" SET balance = $1 WHERE userid = $2`,
+                        `UPDATE "NBAcurrency" SET balance = $1 WHERE userid = $2`,
                         [newUserBal, userid],
                     )
-                    await t.none(`DELETE FROM "activebets" WHERE betid = $1`, [betId])
+                    await t.none(`DELETE FROM "NBAactivebets" WHERE betid = $1`, [betId])
                     var wonBetInformation = await {
                         [`userId`]: userid,
                         [`betId`]: betId,
