@@ -56,14 +56,16 @@ export class closeOldBetsSlash extends Command {
             })
             return
         }
+        await interaction.deferReply({ ephemeral: true })
         var userid = interaction.user.id
         var winTeam = interaction.options.getString('winning_team')
         var loseTeam = interaction.options.getString('losing_team')
         var winOdds = interaction.options.getString('winning_team_odds')
         var matchid = interaction.options.getString('matchid')
         Log.Green(`${userid} has queued all old bets to close.`)
-        await closeOldBets(winTeam, loseTeam, winOdds, matchid).then(() => {
-            interaction.reply({
+        let msg = interaction
+        await closeOldBets(winTeam, loseTeam, winOdds, matchid).then(async () => {
+            await msg.followUp({
                 content: `All old bets have been closed.`,
                 ephemeral: true,
             })
