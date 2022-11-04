@@ -5,12 +5,11 @@ import { completedReqLog } from '#winstonLogger'
 import { createRequire } from 'module'
 import { isGameDay } from '#botUtil/isGameDay'
 import { resolveCompCron } from '../db/gameSchedule/resolveCompCron.js'
-import stringifyObject from 'stringify-object'
 
 const require = createRequire(import.meta.url)
 const cron = require('cronitor')(`f9f7339479104e79bf2b52eb9c2242bf`)
 cron.wraps(require('node-cron'))
-const compGameMonitor = new cron.Monitor('Completed Game Monitor')
+const compGameMonitor = new cron.Monitor('Finished Game Check')
 
 /**
  * @module completedReq -
@@ -18,26 +17,35 @@ const compGameMonitor = new cron.Monitor('Completed Game Monitor')
  */
 
 export function completedReq() {
-    Log.Yellow(`[Startup]: completedReq.js reached`)
-
+    Log.Yellow(
+        `[Startup]: completedReq.js reached\nDaily Check Cron Queue: ${NBA_COLLECT_CRONTIMES}`,
+    )
     this.dailyCheck = async function () {
+        Log.Yellow(
+            `Query to collect the finished games time ranges started | If there are games scheduled, remember to run /callschedule`,
+        )
         var checkGameDay = await isGameDay()
-        var completedCron = await resolveCompCron()
+        let completedCron
         cron.schedule(
             `initGameDay`,
             `${NBA_COLLECT_CRONTIMES}`,
             async () => {
+                //# Retrieve the cron ranges for the times we will be checking for completed games -- in the Cron format
+                completedCron = await resolveCompCron()
                 completedReqLog.info(`Running completedReq.js - Initializing Cron Jobs`)
                 compGameMonitor.ping({
                     state: `ok`,
                     message: `Initializing finished game check Cron Job [completedReq.js]`,
                 })
                 var cronRange1 = completedCron?.range1
-                var cronRange2 = completedCron?.range2
-                var stringified = stringifyObject(completedCron)
-                completedReqLog.info(`Cron Range Hours:\n${stringified}`)
+                    ? completedCron.range1
+                    : undefined
+                var cronRange2 = completedCron?.range2 ?? undefined
+                completedReqLog.info(
+                    `[completedReq.js] Cron Range Hours:\nRange 1: ${cronRange1}\nRange 2: ${cronRange2}`,
+                )
                 Log.Blue(
-                    `[completedReq.js]\nGame Day!\nCron Range Hours: ${stringified}`,
+                    `[completedReq.js]\nGame Day!\nCron Range Hours:\nRange 1: ${cronRange1}\nRange 2: ${cronRange2}`,
                 )
                 if (checkGameDay == true && cronRange1 !== undefined) {
                     cron.schedule(
@@ -55,8 +63,9 @@ export function completedReq() {
                         { timezone: 'America/New_York' },
                     )
                     if (cronRange2 !== undefined) {
-                        Log.Green(`Checking for completed games between the hours:`)
-                        console.log(cronRange2)
+                        Log.Green(
+                            `Checking for completed games between the hours: ${cronRange2}`,
+                        )
                         cron.schedule(
                             `CompletedGameCheck`,
                             cronRange2,
@@ -66,18 +75,22 @@ export function completedReq() {
                                     message: `Checking for completed games..`,
                                 })
                                 await checkCompleted(compGameMonitor)
+                                completedReqLog.info(`Checking for completed games`)
                                 Log.Yellow(`Checking for completed games`)
                             },
                             { timezone: 'America/New_York' },
                         )
                     }
                 } else {
-                    completedReqLog.ping({
+                    compGameMonitor.ping({
                         state: 'ok',
-                        message: `No games today, skipping completed game check.`,
+                        message: `No games today, skipping completed game check..`,
                     })
                     Log.Red(
                         `[completedReq.js] No games today, skipping completed game check..`,
+                    )
+                    completedReqLog.info(
+                        `[completedReq.js] No games today, skipping completed game check`,
                     )
                     return
                 }
@@ -96,9 +109,12 @@ export function completedReq() {
             var completedCron = await resolveCompCron()
             var cronRange1 = completedCron?.range1
             var cronRange2 = completedCron?.range2
-            var stringified = stringifyObject(completedCron)
-            completedReqLog.info(`Cron Range Hours:\n${stringified}`)
-            Log.Blue(`[completedReq.js]\nGame Day!\nCron Range Hours: ${stringified}`)
+            completedReqLog.info(
+                `Cron Range Hours:\nRange 1: ${cronRange1}\nRange 2: ${cronRange2}`,
+            )
+            Log.Blue(
+                `[completedReq.js]\nGame Day!\nCron Range Hours:\nRange 1: ${cronRange1}\nRange 2: ${cronRange2}`,
+            )
             if (cronRange1) {
                 cron.schedule(
                     `compGamesRange1`,
@@ -115,8 +131,6 @@ export function completedReq() {
                     { timezone: 'America/New_York' },
                 )
                 if (cronRange2) {
-                    Log.Green(`Checking for completed games between the hours:`)
-                    console.log(cronRange2)
                     cron.schedule(
                         `compRange2`,
                         cronRange2,
@@ -126,6 +140,7 @@ export function completedReq() {
                                 message: `Checking for completed games..`,
                             })
                             await checkCompleted(compGameMonitor)
+                            completedReqLog.info(`Checking for completed games..`)
                             Log.Yellow(`Checking for completed games`)
                         },
                         { timezone: 'America/New_York' },
@@ -138,7 +153,7 @@ export function completedReq() {
             })
             return
         } else {
-            completedReqLog.log({
+            completedReqLog.info({
                 state: 'ok',
                 message: `No games today, skipping completed game check..`,
             })
