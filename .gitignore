@@ -119,3 +119,4 @@ Setup.md
 cache/**
 .node-persist/**/*
 commands/test/**
+utils/unitTesting/**
