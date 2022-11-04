@@ -51,7 +51,7 @@ export async function newBet(
     async.series(
         [
             async function valUser() {
-                await validateUser(interaction, user, true)
+                await validateUser(interaction, user, true, true)
                 return
             },
             async function verDup() {
