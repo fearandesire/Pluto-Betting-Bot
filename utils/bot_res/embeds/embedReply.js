@@ -66,7 +66,7 @@ export async function embedReply(message, embedContent, interactionEph) {
                 reqChan = await fetchChanId(target)
                 reqChan.send({ embeds: [embedWithFields] })
                 return
-            } else if (isSilent === true) {
+            } else if (isSilent == true) {
                 reqChan.send({ embeds: [embedWithFields], ephemeral: true })
                 return
             }
