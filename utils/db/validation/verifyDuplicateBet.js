@@ -2,6 +2,7 @@ import { FileRunning } from '#botClasses/FileRunning'
 import { Log } from '#LogColor'
 import { QuickError } from '#embed'
 import { isDuplicateBet } from '#utilValidate/isDuplicateBet'
+import { pendingBet } from './pendingBet.js'
 
 /**
  * @module verifyDuplicateBet - Handles promise for validation of a duplicate bet when invoked via {@link placeBet.js}
@@ -16,9 +17,11 @@ import { isDuplicateBet } from '#utilValidate/isDuplicateBet'
 
 export async function verifyDupBet(message, userid, matchId) {
     new FileRunning(`verifyDupBet`)
-    await isDuplicateBet(userid, matchId).then((data) => {
+    await isDuplicateBet(userid, matchId).then(async (data) => {
         if (data) {
             QuickError(message, `You have already placed a bet on this match`)
+            //# delete from pending
+            await new pendingBet().deletePending(userid)
             throw Log.Error(
                 `[verifyDupBet.js] User ${userid} has already placed a bet on Matchup: ${matchId} - ended event`,
             )

@@ -1,18 +1,19 @@
-import { Log, container, embedReply } from '#config'
+import { Log, embedReply } from '#config'
 
 import { AssignBetID } from '#botUtil/AssignIDs'
 import { addNewBet } from '#utilBetOps/addNewBet'
 import flatcache from 'flat-cache'
 import { isBetIdExisting } from '../validation/isBetIdExisting.js'
 import merge from 'deepmerge'
+import { pendingBet } from '../validation/pendingBet.js'
 import { confirmBetEmbed as pleaseConfirmEmbed } from '../../bot_res/embeds/confirmBetEmbed.js'
 import { setupBetLog } from '#winstonLogger'
 import { sortBalance } from '#utilCurrency/sortBalance'
 import stringifyObject from 'stringify-object'
 
 let allbetSlipsCache = flatcache.create(
-	`allbetSlipsCache.json`,
-	'./cache/betslips',
+    `allbetSlipsCache.json`,
+    './cache/betslips',
 )
 /**
  * @module confirmBet -
@@ -31,93 +32,95 @@ let allbetSlipsCache = flatcache.create(
  */
 
 export async function confirmBet(message, betslip, userId, interactionEph) {
-	//? Sending Embed w/ bet details for the user to confirm bet
-	await pleaseConfirmEmbed(message, betslip, interactionEph)
-	//? Assigning a filter for the message collector to listen for. The colllection will identify the user by their ID
-	//# for some reason, this wont work. Assigned a manaul check for the ID instead.
-	const filter = (user) => {
-		return user.id === userId
-	}
-	setupBetLog.info(`Started bet confirmation timer for ${userId}`)
-	//?  Create collection listener for the user to confirm their bet via message collection [Discord.js] on a 60 second timer.
-	const collector = message.channel.createMessageCollector(filter, {
-		time: 60000,
-		error: 'time',
-	})
-	//? Using the '.on' event to listen for the user to confirm the bet
-	collector.on('collect', async (message) => {
-		if (
-			(message.content.toLowerCase() === 'yes' &&
-				message.author.id === userId) ||
-			(message.content.toLowerCase() === 'confirm' &&
-				message.author.id === userId)
-		) {
-			collector.stop()
-			container.userIsBetting[`${userId}`] = false //? Resetting the userIsBetting flag to false so the user can bet again.
-			var betId = await AssignBetID()
-			var validateID = await isBetIdExisting(betId)
-			Log.Green(
-				`Bet ID ${validateID} is unique and has been assigned to user: ${userId}.`,
-			)
-			betslip.betid = validateID
+    //? Sending Embed w/ bet details for the user to confirm bet
+    await pleaseConfirmEmbed(message, betslip, interactionEph)
+    //? Assigning a filter for the message collector to listen for. The colllection will identify the user by their ID
+    //# for some reason, this wont work. Assigned a manaul check for the ID instead.
+    const filter = (user) => {
+        return user.id === userId
+    }
+    setupBetLog.info(`Started bet confirmation timer for ${userId}`)
+    //?  Create collection listener for the user to confirm their bet via message collection [Discord.js] on a 60 second timer.
+    const collector = message.channel.createMessageCollector(filter, {
+        time: 60000,
+        error: 'time',
+    })
+    //? Using the '.on' event to listen for the user to confirm the bet
+    collector.on('collect', async (message) => {
+        if (
+            (message.content.toLowerCase() === 'yes' &&
+                message.author.id === userId) ||
+            (message.content.toLowerCase() === 'confirm' &&
+                message.author.id === userId)
+        ) {
+            collector.stop()
+            //# delete from pending
+            await new pendingBet().deletePending(userId)
+            var betId = await AssignBetID()
+            var validateID = await isBetIdExisting(betId)
+            Log.Green(
+                `Bet ID ${validateID} is unique and has been assigned to user: ${userId}.`,
+            )
+            betslip.betid = validateID
 
-			setupBetLog.info(
-				`Betslip confirmed for ${userId}\n${stringifyObject(betslip)}`,
-			)
-			//? If user already has collected their list of bets via 'listBets', we need to allow them to retrieve a new list since they are adding to it.
-			var cacheTitle = `${betslip.userid}`
-			await allbetSlipsCache.setKey(`${cacheTitle}-hasBetsEmbed`, false)
-			if (allbetSlipsCache.getKey(`${cacheTitle}-activebetslips`) === null) {
-				await allbetSlipsCache.setKey(`${cacheTitle}-activebetslips`, betslip)
-			} else {
-				//# utilize merge
-				var currentBets = allbetSlipsCache.getKey(
-					`${cacheTitle}-activebetslips`,
-				)
-				var newBets = merge(currentBets, betslip)
-				await allbetSlipsCache.setKey(`${cacheTitle}-activebetslips`, newBets)
-			}
-			await allbetSlipsCache.save(true)
-			await addNewBet(message, betslip, interactionEph) //! Add bet to active bet list in DB [User will receive a response within this function]
-			await sortBalance(message, betslip.userid, betslip.amount, 'sub') //! Subtract users bet amount from their balance
-			return
-		}
-		if (
-			(message.content.toLowerCase() === 'no' &&
-				message.author.id === userId) ||
-			(message.content.toLowerCase() === 'cancel' &&
-				message.author.id === userId)
-		) {
-			collector.stop()
-			setupBetLog.info(`Betslip cancelled for ${userId}`)
-			container.userIsBetting[`${userId}`] = false //? Resetting the userIsBetting flag to false so the user can bet again.
-			var embObj = {
-				title: `Bet Cancellation`,
-				description: `Your bet has been cancelled. Your balance has not been affected.`,
-				color: `#ffff00`,
-				isSilent: true,
-				followUp: true,
-			}
-			await embedReply(message, embObj, true)
-			return
-		}
-	})
-	collector.on('end', async (collected, reason) => {
-		if (reason === 'time') {
-			var embObj = {
-				title: `Bet Cancellation`,
-				description: `Your bet has been cancelled. Your balance has not been affected.`,
-				color: `#ffff00`,
-				isSilent: true,
-				followUp: true,
-			}
-			container.userIsBetting[`${userId}`] = false //? Resetting the userIsBetting flag to false so the user can bet again.
-			await embedReply(message, embObj, true)
-			return
-		}
-	})
-	//& 60 Second Timer to confirm bet
-	setTimeout(() => {
-		collector.stop('time')
-	}, 60000)
+            setupBetLog.info(
+                `Betslip confirmed for ${userId}\n${stringifyObject(betslip)}`,
+            )
+            //? If user already has collected their list of bets via 'listBets', we need to allow them to retrieve a new list since they are adding to it.
+            var cacheTitle = `${betslip.userid}`
+            await allbetSlipsCache.setKey(`${cacheTitle}-hasBetsEmbed`, false)
+            if (allbetSlipsCache.getKey(`${cacheTitle}-activebetslips`) === null) {
+                await allbetSlipsCache.setKey(`${cacheTitle}-activebetslips`, betslip)
+            } else {
+                //# utilize merge
+                var currentBets = allbetSlipsCache.getKey(
+                    `${cacheTitle}-activebetslips`,
+                )
+                var newBets = merge(currentBets, betslip)
+                await allbetSlipsCache.setKey(`${cacheTitle}-activebetslips`, newBets)
+            }
+            await allbetSlipsCache.save(true)
+            await addNewBet(message, betslip, interactionEph) //! Add bet to active bet list in DB [User will receive a response within this function]
+            await sortBalance(message, betslip.userid, betslip.amount, 'sub') //! Subtract users bet amount from their balance
+            return
+        }
+        if (
+            (message.content.toLowerCase() === 'no' &&
+                message.author.id === userId) ||
+            (message.content.toLowerCase() === 'cancel' &&
+                message.author.id === userId)
+        ) {
+            collector.stop()
+            setupBetLog.info(`Betslip cancelled for ${userId}`)
+            //# delete from pending
+            await new pendingBet().deletePending(userId)
+            var embObj = {
+                title: `Bet Cancellation`,
+                description: `Your bet has been cancelled.`,
+                color: `#408080`,
+                isSilent: true,
+            }
+            await embedReply(message, embObj, true)
+            return
+        }
+    })
+    collector.on('end', async (collected, reason) => {
+        if (reason === 'time') {
+            var embObj = {
+                title: `Bet Cancellation`,
+                description: `Your bet has been cancelled.`,
+                color: `#408080`,
+                isSilent: true,
+                followUp: true,
+            }
+            //# delete from pending
+            await new pendingBet().deletePending(userId)
+            await embedReply(message, embObj, true)
+            return
+        }
+    })
+    //& 60 Second Timer to confirm bet
+    setTimeout(() => {
+        collector.stop('time')
+    }, 60000)
 }
