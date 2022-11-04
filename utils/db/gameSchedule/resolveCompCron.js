@@ -1,4 +1,4 @@
-import { Log, NBA_ACTIVEMATCHUPS } from '#config'
+import { Log, NBA_ACTIVEMATCHUPS, container } from '#config'
 
 import { db } from '#db'
 import { resolveToday } from '#dateUtil/resolveToday'
@@ -120,6 +120,10 @@ export async function resolveCompCron() {
                 await Log.Green(
                     `[resolveCompCron.js] (2) Cron Ranges:\nRange 1: ${range1}\nRange 2: ${range2}`,
                 )
+                container.cronRanges = {
+                    range1: range1,
+                    range2: range2,
+                }
                 return {
                     range1: `${range1}`,
                     range2: `${range2}`,
@@ -140,6 +144,9 @@ export async function resolveCompCron() {
                 range1 = earliestCronSplit.join(' ')
                 await console.log(`Cron Comp String:`, range1)
                 await Log.Green(`[resolveCompCron.js] (1) Cron Ranges:\n${range1}`)
+                container.cronRanges = {
+                    range1: range1,
+                }
                 return {
                     range1: range1,
                 }
