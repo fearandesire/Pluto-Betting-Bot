@@ -14,8 +14,8 @@ import { db } from '#db'
  */
 
 export async function checkbalance(inputuserid, message, target) {
-    let targetName = target.user.username
-    let targetId = target.id
+    let targetName = target?.user?.username
+    let targetId = target?.id
     let queryUserOrTarget
     Log.Yellow(`[checkbalance.js] Checking balance.`)
     if (target) {
