@@ -42,7 +42,7 @@ export async function returnWeeklyOdds(message, interactionEph) {
     var embedObj = {
         title: `Weekly H2H Odds`,
         fields: oddsFields,
-        color: `#00ffff`,
+        thumbnail: `${process.env.sportLogo}`,
         footer:
             'Favored teams have a - negative number | Pluto - Designed by FENIX#7559',
     }

@@ -37,7 +37,6 @@ export async function embedReply(message, embedContent, interactionEph) {
             .setThumbnail(thumbnail)
             .setDescription(embedDescription)
             .addFields(...embedContent.fields)
-            .setTimestamp()
             .setFooter({ text: embedFooter })
         if (
             (target == 'reply' && interactionEph == true) ||
