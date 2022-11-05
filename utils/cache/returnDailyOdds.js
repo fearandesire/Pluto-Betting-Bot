@@ -22,12 +22,12 @@ export async function returnDailyOdds(message, interactionEph) {
         var aTeam = match.teamtwo
         var hOdds = match.teamoneodds
         var aOdds = match.teamtwoodds
-        var dateTitle = match.dateofmatchup
+        var startTime = match.legiblestart
         let oddsFormat = await formatOdds(hOdds, aOdds)
         hOdds = oddsFormat.homeOdds
         aOdds = oddsFormat.awayOdds
         oddsFields.push({
-            name: `• ${dateTitle}`,
+            name: `• ${startTime}`,
             value: `**${hTeam}**\nOdds: *${hOdds}*\n**${aTeam}**\nOdds: *${aOdds}*\n──────`,
             inline: true,
         })
@@ -40,7 +40,7 @@ export async function returnDailyOdds(message, interactionEph) {
     console.log(oddsFields)
     var embedObj = {
         color: `#00ffff`,
-        title: `Daily H2H Odds`,
+        title: `:scroll: Daily H2H Odds`,
         fields: oddsFields,
         thumbnail: `${process.env.sportLogoNBA}`,
         footer:
