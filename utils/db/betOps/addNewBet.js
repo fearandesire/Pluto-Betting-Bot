@@ -20,76 +20,75 @@ import { setupBetLog } from '#winstonLogger'
  */
 
 export function addNewBet(message, betslip, interactionEph) {
-	//Log.Red(`INTERACTION: ${interactionEph}`)
-	/*
+    //Log.Red(`INTERACTION: ${interactionEph}`)
+    /*
     Querying DB using db.tx since we are handling multiple transactions
     First query: Selecting the 'matchid' as its required for us to store the betslip information in the DB.
     */
-	db.tx('createNewBet', (t) => {
-		return t
-			.one(
-				`SELECT matchid from "NBAactivematchups" WHERE teamone = $1 OR teamtwo = $1`,
-				/**@property {Object} betslip.teamid - The team name the user has input */
-				[betslip.teamid],
-			)
-			.then((data) => {
-				console.log(data)
-				console.log(betslip)
-				console.log(`--`)
-				container.temp_matchId = data.matchid
-				return t.none(
-					`INSERT INTO "NBAbetslips" (userid, teamid, betid, amount, matchid, dateofbet, betresult) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-					[
-						betslip.userid,
-						betslip.teamid,
-						betslip.betid,
-						betslip.amount,
-						data.matchid,
-						TodaysDate(),
-						'pending',
-					], //? Insert betslip information into the database
-				)
-			})
-			.then((data) => {
-				setupBetLog.info(
-					`Storing betslip into database - "NBAactivebets"\nData: ${data}\nBetslip: ${betslip}`,
-				)
-				return t.none(
-					`INSERT INTO "NBAactivebets" (betid, userid, teamid, matchid, amount, dateofbet) VALUES ($1, $2, $3, $4, $5, $6)`,
-					[
-						betslip.betid,
-						betslip.userid,
-						betslip.teamid,
-						container.temp_matchId,
-						betslip.amount,
-						TodaysDate(),
-					], //? Insert betslip information into the database
-				)
-			})
-			.then(() => {
-				var isSilent = interactionEph ? true : false
-				setupBetLog.info(`Successfully added betslip into the database.`)
-				var embedcontent = {
-					//? Compiling the properties of the embed to return to the user: confirming their bet has been added to DB
-					title: `Bet #${betslip.betid} Slip Confirmed`,
-					description: `Congratulations <@${betslip.userid}>! Your bet has been placed! You may view all of your active bets by typing: \`/mybets\`\n\n**__Betslip Details__**\n**Bet ID:** ${betslip.betid}\n**Team:** ${betslip.teamid}\n**Amount:** $${betslip.amount}`,
-					color: '#00FF00',
-					//footer: 'For more commands, type: ?help',
-					silent: isSilent,
-					target: `reply`,
-				}
-				if (isSilent === true) {
-					return embedReply(message, embedcontent, true)
-				} else {
-					return embedReply(message, embedcontent) //? Sending the embed to the user via our embedReply function in [embedReply.js]
-				}
-			})
-			.catch((err) => {
-				Log.Error(
-					`[addNewBet.js] Error adding bet to "NBAactivebets" table\n${err}`,
-				)
-				setupBetLog.error(`Error adding bet to "NBAactivebets" table\n${err}`)
-				return
-			})
-	})
+    db.tx('createNewBet', (t) => {
+        return t
+            .one(
+                `SELECT matchid from "NBAactivematchups" WHERE teamone = $1 OR teamtwo = $1`,
+                /**@property {Object} betslip.teamid - The team name the user has input */
+                [betslip.teamid],
+            )
+            .then((data) => {
+                container.temp_matchId = data.matchid
+                return t.none(
+                    `INSERT INTO "NBAbetslips" (userid, teamid, betid, amount, matchid, dateofbet, betresult) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+                    [
+                        betslip.userid,
+                        betslip.teamid,
+                        betslip.betid,
+                        betslip.amount,
+                        data.matchid,
+                        TodaysDate(),
+                        'pending',
+                    ], //? Insert betslip information into the database
+                )
+            })
+            .then((data) => {
+                setupBetLog.info(
+                    `Storing betslip into database - "NBAactivebets"\nData: ${data}\nBetslip: ${betslip}`,
+                )
+                return t.none(
+                    `INSERT INTO "NBAactivebets" (betid, userid, teamid, matchid, amount) VALUES ($1, $2, $3, $4, $5)`,
+                    [
+                        betslip.betid,
+                        betslip.userid,
+                        betslip.teamid,
+                        container.temp_matchId,
+                        betslip.amount,
+                    ], //? Insert betslip information into the database
+                )
+            })
+            .then(() => {
+                setupBetLog.info(`Successfully added betslip into the database.`)
+                var embedcontent = {
+                    //? Compiling the properties of the embed to return to the user: confirming their bet has been added to DB
+                    title: `:ticket: Bet confirmed!`,
+                    description: `<@${betslip.userid}>, your bet is locked in :lock:
+                    *To view all of your active bets, type \`/mybets\`
+                    To view your history of betting with Pluto, type \`/bethistory\`*
+                    
+                    __**:money_mouth: Details** __
+                    **Bet ID:** ${betslip.betid}
+                    **Team:** ${betslip.teamid}
+                    **Amount:** \`$${betslip.amount}\`
+                    **Profit:** \`$${betslip.profit}\`
+                    **Payout:** \`$${betslip.payout}\`
+                    `,
+                    color: '#00FF00',
+                    //footer: 'For more commands, type: ?help',
+                    target: `reply`,
+                    thumbnail: `${process.env.sportLogoNBA}`,
+                }
+                return embedReply(message, embedcontent) //? Sending the embed to the user via our embedReply function in [embedReply.js]
+            })
+            .catch((err) => {
+                Log.Error(`[addNewBet.js] Error adding bet to activebets table\n${err}`)
+                setupBetLog.error(`Error adding bet to activebets table\n${err}`)
+                return
+            })
+    })
 }
