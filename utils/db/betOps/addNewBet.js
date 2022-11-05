@@ -35,7 +35,7 @@ export function addNewBet(message, betslip, interactionEph) {
             .then((data) => {
                 container.temp_matchId = data.matchid
                 return t.none(
-                    `INSERT INTO "NBAbetslips" (userid, teamid, betid, amount, matchid, dateofbet, betresult) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+                    `INSERT INTO "NBAbetslips" (userid, teamid, betid, amount, matchid, dateofbet, betresult, profit, payout) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
                     [
                         betslip.userid,
                         betslip.teamid,
@@ -44,6 +44,8 @@ export function addNewBet(message, betslip, interactionEph) {
                         data.matchid,
                         TodaysDate(),
                         'pending',
+                        betslip.profit,
+                        betslip.payout,
                     ], //? Insert betslip information into the database
                 )
             })
@@ -73,7 +75,7 @@ export function addNewBet(message, betslip, interactionEph) {
                     
                     __**:money_mouth: Details** __
                     **Bet ID:** ${betslip.betid}
-                    **Team:** ${betslip.teamid}
+                    **Team:** **${betslip.teamid}**
                     **Amount:** \`$${betslip.amount}\`
                     **Profit:** \`$${betslip.profit}\`
                     **Payout:** \`$${betslip.payout}\`
