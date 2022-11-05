@@ -1,7 +1,7 @@
 import { SapDiscClient } from '#main'
 import { createChanLog } from '#winstonLogger'
 import { createRequire } from 'module'
-import { msgBotChan } from '#botUtil/msgBotChan'
+import { dmMe } from '../../bot_res/dmMe.js'
 
 const require = createRequire(import.meta.url)
 const cron = require('cronitor')(`f9f7339479104e79bf2b52eb9c2242bf`)
@@ -24,7 +24,7 @@ export async function createChannel(homeTeam, awayTeam) {
     try {
         const guild = SapDiscClient.guilds.cache.get(`${process.env.server_ID}`)
         const category = guild.channels.cache.get(`${process.env.gameCat_ID}`)
-        const channelName = `${homeTeam} vs ${awayTeam}`
+        const channelName = `${awayTeam} vs ${homeTeam}`
         var gameChan = await guild.channels.create(channelName, {
             type: 'text',
             topic: `Enjoy the Game!`,
@@ -34,10 +34,8 @@ export async function createChannel(homeTeam, awayTeam) {
         var teamChoices = [homeTeam, awayTeam]
         var goodLuck = Math.floor(Math.random() * teamChoices.length)
         await gameChan.send(`Good luck to the ${teamChoices[goodLuck]}!`)
-        await msgBotChan(
+        await dmMe(
             `${channelName} Game Channel created successfully\nDirect Link: <#${gameChan.id}>`,
-            `#00ff00`,
-            `Game Channel Creation`,
         )
         createChanLog.info(`Game Channel Created: ${channelName}`)
         await gameCreateMonitor.ping({

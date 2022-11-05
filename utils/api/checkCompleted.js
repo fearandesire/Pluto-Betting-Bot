@@ -75,7 +75,7 @@ export async function checkCompleted(compGameMonitor) {
                 var gameChan
                 var hTeamShort = await getShortName(value.home_team)
                 var aTeamShort = await getShortName(value.away_team)
-                gameChan = `${hTeamShort}-vs-${aTeamShort}`
+                gameChan = `${aTeamShort}-vs-${hTeamShort}`
                 try {
                     gameChan = await locateChannel(gameChan)
                     if (gameChan) {
