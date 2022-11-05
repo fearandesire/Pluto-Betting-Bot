@@ -32,16 +32,15 @@ export class balanceSlash extends Command {
         )
     }
     async chatInputRun(interaction) {
-        var userOption = interaction.options.getMentionable('user')
+        var target = interaction.options.getMentionable('user')
         const userid = interaction.user.id
-        if (!userOption) {
+        if (!target) {
             await validateUser(interaction, userid, true)
             await checkbalance(userid, interaction)
             return
         }
-        if (userOption) {
-            const notuser = true
-            await checkbalance(userid, interaction, notuser) // reinstalls checkbalance function
+        if (target) {
+            await checkbalance(userid, interaction, target)
             return
         }
     }

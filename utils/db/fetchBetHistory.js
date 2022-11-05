@@ -1,4 +1,5 @@
-import { QuickError } from '#config'
+import { QuickError, _ } from '#config'
+
 import { db } from '#db'
 import { embedReply } from '#embed'
 
@@ -9,38 +10,53 @@ import { embedReply } from '#embed'
  * @return {object} - Embed object of user bet history
  */
 export async function fetchBetHistory(message, userid, interactionEph) {
+    let entries
+    let wonCount = 0
+    let lostCount = 0
     let betHistory = []
     db.tx('fetchBetHistory', async (t) => {
         const findings = await t.manyOrNone(
             'SELECT * FROM betslips WHERE userid = $1 ORDER BY dateofbet',
             [userid],
         )
-        if (!findings) {
-            QuickError(message, `You have no betting history to view.`)
+        if (!findings || _.isEmpty(findings)) {
+            QuickError(
+                message,
+                `You have no betting history to view. Try placing a bet first!`,
+            )
+            return false
         }
+        //# Count # of entries
         if (findings) {
+            entries = Object.keys(findings).length
             for (let i = 0; i < findings.length; i++) {
                 if (findings[i].betresult === `won`) {
+                    wonCount++
                     await betHistory.push({
-                        name: `${findings[i].dateofbet}`,
-                        value: `**Team:** ${findings[i].teamid}\n**Bet Amount:** $${findings[i].amount}\n:moneybag: **Profit:** $${findings[i].profit}\n:moneybag: **Payout:** $${findings[i].payout}`,
+                        name: `${findings[i].dateofbet} :white_check_mark: `,
+                        value: `**Team:** ${findings[i].teamid}\n**Bet Amount:**\`$${findings[i].amount}\`\n:moneybag: **Profit:** \`$${findings[i].profit}\`\n:moneybag: **Payout:** \`$${findings[i].payout}\``,
                         inline: true,
                     })
                 } else if (findings[i].betresult === 'lost') {
+                    lostCount++
                     await betHistory.push({
-                        name: `${findings[i].dateofbet}`,
-                        value: `**Team:** ${findings[i].teamid}\n**Bet Amount:** $${findings[i].amount}\n:pensive: **Lost Bet, no payout.**`,
+                        name: `:x: ${findings[i].dateofbet}`,
+                        value: `**Team:** ${findings[i].teamid}\n**Bet Amount:** \`$${findings[i].amount}\`\n:pensive: **Lost Bet, no payout.**`,
                         inline: true,
                     })
                 }
             }
         }
     })
-        .then(async function historyEmbed() {
+        .then(async function historyEmbed(resp) {
+            if (resp === false) {
+                return
+            }
             var userName = message?.author?.username || message?.user?.username
             let embedcontent = {
                 title: `${userName}'s Bet History`,
                 color: '#00FF00',
+                description: `Total Bets: \`${entries}\` | Won: \`${wonCount}\` | Lost: \`${lostCount}\``,
                 fields: betHistory,
             }
             await embedReply(message, embedcontent, interactionEph)
