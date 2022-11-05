@@ -4,10 +4,10 @@ import { apiReqLog, checkCompletedLog } from '#winstonLogger'
 import { checkProgress } from '../db/matchupOps/progress/checkProgress.js'
 import { closeLostBets } from '../db/betOps/closeBets/closeLostBets.js'
 import { closeWonBets } from '../db/betOps/closeBets/closeWonBets.js'
+import { dmMe } from '../bot_res/dmMe.js'
 import fetch from 'node-fetch'
 import { getShortName } from '../bot_res/getShortName.js'
 import { locateChannel } from '../db/gameSchedule/locateChannel.js'
-import { msgBotChan } from '#botUtil/msgBotChan'
 import { queueDeleteChannel } from '../db/gameSchedule/queueDeleteChannel.js'
 import { setProgress } from '../db/matchupOps/progress/setProgress.js'
 import stringifyObject from 'stringify-object'
@@ -144,9 +144,7 @@ export async function checkCompleted(compGameMonitor) {
                     )
                     return
                 })
-                await msgBotChan(
-                    `Closed Bets for ${value.home_team} vs ${value.away_team}`,
-                )
+                await dmMe(`Closed Bets for ${value.home_team} vs ${value.away_team}`)
             } else {
                 await checkCompletedLog.info(
                     `${fileName} Bets for Matchup: ${value.home_team} vs. ${value.away_team} are already being closed. This game will not be queued to be processed.`,
