@@ -96,7 +96,7 @@ export async function confirmBet(message, betslip, userId, interactionEph) {
             //# delete from pending
             await new pendingBet().deletePending(userId)
             var embObj = {
-                title: `Bet Cancellation`,
+                title: `:x: Bet Cancellation`,
                 description: `Your bet has been cancelled.`,
                 color: `#191919`,
                 isSilent: true,
@@ -108,7 +108,7 @@ export async function confirmBet(message, betslip, userId, interactionEph) {
     collector.on('end', async (collected, reason) => {
         if (reason === 'time') {
             var embObj = {
-                title: `Bet Cancellation`,
+                title: `:x: Bet Cancellation`,
                 description: `Your bet has been cancelled.`,
                 color: `#191919`,
                 followUp: true,
