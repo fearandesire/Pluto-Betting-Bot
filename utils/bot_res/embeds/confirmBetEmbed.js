@@ -9,37 +9,21 @@ import { MessageEmbed } from 'discord.js'
  */
 export function confirmBetEmbed(message, betslip, interactionEph) {
     var customerFooter =
-        'PLEASE NOTE: YOUR BET IS NOT CONFIRMED YET! | Acceptable Inputs include `yes`, `confirm` or `no`, `cancel`'
-    var isSilent = interactionEph ? true : false
+        'Please Note: If you do not confirm your bet within 60 seconds, it will be cancelled.'
     const confirmembed = new MessageEmbed()
-        .setColor('#0099ff')
-        .setTitle('Bet Slip Confirmation')
+        .setColor('#ffd600')
+        .setTitle(':receipt: Bet Pending Confirmation')
         .setDescription(
-            `Below, you will find your bet slip. Please confirm your bet slip by typing **yes** or **no**`,
-        )
-        .addFields(
-            {
-                name: `Bet Amount: `,
-                value: `$${betslip.amount}`,
-                inline: true,
-            },
-            {
-                name: `Team: `,
-                value: `${betslip.teamid}`,
-                inline: true,
-            },
-            {
-                name: `Potential Payout: `,
-                value: `$${betslip.payout}`,
-                inline: false,
-            },
-            {
-                name: `Potential Profit: `,
-                value: `$${betslip.profit}`,
-                inline: false,
-            },
+            `Please confirm your bet by typing: __***confirm,***__ / __***yes***__ / __***y***__
+            To cancel setting up this bet, type: __***cancel***__ / __***no***__ / __***n***__
+                    
+            **__Bet Details:__**
+            
+            Team: ${betslip.teamid} | Amount: \`$${betslip.amount}\` 
+            Profit: \`$${betslip.profit}\` | Payout: \`$${betslip.payout}\``,
         )
         .setTimestamp()
+        .setThumbnail(`${process.env.sportLogo}`)
         .setFooter({ text: customerFooter })
     if (interactionEph) {
         message.reply({ embeds: [confirmembed], ephemeral: true })

@@ -1,6 +1,7 @@
 import { addMinutes, format } from 'date-fns'
 
 import cron from 'node-cron'
+import { dmMe } from '../../bot_res/dmMe.js'
 import { msgBotChan } from '#botUtil/msgBotChan'
 
 /**
@@ -17,7 +18,7 @@ export async function queueDeleteChannel(gameChan) {
     var currDay = splitTime[2]
     var currMonth = splitTime[3]
     var cronString = `${newMin} ${newHour} ${currDay} ${currMonth} *`
-    await msgBotChan(`Deleting ${gameChan} in 30 minutes`)
+    await dmMe(`Deleting ${gameChan} in 30 minutes`)
     cron.schedule(cronString, async () => {
         await console.log(`Creating Cron Job to delete channel ${gameChan}`)
         try {
