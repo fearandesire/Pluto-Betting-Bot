@@ -42,6 +42,7 @@ export async function returnDailyOdds(message, interactionEph) {
         color: `#00ffff`,
         title: `Daily H2H Odds`,
         fields: oddsFields,
+        thumbnail: `${process.env.sportLogoNBA}`,
         footer:
             'Favored teams have a - negative number | Pluto - Designed by FENIX#7559',
     }
