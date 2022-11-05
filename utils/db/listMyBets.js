@@ -6,8 +6,6 @@ import { FileRunning } from '#botClasses/FileRunning'
 import { Log } from '#LogColor'
 import { QuickError } from '#config'
 import { db } from '#db'
-import { resolveMatchup } from '#cacheUtil/resolveMatchup'
-import { resolvePayouts } from '#utilBetOps/resolvePayouts'
 import stringifyObject from 'stringify-object'
 
 /**
@@ -56,15 +54,23 @@ export function listMyBets(userid, message) {
                         row,
                     )}`,
                 )
-                var oddsForTeam = await resolveMatchup(teamId, `odds`)
-                var potentialPayout = await resolvePayouts(oddsForTeam, amount)
-                var profit = row.profit || potentialPayout.profit
-                var payout = row.payout || potentialPayout.payout
-                container[`listBets-${userid}`].push(
-                    `**•** __Bet #${betId}__
+                // var oddsForTeam = await resolveMatchup(teamId, `odds`)
+                // var potentialPayout = await resolvePayouts(oddsForTeam, amount)
+                var profit = row.profit ?? `N/A`
+                var payout = row.payout ?? `N/A`
+                if (profit == `N/A` || payout == `N/A`) {
+                    container[`listBets-${userid}`].push(
+                        `**•** __Bet #${betId}__
+                Team: **${teamId}** | Amount: \`$${amount}\`
+                Profit: \`${profit}\` | Payout: \`${payout}\``,
+                    )
+                } else if (profit !== `N/A` || payout !== `N/A`) {
+                    container[`listBets-${userid}`].push(
+                        `**•** __Bet #${betId}__
             Team: **${teamId}** | Amount: \`$${amount}\`
             Profit: \`$${profit}\` | Payout: \`$${payout}\``,
-                )
+                    )
+                }
             } else {
                 Log.Red(`Something went wrong when listing bets for user ${userid}`)
                 return
@@ -106,6 +112,7 @@ export function listMyBets(userid, message) {
             Log.Green(
                 `[listMyBets.js] Storing User (${userid}) collected Array of Bet Information.`,
             )
+            delete container[`listBets-${userid}`]
             return
         })
         .catch((err) => {
@@ -115,7 +122,7 @@ export function listMyBets(userid, message) {
         })
         .finally(() => {
             //? Clearing the array from memory to preserve our memory usage
-            delete container[`listBets-${userid}`]
+
             return
         })
 }
