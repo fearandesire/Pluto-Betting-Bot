@@ -34,33 +34,52 @@ export function listMyBets(userid, message) {
     new FileRunning('listMyBets')
     //? This arrow function used in⁡⁣⁣⁢ 𝙙𝙗⁡⁣⁣⁢.𝙢𝙖𝙥⁡ is to declare what we want to do with ⁡⁢⁣⁣𝙚𝙖𝙘𝙝⁡ row of the query result (see pg-promise db.Map method).
 
-    db.map(`SELECT * FROM "NBAbetslips" WHERE userid = $1`, [userid], (row) => {
-        var amount = row.amount
-        var teamId = row.teamid
-        var betId = row.betid
-        var result = row.betresult
-        if (row == null || row.length == 0 || row.length < 1 || row == undefined) {
-            return
-        }
-        if (result.toLowerCase() == 'pending') {
-            Log.Red(`Pending bet found for user ${userid}`)
-            Log.Green(
-                `[listMyBets.js] Bets Collected for ${userid}:\n${stringifyObject(
-                    row,
-                )}`,
-            )
-            var profit = row.profit
-            var payout = row.payout
-            container[`listBets-${userid}`].push(
-                `**•** __Bet #${betId}__
+    db.map(
+        `SELECT * FROM "NBAbetslips" WHERE userid = $1`,
+        [userid],
+        async (row) => {
+            var amount = row.amount
+            var teamId = row.teamid
+            var betId = row.betid
+            var result = row.betresult
+            if (
+                row == null ||
+                row.length == 0 ||
+                row.length < 1 ||
+                row == undefined
+            ) {
+                return
+            }
+            if (result.toLowerCase() == 'pending') {
+                Log.Red(`Pending bet found for user ${userid}`)
+                Log.Green(
+                    `[listMyBets.js] Bets Collected for ${userid}:\n${stringifyObject(
+                        row,
+                    )}`,
+                )
+                // var oddsForTeam = await resolveMatchup(teamId, `odds`)
+                // var potentialPayout = await resolvePayouts(oddsForTeam, amount)
+                var profit = row.profit ?? `N/A`
+                var payout = row.payout ?? `N/A`
+                if (profit == `N/A` || payout == `N/A`) {
+                    container[`listBets-${userid}`].push(
+                        `**•** __Bet #${betId}__
+                Team: **${teamId}** | Amount: \`$${amount}\`
+                Profit: \`${profit}\` | Payout: \`${payout}\``,
+                    )
+                } else if (profit !== `N/A` || payout !== `N/A`) {
+                    container[`listBets-${userid}`].push(
+                        `**•** __Bet #${betId}__
             Team: **${teamId}** | Amount: \`$${amount}\`
             Profit: \`$${profit}\` | Payout: \`$${payout}\``,
-            )
-        } else {
-            Log.Red(`Something went wrong when listing bets for user ${userid}`)
-            return
-        }
-    })
+                    )
+                }
+            } else {
+                Log.Red(`Something went wrong when listing bets for user ${userid}`)
+                return
+            }
+        },
+    )
         .then(async function handleResp() {
             await Log.Green(
                 `[listMyBets.js] Collected User (${userid}) Bet Information [Memory - Stage 2]:`,
@@ -96,6 +115,7 @@ export function listMyBets(userid, message) {
             Log.Green(
                 `[listMyBets.js] Storing User (${userid}) collected Array of Bet Information.`,
             )
+            delete container[`listBets-${userid}`]
             return
         })
         .catch((err) => {
@@ -105,7 +125,6 @@ export function listMyBets(userid, message) {
         })
         .finally(() => {
             //? Clearing the array from memory to preserve our memory usage
-            delete container[`listBets-${userid}`]
             return
         })
 }
