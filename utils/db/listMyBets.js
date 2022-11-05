@@ -58,8 +58,8 @@ export function listMyBets(userid, message) {
                 )
                 var oddsForTeam = await resolveMatchup(teamId, `odds`)
                 var potentialPayout = await resolvePayouts(oddsForTeam, amount)
-                var profit = row.profit || potentialPayout
-                var payout = row.payout || potentialPayout
+                var profit = row.profit || potentialPayout.profit
+                var payout = row.payout || potentialPayout.payout
                 container[`listBets-${userid}`].push(
                     `**•** __Bet #${betId}__
             Team: **${teamId}** | Amount: \`$${amount}\`
