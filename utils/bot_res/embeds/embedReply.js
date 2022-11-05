@@ -117,7 +117,7 @@ export async function embedReply(message, embedContent, interactionEph) {
 export function QuickError(message, text, interactionEph) {
     const embed = new MessageEmbed()
         .setColor('#ff0000')
-        .setTitle('Error')
+        .setTitle(':triangular_flag_on_post: Error')
         .setDescription(text)
         .setTimestamp()
         .setFooter({ text: helpfooter })
