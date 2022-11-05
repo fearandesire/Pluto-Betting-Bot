@@ -2,19 +2,13 @@ import { Log, embedReply } from '#config'
 
 import { AssignBetID } from '#botUtil/AssignIDs'
 import { addNewBet } from '#utilBetOps/addNewBet'
-import flatcache from 'flat-cache'
 import { isBetIdExisting } from '../validation/isBetIdExisting.js'
-import merge from 'deepmerge'
 import { pendingBet } from '../validation/pendingBet.js'
 import { confirmBetEmbed as pleaseConfirmEmbed } from '../../bot_res/embeds/confirmBetEmbed.js'
 import { setupBetLog } from '#winstonLogger'
 import { sortBalance } from '#utilCurrency/sortBalance'
 import stringifyObject from 'stringify-object'
 
-let allbetSlipsCache = flatcache.create(
-    `allbetSlipsCache.json`,
-    './cache/betslips',
-)
 /**
  * @module confirmBet -
  * ⁡⁣⁣⁢Creates a message listener & collection for the user to confirm their bet. ⁡⁣⁣⁢The listener will be active for 60 seconds.⁡
@@ -68,20 +62,6 @@ export async function confirmBet(message, betslip, userId, interactionEph) {
             setupBetLog.info(
                 `Betslip confirmed for ${userId}\n${stringifyObject(betslip)}`,
             )
-            //? If user already has collected their list of bets via 'listBets', we need to allow them to retrieve a new list since they are adding to it.
-            var cacheTitle = `${betslip.userid}`
-            await allbetSlipsCache.setKey(`${cacheTitle}-hasBetsEmbed`, false)
-            if (allbetSlipsCache.getKey(`${cacheTitle}-activebetslips`) === null) {
-                await allbetSlipsCache.setKey(`${cacheTitle}-activebetslips`, betslip)
-            } else {
-                //# utilize merge
-                var currentBets = allbetSlipsCache.getKey(
-                    `${cacheTitle}-activebetslips`,
-                )
-                var newBets = merge(currentBets, betslip)
-                await allbetSlipsCache.setKey(`${cacheTitle}-activebetslips`, newBets)
-            }
-            await allbetSlipsCache.save(true)
             await addNewBet(message, betslip, interactionEph) //! Add bet to active bet list in DB [User will receive a response within this function]
             await sortBalance(message, betslip.userid, betslip.amount, 'sub') //! Subtract users bet amount from their balance
             return

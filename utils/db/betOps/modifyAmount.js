@@ -1,6 +1,5 @@
 import { Log } from '#LogColor'
 import { db } from '#db'
-import { flatcache } from '#config'
 
 /**
  * @module modifyAmount -
@@ -39,20 +38,6 @@ export function modifyAmount(message, userid, betid, amount, interactionEph) {
             [amount, userid, betid],
         )
     }).then(() => {
-        var allowCollection = async (userid) => {
-            let allbetSlipsCache = flatcache.create(
-                `allbetSlipsCache.json`,
-                './cache/betslips',
-            )
-            await allbetSlipsCache.setKey(`${userid}-hasBetEmbed`, false)
-            allbetSlipsCache.save(true)
-            await allbetSlipsCache.setKey(`${userid}-activeBetslips`, null)
-            allbetSlipsCache.save(true)
-            Log.BrightBlue(
-                `${userid}'s betslips have been locally cleared - We will collect their bets the next time they request to view them`,
-            )
-        }
-        allowCollection(userid)
         Log.Green(
             `[modifyAmount.js] Successfully modified bet #${betid} to $${amount}.`,
         )

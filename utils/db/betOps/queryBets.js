@@ -1,7 +1,6 @@
-import { flatcache, QuickError } from '#config'
-
-import { db } from '#db'
 import { Log } from '#LogColor'
+import { QuickError } from '#config'
+import { db } from '#db'
 
 /**
  * @module queryBets -
@@ -16,13 +15,9 @@ import { Log } from '#LogColor'
  * @references {@link cancelBet.js}
  */
 export async function queryBets(message, userid, betid) {
-    var allbetSlipsCache = await flatcache.load(
-        'allbetSlipsCache.json',
-        './cache/betslips',
-    )
     db.tx('queryCancelBet', async (t) => {
         const getBetCount = await t.manyOrNone(
-            `SELECT count(*) FROM betslips WHERE userid = $1`,
+            `SELECT count(*) FROM "betslips" WHERE userid = $1`,
             [userid],
             (c) => c.count,
         )
@@ -42,11 +37,11 @@ export async function queryBets(message, userid, betid) {
             //? Since we require multiple transactions, we assign the necesary info transactions variables so we can call upon them.
             //* We utilize async functions to grab both the bet amount and the user's balance, and finally updating the balance with the math complete.
             const betData = await t.oneOrNone(
-                'SELECT amount FROM betslips WHERE userid = $1 AND betid = $2',
+                'SELECT amount FROM "betslips" WHERE userid = $1 AND betid = $2',
                 [userid, betid],
             )
             const userBal = await t.oneOrNone(
-                `SELECT balance FROM currency WHERE userid = $1`,
+                `SELECT balance FROM "currency" WHERE userid = $1`,
                 [userid],
             )
             const placedBetAmount = parseInt(betData.amount)
@@ -54,26 +49,24 @@ export async function queryBets(message, userid, betid) {
             const newBal = currentUserBal + placedBetAmount
             await t.batch([
                 await t.oneOrNone(
-                    `UPDATE currency SET balance = $1 WHERE userid = $2`,
+                    `UPDATE "currency" SET balance = $1 WHERE userid = $2`,
                     [newBal, userid],
                 ),
                 await t.oneOrNone(
-                    `DELETE FROM activebets WHERE userid = $1 AND betid = $2`,
+                    `DELETE FROM "activebets" WHERE userid = $1 AND betid = $2`,
                     [
-                        //? Delete from activebets table
+                        //? Delete from "NBAactivebets" table
                         userid,
                         betid,
                     ],
                 ),
                 await t.oneOrNone(
-                    `DELETE FROM betslips WHERE userid = $1 AND betid = $2`,
+                    `DELETE FROM "betslips" WHERE userid = $1 AND betid = $2`,
                     [userid, betid],
                 ),
             ])
-            await allbetSlipsCache.setKey(`${userid}-hasBetsEmbed`, false)
-            await allbetSlipsCache.save(true)
             Log.Green(
-                `[queryBets.js] User ${userid} has cancelled bet ${betid}\nSuccessfully updated their balance, and removed the bet from the activebets & betslips table`,
+                `[queryBets.js] User ${userid} has cancelled bet ${betid}\nSuccessfully updated their balance, and removed the bet from the "NBAactivebets" & "NBAbetslips" table`,
             )
         }
     }).then((data) => {
