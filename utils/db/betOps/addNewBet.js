@@ -33,9 +33,6 @@ export function addNewBet(message, betslip, interactionEph) {
                 [betslip.teamid],
             )
             .then((data) => {
-                console.log(data)
-                console.log(betslip)
-                console.log(`--`)
                 container.temp_matchId = data.matchid
                 return t.none(
                     `INSERT INTO betslips (userid, teamid, betid, amount, matchid, dateofbet, betresult) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
@@ -70,12 +67,23 @@ export function addNewBet(message, betslip, interactionEph) {
                 setupBetLog.info(`Successfully added betslip into the database.`)
                 var embedcontent = {
                     //? Compiling the properties of the embed to return to the user: confirming their bet has been added to DB
-                    title: `Bet #${betslip.betid} Slip Confirmed`,
-                    description: `Congratulations <@${betslip.userid}>! Your bet has been placed! You may view all of your active bets by typing: \`/mybets\`\n\n**__Betslip Details__**\n**Bet ID:** ${betslip.betid}\n**Team:** ${betslip.teamid}\n**Amount:** $${betslip.amount}`,
+                    title: `:ticket: Bet confirmed!`,
+                    description: `<@${betslip.userid}>, your bet is locked in :lock:
+                    *To view all of your active bets, type \`/mybets\`
+                    To view your history of betting with Pluto, type \`/bethistory\`*
+                    
+                    __**:money_mouth: Details** __
+                    **Bet ID:** ${betslip.betid}
+                    **Team:** ${betslip.teamid}
+                    **Amount:** \`$${betslip.amount}\`
+                    **Profit:** \`$${betslip.profit}\`
+                    **Payout:** \`$${betslip.payout}\`
+                    `,
                     color: '#00FF00',
                     //footer: 'For more commands, type: ?help',
                     silent: isSilent,
                     target: `reply`,
+                    thumbnail: `${process.env.sportLogo}`,
                 }
                 if (isSilent === true) {
                     return embedReply(message, embedcontent, true)

@@ -32,10 +32,10 @@ let allbetSlipsCache = flatcache.create(
  */
 
 export async function confirmBet(message, betslip, userId, interactionEph) {
-    //? Sending Embed w/ bet details for the user to confirm bet
+    //& Sending Embed w/ bet details for the user to confirm bet
     await pleaseConfirmEmbed(message, betslip, interactionEph)
     //? Assigning a filter for the message collector to listen for. The colllection will identify the user by their ID
-    //# for some reason, this wont work. Assigned a manaul check for the ID instead.
+    //# for some reason, this wont work. Assigned a different check for the ID instead[ msgIsFromUser ]
     const filter = (user) => {
         return user.id === userId
     }
@@ -47,11 +47,13 @@ export async function confirmBet(message, betslip, userId, interactionEph) {
     })
     //? Using the '.on' event to listen for the user to confirm the bet
     collector.on('collect', async (message) => {
+        //# Var for checking if the msg received is from the user who placed the bet
+        let msgIsFromUser
+        msgIsFromUser = message.author.id === userId
+        var acceptableAnswers = ['confirm', 'yes', 'y']
         if (
-            (message.content.toLowerCase() === 'yes' &&
-                message.author.id === userId) ||
-            (message.content.toLowerCase() === 'confirm' &&
-                message.author.id === userId)
+            acceptableAnswers.includes(message.content.toLowerCase()) &&
+            msgIsFromUser
         ) {
             collector.stop()
             //# delete from pending
@@ -84,20 +86,19 @@ export async function confirmBet(message, betslip, userId, interactionEph) {
             await sortBalance(message, betslip.userid, betslip.amount, 'sub') //! Subtract users bet amount from their balance
             return
         }
+        var declineAnswer = [`no`, `n`, `cancel`]
         if (
-            (message.content.toLowerCase() === 'no' &&
-                message.author.id === userId) ||
-            (message.content.toLowerCase() === 'cancel' &&
-                message.author.id === userId)
+            declineAnswer.includes(message.content.toLowerCase()) &&
+            msgIsFromUser
         ) {
             collector.stop()
             setupBetLog.info(`Betslip cancelled for ${userId}`)
             //# delete from pending
             await new pendingBet().deletePending(userId)
             var embObj = {
-                title: `Bet Cancellation`,
+                title: `:x: Bet Cancellation`,
                 description: `Your bet has been cancelled.`,
-                color: `#408080`,
+                color: `#191919`,
                 isSilent: true,
             }
             await embedReply(message, embObj, true)
@@ -107,10 +108,9 @@ export async function confirmBet(message, betslip, userId, interactionEph) {
     collector.on('end', async (collected, reason) => {
         if (reason === 'time') {
             var embObj = {
-                title: `Bet Cancellation`,
+                title: `:x: Bet Cancellation`,
                 description: `Your bet has been cancelled.`,
-                color: `#408080`,
-                isSilent: true,
+                color: `#191919`,
                 followUp: true,
             }
             //# delete from pending
