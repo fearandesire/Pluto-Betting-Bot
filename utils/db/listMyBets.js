@@ -84,7 +84,7 @@ export function listMyBets(userid, message) {
                 color: '#00FF00',
                 description: joinedBetsArr,
                 target: `reply`,
-                thumbnail: `${process.env.sportLogoNBA}`,
+                thumbnail: `${process.env.sportLogo}`,
                 footer: `The payout and profit numbers are potential values, as these games have yet to be completed.`,
             }
             await Log.Yellow(`Sending ${userid} their betslips - Embed`)
