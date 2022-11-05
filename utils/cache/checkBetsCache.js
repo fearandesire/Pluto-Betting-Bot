@@ -1,6 +1,4 @@
-import { Log, QuickError } from '#config'
-
-import { NoDataFoundError } from '#botClasses/Errors'
+import { QuickError } from '#config'
 import { hasActiveBets } from '#utilValidate/hasActiveBets'
 import { listMyBets } from '#utilDB/listMyBets'
 
@@ -14,18 +12,14 @@ import { listMyBets } from '#utilDB/listMyBets'
 export async function checkBetsCache(message, userId, interactionEph) {
     var user = userId
     //? Validate if user has any active bets
-    await hasActiveBets(user).then((data) => {
+    await hasActiveBets(user).then(async (data) => {
         if (data.length > 0) {
-            Log.Yellow(`[hasActiveBet.js] User ${user} has active bets`)
+            await listMyBets(user, message)
             return true
         } else {
             QuickError(message, 'You have no active bets', interactionEph)
-            throw new NoDataFoundError(
-                `User ${user} has no active bets`,
-                'listBets.js',
-            )
+            return
         }
     })
-    await listMyBets(user, message)
     return
 }
