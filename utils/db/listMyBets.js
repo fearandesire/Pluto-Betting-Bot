@@ -42,9 +42,7 @@ export function listMyBets(userid, message) {
         var betid = row.betid
         var result = row.betresult
         if (row == null || row.length == 0 || row.length < 1 || row == undefined) {
-            throw Log.Error(
-                `[listMyBets.js] No bets found for user ${userid} [init stage]`,
-            )
+            return
         }
         if (result.toLowerCase() == 'pending') {
             Log.Red(`Pending bet found for user ${userid}`)
