@@ -1,8 +1,7 @@
-import { deleteBetFromArray } from '#utilBetOps/deleteBetArr'
+import { Command } from '@sapphire/framework'
 import { queryBets } from '#utilBetOps/queryBets'
 import { validateUser } from '#utilValidate/validateExistingUser'
 import { verifyBetAuthor } from '#utilValidate/verifyBetAuthor'
-import { Command } from '@sapphire/framework'
 import { verifyCancellation } from '../../utils/db/betOps/verifyCancellation.js'
 
 export class cancelBetSlash extends Command {
@@ -56,7 +55,6 @@ export class cancelBetSlash extends Command {
                 return
             } else {
                 await queryBets(interaction, userid, betId) //? Query DB & delete specified bet
-                await deleteBetFromArray(interaction, userid, betId) //? Update our local storage with the new betslip for the user (for displaying bet info to user)
             }
         })
     }
