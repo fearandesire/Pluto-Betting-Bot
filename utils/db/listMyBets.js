@@ -1,10 +1,10 @@
 /** @module listMyBets*/
 
-import { Memory_Betslips as betslipsMem, embedReply, flatcache } from '#config'
+import { container, embedReply, flatcache } from '#config'
 
 import { FileRunning } from '#botClasses/FileRunning'
 import { Log } from '#LogColor'
-import { QuickError } from '#embed'
+import { QuickError } from '#config'
 import { db } from '#db'
 import stringifyObject from 'stringify-object'
 
@@ -27,16 +27,14 @@ import stringifyObject from 'stringify-object'
  *
  */
 export function listMyBets(userid, message) {
-    let allbetSlipsCache = flatcache.create(
-        `allbetSlipsCache.json`,
-        './cache/betslips',
-    )
+    container[`listBets-${userid}`] = []
     new FileRunning('listMyBets')
     //? This arrow function used in⁡⁣⁣⁢ 𝙙𝙗⁡⁣⁣⁢.𝙢𝙖𝙥⁡ is to declare what we want to do with ⁡⁢⁣⁣𝙚𝙖𝙘𝙝⁡ row of the query result (see pg-promise db.Map method).
-    db.map(`SELECT * FROM betslips WHERE userid = $1`, [userid], (row) => {
+
+    db.map(`SELECT * FROM "betslips" WHERE userid = $1`, [userid], (row) => {
         var amount = row.amount
-        var teamID = row.teamid
-        var betid = row.betid
+        var teamId = row.teamid
+        var betId = row.betid
         var result = row.betresult
         if (row == null || row.length == 0 || row.length < 1 || row == undefined) {
             return
@@ -48,27 +46,12 @@ export function listMyBets(userid, message) {
                     row,
                 )}`,
             )
-            betslipsMem[`${userid}`] = betslipsMem[`${userid}`] || {}
-            betslipsMem[`${userid}`].betslip = betslipsMem[`${userid}`].betslip || [] //? Creating an array for the objects (bets info) to be pushed into
-            betslipsMem[`${userid}`].betslip.push(
-                //? Bet information is placed into the 'betslip' array in this format.
-                //? The way Discord will display the information, each object here will be it's own column.
-                //? This is important when it comes to manipulating the array for cancellations/modifying bets.
-                {
-                    name: 'Bet ID',
-                    value: `${betid}`,
-                    inline: true,
-                },
-                {
-                    name: 'Amount',
-                    value: `$${amount}`,
-                    inline: true,
-                },
-                {
-                    name: 'Team',
-                    value: `${teamID} \n \u200B`, //? `\𝙪𝟮𝟬𝟬𝘽` is a zero-width space (blank space) to placed @ the end to create space between each bet list
-                    inline: true,
-                },
+            var profit = row.profit
+            var payout = row.payout
+            container[`listBets-${userid}`].push(
+                `**•** __Bet #${betId}__
+            Team: **${teamId}** | Amount: \`$${amount}\`
+            Profit: \`$${profit}\` | Payout: \`$${payout}\``,
             )
         } else {
             Log.Red(`Something went wrong when listing bets for user ${userid}`)
@@ -76,10 +59,10 @@ export function listMyBets(userid, message) {
         }
     })
         .then(async function handleResp() {
-            Log.Green(
+            await Log.Green(
                 `[listMyBets.js] Collected User (${userid}) Bet Information [Memory - Stage 2]:`,
             )
-            Log.BrightBlue(stringifyObject(betslipsMem[`${userid}`].betslip))
+            await Log.BrightBlue(container[`listBets-${userid}`])
             var userName = message?.author?.username
                 ? message?.author?.username
                 : message?.user?.id
@@ -91,24 +74,21 @@ export function listMyBets(userid, message) {
                     : false
             var title
             if (isSelf == true) {
-                title = `Your Active Bet Slips :tickets: `
+                title = `:tickets: Your Active Bets`
             } else {
                 title = `${userName}'s Active Bet Slips`
             }
+            var joinedBetsArr = container[`listBets-${userid}`].join('\n───────\n')
             var embedcontent = {
                 title: title,
                 color: '#00FF00',
-                fields: betslipsMem[`${userid}`].betslip,
+                description: joinedBetsArr,
                 target: `reply`,
+                thumbnail: `${process.env.sportLogoNBA}`,
+                footer: `The payout and profit numbers are potential values, as these games have yet to be completed.`,
             }
             await Log.Yellow(`Sending ${userid} their betslips - Embed`)
             await embedReply(message, embedcontent)
-            await allbetSlipsCache.setKey(
-                `${userid}-activeBetslips`,
-                betslipsMem[`${userid}`].betslip,
-            )
-            await allbetSlipsCache.setKey(`${userid}-hasBetsEmbed`, true)
-            await allbetSlipsCache.save(true)
             //!SECTION
             Log.Green(
                 `[listMyBets.js] Storing User (${userid}) collected Array of Bet Information.`,
@@ -122,6 +102,7 @@ export function listMyBets(userid, message) {
         })
         .finally(() => {
             //? Clearing the array from memory to preserve our memory usage
-            delete betslipsMem[`${userid}`]
+            delete container[`listBets-${userid}`]
+            return
         })
 }

@@ -19,7 +19,7 @@ export function confirmBetEmbed(message, betslip, interactionEph) {
                     
             **__Bet Details:__**
             
-            Team: ${betslip.teamid} | Amount: \`$${betslip.amount}\` 
+            Team: **${betslip.teamid}** | Amount: \`$${betslip.amount}\` 
             Profit: \`$${betslip.profit}\` | Payout: \`$${betslip.payout}\``,
         )
         .setTimestamp()
