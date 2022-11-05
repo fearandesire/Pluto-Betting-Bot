@@ -23,12 +23,12 @@ export async function returnWeeklyOdds(message, interactionEph) {
         var hOdds = match.teamoneodds
         var aOdds = match.teamtwoodds
         var matchupId = match.matchid
-        var dateTitle = match.dateofmatchup
+        var startTime = match.legiblestart
         let oddsFormat = await formatOdds(hOdds, aOdds)
         hOdds = oddsFormat.homeOdds
         aOdds = oddsFormat.awayOdds
         oddsFields.push({
-            name: `• ${dateTitle}`,
+            name: `• ${startTime}`,
             value: `**${hTeam}**\nOdds: *${hOdds}*\n**${aTeam}**\nOdds: *${aOdds}*\n──────`,
             inline: true,
         })
@@ -40,7 +40,7 @@ export async function returnWeeklyOdds(message, interactionEph) {
     }
     console.log(oddsFields)
     var embedObj = {
-        title: `Weekly H2H Odds`,
+        title: `:mega: Weekly H2H Odds`,
         fields: oddsFields,
         thumbnail: `${process.env.sportLogo}`,
         footer:
