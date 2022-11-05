@@ -40,7 +40,7 @@ export async function returnDailyOdds(message, interactionEph) {
     console.log(oddsFields)
     var embedObj = {
         color: `#00ffff`,
-        title: `:scroll: Daily H2H Odds`,
+        title: `:mega: Daily H2H Odds`,
         fields: oddsFields,
         thumbnail: `${process.env.sportLogoNBA}`,
         footer:
