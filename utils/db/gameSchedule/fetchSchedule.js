@@ -67,6 +67,7 @@ export async function fetchSchedule(interaction) {
     } else {
         var embObj = {
             title: `Game Channels Queue`,
+            color: `#ff00ff`,
             description: `Successfully queued game channels to be created for the games in the day at their scheduled times :white_check_mark: `,
             footer: `${container.numOfMatchups} game channels will be created | This is based on the current matchups in the database.`,
             target: `modBotSpamID`,

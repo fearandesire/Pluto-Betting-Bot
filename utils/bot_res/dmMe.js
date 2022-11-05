@@ -6,11 +6,13 @@ import { SapDiscClient } from '#main'
  */
 
 export async function dmMe(message, embed) {
+    console.log(`sending DM`)
     var userid = process.env.botDevID
-    var botOwner = await SapDiscClient.users.fetch(`${userid}`)
-    if (embed) {
-        botOwner.send({ embeds: [embed] })
-    } else {
-        botOwner.send(message)
-    }
+    await SapDiscClient.users.fetch(`${userid}`).then((user) => {
+        if (embed) {
+            user.send({ embeds: [embed] })
+        } else {
+            user.send(message)
+        }
+    })
 }
