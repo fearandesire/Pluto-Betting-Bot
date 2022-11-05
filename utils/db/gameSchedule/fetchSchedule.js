@@ -2,10 +2,9 @@
 
 import { Log, _, container, flatcache } from '#config'
 
-import { MessageEmbed } from 'discord.js'
 import { cronMath } from './cronMath.js'
 import { db } from '#db'
-import { embedReply } from '#embed'
+import { dmMe } from '../../bot_res/dmMe.js'
 import { msgBotChan } from '#botUtil/msgBotChan'
 import { resolveToday } from '#dateUtil/resolveToday'
 import { scheduleChannels } from './scheduleChannels.js'
@@ -66,27 +65,21 @@ export async function fetchSchedule(interaction) {
         )
         return
     } else {
-        var embed = new MessageEmbed()
-            .setTitle(`Game Channels Queue`)
-            .setDescription(
-                `Successfully queued game channels to be created for the games in the day at their scheduled times :white_check_mark: `,
-            )
-            .setFooter(
-                `${container.numOfMatchups} game channels will be created | This is based on the current matchups in the database.`,
-            )
-            .setColor(`#00FF00`)
         var embObj = {
             title: `Game Channels Queue`,
+            color: `#ff00ff`,
             description: `Successfully queued game channels to be created for the games in the day at their scheduled times :white_check_mark: `,
             footer: `${container.numOfMatchups} game channels will be created | This is based on the current matchups in the database.`,
             target: `modBotSpamID`,
         }
         cache.setKey(`hasSent-${today}`, true)
         cache.save()
+        //# This function can be called from a command, or on start-up. So no interaction would indicate that it was called from start-up.
         if (!interaction) {
-            await embedReply(null, embObj)
+            await dmMe(null, embObj)
         } else {
-            await interaction.followUp({ embeds: [embed] })
+            delete embObj.target
+            await interaction.followUp({ embeds: [embObj] })
         }
         container.fetchedAlready = true
         Log.Green(
