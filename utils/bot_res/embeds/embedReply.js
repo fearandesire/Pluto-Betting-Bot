@@ -25,6 +25,7 @@ export async function embedReply(message, embedContent, interactionEph) {
     var target = embedContent?.target || 'reply'
     var isSilent = embedContent?.silent || false
     var followUp = embedContent?.followUp || false
+    var thumbnail = embedContent?.thumbnail || ``
     //debug: console.log(`EMBED OBJECT: ===>>`, embedContent)
     var reqChan
 
@@ -33,6 +34,7 @@ export async function embedReply(message, embedContent, interactionEph) {
         const embedWithFields = new MessageEmbed()
             .setColor(embedColor)
             .setTitle(embedTitle)
+            .setThumbnail(thumbnail)
             .setDescription(embedDescription)
             .addFields(...embedContent.fields)
             .setTimestamp()
@@ -78,6 +80,7 @@ export async function embedReply(message, embedContent, interactionEph) {
         const noFieldsEmbed = new MessageEmbed()
             .setColor(embedColor)
             .setTitle(embedTitle)
+            .setThumbnail(thumbnail)
             .setDescription(embedDescription)
             .setTimestamp()
             .setFooter({ text: embedFooter })
