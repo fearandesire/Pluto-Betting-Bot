@@ -1,5 +1,5 @@
 import { Command } from '@sapphire/framework'
-import { msgBotChan } from '#botUtil/msgBotChan'
+import { dmMe } from '../../utils/bot_res/dmMe.js'
 import { removeAllMatchups } from '#utilMatchups/removeAllMatchups'
 
 export class removeAllMatchupsSlash extends Command {
@@ -33,9 +33,13 @@ export class removeAllMatchupsSlash extends Command {
             return
         }
         var userid = interaction.user.id
-        await msgBotChan(
+        await dmMe(
             `Clearing all matchups -- Requested by ${interaction.user.username}`,
         )
+        await interaction.reply({
+            content: `Clearing all matchups in the database.`,
+            ephemeral: true,
+        })
         await removeAllMatchups()
         return
     }

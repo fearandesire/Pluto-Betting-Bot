@@ -52,7 +52,7 @@ export async function fetchSchedule(interaction) {
             }
         })
     if (checkDB == false) {
-        await msgBotChan(
+        await dmMe(
             `No active matchups found in the database, no games have been scheduled.`,
         )
         return

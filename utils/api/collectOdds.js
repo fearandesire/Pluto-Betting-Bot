@@ -13,11 +13,11 @@ import _ from 'lodash'
 import { assignMatchID } from '#botUtil/AssignIDs'
 import { collectOddsLog } from '../logging.js'
 import { createMatchups } from '#utilMatchups/createMatchups'
+import { dmMe } from '../bot_res/dmMe.js'
 import fetch from 'node-fetch'
 import flatcache from 'flat-cache'
 import { gameDaysCache } from '../cache/gameDaysCache.js'
 import { isExactMatchup } from '../db/validation/isExactMatchup.js'
-import { msgBotChan } from '#botUtil/msgBotChan'
 import { resolveDayName } from '../bot_res/resolveDayName.js'
 import { resolveIso } from '#dateUtil/resolveIso'
 import { resolveToday } from '#dateUtil/resolveToday'
@@ -79,7 +79,7 @@ export async function collectOdds(message) {
             collectOddsLog.info(
                 `Matchup already exists in DB: ${value.home_team} vs ${value.away_team} on date: ${gameDate} -- This matchup will not be stored.`,
             )
-            await msgBotChan(
+            await dmMe(
                 `**${value.home_team} vs ${value.away_team}** on date: **${gameDate}** already exists in DB -- This matchup will __not__ be stored.`,
             )
             continue
@@ -198,7 +198,7 @@ export async function collectOdds(message) {
         }
     }
     if (_.isEmpty(matchups)) {
-        await msgBotChan(
+        await dmMe(
             `Issue occured while collecting & storing matchups. No Information has been stored.`,
             `error`,
         )
@@ -229,7 +229,7 @@ export async function collectOdds(message) {
     }
     if (message == null) {
         setTimeout(() => {
-            msgBotChan(
+            dmMe(
                 `Odds stored into cache & db. (# Of Matches: ${container.matchupCount})`,
             )
         }, 10000)

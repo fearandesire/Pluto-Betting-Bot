@@ -1,5 +1,6 @@
 import { Log } from '#config'
-import { msgBotChan } from '#botUtil/msgBotChan'
+import { dmMe } from '../dmMe.js'
+
 /**
  * @class NoDataFound -
  * Class to handle errors when no data is found
@@ -16,7 +17,7 @@ export class NoDataFoundError extends Error {
             `[${this.filename}] UNABLE TO RETRIEVE ANY DATA:\n${this.message}`,
         )
         if (this.errToSpam !== `no`) {
-            msgBotChan(this.message, `error`)
+            dmMe(this.message, `error`)
         }
     }
 }
