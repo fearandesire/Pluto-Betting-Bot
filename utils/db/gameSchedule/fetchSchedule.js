@@ -76,7 +76,9 @@ export async function fetchSchedule(interaction) {
         cache.save()
         //# This function can be called from a command, or on start-up. So no interaction would indicate that it was called from start-up.
         if (!interaction) {
-            await dmMe(null, embObj)
+            await dmMe(
+                `${container.numOfMatchups} game channels have been queued to be created for the day.`,
+            )
         } else {
             delete embObj.target
             await interaction.followUp({ embeds: [embObj] })
