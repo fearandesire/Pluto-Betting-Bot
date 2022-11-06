@@ -118,6 +118,8 @@ export async function collectOdds(message) {
                 home_odds = 'n/a'
                 away_odds = 'n/a'
             }
+            //# identifier for the game via the API
+            var idApi = value.id
             //# date-fns to parse the ISO, get the start time & format it for Cron Jobs
             var gameTime = parseISO(isoDate)
             var startHour = getHours(gameTime)
@@ -177,6 +179,7 @@ export async function collectOdds(message) {
                 startTimeISO,
                 cronStartTime,
                 legibleStartTime,
+                idApi,
             )
             //# game channel creation
             await scheduleChannels(
