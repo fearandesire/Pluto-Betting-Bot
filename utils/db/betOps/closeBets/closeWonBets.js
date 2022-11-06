@@ -1,5 +1,6 @@
 import { Log, NFL_ACTIVEMATCHUPS } from '#config'
 
+import _ from 'lodash'
 import { closeBetLog } from '../../../logging.js'
 import { db } from '#db'
 import { resolvePayouts } from '#utilBetOps/resolvePayouts'
@@ -21,7 +22,7 @@ export async function closeWonBets(winningTeam, homeOrAway, losingTeam) {
                 `SELECT * FROM "${NFL_ACTIVEMATCHUPS}" WHERE teamone = $1 AND teamtwo = $2 OR teamone = $2 AND teamtwo = $1`,
                 [winningTeam, losingTeam],
             ) // Query DB for matchup info
-            if (!getMatchInfo) {
+            if (!getMatchInfo || _.isEmpty(getMatchInfo)) {
                 await closeBetLog.error(`No match found for ${winningTeam}`)
                 return reject(`No match found for ${winningTeam}`)
             }
