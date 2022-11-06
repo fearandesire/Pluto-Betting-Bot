@@ -26,20 +26,20 @@ export async function scheduleChannels(
     awayTeam = await getShortName(awayTeam)
     await schedChanMonitor.ping({
         state: `run`,
-        message: `Creating a Cron Job to create a game channel for: ${homeTeam} vs ${awayTeam} | Cron Time: ${cronStartTime}`,
+        message: `Creating a Cron Job to create a game channel for: ${awayTeam} vs ${homeTeam} | Cron Time: ${cronStartTime}`,
     })
     await Log.Yellow(
-        `Creating a Cron Job to create a game channel for: ${homeTeam} vs ${awayTeam} | Cron Time: ${cronStartTime}`,
+        `Creating a Cron Job to create a game channel for: ${awayTeam} vs ${homeTeam} | Cron Time: ${cronStartTime}`,
     )
     await scheduleChanLog.info(
-        `Creating a Cron Job to create a game channel for: ${homeTeam} vs ${awayTeam} | Cron Time: ${cronStartTime}`,
+        `Creating a Cron Job to create a game channel for: ${awayTeam} vs ${homeTeam} | Cron Time: ${cronStartTime}`,
     )
     var createCron = async () => {
         await cron.schedule(
-            `${homeTeam} vs ${awayTeam}`,
+            `${awayTeam} vs ${homeTeam}`,
             `${cronStartTime}`,
             async () => {
-                await createChannel(homeTeam, awayTeam)
+                await createChannel(awayTeam, homeTeam)
             },
             { timezone: 'America/New_York' },
         )
@@ -47,15 +47,15 @@ export async function scheduleChannels(
     await createCron().then(async () => {
         await schedChanMonitor.ping({
             state: `complete`,
-            message: `Successfully created Cron Job to create a game channel for: ${homeTeam} vs ${awayTeam} | Cron Time: ${cronStartTime}`,
+            message: `Successfully created Cron Job to create a game channel for: ${awayTeam} vs ${homeTeam} | Cron Time: ${cronStartTime}`,
         })
         await Log.Green(
-            `Successfully created Cron Job to create a game channel for: ${homeTeam} vs ${awayTeam} | Cron Time: ${cronStartTime}`,
+            `Successfully created Cron Job to create a game channel for: ${awayTeam} vs ${homeTeam} | Cron Time: ${cronStartTime}`,
         )
         await scheduleChanLog.info(
-            `Successfully created Cron Job to create a game channel for: ${homeTeam} vs ${awayTeam} | Cron Time: ${cronStartTime}`,
+            `Successfully created Cron Job to create a game channel for: ${awayTeam} vs ${homeTeam} | Cron Time: ${cronStartTime}`,
         )
-        gamesScheduled.push(`• ${homeTeam} vs ${awayTeam} | ${legibleStartTime}`)
+        gamesScheduled.push(`• ${awayTeam} vs ${homeTeam} | ${legibleStartTime}`)
         return
     })
 }

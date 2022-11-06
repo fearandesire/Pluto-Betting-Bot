@@ -13,7 +13,7 @@ const gameCreateMonitor = new cron.Monitor('Create Game Channels')
  * Create game channel in the live games category
  */
 
-export async function createChannel(homeTeam, awayTeam) {
+export async function createChannel(awayTeam, homeTeam) {
     createChanLog.info(
         `Creating Game Channel | Title: ${awayTeam} at ${homeTeam}`,
     )
