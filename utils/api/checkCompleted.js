@@ -1,4 +1,4 @@
-import { Log, NFL_SCORE, container } from '#config'
+import { Log, NFL_SCORE, _, container } from '#config'
 import { apiReqLog, checkCompletedLog } from '#winstonLogger'
 
 import { checkProgress } from '../db/matchupOps/progress/checkProgress.js'
@@ -7,6 +7,7 @@ import { closeWonBets } from '../db/betOps/closeBets/closeWonBets.js'
 import { dmMe } from '../bot_res/dmMe.js'
 import fetch from 'node-fetch'
 import { getShortName } from '../bot_res/getShortName.js'
+import { idApiExisting } from '../db/validation/idApiExisting.js'
 import { locateChannel } from '../db/gameSchedule/locateChannel.js'
 import { queueDeleteChannel } from '../db/gameSchedule/queueDeleteChannel.js'
 import { setProgress } from '../db/matchupOps/progress/setProgress.js'
@@ -51,7 +52,9 @@ export async function checkCompleted(compGameMonitor) {
     await checkCompletedLog.info(stringifyObject(compResults))
     let skippedGames = []
     for await (let [key, value] of Object.entries(compResults)) {
-        if (value.completed === true) {
+        var idApi = value.id
+        //# check for API ID in the DB
+        if (value.completed === true && !_.isEmpty(await idApiExisting(idApi))) {
             await checkCompletedLog.info(
                 `Completed Game Found in API: ${value.home_team} vs ${value.away_team}`,
             )

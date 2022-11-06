@@ -17,50 +17,52 @@ import { formatOdds } from '#cmdUtil/formatOdds'
  * @references {@link createMatchup.js} - This module is called from createMatchup.js - the command responsible for manually initiating a new matchup.
  */
 export async function createMatchups(
-	message,
-	teamOne,
-	teamTwo,
-	teamOneOdds,
-	teamTwoOdds,
-	matchupId,
-	gameDate,
-	startISO,
-	cronStartTime,
-	legibleStartTime,
+    message,
+    teamOne,
+    teamTwo,
+    teamOneOdds,
+    teamTwoOdds,
+    matchupId,
+    gameDate,
+    startTimeISO,
+    cronStartTime,
+    legibleStartTime,
+    idApi,
 ) {
-	createMatchupsLog.info(`Initializing createMatchups!`)
+    createMatchupsLog.info(`Initializing createMatchups!`)
 
-	db.none(
-		`INSERT INTO activematchups (matchid, teamOne, teamTwo, teamOneOdds, teamTwoOdds, dateofmatchup, "startTime", cronstart, legiblestart) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-		[
-			matchupId,
-			teamOne,
-			teamTwo,
-			teamOneOdds,
-			teamTwoOdds,
-			gameDate,
-			startISO,
-			cronStartTime,
-			legibleStartTime,
-		],
-	)
-		.then(async () => {
-			let oddsFormat = await formatOdds(teamOneOdds, teamTwoOdds)
-			teamOneOdds = oddsFormat.homeOdds
-			teamTwoOdds = oddsFormat.awayOdds
-			var matchupEmbedObj = {
-				title: 'Matchup Created; Details:',
-				description: `ID: ${matchupId}\nDate: ${gameDate}\n**Game Channel Scheduled:** ${legibleStartTime}\n\n**Home Team:** **${teamOne}** *@* *${teamOneOdds}*\n**Away Team:** **${teamTwo}** *@* *${teamTwoOdds}*`,
-				color: 'GREEN',
-				target: 'modBotSpamID',
-			}
-			await embedReply(message, matchupEmbedObj)
-			return
-		})
-		.catch((err) => {
-			createMatchupsLog.error(
-				`Error adding matchup to activematchups table\nData received:\nHome Team (teamOne): ${teamOne} Away Team (teamTwo): ${teamTwo}\nHome Team Odds: ${teamOneOdds} - Away Team Odds: ${teamTwoOdds}\nError Details:\n${err}`,
-			)
-			container.err = 0
-		})
+    db.none(
+        `INSERT INTO "activematchups" (matchid, teamOne, teamTwo, teamOneOdds, teamTwoOdds, dateofmatchup, "startTime", cronstart, legiblestart, idapi) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+        [
+            matchupId,
+            teamOne,
+            teamTwo,
+            teamOneOdds,
+            teamTwoOdds,
+            gameDate,
+            startTimeISO,
+            cronStartTime,
+            legibleStartTime,
+            idApi,
+        ],
+    )
+        .then(async () => {
+            let oddsFormat = await formatOdds(teamOneOdds, teamTwoOdds)
+            teamOneOdds = oddsFormat.homeOdds
+            teamTwoOdds = oddsFormat.awayOdds
+            var matchupEmbedObj = {
+                title: 'Matchup Created; Details:',
+                description: `ID: ${matchupId}\nDate: ${gameDate}\n**Game Channel Scheduled:** ${legibleStartTime}\n\n**Home Team:** **${teamOne}** *@* *${teamOneOdds}*\n**Away Team:** **${teamTwo}** *@* *${teamTwoOdds}*`,
+                color: 'GREEN',
+                target: 'modBotSpamID',
+            }
+            await embedReply(message, matchupEmbedObj)
+            return
+        })
+        .catch((err) => {
+            createMatchupsLog.error(
+                `Error adding matchup to activematchups table\nData received:\nHome Team (teamOne): ${teamOne} Away Team (teamTwo): ${teamTwo}\nHome Team Odds: ${teamOneOdds} - Away Team Odds: ${teamTwoOdds}\nError Details:\n${err}`,
+            )
+            container.err = 0
+        })
 }
