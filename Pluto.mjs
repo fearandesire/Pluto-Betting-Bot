@@ -35,7 +35,7 @@ const SapDiscClient = new SapphireClient({
     typing: true,
     loadMessageCommandListeners: true,
     statcord: {
-        client_id: `983432174361534474`,
+        client_id: `${process.env.botsId}`,
         key: process.env.STATCORD_KEY,
         autopost: true, // (Optional) Allows automatic posting of statistics.
         debug: false, // (Optional) Show debug messages.
