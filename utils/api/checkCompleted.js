@@ -75,7 +75,7 @@ export async function checkCompleted(compGameMonitor) {
                 var gameChan
                 var hTeamShort = await getShortName(value.home_team)
                 var aTeamShort = await getShortName(value.away_team)
-                gameChan = `${hTeamShort}-vs-${aTeamShort}`
+                gameChan = `${aTeamShort}-vs-${hTeamShort}`
                 try {
                     gameChan = await locateChannel(gameChan)
                     if (gameChan) {
@@ -131,19 +131,21 @@ export async function checkCompleted(compGameMonitor) {
                     `Step 5: Progress Set to true || ${value.home_team} vs ${value.away_team}`,
                 )
                 //# Close the bets for the winners of the matchup
-                await closeWonBets(winner, homeOrAwayWon).catch((err) => {
+                await closeWonBets(winner, homeOrAwayWon, losingTeam).catch((err) => {
                     checkCompletedLog.error(
                         `${fileName} Error closing won bets for ${winner} || ${err}`,
                     )
                     return
                 })
                 //# Close the bets for the losers of the matchup
-                await closeLostBets(losingTeam, losingTeamHomeOrAway).catch((err) => {
-                    checkCompletedLog.error(
-                        `${fileName} Error closing lost bets for ${losingTeam} || ${err}`,
-                    )
-                    return
-                })
+                await closeLostBets(losingTeam, losingTeamHomeOrAway, winner).catch(
+                    (err) => {
+                        checkCompletedLog.error(
+                            `${fileName} Error closing lost bets for ${losingTeam} || ${err}`,
+                        )
+                        return
+                    },
+                )
                 await dmMe(`Closed Bets for ${value.home_team} vs ${value.away_team}`)
             } else {
                 await checkCompletedLog.info(
