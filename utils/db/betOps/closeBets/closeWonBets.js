@@ -74,7 +74,7 @@ export async function closeWonBets(winningTeam, homeOrAway, losingTeam) {
                     const currentUserBal = parseFloat(userBal?.balance)
                     const newUserBal = currentUserBal + payoutAmount
                     await t.oneOrNone(
-                        `UPDATE "currency" SET balance = $1 WHERE userid = $2`,
+                        `UPDATE "NBAcurrency" SET balance = $1 WHERE userid = $2`,
                         [newUserBal, userid],
                     )
                     //# Delete bet from activebets
