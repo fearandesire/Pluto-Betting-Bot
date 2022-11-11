@@ -1,6 +1,6 @@
 /** @module listMyBets*/
 
-import { container, embedReply, flatcache } from '#config'
+import { accounting, container, embedReply } from '#config'
 
 import { FileRunning } from '#botClasses/FileRunning'
 import { Log } from '#LogColor'
@@ -57,23 +57,14 @@ export function listMyBets(userid, message) {
                         row,
                     )}`,
                 )
-                // var oddsForTeam = await resolveMatchup(teamId, `odds`)
-                // var potentialPayout = await resolvePayouts(oddsForTeam, amount)
-                var profit = row.profit ?? `N/A`
-                var payout = row.payout ?? `N/A`
-                if (profit == `N/A` || payout == `N/A`) {
-                    container[`listBets-${userid}`].push(
-                        `**•** __Bet #${betId}__
-                Team: **${teamId}** | Amount: \`$${amount}\`
-                Profit: \`${profit}\` | Payout: \`${payout}\``,
-                    )
-                } else if (profit !== `N/A` || payout !== `N/A`) {
-                    container[`listBets-${userid}`].push(
-                        `**•** __Bet #${betId}__
+                var format = accounting.format
+                var profit = format(row.profit) ?? `N/A`
+                var payout = format(row.payout) ?? `N/A`
+                container[`listBets-${userid}`].push(
+                    `**•** __Bet #${betId}__
             Team: **${teamId}** | Amount: \`$${amount}\`
             Profit: \`$${profit}\` | Payout: \`$${payout}\``,
-                    )
-                }
+                )
             } else {
                 Log.Red(`Something went wrong when listing bets for user ${userid}`)
                 return
