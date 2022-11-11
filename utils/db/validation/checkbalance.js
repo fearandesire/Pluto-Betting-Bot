@@ -57,7 +57,7 @@ export async function checkbalance(inputuserid, message, target) {
             discordName = discordName || 'User'
             var balEmbed = {
                 title: `:money_with_wings: ${discordName.username}'s Funds`,
-                description: `**Current Balance: \`${balance}\`**`,
+                description: `**Current Balance: \`$${balance}\`**`,
                 color: '#00FF00',
                 footer: 'For assistance, DM FENIX#7559',
             }
@@ -66,7 +66,7 @@ export async function checkbalance(inputuserid, message, target) {
             var calledBy = await SapDiscClient.users.fetch(inputuserid) //? Fetch user who called the command
             var targetBalEmbd = {
                 title: `:money_with_wings: ${targetName}'s Funds`,
-                description: `**Current Balance: \`${balance}\`**\n*Requested by ${calledBy.username}*`,
+                description: `**Current Balance: \`$${balance}\`**\n*Requested by ${calledBy.username}*`,
                 color: '#00FF00',
                 footer: 'For assistance, DM FENIX#7559',
             }
