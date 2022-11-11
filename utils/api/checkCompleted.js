@@ -72,8 +72,8 @@ export async function checkCompleted(compGameMonitor) {
                     `Unable to find matchup in database: ${value.home_team} vs ${value.away_team}`,
                 )
                 continue
-            }
-            if (checkProg === false) {
+            } else if (checkProg === false) {
+                console.log(`checkProg: ${checkProg}`)
                 //# Queue game channel to be closed in 30 minutes
                 var gameChan
                 var hTeamShort = await getShortName(value.home_team)
