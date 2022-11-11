@@ -28,7 +28,7 @@ export class ReadyListener extends Listener {
 }
 
 setTimeout(async () => {
-    //# Queue checking for weekly games schedule
+    //# Queue checking for games schedule
     await scheduleReq()
     //# Queue game channel scheduling
     if (process.env.envMode == 'Online') {
