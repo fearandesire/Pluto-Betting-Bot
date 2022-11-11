@@ -2,7 +2,6 @@ import { addMinutes, format } from 'date-fns'
 
 import cron from 'node-cron'
 import { dmMe } from '../../bot_res/dmMe.js'
-import { msgBotChan } from '#botUtil/msgBotChan'
 
 /**
  * @module queueDeleteChannel
@@ -23,7 +22,7 @@ export async function queueDeleteChannel(gameChan) {
         await console.log(`Creating Cron Job to delete channel ${gameChan}`)
         try {
             await gameChan.delete()
-            await msgBotChan(`Deleted ${gameChan.name}`)
+            await dmMe(`Deleted ${gameChan.name}`)
         } catch (error) {
             console.log(`Unable to delete game channel ${gameChan} >>\n`, error)
         }
