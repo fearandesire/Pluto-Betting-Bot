@@ -73,7 +73,7 @@ export async function checkCompleted(compGameMonitor) {
                 )
                 continue
             }
-            if (checkProg == false) {
+            if (checkProg === false) {
                 //# Queue game channel to be closed in 30 minutes
                 var gameChan
                 var hTeamShort = await getShortName(value.home_team)
