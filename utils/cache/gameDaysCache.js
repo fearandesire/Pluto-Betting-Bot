@@ -1,5 +1,10 @@
 import { Log, _, flatcache } from '#config'
 
+/**
+ * @module gameDaysCache
+ * Manages the 'game days' cache - A cache system being used to know what days we have games. This is used to provide daily information of how many game channels are being scheduled day-to-day
+ * @param {string} dayName - The name of the day of the week (Sunday, Monday, etc)
+ */
 export async function gameDaysCache(dayName) {
     let gameDays
     var gameDayCache = flatcache.create('gameDaysCache.json', './cache/')

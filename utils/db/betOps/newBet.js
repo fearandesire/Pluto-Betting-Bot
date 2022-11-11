@@ -29,8 +29,8 @@ export async function newBet(
     var matchupId = parseInt(matchInfo.matchid)
     var activeCheck = await gameActive(betOnTeam, matchupId)
     if (!betOnTeam) {
-        //# failure to match team
-        QuickError(interaction, 'Please enter a valid team or match id', true)
+        //# failure to locate match
+        QuickError(interaction, 'Please enter a valid team', true)
         //# delete from pending
         await new pendingBet().deletePending(user)
         return
