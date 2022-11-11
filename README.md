@@ -7,8 +7,8 @@
 </div>
 <h1 align="center">Pluto</h1>
 <p align="center">
-  <img alt="Github top language" src="https://img.shields.io/github/languages/top/fearandesire/Hercules?color=green">
-  <img alt="Serving" src="https://img.shields.io/badge/NBAC%20Users-203.948-blue">
+  <img alt="Github top language" src="https://img.shields.io/github/languages/top/fearandesire/Pluto-Betting-Bot?color=green">
+  <img alt="Serving" src="https://img.shields.io/badge/Serving Users-203.948-blue">
   <img alt="License" src="https://img.shields.io/github/license/fearandesire/Hercules">
 
 </p>
