@@ -1,4 +1,5 @@
 import { MessageEmbed } from 'discord.js'
+import { accounting } from '#config'
 
 /**
  * @module confirmBetEmbed
@@ -10,6 +11,10 @@ import { MessageEmbed } from 'discord.js'
 export function confirmBetEmbed(message, betslip, interactionEph) {
     var customerFooter =
         'Please Note: If you do not confirm your bet within 60 seconds, it will be cancelled.'
+    var format = accounting.format
+    var amount = format(betslip.amount)
+    var profit = format(betslip.profit)
+    var payout = format(betslip.payout)
     const confirmembed = new MessageEmbed()
         .setColor('#ffd600')
         .setTitle(':receipt: Bet Pending Confirmation')
@@ -19,8 +24,8 @@ export function confirmBetEmbed(message, betslip, interactionEph) {
                     
             **__Bet Details:__**
             
-            Team: **${betslip.teamid}** | Amount: \`$${betslip.amount}\` 
-            Profit: \`$${betslip.profit}\` | Payout: \`$${betslip.payout}\``,
+            Team: **${betslip.teamid}** | Amount: \`$${amount}\` 
+            Profit: \`$${payout}\` | Payout: \`$${profit}\``,
         )
         .setTimestamp()
         .setThumbnail(`${process.env.sportLogo}`)

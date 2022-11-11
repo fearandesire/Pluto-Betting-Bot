@@ -1,4 +1,4 @@
-import { QuickError, _ } from '#config'
+import { QuickError, _, accounting } from '#config'
 
 import { db } from '#db'
 import { embedReply } from '#embed'
@@ -30,18 +30,22 @@ export async function fetchBetHistory(message, userid, interactionEph) {
         if (findings) {
             entries = Object.keys(findings).length
             for (let i = 0; i < findings.length; i++) {
+                var format = accounting.format
+                var amount = format(findings[i].amount)
+                var profit = format(findings[i].profit)
+                var payout = format(findings[i].payout)
                 if (findings[i].betresult === `won`) {
                     wonCount++
                     await betHistory.push({
                         name: `${findings[i].dateofbet} :white_check_mark: `,
-                        value: `**Team:** ${findings[i].teamid}\n**Bet Amount:**\`$${findings[i].amount}\`\n:moneybag: **Profit:** \`$${findings[i].profit}\`\n:moneybag: **Payout:** \`$${findings[i].payout}\``,
+                        value: `**Team:** ${findings[i].teamid}\n**Bet Amount:**\`${amount}\`\n:moneybag: **Profit:** \`$${profit}\`\n:moneybag: **Payout:** \`$${payout}\``,
                         inline: true,
                     })
                 } else if (findings[i].betresult === 'lost') {
                     lostCount++
                     await betHistory.push({
                         name: `:x: ${findings[i].dateofbet}`,
-                        value: `**Team:** ${findings[i].teamid}\n**Bet Amount:** \`$${findings[i].amount}\`\n:pensive: **Lost Bet, no payout.**`,
+                        value: `**Team:** ${findings[i].teamid}\n**Bet Amount:** \`$${amount}\`\n:pensive: **Lost Bet, no payout.**`,
                         inline: true,
                     })
                 }

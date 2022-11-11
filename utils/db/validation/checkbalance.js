@@ -1,6 +1,7 @@
 import { Log, QuickError, embedReply } from '#config'
 
 import { SapDiscClient } from '#main'
+import accounting from 'accounting'
 import { db } from '#db'
 
 /**
@@ -25,18 +26,18 @@ export async function checkbalance(inputuserid, message, target) {
     }
     db.tx('checkbalance-Transaction', async (t) => {
         //? Querying database for the balance. Our query results are stored in the 'findings' variable
-        const findings = await t.oneOrNone(
+        const balQuery = await t.oneOrNone(
             'SELECT * FROM currency WHERE userid = $1',
             [queryUserOrTarget],
         )
         //? Findings will return null (!findings) if the user does not exist in the database
         //? In this instance, since 'notusercheck' is true; which means we are checking for another user's information. This is relevant for our response message
-        if (!findings && target) {
+        if (!balQuery && target) {
             QuickError(message, `User ${targetId} is not registered with Pluto.`)
             Log.Error('User has no Betting history')
             return
         }
-        if (!findings) {
+        if (!balQuery) {
             //? Findings is null, meaning the user does not exist in the database.
             Log.BrightBlue(
                 `[checkbalance.js] User ${inputuserid} is not in the database, creating user`,
@@ -49,29 +50,27 @@ export async function checkbalance(inputuserid, message, target) {
                 [inputuserid, '100'],
             ) //? Create user in the database
         }
+        var balance = accounting.format(balQuery.balance)
         //? The user exists in the database
-        if (findings.userid === inputuserid && !target) {
-            const usersBal = findings.balance
-            var discordName = await SapDiscClient.users.fetch(inputuserid) //? Fetching the username of the user via Discord.js API cache
+        if (balQuery.userid === inputuserid && !target) {
+            var discordName = await SapDiscClient.users.fetch(inputuserid) //? Fetch the target user
             discordName = discordName || 'User'
             var balEmbed = {
                 title: `:money_with_wings: ${discordName.username}'s Funds`,
-                description: `**Current Balance: $${usersBal}**\nTo claim your daily $100 dollars, *type /claim*`,
+                description: `**Current Balance: \`$${balance}\`**`,
                 color: '#00FF00',
                 footer: 'For assistance, DM FENIX#7559',
             }
             embedReply(message, balEmbed) //? Sending embed with balance to user
-            Log.BrightBlue(usersBal)
-        } else if (findings.userid === targetId) {
-            const targetUserBal = findings.balance
+        } else if (balQuery.userid === targetId) {
+            var calledBy = await SapDiscClient.users.fetch(inputuserid) //? Fetch user who called the command
             var targetBalEmbd = {
                 title: `:money_with_wings: ${targetName}'s Funds`,
-                description: `**Current Balance: $${targetUserBal}**`,
+                description: `**Current Balance: \`$${balance}\`**\n*Requested by ${calledBy.username}*`,
                 color: '#00FF00',
                 footer: 'For assistance, DM FENIX#7559',
             }
             embedReply(message, targetBalEmbd) //? Sending embed with balance to user
-            Log.BrightBlue(targetUserBal)
         }
     })
         //? Catching connection errors, not database data/table/error errors.
