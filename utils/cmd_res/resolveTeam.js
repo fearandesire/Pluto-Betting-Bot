@@ -5,7 +5,7 @@ import { teamList } from '#lib/nbaTeamList'
 /**
  * Resolve a team name using fuzzy search & comparison to the list of teams saved locally.
  * @param {string} teamName - The name of the team to search for
- * @return {ReturnValueDataTypeHere} Brief description of the returning value here.
+ * @return {string} The name of the team that was found, or null if no team was found.
  */
 
 export async function resolveTeam(teamName) {
@@ -24,6 +24,5 @@ export async function resolveTeam(teamName) {
     console.log(`Resolved Teams:`, result)
     console.log(`Team Found:`, foundTeam)
     resolveTeamLog.info(`Resolved team: ${teamName} to ${foundTeam.item.name}`)
-    //console.log(foundTeam)
     return foundTeam.item.name
 }

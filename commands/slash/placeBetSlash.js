@@ -47,36 +47,21 @@ export class placeBetSlash extends Command {
                 ephemeral: true,
             })
             return
-        } else {
-            await new pendingBet().insertPending(userid)
-        }
-        if (!interaction.options.getString('team')) {
-            interaction.reply({
-                content: `**Please provide a team to bet on.**`,
-                ephemeral: true,
-            })
-            return
-        }
-        if (interaction.options.getString(`team`).match(/^[0-9]+$/)) {
+        } else if (interaction.options.getString(`team`).match(/^[0-9]+$/)) {
             interaction.reply({
                 content: `**Please provide a valid team.**`,
                 ephemeral: true,
             })
             return
+        } else {
+            await new pendingBet().insertPending(userid)
+            var interactionEph = true
+            await newBet(
+                interaction,
+                interaction.options.getString('team'),
+                interaction.options.getInteger('amount'),
+                interactionEph,
+            )
         }
-        if (!interaction.options.getInteger('amount')) {
-            interaction.reply({
-                content: `**Please provide an amount to bet.**`,
-                ephemeral: true,
-            })
-            return
-        }
-        var interactionEph = true
-        await newBet(
-            interaction,
-            interaction.options.getString('team'),
-            interaction.options.getInteger('amount'),
-            interactionEph,
-        )
     }
 }

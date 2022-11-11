@@ -3,7 +3,8 @@ import { SapDiscClient } from '#main'
 /**
  * @module isInServer
  * Check if a user is in the server
- *
+ * @param {string} userID - The user ID to check
+ * @returns {boolean} - Returns true if the user is in the server, false if not
  */
 
 export async function isInServer(userid) {
