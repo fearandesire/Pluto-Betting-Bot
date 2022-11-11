@@ -57,10 +57,6 @@ Sources of vital resources used in this project
 - [pg-pool](https://www.npmjs.com/package/pg-pool)
 - [the-odds-api](the-odds-api.com/)
 
-## :white_check_mark: Change Log
-
-You can view the [Change Log here](ChangeLog.md)
-
 ## :memo: License
 
 [MIT License](LICENSE)
