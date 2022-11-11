@@ -10,6 +10,7 @@ import { getShortName } from '../bot_res/getShortName.js'
 import { idApiExisting } from '../db/validation/idApiExisting.js'
 import { locateChannel } from '../db/gameSchedule/locateChannel.js'
 import { queueDeleteChannel } from '../db/gameSchedule/queueDeleteChannel.js'
+import { removeMatch } from '#utilMatchups/removeMatchup'
 import { setProgress } from '../db/matchupOps/progress/setProgress.js'
 import stringifyObject from 'stringify-object'
 
@@ -150,6 +151,7 @@ export async function checkCompleted(compGameMonitor) {
                     },
                 )
                 await dmMe(`Closed Bets for ${value.home_team} vs ${value.away_team}`)
+                await removeMatch(value.home_team, value.away_team)
             } else {
                 await checkCompletedLog.info(
                     `${fileName} Bets for Matchup: ${value.home_team} vs. ${value.away_team} are already being closed. This game will not be queued to be processed.`,
