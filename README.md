@@ -44,12 +44,6 @@ Released! Current Version: v1.4.5
 
 Pluto is a full-fledged betting bot with a strong focus on simplicity. Users are able to securely place NFL Bets and particpate in the online betting scene without using real-life currency. Pluto utilizies an API _([the-odds-api](the-odds-api.com/))_ & secure SQL Databases to ensure that we consistently deliver accurate odds as well as smooth, worry-free redemption of bets.
 
-Pluto also features the ability to auto-create and delete game channels for the matchups of the week.
-
-## Statistics:
-
-Pluto will capture usage statistics for the following commands:
-
 ## :rocket: Technologies
 
 Sources of vital resources used in this project
@@ -60,9 +54,13 @@ Sources of vital resources used in this project
 - [pg-pool](https://www.npmjs.com/package/pg-pool)
 - [the-odds-api](the-odds-api.com/)
 
+## :white_check_mark: Change Log
+
+You can view the [Change Log here](ChangeLog.md)
+
 ## :memo: License
 
-[MIT](http://opensource.org/licenses/MIT)
+[MIT License](LICENSE)
 
 ## :scientist: Authors
 
