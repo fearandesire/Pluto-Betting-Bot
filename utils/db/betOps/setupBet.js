@@ -6,7 +6,7 @@ import { confirmBet } from '#utilBetOps/confirmBet'
 import { debugLogging as debug } from '../../bot_res/debugLogging.js'
 import { fetchBalance } from '#utilCurrency/fetchBalance'
 import { isMatchExist } from '#utilValidate/isMatchExist'
-import { resolveOdds } from '../../cache/resolveOdds.js'
+import { resolveMatchup } from '#cacheUtil/resolveMatchup'
 import { resolvePayouts } from '#utilBetOps/resolvePayouts'
 import { setupBetLog } from '#winstonLogger'
 
@@ -67,7 +67,7 @@ export async function setupBet(
                 )
             }
 
-            var oddsForTeam = await resolveOdds(data, betOnTeamName)
+            var oddsForTeam = await resolveMatchup(betOnTeamName, `odds`)
             if (!oddsForTeam) {
                 await QuickError(`Unable to resolve odds for ${betOnTeamName}`)
                 throw new Error(`Unable to resolve odds for ${betOnTeamName}`)
