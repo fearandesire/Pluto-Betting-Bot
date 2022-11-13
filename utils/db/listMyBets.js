@@ -10,6 +10,7 @@ import stringifyObject from 'stringify-object'
 
 /**
  * @module listMyBets
+<<<<<<< Updated upstream
  * ⁡⁣⁣⁢@summary⁡ - ⁡⁣⁣⁢Queries DB 'betslips' table & lists all active bets the user has via an embed reply.⁡⁡
 @description    
  1. Executes out a query to the DB using the db.map method to retrieve all active bets for the user from the 'betslips' table, afterwards:
@@ -24,6 +25,12 @@ import stringifyObject from 'stringify-object'
  * Initilization of the object is within the config file to retain it's empty value on startup.
  * @returns {obj} embedReply - A Discord embed reply object containing the user's betslips.
  * @references {@link listBets.js} - listBets.js is the `invoker` that will que this function to retrieve the user's betslips.
+=======
+ * Query the database for all bets placed by the user
+ * @param {integer} userid - The user's Discord ID
+ * @param {obj} message - The Duscord message object
+ *
+>>>>>>> Stashed changes
  *
  */
 export function listMyBets(userid, message) {
@@ -55,6 +62,7 @@ export function listMyBets(userid, message) {
                     )}`,
                 )
                 var format = accounting.format
+                amount = format(amount)
                 var profit = format(row.profit) ?? `N/A`
                 var payout = format(row.payout) ?? `N/A`
                 container[`listBets-${userid}`].push(
