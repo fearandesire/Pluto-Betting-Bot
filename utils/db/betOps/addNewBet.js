@@ -1,6 +1,7 @@
+import { accounting, container } from '#config'
+
 import { Log } from '#LogColor'
 import { TodaysDate } from '#cmdUtil/TodaysDate'
-import { container } from '#config'
 import { db } from '#db'
 import { embedReply } from '#embed'
 import { setupBetLog } from '#winstonLogger'
@@ -67,6 +68,10 @@ export function addNewBet(message, betslip, interactionEph) {
             .then(() => {
                 var isSilent = interactionEph ? true : false
                 setupBetLog.info(`Successfully added betslip into the database.`)
+                var format = accounting.format
+                var amount = format(betslip.amount)
+                var profit = format(betslip.profit)
+                var payout = format(betslip.payout)
                 var embedcontent = {
                     //? Compiling the properties of the embed to return to the user: confirming their bet has been added to DB
                     title: `:ticket: Bet confirmed!`,
@@ -77,9 +82,9 @@ export function addNewBet(message, betslip, interactionEph) {
                     __**:money_mouth: Details** __
                     **Bet ID:** ${betslip.betid}
                     **Team:** **${betslip.teamid}**
-                    **Amount:** \`$${betslip.amount}\`
-                    **Profit:** \`$${betslip.profit}\`
-                    **Payout:** \`$${betslip.payout}\`
+                    **Amount:** \`$${amount}\`
+                    **Profit:** \`$${profit}\`
+                    **Payout:** \`$${payout}\`
                     `,
                     color: '#00FF00',
                     //footer: 'For more commands, type: ?help',
