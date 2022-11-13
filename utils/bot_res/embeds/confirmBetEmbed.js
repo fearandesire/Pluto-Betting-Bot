@@ -25,7 +25,7 @@ export function confirmBetEmbed(message, betslip, interactionEph) {
             **__Bet Details:__**
             
             Team: **${betslip.teamid}** | Amount: \`$${amount}\` 
-            Profit: \`$${payout}\` | Payout: \`$${profit}\``,
+            Profit: \`$${profit}\` | Payout: \`$${payout}\``,
         )
         .setTimestamp()
         .setThumbnail(`${process.env.sportLogoNBA}`)
