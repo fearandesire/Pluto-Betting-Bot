@@ -10,28 +10,9 @@ import stringifyObject from 'stringify-object'
 
 /**
  * @module listMyBets
-<<<<<<< Updated upstream
- * ⁡⁣⁣⁢@summary⁡ - ⁡⁣⁣⁢Queries DB 'betslips' table & lists all active bets the user has via an embed reply.⁡⁡
-@description    
- 1. Executes out a query to the DB using the db.map method to retrieve all active bets for the user from the 'betslips' table, afterwards:
- * 2. After collecting the user's bet information from the query, this function will use our pre-defined empty `Memory_Betslips` object.
- * 3. Within `Memory_Betslips`, we estbalish a set of dynamic properties and push the user's betslips information as nested objects (obj) into an array (arr).
- * 4. We then use this nested arr of objs to utilize Discord's Embed 'Fields' capabilities returning our data to the user (using {@linkcode embedReply}); see: {@link https://discord.js.org/#/docs/main/stable/typedef/MessageEmbedOptions Discord Docs}.
- * 5. After sending the user's betslips in an embed, we use {@linkcode flatcache} to store the user's betslips in a local storage file.
- * @property  {method} db.map - A simpler way to iterate over a query result. Handles a function for each row retrieved from the query. See: ***{@link http://vitaly-t.github.io/pg-promise/Database.html#map pg-promise Map}***
- * @param {integer} userid - user ID
- * @param {obj} message - The message object containing the user & their message - also used to reference a direct reply to the user with message.reply()
- * @param {obj} betslipsMem - An empty object to push the user's betslips into. This object is created within memory && cleared at the end of this function to preserve memory. 
- * Initilization of the object is within the config file to retain it's empty value on startup.
- * @returns {obj} embedReply - A Discord embed reply object containing the user's betslips.
- * @references {@link listBets.js} - listBets.js is the `invoker` that will que this function to retrieve the user's betslips.
-=======
  * Query the database for all bets placed by the user
  * @param {integer} userid - The user's Discord ID
  * @param {obj} message - The Duscord message object
- *
->>>>>>> Stashed changes
- *
  */
 export function listMyBets(userid, message) {
     container[`listBets-${userid}`] = []
