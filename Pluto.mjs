@@ -6,7 +6,14 @@ import { LogLevel, SapphireClient } from '@sapphire/framework'
 
 import { Log } from '#config'
 import { RateLimitManager } from '@sapphire/ratelimits'
+import bodyParser from 'body-parser'
+import { createRequire } from 'module'
+import express from 'express'
 import { memUse } from '#mem'
+
+// use require in ES6
+
+const require = createRequire(import.meta.url)
 
 Log.Magenta(`[Startup]: Initializing Pluto`)
 
@@ -57,6 +64,17 @@ const loginClient = async () => {
     }
 }
 loginClient()
+const app = express()
+const port = 3000
+
+app.use(require('express-status-monitor')())
+//app.listen(port, () => console.log(`app listening on port ${port}!`))
+app.use(bodyParser.json()) // for parsing application/json
+app.use(bodyParser.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
+app.listen(port, () => {
+    Log.Yellow(`[Startup]: Express Server listening on port ${port}!`)
+})
+
 await memUse(`Pluto.mjs`, `Init Startup`)
 export { SapDiscClient }
 export { RateLimitManager }
