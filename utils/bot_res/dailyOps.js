@@ -9,8 +9,7 @@ import { sentSchEmb } from '../cache/sentSchEmb.js'
  */
 
 export async function dailyOps() {
-    
-    await memUse(`dailyOps.js`, `Pre-Cron`)
+    await memUse(`dailyOps`, `Pre-Cron`)
     cron.schedule('0 0 * * *', async () => {
         await sentSchEmb().then(async (res) => {
             if (res == false) {
@@ -25,5 +24,5 @@ export async function dailyOps() {
             }
         })
     })
-    await memUse(`dailyOps.js`, `Post-Cron`)
+    await memUse(`dailyOps`, `Post-Cron`)
 }
