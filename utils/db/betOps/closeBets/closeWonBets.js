@@ -12,13 +12,16 @@ import { wonDm } from '../wonDm.js'
  * 2. Calculate payout for the bets, and update the "NBAbetslips" table with the payout, as well as the betresult with "won"
  * 3. Update the user balance from the "currency" table with the payout
  * 4. DM the user they won their bet
+ * @param {string} winningTeam - The team that won the game
+ * @param {string} homeOrAway - If this team that won was 'home' or 'away' - string literal
+ * @param {string} losingTeam - The losing team
  */
 
 export async function closeWonBets(winningTeam, homeOrAway, losingTeam) {
     return new Promise(async (resolve, reject) => {
-        var dbStack = await db.tx(async (t) => {
+        await db.tx(async (t) => {
             // Start a db transaction
-            var getMatchInfo = await t.oneOrNone(
+            let getMatchInfo = await t.oneOrNone(
                 `SELECT * FROM "${NBA_ACTIVEMATCHUPS}" WHERE teamone = $1 AND teamtwo = $2 OR teamone = $2 AND teamtwo = $1`,
                 [winningTeam, losingTeam],
             ) // Query DB for matchup info
@@ -26,19 +29,19 @@ export async function closeWonBets(winningTeam, homeOrAway, losingTeam) {
                 await closeBetLog.error(`No match found for ${winningTeam}`)
                 return reject(`No match found for ${winningTeam}`)
             }
-            var getWinners = await t.manyOrNone(
+            let getWinners = await t.manyOrNone(
                 `SELECT * FROM "NBAbetslips" WHERE teamid = $1 AND betresult = 'pending'`,
                 [winningTeam],
-            )
+            );
             if (getWinners) {
                 for await (const betslip of getWinners) {
                     //# bet information
-                    var betAmount = betslip.amount
-                    var betId = betslip.betid
-                    var userid = betslip.userid
-                    var betOdds
-                    var opposingTeam
-                    var teamBetOn
+                    let betAmount = betslip.amount
+                    let betId = betslip.betid
+                    let userid = betslip.userid
+                    let betOdds
+                    let opposingTeam
+                    let teamBetOn
                     if (homeOrAway === 'home') {
                         betOdds = getMatchInfo.teamoneodds
                         opposingTeam = getMatchInfo.teamtwo
@@ -52,11 +55,11 @@ export async function closeWonBets(winningTeam, homeOrAway, losingTeam) {
                         `Bet ID: ${betId} || Bet Odds: ${betOdds} || Bet Amount: ${betAmount}`,
                     )
                     //# calc payout
-                    var payAndProfit = await resolvePayouts(betOdds, betAmount)
-                    var payout = payAndProfit.payout
-                    var profit = payAndProfit.profit
-                    const payoutAmount = parseFloat(payout)
-                    const profitAmount = parseFloat(profit)
+                    let payAndProfit = await resolvePayouts(betOdds, betAmount)
+                    let payout = payAndProfit.payout
+                    let profit = payAndProfit.profit
+                    let payoutAmount = parseFloat(payout)
+                    let profitAmount = parseFloat(profit)
                     await closeBetLog.info(
                         `Closing Bet Information:\nUser ID: ${userid}\nBet ID: ${betId}\nBet Result: Won\nBet Amount: ${betAmount}\nBet Odds: ${betOdds}\nTeam Bet On: ${teamBetOn}\nOpposing Team: ${opposingTeam}\nWinning Team: ${winningTeam}\nHome or Away: ${homeOrAway}\nPayout: ${payoutAmount}\nProfit: ${profitAmount}`,
                     )
@@ -71,15 +74,14 @@ export async function closeWonBets(winningTeam, homeOrAway, losingTeam) {
                         [userid],
                     )
                     //# calc winnings
-                    const currentUserBal = parseFloat(userBal?.balance)
-                    const newUserBal = currentUserBal + payoutAmount
+                    const newUserBal = parseFloat(await userBal?.balance) + payoutAmount
                     await t.oneOrNone(
                         `UPDATE "NBAcurrency" SET balance = $1 WHERE userid = $2`,
                         [newUserBal, userid],
                     )
                     //# Delete bet from activebets
                     await t.none(`DELETE FROM "NBAactivebets" WHERE betid = $1`, [betId])
-                    var wonBetInformation = await {
+                    let wonBetInformation = {
                         [`userId`]: userid,
                         [`betId`]: betId,
                         [`wonOrLost`]: `won`,
