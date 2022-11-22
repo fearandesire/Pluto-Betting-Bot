@@ -1,11 +1,17 @@
-import { Log, NFL_ACTIVEMATCHUPS, NFL_ACTIVEBETS, NFL_PROFILES, NFL_BETS } from '#config'
+import {
+    Log,
+    NFL_ACTIVEBETS,
+    NFL_ACTIVEMATCHUPS,
+    NFL_BETS,
+    NFL_PROFILES,
+} from '#config'
 
 import { closeBetLog } from '../../../logging.js'
 import { db } from '#db'
 import { lostDm } from '../lostDm.js'
 import { memUse } from '#mem'
+
 const actMatchups = NFL_ACTIVEMATCHUPS
-const profiles = NFL_PROFILES
 const actBets = NFL_ACTIVEBETS
 const betTbl = NFL_BETS
 /**

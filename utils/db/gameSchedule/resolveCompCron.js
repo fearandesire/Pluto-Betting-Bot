@@ -2,6 +2,7 @@ import { Log, NFL_ACTIVEMATCHUPS, container } from '#config'
 
 import { db } from '#db'
 import { dmMe } from '../../bot_res/dmMe.js'
+import { memUse } from '#mem'
 import { resolveToday } from '#dateUtil/resolveToday'
 import stringifyObject from 'stringify-object'
 
@@ -12,6 +13,7 @@ import stringifyObject from 'stringify-object'
  */
 
 export async function resolveCompCron() {
+    await memUse(`resolveCompCron.js`, `Pre-Cron Range`)
     var todaySlash = await new resolveToday().todayFullSlashes
     todaySlash = todaySlash.toString()
     Log.Green(`[resolveCompCron.js] Today is ${todaySlash}`)
