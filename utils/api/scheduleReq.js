@@ -15,7 +15,7 @@ the-odds-api seems to only update their odds every day, and provide the odds for
 */
 
 export async function scheduleReq() {
-    await memUse(`scheduleReq.js`, `Pre-Cron`)
+    await memUse(`scheduleReq`, `Pre-Cron`)
     cron.schedule(
         `collectMatchupsReq`,
         `${NFL_NEWSCHED_CHECK}`,
@@ -27,5 +27,5 @@ export async function scheduleReq() {
         },
         { timezone: 'America/New_York' },
     )
-    await memUse(`scheduleReq.js`, `Post-Cron`)
+    await memUse(`scheduleReq`, `Post-Cron`)
 }

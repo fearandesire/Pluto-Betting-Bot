@@ -49,7 +49,7 @@ export async function checkCompleted(compGameMonitor) {
             var apiCompletedResult = json
             container.apiCompResult = apiCompletedResult
         })
-    await memUse(`checkCompleted.js`, `Post-API Init Connection`)
+    await memUse(`checkCompleted`, `Post-API Init Connection`)
     var compResults = container.apiCompResult
     await apiReqLog.info(`${fileName} API Connection Information:`)
     await checkCompletedLog.info(stringifyObject(compResults))

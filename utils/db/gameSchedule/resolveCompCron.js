@@ -13,7 +13,7 @@ import stringifyObject from 'stringify-object'
  */
 
 export async function resolveCompCron() {
-    await memUse(`resolveCompCron.js`, `Pre-Cron Range`)
+    await memUse(`resolveCompCron`, `Pre-Cron Range`)
     var todaySlash = await new resolveToday().todayFullSlashes
     todaySlash = todaySlash.toString()
     Log.Green(`[resolveCompCron.js] Today is ${todaySlash}`)

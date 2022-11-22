@@ -34,7 +34,7 @@ export function completedReq() {
                 //# Retrieve the cron ranges for the times we will be checking for completed games -- in the Cron format
                 completedCron = await resolveCompCron()
 
-                await memUse(`completedReq.js`, `Post-Cron Range Collection`)
+                await memUse(`completedReq`, `Post-Cron Range Collection`)
                 completedReqLog.info(`Running completedReq.js - Initializing Cron Jobs`)
                 compGameMonitor.ping({
                     state: `ok`,
@@ -60,7 +60,7 @@ export function completedReq() {
                                 state: 'run',
                                 message: `Checking for completed games..`,
                             })
-                            await memUse(`completedReq.js`, `Pre-Check: Completed Games`)
+                            await memUse(`completedReq`, `Pre-Check: Completed Games`)
                             await checkCompleted(compGameMonitor)
                             Log.Yellow(`Checking for completed games`)
                         },
