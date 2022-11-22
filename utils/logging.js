@@ -26,6 +26,28 @@ const customWinstonFormat = printf(
     },
 )
 
+export const memLog = winston.createLogger({
+    levels: winston.config.syslog.levels,
+    format: winston.format.combine(
+        winston.format.colorize(),
+        splat(),
+        winston.format.prettyPrint({
+            colorize: true,
+            depth: 5,
+        }),
+        timestamp,
+        customWinstonFormat,
+    ),
+    transports: [
+        new winston.transports.File({
+            filename: 'logs/system/error.log',
+            level: 'error',
+        }),
+        new winston.transports.File({ filename: 'logs/system/memory.log' }),
+        new winston.transports.Console(),
+    ],
+})
+
 export const addNewBetLog = winston.createLogger({
     level: 'info',
     format: winston.format.combine(

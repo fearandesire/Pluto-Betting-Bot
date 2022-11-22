@@ -3,6 +3,7 @@ import { Log, NBA_ACTIVEMATCHUPS } from '#config'
 import _ from 'lodash'
 import { closeBetLog } from '../../../logging.js'
 import { db } from '#db'
+import { memUse } from '#mem'
 import { resolvePayouts } from '#utilBetOps/resolvePayouts'
 import { wonDm } from '../wonDm.js'
 
@@ -32,7 +33,7 @@ export async function closeWonBets(winningTeam, homeOrAway, losingTeam) {
             let getWinners = await t.manyOrNone(
                 `SELECT * FROM "NBAbetslips" WHERE teamid = $1 AND betresult = 'pending'`,
                 [winningTeam],
-            );
+            )
             if (getWinners) {
                 for await (const betslip of getWinners) {
                     //# bet information
@@ -97,6 +98,8 @@ export async function closeWonBets(winningTeam, homeOrAway, losingTeam) {
                     await closeBetLog.info(
                         `Successfully closed bet ${betId} || User ID: ${userid}`,
                     )
+                    
+                    await memUse(`closeWonBets`, `Post-Close Won`)
                 }
                 resolve()
             }
