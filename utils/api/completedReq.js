@@ -3,8 +3,8 @@ import { Log, NFL_COLLECT_CRONTIMES } from '#config'
 import { checkCompleted } from './checkCompleted.js'
 import { completedReqLog } from '#winstonLogger'
 import { createRequire } from 'module'
-import { dmMe } from '../bot_res/dmMe.js'
 import { isGameDay } from '#botUtil/isGameDay'
+import { memUse } from '#mem'
 import { resolveCompCron } from '../db/gameSchedule/resolveCompCron.js'
 
 const require = createRequire(import.meta.url)
@@ -33,6 +33,8 @@ export function completedReq() {
             async () => {
                 //# Retrieve the cron ranges for the times we will be checking for completed games -- in the Cron format
                 completedCron = await resolveCompCron()
+
+                await memUse(`completedReq.js`, `Post-Cron Range Collection`)
                 completedReqLog.info(`Running completedReq.js - Initializing Cron Jobs`)
                 compGameMonitor.ping({
                     state: `ok`,
@@ -58,6 +60,7 @@ export function completedReq() {
                                 state: 'run',
                                 message: `Checking for completed games..`,
                             })
+                            await memUse(`completedReq.js`, `Pre-Check: Completed Games`)
                             await checkCompleted(compGameMonitor)
                             Log.Yellow(`Checking for completed games`)
                         },

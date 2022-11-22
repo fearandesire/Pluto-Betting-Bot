@@ -37,7 +37,8 @@
         "#dateUtil/*": "./utils/date/*.js",
         "#cacheUtil/*": "./utils/cache/*.js",
         "#main": "./Pluto.mjs",
-        "#winstonLogger": "./utils/logging.js"
+        "#winstonLogger": "./utils/logging.js",
+        "#mem": "./utils/bot_res/memUse.js"
     },
     "type": "module",
     "author": "",

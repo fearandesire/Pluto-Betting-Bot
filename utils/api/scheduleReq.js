@@ -1,7 +1,7 @@
-import { NFL_NEWSCHED_CHECK, flatcache } from '#config'
-
+import { NFL_NEWSCHED_CHECK } from '#config'
 import { collectOdds } from './collectOdds.js'
 import { createRequire } from 'module'
+import { memUse } from '#mem'
 import { removeAllMatchups } from '#utilMatchups/removeAllMatchups'
 
 const require = createRequire(import.meta.url)
@@ -15,10 +15,7 @@ the-odds-api seems to only update their odds every day, and provide the odds for
 */
 
 export async function scheduleReq() {
-    let schReqCache = await flatcache.create(
-        `lastWeekCalled.json`,
-        './cache/scheduleReq',
-    )
+    await memUse(`scheduleReq.js`, `Pre-Cron`)
     cron.schedule(
         `collectMatchupsReq`,
         `${NFL_NEWSCHED_CHECK}`,
@@ -30,4 +27,5 @@ export async function scheduleReq() {
         },
         { timezone: 'America/New_York' },
     )
+    await memUse(`scheduleReq.js`, `Post-Cron`)
 }

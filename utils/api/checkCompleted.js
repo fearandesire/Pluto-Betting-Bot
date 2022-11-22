@@ -9,6 +9,7 @@ import { dmMe } from '../bot_res/dmMe.js'
 import fetch from 'node-fetch'
 import { getShortName } from '../bot_res/getShortName.js'
 import { idApiExisting } from '../db/validation/idApiExisting.js'
+import { memUse } from '#mem'
 import { queueDeleteChannel } from '../db/gameSchedule/queueDeleteChannel.js'
 import { removeMatch } from '#utilMatchups/removeMatchup'
 import { setProgress } from '../db/matchupOps/progress/setProgress.js'
@@ -48,6 +49,7 @@ export async function checkCompleted(compGameMonitor) {
             var apiCompletedResult = json
             container.apiCompResult = apiCompletedResult
         })
+    await memUse(`checkCompleted.js`, `Post-API Init Connection`)
     var compResults = container.apiCompResult
     await apiReqLog.info(`${fileName} API Connection Information:`)
     await checkCompletedLog.info(stringifyObject(compResults))
