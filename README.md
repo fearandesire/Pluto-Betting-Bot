@@ -14,20 +14,11 @@
 <h4 align="center">
 </h4>
 
-<hr>
-
-<p align="center">
-  <a href="https://github.com/fearandesire/Pluto-Betting-Bot/blob/main/About.md">About</a> &#xa0; | &#xa0; 
-  <a href="#rocket-technologies">Packages</a> &#xa0; | &#xa0;
-  <a href="#memo-license">License</a> &#xa0; | &#xa0;
-  <a href="#scientist-authors">Authors</a>
-</p>
-
-<br>
-
 ## :dart: Overview
 
 Pluto is a full-fledged betting bot with a strong focus on simplicity. Users are able to securely place bets on NFL & NBA games and participate in the online betting scene without using real-life currency. Pluto utilizes an API _([the-odds-api](the-odds-api.com/))_ & secure SQL Databases to ensure that we consistently deliver accurate odds as well as smooth, worry-free redemption of bets.
+
+<a href="https://github.com/fearandesire/Pluto-Betting-Bot/blob/main/About.md">Read about the development process here!</a>
 
 ## :rocket: Technologies
 
