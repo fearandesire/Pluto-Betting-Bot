@@ -4,11 +4,11 @@ import { apiReqLog, checkCompletedLog } from '#winstonLogger'
 import { checkProgress } from '../db/matchupOps/progress/checkProgress.js'
 import { closeLostBets } from '../db/betOps/closeBets/closeLostBets.js'
 import { closeWonBets } from '../db/betOps/closeBets/closeWonBets.js'
+import { deleteChan } from '../db/gameSchedule/deleteChan.js'
 import { dmMe } from '../bot_res/dmMe.js'
 import fetch from 'node-fetch'
 import { getShortName } from '../bot_res/getShortName.js'
 import { idApiExisting } from '../db/validation/idApiExisting.js'
-import { locateChannel } from '../db/gameSchedule/locateChannel.js'
 import { queueDeleteChannel } from '../db/gameSchedule/queueDeleteChannel.js'
 import { removeMatch } from '#utilMatchups/removeMatchup'
 import { setProgress } from '../db/matchupOps/progress/setProgress.js'
@@ -73,22 +73,22 @@ export async function checkCompleted(compGameMonitor) {
                     `Unable to find matchup in database: ${value.home_team} vs ${value.away_team}`,
                 )
                 continue
-            }
-            if (checkProg == false) {
+            } else if (checkProg === false) {
+                console.log(`checkProg: ${checkProg}`)
                 //# Queue game channel to be closed in 30 minutes
                 var gameChan
                 var hTeamShort = await getShortName(value.home_team)
                 var aTeamShort = await getShortName(value.away_team)
                 gameChan = `${aTeamShort}-vs-${hTeamShort}`
                 try {
-                    gameChan = await locateChannel(gameChan)
-                    if (gameChan) {
-                        await queueDeleteChannel(gameChan)
-                        await Log.Green(
-                            `Step 3: - Game Channel Queued for Deletion || ${gameChan}`,
-                        )
-                    }
+                    await queueDeleteChannel(gameChan)
+                    await Log.Green(
+                        `Step 3: - Game Channel Queued for Deletion || ${gameChan}`,
+                    )
                 } catch (err) {
+                    await dmMe(
+                        `Error during locate / delete game channel for ${value.away_team}-vs.-${value.home_team}\nError: : ${err}`,
+                    )
                     await checkCompletedLog.error(
                         `Error occured during locate / delete game channel for ${value.home_team} vs. ${value.away_team}`,
                     )

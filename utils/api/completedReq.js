@@ -3,6 +3,7 @@ import { Log, NFL_COLLECT_CRONTIMES } from '#config'
 import { checkCompleted } from './checkCompleted.js'
 import { completedReqLog } from '#winstonLogger'
 import { createRequire } from 'module'
+import { dmMe } from '../bot_res/dmMe.js'
 import { isGameDay } from '#botUtil/isGameDay'
 import { resolveCompCron } from '../db/gameSchedule/resolveCompCron.js'
 

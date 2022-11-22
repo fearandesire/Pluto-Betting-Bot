@@ -1,7 +1,9 @@
 import { Log, NFL_ACTIVEMATCHUPS, container } from '#config'
 
 import { db } from '#db'
+import { dmMe } from '../../bot_res/dmMe.js'
 import { resolveToday } from '#dateUtil/resolveToday'
+import stringifyObject from 'stringify-object'
 
 /**
  * @module resolveCompCron
@@ -124,6 +126,11 @@ export async function resolveCompCron() {
                     range1: range1,
                     range2: range2,
                 }
+                await dmMe(
+                    `Cron Ranges for Completed Games:\n${stringifyObject(
+                        container.cronRanges,
+                    )}`,
+                )
                 return {
                     range1: `${range1}`,
                     range2: `${range2}`,
@@ -147,6 +154,11 @@ export async function resolveCompCron() {
                 container.cronRanges = {
                     range1: range1,
                 }
+                await dmMe(
+                    `Cron Ranges for Completed Games:\n${stringifyObject(
+                        container.cronRanges,
+                    )}`,
+                )
                 return {
                     range1: range1,
                 }
