@@ -6,6 +6,7 @@ import { LogLevel, SapphireClient } from '@sapphire/framework'
 
 import { Log } from '#config'
 import { RateLimitManager } from '@sapphire/ratelimits'
+import { memUse } from '#mem'
 
 Log.Magenta(`[Startup]: Initializing Pluto`)
 
@@ -42,7 +43,6 @@ const SapDiscClient = new SapphireClient({
         sharding: false, // (Optional) Activate the sharding mode, it is important to read the notes below.
     },
 })
-
 const loginClient = async () => {
     try {
         Log.Yellow(`[Startup]: Logging in Pluto to Discord..`)
@@ -57,6 +57,6 @@ const loginClient = async () => {
     }
 }
 loginClient()
-
+await memUse(`Pluto.mjs`, `Init Startup`)
 export { SapDiscClient }
 export { RateLimitManager }
