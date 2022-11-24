@@ -1,7 +1,10 @@
 import { Log, NFL_ACTIVEMATCHUPS, container } from '#config'
 
 import { db } from '#db'
+import { dmMe } from '../../bot_res/dmMe.js'
+import { memUse } from '#mem'
 import { resolveToday } from '#dateUtil/resolveToday'
+import stringifyObject from 'stringify-object'
 
 /**
  * @module resolveCompCron
@@ -10,6 +13,7 @@ import { resolveToday } from '#dateUtil/resolveToday'
  */
 
 export async function resolveCompCron() {
+    await memUse(`resolveCompCron`, `Pre-Cron Range`)
     var todaySlash = await new resolveToday().todayFullSlashes
     todaySlash = todaySlash.toString()
     Log.Green(`[resolveCompCron.js] Today is ${todaySlash}`)
@@ -124,6 +128,11 @@ export async function resolveCompCron() {
                     range1: range1,
                     range2: range2,
                 }
+                await dmMe(
+                    `Cron Ranges for Completed Games:\n${stringifyObject(
+                        container.cronRanges,
+                    )}`,
+                )
                 return {
                     range1: `${range1}`,
                     range2: `${range2}`,
@@ -147,6 +156,11 @@ export async function resolveCompCron() {
                 container.cronRanges = {
                     range1: range1,
                 }
+                await dmMe(
+                    `Cron Ranges for Completed Games:\n${stringifyObject(
+                        container.cronRanges,
+                    )}`,
+                )
                 return {
                     range1: range1,
                 }

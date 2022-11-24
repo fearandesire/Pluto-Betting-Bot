@@ -3,6 +3,7 @@ import { Log, NFL_ACTIVEMATCHUPS } from '#config'
 import _ from 'lodash'
 import { closeBetLog } from '../../../logging.js'
 import { db } from '#db'
+import { memUse } from '#mem'
 import { resolvePayouts } from '#utilBetOps/resolvePayouts'
 import { wonDm } from '../wonDm.js'
 
@@ -12,11 +13,14 @@ import { wonDm } from '../wonDm.js'
  * 2. Calculate payout for the bets, and update the "NBAbetslips" table with the payout, as well as the betresult with "won"
  * 3. Update the user balance from the "currency" table with the payout
  * 4. DM the user they won their bet
+ * @param {string} winningTeam - The team that won the game
+ * @param {string} homeOrAway - If this team that won was 'home' or 'away' - string literal
+ * @param {string} losingTeam - The losing team
  */
 
 export async function closeWonBets(winningTeam, homeOrAway, losingTeam) {
     return new Promise(async (resolve, reject) => {
-        var dbStack = await db.tx(async (t) => {
+        await db.tx(async (t) => {
             // Start a db transaction
             var getMatchInfo = await t.oneOrNone(
                 `SELECT * FROM "${NFL_ACTIVEMATCHUPS}" WHERE teamone = $1 AND teamtwo = $2 OR teamone = $2 AND teamtwo = $1`,
@@ -33,12 +37,12 @@ export async function closeWonBets(winningTeam, homeOrAway, losingTeam) {
             if (getWinners) {
                 for await (const betslip of getWinners) {
                     //# bet information
-                    var betAmount = betslip.amount
-                    var betId = betslip.betid
-                    var userid = betslip.userid
-                    var betOdds
-                    var opposingTeam
-                    var teamBetOn
+                    let betAmount = betslip.amount
+                    let betId = betslip.betid
+                    let userid = betslip.userid
+                    let betOdds
+                    let opposingTeam
+                    let teamBetOn
                     if (homeOrAway === 'home') {
                         betOdds = getMatchInfo.teamoneodds
                         opposingTeam = getMatchInfo.teamtwo
@@ -52,11 +56,11 @@ export async function closeWonBets(winningTeam, homeOrAway, losingTeam) {
                         `Bet ID: ${betId} || Bet Odds: ${betOdds} || Bet Amount: ${betAmount}`,
                     )
                     //# calc payout
-                    var payAndProfit = await resolvePayouts(betOdds, betAmount)
-                    var payout = payAndProfit.payout
-                    var profit = payAndProfit.profit
-                    const payoutAmount = parseFloat(payout)
-                    const profitAmount = parseFloat(profit)
+                    let payAndProfit = await resolvePayouts(betOdds, betAmount)
+                    let payout = payAndProfit.payout
+                    let profit = payAndProfit.profit
+                    let payoutAmount = parseFloat(payout)
+                    let profitAmount = parseFloat(profit)
                     await closeBetLog.info(
                         `Closing Bet Information:\nUser ID: ${userid}\nBet ID: ${betId}\nBet Result: Won\nBet Amount: ${betAmount}\nBet Odds: ${betOdds}\nTeam Bet On: ${teamBetOn}\nOpposing Team: ${opposingTeam}\nWinning Team: ${winningTeam}\nHome or Away: ${homeOrAway}\nPayout: ${payoutAmount}\nProfit: ${profitAmount}`,
                     )
@@ -71,8 +75,7 @@ export async function closeWonBets(winningTeam, homeOrAway, losingTeam) {
                         [userid],
                     )
                     //# calc winnings
-                    const currentUserBal = parseFloat(userBal?.balance)
-                    const newUserBal = currentUserBal + payoutAmount
+                    const newUserBal = parseFloat(await userBal?.balance) + payoutAmount
                     await t.oneOrNone(
                         `UPDATE "currency" SET balance = $1 WHERE userid = $2`,
                         [newUserBal, userid],
@@ -95,6 +98,8 @@ export async function closeWonBets(winningTeam, homeOrAway, losingTeam) {
                     await closeBetLog.info(
                         `Successfully closed bet ${betId} || User ID: ${userid}`,
                     )
+                    
+                    await memUse(`closeWonBets`, `Post-Close Won`)
                 }
                 resolve()
             }

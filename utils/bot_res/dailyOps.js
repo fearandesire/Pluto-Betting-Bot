@@ -1,5 +1,6 @@
 import cron from 'node-cron'
 import { embedReply } from '#config'
+import { memUse } from '#mem'
 import { sentSchEmb } from '../cache/sentSchEmb.js'
 
 /**
@@ -8,6 +9,7 @@ import { sentSchEmb } from '../cache/sentSchEmb.js'
  */
 
 export async function dailyOps() {
+    await memUse(`dailyOps`, `Pre-Cron`)
     cron.schedule('0 0 * * *', async () => {
         await sentSchEmb().then(async (res) => {
             if (res == false) {
@@ -22,4 +24,5 @@ export async function dailyOps() {
             }
         })
     })
+    await memUse(`dailyOps`, `Post-Cron`)
 }
