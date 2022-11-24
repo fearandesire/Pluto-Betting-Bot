@@ -65,7 +65,7 @@ const loginClient = async () => {
 }
 loginClient()
 const app = express()
-const port = 3000
+const port = 3003
 
 app.use(require('express-status-monitor')())
 //app.listen(port, () => console.log(`app listening on port ${port}!`))
