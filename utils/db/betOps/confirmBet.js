@@ -16,13 +16,8 @@ import stringifyObject from 'stringify-object'
  * @param {obj} message - The message object - contains the user info from Discord & allows us to reply to the user.
  * @param {obj} betslip - The bet information from the user input that we will have them confirm. Additionally, we tack on the matchid, and assign a betid to the bet.
  * @param {boolean} interactionEph - Whether the response should be visible to the user or not [slash cmd]
- * @returns - If the user confirms the bet, pushes bet to DB with {@link addNewBet} (which will provide a response to user) && subtracts/sorts their new balance with {@link sortBalance}
+ * @returns - If the user confirms the bet, pushes bet to DB with {@link addNewBet}
  * If the user does not confirm their bet in time, we inform them of such and end the event.
- * @references
- * - {@link setupBet.js} Calls confirmBet.js
- * - {@link addNewBet.js} Adds the bet to the DB
- * - {@link sortBalance.js} Sorts the user's balance [subtracting the bet amount, storing new balance]
- *
  */
 
 export async function confirmBet(message, betslip, userId, interactionEph) {
@@ -77,7 +72,7 @@ export async function confirmBet(message, betslip, userId, interactionEph) {
             await new pendingBet().deletePending(userId)
             var embObj = {
                 title: `:x: Bet Cancellation`,
-                description: `Your bet has been cancelled.`,
+                description: `Your ${betslip.amount} bet on the ${betslip.teamid} has been cancelled.`,
                 color: `#191919`,
                 isSilent: true,
             }
@@ -88,8 +83,8 @@ export async function confirmBet(message, betslip, userId, interactionEph) {
     collector.on('end', async (collected, reason) => {
         if (reason === 'time') {
             var embObj = {
-                title: `:x: Bet Cancellation`,
-                description: `Your bet has been cancelled.`,
+                title: `:x: Bet Cancelled`,
+                description: `Your bet on the ${betslip.teamid} has been cancelled.`,
                 color: `#191919`,
                 followUp: true,
             }
