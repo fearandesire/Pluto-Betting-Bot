@@ -1,8 +1,8 @@
 import {
     Log,
-    NFL_ACTIVEBETS,
     NFL_ACTIVEMATCHUPS,
     NFL_BETS,
+    NFL_LIVEBETS,
     NFL_PROFILES,
 } from '#config'
 
@@ -12,7 +12,7 @@ import { lostDm } from '../lostDm.js'
 import { memUse } from '#mem'
 
 const actMatchups = NFL_ACTIVEMATCHUPS
-const actBets = NFL_ACTIVEBETS
+const actBets = NFL_LIVEBETS
 const betTbl = NFL_BETS
 /**
  * @module closeLostBets
