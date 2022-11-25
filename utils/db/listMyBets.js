@@ -103,7 +103,6 @@ export function listMyBets(userid, message) {
             return false
         })
         .finally(() => {
-            //? Clearing the array from memory to preserve our memory usage
             return
         })
 }

@@ -20,8 +20,7 @@ import { setupBetLog } from '#winstonLogger'
  *
  */
 
-export function addNewBet(message, betslip, interactionEph) {
-    //Log.Red(`INTERACTION: ${interactionEph}`)
+export function addNewBet(message, betslip) {
     /*
     Querying DB using db.tx since we are handling multiple transactions
     First query: Selecting the 'matchid' as its required for us to store the betslip information in the DB.

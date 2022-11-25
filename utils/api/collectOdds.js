@@ -17,12 +17,11 @@ import { dmMe } from '../bot_res/dmMe.js'
 import fetch from 'node-fetch'
 import flatcache from 'flat-cache'
 import { gameDaysCache } from '../cache/gameDaysCache.js'
-import { isExactMatchup } from '../db/validation/isExactMatchup.js'
 import { resolveDayName } from '../bot_res/resolveDayName.js'
 import { resolveIso } from '#dateUtil/resolveIso'
 import { resolveToday } from '#dateUtil/resolveToday'
 import { scheduleChannels } from '../db/gameSchedule/scheduleChannels.js'
-import stringifyObject from 'stringify-object'
+import { isMatchExist } from '#utilValidate/isMatchExist'
 
 let oddsCache = flatcache.create(`oddsCache.json`, './cache/dailyOdds')
 
@@ -46,15 +45,19 @@ export async function collectOdds(message) {
     }
     let matchups = {} //# to store matchups into cache
     container.allNbaOdds = {}
-    await fetch(url, options)
-        .then((res) => res.json())
-        .then((json) => {
-            collectOddsLog.info(`Initializing collection of odds for the day`)
-            //? Returns the list of matchups
-            var apiGamesList = json
-            container.allNbaOdds = apiGamesList
-        })
-    var allNbaOdds = container.allNbaOdds
+    let apiRequest
+    // let apiRes
+    let allNbaOdds
+    collectOddsLog.notice({
+        status: `New Session`,
+    })
+    try {
+        apiRequest = await fetch(url, options).then((res) => res.json())
+        allNbaOdds = apiRequest
+    } catch (error) {
+        collectOddsLog.error({ errorMsg: error })
+        return
+    }
     container.matchupCount = 0
     for (let [key, value] of Object.entries(allNbaOdds)) {
         let isoDate = value.commence_time
@@ -69,28 +72,19 @@ export async function collectOdds(message) {
         var apiDoW = apiDateInfo.dayOfWeek
         var nextWeek = parseInt(weekNum) + 1 //# Fetch Monday Games
         var gameDate = `${monthNum}/${gameDay}/${gameYear}`
-        //# Prevent duplication of matchups in the database
-        var dupeDBMatchup = await isExactMatchup(
-            value.home_team,
-            value.away_team,
-            gameDate,
-        )
-        if (dupeDBMatchup == true) {
-            collectOddsLog.info(
-                `Matchup already exists in DB: ${value.home_team} vs ${value.away_team} on date: ${gameDate} -- This matchup will not be stored.`,
-            )
-            await dmMe(
-                `**${value.home_team} vs ${value.away_team}** on date: **${gameDate}** already exists in DB -- This matchup will __not__ be stored.`,
-            )
+        if (await isMatchExist(value.home_team)) {
+            //# there is a unique-key constraint in the database, but this is to prevent the count of games scheduled from being incorrect
+            collectOddsLog.error({
+                status: `Duplicate Matchup`,
+                teamone: value.home_team,
+                teamtwo: value.away_team,
+            })
             continue
         }
         if (
             apiWeekNum === weekNum ||
             (apiWeekNum === nextWeek && apiDoW === 'Mon')
         ) {
-            await collectOddsLog.info(
-                `Storing Matchup: ${value.home_team} vs ${value.away_team}\nToday's Week: ${weekNum} | API Week: ${apiWeekNum} | Next Week: ${nextWeek} Game Day: ${apiDoW}`,
-            )
             container.matchupCount++
             //# the current day and time
             let currentDay = todayDateInfo.dayNum
@@ -128,11 +122,6 @@ export async function collectOdds(message) {
             var startDayOfMonth = Number(format(gameTime, `d`))
             var startMonth = Number(format(gameTime, `M`))
             var cronStartTime = `${startMin} ${startHour} ${startDayOfMonth} ${startMonth} ${startDay}`
-            //# Format ISO to be used for game start times in a quick gameActive check
-            var startTimeISO = formatISO(gameTime, { representation: 'complete' })
-            await collectOddsLog.info(
-                `Matchup: ${home_team} vs ${away_team} | Cron Start Time: ${cronStartTime}`,
-            )
             let matchupId = await assignMatchID()
             var dayName = await resolveDayName(startDay)
             if (startMin.toString().length === 1) {
@@ -161,12 +150,10 @@ export async function collectOdds(message) {
                 [`cronStartTime`]: cronStartTime,
                 [`legibleStartTime`]: legibleStartTime,
             }
-            await collectOddsLog.info(
-                `== Storing Matchup into cache: ==\n${stringifyObject(
-                    matchups[matchupId],
-                )}`,
-            )
-            // date-fns will format '00' minutes as '0' | adding a zero to make it more legible
+            await collectOddsLog.notice({
+                status: `Storing Match`,
+                matchInfo: matchups[`${matchupId}`],
+            })
             //# matchups to DB
             await createMatchups(
                 message,
@@ -181,7 +168,7 @@ export async function collectOdds(message) {
                 legibleStartTime,
                 idApi,
             )
-            //# game channel creation
+            //# queue game channel creation
             await scheduleChannels(
                 home_team,
                 away_team,
@@ -191,9 +178,11 @@ export async function collectOdds(message) {
             //# save day of the week names to cache for daily embeds to staff
             await gameDaysCache(dayName)
         } else {
-            collectOddsLog.info(
-                `== Matchup not stored: ==\n${value.home_team} vs ${value.away_team}\nToday's Week: ${weekNum} | API Week: ${apiWeekNum} | Next Week: ${nextWeek} Game Day: ${apiDoW}`,
-            )
+            collectOddsLog.warning({
+                status: `Skipped Storing Match`,
+                teamone: value.home_team,
+                teamtwo: value.away_team,
+            })
             continue
         }
     }
@@ -207,14 +196,12 @@ export async function collectOdds(message) {
         )
         return
     }
-    collectOddsLog.info(
-        `All Matchup information collected:\n${stringifyObject(matchups)}`,
-    )
     await oddsCache.setKey(`matchups`, matchups)
     await oddsCache.save(true)
-    collectOddsLog.info(
-        `Successfully gathered odds for the day.\nOdds are stored into cache & db\n# Of Matchups Stored: (${container.matchupCount})`,
-    )
+    await collectOddsLog.notice({
+        status: `Complete`,
+        count: container.matchupCount,
+    })
     if (message !== null) {
         setTimeout(async () => {
             var embObj = {

@@ -8,7 +8,7 @@ import { accounting } from '#config'
  * @param {object} betslip - The details of the users bet
  * @param {boolean} interactionEph - Whether the response should be visible to the user or not [slash cmd]
  */
-export function confirmBetEmbed(message, betslip, interactionEph) {
+export function confirmBetEmbed(message, betslip) {
     var customerFooter =
         'Please Note: If you do not confirm your bet within 60 seconds, it will be cancelled.'
     var format = accounting.format
@@ -30,9 +30,5 @@ export function confirmBetEmbed(message, betslip, interactionEph) {
         .setTimestamp()
         .setThumbnail(`${process.env.sportLogoNBA}`)
         .setFooter({ text: customerFooter })
-    if (interactionEph) {
-        message.reply({ embeds: [confirmembed], ephemeral: true })
-    } else if (!interactionEph) {
-        message.reply({ embeds: [confirmembed] })
-    }
+    message.reply({ embeds: [confirmembed], ephemeral: true })
 }

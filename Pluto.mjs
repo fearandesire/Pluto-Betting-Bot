@@ -12,11 +12,9 @@ import express from 'express'
 import { memUse } from '#mem'
 
 // use require in ES6
-
 const require = createRequire(import.meta.url)
 
 Log.Magenta(`[Startup]: Initializing Pluto`)
-
 // Sapphire framework
 const SapDiscClient = new SapphireClient({
     defaultPrefix: process.env.PREFIX,
@@ -50,25 +48,26 @@ const SapDiscClient = new SapphireClient({
         sharding: false, // (Optional) Activate the sharding mode, it is important to read the notes below.
     },
 })
-const loginClient = async () => {
+const login = async () => {
     try {
-        Log.Yellow(`[Startup]: Logging in Pluto to Discord..`)
+        Log.Yellow(`[Startup]: Logging Pluto in to Discord..`)
         await SapDiscClient.login(process.env.TOKEN)
-        Log.Green(
-            `[Startup]: Logged in successfully!\nID: ${SapDiscClient.user.id}`,
-        )
     } catch (error) {
+        Log.Red(`[Startup]: Error logging in to Discord!`)
         SapDiscClient.logger.fatal(error)
         SapDiscClient.destroy()
         process.exit(1)
+    } finally {
+        Log.Green(
+            `[Startup]: Logged in successfully!\nID: ${SapDiscClient.user.id}`,
+        )
     }
 }
-loginClient()
+login()
 const app = express()
 const port = 3000
 
 app.use(require('express-status-monitor')())
-//app.listen(port, () => console.log(`app listening on port ${port}!`))
 app.use(bodyParser.json()) // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
 app.listen(port, () => {

@@ -11,7 +11,7 @@ import { db } from '#db'
  * @param {integer} amount
  */
 
-export function modifyAmount(message, userid, betid, amount, interactionEph) {
+export function modifyAmount(interaction, userid, betid, amount) {
     db.tx('modifyAmount', async (t) => {
         const currentAmount = await t.oneOrNone(
             `SELECT amount FROM "NBAbetslips" WHERE userid = $1 AND betid = $2`,
@@ -41,13 +41,9 @@ export function modifyAmount(message, userid, betid, amount, interactionEph) {
         Log.Green(
             `[modifyAmount.js] Successfully modified bet #${betid} to $${amount}.`,
         )
-        if (interactionEph) {
-            message.reply({
-                content: `Successfully modified bet #${betid} to $${amount}.`,
-                ephemeral: true,
-            })
-        } else {
-            message.reply(`Successfully modified bet #${betid} to $${amount}.`)
-        }
+        interaction.reply({
+            content: `Successfully modified your bet #${betid} to $${amount}.`,
+            ephemeral: true,
+        })
     })
 }

@@ -1,20 +1,15 @@
+import { QuickError, embedReply } from '#config'
+
 import { Log } from '#LogColor'
-import { QuickError } from '#config'
 import { db } from '#db'
 
 /**
  * @module queryBets -
- * Query the database to locate & delete the specified bet from the user.
- * @description - This is intended for when a user wants to cancel a bet, so it will remove the bet from the leaderboard table ('"NBAbetslips"') and the "NBAactivebets" table.
- * When initiated, queryBets will verify if the user has any bets* (failsafe, but can definitely be removed as we verified prior)
- * Following that, we will update the users balance wih how much they bet, since they are cancelling it.
- * The only reason for separation of the user's bets (```betCount```) being either 1 or higher than 1 is to update the `hasBetsEmbed` information;
- * As if the user has no bets remaining, we will need to make sure they are informed of such if they try to list them again, and `hasBetsEmbed` is apart of that check.
- * @param {integer} userid
- * @param {integer} betid
- * @references {@link cancelBet.js}
+ * Query the DB and delete the specified bet via the betid
+ * @param {integer} userid - The user's Discord ID
+ * @param {integer} betid - The id of the bet to be deleted
  */
-export async function queryBets(message, userid, betid) {
+export async function queryBets(interaction, userid, betid) {
     db.tx('queryCancelBet', async (t) => {
         const getBetCount = await t.manyOrNone(
             `SELECT count(*) FROM "NBAbetslips" WHERE userid = $1`,
@@ -22,31 +17,23 @@ export async function queryBets(message, userid, betid) {
             (c) => c.count,
         )
         const betCount = parseInt(getBetCount[0].count) //? convert count of bets to integer
-        Log.Yellow(
-            `[queryBets.js] User ${userid} has ` + betCount + ` active bet(s).`,
-        )
-        if (betCount === 0) {
-            await QuickError(
-                message,
-                `You have no active bets\nCeased canceling bet operations - no data has been changed,`,
-            )
+        if (betCount < 1) {
+            await QuickError(interaction, `You have no active bets to cancel.`)
             throw Log.Error(`[queryBets.js] User ${userid} has no active bets.`)
         }
         if (betCount > 0) {
-            //? Update user balance by adding the amount they have bet.
-            //? Since we require multiple transactions, we assign the necesary info transactions variables so we can call upon them.
-            //* We utilize async functions to grab both the bet amount and the user's balance, and finally updating the balance with the math complete.
+            // Collect bet info
             const betData = await t.oneOrNone(
                 'SELECT amount FROM "NBAbetslips" WHERE userid = $1 AND betid = $2',
                 [userid, betid],
             )
+            // Collect current user balance
             const userBal = await t.oneOrNone(
                 `SELECT balance FROM "NBAcurrency" WHERE userid = $1`,
                 [userid],
             )
-            const placedBetAmount = parseInt(betData.amount)
-            const currentUserBal = parseInt(userBal.balance)
-            const newBal = currentUserBal + placedBetAmount
+            // add current user balance + the bet amount
+            const newBal = parseInt(userBal.balance) + parseInt(betData.amount)
             await t.batch([
                 await t.oneOrNone(
                     `UPDATE "NBAcurrency" SET balance = $1 WHERE userid = $2`,
@@ -54,20 +41,21 @@ export async function queryBets(message, userid, betid) {
                 ),
                 await t.oneOrNone(
                     `DELETE FROM "NBAactivebets" WHERE userid = $1 AND betid = $2`,
-                    [
-                        //? Delete from "NBAactivebets" table
-                        userid,
-                        betid,
-                    ],
+                    [userid, betid],
                 ),
                 await t.oneOrNone(
                     `DELETE FROM "NBAbetslips" WHERE userid = $1 AND betid = $2`,
                     [userid, betid],
                 ),
             ])
-            Log.Green(
-                `[queryBets.js] User ${userid} has cancelled bet ${betid}\nSuccessfully updated their balance, and removed the bet from the "NBAactivebets" & "NBAbetslips" table`,
-            )
+            var embObj = {
+                title: `Bet Revoked`,
+                description: `Successfully cancelled bet #${betid}\nYour balance has been restored.`,
+                color: `#00ff00`,
+                thumbnail: `${process.env.sportLogo}`,
+                target: `reply`,
+            }
+            await embedReply(interaction, embObj)
         }
     }).then((data) => {
         Log.Green(`[queryBets.js] Operations for ${userid} completed.`)
