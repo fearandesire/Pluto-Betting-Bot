@@ -2,6 +2,7 @@ import { SapDiscClient } from '#main'
 import { createChanLog } from '#winstonLogger'
 import { createRequire } from 'module'
 import { dmMe } from '../../bot_res/dmMe.js'
+import { gameEmbed } from './gameEmbed.js'
 
 const require = createRequire(import.meta.url)
 const cron = require('cronitor')(`f9f7339479104e79bf2b52eb9c2242bf`)
@@ -30,14 +31,11 @@ export async function createChannel(awayTeam, homeTeam) {
             topic: `Enjoy the Game!`,
             parent: category,
         })
-        //# Wish a random team good luck
-        var teamChoices = [homeTeam, awayTeam]
-        var goodLuck = Math.floor(Math.random() * teamChoices.length)
-        await gameChan.send(`Good luck to the ${teamChoices[goodLuck]}!`)
+        //# Collect information about the game and send it to the game channel on creation
+        var gameInfo = await gameEmbed(homeTeam, awayTeam)
+        await gameChan.send({ embeds: [gameInfo] })
         await dmMe(
             `${channelName} Game Channel created successfully\nDirect Link: <#${gameChan.id}>`,
-            `#00ff00`,
-            `Game Channel Creation`,
         )
         createChanLog.info(`Game Channel Created: ${channelName}`)
         await gameCreateMonitor.ping({

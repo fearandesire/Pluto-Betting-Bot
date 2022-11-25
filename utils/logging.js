@@ -10,8 +10,17 @@ if (!fs.existsSync(logDir)) {
     // Create the directory if it does not exist
     fs.mkdirSync(logDir)
 }
-
-const { level, combine, splat, printf } = winston.format
+const levels = {
+    emerg: 0,
+    alert: 1,
+    crit: 2,
+    error: 3,
+    warning: 4,
+    notice: 5,
+    info: 6,
+    debug: 7,
+}
+const { json, combine, splat, printf, colorize, prettyPrint } = winston.format
 
 let timestamp = winston.format.timestamp({
     format: 'MM-DD HH:mm:ss',
@@ -25,6 +34,30 @@ const customWinstonFormat = printf(
         return msg
     },
 )
+
+//# Global Format Config
+var FORMAT = combine(
+    splat(),
+    prettyPrint({
+        colorize: true,
+        depth: 5,
+    }),
+    timestamp,
+    json(),
+)
+
+export const overallLog = winston.createLogger({
+    levels: winston.config.syslog.levels,
+    format: FORMAT,
+    transports: [
+        new winston.transports.File({
+            filename: 'logs/global/error/testing.log',
+            level: 'error',
+        }),
+        new winston.transports.File({ filename: 'logs/global/testing.log' }),
+        new winston.transports.Console(),
+    ],
+})
 
 export const memLog = winston.createLogger({
     levels: winston.config.syslog.levels,
@@ -213,17 +246,8 @@ export const betSlipLog = winston.createLogger({
 })
 
 export const checkCompletedLog = winston.createLogger({
-    level: 'info',
-    format: winston.format.combine(
-        winston.format.colorize(),
-        splat(),
-        winston.format.prettyPrint({
-            colorize: true,
-            depth: 5,
-        }),
-        timestamp,
-        customWinstonFormat,
-    ),
+    levels: levels,
+    format: FORMAT,
     transports: [
         new winston.transports.File({
             filename: 'logs/closeBetOp/err/2. checkCompletedErr.log',
@@ -308,17 +332,8 @@ export const deleteBetArrLog = winston.createLogger({
     ],
 })
 export const collectOddsLog = winston.createLogger({
-    level: 'info',
-    format: winston.format.combine(
-        winston.format.colorize(),
-        splat(),
-        winston.format.prettyPrint({
-            colorize: true,
-            depth: 5,
-        }),
-        timestamp,
-        customWinstonFormat,
-    ),
+    levels: levels,
+    format: FORMAT,
     transports: [
         new winston.transports.File({
             filename: 'logs/collectOddsErr.log',
@@ -753,16 +768,7 @@ export const closeBetLog = winston.createLogger({
 })
 export const apiReqLog = winston.createLogger({
     level: 'info',
-    format: winston.format.combine(
-        winston.format.colorize(),
-        splat(),
-        winston.format.prettyPrint({
-            colorize: true,
-            depth: 5,
-        }),
-        timestamp,
-        customWinstonFormat,
-    ),
+    format: FORMAT,
     transports: [
         new winston.transports.File({
             filename: 'logs/closeBetOp/err/apiReq.log',
