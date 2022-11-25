@@ -9,9 +9,6 @@ import { pendingBet } from './pendingBet.js'
  * @param {obj} message - Discord.Message
  * @param {integer} userid - The user's ID
  * @returns {boolean} True if the user is registered, throws error otherwise
- * @references
- * - {@link isExistingUser} - DB Query promise function to check if the user is registered in the database
- * - {@link listbets.js} - The invoker of this module is listbets.js
  */
 export async function validateUser(
     message,
@@ -21,7 +18,7 @@ export async function validateUser(
 ) {
     await isExistingUser(userid).then(async function handleResp(data) {
         if (data) {
-            Log.Green(`[validateUser.js] User ${userid} is registered with Pluto.`)
+            Log.Green(`${userid} validated as an existing user`)
             return
         } else {
             var errorMsg
@@ -35,7 +32,7 @@ export async function validateUser(
                 //# delete from pending
                 await new pendingBet().deletePending(userid)
             }
-            QuickError(message, errorMsg, interactionEph)
+            await QuickError(message, errorMsg, interactionEph)
             throw Log.Red(
                 `[validateUser.js] User ${userid} is not registered with Pluto.`,
             )

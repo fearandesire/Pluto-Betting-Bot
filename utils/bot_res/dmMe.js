@@ -36,7 +36,7 @@ export async function dmMe(message, embed) {
             var formatEmb = new MessageEmbed()
                 .setTitle(`Notification`)
                 .setDescription(message)
-                .setColor(`${randomColor}`)
+                .setColor(randomColor)
             user.send({ embeds: [formatEmb] })
         }
     })

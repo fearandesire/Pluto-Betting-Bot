@@ -10,7 +10,16 @@ if (!fs.existsSync(logDir)) {
     // Create the directory if it does not exist
     fs.mkdirSync(logDir)
 }
-
+const levels = {
+    emerg: 0,
+    alert: 1,
+    crit: 2,
+    error: 3,
+    warning: 4,
+    notice: 5,
+    info: 6,
+    debug: 7,
+}
 const { json, combine, splat, printf, colorize, prettyPrint } = winston.format
 
 let timestamp = winston.format.timestamp({
@@ -237,7 +246,7 @@ export const betSlipLog = winston.createLogger({
 })
 
 export const checkCompletedLog = winston.createLogger({
-    level: 'info',
+    levels: levels,
     format: FORMAT,
     transports: [
         new winston.transports.File({
@@ -323,17 +332,8 @@ export const deleteBetArrLog = winston.createLogger({
     ],
 })
 export const collectOddsLog = winston.createLogger({
-    level: 'info',
-    format: winston.format.combine(
-        winston.format.colorize(),
-        splat(),
-        winston.format.prettyPrint({
-            colorize: true,
-            depth: 5,
-        }),
-        timestamp,
-        customWinstonFormat,
-    ),
+    levels: levels,
+    format: FORMAT,
     transports: [
         new winston.transports.File({
             filename: 'logs/collectOddsErr.log',
