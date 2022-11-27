@@ -11,7 +11,9 @@ import { SapDiscClient } from '#main'
 export async function findEmoji(emojiName) {
     console.log(`searching for emoji: ${emojiName}`)
     // Find an emoji by name
-    var emoji = SapDiscClient.emojis.cache.find((e) => e.name === emojiName)
+    var emoji = SapDiscClient.emojis.cache.find(
+        (e) => e.name === emojiName.toLowerCase(),
+    )
     if (!emoji) {
         return null
     }
