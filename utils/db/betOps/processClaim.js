@@ -1,7 +1,5 @@
 //import { updateclaim } from './addClaimTime.js';
 
-import { db } from '#db'
-import { Log } from '#LogColor'
 import {
     addHours,
     format,
@@ -12,7 +10,10 @@ import {
     parseISO,
 } from 'date-fns'
 
-export async function processClaim(inputuserid, message) {
+import { Log } from '#LogColor'
+import { db } from '#db'
+
+export async function processClaim(inputuserid, interaction) {
     var today = new Date()
     //# Convert the current time & last claim time to unix
     var rightNow = await getUnixTime(fromUnixTime(today))
@@ -38,7 +39,7 @@ export async function processClaim(inputuserid, message) {
                 description: `Welcome to Pluto! You have claimed your daily $100.\nYou can use this command again in 24 hours.\nYour new balance: $${updatedBalance}`,
                 color: `#00ff00`,
             }
-            message.reply({ embeds: [embObj] })
+            interaction.reply({ embeds: [embObj] })
 
             return t.any(
                 'UPDATE currency SET lastclaimtime = $1, balance = $2 WHERE userid = $3 RETURNING *',
@@ -62,7 +63,7 @@ export async function processClaim(inputuserid, message) {
             if (passedCooldown == false) {
                 var timeLeft = await formatDistanceStrict(rightNowISO, cooldown)
                 Log.BrightBlue(`[processClaim.js] User ${inputuserid} is on cooldown.`)
-                message.reply({
+                interaction.reply({
                     content: `You are on cooldown! You can collect your daily $100 again in **${timeLeft}**`,
                     ephemeral: true,
                 })
@@ -76,7 +77,7 @@ export async function processClaim(inputuserid, message) {
                     description: `Welcome back! You have claimed your daily $100.\nYou can use this command again in 24 hours.\nYour new balance is: **$${balance}**.`,
                     color: `#00ff00`,
                 }
-                message.reply({ embeds: [embObj], ephemeral: true })
+                interaction.reply({ embeds: [embObj], ephemeral: true })
                 return t.any(
                     'UPDATE currency SET lastclaimtime = $1, balance = $2 WHERE userid = $3 RETURNING *',
                     [rightNow, balance, inputuserid],

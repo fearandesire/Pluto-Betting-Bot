@@ -18,11 +18,11 @@ export async function resolveTeam(teamName) {
     const result = fuse.search(`${teamName}`)
     var foundTeam = result[0]
     if (!foundTeam) {
-        resolveTeamLog.error(`Unable to resolve team: ${teamName}`)
+        await resolveTeamLog.error({
+            status: `No Data`,
+            errorMsg: `No team found for ${teamName}`,
+        })
         return null
     }
-    console.log(`Resolved Teams:`, result)
-    console.log(`Team Found:`, foundTeam)
-    resolveTeamLog.info(`Resolved team: ${teamName} to ${foundTeam.item.name}`)
     return foundTeam.item.name
 }

@@ -20,8 +20,7 @@ import { setupBetLog } from '#winstonLogger'
  *
  */
 
-export function addNewBet(message, betslip, interactionEph) {
-    //Log.Red(`INTERACTION: ${interactionEph}`)
+export function addNewBet(message, betslip) {
     /*
     Querying DB using db.tx since we are handling multiple transactions
     First query: Selecting the 'matchid' as its required for us to store the betslip information in the DB.
@@ -66,7 +65,6 @@ export function addNewBet(message, betslip, interactionEph) {
                 )
             })
             .then(() => {
-                var isSilent = interactionEph ? true : false
                 setupBetLog.info(`Successfully added betslip into the database.`)
                 var format = accounting.format
                 var amount = format(betslip.amount)
@@ -88,15 +86,10 @@ export function addNewBet(message, betslip, interactionEph) {
                     `,
                     color: '#00FF00',
                     //footer: 'For more commands, type: ?help',
-                    silent: isSilent,
                     target: `reply`,
                     thumbnail: `${process.env.sportLogo}`,
                 }
-                if (isSilent === true) {
-                    return embedReply(message, embedcontent, true)
-                } else {
-                    return embedReply(message, embedcontent) //? Sending the embed to the user via our embedReply function in [embedReply.js]
-                }
+                return embedReply(message, embedcontent) //? Sending the embed to the user via our embedReply function in [embedReply.js]
             })
             .catch((err) => {
                 Log.Error(`[addNewBet.js] Error adding bet to activebets table\n${err}`)

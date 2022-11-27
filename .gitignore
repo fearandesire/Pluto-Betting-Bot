@@ -120,3 +120,6 @@ cache/**
 .node-persist/**/*
 commands/test/**
 utils/unitTesting/**
+
+# Images Dir
+lib/images/**
