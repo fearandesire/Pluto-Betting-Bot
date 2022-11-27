@@ -73,6 +73,7 @@
         "fs-extra": "^10.1.0",
         "fuse.js": "^6.6.2",
         "jsdoc-to-markdown": "^7.1.1",
+        "load-json-file": "^7.0.1",
         "lodash": "^4.17.21",
         "lodash.pullat": "^4.6.0",
         "node-cron": "^3.0.2",
