@@ -1,20 +1,21 @@
+import { embedfooter as defaultFooter, helpfooter } from '#config'
+
 import { Log } from '#LogColor'
 import { MessageEmbed } from 'discord.js'
-import { embedfooter as defaultFooter } from '../../../lib/PlutoConfig.js'
 import { fetchChanId } from '#botUtil/fetchChanId'
-import { helpfooter } from './../../../lib/PlutoConfig.js'
 
 /**
- * @description {*} This function is used to send an embed to the channel that originated the message.
- * @param {message} message The message object that was sent.
- * @param {embedContent} embedContent Object supplied by the caller to be converted into an embed.
- * Example model of `embedContent` should be something along the lines of:
+ * @module embedReply
+ * @description Constructor function for creating & sending embeds
+ * @param {message} interaction The message object that was sent.
+ * @param {embedContent} embedContent Object supplied to be converted into an embed.
+ * Example model of a `embedContent`:
  *
- * embedContent = { title: '', description: '', color: '', footer: '', fields: [ { name: '', value: '', inline: '' }, etc. ] }
+ * ```embedContent = { title: '', description: '', color: '', footer: '', fields: [ { name: '', value: '', inline: '' }, etc. ] }```
  * @returns {embed} embedWithFields or noFieldsEmbed - self-descriptive returns.
  */
 
-export async function embedReply(message, embedContent, interactionEph) {
+export async function embedReply(interaction, embedContent, interactionEph) {
     var embedColor = embedContent?.color ?? '#e0ff19'
     var embedTitle = embedContent?.title ?? ''
     var embedDescription = embedContent?.description ?? ''
@@ -44,19 +45,19 @@ export async function embedReply(message, embedContent, interactionEph) {
         ) {
             //# switch .reply to .followUp if the followUp prop is true [deferred replies from slash commands]
             if (followUp === true) {
-                return await message.followUp({
+                return await interaction.followUp({
                     embeds: [embedWithFields],
                     ephemeral: true,
                 })
             } else {
-                await message.reply({
+                await interaction.reply({
                     embeds: [embedWithFields],
                     ephemeral: true,
                 })
                 return
             }
         } else if (target == 'reply' && !interactionEph) {
-            await message.reply({
+            await interaction.reply({
                 embeds: [embedWithFields],
             })
             return
@@ -81,23 +82,22 @@ export async function embedReply(message, embedContent, interactionEph) {
             .setTitle(embedTitle)
             .setThumbnail(thumbnail)
             .setDescription(embedDescription)
-            .setTimestamp()
             .setFooter({ text: embedFooter })
         if (target == 'reply' && isSilent === true) {
             if (followUp == true) {
-                return await message.followUp({
+                return await interaction.followUp({
                     embeds: [noFieldsEmbed],
                     ephemeral: true,
                 })
             } else {
-                await message.reply({ embeds: [noFieldsEmbed], ephemeral: true })
+                await interaction.reply({ embeds: [noFieldsEmbed], ephemeral: true })
                 return
             }
         } else if (target == 'reply' && isSilent === false) {
             if (followUp == true) {
-                return await message.followUp({ embeds: [noFieldsEmbed] })
+                return await interaction.followUp({ embeds: [noFieldsEmbed] })
             } else {
-                await message.reply({ embeds: [noFieldsEmbed] })
+                await interaction.reply({ embeds: [noFieldsEmbed] })
                 return
             }
         }
@@ -119,7 +119,6 @@ export function QuickError(message, text, interactionEph) {
         .setColor('#ff0000')
         .setTitle(':triangular_flag_on_post: Error')
         .setDescription(text)
-        .setTimestamp()
         .setFooter({ text: helpfooter })
     if (interactionEph === true) {
         message.reply({ embeds: [embed], ephemeral: true })
