@@ -11,20 +11,15 @@ import stringifyObject from 'stringify-object'
 
 /**
  * @module confirmBet -
- * ⁡⁣⁣⁢Creates a message listener & collection for the user to confirm their bet. ⁡⁣⁣⁢The listener will be active for 60 seconds.⁡
- *⁡⁣⁣⁢ We want to timeout bets that aren't confirmed so we don't have any infinite hangups.⁡
- * @param {obj} message - The message object - contains the user info from Discord & allows us to reply to the user.
- * @param {obj} betslip - The bet information from the user input that we will have them confirm. Additionally, we tack on the matchid, and assign a betid to the bet.
- * @param {boolean} interactionEph - Whether the response should be visible to the user or not [slash cmd]
- * @returns - If the user confirms the bet, pushes bet to DB with {@link addNewBet}
- * If the user does not confirm their bet in time, we inform them of such and end the event.
+ * Create's a message listener for the user to accept, or cancel their pending bet.⁡
+ * @param {object} message - The message object - contains the user info from Discord & allows us to reply to the user.
+ * @param {object} betslip - The details of the users bet
+ * @returns - Resolves with an embed reply to the user that their bet has been placed.
  */
 
-export async function confirmBet(message, betslip, userId, interactionEph) {
+export async function confirmBet(message, betslip, userId) {
     //& Sending Embed w/ bet details for the user to confirm bet
-    await pleaseConfirmEmbed(message, betslip, interactionEph)
-    //? Assigning a filter for the message collector to listen for. The colllection will identify the user by their ID
-    //# for some reason, this wont work. Assigned a different check for the ID instead[ msgIsFromUser ]
+    await pleaseConfirmEmbed(message, betslip)
     const filter = (user) => {
         return user.id === userId
     }
@@ -57,7 +52,7 @@ export async function confirmBet(message, betslip, userId, interactionEph) {
             setupBetLog.info(
                 `Betslip confirmed for ${userId}\n${stringifyObject(betslip)}`,
             )
-            await addNewBet(message, betslip, interactionEph) //! Add bet to active bet list in DB [User will receive a response within this function]
+            await addNewBet(message, betslip) //! Add bet to active bet list in DB [User will receive a response within this function]
             await sortBalance(message, betslip.userid, betslip.amount, 'sub') //! Subtract users bet amount from their balance
             return
         }

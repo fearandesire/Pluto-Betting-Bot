@@ -35,32 +35,35 @@ const options = {
  */
 
 export async function checkCompleted(compGameMonitor) {
-    container.processQueue = 0
     var fileName = `[checkCompleted.js]`
-    await checkCompletedLog.info(
-        `${fileName} Initilization API Call for completed games`,
-    )
-    await fetch(url, options)
-        .then((res) => res.json())
-        .then(async (json) => {
-            await checkCompletedLog.info(
-                `${fileName} API Connection successful | API Log in apiReq.log`,
-            )
-            var apiCompletedResult = json
-            container.apiCompResult = apiCompletedResult
-        })
+    await checkCompletedLog.info(`Init Check Completed`, {
+        status: `Initilization check for completed games`,
+    })
+    let response
+    let apiJSON
+    try {
+        response = await fetch(url, options)
+        apiJSON = await response.json()
+    } catch (error) {
+        await checkCompletedLog.error(`API Call Error`, { errorMsg: error })
+        return
+    }
     await memUse(`checkCompleted`, `Post-API Init Connection`)
-    var compResults = container.apiCompResult
-    await apiReqLog.info(`${fileName} API Connection Information:`)
-    await checkCompletedLog.info(stringifyObject(compResults))
+    var compResults = apiJSON
+    await apiReqLog.info(`API Connection Info`, {
+        status: `Connection successful`,
+    })
     let skippedGames = []
     for await (let [key, value] of Object.entries(compResults)) {
         var idApi = value.id
         //# check for API ID in the DB
         if (value.completed === true && !_.isEmpty(await idApiExisting(idApi))) {
-            await checkCompletedLog.info(
-                `Completed Game Found in API: ${value.home_team} vs ${value.away_team}`,
-            )
+            await checkCompletedLog.info(`Phase: 1`, {
+                status: `Collected a Completed Game`,
+                hometeam: value.home_team,
+                awayteam: value.away_team,
+                apiId: idApi,
+            })
             await Log.Green(
                 `Step 1: - Completed Game Found || ${value.home_team} vs ${value.away_team}`,
             )
@@ -68,17 +71,22 @@ export async function checkCompleted(compGameMonitor) {
             var checkProg = await checkProgress(value.home_team, value.away_team)
             await Log.Blue(`Step 1.5: - Check Progress: ${checkProg}`)
             if (checkProg == 'empty') {
-                await checkCompletedLog.info(
-                    `Unable to find matchup in database: ${value.home_team} vs ${value.away_team}`,
-                )
+                await checkCompletedLog.info(`Unable to locate Matchup`, {
+                    Phase: 1.5,
+                    sourceFun: `checkProgress`,
+                    hometeam: value.home_team,
+                    awayteam: value.away_team,
+                    apiId: idApi,
+                    error: `Unable to find matchup in database: ${value.home_team} vs ${value.away_team}`,
+                })
                 await Log.Red(
                     `Unable to find matchup in database: ${value.home_team} vs ${value.away_team}`,
                 )
                 continue
             } else if (checkProg === false) {
                 console.log(`checkProg: ${checkProg}`)
-                //# Queue game channel to be closed in 30 minutes
                 var gameChan
+                //# Queue game channel to be closed in 30 minutes
                 var hTeamShort = await getShortName(value.home_team)
                 var aTeamShort = await getShortName(value.away_team)
                 gameChan = `${aTeamShort}-vs-${hTeamShort}`
@@ -91,9 +99,14 @@ export async function checkCompleted(compGameMonitor) {
                     await dmMe(
                         `Error during locate / delete game channel for ${value.away_team}-vs.-${value.home_team}\nError: : ${err}`,
                     )
-                    await checkCompletedLog.error(
-                        `Error occured during locate / delete game channel for ${value.home_team} vs. ${value.away_team}`,
-                    )
+                    await checkCompletedLog.error(`Error`, {
+                        Phase: 3,
+                        sourceFun: `queueDeleteChannel`,
+                        hometeam: value.home_team,
+                        awayteam: value.away_team,
+                        apiId: idApi,
+                        erroMsg: `Error occured during locate / delete game channel for ${value.home_team} vs. ${value.away_team}`,
+                    })
                 }
                 //# determine which prop is the home team's score and away team's score by matching the team name
                 let hScoreProp
@@ -118,17 +131,25 @@ export async function checkCompleted(compGameMonitor) {
                     homeOrAwayWon = 'home'
                     losingTeam = value.away_team
                     losingTeamHomeOrAway = 'away'
-                    await checkCompletedLog.info(
-                        `${fileName} Winner: Home Team: ${winner} - ${homeScore}`,
-                    )
+                    await checkCompletedLog.info({
+                        status: `Calculating Winner`,
+                        hometeam: value.home_team,
+                        awayteam: value.away_team,
+                        apiId: idApi,
+                        statusMsg: `Winner: Home Team: ${winner} - ${homeScore}`,
+                    })
                 } else if (Number(homeScore) < Number(awayScore)) {
                     winner = value.away_team
                     homeOrAwayWon = 'away'
                     losingTeam = value.home_team
                     losingTeamHomeOrAway = 'home'
-                    await checkCompletedLog.info(
-                        `${fileName} Winner: Away Team: ${winner} - ${awayScore}`,
-                    )
+                    await checkCompletedLog.info({
+                        status: `Calculating Winner`,
+                        hometeam: value.home_team,
+                        awayteam: value.away_team,
+                        apiId: idApi,
+                        statusMsg: `Winner: Away Team: ${winner} - ${awayScore}`,
+                    })
                 }
                 await Log.Green(`Step 4: Winner Determined || ${winner}`)
                 //& Declare the matchup as being processed to prevent overlapping the process of closing bets
@@ -138,26 +159,33 @@ export async function checkCompleted(compGameMonitor) {
                 )
                 //# Close the bets for the winners of the matchup
                 await closeWonBets(winner, homeOrAwayWon, losingTeam).catch((err) => {
-                    checkCompletedLog.error(
-                        `${fileName} Error closing won bets for ${winner} || ${err}`,
-                    )
+                    checkCompletedLog.error(`${fileName}`, {
+                        error: `Error closing won bets for ${winner} || ${err}`,
+                    })
                     return
                 })
                 //# Close the bets for the losers of the matchup
                 await closeLostBets(losingTeam, losingTeamHomeOrAway, winner).catch(
                     (err) => {
-                        checkCompletedLog.error(
-                            `${fileName} Error closing lost bets for ${losingTeam} || ${err}`,
-                        )
+                        checkCompletedLog.error(`Error`, {
+                            errorMsg: `Error closing lost bets for ${losingTeam} || ${err}`,
+                            hometeam: value.home_team,
+                            awayteam: value.away_team,
+                            apiId: idApi,
+                        })
                         return
                     },
                 )
                 await dmMe(`Closed Bets for ${value.home_team} vs ${value.away_team}`)
                 await removeMatch(value.home_team, value.away_team)
             } else {
-                await checkCompletedLog.info(
-                    `${fileName} Bets for Matchup: ${value.home_team} vs. ${value.away_team} are already being closed. This game will not be queued to be processed.`,
-                )
+                await checkCompletedLog.info({
+                    hometeam: value.home_team,
+                    awayteam: value.away_team,
+                    apiId: idApi,
+                    status: `Matchup already being processed`,
+                    skipped: true,
+                })
                 await Log.Yellow(
                     `Bets for Matchup: ${value.home_team} vs. ${value.away_team} are already being closed. This game will not be queued to be processed.`,
                 )
@@ -168,9 +196,9 @@ export async function checkCompleted(compGameMonitor) {
             continue
         }
     }
-    await checkCompletedLog.info(
-        `${fileName}\nSkipped games:\n${skippedGames.join(`\n`)}\n`,
-    )
+    await checkCompletedLog.info(`Games Skipped`, {
+        status: `Skipped games:\n${skippedGames.join(`\n`)}\n`,
+    })
     await compGameMonitor.ping({
         state: 'complete',
         message: `Completed Finished Game Checks | Sent ${container.processQueue} Games to be closed`,

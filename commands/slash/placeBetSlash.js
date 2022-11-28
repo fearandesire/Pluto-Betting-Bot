@@ -47,6 +47,7 @@ export class placeBetSlash extends Command {
                 ephemeral: true,
             })
             return
+            // regex to check if the team name is a number
         } else if (interaction.options.getString(`team`).match(/^[0-9]+$/)) {
             interaction.reply({
                 content: `**Please provide a valid team.**`,
@@ -55,12 +56,10 @@ export class placeBetSlash extends Command {
             return
         } else {
             await new pendingBet().insertPending(userid)
-            var interactionEph = true
             await newBet(
                 interaction,
                 interaction.options.getString('team'),
                 interaction.options.getInteger('amount'),
-                interactionEph,
             )
         }
     }
