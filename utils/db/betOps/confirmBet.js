@@ -10,6 +10,7 @@ import stringifyObject from 'stringify-object'
 import { MessageEmbed } from 'discord.js'
 import { accounting } from '#config'
 import { SapDiscClient } from '#main'
+import { findEmoji } from '../../bot_res/findEmoji.js'
 /**
  * @module confirmBet -
  * Create's a message listener for the user to accept, or cancel their pending bet via pressing/clicking reactions.
@@ -25,6 +26,10 @@ export async function confirmBet(interaction, betslip, userId) {
     var amount = format(betslip.amount)
     var profit = format(betslip.profit)
     var payout = format(betslip.payout)
+    // get the last word of the team name
+    var teamName = betslip.teamid.split(' ').pop()
+    let teamEmoji = (await findEmoji(teamName)) || ''
+    betslip.teamEmoji = teamEmoji
     let confirmembed = new MessageEmbed()
         .setColor('#ffd600')
         .setTitle(':receipt: Bet Pending Confirmation')
@@ -34,11 +39,11 @@ export async function confirmBet(interaction, betslip, userId) {
                 
         **__Bet Details:__**
         
-        Team: **${betslip.teamid}** | Amount: \`$${amount}\` 
+        Team: **${betslip.teamid}** ${teamEmoji} | Amount: \`$${amount}\` 
         Profit: \`$${profit}\` | Payout: \`$${payout}\``,
         )
         .setTimestamp()
-        .setThumbnail(`${process.env.sportLogo}`)
+        .setThumbnail(`${process.env.sportsLogoNBA}`)
         .setFooter({ text: customerFooter })
     // preview the embed to the user
     let previewEmbed = await interaction.followUp({
