@@ -19,6 +19,7 @@ import { verifyDupBet } from '#utilValidate/verifyDuplicateBet'
  *
  */
 export async function newBet(interaction, betOnTeam, betAmount) {
+    let interactionObj = interaction
     var user = interaction?.author?.id || interaction.user.id
     betOnTeam = await resolveTeam(betOnTeam)
     var matchInfo = await resolveMatchup(betOnTeam, null)
@@ -68,7 +69,7 @@ export async function newBet(interaction, betOnTeam, betAmount) {
             },
             // setup the bet
             async function setBet() {
-                await setupBet(interaction, betOnTeam, betAmount, user, matchupId)
+                await setupBet(interactionObj, betOnTeam, betAmount, user, matchupId)
                 return
             },
         ],
