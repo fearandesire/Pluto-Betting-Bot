@@ -79,7 +79,7 @@ export function addNewBet(message, betslip) {
                     
                     __**:money_mouth: Details** __
                     **Bet ID:** ${betslip.betid}
-                    **Team:** **${betslip.teamid}**
+                    **Team:** **${betslip.teamid}** ${betslip.teamEmoji}
                     **Amount:** \`$${amount}\`
                     **Profit:** \`$${profit}\`
                     **Payout:** \`$${payout}\`
