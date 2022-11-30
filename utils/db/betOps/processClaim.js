@@ -75,7 +75,7 @@ export async function processClaim(inputuserid, interaction) {
                 }
                 interaction.reply({ embeds: [embObj], ephemeral: true })
                 return t.any(
-                    'UPDATE currency SET lastclaimtime = $1, balance = $2 WHERE userid = $3 RETURNING *',
+                    'UPDATE "NBAcurrency" SET lastclaimtime = $1, balance = $2 WHERE userid = $3 RETURNING *',
                     [rightNow, balance, inputuserid],
                 )
             }
