@@ -114,17 +114,35 @@ export async function embedReply(interaction, embedContent, interactionEph) {
     }
 }
 
-export function QuickError(message, text, interactionEph) {
+export async function QuickError(message, text, interactionEph) {
+    console.log(`Deferred: ${message?.deferred} || Replied: ${message?.replied}`)
     const embed = new MessageEmbed()
         .setColor('#ff0000')
         .setTitle(':triangular_flag_on_post: Error')
         .setDescription(text)
         .setFooter({ text: helpfooter })
-    if (interactionEph === true) {
-        message.reply({ embeds: [embed], ephemeral: true })
-        return
-    } else if (!interactionEph) {
-        message.reply({ embeds: [embed] })
-        return
+    if (message?.deferred === true) {
+        if (interactionEph === true) {
+            await message.followUp({ embeds: [embed], ephemeral: true })
+            return
+        } else {
+            await message.followUp({ embeds: [embed] })
+            return
+        }
+    } else {
+        if (interactionEph === true) {
+            message.reply({ embeds: [embed], ephemeral: true })
+            return
+        } else if (!interactionEph) {
+            message.reply({ embeds: [embed] })
+            return
+        }
+        if (interactionEph === true) {
+            message.followUp({ embeds: [embed], ephemeral: true })
+            return
+        } else if (!interactionEph) {
+            message.followUp({ embeds: [embed] })
+            return
+        }
     }
 }

@@ -1,5 +1,4 @@
 import { Log, embedReply } from '#config'
-
 import { AssignBetID } from '#botUtil/AssignIDs'
 import { addNewBet } from '#utilBetOps/addNewBet'
 import { isBetIdExisting } from '../validation/isBetIdExisting.js'
@@ -8,37 +7,58 @@ import { confirmBetEmbed as pleaseConfirmEmbed } from '../../bot_res/embeds/conf
 import { setupBetLog } from '#winstonLogger'
 import { sortBalance } from '#utilCurrency/sortBalance'
 import stringifyObject from 'stringify-object'
-
+import { MessageEmbed } from 'discord.js'
+import { accounting } from '#config'
+import { SapDiscClient } from '#main'
 /**
  * @module confirmBet -
- * Create's a message listener for the user to accept, or cancel their pending bet.⁡
- * @param {object} message - The message object - contains the user info from Discord & allows us to reply to the user.
+ * Create's a message listener for the user to accept, or cancel their pending bet via pressing/clicking reactions.
+ * @param {object} interaction - The message object - contains the user info from Discord & allows us to reply to the user.
  * @param {object} betslip - The details of the users bet
- * @returns - Resolves with an embed reply to the user that their bet has been placed.
  */
 
-export async function confirmBet(message, betslip, userId) {
+export async function confirmBet(interaction, betslip, userId) {
     //& Sending Embed w/ bet details for the user to confirm bet
-    await pleaseConfirmEmbed(message, betslip)
-    const filter = (user) => {
-        return user.id === userId
-    }
-    setupBetLog.info(`Started bet confirmation timer for ${userId}`)
-    //?  Create collection listener for the user to confirm their bet via message collection [Discord.js] on a 60 second timer.
-    const collector = message.channel.createMessageCollector(filter, {
-        time: 60000,
-        error: 'time',
+    var customerFooter =
+        'Please Note: If you do not confirm your bet within 60 seconds, it will be cancelled.'
+    var format = accounting.format
+    var amount = format(betslip.amount)
+    var profit = format(betslip.profit)
+    var payout = format(betslip.payout)
+    let confirmembed = new MessageEmbed()
+        .setColor('#ffd600')
+        .setTitle(':receipt: Bet Pending Confirmation')
+        .setDescription(
+            `Please confirm your bet by pressing the :white_check_mark: reaction below.
+            To cancel, press the :x: reaction below.
+                
+        **__Bet Details:__**
+        
+        Team: **${betslip.teamid}** | Amount: \`$${amount}\` 
+        Profit: \`$${profit}\` | Payout: \`$${payout}\``,
+        )
+        .setTimestamp()
+        .setThumbnail(`${process.env.sportLogo}`)
+        .setFooter({ text: customerFooter })
+    // preview the embed to the user
+    let previewEmbed = await interaction.followUp({
+        content: `<@${userId}>`,
+        embeds: [confirmembed],
+        ephemeral: true,
     })
-    //? Using the '.on' event to listen for the user to confirm the bet
-    collector.on('collect', async (message) => {
-        //# Var for checking if the msg received is from the user who placed the bet
-        let msgIsFromUser
-        msgIsFromUser = message.author.id === userId
-        var acceptableAnswers = ['confirm', 'yes', 'y']
-        if (
-            acceptableAnswers.includes(message.content.toLowerCase()) &&
-            msgIsFromUser
-        ) {
+    await previewEmbed.react('✅')
+    await previewEmbed.react('❌')
+    //& Create reaction collector
+    const filter = (reaction, user) => {
+        return ['✅', '❌'].includes(reaction.emoji.name) && user.id === userId
+    }
+    const collector = previewEmbed.createReactionCollector({
+        filter,
+        time: 60000,
+    })
+    collector.on('collect', async (reaction, user) => {
+        if (reaction.emoji.name === '✅' && user.id === userId) {
+            //& User confirmed bet, add to DB
             collector.stop()
             //# delete from pending
             await new pendingBet().deletePending(userId)
@@ -52,45 +72,40 @@ export async function confirmBet(message, betslip, userId) {
             setupBetLog.info(
                 `Betslip confirmed for ${userId}\n${stringifyObject(betslip)}`,
             )
-            await addNewBet(message, betslip) //! Add bet to active bet list in DB [User will receive a response within this function]
-            await sortBalance(message, betslip.userid, betslip.amount, 'sub') //! Subtract users bet amount from their balance
-            return
-        }
-        var declineAnswer = [`no`, `n`, `cancel`]
-        if (
-            declineAnswer.includes(message.content.toLowerCase()) &&
-            msgIsFromUser
-        ) {
+            await addNewBet(interaction, betslip) //! Add bet to active bet list in DB [User will receive a response within this function]
+            await sortBalance(interaction, betslip.userid, betslip.amount, 'sub') //! Subtract users bet amount from their balance
+        } else if (reaction.emoji.name === '❌' && user.id === userId) {
             collector.stop()
+            //& User cancelled bet, delete from pending
             setupBetLog.info(`Betslip cancelled for ${userId}`)
             //# delete from pending
             await new pendingBet().deletePending(userId)
             var embObj = {
                 title: `:x: Bet Cancellation`,
-                description: `Your ${betslip.amount} bet on the ${betslip.teamid} has been cancelled.`,
+                description: `Your \`$${amount}\` bet on the ${betslip.teamid} has been cancelled.`,
                 color: `#191919`,
-                isSilent: true,
+                followUp: true,
             }
-            await embedReply(message, embObj, true)
+            await embedReply(interaction, embObj, true)
+            return
+        } else {
             return
         }
     })
     collector.on('end', async (collected, reason) => {
         if (reason === 'time') {
+            //# delete from pending
+            await new pendingBet().deletePending(userId)
             var embObj = {
-                title: `:x: Bet Cancelled`,
-                description: `Your bet on the ${betslip.teamid} has been cancelled.`,
+                title: `:x: Bet Cancellation`,
+                description: `<@${userId}>, your \`$${amount}\` bet on the ${betslip.teamid}  has been cancelled since you didn't respond in time..`,
                 color: `#191919`,
                 followUp: true,
             }
-            //# delete from pending
-            await new pendingBet().deletePending(userId)
-            await embedReply(message, embObj, true)
+            await embedReply(interaction, embObj, true)
+            return
+        } else {
             return
         }
     })
-    //& 60 Second Timer to confirm bet
-    setTimeout(() => {
-        collector.stop('time')
-    }, 60000)
 }

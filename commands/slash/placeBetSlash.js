@@ -38,18 +38,21 @@ export class placeBetSlash extends Command {
         )
     }
     async chatInputRun(interaction) {
+        await interaction.deferReply({
+            content: `Submitting your bet, please wait.`,
+        })
         //console.log(interaction.user.id)
         var userid = interaction.user.id
         var hasPending = await new pendingBet().checkPending(userid)
         if (hasPending) {
-            interaction.reply({
+            await interaction.editReply({
                 content: `You are already setting up another bet. Please finish that bet before placing another.`,
-                ephemeral: true,
+                ephemeral: false,
             })
             return
             // regex to check if the team name is a number
         } else if (interaction.options.getString(`team`).match(/^[0-9]+$/)) {
-            interaction.reply({
+            interaction.editReply({
                 content: `**Please provide a valid team.**`,
                 ephemeral: true,
             })
