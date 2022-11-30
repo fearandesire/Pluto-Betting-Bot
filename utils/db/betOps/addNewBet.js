@@ -87,7 +87,8 @@ export function addNewBet(message, betslip) {
                     color: '#00FF00',
                     //footer: 'For more commands, type: ?help',
                     target: `reply`,
-                    thumbnail: `${process.env.sportLogo}`,
+                    thumbnail: `${process.env.sportLogoNBA}`,
+                    followUp: true,
                 }
                 return embedReply(message, embedcontent) //? Sending the embed to the user via our embedReply function in [embedReply.js]
             })
