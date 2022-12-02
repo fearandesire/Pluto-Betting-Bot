@@ -26,7 +26,7 @@ export async function embedReply(interaction, embedContent, interactionEph) {
     var target = embedContent?.target || 'reply'
     var isSilent = embedContent?.silent || false
     var followUp = embedContent?.followUp || false
-    var thumbnail = embedContent?.thumbnail || ``
+    var thumbnail = embedContent?.thumbnail || process.env.sportsLogo
     //debug: console.log(`EMBED OBJECT: ===>>`, embedContent)
     var reqChan
 
@@ -35,7 +35,7 @@ export async function embedReply(interaction, embedContent, interactionEph) {
         const embedWithFields = new MessageEmbed()
             .setColor(embedColor)
             .setTitle(embedTitle)
-            .setThumbnail(thumbnail)
+            // .setThumbnail(thumbnail)
             .setDescription(embedDescription)
             .addFields(...embedContent.fields)
             .setFooter({ text: embedFooter })
