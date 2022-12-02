@@ -38,7 +38,7 @@ export async function confirmBet(interaction, betslip, userId) {
         Profit: \`$${profit}\` | Payout: \`$${payout}\``,
         )
         .setTimestamp()
-        .setThumbnail(`${process.env.sportLogo}`)
+        .setThumbnail(`${process.env.sportsLogo}`)
         .setFooter({ text: customerFooter })
     // preview the embed to the user
     let previewEmbed = await interaction.followUp({
