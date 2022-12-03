@@ -65,7 +65,7 @@ const login = async () => {
 }
 login()
 const app = express()
-const port = 3000
+const port = process.env.XPRESSPORT
 
 app.use(require('express-status-monitor')())
 app.use(bodyParser.json()) // for parsing application/json
