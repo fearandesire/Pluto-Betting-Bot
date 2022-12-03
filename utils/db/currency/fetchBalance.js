@@ -1,6 +1,6 @@
 import { FileRunning } from '#botClasses/FileRunning'
 import { db } from '#db'
-
+import { CURRENCY } from '#config'
 /**
  * @module fetchBalance -
  * ⁡⁣⁣Retrieve balance for user from the database⁡
@@ -10,10 +10,10 @@ import { db } from '#db'
  */
 
 export function fetchBalance(message, userid) {
-	new FileRunning(`fetchBalance`)
-	return db.oneOrNone(
-		'SELECT * FROM "NBAcurrency" WHERE userid = $1',
-		[userid],
-		(a) => a.balance,
-	)
+    new FileRunning(`fetchBalance`)
+    return db.oneOrNone(
+        `SELECT * FROM "${CURRENCY}" WHERE userid = $1`,
+        [userid],
+        (a) => a.balance,
+    )
 }

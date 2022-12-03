@@ -1,5 +1,5 @@
 import { db } from '#db'
-import { embedReply } from '#config'
+import { embedReply, LIVEMATCHUPS } from '#config'
 import { resolveTeam } from '#cmdUtil/resolveTeam'
 
 /**
@@ -14,7 +14,7 @@ export async function returnOddsFor(interaction, teamName) {
     teamName = await resolveTeam(teamName)
     var matchup = await db.any(
         `
-    SELECT * FROM "NBAactivematchups" WHERE teamone = $1 OR teamtwo = $1
+    SELECT * FROM "${LIVEMATCHUPS}" WHERE teamone = $1 OR teamtwo = $1
     `,
         [teamName],
     )

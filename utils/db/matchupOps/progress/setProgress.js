@@ -1,4 +1,5 @@
 import { db } from '#db'
+import { LIVEMATCHUPS } from '#config'
 
 /**
  * @module setProgress
@@ -8,7 +9,7 @@ import { db } from '#db'
 export async function setProgress(homeTeam, awayTeam) {
     var setInProg = await db.none(
         `
-  UPDATE "NBAactivematchups" SET inprogress = true WHERE teamone = $1 OR teamtwo = $2
+  UPDATE "${LIVEMATCHUPS}" SET inprogress = true WHERE teamone = $1 OR teamtwo = $2
   `,
         [homeTeam, awayTeam],
     )

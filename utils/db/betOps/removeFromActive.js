@@ -1,4 +1,5 @@
 import { db } from '#db'
+import { LIVEBETS } from '#config'
 
 /**
  * @module removeFromActive
@@ -6,10 +7,10 @@ import { db } from '#db'
  */
 
 export async function removeFromActive(userid, betid) {
-	return db.tx('removeFromActive', async (t) => {
-		await t.oneOrNone(
-			`DELETE FROM "NBAactivebets" WHERE userid = $1 AND betid = $2`,
-			[userid, betid],
-		)
-	})
+    return db.tx('removeFromActive', async (t) => {
+        await t.oneOrNone(
+            `DELETE FROM "${LIVEBETS}" WHERE userid = $1 AND betid = $2`,
+            [userid, betid],
+        )
+    })
 }
