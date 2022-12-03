@@ -1,4 +1,4 @@
-import { accounting, container } from '#config'
+import { accounting, container, LIVEMATCHUPS, LIVEBETS } from '#config'
 
 import { Log } from '#LogColor'
 import { TodaysDate } from '#cmdUtil/TodaysDate'
@@ -28,7 +28,7 @@ export function addNewBet(message, betslip) {
     db.tx('createNewBet', (t) => {
         return t
             .one(
-                `SELECT matchid from activematchups WHERE teamone = $1 OR teamtwo = $1`,
+                `SELECT matchid from "${LIVEMATCHUPS}" WHERE teamone = $1 OR teamtwo = $1`,
                 /**@property {Object} betslip.teamid - The team name the user has input */
                 [betslip.teamid],
             )
@@ -51,10 +51,10 @@ export function addNewBet(message, betslip) {
             })
             .then((data) => {
                 setupBetLog.info(
-                    `Storing betslip into database - activebets\nData: ${data}\nBetslip: ${betslip}`,
+                    `Storing betslip into database - "${LIVEBETS}"\nData: ${data}\nBetslip: ${betslip}`,
                 )
                 return t.none(
-                    `INSERT INTO activebets (betid, userid, teamid, matchid, amount) VALUES ($1, $2, $3, $4, $5)`,
+                    `INSERT INTO "${LIVEBETS}" (betid, userid, teamid, matchid, amount) VALUES ($1, $2, $3, $4, $5)`,
                     [
                         betslip.betid,
                         betslip.userid,

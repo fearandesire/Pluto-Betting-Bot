@@ -1,5 +1,5 @@
 import { FileRunning } from '#FileRun'
-import { Log } from '#config'
+import { Log, LIVEBETS } from '#config'
 import { db } from '#db'
 
 /**
@@ -14,7 +14,7 @@ export async function getBetsFromId(searchID) {
         `[getBetsFromId.js] getBetsFromId called with searchID: ${searchID}`,
     )
     new FileRunning(`getBetsFromId`)
-    return await db.manyOrNone(`SELECT * FROM activebets WHERE matchid = $1`, [
+    return await db.manyOrNone(`SELECT * FROM "${LIVEBETS}" WHERE matchid = $1`, [
         searchID,
     ])
 }

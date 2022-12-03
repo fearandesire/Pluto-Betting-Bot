@@ -1,4 +1,4 @@
-import { ODDS_NFL, container, embedReply } from '#config'
+import { ODDS, container, embedReply } from '#config'
 import {
     format,
     formatISO,
@@ -33,7 +33,7 @@ export async function collectOdds(message) {
     if (!message) {
         message == null
     }
-    const url = ODDS_NFL
+    const url = ODDS
     const options = {
         method: 'GET',
         headers: {
@@ -211,10 +211,8 @@ export async function collectOdds(message) {
         return
     }
     if (message == null) {
-        setTimeout(() => {
-            dmMe(
-                `Odds stored into cache & db. (# Of Matches: ${container.matchupCount})`,
-            )
+        setTimeout(async () => {
+            await dmMe(`Matchups stored: **${container.matchupCount}**`)
         }, 10000)
         return
     }

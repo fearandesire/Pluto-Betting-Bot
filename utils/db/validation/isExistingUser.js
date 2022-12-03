@@ -1,4 +1,5 @@
 import { db } from '#db'
+import { CURRENCY } from '#config'
 
 /**
  * @module isExistingUser -
@@ -14,5 +15,5 @@ import { db } from '#db'
 //? identify if the user exists in the database
 
 export function isExistingUser(userid) {
-	return db.oneOrNone(`SELECT * FROM currency WHERE userid = $1`, [userid])
+    return db.oneOrNone(`SELECT * FROM "${CURRENCY}" WHERE userid = $1`, [userid])
 }

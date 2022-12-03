@@ -1,4 +1,4 @@
-import { Log, NFL_ACTIVEMATCHUPS, _ } from '#config'
+import { Log, LIVEMATCHUPS, _ } from '#config'
 
 import { db } from '#db'
 import { resolveToday } from '#dateUtil/resolveToday'
@@ -12,10 +12,9 @@ import { resolveToday } from '#dateUtil/resolveToday'
 export async function isGameDay() {
     var todaySlashed = await new resolveToday().todayFullSlashes
     return await db
-        .manyOrNone(
-            `SELECT * FROM "${NFL_ACTIVEMATCHUPS}" WHERE dateofmatchup = $1`,
-            [todaySlashed],
-        )
+        .manyOrNone(`SELECT * FROM "${LIVEMATCHUPS}" WHERE dateofmatchup = $1`, [
+            todaySlashed,
+        ])
         .then(async (data) => {
             if (_.isEmpty(data)) {
                 Log.Red(`No active matchups found in the database.`)

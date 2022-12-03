@@ -1,10 +1,10 @@
 import { QuickError, embedReply } from '#embed'
 
 import { FileRunning } from '#FileRun'
+import { TodaysDate } from '#cmdUtil/TodaysDate'
 import { db } from '#db'
 import { registerUserLog } from '#Logger'
-
-//import { Log } from '#LogColor'
+import { CURRENCY } from '#config'
 
 /**
  * Create a new user in the database. By default, we will store their userID (required) and their default balance: 100 (optional)
@@ -16,7 +16,7 @@ export async function registerUser(message, userid, inform, interactionEph) {
     new FileRunning(`registerUser`)
     db.tx(`registerUser-Transaction`, async (t) => {
         let findUser = await t.oneOrNone(
-            `SELECT * FROM currency WHERE userid = $1`,
+            `SELECT * FROM "${CURRENCY}" WHERE userid = $1`,
             [userid],
         )
         if (!findUser) {
@@ -34,13 +34,10 @@ export async function registerUser(message, userid, inform, interactionEph) {
             }
             await embedReply(message, embedObj)
             return t.any(
-                `INSERT INTO currency (userid, balance) VALUES ($1, $2) RETURNING *`,
-                [userid, '100'],
+                `INSERT INTO "${CURRENCY}" (userid, balance, registerdate) VALUES ($1, $2, $3) RETURNING *`,
+                [userid, '100', TodaysDate()],
             )
         } else {
-            // Log.BrightBlue(
-            //     `[registerUser.js] User ${userid} is in the database, skipping creation`,
-            // )
             registerUserLog.info(
                 `User ${userid} is in the database, skipping creation`,
             )

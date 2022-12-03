@@ -2,7 +2,7 @@ import { Log } from '#LogColor'
 import { SapDiscClient } from '#main'
 import { db } from '#db'
 import { dmLog } from '../../logging.js'
-import { embedReply } from '#config'
+import { embedReply, CURRENCY } from '#config'
 import { giveMoneyLog } from '#winstonLogger'
 import { isInServer } from '../../bot_res/isInServer.js'
 
@@ -23,7 +23,7 @@ export async function giveBalance(
 
     db.tx('processClaim-Transaction', async (t) => {
         const findUser = await t.oneOrNone(
-            'SELECT * FROM currency WHERE userid = $1',
+            `SELECT * FROM "${CURRENCY}" WHERE userid = $1`,
             [targetUserId],
         )
         var currentBalance = findUser.balance
@@ -60,7 +60,7 @@ export async function giveBalance(
             })
         }
         return t.any(
-            'UPDATE currency SET balance = $1 WHERE userid = $2 RETURNING *',
+            `UPDATE "${CURRENCY}" SET balance = $1 WHERE userid = $2 RETURNING *`,
             [updatebalance, targetUserId],
         )
     })

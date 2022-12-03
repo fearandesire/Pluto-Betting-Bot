@@ -1,6 +1,6 @@
 //import flatcache from 'flat-cache'
 
-import { Log, NFL_ACTIVEMATCHUPS, _, container, flatcache } from '#config'
+import { Log, LIVEMATCHUPS, _, container, flatcache } from '#config'
 
 import { cronMath } from './cronMath.js'
 import { db } from '#db'
@@ -31,7 +31,7 @@ export async function fetchSchedule(interaction) {
     }
     await memUse(`fetchSchedule.js`, `Pre-Query/Fetch`)
     var checkDB = await db
-        .manyOrNone(`SELECT * FROM "${NFL_ACTIVEMATCHUPS}"`)
+        .manyOrNone(`SELECT * FROM "${LIVEMATCHUPS}"`)
         .then(async (data) => {
             if (_.isEmpty(data)) {
                 Log.Red(`No active matchups found in the database.`)
