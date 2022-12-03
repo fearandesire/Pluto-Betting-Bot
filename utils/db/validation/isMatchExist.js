@@ -1,4 +1,5 @@
 import { db } from '#db'
+import { LIVEMATCHUPS } from '#config'
 
 /**
  * @module isMatchExist -
@@ -11,7 +12,7 @@ import { db } from '#db'
 
 export async function isMatchExist(teamid) {
     return db.oneOrNone(
-        `SELECT * FROM "NBAactivematchups" WHERE teamone = $1 OR teamtwo = $1`,
+        `SELECT * FROM "${LIVEMATCHUPS}" WHERE teamone = $1 OR teamtwo = $1`,
         [teamid],
     )
 }

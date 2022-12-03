@@ -1,5 +1,6 @@
 import { Log } from '#LogColor'
 import { db } from '#db'
+import { CURRENCY, BETSLIPS, LIVEBETS } from '#config'
 
 /**
  * @module modifyAmount -
@@ -14,11 +15,11 @@ import { db } from '#db'
 export function modifyAmount(interaction, userid, betid, amount) {
     db.tx('modifyAmount', async (t) => {
         const currentAmount = await t.oneOrNone(
-            `SELECT amount FROM "NBAbetslips" WHERE userid = $1 AND betid = $2`,
+            `SELECT amount FROM "${BETSLIPS}" WHERE userid = $1 AND betid = $2`,
             [userid, betid],
         )
         const userBal = await t.oneOrNone(
-            `SELECT balance FROM "NBAcurrency" WHERE userid = $1`,
+            `SELECT balance FROM "${CURRENCY}" WHERE userid = $1`,
             [userid],
         )
         const convertBetAmount = parseInt(currentAmount.amount)
@@ -26,15 +27,15 @@ export function modifyAmount(interaction, userid, betid, amount) {
         const tempBal = convertBetAmount + convertBal
         const newBal = tempBal - amount
         await t.oneOrNone(
-            `UPDATE "NBAcurrency" SET balance = $1 WHERE userid = $2`,
+            `UPDATE "${CURRENCY}" SET balance = $1 WHERE userid = $2`,
             [newBal, userid],
         )
         await t.oneOrNone(
-            `UPDATE "NBAbetslips" SET amount = $1 WHERE userid = $2 AND betid = $3`,
+            `UPDATE "${BETSLIPS}" SET amount = $1 WHERE userid = $2 AND betid = $3`,
             [amount, userid, betid],
         )
         await t.oneOrNone(
-            `UPDATE "NBAactivebets" SET amount = $1 WHERE userid = $2 AND betid = $3`,
+            `UPDATE "${LIVEBETS}" SET amount = $1 WHERE userid = $2 AND betid = $3`,
             [amount, userid, betid],
         )
     }).then(() => {

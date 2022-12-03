@@ -12,6 +12,7 @@ import {
 
 import { Log } from '#LogColor'
 import { db } from '#db'
+import { CURRENCY } from '#config'
 
 export async function processClaim(inputuserid, interaction) {
     var today = new Date()
@@ -21,7 +22,7 @@ export async function processClaim(inputuserid, interaction) {
     db.tx('processClaim-Transaction', async (t) => {
         //? Search for user via their Discord ID in the database
         const findUser = await t.oneOrNone(
-            'SELECT * FROM "NBAcurrency" WHERE userid = $1',
+            `SELECT * FROM "${CURRENCY}" WHERE userid = $1`,
             [inputuserid],
         ) //
         if (!findUser) {
@@ -39,7 +40,7 @@ export async function processClaim(inputuserid, interaction) {
             interaction.reply({ embeds: [embObj] })
 
             return t.any(
-                'UPDATE "NBAcurrency" SET lastclaimtime = $1, balance = $2 WHERE userid = $3 RETURNING *',
+                `UPDATE "${CURRENCY}" SET lastclaimtime = $1, balance = $2 WHERE userid = $3 RETURNING *`,
                 [rightNow, updatedBalance, inputuserid],
             )
         }
@@ -75,7 +76,7 @@ export async function processClaim(inputuserid, interaction) {
                 }
                 interaction.reply({ embeds: [embObj], ephemeral: true })
                 return t.any(
-                    'UPDATE "NBAcurrency" SET lastclaimtime = $1, balance = $2 WHERE userid = $3 RETURNING *',
+                    `UPDATE "${CURRENCY}" SET lastclaimtime = $1, balance = $2 WHERE userid = $3 RETURNING *`,
                     [rightNow, balance, inputuserid],
                 )
             }

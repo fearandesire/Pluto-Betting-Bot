@@ -1,10 +1,10 @@
 import { db } from '#db'
 import { dmMe } from '../../bot_res/dmMe.js'
-import { flatcache } from '#config'
+import { flatcache, LIVEMATCHUPS } from '#config'
 
 export async function removeAllMatchups() {
     await db
-        .oneOrNone(`DELETE FROM "NBAactivematchups"`)
+        .oneOrNone(`DELETE FROM "${LIVEMATCHUPS}"`)
         .catch(
             async () =>
                 await dmMe(`Issue occured deleting matchups from DB.`, `error`),

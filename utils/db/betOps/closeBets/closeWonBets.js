@@ -1,4 +1,4 @@
-import { Log, NBA_ACTIVEMATCHUPS } from '#config'
+import { Log, LIVEMATCHUPS, BETSLIPS, LIVEBETS, CURRENCY } from '#config'
 
 import _ from 'lodash'
 import { closeBetLog } from '../../../logging.js'
@@ -23,7 +23,7 @@ export async function closeWonBets(winningTeam, homeOrAway, losingTeam) {
         await db.tx(async (t) => {
             // Start a db transaction
             let getMatchInfo = await t.oneOrNone(
-                `SELECT * FROM "${NBA_ACTIVEMATCHUPS}" WHERE teamone = $1 AND teamtwo = $2 OR teamone = $2 AND teamtwo = $1`,
+                `SELECT * FROM "${LIVEMATCHUPS}" WHERE teamone = $1 AND teamtwo = $2 OR teamone = $2 AND teamtwo = $1`,
                 [winningTeam, losingTeam],
             ) // Query DB for matchup info
             if (!getMatchInfo || _.isEmpty(getMatchInfo)) {
@@ -66,22 +66,22 @@ export async function closeWonBets(winningTeam, homeOrAway, losingTeam) {
                     )
                     //# update betslip with bet result
                     await t.none(
-                        `UPDATE "NBAbetslips" SET betresult = 'won', payout = $1, profit = $2 WHERE betid = $3`,
+                        `UPDATE "${BETSLIPS}" SET betresult = 'won', payout = $1, profit = $2 WHERE betid = $3`,
                         [payoutAmount, profitAmount, betId],
                     )
                     //# get balance of the user to update it with the winnings
                     const userBal = await t.oneOrNone(
-                        `SELECT balance FROM "NBAcurrency" WHERE userid = $1`,
+                        `SELECT balance FROM "${CURRENCY}" WHERE userid = $1`,
                         [userid],
                     )
                     //# calc winnings
                     const newUserBal = parseFloat(await userBal?.balance) + payoutAmount
                     await t.oneOrNone(
-                        `UPDATE "NBAcurrency" SET balance = $1 WHERE userid = $2`,
+                        `UPDATE "${CURRENCY}" SET balance = $1 WHERE userid = $2`,
                         [newUserBal, userid],
                     )
                     //# Delete bet from activebets
-                    await t.none(`DELETE FROM "NBAactivebets" WHERE betid = $1`, [betId])
+                    await t.none(`DELETE FROM "${LIVEBETS}" WHERE betid = $1`, [betId])
                     let wonBetInformation = {
                         [`userId`]: userid,
                         [`betId`]: betId,
@@ -98,7 +98,7 @@ export async function closeWonBets(winningTeam, homeOrAway, losingTeam) {
                     await closeBetLog.info(
                         `Successfully closed bet ${betId} || User ID: ${userid}`,
                     )
-                    
+
                     await memUse(`closeWonBets`, `Post-Close Won`)
                 }
                 resolve()

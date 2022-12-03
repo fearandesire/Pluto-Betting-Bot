@@ -1,4 +1,4 @@
-import { Log, NBA_SCORE, _, container } from '#config'
+import { Log, SCORE, _, container } from '#config'
 import { apiReqLog, checkCompletedLog } from '#winstonLogger'
 
 import { checkProgress } from '../db/matchupOps/progress/checkProgress.js'
@@ -15,7 +15,7 @@ import { removeMatch } from '#utilMatchups/removeMatchup'
 import { setProgress } from '../db/matchupOps/progress/setProgress.js'
 import stringifyObject from 'stringify-object'
 
-const url = NBA_SCORE
+const url = SCORE
 const options = {
     method: 'GET',
     headers: {

@@ -1,16 +1,16 @@
-import { NBA_ACTIVEMATCHUPS, QuickError, embedReply } from '#config'
+import { LIVEMATCHUPS, QuickError, embedReply } from '#config'
 
 import { db } from '#db'
 import { formatOdds } from '#cmdUtil/formatOdds'
 
 /**
- * @module returnDailyOdds
- * Return the matchups & odds for the day
+ * @module returnWeeklyOdds
+ * Return the matchups & odds for the week
  */
 
-export async function returnDailyOdds(message, interactionEph) {
+export async function returnWeeklyOdds(message, interactionEph) {
     var oddsFields = []
-    var matchupDb = await db.manyOrNone(`SELECT * FROM "${NBA_ACTIVEMATCHUPS}"`)
+    var matchupDb = await db.manyOrNone(`SELECT * FROM "${LIVEMATCHUPS}"`)
     if (!matchupDb || Object.keys(matchupDb).length === 0) {
         QuickError(message, 'No odds available to view.')
         return
@@ -22,6 +22,7 @@ export async function returnDailyOdds(message, interactionEph) {
         var aTeam = match.teamtwo
         var hOdds = match.teamoneodds
         var aOdds = match.teamtwoodds
+        var matchupId = match.matchid
         var startTime = match.legiblestart
         let oddsFormat = await formatOdds(hOdds, aOdds)
         hOdds = oddsFormat.homeOdds
@@ -39,10 +40,10 @@ export async function returnDailyOdds(message, interactionEph) {
     }
     console.log(oddsFields)
     var embedObj = {
-        color: `#00ffff`,
-        title: `:mega: Daily H2H Odds`,
+        title: `:mega: Weekly H2H Odds`,
         fields: oddsFields,
-        thumbnail: `${process.env.sportLogoNBA}`,
+        thumbnail: `${process.env.sportLogo}`,
+        color: `#00ffff`,
         footer:
             'Favored teams have a - negative number | Pluto - Designed by FENIX#7559',
     }
