@@ -4,7 +4,8 @@ import { findEmoji } from '../../bot_res/findEmoji.js'
 import { resolveMatchup } from '#cacheUtil/resolveMatchup'
 import { resolveTeam } from '#cmdUtil/resolveTeam'
 import { validateData } from './../validation/validateData.js'
-
+import { LIVEBETS } from '#config'
+import { resolveTeamColor } from '../../cmd_res/resolveTeam.js'
 /**
 
  * @module gameEmbed
@@ -20,15 +21,16 @@ import { validateData } from './../validation/validateData.js'
 export async function gameEmbed(hometeam, awayteam) {
     var hTeam = await resolveTeam(hometeam)
     var aTeam = await resolveTeam(awayteam)
+
     // setup objs to query the DB with
     var hTeamQuery = new validateData({
-        tables: `activebets`,
+        tables: `${LIVEBETS}`,
         columns: `amount`,
         where: `teamid`,
         values: hTeam,
     })
     var aTeamQuery = new validateData({
-        tables: `activebets`,
+        tables: `${LIVEBETS}`,
         columns: `amount`,
         where: `teamid`,
         values: aTeam,
@@ -46,7 +48,30 @@ export async function gameEmbed(hometeam, awayteam) {
         ? await resolveMatchup(aTeam, `odds`)
         : `N/A`
     let favoredTeam = Number(hOdds) < Number(aOdds) ? hTeam : aTeam // If the home team has higher odds, they are favored, otherwise the away team is favored
-    var totalBetCount = parseInt(hTBetCount) + parseInt(aTBetCount)
+    let gifLink
+    let giphy
+    let gif
+    if (favoredTeam === hTeam) {
+        // # Query Giphy API with team name + 'hype' and return one of the 5 gifs direct image link.
+        let teamSrch = `${hTeam} hype`
+        const url = `https://api.giphy.com/v1/gifs/search?api_key=${process.env.GIPHYAPIKEY}&q=${teamSrch}&limit=5&offset=0&rating=pg-13&lang=en`
+        giphy = await fetch(url).then((res) => res.json())
+        // # Select 1 random gif from the 5 returned
+        gif = giphy.data[Math.floor(Math.random() * giphy.data.length)]
+        // # Return the gif's direct image link
+        gifLink = gif.images.original.url
+    } else if (favoredTeam === aTeam) {
+        let teamName = `${hTeam} hype`
+        const url = `https://api.giphy.com/v1/gifs/search?api_key=${process.env.GIPHYAPIKEY}&q=${teamName}&limit=5&offset=0&rating=pg-13&lang=en`
+        giphy = await fetch(url).then((res) => res.json())
+        gif = giphy.data[Math.floor(Math.random() * giphy.data.length)]
+        gifLink = gif.images.original.url
+
+        var totalBetCount = parseInt(hTBetCount) + parseInt(aTBetCount)
+    }
+    var color = await resolveTeamColor(favoredTeam)
+    // # collect team emoji
+    var teamEmoji = (await findEmoji(favoredTeam)) || ''
     // collect server/guild icon url
     var guildIcon = SapDiscClient.guilds.cache
         .get(`${process.env.server_ID}`)
@@ -55,33 +80,13 @@ export async function gameEmbed(hometeam, awayteam) {
         .setTitle(`${awayteam} @ ${hometeam}`)
         .setDescription(
             `
-**The ${favoredTeam} are favored to win this game!**
+**The ${teamEmoji} ${favoredTeam} are favored to win this game!**
 
-** ${(await findEmoji(hometeam)) || ''} ${hTeam}** 
-__Odds:__ ** \`${hOdds}\`** *| ${
-                favoredTeam === hTeam ? `Favored` : `Underdogs`
-            }*
-__Top Wager:__ ** \`${hTeamHigh}\`**
-__Total Wagered:__ ** \`${hTBetTotal}\`**
-
-** ${(await findEmoji(awayteam)) || ''} ${aTeam}**
-__Odds:__ ** \`${aOdds}\`** *| ${
-                favoredTeam === aTeam ? `Favored` : `Underdogs`
-            }*
-__Top Wager:__ **\`${aTeamHigh}\`**
-__Total Wagered:__ ** \`${aTBetTotal}\`**
-            
-*__Bet Counts__
-${hometeam}: ${hTBetCount}
-${awayteam}: ${aTBetCount}
-Total: ${totalBetCount}*
-
-*Type \`/about\` in the <#${
-                process.env.NFLbettingChan_ID
-            }> channel for information about Pluto*`,
+*Type \`/about\` in the <#${process.env.bettingChan}> channel for information about Pluto*`,
         )
         .setFooter(``)
-        .setColor(`#68d6e6`)
+        .setColor(`${color}`)
         .setThumbnail(`${guildIcon}`)
+        .setImage(`${gifLink}`)
     return embObj
 }
