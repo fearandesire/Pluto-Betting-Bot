@@ -3,7 +3,6 @@ import { AssignBetID } from '#botUtil/AssignIDs'
 import { addNewBet } from '#utilBetOps/addNewBet'
 import { isBetIdExisting } from '../validation/isBetIdExisting.js'
 import { pendingBet } from '../validation/pendingBet.js'
-import { confirmBetEmbed as pleaseConfirmEmbed } from '../../bot_res/embeds/confirmBetEmbed.js'
 import { setupBetLog } from '#winstonLogger'
 import { sortBalance } from '#utilCurrency/sortBalance'
 import stringifyObject from 'stringify-object'
@@ -25,6 +24,10 @@ export async function confirmBet(interaction, betslip, userId) {
     var amount = format(betslip.amount)
     var profit = format(betslip.profit)
     var payout = format(betslip.payout)
+    // get the last word of the team name
+    var teamName = betslip.teamid.split(' ').pop()
+    let teamEmoji = (await findEmoji(teamName)) || ''
+    betslip.teamEmoji = teamEmoji || ''
     let confirmembed = new MessageEmbed()
         .setColor('#ffd600')
         .setTitle(':receipt: Bet Pending Confirmation')
@@ -38,7 +41,7 @@ export async function confirmBet(interaction, betslip, userId) {
         Profit: \`$${profit}\` | Payout: \`$${payout}\``,
         )
         .setTimestamp()
-        .setThumbnail(`${process.env.sportsLogo}`)
+        .setThumbnail(`${process.env.sportLogo}`)
         .setFooter({ text: customerFooter })
     // preview the embed to the user
     let previewEmbed = await interaction.followUp({

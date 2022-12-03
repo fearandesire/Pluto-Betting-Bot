@@ -1,4 +1,5 @@
 import { db } from '#db'
+import { PENDING } from '#config'
 
 /**
  * @module pendingBet
@@ -11,14 +12,14 @@ import { db } from '#db'
 export function pendingBet() {
     //# pending bets table is named `pendingABet`
     this.checkPending = async (userid) => {
-        return db.oneOrNone(`SELECT * FROM "pendingABet" WHERE userid = $1`, [
+        return db.oneOrNone(`SELECT * FROM "${PENDING}" WHERE userid = $1`, [
             userid,
         ])
     }
     this.insertPending = async (userid) => {
-        return db.none(`INSERT INTO "pendingABet" (userid) VALUES ($1)`, [userid])
+        return db.none(`INSERT INTO "${PENDING}" (userid) VALUES ($1)`, [userid])
     }
     this.deletePending = async (userid) => {
-        return db.none(`DELETE FROM "pendingABet" WHERE userid = $1`, [userid])
+        return db.none(`DELETE FROM "${PENDING}" WHERE userid = $1`, [userid])
     }
 }
