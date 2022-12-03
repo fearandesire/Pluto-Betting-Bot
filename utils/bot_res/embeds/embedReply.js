@@ -26,7 +26,7 @@ export async function embedReply(interaction, embedContent, interactionEph) {
     var target = embedContent?.target || 'reply'
     var isSilent = embedContent?.silent || false
     var followUp = embedContent?.followUp || false
-    var thumbnail = embedContent?.thumbnail || process.env.sportsLogo
+    var thumbnail = embedContent?.thumbnail || process.env.sportLogo
     //debug: console.log(`EMBED OBJECT: ===>>`, embedContent)
     var reqChan
 

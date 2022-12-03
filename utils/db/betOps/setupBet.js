@@ -1,4 +1,4 @@
-import { NBA_ACTIVEMATCHUPS, queryBuilder as qBuilder } from '#config'
+import { LIVEMATCHUPS, queryBuilder as qBuilder } from '#config'
 import { QuickError, embedReply } from '#embed'
 
 import { FileRunning } from '#botClasses/FileRunning'
