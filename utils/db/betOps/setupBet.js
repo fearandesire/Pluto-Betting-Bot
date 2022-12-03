@@ -21,7 +21,7 @@ import { validateData } from './../validation/validateData.js'
 
 export async function setupBet(message, teamName, betamount, user) {
     new FileRunning(`setupBet`)
-    var dbQuery = qBuilder(`"${LIVEMATCHUPS}"`, [`teamone`, `teamtwo`], teamName)
+    var dbQuery = qBuilder(`${LIVEMATCHUPS}`, [`teamone`, `teamtwo`], teamName)
     await new validateData(dbQuery).uniqueRowOr().then(async (data) => {
         //? if team user wishes to bet on exists in the matchups DB, Do:
         if (data) {
