@@ -18,7 +18,7 @@ export function validateData(queryData) {
      * @returns {obj} - The row found in the database
      */
     this.uniqueRow = async () => {
-        let query = `SELECT * FROM ${this.tables} WHERE ${this.columns} = $1`
+        let query = `SELECT * FROM "${this.tables}" WHERE ${this.columns} = $1`
         return await db.oneOrNone(query, [this.values])
     }
     /**
@@ -27,15 +27,15 @@ export function validateData(queryData) {
      * @returns {obj} - The row found in the database
      */
     this.uniqueRowOr = async () => {
-        let query = `SELECT * FROM ${this.tables} WHERE ${this.columns[0]} = $1 OR ${this.columns[1]} = $1`
+        let query = `SELECT * FROM "${this.tables}" WHERE ${this.columns[0]} = $1 OR ${this.columns[1]} = $1`
         return await db.oneOrNone(query, this.values)
     }
     this.count = async () => {
-        let query = `SELECT COUNT(*) FROM ${this.tables} WHERE ${this.where} = $1`
+        let query = `SELECT COUNT(*) FROM "${this.tables}" WHERE ${this.where} = $1`
         return await db.oneOrNone(query, [this.values])
     }
     this.countAll = async () => {
-        let query = `SELECT COUNT(*) FROM ${this.tables}`
+        let query = `SELECT COUNT(*) FROM "${this.tables}"`
         return await db.oneOrNone(query)
     }
     /**
@@ -44,7 +44,7 @@ export function validateData(queryData) {
      *
      */
     this.sumAll = async () => {
-        let query = `SELECT SUM (DISTINCT ${this.columns}) FROM ${this.tables} WHERE ${this.where} = $1`
+        let query = `SELECT SUM (DISTINCT ${this.columns}) FROM "${this.tables}" WHERE ${this.where} = $1`
         return await db.oneOrNone(query, [this.values])
     }
     /**
@@ -52,7 +52,7 @@ export function validateData(queryData) {
      * Query a table and return the highest value from specified column with a WHERE clause
      */
     this.topWager = async () => {
-        let query = `SELECT MAX (DISTINCT ${this.columns}) FROM ${this.tables} WHERE ${this.where} = $1`
+        let query = `SELECT MAX (DISTINCT ${this.columns}) FROM "${this.tables}" WHERE ${this.where} = $1`
         return await db.oneOrNone(query, [this.values])
     }
 }
