@@ -1,4 +1,4 @@
-import { Log, QuickError, embedReply } from '#config'
+import { Log, QuickError, embedReply, CURRENCY } from '#config'
 
 import { SapDiscClient } from '#main'
 import accounting from 'accounting'
@@ -27,7 +27,7 @@ export async function checkbalance(inputuserid, message, target) {
     db.tx('checkbalance-Transaction', async (t) => {
         //? Querying database for the balance. Our query results are stored in the 'findings' variable
         const balQuery = await t.oneOrNone(
-            'SELECT * FROM currency WHERE userid = $1',
+            `SELECT * FROM "${CURRENCY}" WHERE userid = $1`,
             [queryUserOrTarget],
         )
         //? Findings will return null (!findings) if the user does not exist in the database
@@ -46,7 +46,7 @@ export async function checkbalance(inputuserid, message, target) {
                 `I see this is your first time using Pluto, welcome! I've created an account for you and assigned 100 dollars.`,
             )
             return t.any(
-                'INSERT INTO currency (userid, balance) VALUES ($1, $2) RETURNING *',
+                `INSERT INTO "${CURRENCY}" (userid, balance) VALUES ($1, $2) RETURNING *`,
                 [inputuserid, '100'],
             ) //? Create user in the database
         }

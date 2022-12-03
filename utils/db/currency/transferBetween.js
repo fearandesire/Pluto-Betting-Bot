@@ -1,5 +1,5 @@
 import { db } from '#db'
-import { embedReply } from '#config'
+import { embedReply, CURRENCY } from '#config'
 import { validateUser } from '#utilValidate/validateExistingUser'
 
 /**
@@ -26,7 +26,7 @@ export async function transferTo(
     transferAmount = Number(transferAmount)
     db.tx(`transferTo`, async (t) => {
         const getUserBal = await t.oneOrNone(
-            `SELECT balance FROM currency WHERE userid = $1`,
+            `SELECT balance FROM "${CURRENCY}" WHERE userid = $1`,
             [userid],
         )
         if (
@@ -36,7 +36,7 @@ export async function transferTo(
             return message.reply(`You don't have enough money to transfer.`)
         }
         const getTargetUserBal = await t.oneOrNone(
-            `SELECT balance FROM currency WHERE userid = $1`,
+            `SELECT balance FROM "${CURRENCY}" WHERE userid = $1`,
             [targetUserId],
         )
         console.log(
@@ -49,11 +49,11 @@ export async function transferTo(
             `New user balance: ${newUserBal}\nNew target user balance: ${newTargetUserBal}`,
         )
         const updateUserBal = await t.oneOrNone(
-            `UPDATE currency SET balance = $1 WHERE userid = $2`,
+            `UPDATE "${CURRENCY}" SET balance = $1 WHERE userid = $2`,
             [newUserBal, userid],
         )
         const updateTargetUserBal = await t.oneOrNone(
-            `UPDATE currency SET balance = $1 WHERE userid = $2`,
+            `UPDATE "${CURRENCY}" SET balance = $1 WHERE userid = $2`,
             [newTargetUserBal, targetUserId],
         )
     }).then(() => {

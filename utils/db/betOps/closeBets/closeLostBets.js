@@ -1,19 +1,9 @@
-import {
-    Log,
-    NFL_ACTIVEMATCHUPS,
-    NFL_BETS,
-    NFL_LIVEBETS,
-    NFL_PROFILES,
-} from '#config'
+import { Log, LIVEMATCHUPS, BETSLIPS, LIVEBETS } from '#config'
 
 import { closeBetLog } from '../../../logging.js'
 import { db } from '#db'
 import { lostDm } from '../lostDm.js'
 import { memUse } from '#mem'
-
-const actMatchups = NFL_ACTIVEMATCHUPS
-const actBets = NFL_LIVEBETS
-const betTbl = NFL_BETS
 /**
  * @module closeLostBets
  * 1. Query DB and find all bets that chose the winning team [teamid] in the "NBAbetslips" table
@@ -27,7 +17,7 @@ export async function closeLostBets(losingTeam, homeOrAway) {
         var dbStack = await db.tx(async (t) => {
             // Start a db transaction
             var getMatchInfo = await t.oneOrNone(
-                `SELECT * FROM "${actMatchups}" WHERE teamone = $1 OR teamtwo = $1`,
+                `SELECT * FROM "${LIVEMATCHUPS}" WHERE teamone = $1 OR teamtwo = $1`,
                 [losingTeam],
             ) // Query DB for matchup info
             if (!getMatchInfo) {
@@ -35,7 +25,7 @@ export async function closeLostBets(losingTeam, homeOrAway) {
                 return reject(`No match found for ${losingTeam}`)
             }
             var getLosers = await t.manyOrNone(
-                `SELECT * FROM "${betTbl}" WHERE teamid = $1 AND betresult = 'pending'`,
+                `SELECT * FROM "${BETSLIPS}" WHERE teamid = $1 AND betresult = 'pending'`,
                 [losingTeam],
             )
             if (getLosers) {
@@ -64,11 +54,11 @@ export async function closeLostBets(losingTeam, homeOrAway) {
                     )
                     //# update betslips table to reflect the user lost their bet
                     await t.none(
-                        `UPDATE "${betTbl}" SET betresult = 'lost' WHERE betid = $1`,
+                        `UPDATE "${BETSLIPS}" SET betresult = 'lost' WHERE betid = $1`,
                         [betId],
                     )
                     //# Delete bet from activebets
-                    await t.none(`DELETE FROM "${actBets}" WHERE betid = $1`, [betId])
+                    await t.none(`DELETE FROM "${LIVEBETS}" WHERE betid = $1`, [betId])
                     var lostBetInformation = await {
                         [`userId`]: userid,
                         [`betId`]: betId,

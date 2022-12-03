@@ -1,5 +1,6 @@
 import { Log } from '#LogColor'
 import { db } from '#db'
+import { CURRENCY, BETSLIPS, LIVEBETS } from '#config'
 
 /**
  * @module modifyAmount -
@@ -14,11 +15,11 @@ import { db } from '#db'
 export function modifyAmount(interaction, userid, betid, amount) {
     db.tx('modifyAmount', async (t) => {
         const currentAmount = await t.oneOrNone(
-            `SELECT amount FROM betslips WHERE userid = $1 AND betid = $2`,
+            `SELECT amount FROM "${BETSLIPS}" WHERE userid = $1 AND betid = $2`,
             [userid, betid],
         )
         const userBal = await t.oneOrNone(
-            `SELECT balance FROM currency WHERE userid = $1`,
+            `SELECT balance FROM "${CURRENCY}" WHERE userid = $1`,
             [userid],
         )
         const convertBetAmount = parseInt(currentAmount.amount)
@@ -30,11 +31,15 @@ export function modifyAmount(interaction, userid, betid, amount) {
             userid,
         ])
         await t.oneOrNone(
-            `UPDATE betslips SET amount = $1 WHERE userid = $2 AND betid = $3`,
+            `UPDATE "${CURRENCY}" SET balance = $1 WHERE userid = $2`,
+            [newBal, userid],
+        )
+        await t.oneOrNone(
+            `UPDATE "${BETSLIPS}" SET amount = $1 WHERE userid = $2 AND betid = $3`,
             [amount, userid, betid],
         )
         await t.oneOrNone(
-            `UPDATE activebets SET amount = $1 WHERE userid = $2 AND betid = $3`,
+            `UPDATE "${LIVEBETS}" SET amount = $1 WHERE userid = $2 AND betid = $3`,
             [amount, userid, betid],
         )
     }).then(() => {

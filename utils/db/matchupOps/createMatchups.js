@@ -1,4 +1,4 @@
-import { container } from '#config'
+import { container, LIVEMATCHUPS } from '#config'
 import { createMatchupsLog } from '../../logging.js'
 import { db } from '#db'
 import { embedReply } from '#embed'
@@ -32,7 +32,7 @@ export async function createMatchups(
     createMatchupsLog.info(`Initializing createMatchups!`)
 
     db.none(
-        `INSERT INTO "activematchups" (matchid, teamOne, teamTwo, teamOneOdds, teamTwoOdds, dateofmatchup, "startTime", cronstart, legiblestart, idapi) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+        `INSERT INTO "${LIVEMATCHUPS}" (matchid, teamOne, teamTwo, teamOneOdds, teamTwoOdds, dateofmatchup, "startTime", cronstart, legiblestart, idapi) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
         [
             matchupId,
             teamOne,

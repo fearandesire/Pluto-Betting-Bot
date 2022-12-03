@@ -1,4 +1,4 @@
-import { QuickError, embedReply } from '#config'
+import { QuickError, embedReply, CURRENCY, BETSLIPS, LIVEBETS } from '#config'
 
 import { Log } from '#LogColor'
 import { db } from '#db'
@@ -24,27 +24,27 @@ export async function queryBets(interaction, userid, betid) {
         if (betCount > 0) {
             // Collect bet info
             const betData = await t.oneOrNone(
-                'SELECT amount FROM "betslips" WHERE userid = $1 AND betid = $2',
+                `SELECT amount FROM "${BETSLIPS}" WHERE userid = $1 AND betid = $2`,
                 [userid, betid],
             )
             // Collect current user balance
             const userBal = await t.oneOrNone(
-                `SELECT balance FROM "currency" WHERE userid = $1`,
+                `SELECT balance FROM "${CURRENCY}" WHERE userid = $1`,
                 [userid],
             )
             // add current user balance + the bet amount
             const newBal = parseInt(userBal.balance) + parseInt(betData.amount)
             await t.batch([
                 await t.oneOrNone(
-                    `UPDATE "currency" SET balance = $1 WHERE userid = $2`,
+                    `UPDATE "${CURRENCY}" SET balance = $1 WHERE userid = $2`,
                     [newBal, userid],
                 ),
                 await t.oneOrNone(
-                    `DELETE FROM "activebets" WHERE userid = $1 AND betid = $2`,
+                    `DELETE FROM "${LIVEBETS}" WHERE userid = $1 AND betid = $2`,
                     [userid, betid],
                 ),
                 await t.oneOrNone(
-                    `DELETE FROM "betslips" WHERE userid = $1 AND betid = $2`,
+                    `DELETE FROM "${BETSLIPS}" WHERE userid = $1 AND betid = $2`,
                     [userid, betid],
                 ),
             ])

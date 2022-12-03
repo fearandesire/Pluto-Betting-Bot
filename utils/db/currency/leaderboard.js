@@ -3,7 +3,7 @@ import { embedReply } from '#config'
 import { reqLeaderboard } from './reqLeaderboard.js'
 
 /**
- * Retrieve the data from the "NBAcurrency" table in the DB - sort by the highest values to the lowest.
+ * Retrieve the data from the currency/profile table in the DB - sort by the highest values to the lowest.
  * @param {message} message - The Discord message object
  * @param {boolean} interactionEph - Whether the interaction is ephemeral or not (silent response)
  * @returns {object} - Returns an embed containing the leaderboard information with user tags and their balances.

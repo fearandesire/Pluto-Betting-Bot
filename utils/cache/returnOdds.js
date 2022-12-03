@@ -4,11 +4,11 @@ import { db } from '#db'
 import { formatOdds } from '#cmdUtil/formatOdds'
 
 /**
- * @module returnWeeklyOdds
- * Return the matchups & odds for the week
+ * @module returnOdds
+ * Return all currently available odds from the database
  */
 
-export async function returnWeeklyOdds(message, interactionEph) {
+export async function returnOdds(message, interactionEph) {
     var oddsFields = []
     var matchupDb = await db.manyOrNone(`SELECT * FROM "${LIVEMATCHUPS}"`)
     if (!matchupDb || Object.keys(matchupDb).length === 0) {
@@ -22,7 +22,6 @@ export async function returnWeeklyOdds(message, interactionEph) {
         var aTeam = match.teamtwo
         var hOdds = match.teamoneodds
         var aOdds = match.teamtwoodds
-        var matchupId = match.matchid
         var startTime = match.legiblestart
         let oddsFormat = await formatOdds(hOdds, aOdds)
         hOdds = oddsFormat.homeOdds
@@ -40,10 +39,10 @@ export async function returnWeeklyOdds(message, interactionEph) {
     }
     console.log(oddsFields)
     var embedObj = {
-        title: `:mega: Weekly H2H Odds`,
-        fields: oddsFields,
-        thumbnail: `${process.env.sportLogo}`,
         color: `#00ffff`,
+        title: `:mega: H2H Odds`,
+        fields: oddsFields,
+        thumbnail: `${process.env.sportLogoNBA}`,
         footer:
             'Favored teams have a - negative number | Pluto - Designed by FENIX#7559',
     }
