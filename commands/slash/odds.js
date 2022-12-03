@@ -1,5 +1,5 @@
 import { Command } from '@sapphire/framework'
-import { returnDailyOdds } from '../../utils/cache/returnDailyOdds.js'
+import { returnOdds } from '../../utils/cache/returnOdds.js'
 
 export class odds extends Command {
     constructor(context, options) {
@@ -26,6 +26,6 @@ export class odds extends Command {
     async chatInputRun(interaction) {
         var userid = interaction.user.id
         var interactionEph = true
-        await returnDailyOdds(interaction, interactionEph)
+        await returnOdds(interaction, interactionEph)
     }
 }

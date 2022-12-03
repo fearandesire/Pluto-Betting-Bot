@@ -1,4 +1,4 @@
-import { NBA_ACTIVEMATCHUPS, queryBuilder as qBuilder } from '#config'
+import { LIVEMATCHUPS, queryBuilder as qBuilder } from '#config'
 import { QuickError, embedReply } from '#embed'
 
 import { FileRunning } from '#botClasses/FileRunning'
@@ -22,11 +22,7 @@ import { validateData } from './../validation/validateData.js'
 
 export async function setupBet(message, teamName, betamount, user) {
     new FileRunning(`setupBet`)
-    var dbQuery = qBuilder(
-        `"${NBA_ACTIVEMATCHUPS}"`,
-        [`teamone`, `teamtwo`],
-        teamName,
-    )
+    var dbQuery = qBuilder(`"${LIVEMATCHUPS}"`, [`teamone`, `teamtwo`], teamName)
     await new validateData(dbQuery).uniqueRowOr().then(async (data) => {
         //? if team user wishes to bet on exists in the matchups DB, Do:
         if (data) {

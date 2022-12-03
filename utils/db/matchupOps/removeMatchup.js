@@ -1,4 +1,4 @@
-import { Log } from '#config'
+import { Log, LIVEMATCHUPS } from '#config'
 import { db } from '#db'
 import { dmMe } from '../../bot_res/dmMe.js'
 import { removeMatchLog } from '../../logging.js'
@@ -12,7 +12,7 @@ import { removeMatchLog } from '../../logging.js'
 export async function removeMatch(hTeam, aTeam) {
     try {
         await db.none(
-            'DELETE FROM "NBAactivematchups" WHERE teamone = $1 AND teamtwo = $2',
+            `DELETE FROM "${LIVEMATCHUPS}" WHERE teamone = $1 AND teamtwo = $2`,
             [hTeam, aTeam],
         )
         Log.Green(
