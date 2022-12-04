@@ -9,6 +9,7 @@ import stringifyObject from 'stringify-object'
 import { MessageEmbed } from 'discord.js'
 import { accounting } from '#config'
 import { SapDiscClient } from '#main'
+import { findEmoji } from '#botUtil/findEmoji'
 /**
  * @module confirmBet -
  * Create's a message listener for the user to accept, or cancel their pending bet via pressing/clicking reactions.
