@@ -1,4 +1,4 @@
-import { Log } from '#config'
+import { Log, LIVEMATCHUPS } from '#config'
 import { db } from '#db'
 import { locateMatchupIdLog } from '../../logging.js'
 
@@ -10,7 +10,7 @@ export async function locateMatchup(hTeam, awTeam) {
         //# locate matchid that contains both teams
         var callMatchups = async () => {
             return db
-                .many(`SELECT * FROM activematchups WHERE teamone = $1`, [hTeam])
+                .many(`SELECT * FROM "${LIVEMATCHUPS}" WHERE teamone = $1`, [hTeam])
                 .then((data) => {
                     console.log(`DATA`, data[0])
                     data = data[0]
