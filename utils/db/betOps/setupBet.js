@@ -44,6 +44,7 @@ export async function setupBet(message, teamName, betamount, user) {
                     description: `You do not have sufficient funds to place this bet. Your current balance is $**${checkFunds}**`,
                     color: 'RED',
                     target: `reply`,
+                    followUp: true,
                 }
                 await embedReply(message, embedcontent, true)
                 throw Log.Error(
