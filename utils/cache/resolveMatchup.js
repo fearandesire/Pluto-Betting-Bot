@@ -1,4 +1,4 @@
-import { Log, NBA_ACTIVEMATCHUPS } from '#config'
+import { Log, LIVEMATCHUPS, flatcache } from '#config'
 
 import { db } from '#db'
 import { resolveMatchupLog } from '../logging.js'
@@ -12,22 +12,24 @@ import { resolveMatchupLog } from '../logging.js'
  */
 
 export async function resolveMatchup(teamName, reqInfo) {
-	resolveMatchupLog.info(`Searching for: ${teamName} in db`)
-	Log.Blue(`Searching for: ${teamName} in db`)
-	var dbMatchup = await db.manyOrNone(
-		`SELECT * FROM "${NBA_ACTIVEMATCHUPS}" WHERE teamone = '${teamName}' OR teamtwo = '${teamName}'`,
-	)
-	if (!dbMatchup || Object.keys(dbMatchup).length === 0) {
-		resolveMatchupLog.info(`No match found for: ${teamName}`)
-		return false
-	}
-	if (!reqInfo) {
-		return dbMatchup[0]
-	} else if (reqInfo === 'odds') {
-		if (teamName === dbMatchup[0].teamone) {
-			return dbMatchup[0].teamoneodds
-		} else if (teamName === dbMatchup[0].teamtwo) {
-			return dbMatchup[0].teamtwoodds
-		}
-	}
+    let oddsCache = flatcache.create(`oddsCache.json`, './cache/weeklyOdds')
+    var weeklyOdds = oddsCache.getKey(`matchups`)
+    resolveMatchupLog.info(`Searching for: ${teamName} in db`)
+    Log.Blue(`Searching for: ${teamName} in db`)
+    var dbMatchup = await db.manyOrNone(
+        `SELECT * FROM ${LIVEMATCHUPS} WHERE teamone = '${teamName}' OR teamtwo = '${teamName}'`,
+    )
+    if (!dbMatchup || Object.keys(dbMatchup).length === 0) {
+        resolveMatchupLog.info(`No match found for: ${teamName}`)
+        return false
+    }
+    if (!reqInfo) {
+        return dbMatchup[0]
+    } else if (reqInfo === 'odds') {
+        if (teamName === dbMatchup[0].teamone) {
+            return dbMatchup[0].teamoneodds
+        } else if (teamName === dbMatchup[0].teamtwo) {
+            return dbMatchup[0].teamtwoodds
+        }
+    }
 }

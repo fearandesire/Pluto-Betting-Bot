@@ -123,3 +123,4 @@ utils/unitTesting/**
 
 # Images Dir
 lib/images/**
+lib/teamList.js

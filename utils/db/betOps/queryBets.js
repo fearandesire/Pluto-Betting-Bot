@@ -12,7 +12,7 @@ import { db } from '#db'
 export async function queryBets(interaction, userid, betid) {
     db.tx('queryCancelBet', async (t) => {
         const getBetCount = await t.manyOrNone(
-            `SELECT count(*) FROM "NBAbetslips" WHERE userid = $1`,
+            `SELECT count(*) FROM "${BETSLIPS}" WHERE userid = $1`,
             [userid],
             (c) => c.count,
         )
