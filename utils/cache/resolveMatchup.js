@@ -17,7 +17,7 @@ export async function resolveMatchup(teamName, reqInfo) {
     resolveMatchupLog.info(`Searching for: ${teamName} in db`)
     Log.Blue(`Searching for: ${teamName} in db`)
     var dbMatchup = await db.manyOrNone(
-        `SELECT * FROM ${LIVEMATCHUPS} WHERE teamone = '${teamName}' OR teamtwo = '${teamName}'`,
+        `SELECT * FROM "${LIVEMATCHUPS}" WHERE teamone = '${teamName}' OR teamtwo = '${teamName}'`,
     )
     if (!dbMatchup || Object.keys(dbMatchup).length === 0) {
         resolveMatchupLog.info(`No match found for: ${teamName}`)
