@@ -1,5 +1,6 @@
 import { gameActive } from '#dateUtil/gameActive'
 import { LIVEBETS } from '#config'
+import { db } from '#db'
 
 /**
  * @module verifyCancellation
