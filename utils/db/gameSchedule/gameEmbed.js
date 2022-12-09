@@ -19,6 +19,9 @@ import { resolveTeamColor } from '../../cmd_res/resolveTeam.js'
  */
 
 export async function gameEmbed(hometeam, awayteam) {
+    console.log(
+        `Creating game embed information for: (away) ${awayteam} vs (home) ${hometeam}  `,
+    )
     var hTeam = await resolveTeam(hometeam)
     var aTeam = await resolveTeam(awayteam)
 
