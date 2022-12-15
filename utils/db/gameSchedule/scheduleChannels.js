@@ -6,9 +6,7 @@ import { getShortName } from './../../bot_res/getShortName.js'
 import { scheduleChanLog } from '#winstonLogger'
 
 const require = createRequire(import.meta.url)
-const cron = require('cronitor')(`f9f7339479104e79bf2b52eb9c2242bf`)
-cron.wraps(require('node-cron'))
-const schedChanMonitor = new cron.Monitor('Schedule Game Channels')
+const cron = require('node-cron')
 
 /**
  * @module scheduleChannels
@@ -24,10 +22,6 @@ export async function scheduleChannels(
 ) {
     homeTeam = await getShortName(homeTeam)
     awayTeam = await getShortName(awayTeam)
-    await schedChanMonitor.ping({
-        state: `run`,
-        message: `Creating a Cron Job to create a game channel for: ${awayTeam} vs ${homeTeam} | Cron Time: ${cronStartTime}`,
-    })
     await Log.Yellow(
         `Creating a Cron Job to create a game channel for: ${awayTeam} vs ${homeTeam} | Cron Time: ${cronStartTime}`,
     )
@@ -36,7 +30,6 @@ export async function scheduleChannels(
     )
     var createCron = async () => {
         await cron.schedule(
-            `${awayTeam} vs ${homeTeam}`,
             `${cronStartTime}`,
             async () => {
                 await createChannel(awayTeam, homeTeam)
@@ -45,10 +38,6 @@ export async function scheduleChannels(
         )
     }
     await createCron().then(async () => {
-        await schedChanMonitor.ping({
-            state: `complete`,
-            message: `Successfully created Cron Job to create a game channel for: ${awayTeam} vs ${homeTeam} | Cron Time: ${cronStartTime}`,
-        })
         await Log.Green(
             `Successfully created Cron Job to create a game channel for: ${awayTeam} vs ${homeTeam} | Cron Time: ${cronStartTime}`,
         )
