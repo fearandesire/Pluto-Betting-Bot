@@ -1,4 +1,4 @@
-import { Log, NBA_COLLECT_CRONTIMES } from '#config'
+import { Log, CHECK_COMPLETED_TIMER } from '#config'
 
 import { checkCompleted } from './checkCompleted.js'
 import { completedReqLog } from '#winstonLogger'
@@ -6,11 +6,9 @@ import { createRequire } from 'module'
 import { isGameDay } from '#botUtil/isGameDay'
 import { memUse } from '#mem'
 import { resolveCompCron } from '../db/gameSchedule/resolveCompCron.js'
-
+import cronstrue from 'cronstrue'
 const require = createRequire(import.meta.url)
-const cron = require('cronitor')(`f9f7339479104e79bf2b52eb9c2242bf`)
-cron.wraps(require('node-cron'))
-const compGameMonitor = new cron.Monitor('Finished Game Check')
+const cron = require('node-cron')
 
 /**
  * @module completedReq -
@@ -19,7 +17,7 @@ const compGameMonitor = new cron.Monitor('Finished Game Check')
 
 export function completedReq() {
     Log.Yellow(
-        `[Startup]: completedReq.js reached\nDaily Check Cron Queue: ${NBA_COLLECT_CRONTIMES}`,
+        `[Startup]: completedReq.js reached\nDaily Check Cron Queue: ${CHECK_COMPLETED_TIMER}`,
     )
     this.dailyCheck = async function () {
         Log.Yellow(
@@ -28,18 +26,13 @@ export function completedReq() {
         var checkGameDay = await isGameDay()
         let completedCron
         cron.schedule(
-            `initGameDay`,
-            `${NBA_COLLECT_CRONTIMES}`,
+            `${CHECK_COMPLETED_TIMER}`,
             async () => {
                 //# Retrieve the cron ranges for the times we will be checking for completed games -- in the Cron format
                 completedCron = await resolveCompCron()
 
                 await memUse(`completedReq`, `Post-Cron Range Collection`)
                 completedReqLog.info(`Running completedReq.js - Initializing Cron Jobs`)
-                compGameMonitor.ping({
-                    state: `ok`,
-                    message: `Initializing finished game check Cron Job [completedReq.js]`,
-                })
                 var cronRange1 = completedCron?.range1
                     ? completedCron.range1
                     : undefined
@@ -52,16 +45,11 @@ export function completedReq() {
                 )
                 if (checkGameDay == true && cronRange1 !== undefined) {
                     cron.schedule(
-                        `compGamesRange1`,
                         cronRange1,
                         async () => {
                             completedReqLog.info(`Checking for completed games..`)
-                            compGameMonitor.ping({
-                                state: 'run',
-                                message: `Checking for completed games..`,
-                            })
                             await memUse(`completedReq`, `Pre-Check: Completed Games`)
-                            await checkCompleted(compGameMonitor)
+                            await checkCompleted()
                             Log.Yellow(`Checking for completed games`)
                         },
                         { timezone: 'America/New_York' },
@@ -71,14 +59,9 @@ export function completedReq() {
                             `Checking for completed games between the hours: ${cronRange2}`,
                         )
                         cron.schedule(
-                            `CompletedGameCheck`,
                             cronRange2,
                             async () => {
-                                compGameMonitor.ping({
-                                    state: 'run',
-                                    message: `Checking for completed games..`,
-                                })
-                                await checkCompleted(compGameMonitor)
+                                await checkCompleted()
                                 completedReqLog.info(`Checking for completed games`)
                                 Log.Yellow(`Checking for completed games`)
                             },
@@ -86,10 +69,6 @@ export function completedReq() {
                         )
                     }
                 } else {
-                    compGameMonitor.ping({
-                        state: 'ok',
-                        message: `No games today, skipping completed game check..`,
-                    })
                     Log.Red(
                         `[completedReq.js] No games today, skipping completed game check..`,
                     )
@@ -103,13 +82,13 @@ export function completedReq() {
         )
     }
     //# to have a command added to force check for completed games
-    this.forceCheck = async function (interaction) {
-        await checkCompleted(compGameMonitor)
+    this.forceCheck = async function () {
+        await checkCompleted()
     }
     //# Intended to be used on bot-restarts
     this.restartedCheck = async function (interaction) {
         var checkGameDay = await isGameDay()
-        if (checkGameDay == true) {
+        if (checkGameDay === true) {
             var completedCron = await resolveCompCron()
             var cronRange1 = completedCron?.range1
             var cronRange2 = completedCron?.range2
@@ -121,29 +100,19 @@ export function completedReq() {
             )
             if (cronRange1) {
                 cron.schedule(
-                    `compGamesRange1`,
                     cronRange1,
                     async () => {
                         completedReqLog.info(`Checking for completed games..`)
-                        compGameMonitor.ping({
-                            state: 'run',
-                            message: `Checking for completed games..`,
-                        })
-                        await checkCompleted(compGameMonitor)
+                        await checkCompleted()
                         Log.Yellow(`Checking for completed games`)
                     },
                     { timezone: 'America/New_York' },
                 )
                 if (cronRange2) {
                     cron.schedule(
-                        `compRange2`,
                         cronRange2,
                         async () => {
-                            compGameMonitor.ping({
-                                state: 'run',
-                                message: `Checking for completed games..`,
-                            })
-                            await checkCompleted(compGameMonitor)
+                            await checkCompleted()
                             completedReqLog.info(`Checking for completed games..`)
                             Log.Yellow(`Checking for completed games`)
                         },

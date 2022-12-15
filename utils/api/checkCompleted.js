@@ -1,10 +1,9 @@
-import { Log, SCORE, _, container } from '#config'
+import { Log, SCORE, _ } from '#config'
 import { apiReqLog, checkCompletedLog } from '#winstonLogger'
 
 import { checkProgress } from '../db/matchupOps/progress/checkProgress.js'
 import { closeLostBets } from '../db/betOps/closeBets/closeLostBets.js'
 import { closeWonBets } from '../db/betOps/closeBets/closeWonBets.js'
-import { deleteChan } from '../db/gameSchedule/deleteChan.js'
 import { dmMe } from '../bot_res/dmMe.js'
 import fetch from 'node-fetch'
 import { getShortName } from '../bot_res/getShortName.js'
@@ -13,7 +12,7 @@ import { memUse } from '#mem'
 import { queueDeleteChannel } from '../db/gameSchedule/queueDeleteChannel.js'
 import { removeMatch } from '#utilMatchups/removeMatchup'
 import { setProgress } from '../db/matchupOps/progress/setProgress.js'
-import stringifyObject from 'stringify-object'
+import { determineWinner } from '../bot_res/betOps/determineWinner.js'
 
 const url = SCORE
 const options = {
@@ -34,7 +33,7 @@ const options = {
  * 3. Once the winner is determined, the information is sent to {@link closeWonBets} & {@link @closeLostBets} to close the bets for the matchup
  */
 
-export async function checkCompleted(compGameMonitor) {
+export async function checkCompleted() {
     var fileName = `[checkCompleted.js]`
     await checkCompletedLog.info(`Init Check Completed`, {
         status: `Initilization check for completed games`,
@@ -108,49 +107,15 @@ export async function checkCompleted(compGameMonitor) {
                         erroMsg: `Error occured during locate / delete game channel for ${value.home_team} vs. ${value.away_team}`,
                     })
                 }
-                //# determine which prop is the home team's score and away team's score by matching the team name
-                let hScoreProp
-                let awScoreProp
-                if (value.scores[0].name === value.home_team) {
-                    hScoreProp = value.scores[0]
-                    awScoreProp = value.scores[1]
-                } else if (value.scores[0].name === value.away_team) {
-                    hScoreProp = value.scores[1]
-                    awScoreProp = value.scores[0]
-                }
-
-                //# determine winner based on the scores
-                var homeScore = hScoreProp.score
-                var awayScore = awScoreProp.score
-                var winner = ''
-                var homeOrAwayWon
-                var losingTeam
-                var losingTeamHomeOrAway
-                if (Number(homeScore) > Number(awayScore)) {
-                    winner = value.home_team
-                    homeOrAwayWon = 'home'
-                    losingTeam = value.away_team
-                    losingTeamHomeOrAway = 'away'
-                    await checkCompletedLog.info({
-                        status: `Calculating Winner`,
-                        hometeam: value.home_team,
-                        awayteam: value.away_team,
-                        apiId: idApi,
-                        statusMsg: `Winner: Home Team: ${winner} - ${homeScore}`,
-                    })
-                } else if (Number(homeScore) < Number(awayScore)) {
-                    winner = value.away_team
-                    homeOrAwayWon = 'away'
-                    losingTeam = value.home_team
-                    losingTeamHomeOrAway = 'home'
-                    await checkCompletedLog.info({
-                        status: `Calculating Winner`,
-                        hometeam: value.home_team,
-                        awayteam: value.away_team,
-                        apiId: idApi,
-                        statusMsg: `Winner: Away Team: ${winner} - ${awayScore}`,
-                    })
-                }
+                let detWin = await determineWinner(value)
+                let { winner, homeOrAwayWon, losingTeam, losingTeamHomeOrAway } = detWin
+                await checkCompletedLog.info({
+                    status: `Calculating Winner`,
+                    hometeam: value.home_team,
+                    awayteam: value.away_team,
+                    apiId: idApi,
+                    statusMsg: `Winner: Home Team: ${winner}`,
+                })
                 await Log.Green(`Step 4: Winner Determined || ${winner}`)
                 //& Declare the matchup as being processed to prevent overlapping the process of closing bets
                 await setProgress(value.home_team, value.away_team)
@@ -199,8 +164,8 @@ export async function checkCompleted(compGameMonitor) {
     await checkCompletedLog.info(`Games Skipped`, {
         status: `Skipped games:\n${skippedGames.join(`\n`)}\n`,
     })
-    await compGameMonitor.ping({
-        state: 'complete',
-        message: `Completed Finished Game Checks | Sent ${container.processQueue} Games to be closed`,
-    })
+    await Log.Green(`{
+        "stack": 'checkCompleted',
+        "status": 'Completed',
+    }`)
 }
