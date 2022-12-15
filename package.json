@@ -1,6 +1,6 @@
 {
 	"name": "bettingbot",
-	"version": "1.12.0",
+	"version": "1.12.1",
 	"description": "",
 	"main": "Pluto.mjs",
 	"prettier": "fenix-js-prettier-config",
@@ -10,7 +10,8 @@
 		"start": "node ./Pluto.js",
 		"format": "prettier --write \"src/**/*.js\"",
 		"test": "echo \"Error: no test specified\" && exit 1",
-		"docs": "jsdoc2md lib/*.js > addNewBet.js"
+		"docs": "jsdoc2md lib/*.js > addNewBet.js",
+		"auto": "nodemon node ./Pluto.mjs"
 	},
 	"imports": {
 		"#db": "./Database/dbindex.js",
