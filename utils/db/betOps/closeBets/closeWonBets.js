@@ -30,8 +30,8 @@ export async function closeWonBets(winningTeam, homeOrAway, losingTeam) {
                 await closeBetLog.error(`No match found for ${winningTeam}`)
                 return reject(`No match found for ${winningTeam}`)
             }
-            var getWinners = await t.manyOrNone(
-                `SELECT * FROM "betslips" WHERE teamid = $1 AND betresult = 'pending'`,
+            let getWinners = await t.manyOrNone(
+                `SELECT * FROM "${BETSLIPS}" WHERE teamid = $1 AND betresult = 'pending'`,
                 [winningTeam],
             )
             if (getWinners) {

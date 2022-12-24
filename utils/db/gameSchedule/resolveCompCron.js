@@ -1,5 +1,5 @@
-import { Log, NFL_ACTIVEMATCHUPS, container } from '#config'
-
+import { Log, LIVEMATCHUPS, container } from '#config'
+import cronstrue from 'cronstrue'
 import { db } from '#db'
 import { dmMe } from '../../bot_res/dmMe.js'
 import { memUse } from '#mem'
@@ -19,19 +19,21 @@ export async function resolveCompCron() {
     Log.Green(`[resolveCompCron.js] Today is ${todaySlash}`)
     return await db
         .manyOrNone(
-            `SELECT * FROM "${NFL_ACTIVEMATCHUPS}" WHERE dateofmatchup = $1 ORDER BY "startTime" ASC`,
+            `SELECT * FROM "${LIVEMATCHUPS}" WHERE dateofmatchup = $1 ORDER BY "startTime" ASC`,
             [todaySlash],
         )
         .then(async (data) => {
             //console.log(`DATA =>>`, data)
             if (!data || data.length === 0) {
-                console.log(`[resolveCompCron.js] No Games Today`)
+                Log.Red(`[resolveCompCron.js] No games scheduled today`)
                 return false
             }
             var earliestCron = data[0].cronstart
             var latestCron = data[data.length - 1].cronstart
             await console.log(
-                `[resolveCompCron.js] (Cron) Earliest Game Time Today: ${earliestCron} || (Cron) Latest Game Time Today: ${latestCron}`,
+                `[resolveCompCron.js] Earliest Game Time Today: ${cronstrue.toString(
+                    earliestCron,
+                )} || Latest Game Time Today: ${cronstrue.toString(latestCron)}`,
             )
             //# Split the cron times by spaces and add 2 hours to the hour value [second index], then rejoin the string
             var earliestCronSplit = earliestCron.split(' ')
@@ -116,7 +118,6 @@ export async function resolveCompCron() {
                     forceOvernight.includes(earliestCronHour))
             ) {
                 hourRange = `${earliestCronHour + 2}-23`
-                overnightHours = `0-3`
                 earliestCronSplit[1] = hourRange
                 earliestCronSplit[0] = `*/5`
                 range1 = earliestCronSplit.join(' ')
@@ -125,13 +126,15 @@ export async function resolveCompCron() {
                     `[resolveCompCron.js] (2) Cron Ranges:\nRange 1: ${range1}\nRange 2: ${range2}`,
                 )
                 container.cronRanges = {
-                    range1: range1,
+                    range1,
                     range2: range2,
                 }
                 await dmMe(
-                    `Cron Ranges for Completed Games:\n${stringifyObject(
-                        container.cronRanges,
-                    )}`,
+                    `Cron Ranges for Completed Games:\n**# Range 1:** \`${cronstrue.toString(
+                        `${range1}`,
+                    )}\`\n**# Range 2:** \`${cronstrue.toString(`${range2}`)}\`\n\`\`\`js
+                    ${stringifyObject(container.cronRanges)}
+                    \`\`\``,
                 )
                 return {
                     range1: `${range1}`,
@@ -154,15 +157,17 @@ export async function resolveCompCron() {
                 await console.log(`Cron Comp String:`, range1)
                 await Log.Green(`[resolveCompCron.js] (1) Cron Ranges:\n${range1}`)
                 container.cronRanges = {
-                    range1: range1,
+                    range1,
                 }
                 await dmMe(
-                    `Cron Ranges for Completed Games:\n${stringifyObject(
-                        container.cronRanges,
-                    )}`,
+                    `Cron Range for Completed Games:\n**# Range 1:** \`${cronstrue.toString(
+                        `${range1}`,
+                    )}\`\n\`\`\`js
+                    ${stringifyObject(container.cronRanges)}
+                    \`\`\``,
                 )
                 return {
-                    range1: range1,
+                    range1,
                 }
             }
         })

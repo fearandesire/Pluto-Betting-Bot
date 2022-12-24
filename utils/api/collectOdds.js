@@ -43,22 +43,22 @@ export async function collectOdds(message) {
         },
     }
     let matchups = {} //# to store matchups into cache
-    container.allNflOdds = {}
+    container.allOddsObj = {}
     let apiRequest
     // let apiRes
-    let allNflOdds
+    let allOddsObj
     collectOddsLog.notice({
         status: `New Session`,
     })
     try {
         apiRequest = await fetch(url, options).then((res) => res.json())
-        allNflOdds = apiRequest
+        allOddsObj = apiRequest
     } catch (error) {
         collectOddsLog.error({ errorMsg: error })
         return
     }
     container.matchupCount = 0
-    for (let [key, value] of Object.entries(allNflOdds)) {
+    for (let [key, value] of Object.entries(allOddsObj)) {
         let isoDate = value.commence_time
         //# Storing games that are scheduled for this week || API can return games for the next week, but they have no odds.
         let todayDateInfo = new resolveToday()
