@@ -14,6 +14,7 @@ import { scheduleChannels } from './scheduleChannels.js'
  * @module fetchSchedule
  * 1. Retrieve all matchup information for the day via the dailyOdds cache file
  * 2. Iterate through the matchups and spawn the Cron Jobs to create a game channel for each matchup with the home team, away team and cronStartTime
+ * {@link callSchedule (fetchOdds command)}
  */
 
 export async function fetchSchedule(interaction) {
