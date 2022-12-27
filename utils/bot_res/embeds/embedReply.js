@@ -29,7 +29,9 @@ export async function embedReply(interaction, embedContent, interactionEph) {
     var thumbnail = embedContent?.thumbnail || process.env.sportLogo
     //debug: console.log(`EMBED OBJECT: ===>>`, embedContent)
     var reqChan
-
+    if (interaction.deferred === true) {
+        followUp = true
+    }
     //# Embeds with fields response
     if (hasFields !== false) {
         const embedWithFields = new MessageEmbed()
