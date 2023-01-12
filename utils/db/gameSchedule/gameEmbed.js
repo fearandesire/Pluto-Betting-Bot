@@ -124,7 +124,7 @@ export async function gameEmbed(hometeam, awayteam) {
 
     if (favoredTeam === hTeam) {
         // # Find team full name in property of nba teams.
-        const teamName = nflteams[hTeam.toLowerCase()]
+        const teamName = nbaTeams[hTeam.toLowerCase()]
         const randomTerms = [`${teamName} hype`, `${teamName}`]
         const selectRandomTerm =
             randomTerms[Math.floor(Math.random() * randomTerms.length)]
