@@ -54,18 +54,74 @@ export async function gameEmbed(hometeam, awayteam) {
     let gifLink
     let giphy
     let gif
+    // # Obj with all nba teams to match their short name with their full name
+    const nbaTeams = {
+        Hawks: 'Atlanta Hawks',
+        Celtics: 'Boston Celtics',
+        Nets: 'Brooklyn Nets',
+        Hornets: 'Charlotte Hornets',
+        Bulls: 'Chicago Bulls',
+        Cavaliers: 'Cleveland Cavaliers',
+        Dallas: 'Dallas Mavericks',
+        Nuggets: 'Denver Nuggets',
+        Pistons: 'Detroit Pistons',
+        Warriors: 'Golden State Warriors',
+        Rockets: 'Houston Rockets',
+        Pacers: 'Indiana Pacers',
+        Wizards: 'Washington Wizards',
+        Clippers: 'Los Angeles Clippers',
+        Lakers: 'Los Angeles Lakers',
+        Grizzlies: 'Memphis Grizzlies',
+        Heat: 'Miami Heat',
+        Bucks: 'Milwaukee Bucks',
+        Magic: 'Orlando Magic',
+        Knicks: 'New York Knicks',
+        Thunder: 'Oklahoma City Thunder',
+        '76ers': 'Philadelphia 76ers',
+        Suns: 'Phoenix Suns',
+        'Trail Blazers': 'Portland Trail Blazers',
+        Kings: 'Sacramento Kings',
+        Spurs: 'San Antonio Spurs',
+        Raptors: 'Toronto Raptors',
+        Jazz: 'Utah Jazz',
+        Pelicans: 'New Orleans Pelicans',
+        Timberwolves: 'Minnesota Timberwolves',
+    }
+
     if (favoredTeam === hTeam) {
+        // # Find team full name in property of nba teams.
+        const teamName = nbaTeams[hTeam]
+        const randomTerms = [
+            `${teamName} hype`,
+            `${teamName}`,
+            `${teamName} scoring`,
+            `${teamName} dunk`,
+            `${teamName} block`,
+            `${teamName} assist`,
+        ]
+        const selectRandomTerm =
+            randomTerms[Math.floor(Math.random() * randomTerms.length)]
         // # Query Giphy API with team name + 'hype' and return one of the 5 gifs direct image link.
-        let teamSrch = `${hTeam} hype`
-        const url = `https://api.giphy.com/v1/gifs/search?api_key=${process.env.GIPHYAPIKEY}&q=${teamSrch}&limit=5&offset=0&rating=pg-13&lang=en`
+        const url = `https://api.giphy.com/v1/gifs/search?api_key=${process.env.GIPHYAPIKEY}&q=${selectRandomTerm}&limit=25&offset=0&rating=pg-13&lang=en`
         giphy = await fetch(url).then((res) => res.json())
         // # Select 1 random gif from the 5 returned
         gif = giphy.data[Math.floor(Math.random() * giphy.data.length)]
         // # Return the gif's direct image link
         gifLink = gif.images.original.url
     } else if (favoredTeam === aTeam) {
-        let teamName = `${hTeam} hype`
-        const url = `https://api.giphy.com/v1/gifs/search?api_key=${process.env.GIPHYAPIKEY}&q=${teamName}&limit=5&offset=0&rating=pg-13&lang=en`
+        // # Find team full name in property of nba teams.
+        const teamName = nbaTeams[aTeam]
+        const randomTerms = [
+            `${teamName} hype`,
+            `${teamName}`,
+            `${teamName} scoring`,
+            `${teamName} dunk`,
+            `${teamName} block`,
+            `${teamName} assist`,
+        ]
+        const selectRandomTerm =
+            randomTerms[Math.floor(Math.random() * randomTerms.length)]
+        const url = `https://api.giphy.com/v1/gifs/search?api_key=${process.env.GIPHYAPIKEY}&q=${selectRandomTerm}&limit=5&offset=0&rating=pg-13&lang=en`
         giphy = await fetch(url).then((res) => res.json())
         gif = giphy.data[Math.floor(Math.random() * giphy.data.length)]
         gifLink = gif.images.original.url
