@@ -24,7 +24,7 @@ export async function newBet(interaction, betOnTeam, betAmount) {
     betOnTeam = await resolveTeam(betOnTeam)
     var matchInfo = await resolveMatchup(betOnTeam, null)
     var negativeRgx = /-/g
-    if (betAmount.match(negativeRgx)) {
+    if (betAmount.toString().match(negativeRgx)) {
         await QuickError(
             interaction,
             `You cannot enter a negative number for your bet amount.`,
