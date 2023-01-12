@@ -56,53 +56,46 @@ export async function gameEmbed(hometeam, awayteam) {
     let gif
     // # Obj with all nba teams to match their short name with their full name
     const nbaTeams = {
-        Hawks: 'Atlanta Hawks',
-        Celtics: 'Boston Celtics',
-        Nets: 'Brooklyn Nets',
-        Hornets: 'Charlotte Hornets',
-        Bulls: 'Chicago Bulls',
-        Cavaliers: 'Cleveland Cavaliers',
-        Dallas: 'Dallas Mavericks',
-        Nuggets: 'Denver Nuggets',
-        Pistons: 'Detroit Pistons',
-        Warriors: 'Golden State Warriors',
-        Rockets: 'Houston Rockets',
-        Pacers: 'Indiana Pacers',
-        Wizards: 'Washington Wizards',
-        Clippers: 'Los Angeles Clippers',
-        Lakers: 'Los Angeles Lakers',
-        Grizzlies: 'Memphis Grizzlies',
-        Heat: 'Miami Heat',
-        Bucks: 'Milwaukee Bucks',
-        Magic: 'Orlando Magic',
-        Knicks: 'New York Knicks',
-        Thunder: 'Oklahoma City Thunder',
+        hawks: 'Atlanta Hawks',
+        celtics: 'Boston Celtics',
+        nets: 'Brooklyn Nets',
+        hornets: 'Charlotte Hornets',
+        bulls: 'Chicago Bulls',
+        cavaliers: 'Cleveland Cavaliers',
+        dallas: 'Dallas Mavericks',
+        nuggets: 'Denver Nuggets',
+        pistons: 'Detroit Pistons',
+        warriors: 'Golden State Warriors',
+        rockets: 'Houston Rockets',
+        pacers: 'Indiana Pacers',
+        wizards: 'Washington Wizards',
+        clippers: 'Los Angeles Clippers',
+        lakers: 'Los Angeles Lakers',
+        grizzlies: 'Memphis Grizzlies',
+        heat: 'Miami Heat',
+        bucks: 'Milwaukee Bucks',
+        magic: 'Orlando Magic',
+        knicks: 'New York Knicks',
+        thunder: 'Oklahoma City Thunder',
         '76ers': 'Philadelphia 76ers',
-        Suns: 'Phoenix Suns',
-        'Trail Blazers': 'Portland Trail Blazers',
-        Kings: 'Sacramento Kings',
-        Spurs: 'San Antonio Spurs',
-        Raptors: 'Toronto Raptors',
-        Jazz: 'Utah Jazz',
-        Pelicans: 'New Orleans Pelicans',
-        Timberwolves: 'Minnesota Timberwolves',
+        suns: 'Phoenix Suns',
+        'trail-blazers': 'Portland Trail Blazers',
+        kings: 'Sacramento Kings',
+        spurs: 'San Antonio Spurs',
+        raptors: 'Toronto Raptors',
+        jazz: 'Utah Jazz',
+        pelicans: 'New Orleans Pelicans',
+        timberwolves: 'Minnesota Timberwolves',
     }
 
     if (favoredTeam === hTeam) {
         // # Find team full name in property of nba teams.
-        const teamName = nbaTeams[hTeam]
-        const randomTerms = [
-            `${teamName} hype`,
-            `${teamName}`,
-            `${teamName} scoring`,
-            `${teamName} dunk`,
-            `${teamName} block`,
-            `${teamName} assist`,
-        ]
+        const teamName = nbaTeams[hTeam.toLowerCase()]
+        const randomTerms = [`${teamName} hype`, `${teamName}`]
         const selectRandomTerm =
             randomTerms[Math.floor(Math.random() * randomTerms.length)]
         // # Query Giphy API with team name + 'hype' and return one of the 5 gifs direct image link.
-        const url = `https://api.giphy.com/v1/gifs/search?api_key=${process.env.GIPHYAPIKEY}&q=${selectRandomTerm}&limit=25&offset=0&rating=pg-13&lang=en`
+        const url = `https://api.giphy.com/v1/gifs/search?api_key=${process.env.GIPHYAPIKEY}&q=${selectRandomTerm}&limit=10&offset=0&rating=pg-13&lang=en`
         giphy = await fetch(url).then((res) => res.json())
         // # Select 1 random gif from the 5 returned
         gif = giphy.data[Math.floor(Math.random() * giphy.data.length)]
