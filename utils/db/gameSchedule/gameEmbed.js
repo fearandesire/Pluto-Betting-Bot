@@ -88,9 +88,43 @@ export async function gameEmbed(hometeam, awayteam) {
         timberwolves: 'Minnesota Timberwolves',
     }
 
+    const nflteams = {
+        cardinals: `Arizona Cardinals`,
+        falcons: `Atlanta Falcons`,
+        ravens: `Baltimore Ravens`,
+        bills: `Buffalo Bills`,
+        panthers: `Carolina Panthers`,
+        bears: `Chicago Bears`,
+        bengals: `Cincinnati Bengals`,
+        browns: `Cleveland Browns`,
+        cowboys: `Dallas Cowboys`,
+        broncos: `Denver Broncos`,
+        lions: `Detroit Lions`,
+        packers: `Green Bay Packers`,
+        texans: `Houston Texans`,
+        colts: `Indianapolis Colts`,
+        jaguars: `Jacksonville Jaguars`,
+        chiefs: `Kansas City Chiefs`,
+        chargers: `Los Angeles Chargers`,
+        raiders: `Las Vegas Raiders`,
+        rams: `Los Angeles Rams`,
+        dolphins: `Miami Dolphins`,
+        vikings: `Minnesota Vikings`,
+        patriots: `New England Patriots`,
+        saints: `New Orleans Saints`,
+        giants: `New York Giants`,
+        jets: `New York Jets`,
+        eagles: `Philadelphia Eagles`,
+        steelers: `Pittsburgh Steelers`,
+        seahawks: `Seattle Seahawks`,
+        buccaneers: `Tampa Bay Buccaneers`,
+        titans: `Tennessee Titans`,
+        redskins: `Washington Redskins`,
+    }
+
     if (favoredTeam === hTeam) {
         // # Find team full name in property of nba teams.
-        const teamName = nbaTeams[hTeam.toLowerCase()]
+        const teamName = nflteams[hTeam.toLowerCase()]
         const randomTerms = [`${teamName} hype`, `${teamName}`]
         const selectRandomTerm =
             randomTerms[Math.floor(Math.random() * randomTerms.length)]
