@@ -23,6 +23,18 @@ export async function newBet(interaction, betOnTeam, betAmount) {
     var user = interaction?.author?.id || interaction.user.id
     betOnTeam = await resolveTeam(betOnTeam)
     var matchInfo = await resolveMatchup(betOnTeam, null)
+    var negativeRgx = /-/g
+    if (betAmount.match(negativeRgx)) {
+        await QuickError(
+            interaction,
+            `You cannot enter a negative number for your bet amount.`,
+            true,
+        )
+        //# delete from pending
+        await new pendingBet().deletePending(user)
+        return
+    }
+
     if (!matchInfo) {
         QuickError(interaction, `Unable to locate a match for ${betOnTeam}`, true)
         //# delete from pending
@@ -77,6 +89,7 @@ export async function newBet(interaction, betOnTeam, betAmount) {
             if (err) {
                 Log.Red(err)
                 setupBetLog.error({ errorMsg: err })
+                QuickError(interaction, `Unable to place bet.`)
                 return
             }
         },
