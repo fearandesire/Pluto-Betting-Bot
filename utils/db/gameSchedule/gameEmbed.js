@@ -125,7 +125,11 @@ export async function gameEmbed(hometeam, awayteam) {
     if (favoredTeam === hTeam) {
         // # Find team full name in property of nba teams.
         const teamName = nbaTeams[hTeam.toLowerCase()]
-        const randomTerms = [`${teamName} hype`, `${teamName}`]
+        const randomTerms = [
+            `${teamName} basketball hype`,
+            `${teamName} basketall`,
+            `${teamName} basketball gifs`,
+        ]
         const selectRandomTerm =
             randomTerms[Math.floor(Math.random() * randomTerms.length)]
         // # Query Giphy API with team name + 'hype' and return one of the 5 gifs direct image link.
