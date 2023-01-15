@@ -88,7 +88,7 @@ export async function gameEmbed(hometeam, awayteam) {
         timberwolves: 'Minnesota Timberwolves',
     }
 
-    const nflteams = {
+    const nflTeams = {
         cardinals: `Arizona Cardinals`,
         falcons: `Atlanta Falcons`,
         ravens: `Baltimore Ravens`,
@@ -124,12 +124,8 @@ export async function gameEmbed(hometeam, awayteam) {
 
     if (favoredTeam === hTeam) {
         // # Find team full name in property of nba teams.
-        const teamName = nflteams[hTeam.toLowerCase()]
-        const randomTerms = [
-            `${teamName} basketball hype`,
-            `${teamName} basketall`,
-            `${teamName} basketball gifs`,
-        ]
+        const teamName = nflTeams[hTeam.toLowerCase()]
+        const randomTerms = [`${teamName} football hype`, `${teamName} football`]
         const selectRandomTerm =
             randomTerms[Math.floor(Math.random() * randomTerms.length)]
         // # Query Giphy API with team name + 'hype' and return one of the 5 gifs direct image link.
@@ -141,15 +137,8 @@ export async function gameEmbed(hometeam, awayteam) {
         gifLink = gif.images.original.url
     } else if (favoredTeam === aTeam) {
         // # Find team full name in property of nba teams.
-        const teamName = nbaTeams[aTeam]
-        const randomTerms = [
-            `${teamName} hype`,
-            `${teamName}`,
-            `${teamName} scoring`,
-            `${teamName} dunk`,
-            `${teamName} block`,
-            `${teamName} assist`,
-        ]
+        const teamName = nflTeams[aTeam]
+        const randomTerms = [`${teamName} football`, `${teamName} scoring`]
         const selectRandomTerm =
             randomTerms[Math.floor(Math.random() * randomTerms.length)]
         const url = `https://api.giphy.com/v1/gifs/search?api_key=${process.env.GIPHYAPIKEY}&q=${selectRandomTerm}&limit=5&offset=0&rating=pg-13&lang=en`
