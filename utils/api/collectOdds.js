@@ -1,4 +1,4 @@
-import { ODDS, container, embedReply } from '#config'
+import { ODDS, container, embedReply, gamesScheduled } from '#config'
 import {
     format,
     formatISO,
@@ -58,6 +58,10 @@ export async function collectOdds(message) {
         return
     }
     container.matchupCount = 0
+    // ? Clear txt arr of game schedule
+    const schCache = await flatcache.create(`scheduleArr`, `./cache/scheduleArr`)
+    await schCache.clearAll()
+    await schCache.save(true)
     for (let [key, value] of Object.entries(allOddsObj)) {
         let isoDate = value.commence_time
         //# Storing games that are scheduled for this week || API can return games for the next week, but they have no odds.
@@ -104,8 +108,11 @@ export async function collectOdds(message) {
                 home_odds = findHomeOdds.price
                 away_odds = findAwayOdds.price
             } else {
-                home_odds = 'n/a'
-                away_odds = 'n/a'
+                continue
+            }
+            // # Skip games w. no odds
+            if (!home_odds || !away_odds) {
+                continue
             }
             //# identifier for the game via the API
             var idApi = value.id
