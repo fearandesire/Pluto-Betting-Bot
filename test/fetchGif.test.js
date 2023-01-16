@@ -2,7 +2,7 @@
 import dotenv from 'dotenv'
 dotenv.config()
 import assert from 'assert'
-import { fetchGif } from '../utils/bot_res/fetchGif.js'
+import { fetchGif } from '#utilBot/fetchGif'
 
 describe('fetchGif', () => {
     it('should return an array of .GIF URLs', () => {

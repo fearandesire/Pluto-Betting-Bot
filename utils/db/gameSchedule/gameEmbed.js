@@ -6,7 +6,7 @@ import { resolveTeam } from '#cmdUtil/resolveTeam'
 import { validateData } from './../validation/validateData.js'
 import { LIVEBETS } from '#config'
 import { resolveTeamColor } from '../../cmd_res/resolveTeam.js'
-import { fetchGif } from '#utilBot/'
+import { fetchGif } from '#utilBot/fetchGif'
 /**
 
  * @module gameEmbed
