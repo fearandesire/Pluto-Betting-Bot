@@ -1,6 +1,6 @@
 {
     "name": "bettingbot",
-    "version": "1.9.5",
+    "version": "1.9.6",
     "description": "",
     "main": "Pluto.mjs",
     "prettier": "fenix-js-prettier-config",
@@ -15,7 +15,7 @@
     },
     "imports": {
         "#db": "./Database/dbindex.js",
-        "#utilBot/": "./utils/bot_res/*.js",
+        "#utilBot/*": "./utils/bot_res/*.js",
         "#LogColor": "./utils/bot_res/consoleLog.js",
         "#Logger": "./utils/logging.js",
         "#FileRun": "./utils/bot_res/classes/FileRunning.js",
@@ -77,6 +77,7 @@
         "load-json-file": "^7.0.1",
         "lodash": "^4.17.21",
         "lodash.pullat": "^4.6.0",
+        "mocha": "^10.2.0",
         "node-cron": "^3.0.2",
         "node-persist": "^3.1.0",
         "nodemon": "^2.0.19",
