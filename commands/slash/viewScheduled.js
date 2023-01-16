@@ -1,7 +1,8 @@
-import { gamesScheduled, _ } from '#config'
+import { _ } from '#config'
 
-import { embedReply } from '#embed'
 import { Command } from '@sapphire/framework'
+import { embedReply } from '#embed'
+import { fetchScheduleArr } from '#cache/fetchScheduleArr'
 
 export class viewScheduled extends Command {
     constructor(context, options) {
@@ -33,7 +34,9 @@ export class viewScheduled extends Command {
             })
             return
         }
-        if (_.isEmpty(gamesScheduled)) {
+        const schArr = await fetchScheduleArr()
+        console.log(schArr)
+        if (_.isEmpty(schArr)) {
             await interaction.reply(
                 `There are currently no game channels scheduled to be created.`,
             )
@@ -41,7 +44,7 @@ export class viewScheduled extends Command {
         } else {
             var embObj = {
                 title: `Scheduled Game Channels`,
-                description: gamesScheduled.join(`\n`),
+                description: schArr.join(`\n`),
                 color: `#00FF00`,
                 target: `reply`,
                 footer: `The game channels will be created an hour ahead of the game's start time. All start times listed are in EST.`,
