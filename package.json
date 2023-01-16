@@ -16,6 +16,7 @@
     "imports": {
         "#db": "./Database/dbindex.js",
         "#utilBot/*": "./utils/bot_res/*.js",
+        "#cache/*": "./utils/cache/*.js",
         "#LogColor": "./utils/bot_res/consoleLog.js",
         "#Logger": "./utils/logging.js",
         "#FileRun": "./utils/bot_res/classes/FileRunning.js",
