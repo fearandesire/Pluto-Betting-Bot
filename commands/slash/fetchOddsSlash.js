@@ -1,5 +1,6 @@
 import { Command } from '@sapphire/framework'
 import { collectOdds } from '../../utils/api/collectOdds.js'
+import { Log } from '#config'
 
 export class fetchOddsSlash extends Command {
     constructor(context, options) {
@@ -33,6 +34,11 @@ export class fetchOddsSlash extends Command {
             return
         }
         var userid = interaction.user.id
+        await Log.Red(`User ${userid} is made a request to manually fetching odds.`)
+        await interaction.followUp({
+            content: `Collecting odds.`,
+            ephemeral: true,
+        })
         await collectOdds(interaction)
     }
 }
