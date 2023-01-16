@@ -13,10 +13,11 @@ import { validateData } from './../validation/validateData.js'
 /**
  * @module setupBet - This module is used to setup a bet in the DB.
  * @summary - Checks if the team the user wishes to bet on exists in the database, and if it does, it will send
- * the user's bet information to the next function (@link confirmBet)
+ * the user's bet information to the next function ({@link confirmBet})
  * @param {obj} message - The message object from the discord.js library
  * @param {obj} teamName - The team the user wishes to bet on.
  * @param {integer} betamount - The amount of money the user wishes to bet
+ * @param {integer} user - The user's discord ID
  */
 
 export async function setupBet(message, teamName, betamount, user) {
