@@ -1,10 +1,11 @@
-import { Log } from '#config'
+import { Log, container } from '#config'
 import flatcache from 'flat-cache'
 import { createChannel } from './createChannel.js'
 import { createRequire } from 'module'
 import { getShortName } from './../../bot_res/getShortName.js'
 import { scheduleChanLog } from '#winstonLogger'
 import { cronMath } from './cronMath.js'
+import _ from 'lodash'
 const require = createRequire(import.meta.url)
 const cron = require('node-cron')
 
@@ -62,7 +63,11 @@ export async function scheduleChannels(
         const adjNum = firstNum - 1
         // # Replace it in the string
         const replaced = legibleStartTime.replace(firstNum, adjNum)
-        await schArr.push(`• ${awayTeam} vs ${homeTeam} | ${replaced}`)
+        const schStr = `• ${awayTeam} vs ${homeTeam} | ${replaced}`
+        const dupeCheck = _.find(schArr, (o) => o === schStr)
+        if (!dupeCheck) {
+            await schArr.push(schStr)
+        }
         await schCache.save(true)
         return
     })

@@ -21,6 +21,7 @@ import { resolveDayName } from '../bot_res/resolveDayName.js'
 import { resolveIso } from '#dateUtil/resolveIso'
 import { resolveToday } from '#dateUtil/resolveToday'
 import { scheduleChannels } from '../db/gameSchedule/scheduleChannels.js'
+import { scheduleEmbed } from '../db/gameSchedule/scheduleEmbed.js'
 
 let oddsCache = flatcache.create(`oddsCache.json`, './cache/weeklyOdds')
 
@@ -59,9 +60,7 @@ export async function collectOdds(message) {
     }
     container.matchupCount = 0
     // ? Clear txt arr of game schedule
-    const schCache = await flatcache.create(`scheduleArr`, `./cache/scheduleArr`)
-    await schCache.clearAll()
-    await schCache.save(true)
+    await flatcache.clearCacheById(`scheduleArr.json`)
     for (let [key, value] of Object.entries(allOddsObj)) {
         let isoDate = value.commence_time
         //# Storing games that are scheduled for this week || API can return games for the next week, but they have no odds.
@@ -192,7 +191,6 @@ export async function collectOdds(message) {
     if (_.isEmpty(matchups)) {
         await dmMe(
             `Issue occured while collecting & storing matchups. No Information has been stored.`,
-            `error`,
         )
         collectOddsLog.error(
             `Issue occured while collecting & storing matchup. No Information has been stored.`,
@@ -206,16 +204,8 @@ export async function collectOdds(message) {
         count: container.matchupCount,
     })
     if (message !== null) {
-        setTimeout(async () => {
-            var embObj = {
-                title: `Matchup Scheduling`,
-                description: `**${container.matchupCount}** Matchups have been scheduled for the week!`,
-                color: `#8000ff`,
-                target: `modBotSpamID`,
-            }
-            await embedReply(message, embObj)
-        }, 10000)
-        return
+        var embObj = await scheduleEmbed()
+        await embedReply(message, embObj)
     }
     if (message == null) {
         setTimeout(async () => {
