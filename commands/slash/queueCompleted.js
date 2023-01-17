@@ -33,6 +33,7 @@ export class queueCompleted extends Command {
             })
             return
         }
+        await interaction.deferReply()
         var userid = interaction.user.id
         Log.Green(`${userid} has used the queueCompleted command.`)
         await new completedReq().restartedCheck(interaction)

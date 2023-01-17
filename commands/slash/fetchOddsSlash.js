@@ -25,6 +25,7 @@ export class fetchOddsSlash extends Command {
         )
     }
     async chatInputRun(interaction) {
+        await interaction.deferReply()
         if (!interaction.guildId) {
             interaction.reply({
                 content: `This command can only be used in a server.`,
