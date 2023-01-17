@@ -12,7 +12,8 @@ const cron = require('node-cron')
 
 /** 
 @module scheduleReq 
-the-odds-api seems to only update their odds every day, and provide the odds for the same-day games, not the future, like the NFL version does.
+Executed daily, setup a sequence of Cron Jobs to call the API and collect odds for games.
+Cron Jobs here are defined inside of the `.env` file; But they are based on weekly for NFL, and daily for NBA.
 */
 
 export async function scheduleReq() {
