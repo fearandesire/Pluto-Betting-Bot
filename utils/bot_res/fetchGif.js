@@ -8,8 +8,8 @@
 
 export async function fetchGif(term) {
     const randomTerms = [
-        `${term} basketball`,
-        `${term} basketball hype`,
+        `${term} ${process.env.SPORT}`,
+        `${term} ${process.env.SPORT} hype`,
         `${term} score`,
         `${term} playoffs`,
         `${term} highlights`,
