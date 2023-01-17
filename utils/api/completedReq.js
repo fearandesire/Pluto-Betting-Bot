@@ -7,12 +7,14 @@ import { isGameDay } from '#botUtil/isGameDay'
 import { memUse } from '#mem'
 import { resolveCompCron } from '../db/gameSchedule/resolveCompCron.js'
 import cronstrue from 'cronstrue'
+import { reply } from '../bot_res/reply.js'
 const require = createRequire(import.meta.url)
 const cron = require('node-cron')
 
 /**
  * @module completedReq -
- * Setup a sequence of Cron Jobs to create API Calls to check for completed games based on the earliest and latest game times for the day.
+ * Executed daily, this module will setup a sequence of Cron Jobs for API Calls to check the status of games/completed games.
+ * The Cron Jobs are generated via {@link resolveCompCron} and are based on the games scheduled for the day.
  */
 
 export function completedReq() {
@@ -85,7 +87,7 @@ export function completedReq() {
     this.forceCheck = async function () {
         await checkCompleted()
     }
-    //# Intended to be used on bot-restarts
+    //# Used on bot-restart & accessible via cmd
     this.restartedCheck = async function (interaction) {
         var checkGameDay = await isGameDay()
         if (checkGameDay === true) {
@@ -120,10 +122,12 @@ export function completedReq() {
                     )
                 }
             }
-            interaction.reply({
-                content: `Successfully collected the time range.`,
-                ephemeral: true,
-            })
+            if (interaction) {
+                await reply(interaction, {
+                    content: `Initialized Cron Jobs for checking for completed games.`,
+                    ephemeral: true,
+                })
+            }
             return
         } else {
             completedReqLog.info({
