@@ -41,7 +41,7 @@ export function addNewBet(message, betslip) {
             .then((data) => {
                 container.temp_matchId = data.matchid
                 return t.none(
-                    `INSERT INTO ${BETSLIPS} (userid, teamid, betid, amount, matchid, dateofbet, betresult, profit, payout) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+                    `INSERT INTO "${BETSLIPS}" (userid, teamid, betid, amount, matchid, dateofbet, betresult, profit, payout) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
                     [
                         betslip.userid,
                         betslip.teamid,
