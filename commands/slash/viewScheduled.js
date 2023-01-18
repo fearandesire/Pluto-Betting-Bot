@@ -45,7 +45,7 @@ export class viewScheduled extends Command {
             var embObj = {
                 title: `Scheduled Game Channels`,
                 description: schArr.join(`\n`),
-                color: `#00FF00`,
+                color: `#4350ef`,
                 target: `reply`,
                 footer: `The game channels will be created an hour ahead of the game's start time. All start times listed are in EST.`,
             }
