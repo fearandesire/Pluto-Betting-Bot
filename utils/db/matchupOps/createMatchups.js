@@ -45,24 +45,10 @@ export async function createMatchups(
             legibleStartTime,
             idApi,
         ],
-    )
-        .then(async () => {
-            let oddsFormat = await formatOdds(teamOneOdds, teamTwoOdds)
-            teamOneOdds = oddsFormat.homeOdds
-            teamTwoOdds = oddsFormat.awayOdds
-            var matchupEmbedObj = {
-                title: 'Matchup Created; Details:',
-                description: `ID: ${matchupId}\nDate: ${gameDate}\n**Game Channel Scheduled:** ${legibleStartTime}\n\n**Home Team:** **${teamOne}** *@* *${teamOneOdds}*\n**Away Team:** **${teamTwo}** *@* *${teamTwoOdds}*`,
-                color: 'GREEN',
-                target: 'modBotSpamID',
-            }
-            await embedReply(message, matchupEmbedObj)
-            return
-        })
-        .catch((err) => {
-            createMatchupsLog.error(
-                `Error adding matchup to NBAactivematchups table\nData received:\nHome Team (teamOne): ${teamOne} Away Team (teamTwo): ${teamTwo}\nHome Team Odds: ${teamOneOdds} - Away Team Odds: ${teamTwoOdds}\nError Details:\n${err}`,
-            )
-            container.err = 0
-        })
+    ).catch((err) => {
+        createMatchupsLog.error(
+            `Error adding matchup to NBAactivematchups table\nData received:\nHome Team (teamOne): ${teamOne} Away Team (teamTwo): ${teamTwo}\nHome Team Odds: ${teamOneOdds} - Away Team Odds: ${teamTwoOdds}\nError Details:\n${err}`,
+        )
+        container.err = 0
+    })
 }
