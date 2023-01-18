@@ -1,5 +1,6 @@
 import { AssignBetID } from '#botUtil/AssignIDs'
 import { db } from '#db'
+import { LIVEBETS, BETSLIPS } from '#config'
 
 /**
  * @module isBetIdExisting
@@ -14,11 +15,11 @@ export async function isBetIdExisting(betId) {
             console.log(`Searching for betid: ${betId}`)
             db.tx(async (t) => {
                 var activeBetsCheck = await t.oneOrNone(
-                    `SELECT * FROM activebets WHERE "betid" = $1`,
+                    `SELECT * FROM ${LIVEBETS} WHERE "betid" = $1`,
                     [betId],
                 )
                 var betslipsCheck = await t.oneOrNone(
-                    `SELECT * FROM betslips WHERE "betid" = $1`,
+                    `SELECT * FROM ${BETSLIPS} WHERE "betid" = $1`,
                     [betId],
                 )
                 //# recursively call the function if the betid already exists
