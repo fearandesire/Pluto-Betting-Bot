@@ -116,7 +116,6 @@ export async function resolveCompCron() {
                     l.cronHour = `${lastHour}-${lastHour + 4}`
                     break
             }
-
             const today = new Date(todaySlash)
             const endOfMonth = isLastDayOfMonth(today)
             if (endOfMonth) {
@@ -147,7 +146,9 @@ export async function resolveCompCron() {
                 earliestCron,
             )} || Latest Game Time Today: ${cronstrue.toString(latestCron)}`
             await console.log(rangesEnglish)
-            await dmMe(rangesEnglish)
+            await dmMe(`Today's Cron Ranges:\n\`\`\`js
+            ${stringifyObject(res)}
+            \`\`\``)
             return res
         })
         .catch(async (err) => {
