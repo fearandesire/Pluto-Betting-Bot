@@ -26,21 +26,21 @@ export class ReadyListener extends Listener {
         } = SapDiscClient.user
     }
 }
-
+/** On a timeout to ensure bot is logged in. */
 setTimeout(async () => {
-    //# Queue checking for games schedule
+    //# Queue Cron for for games schedule
     await scheduleReq()
-    //# Queue game channel scheduling
+    //# Restart Operation: Check for game channels to be scheduled on restart
     if (process.env.envMode == 'Online') {
         await fetchSchedule()
     }
-    //# Queue checking for completed games
+    //# Queue Daily Cron to create more Crons related to games
     await new completedReq().dailyCheck().then(() => {
-        Log.Green(`Game Completed Check Cron Job Initiated`)
+        Log.Green(`Initialized Daily 'resolveCompCron' Cron Job`)
     })
-    //# Daily Embeds
-    await dailyOps().then(() => {
-        Log.Green(`Daily Embeds Initiated`)
+    // # Restart operation: Check for cron jobs that need to be restarted after a bot restart
+    await new completedReq().restartedCheck().then(() => {
+        Log.Green(`Checked for interuptted Cron Jobs`)
     })
 }, 5000)
 

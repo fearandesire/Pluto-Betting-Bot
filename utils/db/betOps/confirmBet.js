@@ -18,14 +18,14 @@ import { findEmoji } from '#botUtil/findEmoji'
  */
 
 export async function confirmBet(interaction, betslip, userId) {
-    //& Sending Embed w/ bet details for the user to confirm bet
+    // ? Sending Embed w/ bet details for the user to confirm bet
     var customerFooter =
         'Please Note: If you do not confirm your bet within 60 seconds, it will be cancelled.'
     var format = accounting.format
     var amount = format(betslip.amount)
     var profit = format(betslip.profit)
     var payout = format(betslip.payout)
-    // get the last word of the team name
+    // ? Get the last word of the team name
     var teamName = betslip.teamid.split(' ').pop()
     let teamEmoji = (await findEmoji(teamName)) || ''
     betslip.teamEmoji = teamEmoji || ''
@@ -44,7 +44,8 @@ export async function confirmBet(interaction, betslip, userId) {
         .setTimestamp()
         .setThumbnail(`${process.env.sportLogo}`)
         .setFooter({ text: customerFooter })
-    // preview the embed to the user
+
+    // ? Preview the embed to the user
     let previewEmbed = await interaction.followUp({
         content: `<@${userId}>`,
         embeds: [confirmembed],
@@ -52,7 +53,7 @@ export async function confirmBet(interaction, betslip, userId) {
     })
     await previewEmbed.react('✅')
     await previewEmbed.react('❌')
-    //& Create reaction collector
+    // ? Create reaction collector
     const filter = (reaction, user) => {
         return ['✅', '❌'].includes(reaction.emoji.name) && user.id === userId
     }

@@ -1,4 +1,10 @@
-import { accounting, container, LIVEMATCHUPS, LIVEBETS } from '#config'
+import {
+    accounting,
+    container,
+    LIVEMATCHUPS,
+    LIVEBETS,
+    BETSLIPS,
+} from '#config'
 
 import { Log } from '#LogColor'
 import { TodaysDate } from '#cmdUtil/TodaysDate'
@@ -9,7 +15,7 @@ import { setupBetLog } from '#winstonLogger'
 /**
  * @module addNewBet -
  * Adds a new bet to the database with the provided information inside of the betslip object.⁡
- * ⁡⁣⁣⁢Queries the 'activematchups' table in the DB to gather the matchup ID using the provided team IDs⁡
+ * ⁡⁣⁣⁢Queries the 'activeMatchups' table in the DB to gather the matchup ID using the provided team IDs⁡
  * @param {obj} message - The message object - contains the user info from Discord & allows us to reply to the user.
  * @param {obj} betslip - Object containing the user's bet information. The betslip object model is inherited from: placebet.js (command) > confirmbet.js (user confirms bet).
  * @returns {embed} - Resolves with an embed reply to the user that their bet has been placed.
@@ -35,7 +41,7 @@ export function addNewBet(message, betslip) {
             .then((data) => {
                 container.temp_matchId = data.matchid
                 return t.none(
-                    `INSERT INTO "betslips" (userid, teamid, betid, amount, matchid, dateofbet, betresult, profit, payout) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+                    `INSERT INTO ${BETSLIPS} (userid, teamid, betid, amount, matchid, dateofbet, betresult, profit, payout) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
                     [
                         betslip.userid,
                         betslip.teamid,
@@ -79,7 +85,7 @@ export function addNewBet(message, betslip) {
                     
                     __**:money_mouth: Details** __
                     **Bet ID:** ${betslip.betid}
-                    **Team:** **${betslip.teamid}**
+                    **Team:** **${betslip.teamid}** ${betslip.teamEmoji}
                     **Amount:** \`$${amount}\`
                     **Profit:** \`$${profit}\`
                     **Payout:** \`$${payout}\`

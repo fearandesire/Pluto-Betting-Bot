@@ -18,12 +18,12 @@ const cron = require('node-cron')
  */
 
 export function completedReq() {
-    Log.Yellow(
-        `[Startup]: completedReq.js reached\nDaily Check Cron Queue: ${CHECK_COMPLETED_TIMER}`,
-    )
+    /** @var CHECK_COMPLETED_TIMER is a Cron String provided in the `.env` file; This will dictate schedule to run `{@link resolveCompCron}`
+     * This is set to run daily after the schedule ({@link scheduleReq}) has been collected.
+     */
     this.dailyCheck = async function () {
-        Log.Yellow(
-            `Query to collect the finished games time ranges started | If there are games scheduled, remember to run /callschedule`,
+        await Log.Green(
+            `[Startup]: completedReq > dailyCheck initialized on schedule of: ${CHECK_COMPLETED_TIMER}`,
         )
         var checkGameDay = await isGameDay()
         let completedCron
@@ -32,7 +32,6 @@ export function completedReq() {
             async () => {
                 //# Retrieve the cron ranges for the times we will be checking for completed games -- in the Cron format
                 completedCron = await resolveCompCron()
-
                 await memUse(`completedReq`, `Post-Cron Range Collection`)
                 completedReqLog.info(`Running completedReq.js - Initializing Cron Jobs`)
                 var cronRange1 = completedCron?.range1
@@ -83,11 +82,11 @@ export function completedReq() {
             { timezone: 'America/New_York' },
         )
     }
-    //# to have a command added to force check for completed games
+    // # Force execution of the checkCompleted function via CMD {@link forceCheck}
     this.forceCheck = async function () {
         await checkCompleted()
     }
-    //# Used on bot-restart & accessible via cmd
+    //#  Called via CMD to call for creation of the Cron Jobs
     this.restartedCheck = async function (interaction) {
         var checkGameDay = await isGameDay()
         if (checkGameDay === true) {
