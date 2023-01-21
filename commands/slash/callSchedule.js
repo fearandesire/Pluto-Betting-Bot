@@ -1,6 +1,7 @@
 import { Command } from '@sapphire/framework'
 import { Log } from '#config'
 import { fetchSchedule } from '../../utils/db/gameSchedule/fetchSchedule.js'
+import { isMod } from '#botUtil/isMod'
 
 export class callSchedule extends Command {
     constructor(context, options) {
@@ -34,6 +35,13 @@ export class callSchedule extends Command {
             return
         }
         var userid = interaction.user.id
+        let modStatus = await isMod(interaction)
+        if (!modStatus) {
+            interaction.reply({
+                content: `You do not have permission to use this command.`,
+                ephemeral: true,
+            })
+        }
         Log.Yellow(`User ${userid} called the callSchedule cmd`)
         await interaction.deferReply()
         await fetchSchedule(interaction)
