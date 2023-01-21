@@ -36,11 +36,9 @@ setTimeout(async () => {
     }
     //# Queue Daily Cron to create more Crons related to games
     await new completedReq().dailyCheck().then(() => {
-        Log.Green(`Initialized Daily 'resolveCompCron' Cron Job`)
-    })
-    // # Restart operation: Check for cron jobs that need to be restarted after a bot restart
-    await new completedReq().restartedCheck().then(() => {
-        Log.Green(`Checked for interuptted Cron Jobs`)
+        Log.Green(
+            `[ready] Called \`completedReq\` to initialize the daily 'resolveCompCron' Cron Job ->\nCron Time: ${process.env.CHECK_COMPLETED_TIMER}`,
+        )
     })
 }, 5000)
 

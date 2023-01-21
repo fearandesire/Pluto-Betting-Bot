@@ -18,6 +18,7 @@ const cron = require('node-cron')
  */
 
 export function completedReq() {
+    completedReqLog.info(`Running completedReq.js`)
     /** @var CHECK_COMPLETED_TIMER is a Cron String provided in the `.env` file; This will dictate schedule to run `{@link resolveCompCron}`
      * This is set to run daily after the schedule ({@link scheduleReq}) has been collected.
      */
@@ -33,7 +34,6 @@ export function completedReq() {
                 //# Retrieve the cron ranges for the times we will be checking for completed games -- in the Cron format
                 completedCron = await resolveCompCron()
                 await memUse(`completedReq`, `Post-Cron Range Collection`)
-                completedReqLog.info(`Running completedReq.js - Initializing Cron Jobs`)
                 var cronRange1 = completedCron?.range1
                     ? completedCron.range1
                     : undefined
@@ -42,29 +42,30 @@ export function completedReq() {
                     `[completedReq.js] Cron Range Hours:\nRange 1: ${cronRange1}\nRange 2: ${cronRange2}`,
                 )
                 Log.Blue(
-                    `[completedReq.js]\nGame Day!\nCron Range Hours:\nRange 1: ${cronRange1}\nRange 2: ${cronRange2}`,
+                    `[completedReq.js]\nRes from \`resolveCompCron\`\nCron Range Hours:\nRange 1: ${cronRange1}\nRange 2: ${cronRange2}`,
                 )
                 if (checkGameDay == true && cronRange1 !== undefined) {
                     cron.schedule(
                         cronRange1,
                         async () => {
-                            completedReqLog.info(`Checking for completed games..`)
+                            await completedReqLog.info(
+                                `[Range 1] Checking for completed games..`,
+                            )
+                            await Log.Yellow(`Checking for completed games`)
                             await memUse(`completedReq`, `Pre-Check: Completed Games`)
                             await checkCompleted()
-                            Log.Yellow(`Checking for completed games`)
                         },
                         { timezone: 'America/New_York' },
                     )
                     if (cronRange2 !== undefined) {
-                        Log.Green(
-                            `Checking for completed games between the hours: ${cronRange2}`,
-                        )
                         cron.schedule(
                             cronRange2,
                             async () => {
+                                await completedReqLog.info(
+                                    `[Range 2] Checking for completed games..`,
+                                )
+                                await Log.Yellow(`Checking for completed games`)
                                 await checkCompleted()
-                                completedReqLog.info(`Checking for completed games`)
-                                Log.Yellow(`Checking for completed games`)
                             },
                             { timezone: 'America/New_York' },
                         )
@@ -97,25 +98,31 @@ export function completedReq() {
                 `Cron Range Hours:\nRange 1: ${cronRange1}\nRange 2: ${cronRange2}`,
             )
             Log.Blue(
-                `[completedReq.js]\nGame Day!\nCron Range Hours:\nRange 1: ${cronRange1}\nRange 2: ${cronRange2}`,
+                `[completedReq.js]\nCron Range Hours:\nRange 1: ${cronRange1}\nRange 2: ${cronRange2}`,
             )
             if (cronRange1) {
                 cron.schedule(
                     cronRange1,
                     async () => {
-                        completedReqLog.info(`Checking for completed games..`)
+                        await completedReqLog.info(
+                            `[Range 1] Checking for completed games..`,
+                        )
+                        await Log.Yellow(`Checking for completed games`)
+                        await memUse(`completedReq`, `Pre-Check: Completed Games`)
                         await checkCompleted()
-                        Log.Yellow(`Checking for completed games`)
                     },
                     { timezone: 'America/New_York' },
                 )
+
                 if (cronRange2) {
                     cron.schedule(
                         cronRange2,
                         async () => {
+                            await completedReqLog.info(
+                                `[Range 2] Checking for completed games..`,
+                            )
+                            await Log.Yellow(`Checking for completed games`)
                             await checkCompleted()
-                            completedReqLog.info(`Checking for completed games..`)
-                            Log.Yellow(`Checking for completed games`)
                         },
                         { timezone: 'America/New_York' },
                     )
