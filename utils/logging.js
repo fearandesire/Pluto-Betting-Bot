@@ -53,13 +53,7 @@ function customTransport(options) {
     let res
     if (dirPath) {
         switch (true) {
-            case !joinDate && !name:
-                res = new DailyRotateFile({
-                    filename: `logs/${dirPath}/%DATE%.log`,
-                    datePattern: 'YYYY-MM-DD',
-                })
-                break
-            case joinDate && name:
+            case name !== undefined:
                 res = new DailyRotateFile({
                     filename: `logs/${dirPath}/${name}-%DATE%.log`,
                     datePattern: 'YYYY-MM-DD',
@@ -105,6 +99,10 @@ const consoleFormat = combine(
     }),
 )
 
+const consoleTransport = new winston.transports.Console({
+    format: combine(consoleFormat),
+})
+
 //# Global Format Config
 var FORMAT = combine(
     splat(),
@@ -128,7 +126,7 @@ export const debugLog = winston.createLogger({
             filename: 'logs/debug/globalDebug.log',
             format: FORMAT,
         }),
-        new winston.transports.Console({ format: combine(consoleFormat) }),
+        consoleTransport,
     ],
 })
 
@@ -141,7 +139,7 @@ export const overallLog = winston.createLogger({
             level: 'error',
         }),
         new winston.transports.File({ filename: 'logs/global/testing.log' }),
-        new winston.transports.Console(),
+        consoleTransport,
     ],
 })
 
@@ -163,7 +161,7 @@ export const memLog = winston.createLogger({
             level: 'error',
         }),
         new winston.transports.File({ filename: 'logs/system/memory.log' }),
-        new winston.transports.Console(),
+        consoleTransport,
     ],
 })
 
@@ -490,32 +488,16 @@ export const scheduleReqLog = winston.createLogger({
     ],
 })
 export const completedReqLog = winston.createLogger({
-    level: 'info',
-    format: winston.format.combine(
-        winston.format.prettyPrint({
-            colorize: true,
-            depth: 5,
-        }),
-        timestamp,
-        customWinstonFormat,
-    ),
+    levels: winston.config.syslog.levels,
+    format: FORMAT,
     transports: [
-        new winston.transports.File({
-            filename: 'logs/closeBetOp/err/completedReqErr.log',
-            level: 'error',
-        }),
-        new winston.transports.File({
-            filename: 'logs/closeBetOp/err/0. allClosingInfo.log',
-            level: 'error',
-        }),
-        new winston.transports.File({
-            filename: 'logs/closeBetOp/1. completedReq.log',
-        }),
-        new winston.transports.File({
-            filename: 'logs/closeBetOp/0. allClosingInfo.log',
+        customTransport({
+            dirPath: `dailyOps`,
+            name: 'completedReq',
         }),
     ],
 })
+
 export const resolveMatchupLog = winston.createLogger({
     level: 'info',
     format: winston.format.combine(

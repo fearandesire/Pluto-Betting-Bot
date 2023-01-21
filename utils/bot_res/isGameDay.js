@@ -20,7 +20,7 @@ export async function isGameDay() {
                 Log.Red(`No active matchups found in the database.`)
                 return false
             } else {
-                Log.Green(`Active matchups found in the database.`)
+                Log.Green(`[isGameDay] Active matchups found in the database.`)
                 return true
             }
         })
