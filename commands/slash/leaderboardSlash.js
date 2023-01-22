@@ -1,5 +1,6 @@
 import { leaderboard } from '#utilCurrency/leaderboard'
 import { Command } from '@sapphire/framework'
+import { reply } from '#botUtil/reply'
 
 export class leaderboardSlash extends Command {
     constructor(context, options) {
@@ -26,6 +27,9 @@ export class leaderboardSlash extends Command {
     async chatInputRun(interaction) {
         var userid = interaction.user.id
         await interaction.deferReply({ ephemeral: true })
+        await reply(interaction, {
+            content: `Collecting the leaderboard, this take 1 minute. I'll ping you when it's ready!`,
+        })
         var interactionEph = true
         await leaderboard(interaction, interactionEph)
     }
