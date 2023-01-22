@@ -32,46 +32,24 @@ export async function leaderboard(message, interactionEph) {
                     }
                 })
                 let formatId = mappedUserCache.toString().replace(/,/gim, '')
-                console.log(`member id is: ${formatId}`)
                 var humanIndex = i + 1
                 var lbEntry = `**${humanIndex}.** ${formatId}: ${lbUserBal}`
                 lbArray.push(lbEntry)
             }
-            var lbJoined = lbArray.join('\n')
-            var lbString = lbJoined.toString()
+            var lbString = lbArray.join('\n')
             var lbLength = lbString.length
             console.log(`Array Length: ${lbLength}`)
-            if (lbLength > 4096) {
-                var lbArr1 = lbArray.slice(0, lbArray.length / 2)
-                var lbArr2 = lbArray.slice(lbArray.length / 2, lbArray.length)
-                var half1Data = lbArr1.join('\n')
-                var half2Data = lbArr2.join('\n')
-                var firstHalf = {
-                    title: `Betting Leaderboard [Page 1]`,
-                    description: half1Data,
+            var pages = Math.ceil(lbLength / 4096)
+            for (var indx = 0; indx < pages; indx++) {
+                var start = indx * 4096
+                var end = start + 4096
+                var page = indx + 1
+                var pageData = lbString.slice(start, end)
+                var embObj = {
+                    title: `Betting Leaderboard [Page ${page}]`,
+                    description: pageData,
                     color: `#ffff00`,
-                    footer: `You are currently #${usersIndex} on the Leaderboard! | Page 1`,
-                    target: `reply`,
-                    silent: true,
-                    followUp: true,
-                }
-                var secondHalf = {
-                    title: `Betting Leaderboard [Page 2]`,
-                    description: half2Data,
-                    color: `#ffff00`,
-                    footer: `You are currently #${usersIndex} on the Leaderboard! | Page 2`,
-                    target: `reply`,
-                    silent: true,
-                    followUp: true,
-                }
-                await embedReply(message, firstHalf, true)
-                await embedReply(message, secondHalf, true)
-            } else {
-                const embObj = {
-                    title: `Betting Leaderboard`,
-                    description: lbString,
-                    color: `#ffff00`,
-                    footer: `You are currently #${usersIndex} on the Leaderboard!`,
+                    footer: `You are currently #${usersIndex} on the Leaderboard! | Page ${page}`,
                     target: `reply`,
                     silent: true,
                     followUp: true,
