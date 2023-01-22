@@ -28,9 +28,8 @@ export async function leaderboard(message, interactionEph) {
                     usersBal = lb[i].balance
                 }
                 if (!memberCache.has(lbUserId)) {
-                    let member = server.members.cache.get(lbUserId)
-                    if (!member) member = await server.members.fetch(lbUserId)
-                    memberCache.set(lbUserId, member)
+                    let member = server.members.cache.get(lbUserId) || null
+                    if (member) memberCache.set(lbUserId, member)
                 }
                 let mappedUserCache = memberCache.get(lbUserId) || null
                 var formatId = mappedUserCache?.user || `<@${lbUserId}>`
