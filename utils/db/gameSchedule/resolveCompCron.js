@@ -140,8 +140,8 @@ export async function resolveCompCron() {
             if (!oneGame) {
                 newRanges.range2 = `*/5 ${l.cronHour} ${l.dayOfMonth} ${l.month} ${l.dayOfWeek}`
             }
-            res.range1 = '45 11 * * *'
-            res.range2 = '46 11 * * *'
+            res.range1 = newRanges.range1 || null
+            res.range2 = newRanges.range2 || null
             const rangesEnglish = `[resolveCompCron.js] Earliest Game Time Today: ${cronstrue.toString(
                 earliestCron,
             )} || Latest Game Time Today: ${cronstrue.toString(latestCron)}`
