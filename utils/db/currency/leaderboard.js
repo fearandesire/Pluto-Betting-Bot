@@ -1,5 +1,5 @@
 import { SapDiscClient } from '#main'
-import { embedReply } from '#config'
+import { embedReply, container } from '#config'
 import { reqLeaderboard } from './reqLeaderboard.js'
 
 /**
@@ -8,6 +8,8 @@ import { reqLeaderboard } from './reqLeaderboard.js'
  * @param {boolean} interactionEph - Whether the interaction is ephemeral or not (silent response)
  * @returns {object} - Returns an embed containing the leaderboard information with user tags and their balances.
  */
+let memberCache = container.leaderboardCache
+memberCache = new Map()
 
 export async function leaderboard(message, interactionEph) {
     await reqLeaderboard().then(async (lb) => {
@@ -25,13 +27,13 @@ export async function leaderboard(message, interactionEph) {
                     usersIndex = i + 1
                     usersBal = lb[i].balance
                 }
-                let mappedUserCache = memberList.map((m) => {
-                    //# return id that matches the user id in the iteration
-                    if (Number(m.id) == Number(lbUserId)) {
-                        return m
-                    }
-                })
-                let formatId = mappedUserCache.toString().replace(/,/gim, '')
+                if (!memberCache.has(lbUserId)) {
+                    let member = server.members.cache.get(lbUserId)
+                    if (!member) member = await server.members.fetch(lbUserId)
+                    memberCache.set(lbUserId, member)
+                }
+                let mappedUserCache = memberCache.get(lbUserId)
+                var formatId = mappedUserCache.user || mappedUserCache.user.tag
                 var humanIndex = i + 1
                 var lbEntry = `**${humanIndex}.** ${formatId}: ${lbUserBal}`
                 lbArray.push(lbEntry)

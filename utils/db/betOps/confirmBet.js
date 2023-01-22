@@ -38,7 +38,7 @@ export async function confirmBet(interaction, betslip, userId) {
                 
         **__Bet Details:__**
         
-        Team: **${betslip.teamid}** | Amount: \`$${amount}\` 
+        Team: **${betslip.teamid}** ${teamEmoji} | Amount: \`$${amount}\` 
         Profit: \`$${profit}\` | Payout: \`$${payout}\``,
         )
         .setTimestamp()
