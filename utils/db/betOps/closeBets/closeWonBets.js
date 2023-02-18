@@ -75,7 +75,7 @@ export async function closeWonBets(winningTeam, homeOrAway, losingTeam) {
                         [userid],
                     )
                     //# calc winnings
-                    const newUserBal = parseFloat(await userBal?.balance) + payoutAmount
+                    const newUserBal = parseFloat(userBal?.balance) + payoutAmount
                     await t.oneOrNone(
                         `UPDATE "${CURRENCY}" SET balance = $1 WHERE userid = $2`,
                         [newUserBal, userid],

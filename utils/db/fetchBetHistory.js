@@ -9,6 +9,7 @@ import { embedReply } from '#embed'
  * @param {integer} userid - The user id of the user who's bet history is being requested.
  * @return {object} - Embed object of user bet history
  */
+
 export async function fetchBetHistory(message, userid, interactionEph) {
     let entries
     let wonCount = 0

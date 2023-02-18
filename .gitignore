@@ -125,3 +125,5 @@ utils/unitTesting/**
 lib/images/**
 lib/teamList.js
 commands/slash/devEval.js
+.env.nbac
+.env.nflc
