@@ -1,6 +1,4 @@
 /* eslint-disable no-undef */
-import dotenv from 'dotenv'
-dotenv.config()
 import assert from 'assert'
 import { fetchGif } from '#utilBot/fetchGif'
 
@@ -8,7 +6,7 @@ describe('fetchGif', () => {
     it('should return an array of .GIF URLs', () => {
         return new Promise(async (resolve, reject) => {
             // # Create an array of every team
-            const teams = process.env.sportname === 'nfl' ? process.env.nfl_teams.split(',') : process.env.nba_teams.split(',')
+            const teams = process.env.SPORT === 'nfl' ? process.env.nfl_teams.split(',') : process.env.nba_teams.split(',')
             // Create an empty array to store URLs
             const urls = []
             // Loop the test 50 times

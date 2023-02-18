@@ -11,8 +11,8 @@
         "test": "echo \"Error: no test specified\" && exit 1",
         "docs": "jsdoc2md lib/*.js > addNewBet.js",
         "auto": "nodemon node ./Pluto.mjs",
-        "nflc": "cross-env NODE_ENV=production dotenv_config_path=./.env.nflc node Pluto.mjs",
-        "nbac": "cross-env NODE_ENV=production dotenv_config_path=./.env.nbac node Pluto.mjs",
+        "nflc": "cross-env NODE_ENV=production SERVERNAME=nfl SPORT=nfl EXP_PORT=3003  dotenv_config_path=./.env.nflc node Pluto.mjs",
+        "nbac": "cross-env NODE_ENV=production SERVERNAME=nba SPORT=nba EXP_PORT=3002 dotenv_config_path=./.env.nbac node Pluto.mjs",
         "dev": "cross-env NODE_ENV=production dotenv_config_path=./.env node Pluto.mjs"
     },
     "imports": {
@@ -23,6 +23,7 @@
         "#Logger": "./utils/logging.js",
         "#FileRun": "./utils/bot_res/classes/FileRunning.js",
         "#embed": "./utils/bot_res/embeds/embedReply.js",
+        "#env": "./lib/envInit.js",
         "#register": "./utils/db/registerUser.js",
         "#utils/**": "./utils/**",
         "util": "./utils/**/*",

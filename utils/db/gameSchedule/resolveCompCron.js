@@ -4,7 +4,6 @@ import { db } from '#db'
 import cronParser from 'cron-parser'
 import _ from 'lodash'
 import { dmMe } from '../../bot_res/dmMe.js'
-import { memUse } from '#mem'
 import { resolveToday } from '#dateUtil/resolveToday'
 import stringifyObject from 'stringify-object'
 
@@ -23,7 +22,7 @@ import { format, isLastDayOfMonth, addMonths, startOfMonth } from 'date-fns'
  */
 
 export async function resolveCompCron() {
-    await memUse(`resolveCompCron`, `Pre-Cron Range`)
+    await Log.Yellow(`[resolveCompCron.js] Resolving Cron Jobs for completed games..`)
     var todaySlash = await new resolveToday().todayFullSlashes
     todaySlash = todaySlash.toString()
     let res = {}
