@@ -8,7 +8,7 @@ export const alloddsembed = function (
     Team2,
     Team2Odds,
 ) {
-    const sportname = _.upperCase(process.env.sportsname)
+    const sportname = _.upperCase(process.env.sportname)
     const PlutoPlainEmbed = new MessageEmbed()
         .setTitle(`${title} H2H Betting Odds`)
         .setColor('#FFFF00')
