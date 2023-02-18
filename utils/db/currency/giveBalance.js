@@ -2,7 +2,7 @@ import { Log } from '#LogColor'
 import { SapDiscClient } from '#main'
 import { db } from '#db'
 import { dmLog } from '../../logging.js'
-import { embedReply, CURRENCY } from '#config'
+import { embedReply, CURRENCY, formatCurrency } from '#config'
 import { giveMoneyLog } from '#winstonLogger'
 import { isInServer } from '../../bot_res/isInServer.js'
 
@@ -31,7 +31,7 @@ export async function giveBalance(
         var isSilent = interactionEph ? true : false
         var embObj = {
             title: `:moneybag: Added Money`,
-            description: `You have successfully given ${transferammount} to <@${targetUserId}>!`,
+            description: `You have sent ${formatCurrency(transferammount)} to <@${targetUserId}>!`,
             color: `#00ff40`,
             silent: isSilent,
             target: `reply`,
