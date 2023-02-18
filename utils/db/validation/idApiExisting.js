@@ -1,5 +1,6 @@
 import { allClosingLogs } from '../../logging.js'
 import { db } from '#db'
+import { LIVEMATCHUPS } from "#config"
 
 /**
  * @module idApiExisting
@@ -11,7 +12,7 @@ export async function idApiExisting(idApiKey) {
     )
     return await db.oneOrNone(
         `
-    SELECT * FROM "NBAactivematchups" WHERE idapi = $1`,
+    SELECT * FROM "${LIVEMATCHUPS}" WHERE idapi = $1`,
         [idApiKey],
     )
 }

@@ -1,6 +1,6 @@
 import _ from 'lodash'
 import { db } from '#db'
-
+import { LIVEMATCHUPS } from "#config"
 /**
  * @module isExactMatchup
  * Query the database to validate if the exact matchup is existing. The home and away teams inputted must match `teamone` and `teamtwo` in the database respectively.
@@ -13,7 +13,7 @@ import { db } from '#db'
 
 export async function isExactMatchup(homeTeam, awayTeam, matchupDate) {
     var matchup = await db.oneOrNone(
-        `SELECT * FROM "NBAactivematchups" WHERE "teamone" = $1 AND "teamtwo" = $2 AND "dateofmatchup" = $3`,
+        `SELECT * FROM "${LIVEMATCHUPS}" WHERE "teamone" = $1 AND "teamtwo" = $2 AND "dateofmatchup" = $3`,
         [homeTeam, awayTeam, matchupDate],
     )
     if (_.isEmpty(matchup) === true) {

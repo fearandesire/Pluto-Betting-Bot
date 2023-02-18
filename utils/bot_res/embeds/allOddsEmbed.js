@@ -1,4 +1,5 @@
 import { MessageEmbed } from 'discord.js'
+import _ from 'lodash'
 
 export const alloddsembed = function (
     message,
@@ -7,8 +8,9 @@ export const alloddsembed = function (
     Team2,
     Team2Odds,
 ) {
+    const sportname = _.upperCase(process.env.sportsname)
     const PlutoPlainEmbed = new MessageEmbed()
-        .setTitle('NBA H2H Betting Odds')
+        .setTitle(`${title} H2H Betting Odds`)
         .setColor('#FFFF00')
         .addFields(
             {
@@ -22,5 +24,6 @@ export const alloddsembed = function (
                 inline: false,
             },
         )
-    return message.reply({ embeds: [PlutoPlainEmbed] })
+    message.reply({ embeds: [PlutoPlainEmbed] })
+    return
 }

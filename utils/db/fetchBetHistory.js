@@ -1,10 +1,10 @@
-import { QuickError, _, accounting } from '#config'
+import { QuickError, _, accounting, BETSLIPS } from '#config'
 
 import { db } from '#db'
 import { embedReply } from '#embed'
 
 /**
- * Fetch history of a users bets from the "NBAbetslips" table in the DB.
+ * Fetch history of a users bets from the db table in the DB.
  * @param {object} message - The Discord Object message object
  * @param {integer} userid - The user id of the user who's bet history is being requested.
  * @return {object} - Embed object of user bet history
@@ -16,7 +16,7 @@ export async function fetchBetHistory(message, userid, interactionEph) {
     let betHistory = []
     db.tx('fetchBetHistory', async (t) => {
         const findings = await t.manyOrNone(
-            'SELECT * FROM "NBAbetslips" WHERE userid = $1 ORDER BY dateofbet',
+            `SELECT * FROM "${BETSLIPS}" WHERE userid = $1 ORDER BY dateofbet`,
             [userid],
         )
         if (!findings || _.isEmpty(findings)) {

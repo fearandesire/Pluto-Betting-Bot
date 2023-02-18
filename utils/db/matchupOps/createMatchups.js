@@ -7,7 +7,7 @@ import { formatOdds } from '#cmdUtil/formatOdds'
 /**
  * @module createMatchups -
  * Create a new matchup in the DB
- * @description - This function will take in the parameters listed below and populate a row in the DB into '"NBAactivematchups"' with said parameters.
+ * @description - This function will take in the parameters listed below and populate a row in the DB
  * @param {obj} message - The message object containing the user & their message - also used to reference a direct reply to the user with message.reply()
  * @param {string} teamOne - The first team in the matchup (user input)
  * @param {string} teamTwo - The second team in the matchup (user input)

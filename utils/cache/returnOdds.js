@@ -42,7 +42,7 @@ export async function returnOdds(message, interactionEph) {
         color: `#00ffff`,
         title: `:mega: H2H Odds`,
         fields: oddsFields,
-        thumbnail: `${process.env.sportLogoNBA}`,
+        thumbnail: `${process.env.sportLogo}`,
         footer:
             'Favored teams have a - negative number | Pluto - Designed by FENIX#7559',
     }

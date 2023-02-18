@@ -3,7 +3,7 @@ import { LIVEMATCHUPS } from '#config'
 
 /**
  * @module isMatchExist -
- * Query promise to the DB resolves to a single row if we find a match in the '"NBAactivematchups"' table.
+ * Query promise to the DB resolves to a single row if we find a match in the db.
  * Finds the match by the team name ({@link teamid}) provided.
  * @param {string} teamid - The team name to search for in the DB
  * @returns {obj} [1] Row from the query, or null if no match is found
