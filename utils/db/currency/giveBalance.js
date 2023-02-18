@@ -30,7 +30,7 @@ export async function giveBalance(
         var updatebalance = parseInt(currentBalance) + parseInt(transferammount)
         var isSilent = interactionEph ? true : false
         var embObj = {
-            title: `:moneybag: Added Money`,
+            title: `:moneybag: Sent Money`,
             description: `You have sent ${formatCurrency(transferammount)} to <@${targetUserId}>!`,
             color: `#00ff40`,
             silent: isSilent,
@@ -47,6 +47,7 @@ export async function giveBalance(
                 title: `:moneybag: Received Money`,
                 description: `You have received $${transferammount} from <@${interaction.user.id}>!`,
                 color: `#00ff40`,
+                footer: ''
             }
             await SapDiscClient.users.fetch(`${targetUserId}`).then(async (user) => {
                 if (!user) {

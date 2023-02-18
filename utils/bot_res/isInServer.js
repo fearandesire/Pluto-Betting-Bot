@@ -13,6 +13,11 @@ export async function isInServer(userid) {
     )
     var findCache = await server.members.fetch().then((members) => {
         var member = server.members.cache.get(`${userid}`)
+        // # Ensure the user is not a bot
+        if (member.user.bot) {
+            console.log(`User ${userid} is a bot`)
+            return false
+        }
         if (member == undefined) {
             console.log(`User ${userid} not found in server`)
             return false

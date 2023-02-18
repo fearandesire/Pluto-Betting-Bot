@@ -37,7 +37,7 @@ setTimeout(async () => {
     //# Queue Daily Cron to create more Crons related to games
     await new completedReq().dailyCheck().then(() => {
         Log.Green(
-            `[ready] Called \`completedReq\` to initialize the daily 'resolveCompCron' Cron Job ->\nCron Time: ${process.env.CHECK_COMPLETED_TIMER}`,
+            `[Startup] Init call to create completed game check Cron Jobs\nCron Time: ${process.env.CHECK_COMPLETED_TIMER}`,
         )
     })
 }, 5000)

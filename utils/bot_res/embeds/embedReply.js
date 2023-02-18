@@ -32,6 +32,48 @@ export async function embedReply(interaction, embedContent, interactionEph) {
     if (interaction?.deferred && interaction?.deferred === true) {
         followUp = true
     }
+
+    // # Embed with no fields response. Most commons
+    if (confirmFields == false) {
+        const noFieldsEmbed = new MessageEmbed()
+            .setColor(embedColor)
+            .setTitle(embedTitle)
+            .setThumbnail(thumbnail)
+            .setDescription(embedDescription)
+        //   .setFooter({ text: embedFooter })
+        if (target == 'reply' && isSilent === true) {
+            if (followUp == true) {
+                return await interaction.followUp({
+                    embeds: [noFieldsEmbed],
+                    ephemeral: true,
+                })
+            } else {
+                await interaction.reply({ embeds: [noFieldsEmbed], ephemeral: true })
+                return
+            }
+        } else if (target == 'reply' && isSilent === false) {
+            if (followUp == true) {
+                return await interaction.followUp({ embeds: [noFieldsEmbed] })
+            } else {
+                await interaction.reply({ embeds: [noFieldsEmbed] })
+                return
+            }
+        }
+        //# Fields-Embed Destination to a specific channel
+        else if (target !== 'reply') {
+            reqChan = await Promise.resolve(fetchChanId(target))
+            reqChan.send({ embeds: [noFieldsEmbed] })
+            return
+        }
+    } else {
+        return Log.Error(
+            `[embedReply.js] Error: Something went wrong with the embedReply function.`,
+        )
+    }
+
+
+
+
     //# Embeds with fields response
     if (hasFields !== false) {
         const embedWithFields = new MessageEmbed()
@@ -75,44 +117,6 @@ export async function embedReply(interaction, embedContent, interactionEph) {
                 return
             }
         }
-    }
-
-    //& Embed with no fields response
-    if (confirmFields == false) {
-        const noFieldsEmbed = new MessageEmbed()
-            .setColor(embedColor)
-            .setTitle(embedTitle)
-            .setThumbnail(thumbnail)
-            .setDescription(embedDescription)
-            .setFooter({ text: embedFooter })
-        if (target == 'reply' && isSilent === true) {
-            if (followUp == true) {
-                return await interaction.followUp({
-                    embeds: [noFieldsEmbed],
-                    ephemeral: true,
-                })
-            } else {
-                await interaction.reply({ embeds: [noFieldsEmbed], ephemeral: true })
-                return
-            }
-        } else if (target == 'reply' && isSilent === false) {
-            if (followUp == true) {
-                return await interaction.followUp({ embeds: [noFieldsEmbed] })
-            } else {
-                await interaction.reply({ embeds: [noFieldsEmbed] })
-                return
-            }
-        }
-        //# Fields-Embed Destination to a specific channel
-        else if (target !== 'reply') {
-            reqChan = await Promise.resolve(fetchChanId(target))
-            reqChan.send({ embeds: [noFieldsEmbed] })
-            return
-        }
-    } else {
-        return Log.Error(
-            `[embedReply.js] Error: Something went wrong with the embedReply function.`,
-        )
     }
 }
 

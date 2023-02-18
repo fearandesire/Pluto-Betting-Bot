@@ -127,3 +127,4 @@ lib/teamList.js
 commands/slash/devEval.js
 .env.nbac
 .env.nflc
+.env.dev
