@@ -5,7 +5,6 @@ import { Log, LIVEMATCHUPS, _, container, flatcache } from '#config'
 import { cronMath } from './cronMath.js'
 import { db } from '#db'
 import { dmMe } from '../../bot_res/dmMe.js'
-import { memUse } from '#mem'
 import { msgBotChan } from '#botUtil/msgBotChan'
 import { resolveToday } from '#dateUtil/resolveToday'
 import { scheduleChannels } from './scheduleChannels.js'
@@ -30,7 +29,6 @@ export async function fetchSchedule(interaction) {
         })
         return
     }
-    await memUse(`fetchSchedule.js`, `Pre-Query/Fetch`)
     var checkDB = await db
         .manyOrNone(`SELECT * FROM "${LIVEMATCHUPS}"`)
         .then(async (data) => {
@@ -90,6 +88,5 @@ export async function fetchSchedule(interaction) {
         Log.Green(
             `Successfully fetched the game data from the DB and scheduled the game channels`,
         )
-        await memUse(`fetchSchedule.js`, `Pre-Query/Fetch`)
     }
 }

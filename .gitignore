@@ -128,3 +128,8 @@ commands/slash/devEval.js
 .env.nbac
 .env.nflc
 .env.dev
+.scannerwork/.sonar_lock
+.scannerwork/report-task.txt
+.vscode/settings.json
+.prettierrc.json
+.eslintrc.cjs

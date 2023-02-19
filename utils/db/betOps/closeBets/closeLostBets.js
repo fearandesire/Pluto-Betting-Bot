@@ -3,7 +3,6 @@ import { Log, LIVEMATCHUPS, BETSLIPS, LIVEBETS } from '#config'
 import { closeBetLog } from '../../../logging.js'
 import { db } from '#db'
 import { lostDm } from '../lostDm.js'
-import { memUse } from '#mem'
 /**
  * @module closeLostBets
  * 1. Query DB and find all bets that chose the winning team [teamid] in thedb
@@ -71,7 +70,6 @@ export async function closeLostBets(losingTeam, homeOrAway) {
                     await closeBetLog.info(
                         `Successfully closed bet ${betId} || ${userid}`,
                     )
-                    await memUse(`closeLostBets`, `Post-Close Lost`)
                 }
                 resolve()
             }

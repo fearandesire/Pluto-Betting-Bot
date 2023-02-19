@@ -11,42 +11,40 @@ import { reqLeaderboard } from './reqLeaderboard.js'
 let memberCache = container.leaderboardCache
 memberCache = new Map()
 
-export async function leaderboard(message, interactionEph) {
+export async function leaderboard(message) {
     await reqLeaderboard().then(async (lb) => {
         const server = await SapDiscClient.guilds.cache.get(
             `${process.env.server_ID}`,
         )
-        await server.members.fetch().then(async (memberList) => {
+        await server.members.fetch().then(async () => {
             let lbArray = []
             let usersIndex
-            let usersBal
-            for (var i = 0; i < lb.length; i++) {
-                var lbUserId = lb[i].userid
-                var lbUserBal = lb[i].balance
+            for (let i = 0; i < lb.length; i++) {
+                let lbUserId = lb[i].userid
+                let lbUserBal = lb[i].balance
                 if (lbUserId == message?.user?.id) {
                     usersIndex = i + 1
-                    usersBal = lb[i].balance
                 }
                 if (!memberCache.has(lbUserId)) {
                     let member = server.members.cache.get(lbUserId) || null
                     if (member) memberCache.set(lbUserId, member)
                 }
                 let mappedUserCache = memberCache.get(lbUserId) || null
-                var formatId = mappedUserCache?.user || `<@${lbUserId}>`
-                var humanIndex = i + 1
-                var lbEntry = `**${humanIndex}.** ${formatId}: ${lbUserBal}`
+                let formatId = mappedUserCache?.user || `<@${lbUserId}>`
+                let humanIndex = i + 1
+                let lbEntry = `**${humanIndex}.** ${formatId}: ${lbUserBal}`
                 lbArray.push(lbEntry)
-            }
-            var lbString = lbArray.join('\n')
-            var lbLength = lbString.length
+            } 
+            let lbString = lbArray.join('\n')
+            let lbLength = lbString.length
             console.log(`Array Length: ${lbLength}`)
-            var pages = Math.ceil(lbLength / 4096)
-            for (var indx = 0; indx < pages; indx++) {
-                var start = indx * 4096
-                var end = start + 4096
-                var page = indx + 1
-                var pageData = lbString.slice(start, end)
-                var embObj = {
+            let pages = Math.ceil(lbLength / 4096)
+            for (let indx = 0; indx < pages; indx++) {
+                let start = indx * 4096
+                let end = start + 4096
+                let page = indx + 1
+                let pageData = lbString.slice(start, end)
+                let embObj = {
                     title: `Betting Leaderboard [Page ${page}]`,
                     description: pageData,
                     color: `#ffff00`,

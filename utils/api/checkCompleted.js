@@ -8,7 +8,6 @@ import { dmMe } from '../bot_res/dmMe.js'
 import fetch from 'node-fetch'
 import { getShortName } from '../bot_res/getShortName.js'
 import { idApiExisting } from '../db/validation/idApiExisting.js'
-import { memUse } from '#mem'
 import { queueDeleteChannel } from '../db/gameSchedule/queueDeleteChannel.js'
 import { removeMatch } from '#utilMatchups/removeMatchup'
 import { setProgress } from '../db/matchupOps/progress/setProgress.js'
@@ -47,7 +46,6 @@ export async function checkCompleted() {
         await checkCompletedLog.error(`API Call Error`, { errorMsg: error })
         return
     }
-    await memUse(`checkCompleted`, `Post-API Init Connection`)
     var compResults = apiJSON
     await apiReqLog.info(`API Connection Info`, {
         status: `Connection successful`,

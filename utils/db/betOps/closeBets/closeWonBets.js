@@ -3,7 +3,6 @@ import { Log, LIVEMATCHUPS, BETSLIPS, LIVEBETS, CURRENCY } from '#config'
 import _ from 'lodash'
 import { closeBetLog } from '../../../logging.js'
 import { db } from '#db'
-import { memUse } from '#mem'
 import { resolvePayouts } from '#utilBetOps/resolvePayouts'
 import { wonDm } from '../wonDm.js'
 
@@ -99,7 +98,6 @@ export async function closeWonBets(winningTeam, homeOrAway, losingTeam) {
                         `Successfully closed bet ${betId} || User ID: ${userid}`,
                     )
 
-                    await memUse(`closeWonBets`, `Post-Close Won`)
                 }
                 resolve()
             }

@@ -1,4 +1,4 @@
-import { Log, embedReply } from '#config'
+import { Log, embedReply,accounting } from '#config'
 import { AssignBetID } from '#botUtil/AssignIDs'
 import { addNewBet } from '#utilBetOps/addNewBet'
 import { isBetIdExisting } from '../validation/isBetIdExisting.js'
@@ -7,8 +7,6 @@ import { setupBetLog } from '#winstonLogger'
 import { sortBalance } from '#utilCurrency/sortBalance'
 import stringifyObject from 'stringify-object'
 import { MessageEmbed } from 'discord.js'
-import { accounting } from '#config'
-import { SapDiscClient } from '#main'
 import { findEmoji } from '../../bot_res/findEmoji.js'
 /**
  * @module confirmBet -
@@ -19,15 +17,15 @@ import { findEmoji } from '../../bot_res/findEmoji.js'
 
 export async function confirmBet(interaction, betslip, userId) {
     // ? Sending Embed w/ bet details for the user to confirm bet
-    var customerFooter =
+    let customerFooter =
         'Please Note: If you do not confirm your bet within 60 seconds, it will be cancelled.'
-    var format = accounting.format
-    var amount = format(betslip.amount)
-    var profit = format(betslip.profit)
-    var payout = format(betslip.payout)
+    let format = accounting.format
+    let amount = format(betslip.amount)
+    let profit = format(betslip.profit)
+    let payout = format(betslip.payout)
     // ? Get the last word of the team name
-    var teamName = betslip.teamid.split(' ').pop()
-    let teamEmoji = (await findEmoji(teamName)) || ''
+    let teamName = betslip.teamid.split(' ').pop()
+    let teamEmoji = (findEmoji(teamName)) || ''
     betslip.teamEmoji = teamEmoji || ''
     let confirmembed = new MessageEmbed()
         .setColor('#ffd600')

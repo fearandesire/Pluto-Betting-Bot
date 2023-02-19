@@ -1,7 +1,6 @@
 import { SCHEDULE_TIMER } from '#config'
 import { collectOdds } from './collectOdds.js'
 import { createRequire } from 'module'
-import { memUse } from '#mem'
 import { removeAllMatchups } from '#utilMatchups/removeAllMatchups'
 
 const require = createRequire(import.meta.url)
@@ -17,7 +16,6 @@ Cron Jobs here are defined inside of the `.env` file; But they are based on week
 */
 
 export async function scheduleReq() {
-    await memUse(`scheduleReq`, `Pre-Cron`)
     cron.schedule(
         `${SCHEDULE_TIMER}`,
         async () => {
@@ -37,5 +35,4 @@ export async function scheduleReq() {
         },
         { timezone: 'America/New_York' },
     )
-    await memUse(`scheduleReq`, `Post-Cron`)
 }
