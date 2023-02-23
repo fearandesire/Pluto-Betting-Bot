@@ -137,8 +137,8 @@ export function completedReq() {
 			Log.Red(
 				`[completedReq.js] No games today, skipping completed game check..`,
 			)
-			await interaction.reply({
-				content: `No games are scheduled for today.`,
+			await reply(interaction, {
+				content: 'No games were found for today.',
 				ephemeral: true,
 			})
 		}

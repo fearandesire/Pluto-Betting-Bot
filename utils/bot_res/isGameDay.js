@@ -10,18 +10,22 @@ import { resolveToday } from '#dateUtil/resolveToday'
  */
 
 export async function isGameDay() {
-    var todaySlashed = await new resolveToday().todayFullSlashes
-    return await db
-        .manyOrNone(`SELECT * FROM "${LIVEMATCHUPS}" WHERE dateofmatchup = $1`, [
-            todaySlashed,
-        ])
-        .then(async (data) => {
-            if (_.isEmpty(data)) {
-                Log.Red(`No active matchups found in the database.`)
-                return false
-            } else {
-                Log.Green(`[isGameDay] Active matchups found in the database.`)
-                return true
-            }
-        })
+    try {
+        const todaySlashed = await new resolveToday().todayFullSlashes
+        const query = {
+            text: `SELECT * FROM "${process.env.LIVEMATCHUPS}" WHERE dateofmatchup = $1`,
+            values: [todaySlashed],
+        }
+        const result = await db.query(query)
+        const hasActiveMatchups = result.rowCount > 0
+        if (hasActiveMatchups) {
+            Log.Green(`[isGameDay] Active matchups found in the database.`)
+        } else {
+            Log.Red(`No active matchups found in the database.`)
+        }
+        return hasActiveMatchups
+    } catch (error) {
+        Log.Error(`[isGameDay] Error checking for active matchups: ${error}`)
+        throw error
+    }
 }
