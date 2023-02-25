@@ -14,17 +14,17 @@ const initOptions = {
     task: true,
     transact: true,
 }
-const pgp = pgPromise(initOptions) //initialises options
+const pgp = pgPromise(initOptions) // initialises options
 
 //* Logging pg-promise events with pg-monitor */
 monitor.attach(initOptions) // monitor to log
 
-var dbUser = process.env.SQLusername
-var dbIP = process.env.SQLiPAddress
-var dbPass = process.env.SQLPass
-var dbPort = process.env.SQLPort
+const dbUser = process.env.SQLusername
+const dbIP = process.env.SQLiPAddress
+const dbPass = process.env.SQLPass
+const dbPort = process.env.SQLPort
 
-//? node post-gres connection [deprecated]
+// ? node post-gres connection [deprecated]
 const { Pool } = pg.default
 
 export const nodepool = new Pool({

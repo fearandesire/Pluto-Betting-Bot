@@ -6,20 +6,19 @@ import { Log, _, flatcache } from '#config'
  * @param {string} dayName - The name of the day of the week (Sunday, Monday, etc)
  */
 export async function gameDaysCache(dayName) {
-    var gameDayCache = flatcache.create('gameDaysCache.json', './cache/')
-    if (gameDayCache.getKey('gameDays') == undefined) {
-        var gameDays = gameDayCache.setKey(`gameDays`, [])
-        gameDayCache.save(true)
-        Log.Yellow(`Created Game Days Cache`)
-        return gameDays
-    } else if (_.includes(gameDayCache.getKey('gameDays'), dayName)) {
-        Log.Yellow(`Game Day Already Exists in Cache`)
-        return
-    } else {
-        gameDays = gameDayCache.getKey('gameDays')
-        gameDays.push(dayName)
-        gameDayCache.save(true)
-        Log.Green(`Added ${dayName} to Game Days Cache: ${gameDays}`)
-        return
-    }
+	const gameDayCache = flatcache.create('gameDaysCache.json', './cache/')
+	if (gameDayCache.getKey('gameDays') === undefined) {
+		var gameDays = gameDayCache.setKey(`gameDays`, [])
+		gameDayCache.save(true)
+		Log.Yellow(`Created Game Days Cache`)
+		return gameDays
+	}
+	if (_.includes(gameDayCache.getKey('gameDays'), dayName)) {
+		Log.Yellow(`Game Day Already Exists in Cache`)
+	} else {
+		gameDays = gameDayCache.getKey('gameDays')
+		gameDays.push(dayName)
+		gameDayCache.save(true)
+		Log.Green(`Added ${dayName} to Game Days Cache: ${gameDays}`)
+	}
 }

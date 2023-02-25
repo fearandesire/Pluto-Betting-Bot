@@ -28,7 +28,7 @@ export async function embedReply(interaction, embedContent, interactionEph) {
 	let followUp = embedContent?.followUp || false
 	const thumbnail = embedContent?.thumbnail || process.env.sportLogo
 	let reqChan
-	if (interaction?.deferred && interaction?.deferred === true) {
+	if (interaction && interaction?.deferred && interaction?.deferred === true) {
 		followUp = true
 	}
 

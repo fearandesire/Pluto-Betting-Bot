@@ -132,4 +132,5 @@ commands/slash/devEval.js
 .scannerwork/report-task.txt
 .vscode/settings.json
 .prettierrc.json
-.eslintrc.cjs
+commands/slash/devEval2.js
+.vscode/launch.json

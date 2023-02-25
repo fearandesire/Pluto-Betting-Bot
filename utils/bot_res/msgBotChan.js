@@ -1,4 +1,4 @@
-//import { SapDiscClient } from '#main'
+// import { SapDiscClient } from '#main'
 
 import { embedReply } from '#config'
 
@@ -7,13 +7,13 @@ import { embedReply } from '#config'
  */
 
 export async function msgBotChan(msg, color, title) {
-    var embColor = color ?? `#8000ff`
-    var embTitle = title ?? `Alert`
-    var embObj = {
-        title: embTitle,
-        description: msg,
-        color: embColor,
-        target: `modBotSpamID`,
-    }
-    await embedReply(null, embObj)
+	const embColor = color ?? `#8000ff`
+	const embTitle = title ?? `Alert`
+	const embObj = {
+		title: embTitle,
+		description: msg,
+		color: embColor,
+		target: `modBotSpamID`,
+	}
+	await embedReply(null, embObj)
 }

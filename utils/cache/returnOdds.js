@@ -9,21 +9,21 @@ import { formatOdds } from '#cmdUtil/formatOdds'
  */
 
 export async function returnOdds(message, interactionEph) {
-    var oddsFields = []
-    var matchupDb = await db.manyOrNone(`SELECT * FROM "${LIVEMATCHUPS}"`)
+    const oddsFields = []
+    const matchupDb = await db.manyOrNone(`SELECT * FROM "${LIVEMATCHUPS}"`)
     if (!matchupDb || Object.keys(matchupDb).length === 0) {
         QuickError(message, 'No odds available to view.')
         return
     }
-    //# iterate through matchupDB with a for loop so we can access the values of each nested object
+    // # iterate through matchupDB with a for loop so we can access the values of each nested object
     for (const key in matchupDb) {
-        var match = matchupDb[key]
-        var hTeam = match.teamone
-        var aTeam = match.teamtwo
-        var hOdds = match.teamoneodds
-        var aOdds = match.teamtwoodds
-        var startTime = match.legiblestart
-        let oddsFormat = await formatOdds(hOdds, aOdds)
+        const match = matchupDb[key]
+        const hTeam = match.teamone
+        const aTeam = match.teamtwo
+        let hOdds = match.teamoneodds
+        let aOdds = match.teamtwoodds
+        const startTime = match.legiblestart
+        const oddsFormat = await formatOdds(hOdds, aOdds)
         hOdds = oddsFormat.homeOdds
         aOdds = oddsFormat.awayOdds
         oddsFields.push({
@@ -32,13 +32,13 @@ export async function returnOdds(message, interactionEph) {
             inline: true,
         })
     }
-    //# count # of objects in oddsFields - if the # is not divisible by 3, turn the last inline field to false
-    var oddsFieldCount = oddsFields.length
+    // # count # of objects in oddsFields - if the # is not divisible by 3, turn the last inline field to false
+    const oddsFieldCount = oddsFields.length
     if (oddsFieldCount % 3 !== 0) {
         oddsFields[oddsFieldCount - 1].inline = false
     }
     console.log(oddsFields)
-    var embedObj = {
+    const embedObj = {
         color: `#00ffff`,
         title: `:mega: H2H Odds`,
         fields: oddsFields,

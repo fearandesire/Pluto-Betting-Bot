@@ -1,6 +1,9 @@
-import { db } from '#db'
-import { LIVEMATCHUPS, container } from '#config'
 import _ from 'lodash'
+import Promise from 'bluebird'
+import { db } from '#db'
+import { LIVEMATCHUPS, embedReply, findEmoji } from '#config'
+import { MDY } from '../../api/apiUtils.js'
+import { fetchTodaysMatches as fetchToday } from '#matchMngr'
 /**
  * @module scheduleEmbed
  * @description Creates the embed that contains all matchups w. game odds currently in the database. scheduled.
@@ -8,20 +11,32 @@ import _ from 'lodash'
  */
 
 export async function scheduleEmbed() {
-    const currentSch = await db.manyOrNone(
-        `SELECT * from "${LIVEMATCHUPS}" ORDER BY "startTime" ASC`,
-    )
-    // #  currentSch will be an array of objects for the games currently stored.
-    // ? Use Lodash to create a simple string containing the teams, odds & start time.
-    const currentSchString = _.map(currentSch, (game) => {
-        return `\n**• ${game.teamone}** *(${game.teamoneodds})* vs. **${game.teamtwo}** *(${game.teamtwoodds})* | **${game.legiblestart}**`
+    return new Promise(async (resolve, reject) => {
+        const playingToday = await fetchToday()
+        const count = playingToday.length
+        // #  currentSch will be an array of objects for the games currently stored.
+        // ? Use Lodash to create a simple string containing the teams, odds & start time.
+        const matchesStr = await Promise.map(playingToday, async (game) => {
+            let tOne = await findEmoji(game.teamone, true)
+            let tTwo = await findEmoji(game.teamtwo, true)
+
+            if (tOne === null) {
+                tOne = game.teamone
+            }
+            if (tTwo === null) {
+                tTwo = game.teamtwo
+            }
+            return `**• ${tOne}** *(${game.teamoneodds})* vs. **${tTwo}** *(${game.teamtwoodds})* | **${game.legiblestart}**`
+        }).then((res) => res.join('\n'))
+
+        const embed = {
+            title: `Games Scheduled`,
+            description: `${matchesStr}\n\n*${count} games total.*`,
+            color: '#a0b9f3',
+            target: `modBotSpamID`,
+            footer: `All game channels will be created 1 hour ahead of their start (EST)`,
+        }
+        await embedReply(null, embed)
+        resolve()
     })
-    const embed = {
-        title: `Games Scheduled`,
-        description: `${currentSchString}\n\n*${container.matchupCount} games total.*`,
-        color: '#a0b9f3',
-        target: `modBotSpamID`,
-        footer: `All game channels will be created 1 hour ahead of their start (EST)`,
-    }
-    return embed
 }

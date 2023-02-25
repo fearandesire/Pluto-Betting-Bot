@@ -67,6 +67,7 @@ module.exports = {
 					'import/prefer-default-export': 'off',
 					'no-restricted-syntax': 'off',
 					'no-use-before-define': 'off',
+					'mocha/no-global-tests': 'off',
 				},
 			},
 		],

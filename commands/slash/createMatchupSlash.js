@@ -1,15 +1,15 @@
 import { Command } from '@sapphire/framework'
 import { Log } from '#config'
 import { assignMatchID } from '#botUtil/AssignIDs'
-import { createMatchups } from '#utilMatchups/createMatchups'
+import { storeMatchups } from '#utilMatchups/storeMatchups'
 import { resolveToday } from '#dateUtil/resolveToday'
 import { storeCustomMatchup } from '../../utils/bot_res/storeCustomMatchup.js'
 
-export class createMatchupSlash extends Command {
+export class storeMatchupslash extends Command {
 	constructor(context, options) {
 		super(context, {
 			...options,
-			name: 'createMatchupSlash',
+			name: 'storeMatchupslash',
 			aliases: [''],
 			description:
 				'Create a Custom Matchup - Used for events, testing, or if the API fails to populate a specific game',
@@ -48,7 +48,7 @@ export class createMatchupSlash extends Command {
 						.setDescription('Away Team Odds')
 						.setRequired(true),
 				)
-				//# add Integer options for the day, hour and time the matchup begins
+				// # add Integer options for the day, hour and time the matchup begins
 				.addIntegerOption((option) =>
 					option
 						.setName('day')
@@ -87,6 +87,7 @@ export class createMatchupSlash extends Command {
 				),
 		)
 	}
+
 	//    { idHints: [`1022940422974226432`] },
 	async chatInputRun(interaction) {
 		if (!interaction.guildId) {
@@ -96,26 +97,26 @@ export class createMatchupSlash extends Command {
 			})
 			return
 		}
-		var userid = interaction.user.id
+		const userid = interaction.user.id
 		Log.Yellow(`${userid} has created a custom matchup.`)
-		var assignMatchupIds = await assignMatchID()
-		var teamone = await interaction.options.getString('teamone')
-		var teamtwo = await interaction.options.getString('teamtwo')
-		var teamoneodds = await interaction.options.getNumber('teamoneodds')
-		var teamtwoodds = await interaction.options.getNumber('teamtwoodds')
-		var dayNum = await interaction.options.getInteger('day')
-		var hourNum = await interaction.options.getInteger('hour')
-		var minuteNum = await interaction.options.getInteger('minute')
-		var amOrPm = await interaction.options.getString('am_or_pm')
-		//# Convert the hour to 24 hour time if PM is selected
+		const assignMatchupIds = await assignMatchID()
+		const teamone = await interaction.options.getString('teamone')
+		const teamtwo = await interaction.options.getString('teamtwo')
+		const teamoneodds = await interaction.options.getNumber('teamoneodds')
+		const teamtwoodds = await interaction.options.getNumber('teamtwoodds')
+		const dayNum = await interaction.options.getInteger('day')
+		let hourNum = await interaction.options.getInteger('hour')
+		const minuteNum = await interaction.options.getInteger('minute')
+		const amOrPm = await interaction.options.getString('am_or_pm')
+		// # Convert the hour to 24 hour time if PM is selected
 		if (amOrPm == 'PM') {
-			hourNum = hourNum + 12
+			hourNum += 12
 		}
-		var tDay = await new resolveToday()
-		var year = tDay.todaysYear
-		var month = tDay.todaysMonth
-		var gameDate = `${month}/${dayNum}/${year}`
-		var matchupObj = {
+		const tDay = await new resolveToday()
+		const year = tDay.todaysYear
+		const month = tDay.todaysMonth
+		const gameDate = `${month}/${dayNum}/${year}`
+		const matchupObj = {
 			[`home_team`]: teamone,
 			[`away_team`]: teamtwo,
 			[`home_teamOdds`]: teamoneodds,
@@ -132,9 +133,9 @@ export class createMatchupSlash extends Command {
 					content: `There was an error creating this matchup into cache.`,
 					ephemeral: true,
 				})
-				return
+				
 			} else {
-				await createMatchups(
+				await storeMatchups(
 					interaction,
 					teamone,
 					teamtwo,
