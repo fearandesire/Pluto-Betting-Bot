@@ -83,7 +83,7 @@ export async function fetchSchedule(interaction) {
             await interaction.followUp({ embeds: [embObj] })
         }
         container.fetchedAlready = true
-        Log.Green(
+        await Log.Green(
             `Successfully fetched the game data from the DB and scheduled the game channels`,
         )
     }

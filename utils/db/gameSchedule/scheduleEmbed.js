@@ -1,8 +1,7 @@
 import _ from 'lodash'
 import Promise from 'bluebird'
 import { db } from '#db'
-import { LIVEMATCHUPS, embedReply, findEmoji } from '#config'
-import { MDY } from '../../api/apiUtils.js'
+import { embedReply, findEmoji } from '#config'
 import { fetchTodaysMatches as fetchToday } from '#matchMngr'
 /**
  * @module scheduleEmbed
@@ -36,7 +35,6 @@ export async function scheduleEmbed() {
             target: `modBotSpamID`,
             footer: `All game channels will be created 1 hour ahead of their start (EST)`,
         }
-        await embedReply(null, embed)
-        resolve()
+        resolve(await embedReply(null, embed))
     })
 }

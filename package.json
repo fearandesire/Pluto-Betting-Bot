@@ -47,6 +47,7 @@
         "#main": "./Pluto.mjs",
         "#winstonLogger": "./utils/logging.js",
         "#mem": "./utils/bot_res/memUse.js",
+        "#iso": "./utils/time/IsoManager.js",
         "#matchMngr": "./utils/db/matchupOps/matchupManager.js",
         "#qBuilder": "./utils/db/queryBuilder.js"
     },

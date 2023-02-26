@@ -1,13 +1,14 @@
 import cron from 'node-cron'
+import { format } from 'date-fns'
 import { db } from '#db'
 import { LIVEMATCHUPS, RANGES } from '#env'
-import { MDY, logCron } from '#apiUtils'
+import { logCron } from '#apiUtils'
 import { checkCompleted } from '../../api/checkCompleted.js'
 import { Log, _ } from '#config'
 
 export function todaysDayNum() {
     const d = new Date()
-    const dayNum = d.getDay()
+    const dayNum = d.getDate()
     return dayNum
 }
 
@@ -20,7 +21,9 @@ export async function fetchTodaysMatches() {
     const gamesOrdered = await db.manyOrNone(
         `SELECT * from "${LIVEMATCHUPS}" ORDER BY "startTime" ASC`,
     )
-    const today = MDY
+    const td = new Date()
+    const today = format(td, 'MM/dd/yyyy')
+
     const todaysMatches = _.filter(gamesOrdered, async (match) => {
         const matchDate = match.dateofmatchup.toString()
         if (matchDate === today) {
@@ -44,7 +47,9 @@ export async function rangeRefresh() {
             const splitrange1 = range1.split(' ')
             const day = splitrange1[2]
             if (Number(todaysDayNum()) !== Number(day)) {
-                Log.Red(`Older range found in DB. Clearing table`)
+                Log.Red(
+                    `Older range found in DB. Clearing table\nToday: ${todaysDayNum()}\nRange: ${day}`,
+                )
                 await db.none(`DELETE FROM "${RANGES}"`)
                 return false
             }

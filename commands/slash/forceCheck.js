@@ -24,6 +24,7 @@ export class forceCheck extends Command {
             //    { idHints: [`1022940422974226432`] },
         )
     }
+
     async chatInputRun(interaction) {
         if (!interaction.guildId) {
             interaction.reply({
@@ -32,7 +33,7 @@ export class forceCheck extends Command {
             })
             return
         }
-        var userid = interaction.user.id
+        const userid = interaction.user.id
         await interaction.reply({
             content: `Requesting API to check for completed games.`,
             ephemeral: true,

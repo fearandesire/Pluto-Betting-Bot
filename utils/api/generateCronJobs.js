@@ -4,6 +4,7 @@ import _ from 'lodash'
 import { formatRange, logCron } from './apiUtils.js'
 import { checkCompleted } from './checkCompleted.js'
 import { fetchTodaysMatches, rangeManager } from '#matchMngr'
+import dmMe from '#utilBot/dmMe'
 
 /**
  * Generates two cron jobs based on the start times of matches in the given array.
@@ -16,8 +17,11 @@ import { fetchTodaysMatches, rangeManager } from '#matchMngr'
  * ]);
  */
 
-export default async function generateCronJobs(test, matches) {
+export default async function generateCronJobs(matches) {
     const todaysMatches = matches || (await fetchTodaysMatches())
+    if (!todaysMatches) {
+        return false
+    }
     const earliestGame = todaysMatches[0]
     const latestGame = todaysMatches[todaysMatches.length - 1]
     const earliestGameStart = parseISO(earliestGame.startTime)
@@ -59,17 +63,12 @@ export default async function generateCronJobs(test, matches) {
             })
             await checkCompleted()
         })
-
-        if (!test) {
-            await rangeManager({ post: true, r1: range1, r2: range2 })
+        await rangeManager({ post: true, range1, range2 })
+        const rangeObj = {
+            range1,
+            range2,
         }
-
-        const formattedRange1 = range1 ? formatRange(range1) : 'N/A'
-        const formattedRange2 = range2 ? formatRange(range2) : 'N/A'
-        console.log(
-            `\nGenerate Cron Jobs Logging:\nRanges Generated:\n${formattedRange1}\n${formattedRange2}\nRaw:\n${range1}\n${range2}\n\nTimes:\nEarly ->\nStart: ${earliestGameStart}\nDay: ${earliestDayNum}\nHour: ${earliestHour}\nLatest ->\nStart: ${latestGameStart}\nDay: ${latestDayNum}\nHour: ${latestHour}\n`,
-        )
-        return Promise.resolve(true)
+        return Promise.resolve(rangeObj)
     } catch (error) {
         console.error(`Error during generateCronJobs:`, error)
         throw Promise.reject(error)

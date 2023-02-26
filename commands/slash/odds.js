@@ -23,9 +23,10 @@ export class odds extends Command {
             //    { idHints: [`1022940422974226432`] },
         )
     }
+
     async chatInputRun(interaction) {
-        var userid = interaction.user.id
-        var interactionEph = true
+        const userid = interaction.user.id
+        const interactionEph = true
         await returnOdds(interaction, interactionEph)
     }
 }

@@ -8,11 +8,11 @@ import { formatOdds } from '#cmdUtil/formatOdds'
  * Return all currently available odds from the database
  */
 
-export async function returnOdds(message, interactionEph) {
+export async function returnOdds(interaction, interactionEph) {
     const oddsFields = []
     const matchupDb = await db.manyOrNone(`SELECT * FROM "${LIVEMATCHUPS}"`)
     if (!matchupDb || Object.keys(matchupDb).length === 0) {
-        QuickError(message, 'No odds available to view.')
+        await QuickError(interaction, 'No odds available to view.')
         return
     }
     // # iterate through matchupDB with a for loop so we can access the values of each nested object
@@ -37,7 +37,7 @@ export async function returnOdds(message, interactionEph) {
     if (oddsFieldCount % 3 !== 0) {
         oddsFields[oddsFieldCount - 1].inline = false
     }
-    console.log(oddsFields)
+    //   console.log(oddsFields)
     const embedObj = {
         color: `#00ffff`,
         title: `:mega: H2H Odds`,
@@ -46,5 +46,5 @@ export async function returnOdds(message, interactionEph) {
         footer:
             'Favored teams have a - negative number | Pluto - Designed by FENIX#7559',
     }
-    embedReply(message, embedObj, interactionEph)
+    await embedReply(interaction, embedObj)
 }

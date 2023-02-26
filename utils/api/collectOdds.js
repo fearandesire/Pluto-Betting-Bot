@@ -1,32 +1,34 @@
-import { getHours, getMinutes, getDate, getMonth, formatISO } from 'date-fns'
 import _ from 'lodash'
 import fetch from 'node-fetch'
 import flatcache from 'flat-cache'
 import Promise from 'bluebird'
 import { v4 as uuidv4 } from 'uuid'
-import { ODDS, container, embedReply, gamesScheduled, Log } from '#config'
+import { ODDS, Log } from '#config'
 import { assignMatchID } from '#botUtil/AssignIDs'
 import { cacheAdmn, inCache } from '#cacheMngr'
-import { collectOddsLog } from '../logging.js'
 import { storeMatchups } from '#utilMatchups/storeMatchups'
 import { gameDaysCache } from '../cache/gameDaysCache.js'
-import { isMatchExist } from '#utilValidate/isMatchExist'
 import { scheduleChannels } from '../db/gameSchedule/scheduleChannels.js'
 import { scheduleEmbed } from '../db/gameSchedule/scheduleEmbed.js'
-import {
-    isoManager,
-    MDY as todayDate,
-    toMDY,
-    isoToCron,
-    isoToDayOfWeek,
-} from './apiUtils.js'
 import generateCronJobs from './generateCronJobs.js'
+import IsoManager from '#iso'
+import IsoBuilder from '../time/IsoBuilder.js'
 
 const oddsCache = flatcache.create(`oddsCache.json`, './cache/weeklyOdds')
 
 /**
- * @module collectOdds
- * Call the API and store the matchup odds for the week into the database & cache
+ * Calls the API and stores the matchup odds for the week into the database & cache.
+ *
+ * Steps:
+ * - Fetches the matchup odds data from the API endpoint specified in the configuration.
+ * - Filters the games to find only those that are scheduled for today.
+ * - Identifies and stores the details for each game into an object.
+ * - Generates a unique ID for each game and stores the odds information and other data for the game in the object.
+ * - Stores the matchup information into the cache and database.
+ * - Generates and schedules the cron jobs for the game start times.
+ *
+ * @async
+ * @function collectOdds
  */
 
 export async function collectOdds() {
@@ -42,15 +44,22 @@ export async function collectOdds() {
     const apiData = await fetch(apiUrl, { method: 'GET', headers }).then((res) =>
         res.json(),
     )
-
     // ? Filter data by games that are scheduled today
-    const todayGames = apiData.filter((game) =>
-        isoManager(game.commence_time, { today: true }),
+    const allGamesToday = apiData.filter((game) =>
+        new IsoBuilder(game.commence_time).isToday(),
     )
+    const todaysGames = allGamesToday.filter((game) =>
+        new IsoBuilder(game.commence_time).isPast(),
+    )
+
+    if (_.isEmpty(todaysGames)) {
+        Log.Red(`No games were found for today.`)
+        return false
+    }
 
     const matchups = {} // obj to store details of each match into cache
     // ? Identify & store details for each game via the data collected
-    await Promise.map(todayGames, async (game) => {
+    await Promise.map(todaysGames, async (game) => {
         const homeTeam = game.home_team
         const awayTeam = game.away_team
         const homeOdds = _.find(game.bookmakers[0]?.markets[0].outcomes, {
@@ -81,12 +90,11 @@ export async function collectOdds() {
         })
 
         // Date & Time info to store into the database
-        const gameDate = await isoManager(game.commence_time, { formatDate: true })
-        const cronStartTime = await isoToCron(game.commence_time)
+        const isoManager = new IsoManager(game.commence_time)
+        const gameDate = isoManager.mdy
+        const cronStartTime = isoManager.cron
 
-        const legibleStart = await isoManager(game.commence_time, {
-            formatTime: true,
-        })
+        const legibleStart = isoManager.legible
         const uniqueDbId = await uuidv4()
         const colmdata = {
             teamOne: homeTeam,
@@ -102,8 +110,7 @@ export async function collectOdds() {
         }
         await storeMatchups(colmdata) // # Store in database
         await scheduleChannels(homeTeam, awayTeam, cronStartTime, legibleStart)
-        const dayName = isoToDayOfWeek(game.commence_time)
-        await gameDaysCache(dayName)
+        await gameDaysCache(isoManager.dayName)
     })
 
     // Store the matchups information into the cache
@@ -115,4 +122,5 @@ export async function collectOdds() {
     }
     await scheduleEmbed()
     await generateCronJobs()
+    return true
 }

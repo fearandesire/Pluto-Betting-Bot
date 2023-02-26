@@ -22,5 +22,9 @@ test('generateCronJobs returns true on success', async (t) => {
 
     const result = await generateCronJobs(true, todaysMatches)
 
-    t.true(result === true)
+    // # Ensure result is an object
+    t.true(typeof result === 'object')
+    // # Ensure we have `range1` and `range2` properties which both should be strings
+    t.true(typeof result.range1 === 'string')
+    t.true(typeof result.range2 === 'string')
 })
