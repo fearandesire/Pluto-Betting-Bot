@@ -16,39 +16,39 @@ const gameCreateMonitor = new cron.Monitor('Create Game Channels')
  */
 
 export async function createChannel(awayTeam, homeTeam) {
-	createChanLog.info(
-		`Creating Game Channel | Title: ${awayTeam} vs ${homeTeam}`,
-	)
-	await gameCreateMonitor.ping({
-		state: `run`,
-		message: `Creating Game Channel for:  ${awayTeam} vs ${homeTeam}`,
-	})
-	try {
-		const guild = SapDiscClient.guilds.cache.get(`${process.env.server_ID}`)
-		const category = guild.channels.cache.get(`${process.env.gameCat_ID}`)
-		const channelName = `${awayTeam} vs ${homeTeam}`
-		const gameChan = await guild.channels.create(channelName, {
-			type: 'text',
-			topic: `Enjoy the Game!`,
-			parent: category,
-		})
-		// # Collect information about the game and send it to the game channel on creation
-		const gameInfo = await gameEmbed(homeTeam, awayTeam)
-		await gameChan.send({ embeds: [gameInfo] })
-		await dmMe(
-			`${channelName} Game Channel created successfully\nDirect Link: <#${gameChan.id}>`,
-		)
-		createChanLog.info(`Game Channel Created: ${channelName}`)
-		await gameCreateMonitor.ping({
-			state: `complete`,
-			message: `${channelName} Game Channel created successfully`,
-		})
-		return `${channelName} Game Channel created successfully\nDirect Link: <#${gameChan.id}>`
-	} catch (error) {
-		createChanLog.error(`Error Creating Game Channel: ${error}`)
-		await gameCreateMonitor.ping({
-			state: `fail`,
-			message: `Error Creating Game Channel: ${error}`,
-		})
-	}
+    createChanLog.info(
+        `Creating Game Channel | Title: ${awayTeam} vs ${homeTeam}`,
+    )
+    await gameCreateMonitor.ping({
+        state: `run`,
+        message: `Creating Game Channel for:  ${awayTeam} vs ${homeTeam}`,
+    })
+    try {
+        const guild = SapDiscClient.guilds.cache.get(`${process.env.server_ID}`)
+        const category = guild.channels.cache.get(`${process.env.gameCat_ID}`)
+        const channelName = `${awayTeam} vs ${homeTeam}`
+        const gameChan = await guild.channels.create(channelName, {
+            type: 'text',
+            topic: `Enjoy the Game!`,
+            parent: category,
+        })
+        // # Collect information about the game and send it to the game channel on creation
+        const gameInfo = await gameEmbed(homeTeam, awayTeam)
+        await gameChan.send({ embeds: [gameInfo] })
+        await dmMe(
+            `${channelName} Game Channel created successfully\nDirect Link: <#${gameChan.id}>`,
+        )
+        createChanLog.info(`Game Channel Created: ${channelName}`)
+        await gameCreateMonitor.ping({
+            state: `complete`,
+            message: `${channelName} Game Channel created successfully`,
+        })
+        return `${channelName} Game Channel created successfully\nDirect Link: <#${gameChan.id}>`
+    } catch (error) {
+        createChanLog.error(`Error Creating Game Channel: ${error}`)
+        await gameCreateMonitor.ping({
+            state: `fail`,
+            message: `Error Creating Game Channel: ${error}`,
+        })
+    }
 }

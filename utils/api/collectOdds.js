@@ -2,7 +2,6 @@ import _ from 'lodash'
 import fetch from 'node-fetch'
 import flatcache from 'flat-cache'
 import Promise from 'bluebird'
-import { v4 as uuidv4 } from 'uuid'
 import { ODDS, Log } from '#config'
 import { assignMatchID } from '#botUtil/AssignIDs'
 import { cacheAdmn, inCache } from '#cacheMngr'
@@ -95,7 +94,6 @@ export async function collectOdds() {
         const cronStartTime = isoManager.cron
 
         const legibleStart = isoManager.legible
-        const uniqueDbId = await uuidv4()
         const colmdata = {
             teamOne: homeTeam,
             teamTwo: awayTeam,
@@ -106,7 +104,7 @@ export async function collectOdds() {
             startTimeISO: game.commence_time,
             cronStartTime,
             legibleStartTime: legibleStart,
-            idApi: uniqueDbId,
+            idApi: game.id,
         }
         await storeMatchups(colmdata) // # Store in database
         await scheduleChannels(homeTeam, awayTeam, cronStartTime, legibleStart)

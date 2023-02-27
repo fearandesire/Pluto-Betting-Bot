@@ -10,16 +10,13 @@ import { listMyBets } from '#utilDB/listMyBets'
  */
 
 export async function checkBetsCache(message, userId, interactionEph) {
-    var user = userId
-    //? Validate if user has any active bets
-    await hasActiveBets(user).then(async (data) => {
-        if (data.length > 0) {
-            await listMyBets(user, message)
-            return true
-        } else {
-            QuickError(message, 'You have no active bets', interactionEph)
-            return
-        }
-    })
-    return
+	const user = userId
+	// ? Validate if user has any active bets
+	await hasActiveBets(user).then(async (data) => {
+		if (data.length > 0) {
+			await listMyBets(user, message)
+			return true
+		}
+		QuickError(message, 'You have no active bets', interactionEph)
+	})
 }

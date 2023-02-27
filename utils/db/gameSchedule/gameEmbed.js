@@ -3,7 +3,7 @@ import { SapDiscClient } from '#main'
 import { findEmoji } from '../../bot_res/findEmoji.js'
 import { resolveMatchup } from '#cacheUtil/resolveMatchup'
 import { resolveTeam } from '#cmdUtil/resolveTeam'
-import { validateData } from './../validation/validateData.js'
+import { validateData } from '../validation/validateData.js'
 import { LIVEBETS } from '#config'
 import { resolveTeamColor } from '../../cmd_res/resolveTeam.js'
 import { fetchGif } from '#utilBot/fetchGif'
@@ -23,49 +23,49 @@ export async function gameEmbed(hometeam, awayteam) {
     console.log(
         `Creating game embed information for: (away) ${awayteam} vs (home) ${hometeam}  `,
     )
-    var hTeam = await resolveTeam(hometeam)
-    var aTeam = await resolveTeam(awayteam)
+    const hTeam = await resolveTeam(hometeam)
+    const aTeam = await resolveTeam(awayteam)
 
     // setup objs to query the DB with
-    var hTeamQuery = new validateData({
+    const hTeamQuery = new validateData({
         tables: `${LIVEBETS}`,
         columns: `amount`,
         where: `teamid`,
         values: hTeam,
     })
-    var aTeamQuery = new validateData({
+    const aTeamQuery = new validateData({
         tables: `${LIVEBETS}`,
         columns: `amount`,
         where: `teamid`,
         values: aTeam,
     })
-    var hTBetTotal = (await hTeamQuery.sumAll())?.sum ?? 0
-    var aTBetTotal = (await aTeamQuery.sumAll())?.sum ?? 0
-    var hTBetCount = (await hTeamQuery.count())?.count ?? 0
-    var aTBetCount = (await aTeamQuery.count())?.count ?? 0
-    var hTeamHigh = (await hTeamQuery.topWager())?.max ?? 0
-    var aTeamHigh = (await aTeamQuery.topWager())?.max ?? 0
-    var hOdds = (await resolveMatchup(hTeam, `odds`))
+    const hTBetTotal = (await hTeamQuery.sumAll())?.sum ?? 0
+    const aTBetTotal = (await aTeamQuery.sumAll())?.sum ?? 0
+    const hTBetCount = (await hTeamQuery.count())?.count ?? 0
+    const aTBetCount = (await aTeamQuery.count())?.count ?? 0
+    const hTeamHigh = (await hTeamQuery.topWager())?.max ?? 0
+    const aTeamHigh = (await aTeamQuery.topWager())?.max ?? 0
+    const hOdds = (await resolveMatchup(hTeam, `odds`))
         ? await resolveMatchup(hTeam, `odds`)
         : `N/A`
-    var aOdds = (await resolveMatchup(aTeam, `odds`))
+    const aOdds = (await resolveMatchup(aTeam, `odds`))
         ? await resolveMatchup(aTeam, `odds`)
         : `N/A`
-    let favoredTeam = Number(hOdds) < Number(aOdds) ? hTeam : aTeam // If the home team has higher odds, they are favored, otherwise the away team is favored
+    const favoredTeam = Number(hOdds) < Number(aOdds) ? hTeam : aTeam // If the home team has higher odds, they are favored, otherwise the away team is favored
     let gifLink
     if (favoredTeam === hTeam) {
         gifLink = await fetchGif(hTeam)
     } else if (favoredTeam === aTeam) {
         gifLink = await fetchGif(aTeam)
     }
-    var color = await resolveTeamColor(favoredTeam)
+    const color = await resolveTeamColor(favoredTeam)
     // # collect team emoji
-    var teamEmoji = (await findEmoji(favoredTeam)) || ''
+    const teamEmoji = (await findEmoji(favoredTeam)) || ''
     // collect server/guild icon url
-    var guildIcon = SapDiscClient.guilds.cache
+    const guildIcon = SapDiscClient.guilds.cache
         .get(`${process.env.server_ID}`)
         .iconURL()
-    var embObj = new MessageEmbed()
+    const embObj = new MessageEmbed()
         .setTitle(`${awayteam} @ ${hometeam}`)
         .setDescription(
             `
