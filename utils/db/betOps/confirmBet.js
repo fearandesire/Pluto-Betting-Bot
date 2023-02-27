@@ -1,12 +1,12 @@
-import { Log, embedReply,accounting } from '#config'
+import stringifyObject from 'stringify-object'
+import { MessageEmbed } from 'discord.js'
+import { Log, embedReply, accounting } from '#config'
 import { AssignBetID } from '#botUtil/AssignIDs'
 import { addNewBet } from '#utilBetOps/addNewBet'
 import { isBetIdExisting } from '../validation/isBetIdExisting.js'
 import { pendingBet } from '../validation/pendingBet.js'
 import { setupBetLog } from '#winstonLogger'
 import { sortBalance } from '#utilCurrency/sortBalance'
-import stringifyObject from 'stringify-object'
-import { MessageEmbed } from 'discord.js'
 import { findEmoji } from '../../bot_res/findEmoji.js'
 /**
  * @module confirmBet -
@@ -17,17 +17,17 @@ import { findEmoji } from '../../bot_res/findEmoji.js'
 
 export async function confirmBet(interaction, betslip, userId) {
     // ? Sending Embed w/ bet details for the user to confirm bet
-    let customerFooter =
+    const customerFooter =
         'Please Note: If you do not confirm your bet within 60 seconds, it will be cancelled.'
-    let format = accounting.format
-    let amount = format(betslip.amount)
-    let profit = format(betslip.profit)
-    let payout = format(betslip.payout)
+    const { format } = accounting
+    const amount = format(betslip.amount)
+    const profit = format(betslip.profit)
+    const payout = format(betslip.payout)
     // ? Get the last word of the team name
-    let teamName = betslip.teamid.split(' ').pop()
-    let teamEmoji = (findEmoji(teamName)) || ''
+    const teamName = betslip.teamid.split(' ').pop()
+    const teamEmoji = (await findEmoji(teamName)) || ''
     betslip.teamEmoji = teamEmoji || ''
-    let confirmembed = new MessageEmbed()
+    const confirmembed = new MessageEmbed()
         .setColor('#ffd600')
         .setTitle(':receipt: Bet Pending Confirmation')
         .setDescription(
@@ -44,7 +44,7 @@ export async function confirmBet(interaction, betslip, userId) {
         .setFooter({ text: customerFooter })
 
     // ? Preview the embed to the user
-    let previewEmbed = await interaction.followUp({
+    const previewEmbed = await interaction.followUp({
         content: `<@${userId}>`,
         embeds: [confirmembed],
         ephemeral: true,
@@ -52,21 +52,20 @@ export async function confirmBet(interaction, betslip, userId) {
     await previewEmbed.react('✅')
     await previewEmbed.react('❌')
     // ? Create reaction collector
-    const filter = (reaction, user) => {
-        return ['✅', '❌'].includes(reaction.emoji.name) && user.id === userId
-    }
+    const filter = (reaction, user) =>
+        ['✅', '❌'].includes(reaction.emoji.name) && user.id === userId
     const collector = previewEmbed.createReactionCollector({
         filter,
         time: 60000,
     })
     collector.on('collect', async (reaction, user) => {
         if (reaction.emoji.name === '✅' && user.id === userId) {
-            //& User confirmed bet, add to DB
+            // & User confirmed bet, add to DB
             collector.stop()
-            //# delete from pending
+            // # delete from pending
             await new pendingBet().deletePending(userId)
-            var betId = await AssignBetID()
-            var validateID = await isBetIdExisting(betId)
+            const betId = await AssignBetID()
+            const validateID = await isBetIdExisting(betId)
             Log.Green(
                 `Bet ID ${validateID} is unique and has been assigned to user: ${userId}.`,
             )
@@ -79,36 +78,30 @@ export async function confirmBet(interaction, betslip, userId) {
             await sortBalance(interaction, betslip.userid, betslip.amount, 'sub') //! Subtract users bet amount from their balance
         } else if (reaction.emoji.name === '❌' && user.id === userId) {
             collector.stop()
-            //& User cancelled bet, delete from pending
+            // & User cancelled bet, delete from pending
             setupBetLog.info(`Betslip cancelled for ${userId}`)
-            //# delete from pending
+            // # delete from pending
             await new pendingBet().deletePending(userId)
-            var embObj = {
+            const embObj = {
                 title: `:x: Bet Cancellation`,
                 description: `Your \`$${amount}\` bet on the ${betslip.teamid} has been cancelled.`,
                 color: `#191919`,
                 followUp: true,
             }
             await embedReply(interaction, embObj, true)
-            return
-        } else {
-            return
         }
     })
     collector.on('end', async (collected, reason) => {
         if (reason === 'time') {
-            //# delete from pending
+            // # delete from pending
             await new pendingBet().deletePending(userId)
-            var embObj = {
+            const embObj = {
                 title: `:x: Bet Cancellation`,
                 description: `<@${userId}>, your \`$${amount}\` bet on the ${betslip.teamid}  has been cancelled since you didn't respond in time..`,
                 color: `#191919`,
                 followUp: true,
             }
             await embedReply(interaction, embObj, true)
-            return
-        } else {
-            return
         }
     })
 }
