@@ -134,3 +134,9 @@ commands/slash/devEval.js
 .prettierrc.json
 commands/slash/devEval2.js
 .vscode/launch.json
+.env.dev
+.env.dev
+.env.nbac
+.scannerwork/.sonar_lock
+.scannerwork/report-task.txt
+commands/slash/devEval2.js
