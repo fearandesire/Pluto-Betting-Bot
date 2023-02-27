@@ -1,3 +1,4 @@
+import { MessageEmbed } from 'discord.js'
 import { LIVEMATCHUPS, QuickError, embedReply } from '#config'
 
 import { db } from '#db'
@@ -42,9 +43,12 @@ export async function returnOdds(interaction, interactionEph) {
         color: `#00ffff`,
         title: `:mega: H2H Odds`,
         fields: oddsFields,
-        thumbnail: `${process.env.sportLogo}`,
-        footer:
-            'Favored teams have a - negative number | Pluto - Designed by FENIX#7559',
+        thumbnail: {
+            url: `${process.env.sportLogo}`,
+        },
+        footer: {
+            text: `Odds are subject to change. | ${oddsFieldCount} games available to bet on.`,
+        },
     }
-    await embedReply(interaction, embedObj)
+    await interaction.followUp({ embeds: [new MessageEmbed(embedObj)] })
 }

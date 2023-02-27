@@ -22,6 +22,9 @@ export async function scheduleChannels(
     cronStartTime,
     legibleStartTime,
 ) {
+    await console.log(
+        `Scheduling channel:\n${homeTeam} vs ${awayTeam} | ${cronStartTime} | ${legibleStartTime}`,
+    )
     const schCache = await flatcache.create(
         `scheduleArr.json`,
         `./cache/scheduleArr`,

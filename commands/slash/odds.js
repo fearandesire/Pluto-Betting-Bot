@@ -25,6 +25,7 @@ export class odds extends Command {
     }
 
     async chatInputRun(interaction) {
+        await interaction.deferReply({ ephemeral: true })
         const userid = interaction.user.id
         const interactionEph = true
         await returnOdds(interaction, interactionEph)
