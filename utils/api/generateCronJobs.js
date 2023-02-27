@@ -63,7 +63,7 @@ export default async function generateCronJobs(matches) {
             })
             await checkCompleted()
         })
-        await rangeManager({ post: true, range1, range2 })
+        await rangeManager({ post: true, r1: range1, r2: range2 })
         const rangeObj = {
             range1,
             range2,

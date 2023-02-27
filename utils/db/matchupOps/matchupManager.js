@@ -43,6 +43,12 @@ export async function rangeRefresh() {
     const ranges = await db.manyOrNone(`SELECT * FROM "${RANGES}"`)
     if (!_.isEmpty(ranges)) {
         const { range1, range2 } = ranges[0]
+
+        if (range1 === null) {
+            Log.Red(`No ranges were found in the database.`)
+            return false
+        }
+        await console.log(`Ranges: ${range1} ${range2}`)
         if (range1 !== undefined) {
             const splitrange1 = range1.split(' ')
             const day = splitrange1[2]
