@@ -4,6 +4,7 @@ import { QuickError, embedReply } from '#embed'
 import { FileRunning } from '#botClasses/FileRunning'
 import { Log } from '#LogColor'
 import { confirmBet } from '#utilBetOps/confirmBet'
+import { debugLogging as debug } from '../../bot_res/debugLogging.js'
 import { fetchBalance } from '#utilCurrency/fetchBalance'
 import { pendingBet } from '#utilValidate/pendingBet'
 import { resolveMatchup } from '#cacheUtil/resolveMatchup'
@@ -15,7 +16,7 @@ import { validateData } from './../validation/validateData.js'
  * @summary - Checks if the team the user wishes to bet on exists in the database, and if it does, it will send
  * the user's bet information to the next function ({@link confirmBet})
  * @param {obj} message - The message object from the discord.js library
- * @param {obj} teamName - The team the user wishes to bet on.
+ * @param {obj} betOnTeamName - The team the user wishes to bet on.
  * @param {integer} betamount - The amount of money the user wishes to bet
  * @param {integer} user - The user's discord ID
  */

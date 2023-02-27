@@ -3,15 +3,14 @@ import { Log, LIVEMATCHUPS, BETSLIPS, LIVEBETS, CURRENCY } from '#config'
 import _ from 'lodash'
 import { closeBetLog } from '../../../logging.js'
 import { db } from '#db'
-import { memUse } from '#mem'
 import { resolvePayouts } from '#utilBetOps/resolvePayouts'
 import { wonDm } from '../wonDm.js'
 
 /**
  * @module closeWonBets
- * 1. Query DB and find all bets that chose the winning team [teamid] in the "NBAbetslips" table
- * 2. Calculate payout for the bets, and update the "NBAbetslips" table with the payout, as well as the betresult with "won"
- * 3. Update the user balance from the "currency" table with the payout
+ * 1. Query DB and find all bets that chose the winning team [teamid] in thedb
+ * 2. Calculate payout for the bets, and update the db  with the payout
+ * 3. Update the user balance in the dbwith the payout
  * 4. DM the user they won their bet
  * @param {string} winningTeam - The team that won the game
  * @param {string} homeOrAway - If this team that won was 'home' or 'away' - string literal
@@ -75,7 +74,7 @@ export async function closeWonBets(winningTeam, homeOrAway, losingTeam) {
                         [userid],
                     )
                     //# calc winnings
-                    const newUserBal = parseFloat(await userBal?.balance) + payoutAmount
+                    const newUserBal = parseFloat(userBal?.balance) + payoutAmount
                     await t.oneOrNone(
                         `UPDATE "${CURRENCY}" SET balance = $1 WHERE userid = $2`,
                         [newUserBal, userid],
@@ -99,7 +98,6 @@ export async function closeWonBets(winningTeam, homeOrAway, losingTeam) {
                         `Successfully closed bet ${betId} || User ID: ${userid}`,
                     )
 
-                    await memUse(`closeWonBets`, `Post-Close Won`)
                 }
                 resolve()
             }

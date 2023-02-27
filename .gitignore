@@ -125,3 +125,12 @@ utils/unitTesting/**
 lib/images/**
 lib/teamList.js
 commands/slash/devEval.js
+.env.nbac
+.env.nflc
+.env.dev
+.scannerwork/.sonar_lock
+.scannerwork/report-task.txt
+.vscode/settings.json
+.prettierrc.json
+commands/slash/devEval2.js
+.vscode/launch.json

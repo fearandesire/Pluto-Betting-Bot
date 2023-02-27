@@ -1,6 +1,7 @@
 import { Log, BETSLIPS, LIVEBETS, CURRENCY } from '#config'
 import { closeBetLog } from '#winstonLogger'
 import { db } from '#db'
+import { lostDm } from '../../lostDm.js'
 import { resolvePayouts } from '#utilBetOps/resolvePayouts'
 import { wonDm } from '../../wonDm.js'
 
@@ -68,7 +69,6 @@ export async function closeOldBets(winningTeam, losingTeam, odds, matchid) {
                         [`newBalance`]: newUserBal,
                     }
                     await wonDm(wonBetInformation)
-                    resolve()
                 }
             }
             var getLosers = await t.manyOrNone(

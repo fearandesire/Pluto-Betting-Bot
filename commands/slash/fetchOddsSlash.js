@@ -9,7 +9,7 @@ export class fetchOddsSlash extends Command {
             name: 'fetchOddsSlash',
             aliases: [''],
             description:
-                'Fetch all odds for the week manually. Please note this is automatically performed every week.',
+                'Fetch all odds for the day manually. Please note this is automatically performed every daily.',
             chatInputCommand: {
                 register: true,
             },
@@ -25,6 +25,7 @@ export class fetchOddsSlash extends Command {
             //    { idHints: [`1022940422974226432`] },
         )
     }
+
     async chatInputRun(interaction) {
         await interaction.deferReply()
         if (!interaction.guildId) {
@@ -34,7 +35,7 @@ export class fetchOddsSlash extends Command {
             })
             return
         }
-        var userid = interaction.user.id
+        const userid = interaction.user.id
         await Log.Red(`User ${userid} is made a request to manually fetching odds.`)
         await interaction.followUp({
             content: `Collecting odds.`,

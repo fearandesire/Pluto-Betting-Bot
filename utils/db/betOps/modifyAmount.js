@@ -26,10 +26,6 @@ export function modifyAmount(interaction, userid, betid, amount) {
         const convertBal = parseInt(userBal.balance)
         const tempBal = convertBetAmount + convertBal
         const newBal = tempBal - amount
-        await t.oneOrNone(`UPDATE currency SET balance = $1 WHERE userid = $2`, [
-            newBal,
-            userid,
-        ])
         await t.oneOrNone(
             `UPDATE "${CURRENCY}" SET balance = $1 WHERE userid = $2`,
             [newBal, userid],

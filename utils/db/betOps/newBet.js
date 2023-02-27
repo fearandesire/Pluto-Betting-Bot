@@ -76,7 +76,7 @@ export async function newBet(interaction, betOnTeam, betAmount) {
             },
             // verify if the user already has a bet on this matchup
             async function verDup() {
-                await verifyDupBet(interaction, user, matchupId)
+                await verifyDupBet(interaction, user, matchupId, true)
                 return
             },
             // setup the bet

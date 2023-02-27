@@ -2,7 +2,7 @@ import { Log } from '#LogColor'
 import { SapDiscClient } from '#main'
 import { db } from '#db'
 import { dmLog } from '../../logging.js'
-import { embedReply, CURRENCY } from '#config'
+import { embedReply, CURRENCY, formatCurrency } from '#config'
 import { giveMoneyLog } from '#winstonLogger'
 import { isInServer } from '../../bot_res/isInServer.js'
 
@@ -30,8 +30,8 @@ export async function giveBalance(
         var updatebalance = parseInt(currentBalance) + parseInt(transferammount)
         var isSilent = interactionEph ? true : false
         var embObj = {
-            title: `:moneybag: Added Money`,
-            description: `You have successfully given ${transferammount} to <@${targetUserId}>!`,
+            title: `:moneybag: Sent Money`,
+            description: `You have sent ${formatCurrency(transferammount)} to <@${targetUserId}>!`,
             color: `#00ff40`,
             silent: isSilent,
             target: `reply`,
@@ -47,6 +47,7 @@ export async function giveBalance(
                 title: `:moneybag: Received Money`,
                 description: `You have received $${transferammount} from <@${interaction.user.id}>!`,
                 color: `#00ff40`,
+                footer: ''
             }
             await SapDiscClient.users.fetch(`${targetUserId}`).then(async (user) => {
                 if (!user) {

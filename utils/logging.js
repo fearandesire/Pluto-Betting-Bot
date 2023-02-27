@@ -7,7 +7,7 @@ import winston, { addColors } from 'winston'
 import stringifyObject from 'stringify-object'
 import DailyRotateFile from 'winston-daily-rotate-file'
 
-var logDir = 'logs'
+const logDir = 'logs'
 if (!fs.existsSync(logDir)) {
     fs.mkdirSync(logDir)
 }
@@ -34,7 +34,7 @@ addColors({
 // # arrow function to quick-create label + msg object
 export const labelMsg = (label, msg) => ({ label, message: msg })
 
-let timestamp = winston.format.timestamp({
+const timestamp = winston.format.timestamp({
     format: 'MM-DD HH:mm:ss',
 })
 
@@ -103,8 +103,8 @@ const consoleTransport = new winston.transports.Console({
     format: combine(consoleFormat),
 })
 
-//# Global Format Config
-var FORMAT = combine(
+// # Global Format Config
+const FORMAT = combine(
     splat(),
     prettyPrint({
         colorize: true,
@@ -127,6 +127,27 @@ export const debugLog = winston.createLogger({
             format: FORMAT,
         }),
         consoleTransport,
+    ],
+})
+
+export const gameChanImg = winston.createLogger({
+    level: 'info',
+    format: winston.format.combine(
+        winston.format.colorize(),
+        splat(),
+        winston.format.prettyPrint({
+            colorize: true,
+            depth: 5,
+        }),
+        timestamp,
+        customWinstonFormat,
+    ),
+    transports: [
+        new winston.transports.File({
+            filename: 'logs/faError.log',
+            level: 'error',
+        }),
+        new winston.transports.File({ filename: 'logs/gameChanImg.log' }),
     ],
 })
 
@@ -228,6 +249,7 @@ export const validateExistingUserLog = winston.createLogger({
         new winston.transports.File({ filename: 'logs/validateExistingUser.log' }),
     ],
 })
+
 export const processDailyClaimLog = winston.createLogger({
     level: 'info',
     format: winston.format.combine(
@@ -330,7 +352,7 @@ export const betSlipLog = winston.createLogger({
 })
 
 export const checkCompletedLog = winston.createLogger({
-    levels: levels,
+    levels,
     format: FORMAT,
     transports: [
         new winston.transports.File({
@@ -416,7 +438,7 @@ export const deleteBetArrLog = winston.createLogger({
     ],
 })
 export const collectOddsLog = winston.createLogger({
-    levels: levels,
+    levels,
     format: FORMAT,
     transports: [
         new winston.transports.File({
@@ -426,7 +448,7 @@ export const collectOddsLog = winston.createLogger({
         new winston.transports.File({ filename: 'logs/collectOdds.log' }),
     ],
 })
-export const createMatchupsLog = winston.createLogger({
+export const storeMatchupsLog = winston.createLogger({
     level: 'info',
     format: winston.format.combine(
         winston.format.colorize(),
@@ -440,10 +462,10 @@ export const createMatchupsLog = winston.createLogger({
     ),
     transports: [
         new winston.transports.File({
-            filename: 'logs/createMatchupsErr.log',
+            filename: 'logs/storeMatchupsErr.log',
             level: 'error',
         }),
-        new winston.transports.File({ filename: 'logs/createMatchups.log' }),
+        new winston.transports.File({ filename: 'logs/storeMatchups.log' }),
     ],
 })
 export const gatherOddsLog = winston.createLogger({

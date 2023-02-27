@@ -5,7 +5,7 @@ import { pendingBet } from './pendingBet.js'
 
 /**
  * @module validateExistingUser -
- * Validates if a user is registered with the bot (via their userid in 'currency' table)
+ * Validates if a user is registered with the bot (via their userid in the profiles table)
  * @param {obj} message - Discord.Message
  * @param {integer} userid - The user's ID
  * @returns {boolean} True if the user is registered, throws error otherwise

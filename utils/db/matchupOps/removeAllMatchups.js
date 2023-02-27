@@ -1,5 +1,5 @@
 import { db } from '#db'
-import { dmMe } from '../../bot_res/dmMe.js'
+import dmMe from '../../bot_res/dmMe.js'
 import { flatcache, LIVEMATCHUPS } from '#config'
 
 export async function removeAllMatchups() {
@@ -9,8 +9,8 @@ export async function removeAllMatchups() {
             async () =>
                 await dmMe(`Issue occured deleting matchups from DB.`, `error`),
         )
-    var oddsCache = flatcache.create(`oddsCache.json`, './cache/dailyOdds')
-    var matchupCache = oddsCache.getKey(`matchups`)
+    const oddsCache = flatcache.create(`oddsCache.json`, './cache/dailyOdds')
+    const matchupCache = oddsCache.getKey(`matchups`)
     if (!matchupCache || Object.keys(matchupCache).length === 0) {
         await dmMe(`Matchups removed from the DB.\nCache was empty.`)
         return
@@ -18,5 +18,4 @@ export async function removeAllMatchups() {
     await oddsCache.removeKey(`matchups`)
     oddsCache.save(true)
     await dmMe(`Successfully cleared all matchups in the DB & cache`)
-    return
 }

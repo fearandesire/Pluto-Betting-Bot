@@ -18,9 +18,6 @@ export async function processClaim(inputuserid, interaction) {
     var today = new Date()
     //# Convert the current time & last claim time to unix
     var rightNow = await getUnixTime(fromUnixTime(today))
-    Log.Yellow(
-        `[processClaim.js] Processing daily claim request for ${inputuserid}`,
-    )
     let embObj
     db.tx('processClaim-Transaction', async (t) => {
         //? Search for user via their Discord ID in the database
@@ -63,7 +60,6 @@ export async function processClaim(inputuserid, interaction) {
             var passedCooldown = await isAfter(rightNowISO, cooldown)
             if (passedCooldown == false) {
                 var timeLeft = await formatDistanceStrict(rightNowISO, cooldown)
-                Log.BrightBlue(`[processClaim.js] User ${inputuserid} is on cooldown.`)
                 interaction.reply({
                     content: `You are on cooldown! You can collect your daily $100 again in **${timeLeft}**`,
                     ephemeral: true,

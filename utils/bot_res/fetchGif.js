@@ -1,3 +1,5 @@
+import { gameChanImg as gameImgLog } from '../logging.js'
+
 /**
  * @module fecthGif
  * Use Giphy API to fetch a random gif
@@ -19,12 +21,18 @@ export async function fetchGif(term) {
     const selectRandomTerm =
         randomTerms[Math.floor(Math.random() * randomTerms.length)]
     const giphyKey = process.env.GIPHYAPIKEY
-    console.log(`SELECTED RANDOM TERM: ${selectRandomTerm}`)
     // # Query Giphy API with team name + alt. term
     const url = `https://api.giphy.com/v1/gifs/search?api_key=${giphyKey}&q=${selectRandomTerm}&limit=6&offset=0&rating=pg-13&lang=en`
     const giphy = await fetch(url).then((res) => res.json())
     // # Select 1 random gif from the 5 returned
     const gif = giphy.data[Math.floor(Math.random() * giphy.data.length)]
+    if (!gif) {
+        throw new Error('Unable to query Giphy API, no gif was collected.')
+    }
+    gameImgLog.info({
+        level: 'info',
+        message: `[Game Image]\nTeam: ${term}\nSelected Term: ${selectRandomTerm}\nURL Selected: ${gif.images.original.url}`,
+    })
     // # Return the gif's direct image link
     return gif.images.original.url
 }

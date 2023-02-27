@@ -1,7 +1,6 @@
 import Fuse from 'fuse.js'
 import { resolveTeamLog } from '../logging.js'
-import { teamList } from '#lib/teamList'
-import { teamColors } from '#lib/teamColors'
+import { teams } from '#env'
 
 /**
  * Resolve a team name using fuzzy search & comparison to the list of teams saved locally.
@@ -10,12 +9,12 @@ import { teamColors } from '#lib/teamColors'
  */
 
 export async function resolveTeam(teamName) {
-    var teams = teamList
+    const teamsObj = teams 
     const options = {
         includeScore: true,
         keys: ['name'],
     }
-    const fuse = new Fuse(teams, options)
+    const fuse = new Fuse(teamsObj, options)
     const result = fuse.search(`${teamName}`)
     var foundTeam = result[0]
     if (!foundTeam) {
@@ -36,12 +35,12 @@ export async function resolveTeam(teamName) {
  */
 
 export async function resolveTeamColor(teamName) {
-    var teams = teamColors
+    const teamsObj = teams
     const options = {
         includeScore: true,
         keys: ['name'],
     }
-    const fuse = new Fuse(teams, options)
+    const fuse = new Fuse(teamsObj, options)
     const result = fuse.search(`${teamName}`)
     var foundTeam = result[0]
     if (!foundTeam) {

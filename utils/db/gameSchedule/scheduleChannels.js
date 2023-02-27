@@ -1,11 +1,12 @@
-import { Log, container } from '#config'
 import flatcache from 'flat-cache'
-import { createChannel } from './createChannel.js'
 import { createRequire } from 'module'
-import { getShortName } from './../../bot_res/getShortName.js'
+import _ from 'lodash'
+import { Log, container } from '#config'
+import { createChannel } from './createChannel.js'
+import { getShortName } from '../../bot_res/getShortName.js'
 import { scheduleChanLog } from '#winstonLogger'
 import { cronMath } from './cronMath.js'
-import _ from 'lodash'
+
 const require = createRequire(import.meta.url)
 const cron = require('node-cron')
 
@@ -32,7 +33,7 @@ export async function scheduleChannels(
         schArr = await schCache.getKey(`scheduleArr`)
     }
     await console.log(`scheduleArr Array -->\n`, schArr)
-    var newCron = await new cronMath(cronStartTime).subtract(1, `hours`)
+    const newCron = await new cronMath(cronStartTime).subtract(1, `hours`)
     homeTeam = await getShortName(homeTeam)
     awayTeam = await getShortName(awayTeam)
     await Log.Yellow(
@@ -41,7 +42,7 @@ export async function scheduleChannels(
     await scheduleChanLog.info(
         `Creating a Cron Job to create a game channel for: ${awayTeam} vs ${homeTeam} | Cron Time: ${newCron}`,
     )
-    var createCron = async () => {
+    const createCron = async () => {
         await cron.schedule(
             `${newCron}`,
             async () => {
@@ -69,6 +70,5 @@ export async function scheduleChannels(
             await schArr.push(schStr)
         }
         await schCache.save(true)
-        return
     })
 }

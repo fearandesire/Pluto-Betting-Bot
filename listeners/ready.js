@@ -1,10 +1,9 @@
 import { Listener } from '@sapphire/framework'
-import { Log } from '#LogColor'
-import { completedReq } from '../utils/api/completedReq.js'
 import { createRequire } from 'module'
-import { dailyOps } from '../utils/bot_res/dailyOps.js'
+import { Log } from '#LogColor'
 import { fetchSchedule } from '../utils/db/gameSchedule/fetchSchedule.js'
 import { scheduleReq } from '#api/scheduleReq'
+import { rangeRefresh } from '../utils/db/matchupOps/matchupManager.js'
 
 const require = createRequire(import.meta.url)
 const cron = require('cronitor')(`f9f7339479104e79bf2b52eb9c2242bf`)
@@ -19,6 +18,7 @@ export class ReadyListener extends Listener {
             event: 'ready',
         })
     }
+
     run(SapDiscClient) {
         const {
             username, // eslint-disable-line
@@ -28,18 +28,13 @@ export class ReadyListener extends Listener {
 }
 /** On a timeout to ensure bot is logged in. */
 setTimeout(async () => {
-    //# Queue Cron for for games schedule
-    await scheduleReq()
-    //# Restart Operation: Check for game channels to be scheduled on restart
-    if (process.env.envMode == 'Online') {
+    // # Restart Operation: Check for game channels to be scheduled on restart
+    if (process.env.NODE_ENV === 'production') {
+        // # Queue Cron for for games schedule
+        await scheduleReq()
         await fetchSchedule()
+        await rangeRefresh()
     }
-    //# Queue Daily Cron to create more Crons related to games
-    await new completedReq().dailyCheck().then(() => {
-        Log.Green(
-            `[ready] Called \`completedReq\` to initialize the daily 'resolveCompCron' Cron Job ->\nCron Time: ${process.env.CHECK_COMPLETED_TIMER}`,
-        )
-    })
 }, 5000)
 
 Log.Green(`[Startup]: On-Load Processes started!`)

@@ -9,6 +9,7 @@ import { LIVEBETS } from '#config'
  * @returns {obj} The result of the query.
  * @references {@link verifyDuplicateBet.js} - Resolves promise if data is found, rejects promise if data is not found.
  */
+
 export function isDuplicateBet(userid, matchupId) {
     return db.oneOrNone(
         `SELECT * FROM "${LIVEBETS}" WHERE userid = $1 AND matchid = $2`,

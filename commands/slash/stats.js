@@ -1,0 +1,60 @@
+import { Command } from '@sapphire/framework'
+import { getBettingStats } from '#botUtil/getBettingStats'
+import { QuickError } from '#config'
+
+export class Stats extends Command {
+	constructor(context, options) {
+		super(context, {
+			...options,
+			name: 'stats',
+			aliases: [''],
+			description: "View betting stats for yourself, or in 'others'.",
+			chatInputCommand: {
+				register: true,
+			},
+		})
+	}
+
+	registerApplicationCommands(registry) {
+		registry.registerChatInputCommand((builder) =>
+			builder //
+				.setName('stats')
+				.setDescription(this.description)
+				.addSubcommand((subcommand) =>
+					subcommand
+						.setName('all')
+						.setDescription('View betting stats for all.'),
+				)
+				.addSubcommand((subcommand) =>
+					subcommand
+						.setName('user')
+						.setDescription('View betting stats for a specific user.')
+						.addMentionableOption((option) =>
+							option //
+								.setName('user')
+								.setDescription(
+									`📘 Provide the @ of the user you want to view stats for.`,
+								)
+								.setRequired(true),
+						),
+				)
+				.addSubcommand((subcommand) =>
+					subcommand
+						.setName('self')
+						.setDescription('📗 View your betting stats.'),
+				),
+		)
+	}
+
+	async chatInputRun(interaction) {
+		const userid = interaction.user.id
+		await interaction.deferReply()
+		const cmd = interaction.options.getSubcommand()
+		const user = interaction.options.getMentionable('user')
+		const targetId = user ? user?.id : userid
+		if (cmd === 'all') {
+			await getBettingStats({ interaction, type: 'all' })
+		} else
+			await getBettingStats({ interaction, type: 'individual', id: targetId })
+	}
+}

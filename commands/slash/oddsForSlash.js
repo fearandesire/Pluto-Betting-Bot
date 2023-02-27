@@ -29,8 +29,9 @@ export class oddsForSlash extends Command {
             { idHints: [`1023326220932362300`] },
         )
     }
+
     async chatInputRun(interaction) {
-        var team = interaction.options.getString(`team`)
+        const team = interaction.options.getString(`team`)
         await returnOddsFor(interaction, team)
     }
 }

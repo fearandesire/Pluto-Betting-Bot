@@ -1,7 +1,7 @@
 import { formatISO, isAfter, parseISO } from 'date-fns'
 
-import { LIVEMATCHUPS } from '#config'
 import { db } from '#db'
+import { LIVEMATCHUPS } from '#config'
 
 /**
  * @module gameActive
@@ -14,23 +14,22 @@ import { db } from '#db'
  */
 
 export async function gameActive(teamName, matchupId) {
-    var searchForActive = await db
-        .oneOrNone(
-            `SELECT * FROM "${LIVEMATCHUPS}" WHERE "teamone" = $1 OR "teamtwo" = $1 AND "matchid" = $2 OR "teamone" = $1 OR "teamtwo" = $1`,
-            [teamName, matchupId],
-        )
-        .then((dbMatchup) => {
-            var gameStart = dbMatchup.startTime
-            var today = new Date()
-            var gameTimeIso = parseISO(gameStart)
-            var todayISO = formatISO(today, { representation: 'complete' })
-            var todayParsed = parseISO(todayISO)
-            var startedOrNot = isAfter(todayParsed, gameTimeIso)
-            if (startedOrNot) {
-                return true
-            } else {
-                return false
-            }
-        })
-    return searchForActive
+	const searchForActive = await db
+		.oneOrNone(
+			`SELECT * FROM "${LIVEMATCHUPS}" WHERE "teamone" = $1 OR "teamtwo" = $1 AND "matchid" = $2 OR "teamone" = $1 OR "teamtwo" = $1`,
+			[teamName, matchupId],
+		)
+		.then((dbMatchup) => {
+			const gameStart = dbMatchup.startTime
+			const today = new Date()
+			const gameTimeIso = parseISO(gameStart)
+			const todayISO = formatISO(today, { representation: 'complete' })
+			const todayParsed = parseISO(todayISO)
+			const startedOrNot = isAfter(todayParsed, gameTimeIso)
+			if (startedOrNot) {
+				return true
+			}
+			return false
+		})
+	return searchForActive
 }

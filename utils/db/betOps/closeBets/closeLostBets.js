@@ -3,12 +3,11 @@ import { Log, LIVEMATCHUPS, BETSLIPS, LIVEBETS } from '#config'
 import { closeBetLog } from '../../../logging.js'
 import { db } from '#db'
 import { lostDm } from '../lostDm.js'
-import { memUse } from '#mem'
 /**
  * @module closeLostBets
- * 1. Query DB and find all bets that chose the winning team [teamid] in the "NBAbetslips" table
- * 2. Calculate payout for the bets, and update the "NBAbetslips" table with the payout, as well as the betresult with "won"
- * 3. Update the user balance from the "currency" table with the payout
+ * 1. Query DB and find all bets that chose the winning team [teamid] in thedb
+ * 2. Calculate payout for the bets, and update the db with the payout, as well as the betresult with "won"
+ * 3. Update the user balance from the db with the payout
  * 4. DM the user they won their bet
  */
 
@@ -71,7 +70,6 @@ export async function closeLostBets(losingTeam, homeOrAway) {
                     await closeBetLog.info(
                         `Successfully closed bet ${betId} || ${userid}`,
                     )
-                    await memUse(`closeLostBets`, `Post-Close Lost`)
                 }
                 resolve()
             }

@@ -1,14 +1,13 @@
+import fetch from 'node-fetch'
 import { Log, SCORE, _ } from '#config'
 import { apiReqLog, checkCompletedLog } from '#winstonLogger'
 
 import { checkProgress } from '../db/matchupOps/progress/checkProgress.js'
 import { closeLostBets } from '../db/betOps/closeBets/closeLostBets.js'
 import { closeWonBets } from '../db/betOps/closeBets/closeWonBets.js'
-import { dmMe } from '../bot_res/dmMe.js'
-import fetch from 'node-fetch'
+import dmMe from '../bot_res/dmMe.js'
 import { getShortName } from '../bot_res/getShortName.js'
 import { idApiExisting } from '../db/validation/idApiExisting.js'
-import { memUse } from '#mem'
 import { queueDeleteChannel } from '../db/gameSchedule/queueDeleteChannel.js'
 import { removeMatch } from '#utilMatchups/removeMatchup'
 import { setProgress } from '../db/matchupOps/progress/setProgress.js'
@@ -34,7 +33,7 @@ const options = {
  */
 
 export async function checkCompleted() {
-    var fileName = `[checkCompleted.js]`
+    const fileName = `[checkCompleted.js]`
     await checkCompletedLog.info(`Init Check Completed`, {
         status: `Initilization check for completed games`,
     })
@@ -47,15 +46,14 @@ export async function checkCompleted() {
         await checkCompletedLog.error(`API Call Error`, { errorMsg: error })
         return
     }
-    await memUse(`checkCompleted`, `Post-API Init Connection`)
-    var compResults = apiJSON
+    const compResults = apiJSON
     await apiReqLog.info(`API Connection Info`, {
         status: `Connection successful`,
     })
-    let skippedGames = []
-    for await (let [key, value] of Object.entries(compResults)) {
+    const skippedGames = []
+    for await (const [key, value] of Object.entries(compResults)) {
         var idApi = value.id
-        //# check for API ID in the DB
+        // # check for API ID in the DB
         if (value.completed === true && !_.isEmpty(await idApiExisting(idApi))) {
             await checkCompletedLog.info(`Phase: 1`, {
                 status: `Collected a Completed Game`,
@@ -66,8 +64,8 @@ export async function checkCompleted() {
             await Log.Green(
                 `Step 1: - Completed Game Found || ${value.home_team} vs ${value.away_team}`,
             )
-            //# Check if we are in the middle of processing bets
-            var checkProg = await checkProgress(value.home_team, value.away_team)
+            // # Check if we are in the middle of processing bets
+            const checkProg = await checkProgress(value.home_team, value.away_team)
             await Log.Blue(`Step 1.5: - Check Progress: ${checkProg}`)
             if (checkProg == 'empty') {
                 await checkCompletedLog.info(`Unable to locate Matchup`, {
@@ -85,9 +83,9 @@ export async function checkCompleted() {
             } else if (checkProg === false) {
                 console.log(`checkProg: ${checkProg}`)
                 var gameChan
-                //# Queue game channel to be closed in 30 minutes
-                var hTeamShort = await getShortName(value.home_team)
-                var aTeamShort = await getShortName(value.away_team)
+                // # Queue game channel to be closed in 30 minutes
+                const hTeamShort = await getShortName(value.home_team)
+                const aTeamShort = await getShortName(value.away_team)
                 gameChan = `${aTeamShort}-vs-${hTeamShort}`
                 try {
                     await queueDeleteChannel(gameChan)
@@ -107,8 +105,9 @@ export async function checkCompleted() {
                         erroMsg: `Error occured during locate / delete game channel for ${value.home_team} vs. ${value.away_team}`,
                     })
                 }
-                let detWin = await determineWinner(value)
-                let { winner, homeOrAwayWon, losingTeam, losingTeamHomeOrAway } = detWin
+                const detWin = await determineWinner(value)
+                const { winner, homeOrAwayWon, losingTeam, losingTeamHomeOrAway } =
+                    detWin
                 await checkCompletedLog.info({
                     status: `Calculating Winner`,
                     hometeam: value.home_team,
@@ -117,19 +116,18 @@ export async function checkCompleted() {
                     statusMsg: `Winner: Home Team: ${winner}`,
                 })
                 await Log.Green(`Step 4: Winner Determined || ${winner}`)
-                //& Declare the matchup as being processed to prevent overlapping the process of closing bets
+                // & Declare the matchup as being processed to prevent overlapping the process of closing bets
                 await setProgress(value.home_team, value.away_team)
                 await Log.Green(
                     `Step 5: Progress Set to true || ${value.home_team} vs ${value.away_team}`,
                 )
-                //# Close the bets for the winners of the matchup
+                // # Close the bets for the winners of the matchup
                 await closeWonBets(winner, homeOrAwayWon, losingTeam).catch((err) => {
                     checkCompletedLog.error(`${fileName}`, {
                         error: `Error closing won bets for ${winner} || ${err}`,
                     })
-                    return
                 })
-                //# Close the bets for the losers of the matchup
+                // # Close the bets for the losers of the matchup
                 await closeLostBets(losingTeam, losingTeamHomeOrAway, winner).catch(
                     (err) => {
                         checkCompletedLog.error(`Error`, {
@@ -138,7 +136,6 @@ export async function checkCompleted() {
                             awayteam: value.away_team,
                             apiId: idApi,
                         })
-                        return
                     },
                 )
                 await dmMe(`Closed Bets for ${value.home_team} vs ${value.away_team}`)

@@ -1,20 +1,20 @@
-import { Log, _, flatcache } from '#config'
+import { Log, _, flatcache, LIVEMATCHUPS } from '#config'
 
 import { db } from '#db'
 
 /**
- * @module saveMatchups - Save all matchups in the activematchups table from the DB to cache
+ * @module saveMatchups - Save all matchups from the DB to cache
  */
 
 export async function saveMatchups() {
-    db.manyOrNone('SELECT * FROM activematchups')
+    db.manyOrNone(`SELECT * FROM "${LIVEMATCHUPS}"`)
         .then((data) => {
             console.log(`Data from saveMatchups`, data)
             if (_.isEmpty(data)) {
                 console.log(`No active matchups found in the database`)
                 return false
             }
-            //# activematchups Schema: matchid, teamone, teamtwo, teamoneodds, teamtwoodds, dateofmatchup
+            //# Schema: matchid, teamone, teamtwo, teamoneodds, teamtwoodds, dateofmatchup
             var cache = flatcache.create(
                 'dbMatchups.json',
                 './cache/backups/dbMatchups',

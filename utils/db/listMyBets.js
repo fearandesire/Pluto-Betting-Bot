@@ -1,10 +1,9 @@
 /** @module listMyBets*/
 
-import { accounting, container, embedReply } from '#config'
+import { accounting, container, embedReply, QuickError, BETSLIPS } from '#config'
 
 import { FileRunning } from '#botClasses/FileRunning'
 import { Log } from '#LogColor'
-import { QuickError } from '#config'
 import { db } from '#db'
 import stringifyObject from 'stringify-object'
 
@@ -13,6 +12,8 @@ import stringifyObject from 'stringify-object'
  * Query the database for all bets placed by the user
  * @param {integer} userid - The user's Discord ID
  * @param {obj} message - The Duscord message object
+ *
+ *
  */
 export function listMyBets(userid, message) {
     container[`listBets-${userid}`] = []
@@ -20,7 +21,7 @@ export function listMyBets(userid, message) {
     //? This arrow function used in⁡⁣⁣⁢ 𝙙𝙗⁡⁣⁣⁢.𝙢𝙖𝙥⁡ is to declare what we want to do with ⁡⁢⁣⁣𝙚𝙖𝙘𝙝⁡ row of the query result (see pg-promise db.Map method).
 
     db.map(
-        `SELECT * FROM "betslips" WHERE userid = $1`,
+        `SELECT * FROM "${BETSLIPS}" WHERE userid = $1`,
         [userid],
         async (row) => {
             var amount = row.amount
@@ -83,7 +84,7 @@ export function listMyBets(userid, message) {
                 color: '#00FF00',
                 description: joinedBetsArr,
                 target: `reply`,
-                thumbnail: `${process.env.sportLogo}`,
+                thumbnail: `${process.env.sportsLogo}`,
                 footer: `The payout and profit numbers are potential values, as these games have yet to be completed.`,
             }
             await Log.Yellow(`Sending ${userid} their betslips - Embed`)
