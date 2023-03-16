@@ -53,8 +53,18 @@ export class Stats extends Command {
 		const user = interaction.options.getMentionable('user')
 		const targetId = user ? user?.id : userid
 		if (cmd === 'all') {
-			await getBettingStats({ interaction, type: 'all' })
+			await getBettingStats({ interaction, type: 'all' }).catch(async (err) => {
+				await QuickError(interaction, `Unable to collect stats.`)
+				console.error(err)
+			})
 		} else
-			await getBettingStats({ interaction, type: 'individual', id: targetId })
+			await getBettingStats({
+				interaction,
+				type: 'individual',
+				id: targetId,
+			}).catch(async (err) => {
+				await QuickError(interaction, `Unable to collect stats.`)
+				console.error(err)
+			})
 	}
 }

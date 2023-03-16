@@ -5,9 +5,9 @@ import { findEmoji } from '#botUtil/findEmoji'
 /**
  * @module statsEmbedBuilder - Builds the embed object for the stats command
  */
-export async function statsEmbedBuilder(results, username) {
+export async function statsEmbedBuilder(results, header) {
 	const totalBets = results.length
-	const totalBetAmount = _.sumBy(results, 'amount')
+	const totalBetAmount = _.sumBy(results, (bet) => parseInt(bet.amount, 10))
 	const averageBetAmount = totalBetAmount / totalBets
 	const mostAmountBet = _.maxBy(results, 'amount').amount
 	const lowestBet = _.minBy(results, 'amount').amount
@@ -32,10 +32,11 @@ export async function statsEmbedBuilder(results, username) {
 	Object.keys(dollarValues).forEach((key) => {
 		dollarValues[key] = formatCurrency(dollarValues[key])
 	})
-
+	const color = header === 'All users' ? '#b7b4d6' : '#ff0080'
+	await console.log(color)
 	const teamEmoji = (await findEmoji(mostBetOnTeam)) || `:star:`
 	const embedObject = {
-		title: `${username} Betting Stats:`,
+		title: `${header} Betting Stats:`,
 		description: `
         :chart_with_upwards_trend: **Totals:** :chart_with_downwards_trend:
         Wagered: \`${dollarValues.totalBetAmount}\` 
@@ -52,7 +53,7 @@ export async function statsEmbedBuilder(results, username) {
         Total Wins: \`${totalWins}\`
         Winning Percentage: \`${winningPercentage}%\`
         Majority bet on: \`${mostBetOnTeam}\` ${teamEmoji}`,
-		color: `#b7b4d6`,
+		color,
 	}
 	return embedObject
 }
