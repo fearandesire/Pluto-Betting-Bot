@@ -45,13 +45,17 @@ export async function statsEmbedBuilder(results, header) {
         
         :bar_chart: **Min/Max:**
         __Profits:__
-        Highest: \`${dollarValues.highestProfit}\` | Lowest: \`${dollarValues.lowestProfit}\` 
+        Highest: \`${dollarValues.highestProfit}\` | Lowest: \`${
+			dollarValues.lowestProfit
+		}\` 
         __Wager Amount:__
-        Highest: \`${dollarValues.mostAmountBet}\`  | Lowest: \`${dollarValues.lowestBet}\` 
+        Highest: \`${dollarValues.mostAmountBet}\`  | Lowest: \`${
+			dollarValues.lowestBet
+		}\` 
         
         :mag_right: **Misc:**
         Total Wins: \`${totalWins}\`
-        Winning Percentage: \`${winningPercentage}%\`
+        Winning Percentage: \`${winningPercentage.toFixed(2)}%\`
         Majority bet on: \`${mostBetOnTeam}\` ${teamEmoji}`,
 		color,
 	}
