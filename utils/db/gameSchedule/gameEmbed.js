@@ -6,7 +6,7 @@ import { resolveTeam } from '#cmdUtil/resolveTeam'
 import { validateData } from '../validation/validateData.js'
 import { LIVEBETS } from '#config'
 import { resolveTeamColor } from '../../cmd_res/resolveTeam.js'
-import { fetchGif } from '#utilBot/fetchGif'
+import { fetchVsImg } from '#utilBot/fetchVsImg'
 /**
 
  * @module gameEmbed
@@ -52,12 +52,7 @@ export async function gameEmbed(hometeam, awayteam) {
         ? await resolveMatchup(aTeam, `odds`)
         : `N/A`
     const favoredTeam = Number(hOdds) < Number(aOdds) ? hTeam : aTeam // If the home team has higher odds, they are favored, otherwise the away team is favored
-    let gifLink
-    if (favoredTeam === hTeam) {
-        gifLink = await fetchGif(hTeam)
-    } else if (favoredTeam === aTeam) {
-        gifLink = await fetchGif(aTeam)
-    }
+    const imgLink = await fetchVsImg(`${hTeam} vs ${aTeam}`)
     const color = await resolveTeamColor(favoredTeam)
     // # collect team emoji
     const teamEmoji = (await findEmoji(favoredTeam)) || ''
@@ -76,6 +71,8 @@ export async function gameEmbed(hometeam, awayteam) {
         .setFooter(``)
         .setColor(`${color}`)
         .setThumbnail(`${guildIcon}`)
-        .setImage(`${gifLink}`)
+        if (imgLink) {
+            embObj.setImage(`${imgLink}`)
+        }
     return embObj
 }

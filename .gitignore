@@ -140,3 +140,7 @@ commands/slash/devEval2.js
 .scannerwork/.sonar_lock
 .scannerwork/report-task.txt
 commands/slash/devEval2.js
+
+
+#vscode settings
+.vscode/
