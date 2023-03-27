@@ -99,6 +99,7 @@
 		"pm2": "^5.2.0",
 		"postgresql": "^0.0.1",
 		"pupeteer": "^0.0.1",
+		"puppeteer": "^19.8.0",
 		"statcord.js": "^3.4.3",
 		"stringify-object": "^4.0.1",
 		"winston": "^3.8.2",
