@@ -1,7 +1,7 @@
 import flatcache from 'flat-cache'
 import { createRequire } from 'module'
 import _ from 'lodash'
-import { Log, container } from '#config'
+import { Log } from '#config'
 import { createChannel } from './createChannel.js'
 import { getShortName } from '../../bot_res/getShortName.js'
 import { scheduleChanLog } from '#winstonLogger'
