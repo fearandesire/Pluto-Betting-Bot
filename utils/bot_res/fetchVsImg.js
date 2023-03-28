@@ -7,53 +7,35 @@ import puppeteer from 'puppeteer'
  * @returns {string} - The direct image link
  */
 
-export async function fetchVsImg(searchTerm) {
-	// Launching a new browser instance with puppeteer
+export async function fetchVsImg(searchTerm, customSearch) {
 	const browser = await puppeteer.launch({
 		headless: true,
-		args: ['--no-sandbox'],
 	})
 
-	// Opening a new page in the browser
 	const page = await browser.newPage()
 
-	// Navigating to the Google Images website
-	await page.goto('https://www.google.com/imghp')
+	await page.goto(customSearch)
 
-	// Typing the search term into the search box and clicking the "Search" button
-	await page.type(
-		'body > div.L3eUgb > div.o3j99.ikrT4e.om7nvf > form > div:nth-child(1) > div.A8SBwf > div.RNNXgb > div > div.a4bIc > div',
-		`${searchTerm} ESPN`,
-	)
+	await page.keyboard.press('Tab')
+
+	// # Type search term
+	await page.keyboard.type(`${searchTerm} ESPN`)
+
 	await page.keyboard.press('Enter')
-	const firsResSelector = `#islrg > div.islrc > div:nth-child(2) > a.wXeWr.islib.nfEiy > div.bRMDJf.islir`
-	// Waiting for the results to load
-	await page.waitForSelector(firsResSelector, { timeout: 50000 })
+	await page.waitForTimeout(1000)
 
-	// # Click the first result
-	await page.click(firsResSelector)
-	// Adding a short delay to ensure the image has fully loaded
-
-	// Wait for the image to fully load
-	await page.waitForTimeout(2000)
-
-	await page.waitForSelector(
-		`#Sva75c > div.DyeYj > div > div.dFMRD > div.pxAole > div.tvh9oe.BIB1wf > c-wiz > div > div.OUZ5W > div.zjoqD > div.qdnLaf.isv-id.b0vFpe > div > a > img`,
-		{ timeout: 5000 },
+	await page.click(
+		`#___gcse_0 > div > div > div > div.gsc-wrapper > div.gsc-resultsbox-visible > div.gsc-resultsRoot.gsc-tabData.gsc-tabdActive > div > div.gsc-expansionArea > div:nth-child(1) > div.gs-result.gs-imageResult.gs-imageResult-popup > div.gs-image-thumbnail-box > div`,
 	)
-	// Retrieving the URL of the image
-	const imgUrl = await page.evaluate(async () => {
-		const getImage = await document
-			.querySelector(
-				'#Sva75c > div.DyeYj > div > div.dFMRD > div.pxAole > div.tvh9oe.BIB1wf > c-wiz > div > div.OUZ5W > div.zjoqD > div.qdnLaf.isv-id.b0vFpe > div > a > img',
-			)
-			.getAttribute('src')
-		return getImage
+
+	const imgUrl = await page.evaluate(() => {
+		const img = document.querySelector(
+			`#___gcse_0 > div > div > div > div.gsc-wrapper > div.gsc-resultsbox-visible > div.gsc-resultsRoot.gsc-tabData.gsc-tabdActive > div > div.gsc-expansionArea > div.gsc-imageResult.gsc-imageResult-popup.gsc-result.gs-selectedImageResult > div.gs-imagePreviewArea > a > img`,
+		)
+		return img.getAttribute('src')
 	})
 
-	// Closing the browser
 	await browser.close()
 
-	// Returning the image URL (or null if no compatible/matching result was found)
-	return imgUrl
+	return imgUrl || null
 }
