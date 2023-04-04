@@ -34,8 +34,8 @@ export function formatRange(cronString) {
     return statement
 }
 
-export const logCron = async (options) => {
-    const { title, msg } = options
+export const logCron = async (data) => {
+    const { title, msg } = data
     await Log.BrightBlue(
         `Init New Cron Job -->\n[Title]: ${title}\n[Msg]: ${msg || 'N/A'}`,
     )

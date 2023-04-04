@@ -38,10 +38,11 @@ export class giveMoneySlash extends Command {
             { idHints: [`1023303824888307863`] },
         )
     }
+    
     async chatInputRun(interaction) {
-        var userId = interaction.user.id
-        var targetId = interaction.options.getMentionable('user').user.id
-        var amount = interaction.options.getInteger('amount')
+        let userId = interaction.user.id
+        let targetId = interaction.options.getMentionable('user').user.id
+        let amount = interaction.options.getInteger('amount')
         if (amount < 1) {
             interaction.reply({
                 content: 'Please provide a valid amount.',

@@ -7,8 +7,9 @@ import { Log, _, flatcache } from '#config'
  */
 export async function gameDaysCache(dayName) {
 	const gameDayCache = flatcache.create('gameDaysCache.json', './cache/')
+	let gameDays
 	if (gameDayCache.getKey('gameDays') === undefined) {
-		var gameDays = gameDayCache.setKey(`gameDays`, [])
+		gameDays = gameDayCache.setKey(`gameDays`, [])
 		gameDayCache.save(true)
 		Log.Yellow(`Created Game Days Cache`)
 		return gameDays

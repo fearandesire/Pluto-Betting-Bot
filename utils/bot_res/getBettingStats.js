@@ -1,17 +1,19 @@
 /* eslint-disable no-console */
-import fs from 'fs'
 import _ from 'lodash'
 import { db } from '#db'
 import { statsEmbedBuilder } from '#botUtil/statsEmbBuilder'
-import { embedReply } from '#config'
+import { embedReply, BETSLIPS } from '#config'
 import { SapDiscClient } from '#main'
 
 export async function getBettingStats(options) {
 	console.log(`Getting all users betting stats...`)
 	const results = await db.any(`
     SELECT userid, amount, betresult, dateofbet, profit, teamid
-    FROM betslips
+    FROM "${BETSLIPS}"
   `)
+	if (!results) {
+		throw new Error(`No results found for stat collection.`)
+	}
 	if (!options) {
 		return new Error(`No options provided for stat collection.`)
 	}

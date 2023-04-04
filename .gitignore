@@ -140,3 +140,10 @@ commands/slash/devEval2.js
 .scannerwork/.sonar_lock
 .scannerwork/report-task.txt
 commands/slash/devEval2.js
+
+
+#vscode settings
+.vscode/
+Dockerfile
+docker-compose.yml
+docker-compose.debug.yml
