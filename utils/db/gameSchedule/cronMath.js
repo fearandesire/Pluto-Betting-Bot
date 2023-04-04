@@ -1,3 +1,4 @@
+/* eslint-disable default-case */
 /**
  * @module cronMath
  * Add or subtract from a Cron Job time string

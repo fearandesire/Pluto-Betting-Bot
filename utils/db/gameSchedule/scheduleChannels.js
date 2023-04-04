@@ -2,9 +2,9 @@ import flatcache from 'flat-cache'
 import { createRequire } from 'module'
 import _ from 'lodash'
 import { Log } from '#config'
+import { scheduleChanLog } from '#winstonLogger'
 import { createChannel } from './createChannel.js'
 import { getShortName } from '../../bot_res/getShortName.js'
-import { scheduleChanLog } from '#winstonLogger'
 import { cronMath } from './cronMath.js'
 
 const require = createRequire(import.meta.url)
@@ -37,7 +37,7 @@ export async function scheduleChannels(
 		schArr = await schCache.getKey(`scheduleArr`)
 	}
 	let newCron
-	if (noMath === false) {
+	if (!noMath) {
 		newCron = await new cronMath(cronStartTime).subtract(1, `hours`)
 	} else {
 		newCron = cronStartTime

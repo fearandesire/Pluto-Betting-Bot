@@ -1,5 +1,5 @@
 import { reply } from '../bot_res/reply.js'
-import { collectOdds } from './collectOdds.js'
+import collectOdds from './collectOdds.js'
 
 /**
  * Manual/Force request of an attempt to collect odds.
@@ -8,15 +8,15 @@ import { collectOdds } from './collectOdds.js'
  */
 
 export async function reqCollect(interaction) {
-    await collectOdds(interaction).then(async (resp) => {
-        if (resp === false) {
-            await reply(
-                interaction,
-                `Currently it appears there's no odds available. Please try again another time`,
-                true,
-            )
-        } else {
-            await reply(interaction, `Odds have been collected successfully.`)
-        }
-    })
+	await collectOdds(interaction).then(async (resp) => {
+		if (resp === false) {
+			await reply(
+				interaction,
+				`Currently it appears there's no odds available. Please try again another time`,
+				true,
+			)
+		} else {
+			await reply(interaction, `Odds have been collected successfully.`)
+		}
+	})
 }

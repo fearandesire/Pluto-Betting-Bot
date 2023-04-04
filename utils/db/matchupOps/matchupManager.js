@@ -2,9 +2,9 @@ import cron from 'node-cron'
 import { format } from 'date-fns'
 import { db } from '#db'
 import { LIVEMATCHUPS, RANGES } from '#env'
+import { Log, _ } from '#config'
 import { logCron } from '#apiUtils'
 import { checkCompleted } from '../../api/checkCompleted.js'
-import { Log, _ } from '#config'
 
 export function todaysDayNum() {
 	const d = new Date()
@@ -45,7 +45,7 @@ export async function rangeRefresh() {
 		const { range1, range2 } = ranges[0]
 
 		if (range1 === null) {
-			Log.Red(`No ranges were found in the database.`)
+			Log.Red(`No Cron Ranges were found in the database.`)
 			return false
 		}
 		await console.log(`Ranges: ${range1} ${range2}`)

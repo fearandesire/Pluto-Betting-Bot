@@ -1,5 +1,3 @@
-/* eslint-disable mocha/no-global-tests */
-
 import test from 'ava'
 import dotenv from 'dotenv'
 import { fetchVsImg } from '../utils/bot_res/fetchVsImg.js'

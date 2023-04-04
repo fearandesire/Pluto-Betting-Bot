@@ -2,6 +2,7 @@ import fetch from 'node-fetch'
 import { Log, _ } from '#config'
 import { apiReqLog, checkCompletedLog } from '#winstonLogger'
 import { SCORE } from '#env'
+import { removeMatch } from '#utilMatchups/removeMatchup'
 import { checkProgress } from '../db/matchupOps/progress/checkProgress.js'
 import { closeLostBets } from '../db/betOps/closeBets/closeLostBets.js'
 import { closeWonBets } from '../db/betOps/closeBets/closeWonBets.js'
@@ -9,7 +10,6 @@ import dmMe from '../bot_res/dmMe.js'
 import { getShortName } from '../bot_res/getShortName.js'
 import { idApiExisting } from '../db/validation/idApiExisting.js'
 import { queueDeleteChannel } from '../db/gameSchedule/queueDeleteChannel.js'
-import { removeMatch } from '#utilMatchups/removeMatchup'
 import { setProgress } from '../db/matchupOps/progress/setProgress.js'
 import { determineWinner } from '../bot_res/betOps/determineWinner.js'
 
@@ -29,7 +29,7 @@ const options = {
  * When evaluating a matchup, we:
  * 1. Fetch the matchup information from the database to retrieve the ID matching both teams
  * 2. Evaluate the matchup and compare scores in the API to determine the winner
- * 3. Once the winner is determined, the information is sent to {@link closeWonBets} & {@link @closeLostBets} to close the bets for the matchup
+ * 3. Once the winner is determined, the information is sent to {@link closeWonBets} & {@link closeLostBets} to close the bets for the matchup
  */
 
 export async function checkCompleted() {
@@ -52,7 +52,7 @@ export async function checkCompleted() {
 	})
 	const skippedGames = []
 	for await (const [key, value] of Object.entries(compResults)) {
-		var idApi = value.id
+		const idApi = value.id
 		// # check for API ID in the DB
 		if (value.completed === true && !_.isEmpty(await idApiExisting(idApi))) {
 			await checkCompletedLog.info(`Phase: 1`, {
@@ -67,7 +67,7 @@ export async function checkCompleted() {
 			// # Check if we are in the middle of processing bets
 			const checkProg = await checkProgress(value.home_team, value.away_team)
 			await Log.Blue(`Step 1.5: - Check Progress: ${checkProg}`)
-			if (checkProg == 'empty') {
+			if (checkProg === 'empty') {
 				await checkCompletedLog.info(`Unable to locate Matchup`, {
 					Phase: 1.5,
 					sourceFun: `checkProgress`,
@@ -82,11 +82,10 @@ export async function checkCompleted() {
 				continue
 			} else if (checkProg === false) {
 				console.log(`checkProg: ${checkProg}`)
-				var gameChan
 				// # Queue game channel to be closed in 30 minutes
 				const hTeamShort = await getShortName(value.home_team)
 				const aTeamShort = await getShortName(value.away_team)
-				gameChan = `${aTeamShort}-vs-${hTeamShort}`
+				const gameChan = `${aTeamShort}-vs-${hTeamShort}`
 				try {
 					await queueDeleteChannel(gameChan)
 					await Log.Green(

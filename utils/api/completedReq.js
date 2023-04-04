@@ -1,9 +1,9 @@
 import { createRequire } from 'module'
 import { Log, CHECK_COMPLETED_TIMER } from '#config'
 
-import { checkCompleted } from './checkCompleted.js'
 import { completedReqLog } from '#winstonLogger'
 import { isGameDay } from '#botUtil/isGameDay'
+import { checkCompleted } from './checkCompleted.js'
 import { resolveCompCron } from '../db/gameSchedule/resolveCompCron.js'
 import { reply } from '../bot_res/reply.js'
 
@@ -18,7 +18,7 @@ const cron = require('node-cron')
 
 export function completedReq() {
 	completedReqLog.info(`Running completedReq.js`)
-	/** @var CHECK_COMPLETED_TIMER is a Cron String provided in the `.env` file; This will dictate schedule to run `{@link resolveCompCron}`
+	/** `CHECK_COMPLETED_TIMER` is a Cron String provided in the `.env` file; This will dictate schedule to run `{@link resolveCompCron}`
 	 * This is set to run daily after the schedule ({@link scheduleReq}) has been collected.
 	 */
 	this.dailyCheck = async function () {

@@ -2,11 +2,11 @@
 
 import { Log, LIVEMATCHUPS, _, container, flatcache } from '#config'
 
-import { cronMath } from './cronMath.js'
 import { db } from '#db'
-import dmMe from '../../bot_res/dmMe.js'
 import { msgBotChan } from '#botUtil/msgBotChan'
 import { resolveToday } from '#dateUtil/resolveToday'
+import dmMe from '../../bot_res/dmMe.js'
+import { cronMath } from './cronMath.js'
 import { scheduleChannels } from './scheduleChannels.js'
 
 /**
@@ -42,15 +42,11 @@ export async function fetchSchedule(interaction) {
 				const awayTeam = value.teamtwo
 				const cronStartTime = value.cronstart
 				const legibleStartTime = value.legiblestart
-				const startTimeISO = value.startTime
-				// # Subtract 1 hour from the the cron start time to open the game channel an hour before the game starts
-				const newCron = await new cronMath(cronStartTime).subtract(1, `hours`)
 				await scheduleChannels(
 					homeTeam,
 					awayTeam,
-					newCron,
+					cronStartTime,
 					legibleStartTime,
-					true,
 				)
 			}
 		})

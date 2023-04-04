@@ -1,6 +1,6 @@
 {
 	"name": "bettingbot",
-	"version": "1.12.2",
+	"version": "1.13.0",
 	"description": "",
 	"main": "Pluto.mjs",
 	"prettier": "fenix-js-prettier-config",
@@ -13,7 +13,7 @@
 		"auto": "nodemon node ./Pluto.mjs",
 		"nflc": "cross-env NODE_ENV=production SERVERNAME=nfl SPORT=nfl EXP_PORT=3009  dotenv_config_path=./.env.nflc node Pluto.mjs",
 		"nbac": "cross-env NODE_ENV=production SERVERNAME=nba SPORT=nba EXP_PORT=3008 dotenv_config_path=./.env.nbac node Pluto.mjs",
-		"dev": "cross-env NODE_ENV=production SERVERNAME=dev SPORT=nba EXP_PORT=3002 dotenv_config_path=./.env.dev node Pluto.mjs"
+		"dev": "dotenv -e .env.dev node Pluto.mjs"
 	},
 	"imports": {
 		"#db": "./Database/dbindex.js",
@@ -64,6 +64,7 @@
 		"async": "^3.2.4",
 		"axios": "^1.2.3",
 		"bluebird": "^3.7.2",
+		"body-parser": "^1.20.2",
 		"colorette": "^2.0.17",
 		"cron": "^2.1.0",
 		"cron-job-manager": "^2.3.1",
@@ -91,6 +92,7 @@
 		"mocha": "^10.2.0",
 		"node-cache": "^5.1.2",
 		"node-cron": "^3.0.2",
+		"node-fetch": "^3.3.1",
 		"node-persist": "^3.1.0",
 		"nodemon": "^2.0.19",
 		"pg": "^8.7.3",
@@ -107,9 +109,12 @@
 	},
 	"devDependencies": {
 		"ava": "^5.2.0",
-		"eslint": "^8.17.0",
 		"eslint-config-airbnb": "^19.0.4",
 		"eslint-config-prettier": "^8.6.0",
+		"eslint-import-resolver-alias": "^1.1.2",
+		"eslint-import-resolver-node": "^0.3.7",
+		"eslint-plugin-ava": "^14.0.0",
+		"eslint-plugin-import": "^2.27.5",
 		"eslint-plugin-mocha": "^10.1.0",
 		"eslint-plugin-prettier": "^4.2.1",
 		"prettier-eslint-cli": "^7.1.0",
