@@ -1,12 +1,11 @@
 import { MessageEmbed } from 'discord.js'
 import { SapDiscClient } from '#main'
-import { findEmoji } from '../../bot_res/findEmoji.js'
 import { resolveMatchup } from '#cacheUtil/resolveMatchup'
-import { resolveTeam } from '#cmdUtil/resolveTeam'
+import { resolveTeam, resolveTeamColor } from '#cmdUtil/resolveTeam'
+import { LIVEBETS } from '#config'
+
 import { validateData } from '../validation/validateData.js'
-import { LIVEBETS, GOOGLE_CUSTOM } from '#config'
-import { resolveTeamColor } from '../../cmd_res/resolveTeam.js'
-import { fetchVsImg } from '#utilBot/fetchVsImg'
+import { findEmoji } from '../../bot_res/findEmoji.js'
 
 /**
  * @module gameEmbed
@@ -46,10 +45,6 @@ export async function gameEmbed(hometeam, awayteam) {
 		? await resolveMatchup(aTeam, `odds`)
 		: `N/A`
 	const favoredTeam = Number(hOdds) < Number(aOdds) ? hTeam : aTeam // If the home team has higher odds, they are favored, otherwise the away team is favored
-	const imgLink = await fetchVsImg(`${hTeam} vs ${aTeam}`, GOOGLE_CUSTOM).catch(
-		(err) => console.error(err),
-	)
-	await console.log(`Img Link generated: ${imgLink}`)
 	const color = await resolveTeamColor(favoredTeam)
 	// # collect team emoji
 	const teamEmoji = (await findEmoji(favoredTeam)) || ''
@@ -68,8 +63,5 @@ export async function gameEmbed(hometeam, awayteam) {
 		.setFooter(``)
 		.setColor(`${color}`)
 		.setThumbnail(`${guildIcon}`)
-	if (imgLink) {
-		embObj.setImage(`${imgLink}`)
-	}
 	return embObj
 }

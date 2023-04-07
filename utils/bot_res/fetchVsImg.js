@@ -1,41 +1,39 @@
-import puppeteer from 'puppeteer'
+/* eslint-disable prefer-promise-reject-errors */
+import fs from 'fs/promises'
+import path from 'path'
+import { fileURLToPath } from 'node:url'
 
 /**
  * @module fetchVsImg
- * Use Puppeteer to fetch the image for the game channel.
- * @param {string} searchTerm - The term to search for
- * @returns {string} - The direct image link
+ * @summary Retrieve local image file for the matchup.
+ * @param {string} matchup - The matchup to retrieve the image for
+ * @returns {Promise<Buffer>} A promise that resolves with the image data as a Buffer
  */
 
-export async function fetchVsImg(searchTerm, customSearch) {
-	const browser = await puppeteer.launch({
-		headless: true,
-	})
+export async function fetchVsImg(matchup) {
+	// Replace spaces with underscores in the matchup string
+	const matchupFileName = `${matchup.replace(/\s/g, '_')}.jpg`
 
-	const page = await browser.newPage()
+	// Get the directory path of the current module
+	const moduleDir = path.dirname(fileURLToPath(import.meta.url))
 
-	await page.goto(customSearch)
-
-	await page.keyboard.press('Tab')
-
-	// # Type search term
-	await page.keyboard.type(`${searchTerm} ESPN`)
-
-	await page.keyboard.press('Enter')
-	await page.waitForTimeout(1000)
-
-	await page.click(
-		`#___gcse_0 > div > div > div > div.gsc-wrapper > div.gsc-resultsbox-visible > div.gsc-resultsRoot.gsc-tabData.gsc-tabdActive > div > div.gsc-expansionArea > div:nth-child(1) > div.gs-result.gs-imageResult.gs-imageResult-popup > div.gs-image-thumbnail-box > div`,
+	// Construct the path to the matchup image file
+	const imagePath = path.join(
+		moduleDir,
+		'../../',
+		'lib',
+		'matchupimages',
+		`${process.env.SPORT}`,
+		matchupFileName,
 	)
 
-	const imgUrl = await page.evaluate(() => {
-		const img = document.querySelector(
-			`#___gcse_0 > div > div > div > div.gsc-wrapper > div.gsc-resultsbox-visible > div.gsc-resultsRoot.gsc-tabData.gsc-tabdActive > div > div.gsc-expansionArea > div.gsc-imageResult.gsc-imageResult-popup.gsc-result.gs-selectedImageResult > div.gs-imagePreviewArea > a > img`,
-		)
-		return img.getAttribute('src')
-	})
+	try {
+		// Read the image file as a binary buffer
+		const imageBuffer = await fs.readFile(imagePath)
 
-	await browser.close()
-
-	return imgUrl || null
+		return imageBuffer
+	} catch (error) {
+		// If there's an error reading the file, reject the promise with the error message
+		return Promise.reject(`Error fetching ${matchup} image: ${error.message}`)
+	}
 }
