@@ -58,9 +58,9 @@ export async function gameEmbed(hometeam, awayteam) {
 			`
 **The ${teamEmoji} ${favoredTeam} are favored to win this game!**
 
-*Type \`/about\` in the <#${process.env.bettingChan}> channel for information about Pluto*`,
+*Type \`/help\` in the <#${process.env.bettingChan}> channel place bets with Pluto*`,
 		)
-		.setFooter(``)
+		.setFooter({ text: `Pluto | Created by FENIX#7559` })
 		.setColor(`${color}`)
 		.setThumbnail(`${guildIcon}`)
 	return embObj

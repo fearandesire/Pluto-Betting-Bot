@@ -38,6 +38,8 @@ ${invisIndent} __◊ Automatic & Autonomous:__
 ${invisIndent} ◦ **Real-Time Bet processing**
 ${invisIndent} ◦ **Real-Time Game Channel scheduling, and deletion**
 ${invisIndent} ━━
+${invisIndent} Pluto uses virtual currency to aa safe and funenvironment 
+${invisIndent} **For usage, please refer to the /help command!**
 ${invisIndent} :heart: **Enjoy using Pluto? [Support development & server cost](https://ko-fi.com/fenix7559)**
 ${invisIndent} :nerd: [GitHub](https://github.com/fearandesire/Pluto-Betting-Bot/blob/main/README.md)
 ${invisIndent} :question: For questions/concerns, contact me @: **<@${process.env.botDevID}>**
