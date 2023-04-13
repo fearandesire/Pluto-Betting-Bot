@@ -36,7 +36,7 @@ export async function newBet(interaction, betOnTeam, betAmount) {
 	}
 
 	if (!matchInfo) {
-		QuickError(interaction, `Unable to locate a match for ${betOnTeam}`, true)
+		QuickError(interaction, `Unable to locate a match for ${betOnTeam}\nPlease check currently available matchups with `/odds`\nMatchups will become available as DraftKings provides them.`, true)
 		// # delete from pending
 		await new pendingBet().deletePending(user)
 		return
@@ -69,10 +69,6 @@ export async function newBet(interaction, betOnTeam, betAmount) {
 	// # using an async series to catch the errors and stop the process if any of the functions fail
 	async.series(
 		[
-			// ensure user is validated
-			async function valUser() {
-				await validateUser(interaction, user, true, true)
-			},
 			// verify if the user already has a bet on this matchup
 			async function verDup() {
 				await verifyDupBet(interaction, user, matchupId, true)
@@ -86,7 +82,7 @@ export async function newBet(interaction, betOnTeam, betAmount) {
 			if (err) {
 				Log.Red(err)
 				setupBetLog.error({ errorMsg: err })
-				QuickError(interaction, `Unable to place bet.`)
+				QuickError(interaction, `Unable to place your bet.`)
 				
 			}
 		},

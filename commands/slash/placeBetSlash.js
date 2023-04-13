@@ -1,6 +1,8 @@
 import { Command } from '@sapphire/framework'
 import { newBet } from '#utilBetOps/newBet'
 import { pendingBet } from '../../utils/db/validation/pendingBet.js'
+import { QuickError } from '#embed'
+import { validateUser } from '#utilValidate/validateExistingUser'
 
 export class placeBetSlash extends Command {
     constructor(context, options) {
@@ -41,8 +43,9 @@ export class placeBetSlash extends Command {
         await interaction.deferReply({
             content: `Submitting your bet, please wait.`,
         })
-        //console.log(interaction.user.id)
         var userid = interaction.user.id
+
+        await validateUser(interaction, userid, true, true)
         var hasPending = await new pendingBet().checkPending(userid)
         if (hasPending) {
             await interaction.editReply({

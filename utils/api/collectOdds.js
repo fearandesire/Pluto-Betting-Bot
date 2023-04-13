@@ -2,7 +2,7 @@ import _ from 'lodash'
 import fetch from 'node-fetch'
 import flatcache from 'flat-cache'
 import Promise from 'bluebird'
-import { ODDS, Log } from '#config'
+import { ODDS, Log, LIVEMATCHUPS } from '#config'
 import { assignMatchID } from '#botUtil/AssignIDs'
 import { storeMatchups } from '#utilMatchups/storeMatchups'
 import { cacheAdmn, inCache } from '#cacheMngr'
@@ -13,6 +13,8 @@ import generateCronJobs from './generateCronJobs.js'
 import IsoManager from '#iso'
 import IsoBuilder from '../time/IsoBuilder.js'
 import { fetchTodaysMatches } from '#matchMngr'
+import { db } from '#db';
+
 
 const oddsCache = flatcache.create(`oddsCache.json`, './cache/weeklyOdds')
 
@@ -44,11 +46,8 @@ export default async function collectOdds() {
 	const apiData = await fetch(apiUrl, { method: 'GET', headers }).then((res) =>
 		res.json(),
 	)
-	// ? Filter data by games that are scheduled today
-	const allGamesToday = apiData.filter((game) =>
-		new IsoBuilder(game.commence_time).isToday(),
-	)
-	const todaysGames = allGamesToday.filter((game) =>
+	// Filter out games from the past
+	const todaysGames = apiData.filter((game) =>
 		new IsoBuilder(game.commence_time).isPast(),
 	)
 
@@ -60,6 +59,17 @@ export default async function collectOdds() {
 	const matchups = {} // obj to store details of each match into cache
 	// ? Identify & store details for each game via the data collected
 	await Promise.map(todaysGames, async (game) => {
+		const idApi = game.id
+
+		// # Prevent duplicates
+		const existingMatchup = await db.oneOrNone(
+			`SELECT * FROM "${LIVEMATCHUPS}" WHERE "idapi" = $1`,
+			[idApi],
+		)
+		if (!_.isEmpty(existingMatchup)) {
+			return
+		}
+
 		const homeTeam = game.home_team
 		const awayTeam = game.away_team
 		const homeOdds = _.find(game.bookmakers[0]?.markets[0].outcomes, {
@@ -105,7 +115,7 @@ export default async function collectOdds() {
 			startTimeISO: game.commence_time,
 			cronStartTime,
 			legibleStartTime: legibleStart,
-			idApi: game.id,
+			idApi
 		}
 		await storeMatchups(colmdata) // # Store in database
 		await scheduleChannels(homeTeam, awayTeam, cronStartTime, legibleStart)
