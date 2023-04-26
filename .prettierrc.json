@@ -2,13 +2,13 @@
 	"singleQuote": true,
 	"trailingComma": "all",
 	"arrowParens": "always",
-	"printWidth": 20,
+	"printWidth": 60,
 	"endOfLine": "auto",
 	"tabWidth": 4,
-	"semi": true,
+	"semi": false,
 	"bracketSpacing": true,
-	"jsxBracketSameLine": false,
-	"jsxSingleQuote": false,
+	"jsxBracketSameLine": true,
+	"jsxSingleQuote": true,
 	"proseWrap": "preserve",
-	"useTabs": false
+	"useTabs": true
 }

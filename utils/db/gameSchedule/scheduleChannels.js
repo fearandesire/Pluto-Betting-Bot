@@ -23,19 +23,6 @@ export async function scheduleChannels(
 	legibleStartTime,
 	noMath,
 ) {
-	await console.log(
-		`Scheduling channel:\n${homeTeam} vs ${awayTeam} | ${cronStartTime} | ${legibleStartTime}`,
-	)
-	const schCache = await flatcache.create(
-		`scheduleArr.json`,
-		`./cache/scheduleArr`,
-	)
-	let schArr = (await schCache.getKey(`scheduleArr`)) || null
-	if (!schArr) {
-		await schCache.setKey(`scheduleArr`, [])
-		await schCache.save(true)
-		schArr = await schCache.getKey(`scheduleArr`)
-	}
 	let newCron
 	if (!noMath) {
 		newCron = await new cronMath(cronStartTime).subtract(1, `hours`)
@@ -66,17 +53,5 @@ export async function scheduleChannels(
 		await scheduleChanLog.info(
 			`Successfully created Cron Job to create a game channel for: ${awayTeam} vs ${homeTeam} | Cron Time: ${newCron}`,
 		)
-		// # Get first num in legibleStartTime string and subtract 1
-		let firstNum = legibleStartTime.match(/\d+/)
-		firstNum = Number(firstNum[0])
-		const adjNum = firstNum - 1
-		// # Replace it in the string
-		const replaced = legibleStartTime.replace(firstNum, adjNum)
-		const schStr = `• ${awayTeam} vs ${homeTeam} | ${replaced}`
-		const dupeCheck = _.find(schArr, (o) => o === schStr)
-		if (!dupeCheck) {
-			await schArr.push(schStr)
-		}
-		await schCache.save(true)
 	})
 }
