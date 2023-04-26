@@ -18,9 +18,14 @@ import { verifyDupBet } from '#utilValidate/verifyDuplicateBet'
  * @param {integer} betAmount - The amount of money the user is betting
  *
  */
-export async function newBet(interaction, betOnTeam, betAmount) {
+export async function newBet(
+	interaction,
+	betOnTeam,
+	betAmount,
+) {
 	const interactionObj = interaction
-	const user = interaction?.author?.id || interaction.user.id
+	const user =
+		interaction?.author?.id || interaction.user.id
 	betOnTeam = await resolveTeam(betOnTeam)
 	const matchInfo = await resolveMatchup(betOnTeam, null)
 	const negativeRgx = /-/g
@@ -36,16 +41,27 @@ export async function newBet(interaction, betOnTeam, betAmount) {
 	}
 
 	if (!matchInfo) {
-		QuickError(interaction, `Unable to locate a match for ${betOnTeam}\nPlease check currently available matchups with `/odds`\nMatchups will become available as DraftKings provides them.`, true)
+		QuickError(
+			interaction,
+			`Unable to locate a match for ${betOnTeam}\nPlease check currently available matchups with \`/odds\`\nMatchups will become available as DraftKings provides them.`,
+			true,
+		)
 		// # delete from pending
 		await new pendingBet().deletePending(user)
 		return
 	}
 	const matchupId = parseInt(matchInfo.matchid)
-	const activeCheck = await gameActive(betOnTeam, matchupId)
+	const activeCheck = await gameActive(
+		betOnTeam,
+		matchupId,
+	)
 	if (!betOnTeam) {
 		// # failure to locate match
-		await QuickError(interaction, 'Please enter a valid team', true)
+		await QuickError(
+			interaction,
+			'Please enter a valid team',
+			true,
+		)
 		// # delete from pending
 		await new pendingBet().deletePending(user)
 		return
@@ -71,19 +87,32 @@ export async function newBet(interaction, betOnTeam, betAmount) {
 		[
 			// verify if the user already has a bet on this matchup
 			async function verDup() {
-				await verifyDupBet(interaction, user, matchupId, true)
+				await verifyDupBet(
+					interaction,
+					user,
+					matchupId,
+					true,
+				)
 			},
 			// setup the bet
 			async function setBet() {
-				await setupBet(interactionObj, betOnTeam, betAmount, user, matchupId)
+				await setupBet(
+					interactionObj,
+					betOnTeam,
+					betAmount,
+					user,
+					matchupId,
+				)
 			},
 		],
 		(err) => {
 			if (err) {
 				Log.Red(err)
 				setupBetLog.error({ errorMsg: err })
-				QuickError(interaction, `Unable to place your bet.`)
-				
+				QuickError(
+					interaction,
+					`Unable to place your bet.`,
+				)
 			}
 		},
 	)
