@@ -26,7 +26,17 @@ export async function newBet(
 	const interactionObj = interaction
 	const user =
 		interaction?.author?.id || interaction.user.id
-	betOnTeam = await resolveTeam(betOnTeam)
+	betOnTeam = await resolveTeam(betOnTeam).catch(
+		async (err) => {
+			console.log(err)
+			await QuickError(
+				interaction,
+				'An error occured attempting to locate the team you provided. Please try again.',
+				true,
+			)
+			await new pendingBet().deletePending(user)
+		},
+	)
 	const matchInfo = await resolveMatchup(betOnTeam, null)
 	const negativeRgx = /-/g
 	if (betAmount.toString().match(negativeRgx)) {
@@ -35,18 +45,25 @@ export async function newBet(
 			`You cannot enter a negative number for your bet amount.`,
 			true,
 		)
-		// # delete from pending
 		await new pendingBet().deletePending(user)
 		return
 	}
 
+	if (Number(betAmount) < 1) {
+		await QuickError(
+			interaction,
+			`You must bet an amount greater than 0.`,
+			true,
+		)
+		await new pendingBet().deletePending(user)
+		return
+	}
 	if (!matchInfo) {
 		QuickError(
 			interaction,
 			`Unable to locate a match for ${betOnTeam}\nPlease check currently available matchups with \`/odds\`\nMatchups will become available as DraftKings provides them.`,
 			true,
 		)
-		// # delete from pending
 		await new pendingBet().deletePending(user)
 		return
 	}
@@ -56,23 +73,20 @@ export async function newBet(
 		matchupId,
 	)
 	if (!betOnTeam) {
-		// # failure to locate match
 		await QuickError(
 			interaction,
 			'Please enter a valid team',
 			true,
 		)
-		// # delete from pending
 		await new pendingBet().deletePending(user)
 		return
 	}
-	if (activeCheck == true) {
+	if (activeCheck === true) {
 		await QuickError(
 			interaction,
 			`This match has already started. You are unable to place a bet on active games.`,
 			true,
 		)
-		// # delete from pending
 		await new pendingBet().deletePending(user)
 		return
 	}

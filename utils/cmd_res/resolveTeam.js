@@ -1,6 +1,6 @@
 import Fuse from 'fuse.js'
-import { resolveTeamLog } from '../logging.js'
 import { teams } from '#env'
+import { resolveTeamLog } from '../logging.js'
 
 /**
  * Resolve a team name using fuzzy search & comparison to the list of teams saved locally.
@@ -9,22 +9,23 @@ import { teams } from '#env'
  */
 
 export async function resolveTeam(teamName) {
-    const teamsObj = teams 
-    const options = {
-        includeScore: true,
-        keys: ['name'],
-    }
-    const fuse = new Fuse(teamsObj, options)
-    const result = fuse.search(`${teamName}`)
-    var foundTeam = result[0]
-    if (!foundTeam) {
-        await resolveTeamLog.error({
-            status: `No Data`,
-            errorMsg: `No team found for ${teamName}`,
-        })
-        return null
-    }
-    return foundTeam.item.name
+	const teamsObj = teams
+	const options = {
+		includeScore: true,
+		keys: ['name'],
+	}
+	const fuse = new Fuse(teamsObj, options)
+	console.log(teamsObj)
+	const result = fuse.search(`${teamName}`)
+	const foundTeam = result[0]
+	if (!foundTeam) {
+		await resolveTeamLog.error({
+			status: `No Data`,
+			errorMsg: `No team found for ${teamName}`,
+		})
+		return null
+	}
+	return foundTeam.item.name
 }
 
 /**
@@ -35,20 +36,20 @@ export async function resolveTeam(teamName) {
  */
 
 export async function resolveTeamColor(teamName) {
-    const teamsObj = teams
-    const options = {
-        includeScore: true,
-        keys: ['name'],
-    }
-    const fuse = new Fuse(teamsObj, options)
-    const result = fuse.search(`${teamName}`)
-    var foundTeam = result[0]
-    if (!foundTeam) {
-        await resolveTeamLog.error({
-            status: `No Data`,
-            errorMsg: `No team found for ${teamName}`,
-        })
-        return null
-    }
-    return foundTeam.item.colors[0]
+	const teamsObj = teams
+	const options = {
+		includeScore: true,
+		keys: ['name'],
+	}
+	const fuse = new Fuse(teamsObj, options)
+	const result = fuse.search(`${teamName}`)
+	const foundTeam = result[0]
+	if (!foundTeam) {
+		await resolveTeamLog.error({
+			status: `No Data`,
+			errorMsg: `No team found for ${teamName}`,
+		})
+		return null
+	}
+	return foundTeam.item.colors[0]
 }
