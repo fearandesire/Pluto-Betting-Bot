@@ -15,7 +15,6 @@ export async function resolveTeam(teamName) {
 		keys: ['name'],
 	}
 	const fuse = new Fuse(teamsObj, options)
-	console.log(teamsObj)
 	const result = fuse.search(`${teamName}`)
 	const foundTeam = result[0]
 	if (!foundTeam) {
