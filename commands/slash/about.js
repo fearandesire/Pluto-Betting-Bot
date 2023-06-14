@@ -1,6 +1,7 @@
 import { Command } from '@sapphire/framework'
 import { embedReply } from '#config'
 import { loadJsonFile } from 'load-json-file'
+
 export class about extends Command {
     constructor(context, options) {
         super(context, {
@@ -23,10 +24,11 @@ export class about extends Command {
             //    { idHints: [`1022940422974226432`] },
         )
     }
+
     async chatInputRun(interaction) {
-        var pkg = await loadJsonFile('./package.json')
-        var invisIndent = ` ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ `
-        var embObj = {
+        const pkg = await loadJsonFile('./package.json')
+        const invisIndent = ` ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ `
+        const embObj = {
             title: 'About Pluto',
             description: `
             
@@ -46,7 +48,7 @@ ${invisIndent} :question: For questions/concerns, contact me @: **<@${process.en
             `,
             color: `#68d6e6`,
             thumbnail: `https://i.imgur.com/RWjfjyv.png`,
-            footer: `© FENIX 2022 | Version: ${pkg.version}`,
+            footer: `© fenixforever 2023 | Version: ${pkg.version}`,
             target: `reply`,
             silent: true,
         }

@@ -9,9 +9,10 @@ import {
 	BETSLIPS,
 } from '#config'
 
-import { FileRunning } from '#botClasses/FileRunning'
 import { Log } from '#LogColor'
 import { db } from '#db'
+import { SapDiscClient } from '#main'
+import { guildImgURL } from '../bot_res/guildPic.js'
 
 /**
  * @module listMyBets
@@ -23,7 +24,6 @@ import { db } from '#db'
  */
 export function listMyBets(userid, message) {
 	container[`listBets-${userid}`] = []
-	new FileRunning('listMyBets')
 	db.map(
 		`SELECT * FROM "${BETSLIPS}" WHERE userid = $1`,
 		[userid],
@@ -41,7 +41,9 @@ export function listMyBets(userid, message) {
 				return
 			}
 			if (result.toLowerCase() === 'pending') {
-				Log.Red(`Pending bet found for user ${userid}`)
+				Log.Red(
+					`Pending bet found for user ${userid}`,
+				)
 				Log.Green(
 					`[listMyBets.js] Bets Collected for ${userid}:\n${stringifyObject(
 						row,
@@ -57,7 +59,9 @@ export function listMyBets(userid, message) {
             Profit: \`$${profit}\` | Payout: \`$${payout}\``,
 				)
 			} else {
-				Log.Red(`Something went wrong when listing bets for user ${userid}`)
+				Log.Red(
+					`Something went wrong when listing bets for user ${userid}`,
+				)
 			}
 		},
 	)
@@ -65,28 +69,37 @@ export function listMyBets(userid, message) {
 			await Log.Green(
 				`[listMyBets.js] Collected User (${userid}) Bet Information [Memory - Stage 2]:`,
 			)
-			await Log.BrightBlue(container[`listBets-${userid}`])
+			await Log.BrightBlue(
+				container[`listBets-${userid}`],
+			)
 			const userName = message?.author?.username
 				? message?.author?.username
 				: message?.user?.id
 			const isSelf =
-				message?.author?.id === userid ? true : message?.user?.id === userid
+				message?.author?.id === userid
+					? true
+					: message?.user?.id === userid
 			let title
 			if (isSelf === true) {
 				title = `:tickets: Your Active Bets`
 			} else {
 				title = `${userName}'s Active Bet Slips`
 			}
-			const joinedBetsArr = container[`listBets-${userid}`].join('\n───────\n')
+			const joinedBetsArr =
+				container[`listBets-${userid}`].join(
+					'\n───────\n',
+				)
 			const embedcontent = {
 				title,
 				color: '#00FF00',
 				description: joinedBetsArr,
 				target: `reply`,
-				thumbnail: `${process.env.sportLogo}`,
+				thumbnail: `${guildImgURL(SapDiscClient)}`,
 				footer: `The payout and profit numbers are potential values, as these games have yet to be completed.`,
 			}
-			await Log.Yellow(`Sending ${userid} their betslips - Embed`)
+			await Log.Yellow(
+				`Sending ${userid} their betslips - Embed`,
+			)
 			await embedReply(message, embedcontent)
 			//! SECTION
 			Log.Green(
@@ -95,8 +108,14 @@ export function listMyBets(userid, message) {
 			delete container[`listBets-${userid}`]
 		})
 		.catch((err) => {
-			Log.Error(`[listMyBets.js] Error checking for active bet\n${err}`)
-			QuickError(message, `You currently have no active bets`, true)
+			Log.Error(
+				`[listMyBets.js] Error checking for active bet\n${err}`,
+			)
+			QuickError(
+				message,
+				`You currently have no active bets`,
+				true,
+			)
 			return false
 		})
 		.finally(() => {})

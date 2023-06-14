@@ -1,5 +1,5 @@
 import cron from 'node-cron'
-import { embedReply } from '#config'
+import { embedReply, helpfooter } from '#config'
 import { sentSchEmb } from '../cache/sentSchEmb.js'
 
 /**
@@ -10,13 +10,13 @@ import { sentSchEmb } from '../cache/sentSchEmb.js'
 export async function dailyOps() {
     cron.schedule('0 0 * * *', async () => {
         await sentSchEmb().then(async (res) => {
-            if (res == false) {
-                var embedObj = {
+            if (res === false) {
+                const embedObj = {
                     title: `Schedule Queue`,
                     description: `Weekly Schedule Gathering Information: **Every Tuesday @ <t:1664863200:T>**`,
                     color: '#00ff00',
                     target: 'modBotSpamID',
-                    footer: 'Pluto | Designed by FENIX#7559',
+                    footer: `${helpfooter}`,
                 }
                 await embedReply(null, embedObj)
             }

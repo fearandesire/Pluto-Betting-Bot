@@ -11,12 +11,13 @@ import { TodaysDate } from '#cmdUtil/TodaysDate'
 import { db } from '#db'
 import { embedReply } from '#embed'
 import { setupBetLog } from '#winstonLogger'
+import { guildImgURL } from '../../bot_res/guildPic.js'
 
 /**
  * @module addNewBet -
  * Adds a new bet to the database with the provided information inside of the betslip object.⁡
  * ⁡⁣⁣⁢Queries the 'activeMatchups' table in the DB to gather the matchup ID using the provided team IDs⁡
- * @param {obj} message - The message object - contains the user info from Discord & allows us to reply to the user.
+ * @param {obj} interaction - The interaction object - contains the user info from Discord & allows us to reply to the user.
  * @param {obj} betslip - Object containing the user's bet information. The betslip object model is inherited from: placebet.js (command) > confirmbet.js (user confirms bet).
  * @returns {embed} - Resolves with an embed reply to the user that their bet has been placed.
  *  For documentation / debugging purposes, the object's final structure is compiled as: { userid: '⁡⁣⁣⁢𝙣⁡',  teamid: '⁡⁣⁣⁢𝘯⁡', betid: '⁡⁣⁣⁢𝘯⁡', amount: '⁡⁣⁣⁢𝘯⁡', matchid: '⁡⁣⁣⁢𝙣⁡'  'hasactivebet': '⁡⁣⁣⁢𝙣⁡', 'dateofbet': '⁡⁣⁣⁢𝙣⁡' }
@@ -26,7 +27,7 @@ import { setupBetLog } from '#winstonLogger'
  *
  */
 
-export function addNewBet(message, betslip) {
+export function addNewBet(interaction, betslip) {
 	/*
     Querying DB using db.tx since we are handling multiple transactions
     First query: Selecting the 'matchid' as its required for us to store the betslip information in the DB.
@@ -71,7 +72,9 @@ export function addNewBet(message, betslip) {
 				)
 			})
 			.then(() => {
-				setupBetLog.info(`Successfully added betslip into the database.`)
+				setupBetLog.info(
+					`Successfully added betslip into the database.`,
+				)
 				const { format } = accounting
 				const amount = format(betslip.amount)
 				const profit = format(betslip.profit)
@@ -94,14 +97,20 @@ export function addNewBet(message, betslip) {
 					color: '#00FF00',
 					// footer: 'For more commands, type: ?help',
 					target: `reply`,
-					thumbnail: `${process.env.sportLogo}`,
+					thumbnail: `${guildImgURL(
+						interaction.client,
+					)}`,
 					editReply: true,
 				}
-				return embedReply(message, embedcontent) // ? Sending the embed to the user via our embedReply function in [embedReply.js]
+				return embedReply(interaction, embedcontent) // ? Sending the embed to the user via our embedReply function in [embedReply.js]
 			})
 			.catch((err) => {
-				Log.Error(`[addNewBet.js] Error adding bet to activebets table\n${err}`)
-				setupBetLog.error(`Error adding bet to activebets table\n${err}`)
+				Log.Error(
+					`[addNewBet.js] Error adding bet to activebets table\n${err}`,
+				)
+				setupBetLog.error(
+					`Error adding bet to activebets table\n${err}`,
+				)
 			}),
 	)
 }

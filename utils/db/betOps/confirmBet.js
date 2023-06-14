@@ -1,13 +1,15 @@
 import stringifyObject from 'stringify-object'
 import { MessageEmbed } from 'discord.js'
-import { Log, embedReply, accounting } from '#config'
+import { Log, accounting } from '#config'
 import { AssignBetID } from '#botUtil/AssignIDs'
 import { addNewBet } from '#utilBetOps/addNewBet'
-import { isBetIdExisting } from '../validation/isBetIdExisting.js'
-import { pendingBet } from '../validation/pendingBet.js'
 import { setupBetLog } from '#winstonLogger'
 import { sortBalance } from '#utilCurrency/sortBalance'
+import { isBetIdExisting } from '../validation/isBetIdExisting.js'
+import { pendingBet } from '../validation/pendingBet.js'
 import { findEmoji } from '../../bot_res/findEmoji.js'
+import { guildImgURL } from '../../bot_res/guildPic.js'
+
 /**
  * @module confirmBet -
  * Create's a message listener for the user to accept, or cancel their pending bet via pressing/clicking reactions.
@@ -15,9 +17,14 @@ import { findEmoji } from '../../bot_res/findEmoji.js'
  * @param {object} betslip - The details of the users bet
  */
 
-export async function confirmBet(interaction, betslip, userId) {
+export async function confirmBet(
+	interaction,
+	betslip,
+	userId,
+) {
 	// ? Sending Embed w/ bet details for the user to confirm bet
-	const customerFooter = 'Please note: you have 60 seconds to confirm your bet.'
+	const customerFooter =
+		'Please note: you have 60 seconds to confirm your bet.'
 	const { format } = accounting
 	const amount = format(betslip.amount)
 	const profit = format(betslip.profit)
@@ -36,7 +43,7 @@ export async function confirmBet(interaction, betslip, userId) {
         Profit: \`$${profit}\` | Payout: \`$${payout}\``,
 		)
 		.setTimestamp()
-		.setThumbnail(`${process.env.sportLogo}`)
+		.setThumbnail(`${guildImgURL(interaction.client)}`)
 		.setFooter({ text: customerFooter })
 
 	// ? Preview the embed to the user
@@ -49,13 +56,17 @@ export async function confirmBet(interaction, betslip, userId) {
 	await previewEmbed.react('❌')
 	// ? Create reaction collector
 	const filter = (reaction, user) =>
-		['✅', '❌'].includes(reaction.emoji.name) && user.id === userId
+		['✅', '❌'].includes(reaction.emoji.name) &&
+		user.id === userId
 	const collector = previewEmbed.createReactionCollector({
 		filter,
 		time: 60000,
 	})
 	collector.on('collect', async (reaction, user) => {
-		if (reaction.emoji.name === '✅' && user.id === userId) {
+		if (
+			reaction.emoji.name === '✅' &&
+			user.id === userId
+		) {
 			// & User confirmed bet, add to DB
 			collector.stop()
 			// # delete from pending
@@ -68,14 +79,26 @@ export async function confirmBet(interaction, betslip, userId) {
 			betslip.betid = validateID
 
 			setupBetLog.info(
-				`Betslip confirmed for ${userId}\n${stringifyObject(betslip)}`,
+				`Betslip confirmed for ${userId}\n${stringifyObject(
+					betslip,
+				)}`,
 			)
 			await addNewBet(interaction, betslip) //! Add bet to active bet list in DB [User will receive a response within this function]
-			await sortBalance(interaction, betslip.userid, betslip.amount, 'sub') //! Subtract users bet amount from their balance
-		} else if (reaction.emoji.name === '❌' && user.id === userId) {
+			await sortBalance(
+				interaction,
+				betslip.userid,
+				betslip.amount,
+				'sub',
+			) //! Subtract users bet amount from their balance
+		} else if (
+			reaction.emoji.name === '❌' &&
+			user.id === userId
+		) {
 			collector.stop()
 			// & User cancelled bet, delete from pending
-			setupBetLog.info(`Betslip cancelled for ${userId}`)
+			setupBetLog.info(
+				`Betslip cancelled for ${userId}`,
+			)
 			// # delete from pending
 			await new pendingBet().deletePending(userId)
 			const embCancel = {
@@ -88,7 +111,9 @@ export async function confirmBet(interaction, betslip, userId) {
 				embeds: [
 					confirmembed
 						.setTitle(embCancel.title)
-						.setDescription(embCancel.description)
+						.setDescription(
+							embCancel.description,
+						)
 						.setColor(embCancel.color)
 						.setFooter({ text: '' })
 						.setTimestamp(null),
@@ -111,7 +136,9 @@ export async function confirmBet(interaction, betslip, userId) {
 				embeds: [
 					confirmembed
 						.setTitle(embTimeout.title)
-						.setDescription(embTimeout.description)
+						.setDescription(
+							embTimeout.description,
+						)
 						.setColor(embTimeout.color)
 						.setFooter({ text: '' })
 						.setTimestamp(null),

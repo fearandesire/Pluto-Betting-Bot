@@ -1,8 +1,12 @@
 import { MessageEmbed } from 'discord.js'
-import { embedfooter as defaultFooter, helpfooter } from '#config'
+import {
+	embedfooter as defaultFooter,
+	helpfooter,
+} from '#config'
 
 import { Log } from '#LogColor'
 import { fetchChanId } from '#botUtil/fetchChanId'
+import { guildImgURL } from '../guildPic.js'
 
 /**
  * @module embedReply
@@ -15,21 +19,32 @@ import { fetchChanId } from '#botUtil/fetchChanId'
  * @returns {embed} embedWithFields or noFieldsEmbed - self-descriptive returns.
  */
 
-export async function embedReply(interaction, embedContent, interactionEph) {
+export async function embedReply(
+	interaction,
+	embedContent,
+	interactionEph,
+) {
 	const embedColor = embedContent?.color ?? '#e0ff19'
 	const embedTitle = embedContent?.title ?? ''
 	const embedDescription = embedContent?.description ?? ''
 	const embedFields = embedContent?.fields
-	const embedFooter = embedContent?.footer ?? defaultFooter
+	const embedFooter =
+		embedContent?.footer ?? defaultFooter
 	const hasFields = embedFields ?? false
 	const confirmFields = !!hasFields
 	const target = embedContent?.target || 'reply'
 	const isSilent = embedContent?.silent || false
 	let followUp = embedContent?.followUp || false
 	const editReply = embedContent?.editReply || false
-	const thumbnail = embedContent?.thumbnail || process.env.sportLogo
+	const thumbnail =
+		embedContent?.thumbnail ||
+		guildImgURL(interaction.client)
 	let reqChan
-	if (interaction && interaction?.deferred && interaction?.deferred === true) {
+	if (
+		interaction &&
+		interaction?.deferred &&
+		interaction?.deferred === true
+	) {
 		followUp = true
 	}
 
@@ -47,22 +62,33 @@ export async function embedReply(interaction, embedContent, interactionEph) {
 					ephemeral: true,
 				})
 			}
-			await interaction.reply({ embeds: [noFieldsEmbed], ephemeral: true })
+			await interaction.reply({
+				embeds: [noFieldsEmbed],
+				ephemeral: true,
+			})
 			return
 		}
 		if (target === 'reply' && isSilent === false) {
 			if (editReply) {
-				return interaction.editReply({ embeds: [noFieldsEmbed] })
+				return interaction.editReply({
+					embeds: [noFieldsEmbed],
+				})
 			}
 			if (followUp) {
-				return interaction.followUp({ embeds: [noFieldsEmbed] })
+				return interaction.followUp({
+					embeds: [noFieldsEmbed],
+				})
 			}
-			await interaction.reply({ embeds: [noFieldsEmbed] })
+			await interaction.reply({
+				embeds: [noFieldsEmbed],
+			})
 			return
 		}
 		// # Fields-Embed Destination to a specific channel
 		if (target !== 'reply') {
-			reqChan = await Promise.resolve(fetchChanId(target))
+			reqChan = await Promise.resolve(
+				fetchChanId(target),
+			)
 			reqChan.send({ embeds: [noFieldsEmbed] })
 			return
 		}
@@ -82,7 +108,8 @@ export async function embedReply(interaction, embedContent, interactionEph) {
 			.addFields(...embedContent.fields)
 			.setFooter({ text: embedFooter })
 		if (
-			(target === 'reply' && interactionEph === true) ||
+			(target === 'reply' &&
+				interactionEph === true) ||
 			(target === 'reply' && isSilent === true)
 		) {
 			// # switch .reply to .followUp if the followUp prop is true [deferred replies from slash commands]
@@ -107,14 +134,20 @@ export async function embedReply(interaction, embedContent, interactionEph) {
 				reqChan = await fetchChanId(target)
 				reqChan.send({ embeds: [embedWithFields] })
 			} else if (isSilent) {
-				reqChan.send({ embeds: [embedWithFields], ephemeral: true })
+				reqChan.send({
+					embeds: [embedWithFields],
+					ephemeral: true,
+				})
 			}
 		}
 	}
 }
 
-export async function QuickError(message, text, interactionEph) {
-	console.log(`Deferred: ${message?.deferred} || Replied: ${message?.replied}`)
+export async function QuickError(
+	message,
+	text,
+	interactionEph,
+) {
 	const embed = new MessageEmbed()
 		.setColor('#ff0000')
 		.setTitle(':triangular_flag_on_post: Error')
@@ -122,13 +155,19 @@ export async function QuickError(message, text, interactionEph) {
 		.setFooter({ text: helpfooter })
 	if (message?.deferred === true) {
 		if (interactionEph === true) {
-			await message.followUp({ embeds: [embed], ephemeral: true })
+			await message.followUp({
+				embeds: [embed],
+				ephemeral: true,
+			})
 		} else {
 			await message.followUp({ embeds: [embed] })
 		}
 	} else {
 		if (interactionEph === true) {
-			message.reply({ embeds: [embed], ephemeral: true })
+			message.reply({
+				embeds: [embed],
+				ephemeral: true,
+			})
 			return
 		}
 		if (!interactionEph) {
@@ -136,7 +175,10 @@ export async function QuickError(message, text, interactionEph) {
 			return
 		}
 		if (interactionEph === true) {
-			message.followUp({ embeds: [embed], ephemeral: true })
+			message.followUp({
+				embeds: [embed],
+				ephemeral: true,
+			})
 		} else if (!interactionEph) {
 			message.followUp({ embeds: [embed] })
 		}
