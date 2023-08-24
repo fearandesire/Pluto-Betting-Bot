@@ -8,7 +8,7 @@ import {
 
 import { Log } from '#LogColor'
 import { db } from '#db'
-import { guildImgURL } from '../../bot_res/guildPic.js'
+import { guildImgURL } from '#embed'
 
 /**
  * @module queryBets -

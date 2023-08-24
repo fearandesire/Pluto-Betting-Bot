@@ -23,10 +23,16 @@ export class registerSlash extends Command {
 			//    { idHints: [`1022940422974226432`] },
 		)
 	}
+
 	async chatInputRun(interaction) {
-		var userid = interaction.user.id
-		var inform = true
-		var interactionEph = true
-		await registerUser(interaction, userid, inform, interactionEph)
+		const userid = interaction.user.id
+		const inform = true
+		const interactionEph = true
+		await registerUser(
+			interaction,
+			userid,
+			inform,
+			interactionEph,
+		)
 	}
 }

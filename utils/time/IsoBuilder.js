@@ -12,6 +12,10 @@ import {
     getMinutes,
     getDay,
     isValid,
+    startOfWeek,
+    isWithinInterval,
+    endOfWeek,
+    addMinutes,
 } from 'date-fns'
 
 export default class IsoBuilder {
@@ -21,6 +25,7 @@ export default class IsoBuilder {
      */
     constructor(time) {
         this.parseTime = parseISO(time)
+        this.tday = new Date()
     }
 
     /**
@@ -36,8 +41,26 @@ export default class IsoBuilder {
      * Determines whether the date is in the past.
      * @returns {boolean} True if the date is in the past, otherwise false.
      */
-    isPast() {
+    filterPast() {
         return isAfter(this.parseTime, new Date())
+    }
+
+    /**
+     * Filter out any games that are not within Monday - Sunday of the current week
+     * @returns {boolean} True if the date is within the current week, otherwise false.
+     */
+
+    withinThisWeek() {
+        const currentWeekStart = startOfWeek(new Date())
+        const currentWeekEnd = endOfWeek(new Date())
+        const withinWeek = isWithinInterval(
+            this.parseTime,
+            {
+                start: currentWeekStart,
+                end: currentWeekEnd,
+            },
+        )
+        return withinWeek
     }
 
     /**
@@ -56,9 +79,30 @@ export default class IsoBuilder {
         const startHour = getHours(this.parseTime)
         const startMin = getMinutes(this.parseTime)
         const startDay = getDay(this.parseTime)
-        const startMonth = Number(format(this.parseTime, `M`))
-        const startDayOfMonth = Number(format(this.parseTime, `d`))
+        const startMonth = Number(
+            format(this.parseTime, `M`),
+        )
+        const startDayOfMonth = Number(
+            format(this.parseTime, `d`),
+        )
         const cronStartTime = `${startMin} ${startHour} ${startDayOfMonth} ${startMonth} ${startDay}`
+        return cronStartTime
+    }
+
+    /**
+     * Creates a Cron Job time for 2 minutes from the current time.
+     */
+    rightNowToCron() {
+        const rightNow = new Date()
+        const futureRightNow = addMinutes(rightNow, 2) // # Add 2 minutes for functions & timing
+        const rightNowMin = getMinutes(futureRightNow)
+        const rightNowHour = getHours(rightNow)
+        const rightNowDay = getDay(rightNow)
+        const rightNowMonth = Number(format(rightNow, `M`))
+        const rightNowDayOfMonth = Number(
+            format(rightNow, `d`),
+        )
+        const cronStartTime = `${rightNowMin} ${rightNowHour} ${rightNowDayOfMonth} ${rightNowMonth} ${rightNowDay}`
         return cronStartTime
     }
 

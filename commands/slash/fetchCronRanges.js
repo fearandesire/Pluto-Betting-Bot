@@ -1,6 +1,6 @@
 import { Command } from '@sapphire/framework'
-import { container } from '#config'
 import cronstrue from 'cronstrue'
+import { container } from '#config'
 
 export class fetchCronRanges extends Command {
     constructor(context, options) {
@@ -25,8 +25,9 @@ export class fetchCronRanges extends Command {
             //    { idHints: [`1022940422974226432`] },
         )
     }
+
     async chatInputRun(interaction) {
-        var cronRanges = container.cronRanges
+        const { cronRanges } = container
         if (!interaction.guildId) {
             interaction.reply({
                 content: `This command can only be used in a server.`,
@@ -34,21 +35,31 @@ export class fetchCronRanges extends Command {
             })
             return
         }
-        if (!cronRanges || cronRanges.length == 0) {
+        if (!cronRanges || cronRanges.length === 0) {
             interaction.reply({
                 content: `The time ranges have not been collected.\nPlease use the \`/queuecompleted\` command to collect them.`,
                 ephemeral: true,
             })
             return
         }
-        if (cronRanges && cronRanges.range1 && cronRanges.range2) {
+        if (
+            cronRanges &&
+            cronRanges.range1 &&
+            cronRanges.range2
+        ) {
             await interaction.reply({
                 content: `Pluto will check for completed matches between ${cronstrue.toString(
                     `${cronRanges.range1}`,
-                )} and ${cronstrue.toString(`${cronRanges.range2}`)}`,
+                )} and ${cronstrue.toString(
+                    `${cronRanges.range2}`,
+                )}`,
                 ephemeral: true,
             })
-        } else if (cronRanges && cronRanges.range1 && !cronRanges.range2) {
+        } else if (
+            cronRanges &&
+            cronRanges.range1 &&
+            !cronRanges.range2
+        ) {
             await interaction.reply({
                 content: `Pluto will check for completed matches between ${cronstrue.toString(
                     `${cronRanges.range1}`,

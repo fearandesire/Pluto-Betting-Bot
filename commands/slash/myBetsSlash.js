@@ -24,10 +24,15 @@ export class myBetsSlash extends Command {
             { idHints: [`1023323729540952075`] },
         )
     }
+
     async chatInputRun(interaction) {
-        var userid = interaction.user.id
-        var interactionEph = true
+        const userid = interaction.user.id
+        const interactionEph = true
         await validateUser(interaction, userid, true)
-        await checkBetsCache(interaction, userid, interactionEph)
+        await checkBetsCache(
+            interaction,
+            userid,
+            interactionEph,
+        )
     }
 }

@@ -1,6 +1,6 @@
 import { Command } from '@sapphire/framework'
-import { checkCompleted } from '../../utils/api/checkCompleted.js'
 import { Log } from '#config'
+import { checkCompleted } from '../../utils/api/checkCompleted.js'
 
 export class forceCheck extends Command {
     constructor(context, options) {
@@ -8,7 +8,8 @@ export class forceCheck extends Command {
             ...options,
             name: 'forceCheck',
             aliases: [''],
-            description: 'Request API to check for completed games.',
+            description:
+                'Request API to check for completed games.',
             chatInputCommand: {
                 register: true,
             },
@@ -38,7 +39,9 @@ export class forceCheck extends Command {
             content: `Requesting API to check for completed games.`,
             ephemeral: true,
         })
-        Log.Yellow(`User ${userid} requested to check for completed games.`)
+        Log.Yellow(
+            `User ${userid} requested to check for completed games.`,
+        )
         await checkCompleted()
     }
 }

@@ -1,5 +1,5 @@
 import { Log } from '#config'
-import { SapDiscClient } from '#main'
+import locateChannel from '../../bot_res/locateChan.js'
 
 /**
  * @module deleteChan
@@ -9,22 +9,20 @@ import { SapDiscClient } from '#main'
  */
 
 export async function deleteChan(channelName) {
-    console.log(`Locating channel ${channelName.toLowerCase()}`)
-    const guild = SapDiscClient.guilds.cache.get(`${process.env.server_ID}`)
-    const category = guild.channels.cache.get(`${process.env.gameCat_ID}`)
-    //# Locate the channel by name in the category
-    var gameChan = guild.channels.cache.find(
-        (gameChan) => gameChan.name.toLowerCase() === channelName.toLowerCase(),
+    console.log(
+        `Locating channel ${channelName.toLowerCase()}`,
     )
+    const gameChan = await locateChannel(channelName)
     if (!gameChan) {
         await Log.Red(
             `Unable to locate channel ${channelName} to delete.`,
             `#ff0000`,
         )
         return false
-    } else {
-        console.log(`Located channel ${gameChan.name} | ${gameChan.id}`)
-        await gameChan.delete()
-        return true
     }
+    console.log(
+        `Located channel ${gameChan.name} | ${gameChan.id}`,
+    )
+    await gameChan.delete()
+    return true
 }

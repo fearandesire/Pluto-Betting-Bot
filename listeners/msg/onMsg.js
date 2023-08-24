@@ -7,14 +7,7 @@ export class UserEvent extends Listener {
             event: Events.InteractionCreate,
         })
     }
-    async run(interaction) {
-        //# moved to specific commands
-        // if (!interaction.guildId) {
-        //  interaction.reply({
-        //      content: `This command can only be used in a server.`,
-        //      ephemeral: true,
-        //  })
-        //  return
-        // }
-    }
+
+    // eslint-disable-next-line no-unused-vars
+    async run(interaction) {}
 }

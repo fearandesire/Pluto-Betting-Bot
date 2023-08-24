@@ -153,3 +153,5 @@ test/spacing.js
 matchups.json
 matchups3.json
 lib/matchupimages
+.env.dev.nflc
+ca-certificate.crt

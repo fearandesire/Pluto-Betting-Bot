@@ -3,7 +3,7 @@ import { LIVEMATCHUPS, QuickError } from '#config'
 
 import { db } from '#db'
 import { formatOdds } from '#cmdUtil/formatOdds'
-import { guildImgURL } from '../bot_res/guildPic.js'
+import { guildImgURL } from '#embed'
 
 /**
  * @module returnOdds

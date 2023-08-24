@@ -28,7 +28,7 @@ export default class IsoManager {
          * Determines whether the date is in the past.
          * @type {boolean}
          */
-        this.inPast = builder.isPast()
+        this.inPast = builder.filterPast()
 
         /**
          * Determines whether the date is today.
@@ -47,5 +47,7 @@ export default class IsoManager {
          * @type {string}
          */
         this.cron = builder.toCron()
+
+        this.cronRightNow = builder.rightNowToCron()
     }
 }

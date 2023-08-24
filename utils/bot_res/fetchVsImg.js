@@ -12,10 +12,15 @@ import { fileURLToPath } from 'node:url'
 
 export async function fetchVsImg(matchup) {
 	// Replace spaces with underscores in the matchup string
-	const matchupFileName = `${matchup.replace(/\s/g, '_')}.jpg`
+	const matchupFileName = `${matchup.replace(
+		/\s/g,
+		'_',
+	)}.jpg`
 
 	// Get the directory path of the current module
-	const moduleDir = path.dirname(fileURLToPath(import.meta.url))
+	const moduleDir = path.dirname(
+		fileURLToPath(import.meta.url),
+	)
 
 	// Construct the path to the matchup image file
 	const imagePath = path.join(
@@ -34,6 +39,8 @@ export async function fetchVsImg(matchup) {
 		return imageBuffer
 	} catch (error) {
 		// If there's an error reading the file, reject the promise with the error message
-		return Promise.reject(`Error fetching ${matchup} image: ${error.message}`)
+		return Promise.reject(
+			`Error fetching ${matchup} image: ${error.message}`,
+		)
 	}
 }

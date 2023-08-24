@@ -12,7 +12,7 @@ import {
 import { Log } from '#LogColor'
 import { db } from '#db'
 import { SapDiscClient } from '#main'
-import { guildImgURL } from '../bot_res/guildPic.js'
+import { guildImgURL } from '#embed'
 
 /**
  * @module listMyBets

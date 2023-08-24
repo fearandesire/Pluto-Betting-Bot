@@ -1,5 +1,5 @@
 import { Command } from '@sapphire/framework'
-import { Log } from '#config'
+import { Log, isPreSzn } from '#config'
 import { completedReq } from '#api/completedReq'
 
 export class queueCompleted extends Command {
@@ -9,7 +9,7 @@ export class queueCompleted extends Command {
             name: 'queueCompleted',
             aliases: [''],
             description:
-                'Generate the range of time to check for them to be completed.',
+                'Generate the range of time to check for games to be completed.',
             chatInputCommand: {
                 register: true,
             },
@@ -25,6 +25,7 @@ export class queueCompleted extends Command {
             //    { idHints: [`1022940422974226432`] },
         )
     }
+
     async chatInputRun(interaction) {
         if (!interaction.guildId) {
             interaction.reply({
@@ -33,9 +34,17 @@ export class queueCompleted extends Command {
             })
             return
         }
+        if (isPreSzn) {
+            return interaction.reply({
+                content: `This command is disabled during the preseason`,
+                ephemeral: true,
+            })
+        }
         await interaction.deferReply()
-        var userid = interaction.user.id
-        Log.Green(`${userid} has used the queueCompleted command.`)
+        const userid = interaction.user.id
+        Log.Green(
+            `${userid} has used the queueCompleted command.`,
+        )
         await new completedReq().restartedCheck(interaction)
     }
 }

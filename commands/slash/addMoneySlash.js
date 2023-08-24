@@ -25,18 +25,23 @@ export class addMoneySlash extends Command {
                     .addMentionableOption((option) =>
                         option //
                             .setName('user')
-                            .setDescription('The user to add money to')
+                            .setDescription(
+                                'The user to add money to',
+                            )
                             .setRequired(true),
                     )
                     .addIntegerOption((option) =>
                         option //
                             .setName('amount')
-                            .setDescription('The amount of money to add')
+                            .setDescription(
+                                'The amount of money to add',
+                            )
                             .setRequired(true),
                     ),
             { idHints: [`1023308312831328426`] },
         )
     }
+
     async chatInputRun(interaction) {
         if (!interaction.guildId) {
             interaction.reply({
@@ -45,19 +50,19 @@ export class addMoneySlash extends Command {
             })
             return
         }
-        var userid = interaction.user.id
-        var target = interaction.options.getMentionable('user').user.id
-        var amount = interaction.options.getInteger('amount')
+        const target =
+            interaction.options.getMentionable('user').user
+                .id
+        const amount =
+            interaction.options.getInteger('amount')
         if (amount < 1) {
             interaction.reply({
                 content: 'Please provide a valid amount.',
                 ephemeral: true,
             })
-            return
         } else {
             await validateUser(interaction, target, true)
             await giveBalance(interaction, target, amount)
-            return
         }
     }
 }
