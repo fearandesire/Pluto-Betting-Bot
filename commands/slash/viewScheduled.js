@@ -1,8 +1,8 @@
 import { Command } from '@sapphire/framework'
+import { MessageEmbed } from 'discord.js'
+import { format } from 'date-fns'
 import { _ } from '#config'
-
-import { embedReply } from '#embed'
-import { fetchScheduleArr } from '#cache/fetchScheduleArr'
+import Cache from '#rCache'
 
 export class viewScheduled extends Command {
 	constructor(context, options) {
@@ -10,7 +10,8 @@ export class viewScheduled extends Command {
 			...options,
 			name: 'viewScheduled',
 			aliases: [''],
-			description: 'View the scheduled game channels.',
+			description:
+				'View the scheduled game channels.',
 			chatInputCommand: {
 				register: true,
 			},
@@ -35,20 +36,39 @@ export class viewScheduled extends Command {
 			})
 			return
 		}
-		const schArr = await fetchScheduleArr()
-		if (_.isEmpty(schArr)) {
-			await interaction.reply(
-				`There are currently no game channels scheduled to be created.`,
-			)
-		} else {
-			const embObj = {
-				title: `Scheduled Game Channels`,
-				description: schArr.join(`\n`),
-				color: `#4350ef`,
-				target: `reply`,
-				footer: `The game channels will be created an hour ahead of the game's start time. All start times listed are in EST.`,
-			}
-			await embedReply(interaction, embObj)
+		const scheduled = await Cache().get(`scheduled`)
+		if (!scheduled || _.isEmpty(scheduled)) {
+			await interaction.reply({
+				content: `There are no games currently scheduled to be created.`,
+				ephemeral: true,
+			})
+			return
 		}
+		/**
+		 * Schedule Array e.g
+		 * [
+		 {
+  			home_team: 'New Orleans Saints',
+  			away_team: 'Houston Texans',
+  			start: 'Sun, 8:00 PM'
+		 }
+		 * ]
+		 */
+		const currentDate = new Date()
+		const dayName = format(currentDate, 'EEEE')
+
+		let todaysGamesStr = ''
+		await _.forEach(scheduled, (game) => {
+			todaysGamesStr += `${game.away_team} *@* ${game.home_team}\n`
+		})
+
+		// # Create Embed showing scheduled games via fields
+		const emb = new MessageEmbed()
+			.setTitle(`Scheduled Games`)
+			.setColor('#e0ff19')
+			.addField(dayName, todaysGamesStr)
+		await interaction.reply({
+			embeds: [emb],
+		})
 	}
 }

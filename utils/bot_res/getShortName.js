@@ -5,7 +5,7 @@
  * @return {string} Returns the short name of the team (last word in the team name)
  */
 export function getShortName(teamName) {
-    var splitName = teamName.split(' ')
-    var shortName = splitName[splitName.length - 1]
-    return shortName
+	const splitName = teamName.split(' ')
+	const shortName = splitName[splitName.length - 1]
+	return shortName
 }

@@ -1,6 +1,7 @@
 import { Command } from '@sapphire/framework'
 import { checkbalance } from '#utilValidate/checkbalance'
 import { validateUser } from '#utilValidate/validateExistingUser'
+import { isPreSzn } from '#config'
 
 export class balanceSlash extends Command {
     constructor(context, options) {
@@ -31,8 +32,15 @@ export class balanceSlash extends Command {
             { idHints: [`1022954913489223690`] },
         )
     }
+
     async chatInputRun(interaction) {
-        var target = interaction.options.getMentionable('user')
+        if (isPreSzn) {
+            return interaction.reply({
+                content: `It's currently the preseason so this command has been disabled for now! Please wait for the season to begin.`,
+            })
+        }
+        const target =
+            interaction.options.getMentionable('user')
         const userid = interaction.user.id
         if (!target) {
             await validateUser(interaction, userid, true)
@@ -41,7 +49,6 @@ export class balanceSlash extends Command {
         }
         if (target) {
             await checkbalance(userid, interaction, target)
-            return
         }
     }
 }

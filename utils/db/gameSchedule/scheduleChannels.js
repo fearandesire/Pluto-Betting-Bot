@@ -1,9 +1,8 @@
 import { createRequire } from 'module'
-import { Log } from '#config'
-import { scheduleChanLog } from '#winstonLogger'
 import { createChannel } from './createChannel.js'
 import { getShortName } from '../../bot_res/getShortName.js'
 import { cronMath } from './cronMath.js'
+import logClr from '#colorConsole'
 
 const require = createRequire(import.meta.url)
 const cron = require('node-cron')
@@ -15,45 +14,42 @@ const cron = require('node-cron')
  */
 
 export async function scheduleChannels(
-    homeTeam,
-    awayTeam,
-    options,
+	homeTeam,
+	awayTeam,
+	options,
 ) {
-    const { cronStartTime, notSubtracted, id } =
-        options || null
-    let newCron
-    if (notSubtracted) {
-        newCron = await new cronMath(
-            cronStartTime,
-        ).subtract(1, `hours`)
-    } else {
-        newCron = cronStartTime
-    }
+	const { cronStartTime, notSubtracted, id } =
+		options || null
+	let newCron
+	if (notSubtracted) {
+		newCron = await new cronMath(
+			cronStartTime,
+		).subtract(1, `hours`)
+	} else {
+		newCron = cronStartTime
+	}
 
-    console.log(`Cron Time =>  ${newCron}`)
-    homeTeam = await getShortName(homeTeam)
-    awayTeam = await getShortName(awayTeam)
-    await scheduleChanLog.info(
-        `Creating a Cron Job to create a game channel for: ${awayTeam} vs ${homeTeam} | Cron Time: ${newCron}`,
-    )
-    const createCron = async () => {
-        await cron.schedule(
-            `${newCron}`,
-            async () => {
-                await createChannel({
-                    awayTeam,
-                    homeTeam,
-                    id,
-                })
-            },
-            { timezone: 'America/New_York' },
-        )
-    }
-    await createCron().then(async () => {
-        await scheduleChanLog.info(
-            `Successfully created Cron Job to create a game channel for: ${awayTeam} vs ${homeTeam} | Cron Time: ${newCron}`,
-        )
-        Log.Green(`Scheduled: ${awayTeam} vs ${homeTeam}`)
-    })
-    return true
+	const HTEAM = await getShortName(homeTeam)
+	const ATEAM = await getShortName(awayTeam)
+	const createCron = async () => {
+		await cron.schedule(
+			`${newCron}`,
+			async () => {
+				await createChannel({
+					ATEAM,
+					HTEAM,
+					id,
+				})
+			},
+			{ timezone: 'America/New_York' },
+		)
+	}
+	await createCron().then(async () => {
+		await logClr({
+			text: `Scheduled: ${ATEAM} vs ${HTEAM}`,
+			color: 'green',
+			status: `done`,
+		})
+	})
+	return true
 }

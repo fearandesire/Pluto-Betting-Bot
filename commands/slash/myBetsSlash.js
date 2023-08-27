@@ -1,6 +1,7 @@
 import { Command } from '@sapphire/framework'
 import { checkBetsCache } from '../../utils/cache/checkBetsCache.js'
 import { validateUser } from '#utilValidate/validateExistingUser'
+import { isPreSzn } from '#config'
 
 export class myBetsSlash extends Command {
     constructor(context, options) {
@@ -26,6 +27,11 @@ export class myBetsSlash extends Command {
     }
 
     async chatInputRun(interaction) {
+        if (isPreSzn) {
+            return interaction.reply({
+                content: `It's currently the preseason so this command has been disabled for now! Please wait for the season to begin.`,
+            })
+        }
         const userid = interaction.user.id
         const interactionEph = true
         await validateUser(interaction, userid, true)
