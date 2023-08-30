@@ -1,12 +1,17 @@
 // import flatcache from 'flat-cache'
 
-import { Log, LIVEMATCHUPS, _, container, flatcache } from '#config'
+import {
+	Log,
+	LIVEMATCHUPS,
+	_,
+	container,
+	flatcache,
+} from '#config'
 
 import { db } from '#db'
 import { msgBotChan } from '#botUtil/msgBotChan'
 import { resolveToday } from '#dateUtil/resolveToday'
 import dmMe from '../../bot_res/dmMe.js'
-import { cronMath } from './cronMath.js'
 import { scheduleChannels } from './scheduleChannels.js'
 
 /**
@@ -33,11 +38,15 @@ export async function fetchSchedule(interaction) {
 		.manyOrNone(`SELECT * FROM "${LIVEMATCHUPS}"`)
 		.then(async (data) => {
 			if (_.isEmpty(data)) {
-				Log.Red(`No active matchups found in the database.`)
+				Log.Red(
+					`No active matchups found in the database.`,
+				)
 				return false
 			}
 			container.numOfMatchups = data.length
-			for await (const [key, value] of Object.entries(data)) {
+			for await (const [key, value] of Object.entries(
+				data,
+			)) {
 				const homeTeam = value.teamone
 				const awayTeam = value.teamtwo
 				const cronStartTime = value.cronstart
@@ -57,7 +66,10 @@ export async function fetchSchedule(interaction) {
 		return
 	}
 	const today = await new resolveToday().todayFullSlashes
-	const cache = flatcache.create(`queuedEmbed.json`, `./cache`)
+	const cache = flatcache.create(
+		`queuedEmbed.json`,
+		`./cache`,
+	)
 	if (cache.getKey(`hasSent-${today}`)) {
 		console.log(
 			`[fetchSchedule.js] Game Channel Queue Embed has already been sent.`,

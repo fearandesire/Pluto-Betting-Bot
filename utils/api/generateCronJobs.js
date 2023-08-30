@@ -1,8 +1,8 @@
 import cron from 'node-cron'
 import { logCron } from './apiUtils.js'
 import { handleBetMatchups } from './handleBetMatchups.js'
-import { rangeManager } from '#matchMngr'
 import cronRangeGenerator from './cronRangeGenerator.js'
+import { rangeManager } from '../db/matchupOps/ranges.js'
 
 /**
  * Generates two cron jobs based on the start times of matches in the given array.

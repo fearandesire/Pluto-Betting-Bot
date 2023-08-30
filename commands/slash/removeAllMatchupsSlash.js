@@ -1,46 +1,42 @@
 import { Command } from '@sapphire/framework'
-import dmMe from '../../utils/bot_res/dmMe.js'
-import { removeAllMatchups } from '#utilMatchups/removeAllMatchups'
+import { MatchupManager } from '#MatchupManager'
 
 export class removeAllMatchupsSlash extends Command {
-    constructor(context, options) {
-        super(context, {
-            ...options,
-            name: 'removeAllMatchupsSlash',
-            aliases: [''],
-            description:
-                'Remove all matchups currently in the database & cache',
-            chatInputCommand: {
-                register: true,
-            },
-        })
-    }
+	constructor(context, options) {
+		super(context, {
+			...options,
+			name: 'removeAllMatchupsSlash',
+			aliases: [''],
+			description:
+				'Use with caution: This will clear this weeks current matchups from the database.',
+			chatInputCommand: {
+				register: true,
+			},
+		})
+	}
 
-    registerApplicationCommands(registry) {
-        registry.registerChatInputCommand(
-            (builder) =>
-                builder //
-                    .setName('removeallmatchups')
-                    .setDescription(this.description),
-            { idHints: [`1023342000562516019`] },
-        )
-    }
+	registerApplicationCommands(registry) {
+		registry.registerChatInputCommand(
+			(builder) =>
+				builder //
+					.setName('clear_matchups')
+					.setDescription(this.description),
+			{ idHints: [`1023342000562516019`] },
+		)
+	}
 
-    async chatInputRun(interaction) {
-        if (!interaction.guildId) {
-            interaction.reply({
-                content: `This command can only be used in a server.`,
-                ephemeral: true,
-            })
-            return
-        }
-        await dmMe(
-            `Clearing all matchups -- Requested by ${interaction.user.username}`,
-        )
-        await interaction.reply({
-            content: `Clearing all matchups in the database.`,
-            ephemeral: true,
-        })
-        await removeAllMatchups()
-    }
+	async chatInputRun(interaction) {
+		if (!interaction.guildId) {
+			interaction.reply({
+				content: `This command can only be used in a server.`,
+				ephemeral: true,
+			})
+			return
+		}
+		await interaction.reply({
+			content: `Clearing all matchups in the database.`,
+			ephemeral: true,
+		})
+		await new MatchupManager().clearOddsTable()
+	}
 }

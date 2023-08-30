@@ -1,5 +1,6 @@
 import { format } from 'date-fns'
 import redisCache from './redisInstance.js'
+import PlutoLogger from '#PlutoLogger'
 
 export class CacheManager {
 	/**
@@ -52,6 +53,22 @@ export class CacheManager {
 			return false
 		}
 		return todaysGames
+	}
+
+	/**
+	 * Method to remove a key from the cache
+	 */
+	async remove(key) {
+		await this.cache.del(key, async (err) => {
+			if (err) {
+				await PlutoLogger.log({
+					id: 4,
+					description: `Error deleting item from Cache`,
+				})
+			} else {
+				return true
+			}
+		})
 	}
 
 	/**

@@ -19,10 +19,10 @@ export default class IsoManager {
 		this.nflWeek = builder.withinNFLWeek()
 
 		/**
-		 * Filter within NBA Week
+		 * Filter within this week
 		 * @type {boolean}
 		 */
-		this.nbaWeek = builder.withinNBAWeek()
+		this.sevenDayWeek = builder.withinThisWeek()
 
 		/**
 		 * The date formatted as "MM/dd/yyyy".

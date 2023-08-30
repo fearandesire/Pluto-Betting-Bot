@@ -35,9 +35,16 @@ export default class IsoBuilder {
 	 * NFL Week is every wednesday; So this method will check between this week's wednesday and next wednesday
 	 * @returns {boolean} True if the date is within the current week, otherwise false.
 	 */
-	static withinNFLWeek() {
+	withinNFLWeek() {
 		const currentDate = this.dateObj
-		const currentDay = currentDate.getDay()
+		let currentDay = currentDate.getDay()
+
+		// ! Edge-case for anomaly where there is a game for wednesday
+		// ! This will allow the module to work properly
+		if (currentDay === 3) {
+			currentDate.setDate(new Date().getDate() + 1)
+			currentDay += 1
+		}
 
 		// Get the next Wednesday date
 		const nextWednesday = new Date(currentDate)

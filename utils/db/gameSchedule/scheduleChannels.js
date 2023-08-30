@@ -1,8 +1,9 @@
 import { createRequire } from 'module'
 import { createChannel } from './createChannel.js'
 import { getShortName } from '../../bot_res/getShortName.js'
-import { cronMath } from './cronMath.js'
+import CronMath from './CronMath.js'
 import logClr from '#colorConsole'
+import Cache from '#rCache'
 
 const require = createRequire(import.meta.url)
 const cron = require('node-cron')
@@ -18,32 +19,42 @@ export async function scheduleChannels(
 	awayTeam,
 	options,
 ) {
-	const { cronStartTime, notSubtracted } = options || null
-	let newCron
-	if (notSubtracted) {
-		newCron = await new cronMath(
+	const { cronStartTime, queueEarly, gameId } =
+		options || null
+	let openChannelTime
+
+	if (queueEarly) {
+		openChannelTime = await new CronMath(
 			cronStartTime,
 		).subtract(1, `hours`)
 	} else {
-		newCron = cronStartTime
+		openChannelTime = cronStartTime
 	}
 
 	const HTEAM = await getShortName(homeTeam)
 	const ATEAM = await getShortName(awayTeam)
 
-	const createCron = async () => {
+	const createSchedCron = async () => {
 		await cron.schedule(
-			`${newCron}`,
+			`${openChannelTime}`,
 			async () => {
-				await createChannel({
+				const creation = await createChannel({
 					awayTeam: ATEAM,
 					homeTeam: HTEAM,
 				})
+				if (creation) {
+					await Cache().remove(gameId)
+					await logClr({
+						text: `Removed game from cache`,
+						color: `green`,
+						status: `done`,
+					})
+				}
 			},
 			{ timezone: 'America/New_York' },
 		)
 	}
-	await createCron().then(async () => {
+	await createSchedCron().then(async () => {
 		await logClr({
 			text: `Scheduled: ${ATEAM} vs ${HTEAM}`,
 			color: 'green',

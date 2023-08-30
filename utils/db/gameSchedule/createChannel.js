@@ -1,12 +1,8 @@
 import { MessageAttachment } from 'discord.js'
 import { SapDiscClient } from '#main'
 import { createChanLog } from '#winstonLogger'
-import { fetchVsImg } from '#utilBot/fetchVsImg'
-import dmMe from '../../bot_res/dmMe.js'
-import {
-	gameEmbedOdds,
-	gameEmbedPlain,
-} from './gameEmbed.js'
+import { gameEmbedPlain } from './gameEmbed.js'
+import PlutoLogger from '#PlutoLogger'
 
 /**
  * @module createChannel
@@ -40,7 +36,7 @@ export async function createChannel(data) {
 			homeTeam,
 			awayTeam,
 		)
-		//     const imgFile = await fetchVsImg(matchupStr)
+		//  const imgFile = await fetchVsImg(matchupStr)
 		const imgFile = false
 		if (!imgFile) {
 			await gameChan.send({ embeds: [gameInfo] })
@@ -55,17 +51,16 @@ export async function createChannel(data) {
 				files: [imageAttachment],
 			})
 		}
-		await dmMe(
-			`${channelName} Game Channel created successfully\nDirect Link: <#${gameChan.id}>`,
-		)
-		createChanLog.info(
-			`Game Channel Created: ${channelName}`,
-		)
+		await PlutoLogger.log({
+			description: `Game Channel Created | ${awayTeam} vs ${homeTeam} => <#${gameChan.id}>`,
+		})
 
-		return `${channelName} Game Channel created successfully\nDirect Link: <#${gameChan.id}>`
+		return true
 	} catch (error) {
-		createChanLog.error(
-			`Error Creating Game Channel: ${error}`,
-		)
+		await PlutoLogger.log({
+			id: 4,
+			description: `Failed to create a Game Channel | ${awayTeam} vs ${homeTeam}`,
+		})
+		return false
 	}
 }

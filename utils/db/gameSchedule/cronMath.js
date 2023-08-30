@@ -1,9 +1,9 @@
 /* eslint-disable default-case */
 /**
- * @module cronMath
+ * @module CronMath
  * Add or subtract from a Cron Job time string
  */
-export function cronMath(cronTime) {
+export default function CronMath(cronTime) {
 	this.cronTime = cronTime
 	this.splitCron = this.cronTime.split(' ')
 	this.minutes = Number(this.splitCron[0])

@@ -57,16 +57,16 @@ export class viewScheduled extends Command {
 		const currentDate = new Date()
 		const dayName = format(currentDate, 'EEEE')
 
-		let todaysGamesStr = ''
-		await _.forEach(scheduled, (game) => {
-			todaysGamesStr += `${game.away_team} *@* ${game.home_team}\n`
-		})
+		const createMatchStr = (game) =>
+			`${game.away_team} *@* ${game.home_team}\n`
 
 		// # Create Embed showing scheduled games via fields
 		const emb = new MessageEmbed()
 			.setTitle(`Scheduled Games`)
 			.setColor('#e0ff19')
-			.addField(dayName, todaysGamesStr)
+		_.forEach(scheduled, (game) => {
+			emb.addField(game.day, createMatchStr(game))
+		})
 		await interaction.reply({
 			embeds: [emb],
 		})

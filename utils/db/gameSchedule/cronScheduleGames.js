@@ -10,14 +10,15 @@ import {
 import Promise from 'bluebird'
 import { db } from '#db'
 // import { PRESZN_MATCHUPS_TABLE, spinner } from '#config'
+import { SPORT } from '#env'
 import { getShortName } from '../../bot_res/getShortName.js'
 import { scheduleChannels } from './scheduleChannels.js'
-import IsoManager from '../../time/IsoManager.js'
+import IsoManager from '#iso'
 import locateChannel from '../../bot_res/locateChan.js'
 import Cache from '#rCache'
 import logClr from '#colorConsole'
 import { SCORETABLE } from '#serverConf'
-import IsoBuilder from '../../time/IsoBuilder'
+import PlutoLogger from '#PlutoLogger'
 
 /**
  * @module cronScheduleGames
@@ -35,11 +36,19 @@ export default async function cronScheduleGames() {
 		`SELECT * FROM "${SCORETABLE}" WHERE completed = false`,
 	)
 
-	const filterGames = _.filter(games, (game) => {
-		const gameDate = parseISO(game.date)
-		const thisWeek = new IsoBuilder(
-			game.Date,
-		).withinThisWeek()
+	const filterGames = _.filter(games, async (game) => {
+		let thisWeek
+		const dateManager = new IsoManager(game.date)
+		if (SPORT === 'nba') {
+			thisWeek = dateManager.sevenDayWeek
+		} else if (SPORT === 'nfl') {
+			thisWeek = await dateManager.nflWeek
+		} else {
+			await PlutoLogger.log({
+				title: `Game Scheduling Logs`,
+				description: `Error: ${SPORT} is not supported.\nCheck app configuration`,
+			})
+		}
 		return thisWeek
 	})
 
@@ -65,7 +74,12 @@ export default async function cronScheduleGames() {
 				return
 			}
 
-			const alreadyScheduled = async () => {
+			/**
+			 * Checks if the game with the given id is already scheduled.
+			 *
+			 * @return {boolean} True if the game is already scheduled, false otherwise.
+			 */
+			const checkIfScheduled = async () => {
 				const scheduled_gameIds = await Cache().get(
 					`scheduledIds`,
 				)
@@ -81,7 +95,14 @@ export default async function cronScheduleGames() {
 				)
 			}
 
-			if (alreadyScheduled()) {
+			const isScheduled = await checkIfScheduled()
+
+			if (isScheduled) {
+				await logClr({
+					text: `Skipped game as it was already scheduled. => ${game.id}`,
+					color: `green`,
+					status: `done`,
+				})
 				return
 			}
 
@@ -101,6 +122,7 @@ export default async function cronScheduleGames() {
 					{
 						cronStartTime: cronTime,
 						legible: isoManager.legible,
+						gameid: game.id,
 					},
 				)
 			} else {
@@ -112,7 +134,8 @@ export default async function cronScheduleGames() {
 					{
 						cronStartTime: cronTime,
 						legible: isoManager.legible,
-						notSubtracted: true,
+						queueEarly: true,
+						gameid: game.id,
 					},
 				)
 			}
@@ -120,6 +143,7 @@ export default async function cronScheduleGames() {
 				home_team: game.home_team,
 				away_team: game.away_team,
 				start: isoManager.legible,
+				day: isoManager.dayName,
 			})
 			await scheduledIds.push(game.id)
 		},
