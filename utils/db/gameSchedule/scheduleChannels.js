@@ -18,8 +18,7 @@ export async function scheduleChannels(
 	awayTeam,
 	options,
 ) {
-	const { cronStartTime, notSubtracted, id } =
-		options || null
+	const { cronStartTime, notSubtracted } = options || null
 	let newCron
 	if (notSubtracted) {
 		newCron = await new cronMath(
@@ -31,14 +30,14 @@ export async function scheduleChannels(
 
 	const HTEAM = await getShortName(homeTeam)
 	const ATEAM = await getShortName(awayTeam)
+
 	const createCron = async () => {
 		await cron.schedule(
 			`${newCron}`,
 			async () => {
 				await createChannel({
-					ATEAM,
-					HTEAM,
-					id,
+					awayTeam: ATEAM,
+					homeTeam: HTEAM,
 				})
 			},
 			{ timezone: 'America/New_York' },

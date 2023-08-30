@@ -1,6 +1,6 @@
 import cron from 'node-cron'
 import { logCron } from './apiUtils.js'
-import { checkCompleted } from './checkCompleted.js'
+import { handleBetMatchups } from './handleBetMatchups.js'
 import { rangeManager } from '#matchMngr'
 import cronRangeGenerator from './cronRangeGenerator.js'
 
@@ -15,7 +15,9 @@ export default async function generateCronJobs(matchesArr) {
 	if (!todaysMatches) {
 		return false
 	}
-	const { range1, range2 } = await cronRangeGenerator(matchesArr)
+	const { range1, range2 } = await cronRangeGenerator(
+		matchesArr,
+	)
 	const title = `generateCronJobs`
 	const msg = `Checking for completed matches.`
 
@@ -25,7 +27,7 @@ export default async function generateCronJobs(matchesArr) {
 				title,
 				msg,
 			})
-			await checkCompleted()
+			await handleBetMatchups()
 		})
 
 		cron.schedule(range2, async () => {
@@ -33,16 +35,23 @@ export default async function generateCronJobs(matchesArr) {
 				title,
 				msg,
 			})
-			await checkCompleted()
+			await handleBetMatchups()
 		})
-		await rangeManager({ post: true, r1: range1, r2: range2 })
+		await rangeManager({
+			post: true,
+			r1: range1,
+			r2: range2,
+		})
 		const rangeObj = {
 			range1,
 			range2,
 		}
 		return Promise.resolve(rangeObj)
 	} catch (error) {
-		console.error(`Error during generateCronJobs:`, error)
+		console.error(
+			`Error during generateCronJobs:`,
+			error,
+		)
 		throw Promise.reject(error)
 	}
 }

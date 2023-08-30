@@ -16,25 +16,31 @@ import IsoManager from '../../time/IsoManager.js'
 import locateChannel from '../../bot_res/locateChan.js'
 import Cache from '#rCache'
 import logClr from '#colorConsole'
-import { serverConf } from '../../serverConfig.js'
+import { SCORETABLE } from '#serverConf'
+import IsoBuilder from '../../time/IsoBuilder'
 
 /**
- * @module schedulePreseasonGames
- * Generate Cron Jobs for Game Channel creation for Preseason Games
+ * @module cronScheduleGames
+ * Generate Cron Jobs for Game Channel creation
  * Captures games that are wtihin today to be scheduled
  * If there's games that are within the current day & have yet to have a game channel created, they will be created
  * Game channels are scheduled to be by default 1 hour ahead of the game. If we are within 1 hour or already past (game started):
  * This module will create the channels right now
- *
  */
-export default async function schedulePreseasonGames() {
+
+export default async function cronScheduleGames() {
 	const scheduledTally = []
+	const scheduledIds = []
 	const games = await db.manyOrNone(
-		`SELECT * FROM "${serverConf.preseason_matchups_tbl}"`,
+		`SELECT * FROM "${SCORETABLE}" WHERE completed = false`,
 	)
+
 	const filterGames = _.filter(games, (game) => {
 		const gameDate = parseISO(game.date)
-		return isToday(gameDate) && !game.completed
+		const thisWeek = new IsoBuilder(
+			game.Date,
+		).withinThisWeek()
+		return thisWeek
 	})
 
 	await Promise.map(
@@ -59,6 +65,26 @@ export default async function schedulePreseasonGames() {
 				return
 			}
 
+			const alreadyScheduled = async () => {
+				const scheduled_gameIds = await Cache().get(
+					`scheduledIds`,
+				)
+				if (
+					!scheduled_gameIds ||
+					_.isEmpty(scheduled_gameIds)
+				) {
+					return false
+				}
+				return _.includes(
+					scheduled_gameIds,
+					game.id,
+				)
+			}
+
+			if (alreadyScheduled()) {
+				return
+			}
+
 			if (
 				isWithinInterval(parsedGameDate, {
 					start: now,
@@ -77,11 +103,6 @@ export default async function schedulePreseasonGames() {
 						legible: isoManager.legible,
 					},
 				)
-				await scheduledTally.push({
-					home_team: game.home_team,
-					away_team: game.away_team,
-					start: isoManager.legible,
-				})
 			} else {
 				// Game is scheduled in the future beyond 1 hour
 				cronTime = isoManager.cron
@@ -94,16 +115,18 @@ export default async function schedulePreseasonGames() {
 						notSubtracted: true,
 					},
 				)
-				await scheduledTally.push({
-					home_team: game.home_team,
-					away_team: game.away_team,
-					start: isoManager.legible,
-				})
 			}
+			await scheduledTally.push({
+				home_team: game.home_team,
+				away_team: game.away_team,
+				start: isoManager.legible,
+			})
+			await scheduledIds.push(game.id)
 		},
 		{ concurrency: 1 },
 	)
 	await Cache().set(`scheduled`, scheduledTally)
+	await Cache().set(`scheduledIds`, scheduledIds)
 	await logClr({
 		text: `# of Scheduled Games: ${scheduledTally.length}`,
 		color: `green`,

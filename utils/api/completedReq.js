@@ -3,7 +3,7 @@ import { Log, CHECK_COMPLETED_TIMER } from '#config'
 
 import { completedReqLog } from '#winstonLogger'
 import { isGameDay } from '#botUtil/isGameDay'
-import { checkCompleted } from './checkCompleted.js'
+import { handleBetMatchups } from './handleBetMatchups.js'
 import { resolveCompCron } from '../db/gameSchedule/resolveCompCron.js'
 import { reply } from '../bot_res/reply.js'
 
@@ -35,22 +35,28 @@ export function completedReq() {
 				const cronRange1 = completedCron?.range1
 					? completedCron.range1
 					: undefined
-				const cronRange2 = completedCron?.range2 ?? undefined
+				const cronRange2 =
+					completedCron?.range2 ?? undefined
 				completedReqLog.info(
 					`[completedReq.js] Cron Range Hours:\nRange 1: ${cronRange1}\nRange 2: ${cronRange2}`,
 				)
 				Log.Blue(
 					`[completedReq.js]\nRes from \`resolveCompCron\`\nCron Range Hours:\nRange 1: ${cronRange1}\nRange 2: ${cronRange2}`,
 				)
-				if (checkGameDay == true && cronRange1 !== undefined) {
+				if (
+					checkGameDay == true &&
+					cronRange1 !== undefined
+				) {
 					cron.schedule(
 						cronRange1,
 						async () => {
 							await completedReqLog.info(
 								`[Range 1] Checking for completed games..`,
 							)
-							await Log.Yellow(`Checking for completed games`)
-							await checkCompleted()
+							await Log.Yellow(
+								`Checking for completed games`,
+							)
+							await handleBetMatchups()
 						},
 						{ timezone: 'America/New_York' },
 					)
@@ -61,10 +67,15 @@ export function completedReq() {
 								await completedReqLog.info(
 									`[Range 2] Checking for completed games..`,
 								)
-								await Log.Yellow(`Checking for completed games`)
-								await checkCompleted()
+								await Log.Yellow(
+									`Checking for completed games`,
+								)
+								await handleBetMatchups()
 							},
-							{ timezone: 'America/New_York' },
+							{
+								timezone:
+									'America/New_York',
+							},
 						)
 					}
 				} else {
@@ -79,9 +90,9 @@ export function completedReq() {
 			{ timezone: 'America/New_York' },
 		)
 	}
-	// # Force execution of the checkCompleted function via CMD {@link forceCheck}
+	// # Force execution of the handleBetMatchups function via CMD {@link forceCheck}
 	this.forceCheck = async function () {
-		await checkCompleted()
+		await handleBetMatchups()
 	}
 	// #  Called via CMD to call for creation of the Cron Jobs
 	this.restartedCheck = async function (interaction) {
@@ -103,8 +114,10 @@ export function completedReq() {
 						await completedReqLog.info(
 							`[Range 1] Checking for completed games..`,
 						)
-						await Log.Yellow(`Checking for completed games`)
-						await checkCompleted()
+						await Log.Yellow(
+							`Checking for completed games`,
+						)
+						await handleBetMatchups()
 					},
 					{ timezone: 'America/New_York' },
 				)
@@ -116,8 +129,10 @@ export function completedReq() {
 							await completedReqLog.info(
 								`[Range 2] Checking for completed games..`,
 							)
-							await Log.Yellow(`Checking for completed games`)
-							await checkCompleted()
+							await Log.Yellow(
+								`Checking for completed games`,
+							)
+							await handleBetMatchups()
 						},
 						{ timezone: 'America/New_York' },
 					)

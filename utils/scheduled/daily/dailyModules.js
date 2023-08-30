@@ -1,20 +1,16 @@
-import { format } from 'date-fns'
 import { createRequire } from 'module'
 import Promise from 'bluebird'
-import { db } from '#db'
-import { LIVEMATCHUPS, RANGES } from '#env'
-import { Log, _, SCHEDULE_TIMER, isPreSzn } from '#config'
+import { Log, SCHEDULE_TIMER } from '#config'
 import { removeAllMatchups } from '#utilMatchups/removeAllMatchups'
 import collectOdds from '../../api/collectOdds.js'
 import { debugLog, labelMsg } from '../../logging.js'
-import { checkCompleted } from '../../api/checkCompleted.js'
-import { preseasonGameHeartbeat } from '../../api/gameHeartbeat.js'
-import schedulePreseasonGames from '../../db/gameSchedule/schedulePreseasonGames.js'
+import { handleBetMatchups } from '../../api/handleBetMatchups.js'
 import {
-    cronChanScheduler,
-    cronHeartbeat,
+	init_Cron_Chan_Scheduler,
+	init_Cron_Heartbeat,
 } from '../scheduledModules.js'
 import logClr from '#colorConsole'
+import cronScheduleGames from '../../db/gameSchedule/cronScheduleGames.js'
 
 const require = createRequire(import.meta.url)
 const cron = require('node-cron')
@@ -26,49 +22,47 @@ The timer is based on weekly schedule rotation for NFL, and daily for NBA [Regul
 */
 
 export async function scheduleReq() {
-    cron.schedule(
-        `${SCHEDULE_TIMER}`,
-        async () => {
-            await debugLog.info(
-                labelMsg(
-                    `scheduleReq`,
-                    `Closing any existing bets before collecting new odds.`,
-                ),
-            )
+	cron.schedule(
+		`${SCHEDULE_TIMER}`,
+		async () => {
+			await debugLog.info(
+				labelMsg(
+					`scheduleReq`,
+					`Closing any existing bets before collecting new odds.`,
+				),
+			)
 
-            await checkCompleted().then(async () => {
-                await removeAllMatchups().then(async () => {
-                    await collectOdds()
-                })
-            })
-        },
-        { timezone: 'America/New_York' },
-    )
+			await handleBetMatchups().then(async () => {
+				await removeAllMatchups().then(async () => {
+					await collectOdds()
+				})
+			})
+		},
+		{ timezone: 'America/New_York' },
+	)
 }
+
 /**
- * Executed at the top of the day, daily.
+ * @function dbDailyOps
+ * Functions executed daily
+ * Includes:
+ * - Cron jobs for checking completed games & score
+ * - Scheduling game channels
+ * - Closing Bets
  */
 export async function dbDailyOps() {
-    logClr({
-        text: `Starting daily operations`,
-        color: `yellow`,
-        status: `processing`,
-    })
-    try {
-        if (isPreSzn) {
-            await Promise.all([
-                await cronHeartbeat(), // Check for completed games via heartbeat
-                await schedulePreseasonGames(), // Queue games to be made now, in case bot is restarted at an odd time
-                await cronChanScheduler(true),
-            ])
-        } else {
-            await Promise.all([
-                await checkCompleted(),
-                await removeAllMatchups(),
-                await collectOdds(),
-            ])
-        }
-    } catch (err) {
-        Log.Red(err)
-    }
+	logClr({
+		text: `Starting daily operations`,
+		color: `yellow`,
+		status: `processing`,
+	})
+	try {
+		await Promise.all([
+			await init_Cron_Heartbeat(), // Start Cron for Heartbeats
+			await cronScheduleGames(), // Check for any games that need to be scheduled now
+			await init_Cron_Chan_Scheduler(), // Start Cron to schedule games daily
+		])
+	} catch (err) {
+		Log.Red(err)
+	}
 }

@@ -4,113 +4,143 @@
  */
 
 import {
-    format,
-    isAfter,
-    isToday,
-    parseISO,
-    getHours,
-    getMinutes,
-    getDay,
-    isValid,
-    startOfWeek,
-    isWithinInterval,
-    endOfWeek,
-    addMinutes,
+	format,
+	isAfter,
+	isToday,
+	parseISO,
+	getHours,
+	getMinutes,
+	getDay,
+	isValid,
+	startOfWeek,
+	isWithinInterval,
+	endOfWeek,
+	addMinutes,
 } from 'date-fns'
 
 export default class IsoBuilder {
-    /**
-     * Creates a new instance of IsoBuilder with the given time.
-     * @param {string} time - A string representing a valid date and time in ISO format.
-     */
-    constructor(time) {
-        this.parseTime = parseISO(time)
-        this.tday = new Date()
-    }
+	/**
+	 * Creates a new instance of IsoBuilder with the given time.
+	 * @param {string} time - A string representing a valid date and time in ISO format.
+	 */
+	constructor(time) {
+		this.parseTime = parseISO(time)
+		this.dateObj = new Date()
+	}
 
-    /**
-     * Formats the date using the specified format.
-     * @param {string} style - A string representing the desired format.
-     * @returns {string} The date formatted in the specified style.
-     */
-    format(style) {
-        return format(this.parseTime, style)
-    }
+	/**
+	 * @method withinNFLWeek
+	 *
+	 * Verify if a date is within the current NFL Week
+	 * NFL Week is every wednesday; So this method will check between this week's wednesday and next wednesday
+	 * @returns {boolean} True if the date is within the current week, otherwise false.
+	 */
+	static withinNFLWeek() {
+		const currentDate = this.dateObj
+		const currentDay = currentDate.getDay()
 
-    /**
-     * Determines whether the date is in the past.
-     * @returns {boolean} True if the date is in the past, otherwise false.
-     */
-    filterPast() {
-        return isAfter(this.parseTime, new Date())
-    }
+		// Get the next Wednesday date
+		const nextWednesday = new Date(currentDate)
+		nextWednesday.setDate(
+			currentDate.getDate() +
+				((3 - currentDay + 7) % 7),
+		)
 
-    /**
-     * Filter out any games that are not within Monday - Sunday of the current week
-     * @returns {boolean} True if the date is within the current week, otherwise false.
-     */
+		// Get the Wednesday of this week
+		const thisWednesday = new Date(nextWednesday)
+		thisWednesday.setDate(nextWednesday.getDate() - 7)
 
-    withinThisWeek() {
-        const currentWeekStart = startOfWeek(new Date())
-        const currentWeekEnd = endOfWeek(new Date())
-        const withinWeek = isWithinInterval(
-            this.parseTime,
-            {
-                start: currentWeekStart,
-                end: currentWeekEnd,
-            },
-        )
-        return withinWeek
-    }
+		// Check if the date is within this week's Wednesday or the next Wednesday
+		const targetDate = this.parseTime
+		const isWithinWeek =
+			targetDate >= thisWednesday &&
+			targetDate < nextWednesday
+		return isWithinWeek
+	}
 
-    /**
-     * Determines whether the date is today.
-     * @returns {boolean} True if the date is today, otherwise false.
-     */
-    isToday() {
-        return isToday(this.parseTime)
-    }
+	/**
+	 * Formats the date using the specified format.
+	 * @param {string} style - A string representing the desired format.
+	 * @returns {string} The date formatted in the specified style.
+	 */
+	format(style) {
+		return format(this.parseTime, style)
+	}
 
-    /**
-     * Converts the date to a cron job formatted string.
-     * @returns {string} The date formatted as a cron job.
-     */
-    toCron() {
-        const startHour = getHours(this.parseTime)
-        const startMin = getMinutes(this.parseTime)
-        const startDay = getDay(this.parseTime)
-        const startMonth = Number(
-            format(this.parseTime, `M`),
-        )
-        const startDayOfMonth = Number(
-            format(this.parseTime, `d`),
-        )
-        const cronStartTime = `${startMin} ${startHour} ${startDayOfMonth} ${startMonth} ${startDay}`
-        return cronStartTime
-    }
+	/**
+	 * Determines whether the date is in the past.
+	 * @returns {boolean} True if the date is in the past, otherwise false.
+	 */
+	filterPast() {
+		return isAfter(this.parseTime, new Date())
+	}
 
-    /**
-     * Creates a Cron Job time for 2 minutes from the current time.
-     */
-    rightNowToCron() {
-        const rightNow = new Date()
-        const futureRightNow = addMinutes(rightNow, 2) // # Add 2 minutes for functions & timing
-        const rightNowMin = getMinutes(futureRightNow)
-        const rightNowHour = getHours(rightNow)
-        const rightNowDay = getDay(rightNow)
-        const rightNowMonth = Number(format(rightNow, `M`))
-        const rightNowDayOfMonth = Number(
-            format(rightNow, `d`),
-        )
-        const cronStartTime = `${rightNowMin} ${rightNowHour} ${rightNowDayOfMonth} ${rightNowMonth} ${rightNowDay}`
-        return cronStartTime
-    }
+	/**
+	 * Filter out any games that are not within Monday - Sunday of the current week
+	 * @returns {boolean} True if the date is within the current week, otherwise false.
+	 */
 
-    /**
-     * Validates that the date is a valid date.
-     * @returns {boolean} True if the date is valid, otherwise false.
-     */
-    validate() {
-        return isValid(this.parseTime)
-    }
+	withinThisWeek() {
+		const currentWeekStart = startOfWeek(new Date())
+		const currentWeekEnd = endOfWeek(new Date())
+		const withinWeek = isWithinInterval(
+			this.parseTime,
+			{
+				start: currentWeekStart,
+				end: currentWeekEnd,
+			},
+		)
+		return withinWeek
+	}
+
+	/**
+	 * Determines whether the date is today.
+	 * @returns {boolean} True if the date is today, otherwise false.
+	 */
+	isToday() {
+		return isToday(this.parseTime)
+	}
+
+	/**
+	 * Converts the date to a cron job formatted string.
+	 * @returns {string} The date formatted as a cron job.
+	 */
+	toCron() {
+		const startHour = getHours(this.parseTime)
+		const startMin = getMinutes(this.parseTime)
+		const startDay = getDay(this.parseTime)
+		const startMonth = Number(
+			format(this.parseTime, `M`),
+		)
+		const startDayOfMonth = Number(
+			format(this.parseTime, `d`),
+		)
+		const cronStartTime = `${startMin} ${startHour} ${startDayOfMonth} ${startMonth} ${startDay}`
+		return cronStartTime
+	}
+
+	/**
+	 * Creates a Cron Job time for 2 minutes from the current time.
+	 */
+	rightNowToCron() {
+		const rightNow = new Date()
+		const futureRightNow = addMinutes(rightNow, 2) // # Add 2 minutes for functions & timing
+		const rightNowMin = getMinutes(futureRightNow)
+		const rightNowHour = getHours(rightNow)
+		const rightNowDay = getDay(rightNow)
+		const rightNowMonth = Number(format(rightNow, `M`))
+		const rightNowDayOfMonth = Number(
+			format(rightNow, `d`),
+		)
+		const cronStartTime = `${rightNowMin} ${rightNowHour} ${rightNowDayOfMonth} ${rightNowMonth} ${rightNowDay}`
+		return cronStartTime
+	}
+
+	/**
+	 * Validates that the date is a valid date.
+	 * @returns {boolean} True if the date is valid, otherwise false.
+	 */
+	validate() {
+		return isValid(this.parseTime)
+	}
 }

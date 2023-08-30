@@ -6,7 +6,7 @@ import {
 } from '@sapphire/framework'
 import { RateLimitManager } from '@sapphire/ratelimits'
 import logClr from './utils/bot_res/ColorConsole.js'
-import { serverConf } from './utils/serverConfig.js'
+import '#serverConf'
 
 // import { startExpress } from './utils/api/requests/middleware.js'
 
@@ -39,7 +39,7 @@ const SapDiscClient = new SapphireClient({
 	loadMessageCommandListeners: true,
 	statcord: {
 		client_id: `${process.env.botsId}`,
-		key: serverConf.statcord_key,
+		key: process.env.STATCORD_KEY,
 		autopost: true, // (Optional) Allows automatic posting of statistics.
 		debug: false, // (Optional) Show debug messages.
 		sharding: false, // (Optional) Activate the sharding mode, it is important to read the notes below.

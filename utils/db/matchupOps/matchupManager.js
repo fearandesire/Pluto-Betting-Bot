@@ -1,107 +1,116 @@
-import cron from 'node-cron'
-import { format } from 'date-fns'
 import { db } from '#db'
-import { LIVEMATCHUPS, RANGES } from '#env'
-import { Log, _ } from '#config'
-import { logCron } from '#apiUtils'
-import { checkCompleted } from '../../api/checkCompleted.js'
+import { LIVEMATCHUPS } from '#config'
+import logClr from '#colorConsole'
+import { SCORETABLE } from '#serverConf'
+import PlutoLogger from '#PlutoLogger'
 
-export function todaysDayNum() {
-    const d = new Date()
-    const dayNum = d.getDate()
-    return dayNum
-}
+export class MatchupManager {
+	static async storeMatchup(columnData) {
+		const {
+			teamOne,
+			teamTwo,
+			teamOneOdds,
+			teamTwoOdds,
+			matchupId,
+			gameDate,
+			startTimeISO,
+			cronStartTime,
+			legibleStartTime,
+			idApi,
+		} = columnData
 
-/**
- * To be used on a restart of the application to keep persistence of completed check API calls via Cron Jobs.
- * Query DB for the ranges. If there is data, init cron jobs for the ranges. Otherwise, log there was no ranges set.
- * Table 'RANGES
- * @function rangeRefresh
- */
-export async function rangeRefresh() {
-    const ranges = await db.manyOrNone(
-        `SELECT * FROM "${RANGES}"`,
-    )
-    if (!_.isEmpty(ranges)) {
-        const { range1, range2 } = ranges[0]
+		await db
+			.none(
+				`INSERT INTO "${LIVEMATCHUPS}" (matchid, teamOne, teamTwo, teamOneOdds, teamTwoOdds, dateofmatchup, "startTime", cronstart, legiblestart, idapi) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+				[
+					matchupId,
+					teamOne,
+					teamTwo,
+					teamOneOdds,
+					teamTwoOdds,
+					gameDate,
+					startTimeISO,
+					cronStartTime,
+					legibleStartTime,
+					idApi,
+				],
+			)
+			.catch(async (err) => {
+				await PlutoLogger.log({
+					title: `DB Logs`,
+					description: `Error adding matchup into ${LIVEMATCHUPS} table\nError: \`${err?.message}\``,
+				})
+				throw new Error(err)
+			})
+	}
 
-        if (range1 === null) {
-            Log.Red(
-                `No Cron Ranges were found in the database.`,
-            )
-            return false
-        }
-        if (range1 !== undefined) {
-            const splitrange1 = range1.split(' ')
-            const day = splitrange1[2]
-            if (Number(todaysDayNum()) !== Number(day)) {
-                Log.Red(
-                    `Older range found in DB. Clearing table\nToday: ${todaysDayNum()}\nRange: ${day}`,
-                )
-                await db.none(`DELETE FROM "${RANGES}"`)
-                return false
-            }
-            cron.schedule(
-                `${range1}`,
-                async () => {
-                    await checkCompleted()
-                },
-                {
-                    scheduled: true,
-                    timezone: 'America/New_York',
-                },
-            )
-            logCron({
-                title: `Range Refresh`,
-                msg: `Init Cron Job Series for completed games.\nRange: ${range1}`,
-            })
-        }
-        if (range2 !== undefined && range1 !== undefined) {
-            cron.schedule(
-                `${range2}`,
-                async () => {
-                    await checkCompleted()
-                },
-                {
-                    scheduled: true,
-                    timezone: 'America/New_York',
-                },
-            )
-            logCron({
-                title: `Range Refresh`,
-                msg: `Init Cron Job Series for completed games.\nRange: ${range2}`,
-            })
-        }
-        return true
-    }
-    Log.Red(`No ranges were found in the database.`)
-    return false
-}
+	/**
+	 * @public
+	 * @method clearOddsTable
+	 * Remove matchups from the matchups table responsible for keeping track of odds for bets (Odds Table)
+	 */
+	static async clearOddsTable() {
+		await db
+			.oneOrNone(`DELETE FROM "${LIVEMATCHUPS}"`)
+			.catch(async () =>
+				PlutoLogger.log({
+					title: `DB Logs`,
+					description: `Error occured when clearing the Odds Matchup table.`,
+				}),
+			)
+	}
 
-/**
- * Query DB and retrieve, or store the cron job time ranges to use for game score API calls.
- */
-export async function rangeManager(options) {
-    let res
-    const { fetch, post, r1, r2 } = options
-    // # Query `RANGES` tables for the cron job ranges
-    const cronRanges = await db.oneOrNone(
-        `SELECT * FROM "${RANGES}"`,
-    )
-    if (fetch) {
-        // # select `range1` and `range2` from the query
-        const { range1, range2 } = cronRanges[0]
-        res = { range1, range2 }
-    }
-    if (post) {
-        // # Erase current data in the table, then post
-        await db.none(`DELETE FROM "${RANGES}"`)
-        await db.none(
-            `INSERT INTO "${RANGES}" (range1, range2) VALUES ($1, $2)`,
-            [r1, r2],
-        )
-        console.log(`[rangeManager] Stored Cron Ranges.`)
-        res = true
-    }
-    return res
+	/**
+	 * @public
+	 * @method clearScoreTable
+	 * Remove completed games, or a single completed game from the Scores Table in the DB
+	 * @param {string} id - ID of the game. If not provided, all matchups in the table will be removed
+	 */
+
+	static async clearScoreTable(id) {
+		// # Delete the games that are completed
+		if (!id) {
+			await db.none(
+				`DELETE FROM "${SCORETABLE}" WHERE completed = true`,
+			)
+			await logClr({
+				text: `Cleared all completed matchups from the DB`,
+				color: `green`,
+				status: `done`,
+			})
+		} else {
+			await db.none(
+				`DELETE FROM "${SCORETABLE}" WHERE id = $1`,
+				[id],
+			)
+			await logClr({
+				text: `Cleared matchup from DB with ID => ${id}`,
+				color: `green`,
+				status: `done`,
+			})
+		}
+	}
+
+	/**
+	 * @public
+	 * @method rmvMatchupOdds
+	 * Remove specified matchups from the odds matchup table
+	 * @param {string} hTeam - Home team
+	 * @param {string} aTeam - Away team
+	 */
+	static async rmvMatchupOdds(hTeam, aTeam) {
+		try {
+			await db.none(
+				`DELETE FROM "${LIVEMATCHUPS}" WHERE teamone = $1 AND teamtwo = $2`,
+				[hTeam, aTeam],
+			)
+			return true
+		} catch (err) {
+			await PlutoLogger.log({
+				title: `DB Logs`,
+				description: `Error occured removing matchup ${hTeam} vs ${aTeam} from the database`,
+			})
+			return false
+		}
+	}
 }

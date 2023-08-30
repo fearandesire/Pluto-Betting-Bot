@@ -1,14 +1,23 @@
 import _ from 'lodash'
 import { isToday, isYesterday, parseISO } from 'date-fns'
-import { PRESZN_MATCHUPS_TABLE } from '#config'
 import { db } from '#db'
+import { handleBetMatchups } from '#api/handleBetMatchups'
 import { getShortName } from '../bot_res/getShortName.js'
 import { queueDeleteChannel } from '../db/gameSchedule/queueDeleteChannel.js'
 import locateChannel from '../bot_res/locateChan.js'
 import logClr from '#colorConsole'
-import { deleteCompletedMatches } from '../db/matchupOps/deleteCompleted.js'
+import { SCORETABLE } from '#serverConf'
+import { MatchupManager } from '#MatchupManager'
 
-export async function preseasonGameHeartbeat() {
+/**
+ * @function getHeartbeat
+ * Checks for completed games.
+ * Upon finding a completed game:
+ * - Remove from Score Tbl in DB
+ * - Queue Game Channel to be deleted
+ * - Close bets
+ */
+export async function getHeartbeat() {
 	// await logClr({
 	// 	text: `Checking for completed preseason games`,
 	// 	status: `processing`,
@@ -16,7 +25,7 @@ export async function preseasonGameHeartbeat() {
 	// })
 
 	const completedGames = await db.manyOrNone(
-		`SELECT * FROM "${PRESZN_MATCHUPS_TABLE}" WHERE completed = true`,
+		`SELECT * FROM "${SCORETABLE}" WHERE completed = true`,
 	)
 
 	if (_.isEmpty(completedGames)) {
@@ -28,7 +37,7 @@ export async function preseasonGameHeartbeat() {
 		return
 	}
 
-	// Filter games that are within today or the prior today
+	// ? Filter games that are within today or the prior today
 	const filterGames = _.filter(completedGames, (game) => {
 		const gameDate = parseISO(game.date)
 		const criteria =
@@ -59,20 +68,22 @@ export async function preseasonGameHeartbeat() {
 		const channelExists = await locateChannel(chanName)
 		if (!channelExists) {
 			await logClr({
-				text: `Unable to locate channel ${chanName} - It was likely deleted prior.`,
+				text: `Unable to locate channel ${chanName} to be deleted`,
 				status: `error`,
 				color: `red`,
 			})
-			await deleteCompletedMatches(true, game.id)
-			return
+		} else {
+			await queueDeleteChannel(chanName)
+			await logClr({
+				text: `Queued ${chanName} to be deleted`,
+				color: `blue`,
+			})
 		}
+		// ! Close Bets
+		await handleBetMatchups()
+		// ! Remove from Score Tbl
+		await MatchupManager.clearScoreTable(game.id)
 		deletionTally[0] += 1
-		await queueDeleteChannel(chanName)
-		await logClr({
-			text: `Queued ${chanName} to be deleted`,
-			color: `blue`,
-		})
-		await deleteCompletedMatches(true, game.id)
 	})
 	// await logClr({
 	// 	text: `Completed game channel deletion que process. =>\n Count: ${deletionTally} `,

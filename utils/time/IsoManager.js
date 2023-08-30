@@ -5,49 +5,61 @@
 import IsoBuilder from './IsoBuilder.js'
 
 export default class IsoManager {
-    /**
-     * Creates a new instance of IsoManager with the given time.
-     * @param {string} time - A string representing a valid date and time in ISO format.
-     */
-    constructor(time) {
-        const builder = new IsoBuilder(time)
+	/**
+	 * Creates a new instance of IsoManager with the given time.
+	 * @param {string} time - A string representing a valid date and time in ISO format.
+	 */
+	constructor(time) {
+		const builder = new IsoBuilder(time)
 
-        /**
-         * The date formatted as "MM/dd/yyyy".
-         * @type {string}
-         */
-        this.mdy = builder.format(`MM/dd/yyyy`)
+		/**
+		 * Filter within NFL Week
+		 * @type {boolean}
+		 */
+		this.nflWeek = builder.withinNFLWeek()
 
-        /**
-         * The date formatted as "EEE, h:mm a".
-         * @type {string}
-         */
-        this.legible = builder.format(`EEE, h:mm a`)
+		/**
+		 * Filter within NBA Week
+		 * @type {boolean}
+		 */
+		this.nbaWeek = builder.withinNBAWeek()
 
-        /**
-         * Determines whether the date is in the past.
-         * @type {boolean}
-         */
-        this.inPast = builder.filterPast()
+		/**
+		 * The date formatted as "MM/dd/yyyy".
+		 * @type {string}
+		 */
+		this.mdy = builder.format(`MM/dd/yyyy`)
 
-        /**
-         * Determines whether the date is today.
-         * @type {boolean}
-         */
-        this.today = builder.isToday()
+		/**
+		 * The date formatted as "EEE, h:mm a".
+		 * @type {string}
+		 */
+		this.legible = builder.format(`EEE, h:mm a`)
 
-        /**
-         * The name of the day of the week.
-         * @type {string}
-         */
-        this.dayName = builder.format(`EEEE`)
+		/**
+		 * Determines whether the date is in the past.
+		 * @type {boolean}
+		 */
+		this.inPast = builder.filterPast()
 
-        /**
-         * The date formatted as a cron job.
-         * @type {string}
-         */
-        this.cron = builder.toCron()
+		/**
+		 * Determines whether the date is today.
+		 * @type {boolean}
+		 */
+		this.today = builder.isToday()
 
-        this.cronRightNow = builder.rightNowToCron()
-    }
+		/**
+		 * The name of the day of the week.
+		 * @type {string}
+		 */
+		this.dayName = builder.format(`EEEE`)
+
+		/**
+		 * The date formatted as a cron job.
+		 * @type {string}
+		 */
+		this.cron = builder.toCron()
+
+		this.cronRightNow = builder.rightNowToCron()
+	}
 }

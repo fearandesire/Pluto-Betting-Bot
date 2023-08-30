@@ -16,6 +16,8 @@
 		"dev": "cross-env SERVERNAME=nfl-dev SEASON_TYPE=preseason node ./Pluto.mjs -r dotenv/config dotenv_config_path=./.env.dev"
 	},
 	"imports": {
+		"#serverConf": "./utils/serverConfig.js",
+		"#PlutoLogger": "./utils/PlutoLogger.js",
 		"#daily/*": "./utils/scheduled/daily/*.js",
 		"#db": "./Database/dbindex.js",
 		"#utilBot/*": "./utils/bot_res/*.js",
@@ -51,7 +53,7 @@
 		"#winstonLogger": "./utils/logging.js",
 		"#mem": "./utils/bot_res/memUse.js",
 		"#iso": "./utils/time/IsoManager.js",
-		"#matchMngr": "./utils/db/matchupOps/matchupManager.js",
+		"#MatchupManager": "./utils/db/matchupOps/matchupManager.js",
 		"#qBuilder": "./utils/db/queryBuilder.js"
 	},
 	"type": "module",

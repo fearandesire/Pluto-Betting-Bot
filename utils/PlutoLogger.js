@@ -1,15 +1,14 @@
-import discord from 'discord.js'
+import { MessageEmbed } from 'discord.js'
 import { SapDiscClient } from '#main'
-import { serverConf } from './serverConfig.js'
+import { logChan as logChanID } from './serverConfig.js'
 
-const { EmbedBuilder } = discord
 export default class PlutoLogger {
 	static async log(data) {
 		const logChan = await SapDiscClient.channels.fetch(
-			serverConf.logChan,
+			logChanID,
 		)
 		// # Pre-Built Embed for Log Channel
-		const logsEmbed = new EmbedBuilder()
+		const logsEmbed = new MessageEmbed()
 		const color = data?.color || `#ff0000`
 		const title = data?.title || `Logs`
 		const desc = data?.description || `N/A`
