@@ -2,6 +2,12 @@ import { MessageEmbed } from 'discord.js'
 import { SapDiscClient } from '#main'
 import { logChan as logChanID } from './serverConfig.js'
 
+/**
+ * @class PlutoLogger
+ *
+ * Handle logging to the designated server's log channel for Pluto
+ * Logs events regarding the application for viewing the backend processes in real-time
+ */
 export default class PlutoLogger {
 	static async log(data) {
 		const logChan = await SapDiscClient.channels.fetch(
@@ -13,7 +19,7 @@ export default class PlutoLogger {
 		const logsEmbed = new MessageEmbed()
 		switch (data?.id) {
 			case 0:
-				color = '#00ff00' // Green for General Logs
+				color = '#c4f3fd' // Off-White Sky Blue for General Logs
 				title = 'General'
 				break
 			case 1:
@@ -21,8 +27,8 @@ export default class PlutoLogger {
 				title = 'Database'
 				break
 			case 2:
-				color = '#ffff00' // Yellow for Game Scheduling Logs
-				title = 'Game Scheduling'
+				color = '#ff8000' // Orange for Game Scheduling Logs
+				title = 'Game Handling'
 				break
 			case 3:
 				color = '#ff00ff' // Magenta for Betting Logs
@@ -33,8 +39,9 @@ export default class PlutoLogger {
 				title = 'Error'
 				break
 			default:
-				color = data?.color || `#ff0000`
-				title = data?.title || `Logs`
+				// Default to General Logs
+				color = data?.color || `#c4f3fd`
+				title = data?.title || `General`
 				break
 		}
 		const desc = data?.description || `N/A`

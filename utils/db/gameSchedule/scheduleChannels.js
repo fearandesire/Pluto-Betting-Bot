@@ -4,6 +4,7 @@ import { getShortName } from '../../bot_res/getShortName.js'
 import CronMath from './CronMath.js'
 import logClr from '#colorConsole'
 import Cache from '#rCache'
+import PlutoLogger from '#PlutoLogger'
 
 const require = createRequire(import.meta.url)
 const cron = require('node-cron')
@@ -43,7 +44,17 @@ export async function scheduleChannels(
 					homeTeam: HTEAM,
 				})
 				if (creation) {
-					await Cache().remove(gameId)
+					const cachedIds = await Cache().get(
+						`scheduledIds`,
+					)
+					// Find and remove game from cache via ID
+					const newIds = cachedIds.filter(
+						(id) => id !== gameId,
+					)
+					await Cache().set(
+						`scheduledIds`,
+						newIds,
+					)
 					await logClr({
 						text: `Removed game from cache`,
 						color: `green`,
@@ -55,10 +66,9 @@ export async function scheduleChannels(
 		)
 	}
 	await createSchedCron().then(async () => {
-		await logClr({
-			text: `Scheduled: ${ATEAM} vs ${HTEAM}`,
-			color: 'green',
-			status: `done`,
+		await PlutoLogger.log({
+			id: `2`,
+			description: `Game Scheduled | ${homeTeam} vs ${awayTeam}`,
 		})
 	})
 	return true

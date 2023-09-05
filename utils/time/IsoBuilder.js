@@ -16,6 +16,7 @@ import {
 	isWithinInterval,
 	endOfWeek,
 	addMinutes,
+	isBefore,
 } from 'date-fns'
 
 export default class IsoBuilder {
@@ -149,5 +150,17 @@ export default class IsoBuilder {
 	 */
 	validate() {
 		return isValid(this.parseTime)
+	}
+
+	/**
+	 * For NFL:
+	 * Identify if the time provided is before 1 PM (EST)
+	 * @returns {boolean} True if the time is before 1 PM, otherwise false.
+	 */
+	isBefore1PM() {
+		const time = this.parseTime
+		const onePM = new Date()
+		onePM.setHours(13)
+		return isBefore(time, onePM)
 	}
 }

@@ -44,18 +44,6 @@ export class viewScheduled extends Command {
 			})
 			return
 		}
-		/**
-		 * Schedule Array e.g
-		 * [
-		 {
-  			home_team: 'New Orleans Saints',
-  			away_team: 'Houston Texans',
-  			start: 'Sun, 8:00 PM'
-		 }
-		 * ]
-		 */
-		const currentDate = new Date()
-		const dayName = format(currentDate, 'EEEE')
 
 		const createMatchStr = (game) =>
 			`${game.away_team} *@* ${game.home_team}\n`

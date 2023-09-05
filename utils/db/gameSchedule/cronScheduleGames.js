@@ -1,7 +1,6 @@
 /* eslint-disable camelcase */
 import _ from 'lodash'
 import {
-	isToday,
 	parseISO,
 	isWithinInterval,
 	addHours,
@@ -106,6 +105,7 @@ export default async function cronScheduleGames() {
 				return
 			}
 
+			let queueEarly = false
 			if (
 				isWithinInterval(parsedGameDate, {
 					start: now,
@@ -116,34 +116,27 @@ export default async function cronScheduleGames() {
 				// Game is scheduled within 1 hour
 				// Create Cron set to exactly 1 minute from the current time
 				cronTime = isoManager.cronRightNow
-				await scheduleChannels(
-					game.home_team,
-					game.away_team,
-					{
-						cronStartTime: cronTime,
-						legible: isoManager.legible,
-						gameid: game.id,
-					},
-				)
+				queueEarly = true
 			} else {
 				// Game is scheduled in the future beyond 1 hour
 				cronTime = isoManager.cron
-				await scheduleChannels(
-					game.home_team,
-					game.away_team,
-					{
-						cronStartTime: cronTime,
-						legible: isoManager.legible,
-						queueEarly: true,
-						gameid: game.id,
-					},
-				)
 			}
+			await scheduleChannels(
+				game.home_team,
+				game.away_team,
+				{
+					cronStartTime: cronTime,
+					legible: isoManager.legible,
+					queueEarly,
+					gameid: game.id,
+				},
+			)
 			await scheduledTally.push({
 				home_team: game.home_team,
 				away_team: game.away_team,
 				start: isoManager.legible,
 				day: isoManager.dayName,
+				date: game.date,
 			})
 			await scheduledIds.push(game.id)
 		},

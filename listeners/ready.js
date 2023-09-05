@@ -1,9 +1,6 @@
 import { Listener } from '@sapphire/framework'
-import { SEASON_TYPE } from '#env'
-import { rangeRefresh } from '../utils/db/matchupOps/ranges.js'
 import logClr from '../utils/bot_res/ColorConsole.js'
 import { dbDailyOps } from '../utils/scheduled/daily/dailyModules.js'
-import PlutoLogger from '../utils/PlutoLogger.js'
 
 // eslint-disable-next-line no-unused-vars
 export class ReadyListener extends Listener {

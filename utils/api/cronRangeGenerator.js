@@ -27,7 +27,9 @@ import { parseISO } from 'date-fns'
 export default function cronRangeGenerator(matchesArr) {
 	const earliestGame = matchesArr[0]
 	const latestGame = matchesArr[matchesArr.length - 1]
-	const earliestGameStart = parseISO(earliestGame.startTime)
+	const earliestGameStart = parseISO(
+		earliestGame.startTime,
+	)
 	const latestGameStart = parseISO(latestGame.startTime)
 	const earliestDayNum = earliestGameStart.getDate()
 	let latestDayNum = latestGameStart.getDate()
@@ -35,7 +37,9 @@ export default function cronRangeGenerator(matchesArr) {
 	const earliestHour = earliestGameStart.getHours()
 	const latestHour = latestGameStart.getHours()
 	let latestHourString
-	const earliestHourString = `${earliestHour}-${earliestHour + 3}`
+	const earliestHourString = `${earliestHour}-${
+		earliestHour + 3
+	}`
 	// # Increment the day, hour string should be 0-3
 	if (latestHour >= 20) {
 		const nextDay = new Date(latestGameStart)

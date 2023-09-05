@@ -1,18 +1,12 @@
-import { createRequire } from 'module'
 import Promise from 'bluebird'
-import { Log, SCHEDULE_TIMER } from '#config'
-import collectOdds from '../../api/collectOdds.js'
-import { debugLog, labelMsg } from '../../logging.js'
-import { handleBetMatchups } from '../../api/handleBetMatchups.js'
+import { Log } from '#config'
 import {
 	init_Cron_Chan_Scheduler,
 	init_Cron_Heartbeat,
+	init_Cron_Ranges,
 } from '../scheduledModules.js'
 import logClr from '#colorConsole'
 import cronScheduleGames from '../../db/gameSchedule/cronScheduleGames.js'
-
-const require = createRequire(import.meta.url)
-const cron = require('node-cron')
 
 /**
  * @function dbDailyOps
@@ -33,6 +27,7 @@ export async function dbDailyOps() {
 			await init_Cron_Heartbeat(), // Start Cron for Heartbeats
 			await cronScheduleGames(), // Check for any games that need to be scheduled now
 			await init_Cron_Chan_Scheduler(), // Start Cron to schedule games daily
+			await init_Cron_Ranges(), // Start Cron to check completed games
 		])
 	} catch (err) {
 		Log.Red(err)

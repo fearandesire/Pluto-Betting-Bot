@@ -56,7 +56,10 @@ export class CacheManager {
 	}
 
 	/**
-	 * Method to remove a key from the cache
+	 * @method remove
+	 * Remove a key from cache
+	 * @param {string} key
+	 *
 	 */
 	async remove(key) {
 		await this.cache.del(key, async (err) => {
@@ -74,8 +77,8 @@ export class CacheManager {
 	/**
 	 * Clears all cached data.
 	 */
-	clear() {
-		this.cache.flushAll()
+	async clear() {
+		await this.cache.flushAll()
 		return true
 	}
 }

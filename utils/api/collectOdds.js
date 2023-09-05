@@ -122,7 +122,7 @@ export default async function collectOdds() {
 		}
 		await MatchupManager.storeMatchups(colmdata) // # Store in database
 	})
-	await scheduleEmbed()
-	await generateCronJobs(await fetchTodaysMatches())
+	// await scheduleEmbed()
+	// await generateCronJobs(await fetchTodaysMatches())
 	return true
 }

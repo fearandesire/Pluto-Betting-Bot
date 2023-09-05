@@ -61,5 +61,11 @@ export default class IsoManager {
 		this.cron = builder.toCron()
 
 		this.cronRightNow = builder.rightNowToCron()
+
+		/**
+		 * Checks if the date is before 1 PM
+		 * @type {boolean}
+		 */
+		this.before1PM = builder.isBefore1PM()
 	}
 }

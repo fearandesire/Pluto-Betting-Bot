@@ -52,6 +52,7 @@ export async function createChannel(data) {
 			})
 		}
 		await PlutoLogger.log({
+			id: `2`,
 			description: `Game Channel Created | ${awayTeam} vs ${homeTeam} => <#${gameChan.id}>`,
 		})
 

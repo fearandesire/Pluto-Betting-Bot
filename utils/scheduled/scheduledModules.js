@@ -1,13 +1,17 @@
 import { Cron } from 'croner'
-import { dmMe } from '#config'
+import _ from 'lodash'
 import { getHeartbeat } from '../api/gameHeartbeat.js'
 import logClr from '#colorConsole'
 import cronScheduleGames from '../db/gameSchedule/cronScheduleGames.js'
-import { checkCompleted, scheduledGames } from '#serverConf'
+import { PlutoLogger } from '#PlutoLogger'
+import {
+	getRanges,
+	cronHeartbeat,
+	scheduledGames,
+} from '#serverConf'
+import completedChecks from '../bot_res/cronCompletedChecks.js'
+import { Cache } from '#rCache'
 
-console.log(
-	`Check Completed Games: ${checkCompleted}\nScheduled Games: ${scheduledGames}`,
-)
 /**
  * @function init_Cron_Heartbeat
  * Initialize Cron Job for Game Heartbeat
@@ -20,18 +24,14 @@ export async function init_Cron_Heartbeat() {
 	})
 	// # Run Cron every 10 minutes to check for completed games & score
 	// eslint-disable-next-line no-unused-vars
-	const cron = new Cron(`${checkCompleted}`, async () => {
+	const cron = new Cron(`${cronHeartbeat}`, async () => {
 		try {
 			await getHeartbeat()
 		} catch (err) {
-			await logClr({
-				text: err,
-				color: 'red',
-				status: 'error',
+			await PlutoLogger.log({
+				id: 2,
+				description: `An error occured when checking the heartbeat of games\nError: \`${err.message}\``,
 			})
-			await dmMe(
-				`Error occured when checking heartbeat of games`,
-			)
 		}
 	})
 }
@@ -50,5 +50,34 @@ export async function init_Cron_Chan_Scheduler() {
 	// eslint-disable-next-line no-unused-vars
 	const cron = new Cron(`${scheduledGames}`, async () => {
 		await cronScheduleGames()
+	})
+}
+
+/**
+ * @function init_Cron_Ranges
+ * Initialize Cron Job for checking completed games to handle bets & closing game channels
+ */
+
+export async function init_Cron_Ranges() {
+	logClr({
+		text: `Init Cron Job for Checking Completed Games`,
+		color: `yellow`,
+		status: `processing`,
+	})
+	// eslint-disable-next-line no-unused-vars
+	const cron = new Cron(`${getRanges}`, async () => {
+		try {
+			const games = await Cache().get(`scheduled`)
+			if (_.isEmpty(games)) {
+				return
+			}
+			const dates = _.map(games, (game) => game?.date)
+			await completedChecks(dates)
+		} catch (err) {
+			await PlutoLogger.log({
+				id: 2,
+				description: `An error occured when creating Completed Check Cron Ranges\nError: \`${err.message}\``,
+			})
+		}
 	})
 }

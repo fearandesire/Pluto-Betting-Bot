@@ -30,8 +30,9 @@ const serverEnv = {
 	bettingChan: configData.bettingChan,
 	logChan: configData.logChan,
 	statcordKey: configData.statcordKey,
-	checkCompleted: configData.checkCompleted,
+	gameHeartbeat: configData.gameHeartbeat,
 	scheduledGames: configData.scheduledGames,
+	getRanges: configData.getRanges,
 }
 
 const {
@@ -53,7 +54,6 @@ const {
 	checkCompleted,
 	scheduledGames,
 } = serverEnv
-
 
 export {
 	ODDS,
