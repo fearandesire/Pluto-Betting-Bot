@@ -18,6 +18,7 @@ import Cache from '#rCache'
 import logClr from '#colorConsole'
 import { SCORETABLE } from '#serverConf'
 import PlutoLogger from '#PlutoLogger'
+import parseScheduled from '../../bot_res/parseScheduled.js'
 
 /**
  * @module cronScheduleGames
@@ -149,5 +150,7 @@ export default async function cronScheduleGames() {
 		color: `green`,
 		status: `done`,
 	})
+	const emb = await parseScheduled(scheduledTally, SPORT)
+	await PlutoLogger.sendEmbed(emb)
 	return true
 }

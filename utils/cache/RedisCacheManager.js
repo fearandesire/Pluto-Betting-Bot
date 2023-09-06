@@ -68,9 +68,10 @@ export class CacheManager {
 					id: 4,
 					description: `Error deleting item from Cache`,
 				})
-			} else {
+				return false
+			} 
 				return true
-			}
+			
 		})
 	}
 

@@ -3,12 +3,42 @@ import { SapDiscClient } from '#main'
 import { logChan as logChanID } from './serverConfig.js'
 
 /**
- * @class PlutoLogger
- *
+ * PlutoLogger
+ * @namespace
  * Handle logging to the designated server's log channel for Pluto
  * Logs events regarding the application for viewing the backend processes in real-time
  */
 export default class PlutoLogger {
+	/**
+	 *
+	 * Send pre-built embed to the log channel
+	 * @function sendEmbed
+	 * @memberof PlutoLogger
+	 * @param {Object} embed
+	 * @static
+	 */
+	static async sendEmbed(embed) {
+		const logChan = await SapDiscClient.channels.fetch(
+			logChanID,
+		)
+		await logChan.send({
+			embeds: [embed],
+		})
+	}
+
+	/**
+	 * Create embed that will be sent to the designated log channel for the app
+	 *
+	 * @function log
+	 * @memberof PlutoLogger
+	 * @static
+	 * @async
+	 *
+	 * @param {object} data - Object containing the data
+	 * @param {string | null} data.id - The ID of the log
+	 * @param {string} data.description - The description of the log
+	 * @param {string} data.footer - The footer of the embed
+	 */
 	static async log(data) {
 		const logChan = await SapDiscClient.channels.fetch(
 			logChanID,
@@ -44,7 +74,7 @@ export default class PlutoLogger {
 				title = data?.title || `General`
 				break
 		}
-		const desc = data?.description || `N/A`
+		const desc = data.description || `N/A`
 		const footer = data?.footer || {
 			text: `Pluto | Dev. by fenixforever`,
 		}

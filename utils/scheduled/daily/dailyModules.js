@@ -7,6 +7,8 @@ import {
 } from '../scheduledModules.js'
 import logClr from '#colorConsole'
 import cronScheduleGames from '../../db/gameSchedule/cronScheduleGames.js'
+import clearScheduled from '../../db/gameSchedule/clearScheduled.js'
+import collectOdds from '../../api/collectOdds.js'
 
 /**
  * @function dbDailyOps
@@ -24,9 +26,11 @@ export async function dbDailyOps() {
 	})
 	try {
 		await Promise.all([
+			await clearScheduled(),
 			await init_Cron_Heartbeat(), // Start Cron for Heartbeats
 			await cronScheduleGames(), // Check for any games that need to be scheduled now
 			await init_Cron_Chan_Scheduler(), // Start Cron to schedule games daily
+			await collectOdds(),
 			await init_Cron_Ranges(), // Start Cron to check completed games
 		])
 	} catch (err) {

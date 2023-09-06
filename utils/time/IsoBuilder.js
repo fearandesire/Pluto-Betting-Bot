@@ -17,6 +17,7 @@ import {
 	endOfWeek,
 	addMinutes,
 	isBefore,
+	isSameWeek,
 } from 'date-fns'
 
 export default class IsoBuilder {
@@ -162,5 +163,15 @@ export default class IsoBuilder {
 		const onePM = new Date()
 		onePM.setHours(13)
 		return isBefore(time, onePM)
+	}
+
+	isBefore() {
+		return isBefore(this.parseTime, new Date())
+	}
+
+	isSameWeek() {
+		return isSameWeek(this.parseTime, new Date(), {
+			weekStartsOn: 3,
+		})
 	}
 }

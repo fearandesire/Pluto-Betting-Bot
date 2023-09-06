@@ -4,7 +4,6 @@ import { getShortName } from '../../bot_res/getShortName.js'
 import CronMath from './CronMath.js'
 import logClr from '#colorConsole'
 import Cache from '#rCache'
-import PlutoLogger from '#PlutoLogger'
 
 const require = createRequire(import.meta.url)
 const cron = require('node-cron')
@@ -66,10 +65,11 @@ export async function scheduleChannels(
 		)
 	}
 	await createSchedCron().then(async () => {
-		await PlutoLogger.log({
-			id: `2`,
-			description: `Game Scheduled | ${homeTeam} vs ${awayTeam}`,
-		})
+		// ! TODO: Create Adv. Logging toggle
+		// await PlutoLogger.log({
+		// 	id: 2,
+		// 	description: `Game Scheduled | ${homeTeam} vs ${awayTeam}`,
+		// })
 	})
 	return true
 }

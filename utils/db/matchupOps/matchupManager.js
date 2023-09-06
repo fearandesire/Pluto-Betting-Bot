@@ -5,7 +5,7 @@ import { SCORETABLE } from '#serverConf'
 import PlutoLogger from '#PlutoLogger'
 
 export class MatchupManager {
-	static async storeMatchup(columnData) {
+	static async storeMatchups(columnData) {
 		const {
 			teamOne,
 			teamTwo,
@@ -107,7 +107,7 @@ export class MatchupManager {
 			return true
 		} catch (err) {
 			await PlutoLogger.log({
-				title: `DB Logs`,
+				id: 1,
 				description: `Error occured removing matchup ${hTeam} vs ${aTeam} from the database`,
 			})
 			return false

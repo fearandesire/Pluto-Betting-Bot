@@ -4,11 +4,8 @@ import Promise from 'bluebird'
 import { ODDS, LIVEMATCHUPS } from '#config'
 import { assignMatchID } from '#botUtil/AssignIDs'
 import { db } from '#db'
-import { scheduleEmbed } from '../db/gameSchedule/scheduleEmbed.js'
-import generateCronJobs from './generateCronJobs.js'
 import IsoManager from '#iso'
 import IsoBuilder from '../time/IsoBuilder.js'
-import { fetchTodaysMatches } from '../scheduled/daily/dailyModules_Utils.js'
 import PlutoLogger from '#PlutoLogger'
 import { MatchupManager } from '#MatchupManager'
 
@@ -41,17 +38,15 @@ export default async function collectOdds() {
 	}).then((res) => res.json())
 	// Filter out games from the past
 	const filteredPastGames = gamesArr.filter((game) => {
-		const isoHandler = new IsoBuilder(
+		const isoHandler = new IsoManager(
 			game.commence_time,
 		)
-		const current = isoHandler.filterPast()
-		const withinWeek = isoHandler.withinThisWeek()
-		return current && withinWeek
+		return isoHandler.notInPast && isoHandler.isSameWeek
 	})
 
 	if (_.isEmpty(filteredPastGames)) {
 		await PlutoLogger.log({
-			title: `Odds API Logs`,
+			id: 3,
 			description: `No games were found.`,
 		})
 		return false
@@ -122,7 +117,11 @@ export default async function collectOdds() {
 		}
 		await MatchupManager.storeMatchups(colmdata) // # Store in database
 	})
-	// await scheduleEmbed()
-	// await generateCronJobs(await fetchTodaysMatches())
+	await PlutoLogger.log({
+		id: 3,
+		description: `Collected & updated odds for ${_.size(
+			matchups,
+		)} games.`,
+	})
 	return true
 }

@@ -38,9 +38,10 @@ export default class IsoManager {
 
 		/**
 		 * Determines whether the date is in the past.
+		 * @returns {boolean} True if the date is in the past, otherwise false.
 		 * @type {boolean}
 		 */
-		this.inPast = builder.filterPast()
+		this.notInPast = builder.filterPast()
 
 		/**
 		 * Determines whether the date is today.
@@ -67,5 +68,17 @@ export default class IsoManager {
 		 * @type {boolean}
 		 */
 		this.before1PM = builder.isBefore1PM()
+
+		/**
+		 * Determines whether the date is before the current time.
+		 */
+		this.isBefore = builder.isBefore()
+
+		/**
+		 *
+		 * @type {boolean}
+		 * @returns {boolean} True - Same Week | False - Different Week
+		 */
+		this.isSameWeek = builder.isSameWeek()
 	}
 }
