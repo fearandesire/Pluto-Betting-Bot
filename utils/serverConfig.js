@@ -51,8 +51,9 @@ const {
 	bettingChan,
 	logChan,
 	statcordKey,
-	checkCompleted,
+	gameHeartbeat,
 	scheduledGames,
+	getRanges,
 } = serverEnv
 
 export {
@@ -71,8 +72,9 @@ export {
 	bettingChan,
 	logChan,
 	statcordKey,
-	checkCompleted,
+	gameHeartbeat,
 	scheduledGames,
+	getRanges,
 }
 
 export { configData as serverConf, serverEnv }
