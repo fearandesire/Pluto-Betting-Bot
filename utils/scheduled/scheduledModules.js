@@ -3,14 +3,14 @@ import _ from 'lodash'
 import { getHeartbeat } from '../api/gameHeartbeat.js'
 import logClr from '#colorConsole'
 import cronScheduleGames from '../db/gameSchedule/cronScheduleGames.js'
-import { PlutoLogger } from '#PlutoLogger'
+import PlutoLogger from '#PlutoLogger'
 import {
 	getRanges,
-	cronHeartbeat,
+	gameHeartbeat,
 	scheduledGames,
 } from '#serverConf'
 import completedChecks from '../bot_res/cronCompletedChecks.js'
-import { Cache } from '#rCache'
+import Cache from '#rCache'
 
 /**
  * @function init_Cron_Heartbeat
@@ -24,7 +24,7 @@ export async function init_Cron_Heartbeat() {
 	})
 	// # Run Cron every 10 minutes to check for completed games & score
 	// eslint-disable-next-line no-unused-vars
-	const cron = new Cron(`${cronHeartbeat}`, async () => {
+	const cron = new Cron(`${gameHeartbeat}`, async () => {
 		try {
 			await getHeartbeat()
 		} catch (err) {

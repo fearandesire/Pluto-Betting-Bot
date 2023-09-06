@@ -1,6 +1,6 @@
 import _ from 'lodash'
 import { parseISO, isBefore, addHours } from 'date-fns'
-import { IsoManager } from '#iso'
+import IsoManager from '#iso'
 
 /**
  * Creates Cron Jobs to make API Calls to check for completed games to close bets
