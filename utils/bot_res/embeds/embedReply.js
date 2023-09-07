@@ -1,9 +1,4 @@
 import { MessageEmbed } from 'discord.js'
-import {
-	embedfooter as defaultFooter,
-	helpfooter,
-} from '#config'
-
 import { Log } from '#LogColor'
 import { fetchChanId } from '#botUtil/fetchChanId'
 
@@ -47,7 +42,8 @@ export async function embedReply(
 	const embedDescription = embedContent?.description ?? ''
 	const embedFields = embedContent?.fields
 	const embedFooter =
-		embedContent?.footer ?? defaultFooter
+		embedContent?.footer ??
+		`Pluto | Dev. by fenixforever`
 	const hasFields = embedFields ?? false
 	const confirmFields = !!hasFields
 	const target = embedContent?.target || 'reply'
@@ -73,6 +69,7 @@ export async function embedReply(
 			.setTitle(embedTitle)
 			.setThumbnail(thumbnail)
 			.setDescription(embedDescription)
+			.setFooter(embedFooter)
 		if (target === 'reply' && isSilent === true) {
 			if (followUp) {
 				return interaction.followUp({
@@ -170,7 +167,7 @@ export async function QuickError(
 		.setColor('#ff0000')
 		.setTitle(':triangular_flag_on_post: Error')
 		.setDescription(text)
-		.setFooter({ text: helpfooter })
+		.setFooter({ text: 'Pluto | Dev. by fenixforever' })
 	if (message?.deferred === true) {
 		if (interactionEph === true) {
 			await message.followUp({

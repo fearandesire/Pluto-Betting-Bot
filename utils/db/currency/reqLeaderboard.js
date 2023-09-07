@@ -7,11 +7,9 @@ import { CURRENCY } from '#config'
  */
 
 export async function reqLeaderboard() {
-    return await db.map(
-        `SELECT userid,balance FROM "${CURRENCY}" ORDER BY balance DESC NULLS LAST`,
-        ['123'],
-        (lbObj) => {
-            return lbObj
-        },
-    )
+	return db.map(
+		`SELECT userid,balance FROM "${CURRENCY}" ORDER BY balance DESC NULLS LAST`,
+		['123'],
+		(lbObj) => lbObj,
+	)
 }

@@ -1,5 +1,6 @@
 import { Command } from '@sapphire/framework'
 import { MessageEmbed } from 'discord.js'
+import embedColors from '../lib/colorsConfig.js'
 
 export class help extends Command {
 	constructor(context, options) {
@@ -23,7 +24,7 @@ export class help extends Command {
 	}
 
 	async chatInputRun(interaction) {
-		const desc = `:coin:  Pluto provides the fun of placing wagers on sports games, featuring leaderboards and statistics to compete against others.
+		const desc = `Pluto provides the fun of placing wagers on sports games, featuring leaderboards and statistics to compete against others.
 
                **Getting Started**
                 
@@ -32,7 +33,7 @@ export class help extends Command {
                 You can:
 - View odds for the day with /odds
 - Place bets with the /bet command.
-- Use /dailyclaim every 24 hours to receive a bonus $100
+- Use /dailyclaim every 24 hours to receive a bonus $$
                 
 
 **Process**
@@ -40,10 +41,10 @@ export class help extends Command {
                 You'll receive a DM from Pluto with your winnings.
                 
                 Use /commands to view all commands available
-                ***To learn more about Pluto or support development, use the /about command***`
+                ***💜 Want to support the development of Pluto? Use the /about command***`
 		const helpEmbed = new MessageEmbed()
-			.setTitle(`How to use Pluto`)
-			.setColor('#ffff00')
+			.setTitle(`How to use Pluto :coin:`)
+			.setColor(`${embedColors.PlutoYellow}`)
 			.setDescription(desc)
 			.setThumbnail(`https://i.imgur.com/RWjfjyv.png`)
 			.setFooter({

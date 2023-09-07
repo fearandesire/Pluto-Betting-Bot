@@ -74,6 +74,8 @@ export class commands extends Command {
 			.setFooter({
 				text: `Pluto | Developed by fenixforever`,
 			})
+			.setThumbnail(`https://i.imgur.com/RWjfjyv.png`)
+
 		interaction.reply({
 			embeds: [cmdListEmbed],
 			ephemeral: true,

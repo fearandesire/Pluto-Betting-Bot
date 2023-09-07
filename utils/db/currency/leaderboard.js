@@ -19,7 +19,7 @@ export async function leaderboard(message) {
 		await server.members.fetch().then(async () => {
 			const lbArray = []
 			let usersIndex
-			for (let i = 0; i < lb.length; i++) {
+			for (let i = 0; i < lb.length; i += 1) {
 				const lbUserId = lb[i].userid
 				const lbUserBal = lb[i].balance
 				if (lbUserId === message?.user?.id) {
