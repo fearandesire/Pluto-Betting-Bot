@@ -7,7 +7,7 @@ export class help extends Command {
 			...options,
 			name: 'help',
 			aliases: [''],
-			description: 'Learn how to use Pluto',
+			description: '❓ Learn how to use Pluto',
 			chatInputCommand: {
 				register: true,
 			},

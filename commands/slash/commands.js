@@ -8,7 +8,7 @@ export class commands extends Command {
 			...options,
 			name: 'commands',
 			description:
-				'View all commands available to you.',
+				'💡 View all commands available to you.',
 			chatInputCommand: {
 				register: true,
 			},

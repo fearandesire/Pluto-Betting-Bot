@@ -5,9 +5,9 @@ export class registerSlash extends Command {
 	constructor(context, options) {
 		super(context, {
 			...options,
-			name: 'registerSlash',
+			name: 'register',
 			aliases: [''],
-			description: 'Create an account with Pluto',
+			description: '👤 Create an account with Pluto',
 			chatInputCommand: {
 				register: true,
 			},
