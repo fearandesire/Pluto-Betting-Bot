@@ -1,62 +1,77 @@
 import { MessageEmbed } from 'discord.js'
-import { LIVEMATCHUPS, QuickError } from '#config'
-
+import _ from 'lodash'
+import {
+	LIVEMATCHUPS,
+	QuickError,
+	orderByDays,
+	dayOrder,
+} from '#config'
 import { db } from '#db'
 import { formatOdds } from '#cmdUtil/formatOdds'
 import { guildImgURL } from '#embed'
+import parseScheduled from '../bot_res/parseScheduled.js'
+import IsoManager from '#iso'
 
 /**
- * @module returnOdds
  * Return all currently available odds from the database
+ * @param {Interaction} interaction - The Discord Interaction Object
  */
 
 export async function returnOdds(interaction) {
-	const oddsFields = []
 	const matchupDb = await db.manyOrNone(
 		`SELECT * FROM "${LIVEMATCHUPS}"`,
 	)
-	if (!matchupDb || Object.keys(matchupDb).length === 0) {
+	if (_.isEmpty(matchupDb)) {
 		await QuickError(
 			interaction,
 			'No odds available to view.',
 		)
-		return
 	}
-	// # iterate through matchupDB with a for loop so we can access the values of each nested object
-	for (const key in matchupDb) {
-		const match = matchupDb[key]
+
+	const thumbnail = await guildImgURL(interaction.client)
+	console.log(`thumbnail =>`, thumbnail)
+	// // # iterate through matchupDB with a for loop so we can access the values of each nested object
+	const compiledEmbed = await compileOdds(
+		matchupDb,
+		thumbnail,
+	)
+
+	await interaction.followUp({
+		embeds: [new MessageEmbed(compiledEmbed)],
+	})
+}
+
+async function compileOdds(oddsArr, thumbnail) {
+	const oddsFields = []
+	// eslint-disable-next-line guard-for-in
+	for await (const match of Object.values(oddsArr)) {
 		const hTeam = match.teamone
 		const aTeam = match.teamtwo
 		let hOdds = match.teamoneodds
 		let aOdds = match.teamtwoodds
-		const startTime = match.legiblestart
 		const oddsFormat = await formatOdds(hOdds, aOdds)
 		hOdds = oddsFormat.homeOdds
 		aOdds = oddsFormat.awayOdds
+		const isoManager = new IsoManager(match.startTime)
+		const day = isoManager.dayName
 		oddsFields.push({
-			name: `• ${startTime}`,
-			value: `**${hTeam}**\nOdds: *${hOdds}*\n**${aTeam}**\nOdds: *${aOdds}*\n──────`,
-			inline: true,
+			day,
+			date: match.startTime,
+			start: isoManager.timeOnly,
+			away_team: aTeam,
+			home_team: hTeam,
+			home_odds: hOdds,
+			away_odds: aOdds,
 		})
 	}
-	// # count # of objects in oddsFields - if the # is not divisible by 3, turn the last inline field to false
-	const oddsFieldCount = oddsFields.length
-	if (oddsFieldCount % 3 !== 0) {
-		oddsFields[oddsFieldCount - 1].inline = false
+
+	const count = oddsFields.length
+	// Sort the grouped games by day using Lodash's `orderBy` function
+	const options = {
+		includeOdds: true,
+		footer: `Odds are subject to change. | ${count} games available to bet on.`,
+		thumbnail,
 	}
-	//   console.log(oddsFields)
-	const embedObj = {
-		color: `#00ffff`,
-		title: `:mega: H2H Odds`,
-		fields: oddsFields,
-		thumbnail: {
-			url: `${guildImgURL(interaction.client)}`,
-		},
-		footer: {
-			text: `Odds are subject to change. | ${oddsFieldCount} games available to bet on.`,
-		},
-	}
-	await interaction.followUp({
-		embeds: [new MessageEmbed(embedObj)],
-	})
+	const gamesEmbed = parseScheduled(oddsFields, options)
+	return gamesEmbed
 }

@@ -36,6 +36,7 @@ export default class IsoManager {
 		 */
 		this.legible = builder.format(`EEE, h:mm a`)
 
+		this.timeOnly = builder.format('h:mm a')
 		/**
 		 * Determines whether the date is in the past.
 		 * @returns {boolean} True if the date is in the past, otherwise false.

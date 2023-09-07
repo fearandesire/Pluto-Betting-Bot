@@ -9,7 +9,7 @@ export class odds extends Command {
 			name: 'odds',
 			aliases: [''],
 			description:
-				'View the matchups & odds for the entire week',
+				'🔎 View the matchups & odds for the entire week',
 			chatInputCommand: {
 				register: true,
 			},
@@ -27,14 +27,13 @@ export class odds extends Command {
 	}
 
 	async chatInputRun(interaction) {
-		if (isPreSzn) {
+		if (isPreSzn()) {
 			return interaction.reply({
-				content: `It's currently the preseason, no bets can be placed! Please wait for the season to begin.`,
+				content: `This is unavailable in the preseason.`,
+				ephemeral: true,
 			})
 		}
 		await interaction.deferReply({ ephemeral: true })
-		const userid = interaction.user.id
-		const interactionEph = true
-		await returnOdds(interaction, interactionEph)
+		await returnOdds(interaction)
 	}
 }

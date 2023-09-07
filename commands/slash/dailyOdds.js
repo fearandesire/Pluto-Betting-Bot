@@ -26,9 +26,10 @@ export class dailyOdds extends Command {
 	}
 
 	async chatInputRun(interaction) {
-		if (isPreSzn) {
+		if (isPreSzn()) {
 			return interaction.reply({
-				content: `It's currently the preseason, no bets can be placed! Please wait for the season to begin.`,
+				content: `This is unavailable in the preseason.`,
+				ephemeral: true,
 			})
 		}
 		const userid = interaction.user.id

@@ -135,7 +135,7 @@ export default async function cronScheduleGames() {
 			await scheduledTally.push({
 				home_team: game.home_team,
 				away_team: game.away_team,
-				start: isoManager.legible,
+				start: isoManager.timeOnly,
 				day: isoManager.dayName,
 				date: game.date,
 			})
