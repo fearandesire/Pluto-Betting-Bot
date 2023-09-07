@@ -1,14 +1,15 @@
 import { Command } from '@sapphire/framework'
+import { validateUser } from '#utilValidate/validateExistingUser'
 import { isPreSzn } from '#config'
-import { returnOdds } from '../../utils/cache/returnOdds.js'
+import { checkBetsCache } from '../../utils/cache/checkBetsCache.js'
 
-export class dailyOdds extends Command {
+export class myBetsSlash extends Command {
 	constructor(context, options) {
 		super(context, {
 			...options,
-			name: 'dailyOdds',
+			name: 'myBetsSlash',
 			aliases: [''],
-			description: 'View available matchups & odds',
+			description: 'View your currently active bets',
 			chatInputCommand: {
 				register: true,
 			},
@@ -19,9 +20,9 @@ export class dailyOdds extends Command {
 		registry.registerChatInputCommand(
 			(builder) =>
 				builder //
-					.setName('dailyodds')
+					.setName('mybets')
 					.setDescription(this.description),
-			{ idHints: [`1033408964534214746`] },
+			{ idHints: [`1023323729540952075`] },
 		)
 	}
 
@@ -34,6 +35,15 @@ export class dailyOdds extends Command {
 		}
 		const userid = interaction.user.id
 		const interactionEph = true
-		await returnOdds(interaction, interactionEph)
+		const isRegistered = await validateUser(
+			interaction,
+			userid,
+		)
+		if (!isRegistered) return
+		await checkBetsCache(
+			interaction,
+			userid,
+			interactionEph,
+		)
 	}
 }

@@ -1,6 +1,7 @@
 import { Command } from '@sapphire/framework'
 import { MessageEmbed } from 'discord.js'
 import _ from 'lodash'
+import embedColors from "../../lib/colorsConfig.js"
 
 export class commands extends Command {
 	constructor(context, options) {
@@ -59,7 +60,7 @@ export class commands extends Command {
 					command,
 					description,
 				] of Object.entries(value)) {
-					formattedCommands += `**\`${command}\`** - ${description}\n`
+					formattedCommands += `**\`/${command}\`** - ${description}\n`
 				}
 				formattedCommands += '\n'
 			}
@@ -68,10 +69,10 @@ export class commands extends Command {
 		const cmdDescription = formatCommands(cmdList)
 		const cmdListEmbed = new MessageEmbed()
 			.setTitle('Commands')
-			.setColor(`#f6eb1a`)
+			.setColor(`${embedColors.PlutoYellow}`)
 			.setDescription(cmdDescription)
 			.setFooter({
-				text: `Pluto | Developed by FENIX#7559`,
+				text: `Pluto | Developed by fenixforever`,
 			})
 		interaction.reply({
 			embeds: [cmdListEmbed],

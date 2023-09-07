@@ -1,6 +1,7 @@
 import { Command } from '@sapphire/framework'
 import { getBettingStats } from '#botUtil/getBettingStats'
 import { QuickError } from '#config'
+import PlutoLogger from '#PlutoLogger'
 
 export class Stats extends Command {
 	constructor(context, options) {
@@ -9,7 +10,7 @@ export class Stats extends Command {
 			name: 'stats',
 			aliases: [''],
 			description:
-				"📊 View betting stats for yourself, or in 'others'.",
+				'📊 View betting stats for yourself, or other people',
 			chatInputCommand: {
 				register: true,
 			},
@@ -25,14 +26,14 @@ export class Stats extends Command {
 					subcommand
 						.setName('everyone')
 						.setDescription(
-							'View betting stats for everyone in the server.',
+							'👀 View betting stats for everyone in the server.',
 						),
 				)
 				.addSubcommand((subcommand) =>
 					subcommand
 						.setName('user')
 						.setDescription(
-							'View betting stats for a specific user.',
+							'👁️ View betting stats for a specific user.',
 						)
 						.addMentionableOption((option) =>
 							option //
@@ -47,7 +48,7 @@ export class Stats extends Command {
 					subcommand
 						.setName('yourself')
 						.setDescription(
-							'📗 View your personal betting stats.',
+							'📈 View your personal betting stats.',
 						),
 				),
 		)
@@ -69,7 +70,10 @@ export class Stats extends Command {
 					interaction,
 					`Unable to collect stats.`,
 				)
-				console.error(err)
+				await PlutoLogger.log({
+					id: 4,
+					description: `An error occured when collecting stats.`,
+				})
 			})
 		} else
 			await getBettingStats({
@@ -81,7 +85,10 @@ export class Stats extends Command {
 					interaction,
 					`Unable to collect stats.`,
 				)
-				console.error(err)
+				await PlutoLogger.log({
+					id: 4,
+					description: `An error occured when collecting stats.\nError: ${err?.msg}`,
+				})
 			})
 	}
 }

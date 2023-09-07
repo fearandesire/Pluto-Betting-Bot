@@ -7,6 +7,7 @@ import {
 	dayOrder,
 	orderByDays,
 } from '#config'
+import embedColors from '../../lib/colorsConfig.js'
 
 /**
  * @function parseScheduled
@@ -26,13 +27,13 @@ export default async function parseScheduled(
 	let title
 
 	if (includeOdds) {
-		embColor = `#e2f1fe`
+		embColor = `${embedColors.PlutoBlue}`
 		title = `:mega: H2H Odds`
 		createMatchStr = (game) =>
 			`${game.away_team} *(${game.away_odds})* *@* ${game.home_team} *(${game.home_odds})* | *${game.start}*`
 	} else {
 		title = `Scheduled Games`
-		embColor = `#fff209`
+		embColor = `${embedColors.PlutoYellow}`
 		createMatchStr = (game) =>
 			`${game.away_team} @ ${game.home_team} | *${game.start}*`
 	}

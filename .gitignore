@@ -158,3 +158,5 @@ ca-certificate.crt
 daily.drawio
 
 .VSCodeCounter/
+commands/devEval.js
+commands/devEval2.js

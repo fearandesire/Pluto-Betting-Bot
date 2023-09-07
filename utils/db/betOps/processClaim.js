@@ -42,7 +42,7 @@ export async function processClaim(
 			)
 			embObj = {
 				title: 'Daily Claim',
-				description: `Welcome to Pluto! You have claimed your daily $50.\nYou can use this command again in 24 hours.\nYour new balance: $${updatedBalance}`,
+				description: `Welcome to Pluto! You have claimed your daily $20.\nYou can use this command again in 24 hours.\nYour new balance: $${updatedBalance}`,
 				color: `#00ff00`,
 			}
 			await interaction.reply({ embeds: [embObj] })

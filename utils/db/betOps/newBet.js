@@ -57,7 +57,7 @@ export async function newBet(
 		await PendingBetHandler.deletePending(user)
 		return
 	}
-	const matchupId = parseInt(matchInfo.matchid)
+	const matchupId = Number(matchInfo.matchid)
 	const activeCheck = await gameActive(team, matchupId)
 	if (!team) {
 		await QuickError(

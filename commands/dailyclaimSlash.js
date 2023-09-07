@@ -9,7 +9,7 @@ export class dailyClaimSlash extends Command {
 			name: 'dailyClaimSlash',
 			aliases: [''],
 			description:
-				'💲 Claim $50 dollars every 24 hours.',
+				'💲 Claim $20 dollars every 24 hours.',
 			chatInputCommand: {
 				register: true,
 			},
