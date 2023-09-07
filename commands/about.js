@@ -8,7 +8,7 @@ export class about extends Command {
 			...options,
 			name: 'about',
 			aliases: [''],
-			description: 'Information about Pluto',
+			description: '❓ Information about Pluto',
 			chatInputCommand: {
 				register: true,
 			},

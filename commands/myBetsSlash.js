@@ -9,7 +9,8 @@ export class myBetsSlash extends Command {
 			...options,
 			name: 'myBetsSlash',
 			aliases: [''],
-			description: 'View your currently active bets',
+			description:
+				'🪙 View your currently active bets',
 			chatInputCommand: {
 				register: true,
 			},

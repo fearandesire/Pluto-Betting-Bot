@@ -11,8 +11,8 @@
 		"test": "ava",
 		"docs": "jsdoc2md lib/*.js > addNewBet.js",
 		"auto": "nodemon node ./Pluto.mjs",
-		"nflc": "cross-env NODE_ENV=production SERVERNAME=nfl SPORT=nfl EXP_PORT=4442  dotenv_config_path=./.env.nflc node Pluto.mjs",
-		"nbac": "cross-env NODE_ENV=production SERVERNAME=nba SPORT=nba EXP_PORT=4443 dotenv_config_path=./.env.nbac node Pluto.mjs",
+		"nflc": "cross-env NODE_ENV=production SEASON_TYPE=REGULAR SERVERNAME=nfl SPORT=nfl EXP_PORT=4442 node Pluto.mjs -r dotenv/config dotenv_config_path=./.env.nflc",
+		"nbac": "cross-env NODE_ENV=production SEASONTYPE=REGULAR SERVERNAME=nba SPORT=nba EXP_PORT=4443 node Pluto.mjs -r dotenv/config dotenv_config_path=./.env.nbac ",
 		"dev": "cross-env SERVERNAME=nfl-dev SEASON_TYPE=REGULAR node ./Pluto.mjs -r dotenv/config dotenv_config_path=./.env.dev"
 	},
 	"imports": {

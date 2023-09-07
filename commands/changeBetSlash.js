@@ -12,7 +12,7 @@ export class changeBetSlash extends Command {
 			name: 'changeBetSlash',
 			aliases: [''],
 			description:
-				'Change the amount of money you put on a specified bet',
+				'🔀 Change the amount of money you put on a specified bet',
 			chatInputCommand: {
 				register: true,
 			},

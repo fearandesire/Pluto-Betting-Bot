@@ -33,7 +33,7 @@ export class Stats extends Command {
 					subcommand
 						.setName('user')
 						.setDescription(
-							'👁️ View betting stats for a specific user.',
+							' View betting stats for a specific user.',
 						)
 						.addMentionableOption((option) =>
 							option //

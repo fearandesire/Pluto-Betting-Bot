@@ -9,7 +9,7 @@ export class leaderboardSlash extends Command {
 			name: 'leaderboardSlash',
 			aliases: [''],
 			description:
-				'View the current betting leaderboard',
+				'📊 View the current betting leaderboard',
 			chatInputCommand: {
 				register: true,
 			},

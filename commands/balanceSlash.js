@@ -9,7 +9,7 @@ export class balanceSlash extends Command {
 			...options,
 			name: 'balanceSlash',
 			aliases: [''],
-			description: 'View the balance of a user',
+			description: '🏦 View the balance of a user',
 			chatInputCommand: {
 				register: true,
 			},

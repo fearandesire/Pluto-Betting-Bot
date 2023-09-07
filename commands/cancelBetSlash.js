@@ -11,7 +11,7 @@ export class cancelBetSlash extends Command {
 			name: 'cancelBetSlash',
 			aliases: [''],
 			description:
-				'Cancel a bet you have placed via the bet ID. View your bet IDs with the /mybets command.',
+				'❌ Cancel a bet you have placed via the bet ID. View your bet IDs with the /mybets command.',
 			chatInputCommand: {
 				register: true,
 			},
