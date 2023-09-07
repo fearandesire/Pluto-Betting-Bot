@@ -12,8 +12,9 @@ import { CURRENCY } from '#config'
  * - {@link validateExistingUser.js}
  */
 
-//? identify if the user exists in the database
-
 export function isExistingUser(userid) {
-    return db.oneOrNone(`SELECT * FROM "${CURRENCY}" WHERE userid = $1`, [userid])
+	return db.oneOrNone(
+		`SELECT * FROM "${CURRENCY}" WHERE userid = $1`,
+		[userid],
+	)
 }

@@ -61,7 +61,11 @@ export class addMoneySlash extends Command {
 				ephemeral: true,
 			})
 		} else {
-			await validateUser(interaction, target, true)
+			const isRegistered = await validateUser(
+				interaction,
+				target,
+			)
+			if (!isRegistered) return
 			await giveBalance(interaction, target, amount)
 		}
 	}

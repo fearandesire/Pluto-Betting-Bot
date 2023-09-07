@@ -35,7 +35,11 @@ export class myBetsSlash extends Command {
 		}
 		const userid = interaction.user.id
 		const interactionEph = true
-		await validateUser(interaction, userid, true)
+		const isRegistered = await validateUser(
+			interaction,
+			userid,
+		)
+		if (!isRegistered) return
 		await checkBetsCache(
 			interaction,
 			userid,

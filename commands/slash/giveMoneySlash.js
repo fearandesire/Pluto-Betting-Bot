@@ -56,7 +56,11 @@ export class giveMoneySlash extends Command {
 			})
 			return
 		}
-		await validateUser(interaction, userId, true)
+		const isRegistered = await validateUser(
+			interaction,
+			userId,
+		)
+		if (!isRegistered) return
 		await transferTo(
 			interaction,
 			userId,

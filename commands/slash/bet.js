@@ -56,7 +56,12 @@ export class bet extends Command {
 		})
 		const userid = interaction.user.id
 
-		await validateUser(interaction, userid, true, true)
+		const isRegistered = await validateUser(
+			interaction,
+			userid,
+			true,
+		)
+		if (!isRegistered) return
 		const hasPending =
 			await new pendingBet().checkPending(userid)
 		if (hasPending) {

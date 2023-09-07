@@ -65,7 +65,11 @@ export class changeBetSlash extends Command {
 			})
 			return
 		}
-		await validateUser(interaction, userid, true) // ? Validate the user exists in our DB
+		const isRegistered = await validateUser(
+			interaction,
+			userid,
+		)
+		if (!isRegistered) return
 		const interactionEph = true // ? client-side / silent reply
 		const betVerificaiton = await verifyBetAuthor(
 			interaction,

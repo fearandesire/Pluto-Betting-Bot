@@ -10,27 +10,27 @@ import { pendingBet } from './pendingBet.js'
  * @returns {boolean} True if the user is registered, throws error otherwise
  */
 export async function validateUser(
-    interaction,
-    userid,
-    interactionEph,
-    betProcess,
+	interaction,
+	userid,
+	betProcess,
 ) {
-    await isExistingUser(userid).then(async function handleResp(data) {
-        if (data) {
-            return
-        } else {
-            var errorMsg
-            var currentUser = interaction?.author?.id || interaction?.user?.id
-            if (currentUser == userid) {
-                errorMsg = `You are not registered with Pluto. Please register with the command: \`/register\``
-            } else {
-                errorMsg = `User <@${userid}> is not registered with Pluto.`
-            }
-            if (betProcess) {
-                //# delete from pending
-                await new pendingBet().deletePending(userid)
-            }
-            throw QuickError(interaction, errorMsg, true)
-        }
-    })
+	await isExistingUser(userid).then(async (data) => {
+		if (!data) {
+			let errorMsg
+			const currentUser = interaction.user.id
+			if (currentUser === userid) {
+				errorMsg = `You are not registered with Pluto. Please register with the command: \`/register\``
+			} else {
+				errorMsg = `User <@${userid}> is not registered with Pluto.`
+			}
+			if (betProcess) {
+				// # delete from pending
+				await new pendingBet().deletePending(userid)
+			}
+			await QuickError(interaction, errorMsg, true)
+			return false
+		} 
+			return true
+		
+	})
 }
