@@ -2,8 +2,9 @@ import { QuickError, embedReply } from '#embed'
 
 import { TodaysDate } from '#cmdUtil/TodaysDate'
 import { db } from '#db'
-import { registerUserLog } from '#Logger'
-import { CURRENCY } from '#config'
+import { CURRENCY, helpfooter } from '#config'
+import PlutoLogger from '#PlutoLogger'
+import embedColors from '../../lib/colorsConfig.js'
 
 /**
  * Create a new user in the database. By default, we will store their userID (required) and their default balance: 100 (optional)
@@ -12,48 +13,48 @@ import { CURRENCY } from '#config'
  */
 
 export async function registerUser(
-	message,
+	interaction,
 	userid,
 	inform,
-	interactionEph,
 ) {
-	db.tx(`registerUser-Transaction`, async (t) => {
-		const findUser = await t.oneOrNone(
-			`SELECT * FROM "${CURRENCY}" WHERE userid = $1`,
-			[userid],
+	try {
+		await db.tx(
+			`registerUser-Transaction`,
+			async (t) => {
+				const findUser = await t.oneOrNone(
+					`SELECT * FROM "${CURRENCY}" WHERE userid = $1`,
+					[userid],
+				)
+				if (!findUser) {
+					await t.any(
+						`INSERT INTO "${CURRENCY}" (userid, balance, registerdate) VALUES ($1, $2, $3) RETURNING *`,
+						[userid, '50', TodaysDate()],
+					)
+					const embedObj = {
+						title: `Welcome to Pluto! 🎉`,
+						description: `You  will start with $50.\nUse the command **/commands** to see everything you can do, or use **/help** for a quick general how-to.\n*Tip: You can use **\`/dailyclaim\`** to get bonus $$ everyday!*`,
+						color: `${embedColors.PlutoGreen}`,
+						footer: `${helpfooter}`,
+						silent: true,
+					}
+					await embedReply(interaction, embedObj)
+					return
+				}
+				if (inform === true) {
+					QuickError(
+						interaction,
+						`You are already registered!`,
+						true,
+					)
+				}
+			},
 		)
-		if (!findUser) {
-			// Log.BrightBlue(`[registerUser.js] User ${userid} is not in the database, creating user`)
-			registerUserLog.info(
-				`Created user account for ${userid} in the database.`,
-			)
-			const isSilent = !!interactionEph
-			const embedObj = {
-				title: `Welcome to Pluto!`,
-				description: `Successfully created an account for you - you'll start with $100 dollars.`,
-				color: 'GREEN',
-				footer: `Pluto - Developed by FENIX#7559`,
-				silent: isSilent,
-			}
-			await embedReply(message, embedObj)
-			return t.any(
-				`INSERT INTO "${CURRENCY}" (userid, balance, registerdate) VALUES ($1, $2, $3) RETURNING *`,
-				[userid, '100', TodaysDate()],
-			)
-		}
-		registerUserLog.info(
-			`User ${userid} is in the database, skipping creation`,
-		)
-		if (inform === true) {
-			QuickError(
-				message,
-				`You are already registered!`,
-				interactionEph,
-			)
-			return
-		}
-		return findUser
-	}).catch((error) => {
-		registerUserLog.error(error)
-	})
+	} catch (error) {
+		await PlutoLogger.log({
+			id: 4,
+			description: `Error occured when registering user => \`${userid}\`\nError: \`${
+				error?.message || error
+			}\``,
+		})
+	}
 }

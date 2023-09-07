@@ -27,12 +27,6 @@ export class registerSlash extends Command {
 	async chatInputRun(interaction) {
 		const userid = interaction.user.id
 		const inform = true
-		const interactionEph = true
-		await registerUser(
-			interaction,
-			userid,
-			inform,
-			interactionEph,
-		)
+		await registerUser(interaction, userid, inform)
 	}
 }

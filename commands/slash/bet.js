@@ -2,7 +2,7 @@ import { Command } from '@sapphire/framework'
 import { newBet } from '#utilBetOps/newBet'
 import { validateUser } from '#utilValidate/validateExistingUser'
 import { isPreSzn } from '#config'
-import { pendingBet } from '../../utils/db/validation/pendingBet.js'
+import PendingBetHandler from '../../utils/db/validation/pendingBet.js'
 
 export class bet extends Command {
 	constructor(context, options) {
@@ -63,7 +63,7 @@ export class bet extends Command {
 		)
 		if (!isRegistered) return
 		const hasPending =
-			await new pendingBet().checkPending(userid)
+			await PendingBetHandler.checkPending(userid)
 		if (hasPending) {
 			await interaction.editReply({
 				content: `You are already setting up another bet. Please finish that bet before placing another.`,
@@ -81,7 +81,7 @@ export class bet extends Command {
 				ephemeral: true,
 			})
 		} else {
-			await new pendingBet().insertPending(userid)
+			await PendingBetHandler.insertPending(userid)
 			await newBet(
 				interaction,
 				interaction.options.getString('team'),

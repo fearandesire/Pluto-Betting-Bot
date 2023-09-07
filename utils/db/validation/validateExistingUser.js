@@ -1,6 +1,6 @@
 import { QuickError } from '#embed'
 import { isExistingUser } from '#utilValidate/isExistingUser'
-import { pendingBet } from './pendingBet.js'
+import PendingBetHandler from './pendingBet.js'
 
 /**
  * @module validateExistingUser -
@@ -19,18 +19,19 @@ export async function validateUser(
 			let errorMsg
 			const currentUser = interaction.user.id
 			if (currentUser === userid) {
-				errorMsg = `You are not registered with Pluto. Please register with the command: \`/register\``
+				errorMsg = `It looks like you aren't in the system yet. Use the \`/register\` slash command to instantly register.`
 			} else {
 				errorMsg = `User <@${userid}> is not registered with Pluto.`
 			}
 			if (betProcess) {
 				// # delete from pending
-				await new pendingBet().deletePending(userid)
+				await PendingBetHandler.deletePending(
+					userid,
+				)
 			}
 			await QuickError(interaction, errorMsg, true)
 			return false
-		} 
-			return true
-		
+		}
+		return true
 	})
 }

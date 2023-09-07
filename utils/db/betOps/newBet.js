@@ -3,12 +3,10 @@ import teamResolver from 'resolve-team'
 import { Log, QuickError } from '#config'
 
 import { gameActive } from '#dateUtil/gameActive'
-import { pendingBet } from '#utilValidate/pendingBet'
+import PendingBetHandler from '#utilValidate/pendingBet'
 import { resolveMatchup } from '#cacheUtil/resolveMatchup'
-import { resolveTeam } from '#cmdUtil/resolveTeam'
 import { setupBet } from '#utilBetOps/setupBet'
 import { setupBetLog } from '#winstonLogger'
-import { validateUser } from '#utilValidate/validateExistingUser'
 import { verifyDupBet } from '#utilValidate/verifyDuplicateBet'
 import { SPORT } from '#env'
 /**
@@ -37,7 +35,7 @@ export async function newBet(
 			`You cannot enter a negative number for your bet amount.`,
 			true,
 		)
-		await new pendingBet().deletePending(user)
+		await PendingBetHandler.deletePending(user)
 		return
 	}
 
@@ -47,7 +45,7 @@ export async function newBet(
 			`You must bet an amount greater than 0.`,
 			true,
 		)
-		await new pendingBet().deletePending(user)
+		await PendingBetHandler.deletePending(user)
 		return
 	}
 	if (!matchInfo) {
@@ -56,7 +54,7 @@ export async function newBet(
 			`Unable to locate a match for ${team}\nPlease check currently available matchups with \`/odds\`\nMatchups will become available as DraftKings provides them.`,
 			true,
 		)
-		await new pendingBet().deletePending(user)
+		await PendingBetHandler.deletePending(user)
 		return
 	}
 	const matchupId = parseInt(matchInfo.matchid)
@@ -67,7 +65,7 @@ export async function newBet(
 			'Please enter a valid team',
 			true,
 		)
-		await new pendingBet().deletePending(user)
+		await PendingBetHandler.deletePending(user)
 		return
 	}
 	if (activeCheck === true) {
@@ -76,7 +74,7 @@ export async function newBet(
 			`This match has already started. You are unable to place a bet on active games.`,
 			true,
 		)
-		await new pendingBet().deletePending(user)
+		await PendingBetHandler.deletePending(user)
 		return
 	}
 	await setupBetLog.info(`New Betslip Created`, {
