@@ -14,7 +14,7 @@ export async function validateUser(
 	userid,
 	betProcess,
 ) {
-	await isExistingUser(userid).then(async (data) => {
+	return isExistingUser(userid).then(async (data) => {
 		if (!data) {
 			let errorMsg
 			const currentUser = interaction.user.id
