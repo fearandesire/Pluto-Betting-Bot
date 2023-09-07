@@ -46,7 +46,7 @@ export default async function collectOdds() {
 	if (_.isEmpty(filteredPastGames)) {
 		await PlutoLogger.log({
 			id: 3,
-			description: `No games were found.`,
+			description: `No games were found to store odds.`,
 		})
 		return false
 	}
@@ -116,11 +116,11 @@ export default async function collectOdds() {
 		}
 		await MatchupManager.storeMatchups(colmdata) // # Store in database
 	})
+	const gameCount = _.size(matchups) 
+	const msg = gameCount > 0 ? `Collected & updated odds for ${gameCount} games.` : `Collected odds, but no new data was to be updated.`
 	await PlutoLogger.log({
 		id: 3,
-		description: `Collected & updated odds for ${_.size(
-			matchups,
-		)} games.`,
+		description: msg
 	})
 	return true
 }
