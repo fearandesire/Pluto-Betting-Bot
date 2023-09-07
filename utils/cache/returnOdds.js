@@ -1,11 +1,6 @@
 import { MessageEmbed } from 'discord.js'
 import _ from 'lodash'
-import {
-	LIVEMATCHUPS,
-	QuickError,
-	orderByDays,
-	dayOrder,
-} from '#config'
+import { LIVEMATCHUPS, QuickError } from '#config'
 import { db } from '#db'
 import { formatOdds } from '#cmdUtil/formatOdds'
 import { guildImgURL } from '#embed'
