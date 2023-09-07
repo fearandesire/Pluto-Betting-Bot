@@ -1,4 +1,5 @@
 import async from 'async'
+import teamResolver from 'resolve-team'
 import { Log, QuickError } from '#config'
 
 import { gameActive } from '#dateUtil/gameActive'
@@ -9,12 +10,12 @@ import { setupBet } from '#utilBetOps/setupBet'
 import { setupBetLog } from '#winstonLogger'
 import { validateUser } from '#utilValidate/validateExistingUser'
 import { verifyDupBet } from '#utilValidate/verifyDuplicateBet'
-
+import { SPORT } from '#env'
 /**
  * @module newBet - This module is used to setup a bet in the DB.
  * Runs checks to validate the user, their bet, and then operations to get the bet setup.
  * @param {obj} interaction - Discord Message object
- * @param {string} betOnTeam - The team the user is betting on
+ * @param {string} team - The team the user is betting on
  * @param {integer} betAmount - The amount of money the user is betting
  *
  */
@@ -26,18 +27,9 @@ export async function newBet(
 	const interactionObj = interaction
 	const user =
 		interaction?.author?.id || interaction.user.id
-	betOnTeam = await resolveTeam(betOnTeam).catch(
-		async (err) => {
-			console.log(err)
-			await QuickError(
-				interaction,
-				'An error occured attempting to locate the team you provided. Please try again.',
-				true,
-			)
-			await new pendingBet().deletePending(user)
-		},
-	)
-	const matchInfo = await resolveMatchup(betOnTeam, null)
+	const team = await teamResolver(SPORT, betOnTeam)
+
+	const matchInfo = await resolveMatchup(team, null)
 	const negativeRgx = /-/g
 	if (betAmount.toString().match(negativeRgx)) {
 		await QuickError(
@@ -61,18 +53,15 @@ export async function newBet(
 	if (!matchInfo) {
 		QuickError(
 			interaction,
-			`Unable to locate a match for ${betOnTeam}\nPlease check currently available matchups with \`/odds\`\nMatchups will become available as DraftKings provides them.`,
+			`Unable to locate a match for ${team}\nPlease check currently available matchups with \`/odds\`\nMatchups will become available as DraftKings provides them.`,
 			true,
 		)
 		await new pendingBet().deletePending(user)
 		return
 	}
 	const matchupId = parseInt(matchInfo.matchid)
-	const activeCheck = await gameActive(
-		betOnTeam,
-		matchupId,
-	)
-	if (!betOnTeam) {
+	const activeCheck = await gameActive(team, matchupId)
+	if (!team) {
 		await QuickError(
 			interaction,
 			'Please enter a valid team',
@@ -92,7 +81,7 @@ export async function newBet(
 	}
 	await setupBetLog.info(`New Betslip Created`, {
 		user,
-		team: betOnTeam,
+		team,
 		amount: betAmount,
 		matchupId,
 	})
@@ -112,7 +101,7 @@ export async function newBet(
 			async function setBet() {
 				await setupBet(
 					interactionObj,
-					betOnTeam,
+					team,
 					betAmount,
 					user,
 					matchupId,

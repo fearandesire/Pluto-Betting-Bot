@@ -1,6 +1,12 @@
+/* eslint-disable no-useless-escape */
 import { format } from 'date-fns'
 import { MessageEmbed } from 'discord.js'
-import { _, helpfooter } from '#config'
+import {
+	_,
+	helpfooter,
+	dayOrder,
+	orderByDays,
+} from '#config'
 
 /**
  * @function parseScheduled
@@ -11,10 +17,25 @@ import { _, helpfooter } from '#config'
 
 export default async function parseScheduled(
 	scheduledArr,
-	sport,
+	options,
 ) {
-	const createMatchStr = (game) =>
-		`${game.away_team} *@* ${game.home_team}`
+	const { includeOdds, thumbnail, footer } =
+		options || null
+	let createMatchStr
+	let embColor
+	let title
+
+	if (includeOdds) {
+		embColor = `#e2f1fe`
+		title = `:mega: H2H Odds`
+		createMatchStr = (game) =>
+			`${game.away_team} *(${game.away_odds})* *@* ${game.home_team} *(${game.home_odds})* | *[${game.start}]*`
+	} else {
+		title = `Scheduled Games`
+		embColor = `#fff209`
+		createMatchStr = (game) =>
+			`${game.away_team} @ ${game.home_team} | [${game.start}]`
+	}
 
 	// Group the scheduled games by day using Lodash's `groupBy` function
 	const groupedGames = _.groupBy(scheduledArr, (game) => {
@@ -23,43 +44,19 @@ export default async function parseScheduled(
 			_.lowerCase(format(gameDate, 'EEEE')),
 		)
 	})
-	let dayOrder
-	if (sport === 'nfl') {
-		dayOrder = [
-			'Thursday',
-			'Friday',
-			'Saturday',
-			'Sunday',
-			'Monday',
-			'Tuesday',
-			'Wednesday',
-		]
-	} else if (sport === 'nba') {
-		dayOrder = [
-			'Monday',
-			'Tuesday',
-			'Wednesday',
-			'Thursday',
-			'Friday',
-			'Saturday',
-			'Sunday',
-		]
-	} else {
-		return false
-	}
+
 	// Sort the grouped games by day using Lodash's `orderBy` function
-	const sortedGroupedGames = _.orderBy(
-		Object.entries(groupedGames),
-		([day]) => _.indexOf(dayOrder, day),
-		['asc'],
+	const sortedGroupedGames = orderByDays(
+		groupedGames,
+		dayOrder,
 	)
 
 	// Create the Discord Embed
 	const emb = new MessageEmbed()
-		.setTitle(`Scheduled Games`)
-		.setColor('#e0ff19')
-		.setFooter({ text: helpfooter })
-
+		.setTitle(title)
+		.setColor(embColor)
+		.setFooter({ text: footer || helpfooter })
+		.setThumbnail(thumbnail)
 	// Add fields for each day and its corresponding games
 	sortedGroupedGames.forEach(([day, games]) => {
 		const gamesStr = games

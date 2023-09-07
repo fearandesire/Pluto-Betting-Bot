@@ -27,7 +27,7 @@ export class betHistorySlash extends Command {
 	}
 
 	async chatInputRun(interaction) {
-		if (isPreSzn) {
+		if (isPreSzn()) {
 			return interaction.reply({
 				content: `This command is disabled during the preseason`,
 				ephemeral: true,

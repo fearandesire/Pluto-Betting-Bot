@@ -11,7 +11,7 @@ export class bet extends Command {
 			name: 'bet',
 			aliases: [''],
 			description:
-				"Place a bet on a matchup. Use the /odds command to view this week's Games!",
+				"💰 Place a bet on a matchup. Use the /odds command to view this week's Games!",
 			chatInputCommand: {
 				register: true,
 			},
@@ -47,7 +47,8 @@ export class bet extends Command {
 	async chatInputRun(interaction) {
 		if (isPreSzn()) {
 			return interaction.reply({
-				content: `It's currently the preseason, no bets can be placed! Please wait for the season to begin.`,
+				content: `This is unavailable in the preseason.`,
+				ephemeral: true,
 			})
 		}
 		await interaction.deferReply({

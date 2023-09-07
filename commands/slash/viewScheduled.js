@@ -1,8 +1,7 @@
 import { Command } from '@sapphire/framework'
-import { MessageEmbed } from 'discord.js'
-import { format } from 'date-fns'
-import { _, QuickError, helpfooter } from '#config'
+import { _, QuickError } from '#config'
 import { SPORT } from '#env'
+import { guildImgURL } from '#embed'
 import Cache from '#rCache'
 import PlutoLogger from '#PlutoLogger'
 import parseScheduled from '../../utils/bot_res/parseScheduled.js'
@@ -47,7 +46,10 @@ export class viewScheduled extends Command {
 			})
 			return
 		}
-		await parseScheduled(scheduled, SPORT).then(
+		const thumbnail = await guildImgURL(
+			interaction.client,
+		)
+		await parseScheduled(scheduled, { thumbnail }).then(
 			async (res) => {
 				if (res === false) {
 					await QuickError(

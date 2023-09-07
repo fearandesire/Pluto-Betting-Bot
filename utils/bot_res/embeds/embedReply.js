@@ -9,6 +9,23 @@ import { fetchChanId } from '#botUtil/fetchChanId'
 
 import { SapDiscClient } from '#main'
 
+export const guildImgURL = (client) => {
+	let guild
+	if (client) {
+		guild = client.guilds.cache.first() // get the first guild in the cache
+	}
+	if (!client) {
+		// Fetch guild info based on server id
+		const serverId = process.env.server_ID
+		guild = SapDiscClient.guilds.cache.get(serverId)
+	}
+	if (!guild) {
+		return null // no guild found
+	}
+	const iconURL = guild.iconURL({ dynamic: true }) // get the guild's icon URL
+	return iconURL
+}
+
 /**
  * @module embedReply
  * @description Constructor function for creating & sending embeds
@@ -184,21 +201,4 @@ export async function QuickError(
 			message.followUp({ embeds: [embed] })
 		}
 	}
-}
-
-export const guildImgURL = (client) => {
-	let guild
-	if (client) {
-		guild = client.guilds.cache.first() // get the first guild in the cache
-	}
-	if (!client) {
-		// Fetch guild info based on server id
-		const serverId = process.env.server_ID
-		guild = SapDiscClient.guilds.cache.get(serverId)
-	}
-	if (!guild) {
-		return null // no guild found
-	}
-	const iconURL = guild.iconURL({ dynamic: true }) // get the guild's icon URL
-	return iconURL
 }

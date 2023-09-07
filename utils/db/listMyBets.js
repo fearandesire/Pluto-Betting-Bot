@@ -18,11 +18,11 @@ import { guildImgURL } from '#embed'
  * @module listMyBets
  * Query the database for all bets placed by the user
  * @param {integer} userid - The user's Discord ID
- * @param {obj} message - The Duscord message object
+ * @param {obj} interaction - The Discord interaction object
  *
  *
  */
-export function listMyBets(userid, message) {
+export function listMyBets(userid, interaction) {
 	container[`listBets-${userid}`] = []
 	db.map(
 		`SELECT * FROM "${BETSLIPS}" WHERE userid = $1`,
@@ -72,13 +72,13 @@ export function listMyBets(userid, message) {
 			await Log.BrightBlue(
 				container[`listBets-${userid}`],
 			)
-			const userName = message?.author?.username
-				? message?.author?.username
-				: message?.user?.id
+			const userName = interaction?.author?.username
+				? interaction?.author?.username
+				: interaction?.user?.id
 			const isSelf =
-				message?.author?.id === userid
+				interaction?.author?.id === userid
 					? true
-					: message?.user?.id === userid
+					: interaction?.user?.id === userid
 			let title
 			if (isSelf === true) {
 				title = `:tickets: Your Active Bets`
@@ -100,7 +100,7 @@ export function listMyBets(userid, message) {
 			await Log.Yellow(
 				`Sending ${userid} their betslips - Embed`,
 			)
-			await embedReply(message, embedcontent)
+			await embedReply(interaction, embedcontent)
 			//! SECTION
 			Log.Green(
 				`[listMyBets.js] Storing User (${userid}) collected Array of Bet Information.`,
@@ -112,7 +112,7 @@ export function listMyBets(userid, message) {
 				`[listMyBets.js] Error checking for active bet\n${err}`,
 			)
 			QuickError(
-				message,
+				interaction,
 				`You currently have no active bets`,
 				true,
 			)
