@@ -1,9 +1,10 @@
-import { MessageAttachment } from 'discord.js'
+import discord from 'discord.js'
 import { SapDiscClient } from '#main'
-import { createChanLog } from '#winstonLogger'
-import { gameEmbedPlain } from './gameEmbed.js'
+import { fetchVsImg } from '#utilBot/fetchVsImg'
+import { gameEmbedOdds } from './gameEmbed.js'
 import PlutoLogger from '#PlutoLogger'
 
+const { AttachmentBuilder, ChannelType } = discord
 /**
  * @module createChannel
  * Create game channel in the live games category
@@ -11,9 +12,6 @@ import PlutoLogger from '#PlutoLogger'
 
 export async function createChannel(data) {
 	const { awayTeam, homeTeam } = data || null
-	createChanLog.info(
-		`Creating Game Channel | Title: ${awayTeam} vs ${homeTeam}`,
-	)
 	try {
 		const guild = SapDiscClient.guilds.cache.get(
 			`${process.env.server_ID}`,
@@ -22,28 +20,31 @@ export async function createChannel(data) {
 			`${process.env.gameCat_ID}`,
 		)
 		const channelName = `${awayTeam} vs ${homeTeam}`
-		const gameChan = await guild.channels.create(
-			channelName,
-			{
-				type: 'text',
-				topic: `Enjoy the Game!`,
-				parent: category,
-			},
-		)
+		const gameChan = await guild.channels.create({
+			name: channelName,
+			type: ChannelType.GuildText,
+			topic: `Enjoy the Game!`,
+			parent: category,
+		})
 
 		// # Collect information about the game and send it to the game channel on creation
-		const gameInfo = await gameEmbedPlain(
+		const gameInfo = await gameEmbedOdds(
 			homeTeam,
 			awayTeam,
 		)
-		//  const imgFile = await fetchVsImg(matchupStr)
-		const imgFile = false
+		const matchupStr = `${awayTeam} vs ${homeTeam}`
+		const imgFile = await fetchVsImg(matchupStr)
+		// const imgFile = false
 		if (!imgFile) {
-			await gameChan.send({ embeds: [gameInfo] })
+			await gameChan.send({
+				embeds: [gameInfo],
+			})
 		} else {
-			const imageAttachment = new MessageAttachment(
+			const imageAttachment = new AttachmentBuilder(
 				imgFile,
-				'matchup.jpg',
+				{
+					name: 'matchup.jpg',
+				},
 			)
 			gameInfo.setImage(`attachment://matchup.jpg`)
 			await gameChan.send({
@@ -62,6 +63,7 @@ export async function createChannel(data) {
 			id: 4,
 			description: `Failed to create a Game Channel | ${awayTeam} vs ${homeTeam}`,
 		})
+		console.error(error)
 		return false
 	}
 }

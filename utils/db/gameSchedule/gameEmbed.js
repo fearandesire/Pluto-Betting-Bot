@@ -1,18 +1,13 @@
-import { MessageEmbed } from 'discord.js'
+import discord from 'discord.js'
 import teamResolver from 'resolve-team'
-import debug from 'debug'
 import { SapDiscClient } from '#main'
 import { resolveMatchup } from '#cacheUtil/resolveMatchup'
-import {
-	resolveTeam,
-	resolveTeamColor,
-} from '#cmdUtil/resolveTeam'
-import { LIVEBETS } from '#config'
 
+import { SPORT } from '#env'
 import { validateData } from '../validation/validateData.js'
 import { findEmoji } from '../../bot_res/findEmoji.js'
-import { SPORT } from '#env'
 
+const { EmbedBuilder } = discord
 export async function gameEmbedPlain(homeTeam, awayTeam) {
 	const hTeamObj = await teamResolver(SPORT, homeTeam, {
 		full: true,
@@ -25,7 +20,7 @@ export async function gameEmbedPlain(homeTeam, awayTeam) {
 		.get(`${process.env.server_ID}`)
 		.iconURL()
 
-	const embObj = new MessageEmbed()
+	const embObj = new EmbedBuilder()
 		.setTitle(`${awayTeam} @ ${homeTeam}`)
 		.setColor(`${color}`)
 		.setDescription(
@@ -49,14 +44,16 @@ export async function gameEmbedPlain(homeTeam, awayTeam) {
  * @returns {object} - Returns the compiled embed object
  */
 
-export async function gameEmbedOdds(hometeam, awayteam) {
-	console.log(
-		`Creating game embed information for: (away) ${awayteam} vs (home) ${hometeam}  `,
-	)
-	const hTeam = await resolveTeam(hometeam)
-	const aTeam = await resolveTeam(awayteam)
-
-	// setup objs to query the DB with
+export async function gameEmbedOdds(homeTeam, awayTeam) {
+	const hTeamObj = await teamResolver(SPORT, homeTeam, {
+		full: true,
+	})
+	const aTeamObj = await teamResolver(SPORT, awayTeam, {
+		full: true,
+	})
+	const hTeam = hTeamObj.name
+	const aTeam = aTeamObj.name
+	/** 
 	const hTeamQuery = new validateData({
 		tables: `${LIVEBETS}`,
 		columns: `amount`,
@@ -69,23 +66,34 @@ export async function gameEmbedOdds(hometeam, awayteam) {
 		where: `teamid`,
 		values: aTeam,
 	})
-	const hOdds = (await resolveMatchup(hTeam, `odds`))
-		? await resolveMatchup(hTeam, `odds`)
-		: `N/A`
-	const aOdds = (await resolveMatchup(aTeam, `odds`))
-		? await resolveMatchup(aTeam, `odds`)
-		: `N/A`
+	* */
+	const home_team_odds = await resolveMatchup(
+		hTeam,
+		`odds`,
+	)
+	const away_team_odds = await resolveMatchup(
+		aTeam,
+		`odds`,
+	)
+	const hOdds = home_team_odds || `N/A`
+	const aOdds =
+		away_team_odds || `N/A`
+			? await resolveMatchup(aTeam, `odds`)
+			: `N/A`
 	const favoredTeam =
 		Number(hOdds) < Number(aOdds) ? hTeam : aTeam // If the home team has higher odds, they are favored, otherwise the away team is favored
-	const color = await resolveTeamColor(favoredTeam)
+	const color =
+		favoredTeam === hTeam
+			? hTeamObj.colors[0]
+			: aTeamObj.colors[0]
 	// # collect team emoji
 	const teamEmoji = (await findEmoji(favoredTeam)) || ''
 	// collect server/guild icon url
 	const guildIcon = SapDiscClient.guilds.cache
 		.get(`${process.env.server_ID}`)
 		.iconURL()
-	const embObj = new MessageEmbed()
-		.setTitle(`${awayteam} @ ${hometeam}`)
+	const embObj = new EmbedBuilder()
+		.setTitle(`${awayTeam} @ ${homeTeam}`)
 		.setDescription(
 			`
 **The ${teamEmoji} ${favoredTeam} are favored to win this game!**
@@ -93,7 +101,7 @@ export async function gameEmbedOdds(hometeam, awayteam) {
 *Type \`/help\` in the <#${process.env.bettingChan}> channel to place bets with Pluto*`,
 		)
 		.setFooter({
-			text: `Pluto | Created by FENIX#7559`,
+			text: `Pluto | Created by fenixforever`,
 		})
 		.setColor(`${color}`)
 		.setThumbnail(`${guildIcon}`)
