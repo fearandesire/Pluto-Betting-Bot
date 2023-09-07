@@ -4,22 +4,22 @@
  * @param {string | integer} awayOdds - Odds of the Away Team
  * @return {string} Returns the formatted odds
  */
+
 export async function formatOdds(homeOdds, awayOdds) {
-    console.log(`homeOdds: ${homeOdds} | awayOdds: ${awayOdds}`)
-    homeOdds = homeOdds.toString()
-    awayOdds = awayOdds.toString()
-    const favorHome = homeOdds.includes(`-`)
-    const favorAway = awayOdds.includes(`-`)
-    if (favorHome && favorAway) {
-        homeOdds = `${homeOdds}`
-        awayOdds = `${awayOdds}`
-    } else if (favorHome && !favorAway) {
-        awayOdds = `+${awayOdds}` // away team underdog
-    } else if (favorAway && !favorHome) {
-        homeOdds = `+${homeOdds}` // home team underdog
-    }
-    return {
-        homeOdds: homeOdds,
-        awayOdds: awayOdds,
-    }
+	let hOdds = homeOdds.toString()
+	let aOdds = awayOdds.toString()
+	const favorHome = hOdds.includes(`-`)
+	const favorAway = aOdds.includes(`-`)
+	if (favorHome && favorAway) {
+		hOdds = `${hOdds}`
+		aOdds = `${aOdds}`
+	} else if (favorHome && !favorAway) {
+		aOdds = `+${aOdds}` // away team underdog
+	} else if (favorAway && !favorHome) {
+		hOdds = `+${hOdds}` // home team underdog
+	}
+	return {
+		homeOdds: hOdds,
+		awayOdds: aOdds,
+	}
 }
