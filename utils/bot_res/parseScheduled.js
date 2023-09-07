@@ -1,6 +1,6 @@
 /* eslint-disable no-useless-escape */
 import { format } from 'date-fns'
-import { MessageEmbed } from 'discord.js'
+import discord from 'discord.js'
 import {
 	_,
 	helpfooter,
@@ -9,11 +9,12 @@ import {
 } from '#config'
 import embedColors from '../../lib/colorsConfig.js'
 
+const { EmbedBuilder } = discord
 /**
  * @function parseScheduled
  * Parse currently cached scheduled games to be displayed
  * @param {Array} scheduledArr - Array of games
- * @return {MessageEmbed} - Discord Embed with the games formatted and scheduled
+ * @return {EmbedBuilder} - Discord Embed with the games formatted and scheduled
  */
 
 export default async function parseScheduled(
@@ -52,8 +53,9 @@ export default async function parseScheduled(
 		dayOrder,
 	)
 
+	const fields = []
 	// Create the Discord Embed
-	const emb = new MessageEmbed()
+	const emb = new EmbedBuilder()
 		.setTitle(title)
 		.setColor(embColor)
 		.setFooter({ text: footer || helpfooter })
@@ -63,7 +65,11 @@ export default async function parseScheduled(
 		const gamesStr = games
 			.map(createMatchStr)
 			.join('\n')
-		emb.addField(day, gamesStr)
+		fields.push({
+			name: day,
+			value: gamesStr,
+		})
 	})
+	emb.addFields(fields)
 	return emb
 }

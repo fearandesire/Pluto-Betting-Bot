@@ -1,4 +1,5 @@
-import { MessageEmbed } from 'discord.js'
+import discord from 'discord.js'
+
 import _ from 'lodash'
 import { LIVEMATCHUPS, QuickError } from '#config'
 import { db } from '#db'
@@ -7,6 +8,7 @@ import { guildImgURL } from '#embed'
 import parseScheduled from '../bot_res/parseScheduled.js'
 import IsoManager from '#iso'
 
+const { EmbedBuilder } = discord
 /**
  * Return all currently available odds from the database
  * @param {Interaction} interaction - The Discord Interaction Object
@@ -30,7 +32,7 @@ export async function returnOdds(interaction) {
 	)
 
 	await interaction.followUp({
-		embeds: [new MessageEmbed(compiledEmbed)],
+		embeds: [new EmbedBuilder(compiledEmbed)],
 	})
 }
 

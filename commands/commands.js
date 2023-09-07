@@ -1,8 +1,9 @@
 import { Command } from '@sapphire/framework'
-import { MessageEmbed } from 'discord.js'
+import discord from 'discord.js'
 import _ from 'lodash'
 import embedColors from '../lib/colorsConfig.js'
 
+const { EmbedBuilder } = discord
 export class commands extends Command {
 	constructor(context, options) {
 		super(context, {
@@ -67,7 +68,7 @@ export class commands extends Command {
 			return formattedCommands
 		}
 		const cmdDescription = formatCommands(cmdList)
-		const cmdListEmbed = new MessageEmbed()
+		const cmdListEmbed = new EmbedBuilder()
 			.setTitle('Commands')
 			.setColor(`${embedColors.PlutoYellow}`)
 			.setDescription(cmdDescription)

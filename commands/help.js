@@ -1,7 +1,8 @@
 import { Command } from '@sapphire/framework'
-import { MessageEmbed } from 'discord.js'
+import discord from 'discord.js'
 import embedColors from '../lib/colorsConfig.js'
 
+const { EmbedBuilder } = discord
 export class help extends Command {
 	constructor(context, options) {
 		super(context, {
@@ -42,7 +43,7 @@ export class help extends Command {
                 
                 Use /commands to view all commands available
                 ***💜 Want to support the development of Pluto? Use the /about command***`
-		const helpEmbed = new MessageEmbed()
+		const helpEmbed = new EmbedBuilder()
 			.setTitle(`How to use Pluto :coin:`)
 			.setColor(`${embedColors.PlutoYellow}`)
 			.setDescription(desc)

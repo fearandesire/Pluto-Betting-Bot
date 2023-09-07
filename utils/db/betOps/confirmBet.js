@@ -1,5 +1,5 @@
 import stringifyObject from 'stringify-object'
-import { MessageEmbed } from 'discord.js'
+import discord from 'discord.js'
 import { Log, accounting } from '#config'
 import { AssignBetID } from '#botUtil/AssignIDs'
 import { addNewBet } from '#utilBetOps/addNewBet'
@@ -10,6 +10,7 @@ import { isBetIdExisting } from '../validation/isBetIdExisting.js'
 import PendingBetHandler from '../validation/pendingBet.js'
 import { findEmoji } from '../../bot_res/findEmoji.js'
 
+const { EmbedBuilder } = discord
 /**
  * @module confirmBet -
  * Create's a message listener for the user to accept, or cancel their pending bet via pressing/clicking reactions.
@@ -33,7 +34,7 @@ export async function confirmBet(
 	const teamName = betslip.teamid.split(' ').pop()
 	const teamEmoji = (await findEmoji(teamName)) || ''
 	betslip.teamEmoji = teamEmoji || ''
-	const confirmembed = new MessageEmbed()
+	const confirmembed = new EmbedBuilder()
 		.setColor('#ffd600')
 		.setTitle(':receipt: Bet Pending')
 		.setDescription(

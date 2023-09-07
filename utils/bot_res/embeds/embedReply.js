@@ -1,8 +1,11 @@
-import { MessageEmbed } from 'discord.js'
+import discord from 'discord.js'
+import color from 'color'
 import { Log } from '#LogColor'
 import { fetchChanId } from '#botUtil/fetchChanId'
-
 import { SapDiscClient } from '#main'
+import embedColors from '../../../lib/colorsConfig.js'
+
+const { EmbedBuilder } = discord
 
 export const guildImgURL = (client) => {
 	let guild
@@ -21,6 +24,13 @@ export const guildImgURL = (client) => {
 	return iconURL
 }
 
+function convertColor(colorCode) {
+	if (colorCode.toString().includes('#')) {
+		return color(colorCode).rgbNumber()
+	}
+	return colorCode
+}
+
 /**
  * @module embedReply
  * @description Constructor function for creating & sending embeds
@@ -37,7 +47,9 @@ export async function embedReply(
 	embedContent,
 	interactionEph,
 ) {
-	const embedColor = embedContent?.color ?? '#e0ff19'
+	const embedColor =
+		convertColor(embedContent.color) ||
+		embedColors.PlutoYellow
 	const embedTitle = embedContent?.title ?? ''
 	const embedDescription = embedContent?.description ?? ''
 	const embedFields = embedContent?.fields
@@ -64,12 +76,12 @@ export async function embedReply(
 
 	// # Embed with no fields response
 	if (!confirmFields) {
-		const noFieldsEmbed = new MessageEmbed()
+		const noFieldsEmbed = new EmbedBuilder()
 			.setColor(embedColor)
 			.setTitle(embedTitle)
 			.setThumbnail(thumbnail)
 			.setDescription(embedDescription)
-			.setFooter(embedFooter)
+			.setFooter({ text: embedFooter })
 		if (target === 'reply' && isSilent === true) {
 			if (followUp) {
 				return interaction.followUp({
@@ -115,7 +127,7 @@ export async function embedReply(
 
 	// # Embeds with fields response
 	if (hasFields !== false) {
-		const embedWithFields = new MessageEmbed()
+		const embedWithFields = new EmbedBuilder()
 			.setColor(embedColor)
 			.setTitle(embedTitle)
 			// .setThumbnail(thumbnail)
@@ -163,7 +175,7 @@ export async function QuickError(
 	text,
 	interactionEph,
 ) {
-	const embed = new MessageEmbed()
+	const embed = new EmbedBuilder()
 		.setColor('#ff0000')
 		.setTitle(':triangular_flag_on_post: Error')
 		.setDescription(text)

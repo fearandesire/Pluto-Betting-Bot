@@ -75,20 +75,26 @@ export class Stats extends Command {
 					description: `An error occured when collecting stats.`,
 				})
 			})
-		} else
-			await getBettingStats({
+		} else {
+			const fetchedStats = await getBettingStats({
 				interaction,
 				type: 'individual',
 				id: targetId,
 			}).catch(async (err) => {
-				await QuickError(
-					interaction,
-					`Unable to collect stats.`,
-				)
+				const msg = `Unable to collect stats.`
+				await QuickError(interaction, msg, true)
 				await PlutoLogger.log({
 					id: 4,
 					description: `An error occured when collecting stats.\nError: ${err?.msg}`,
 				})
 			})
+			if (fetchedStats === 204) {
+				return QuickError(
+					interaction,
+					`You do not have enough bets to view stats of yourself.`,
+					true,
+				)
+			}
+		}
 	}
 }

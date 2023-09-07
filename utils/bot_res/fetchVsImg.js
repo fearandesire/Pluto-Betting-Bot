@@ -2,6 +2,7 @@
 import fs from 'fs/promises'
 import path from 'path'
 import { fileURLToPath } from 'node:url'
+import PlutoLogger from '#PlutoLogger'
 
 /**
  * @module fetchVsImg
@@ -22,25 +23,26 @@ export async function fetchVsImg(matchup) {
 		fileURLToPath(import.meta.url),
 	)
 
-	// Construct the path to the matchup image file
-	const imagePath = path.join(
-		moduleDir,
-		'../../',
-		'lib',
-		'matchupimages',
-		`${process.env.SPORT}`,
-		matchupFileName,
-	)
-
 	try {
+		// Construct the path to the matchup image file
+		const imagePath = path.join(
+			moduleDir,
+			'../../',
+			'lib',
+			'matchupimages',
+			`${process.env.SPORT}`,
+			matchupFileName,
+		)
+
 		// Read the image file as a binary buffer
 		const imageBuffer = await fs.readFile(imagePath)
 
 		return imageBuffer
 	} catch (error) {
-		// If there's an error reading the file, reject the promise with the error message
-		return Promise.reject(
-			`Error fetching ${matchup} image: ${error.message}`,
-		)
+		await PlutoLogger.log({
+			id: 4,
+			description: `Error fetching ${matchup} image: ${error.message}`,
+		})
+		return false
 	}
 }

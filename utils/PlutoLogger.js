@@ -1,7 +1,8 @@
-import { MessageEmbed } from 'discord.js'
+import discord from 'discord.js'
 import { SapDiscClient } from '#main'
 import { logChan as logChanID } from './serverConfig.js'
 
+const { EmbedBuilder } = discord
 /**
  * PlutoLogger
  * @namespace
@@ -46,7 +47,7 @@ export default class PlutoLogger {
 		let color
 		let title
 		// # Pre-Built Embed for Log Channel
-		const logsEmbed = new MessageEmbed()
+		const logsEmbed = new EmbedBuilder()
 		switch (data?.id) {
 			case 0:
 				color = '#c4f3fd' // Off-White Sky Blue for General Logs
