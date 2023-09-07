@@ -4,7 +4,7 @@ import { SPORT } from '#env'
 import { guildImgURL } from '#embed'
 import Cache from '#rCache'
 import PlutoLogger from '#PlutoLogger'
-import parseScheduled from '../../utils/bot_res/parseScheduled.js'
+import parseScheduled from '../utils/bot_res/parseScheduled.js'
 
 export class viewScheduled extends Command {
 	constructor(context, options) {

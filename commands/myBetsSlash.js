@@ -1,7 +1,7 @@
 import { Command } from '@sapphire/framework'
 import { validateUser } from '#utilValidate/validateExistingUser'
 import { isPreSzn } from '#config'
-import { checkBetsCache } from '../../utils/cache/checkBetsCache.js'
+import { checkBetsCache } from '../utils/cache/checkBetsCache.js'
 
 export class myBetsSlash extends Command {
 	constructor(context, options) {

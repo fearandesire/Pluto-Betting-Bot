@@ -1,6 +1,6 @@
 import { Command } from '@sapphire/framework'
 import { isPreSzn } from '#config'
-import { returnOdds } from '../../utils/cache/returnOdds.js'
+import { returnOdds } from '../utils/cache/returnOdds.js'
 
 export class odds extends Command {
 	constructor(context, options) {

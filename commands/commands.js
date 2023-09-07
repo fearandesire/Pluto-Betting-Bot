@@ -1,7 +1,7 @@
 import { Command } from '@sapphire/framework'
 import { MessageEmbed } from 'discord.js'
 import _ from 'lodash'
-import embedColors from "../../lib/colorsConfig.js"
+import embedColors from '../lib/colorsConfig.js'
 
 export class commands extends Command {
 	constructor(context, options) {

@@ -29,8 +29,6 @@ export async function returnOdds(interaction) {
 	}
 
 	const thumbnail = await guildImgURL(interaction.client)
-	console.log(`thumbnail =>`, thumbnail)
-	// // # iterate through matchupDB with a for loop so we can access the values of each nested object
 	const compiledEmbed = await compileOdds(
 		matchupDb,
 		thumbnail,
@@ -69,7 +67,7 @@ async function compileOdds(oddsArr, thumbnail) {
 	// Sort the grouped games by day using Lodash's `orderBy` function
 	const options = {
 		includeOdds: true,
-		footer: `Odds are subject to change. | ${count} games available to bet on.`,
+		footer: `Odds are subject to change | ${count} games available to bet on.`,
 		thumbnail,
 	}
 	const gamesEmbed = parseScheduled(oddsFields, options)

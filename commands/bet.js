@@ -2,7 +2,7 @@ import { Command } from '@sapphire/framework'
 import { newBet } from '#utilBetOps/newBet'
 import { validateUser } from '#utilValidate/validateExistingUser'
 import { isPreSzn } from '#config'
-import PendingBetHandler from '../../utils/db/validation/pendingBet.js'
+import PendingBetHandler from '../utils/db/validation/pendingBet.js'
 
 export class bet extends Command {
 	constructor(context, options) {

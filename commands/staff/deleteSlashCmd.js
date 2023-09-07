@@ -1,6 +1,6 @@
 import { Command } from '@sapphire/framework'
 import { SapDiscClient } from '#main'
-import isInGuild from '#utils/isInGuild.js'
+import isInGuild from '../../utils/isInGuild.js'
 
 export class deleteSlashCmd extends Command {
 	constructor(context, options) {

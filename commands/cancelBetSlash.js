@@ -2,7 +2,7 @@ import { Command } from '@sapphire/framework'
 import { queryBets } from '#utilBetOps/queryBets'
 import { validateUser } from '#utilValidate/validateExistingUser'
 import { verifyBetAuthor } from '#utilValidate/verifyBetAuthor'
-import { verifyCancellation as invalidCancel } from '../../utils/db/betOps/verifyCancellation.js'
+import { verifyCancellation as invalidCancel } from '../utils/db/betOps/verifyCancellation.js'
 
 export class cancelBetSlash extends Command {
 	constructor(context, options) {
