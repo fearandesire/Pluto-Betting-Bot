@@ -24,7 +24,7 @@ export const guildImgURL = (client) => {
 	return iconURL
 }
 
-function convertColor(colorCode) {
+export function convertColor(colorCode) {
 	if (colorCode.toString().includes('#')) {
 		return color(colorCode).rgbNumber()
 	}

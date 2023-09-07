@@ -4,15 +4,14 @@ import {
 } from '#config'
 import { QuickError, embedReply } from '#embed'
 
-import { FileRunning } from '#botClasses/FileRunning'
 import { Log } from '#LogColor'
 import { confirmBet } from '#utilBetOps/confirmBet'
-import { debugLogging as debug } from '../../bot_res/debugLogging.js'
 import { fetchBalance } from '#utilCurrency/fetchBalance'
 import PendingBetHandler from '#utilValidate/pendingBet'
 import { resolveMatchup } from '#cacheUtil/resolveMatchup'
 import { resolvePayouts } from '#utilBetOps/resolvePayouts'
 import { validateData } from '../validation/validateData.js'
+import embedColors from '../../../lib/colorsConfig.js'
 
 /**
  * @module setupBet - This module is used to setup a bet in the DB.
@@ -30,7 +29,6 @@ export async function setupBet(
 	betamount,
 	user,
 ) {
-	new FileRunning(`setupBet`)
 	const dbQuery = qBuilder(
 		`${LIVEMATCHUPS}`,
 		[`teamone`, `teamtwo`],
@@ -102,12 +100,9 @@ export async function setupBet(
 			const embObj = {
 				title: 'Bet Error',
 				description: `Team containing ${teamName} is not available to bet on. Please review the active matchups.`,
-				color: 'RED',
+				color: embedColors.PlutoRed,
 				silent: true,
 			}
 			await embedReply(message, embObj)
-			throw Log.Error(
-				`[setupBet.js] Team containing ${teamName} does not exist in the database`,
-			)
 		})
 }

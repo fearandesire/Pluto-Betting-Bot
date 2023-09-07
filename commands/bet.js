@@ -1,4 +1,5 @@
 import { Command } from '@sapphire/framework'
+import Promise from 'bluebird' // Import Bluebird library
 import { newBet } from '#utilBetOps/newBet'
 import { validateUser } from '#utilValidate/validateExistingUser'
 import { isPreSzn } from '#config'
@@ -51,42 +52,56 @@ export class bet extends Command {
 				ephemeral: true,
 			})
 		}
+
 		await interaction.deferReply({
 			content: `Submitting your bet, please wait.`,
 		})
+
 		const userid = interaction.user.id
 
-		const isRegistered = await validateUser(
-			interaction,
-			userid,
-			true,
-		)
-		if (!isRegistered) return
-		const hasPending =
-			await PendingBetHandler.checkPending(userid)
-		if (hasPending) {
-			await interaction.editReply({
-				content: `You are already setting up another bet. Please finish that bet before placing another.`,
-				ephemeral: false,
-			})
+		// Use Promise.try to handle promises and catch any errors
+		Promise.try(async () => {
+			const isRegistered = await validateUser(
+				interaction,
+				userid,
+				true,
+			)
+			if (!isRegistered) return
 
-			// regex to check if the team name is a number
-		} else if (
-			interaction.options
-				.getString(`team`)
-				.match(/^[0-9]+$/)
-		) {
-			interaction.editReply({
-				content: `**Please provide a valid team.**`,
-				ephemeral: true,
-			})
-		} else {
+			const hasPending =
+				await PendingBetHandler.checkPending(userid)
+			if (hasPending) {
+				return interaction.editReply({
+					content: `You are already setting up another bet. Please finish that bet before placing another.`,
+					ephemeral: false,
+				})
+			}
+
+			const teamName =
+				interaction.options.getString(`team`)
+			// Use a regex to check if the team name is a number
+			if (teamName.match(/^[0-9]+$/)) {
+				return interaction.editReply({
+					content: `**Please provide a valid team.**`,
+					ephemeral: true,
+				})
+			}
+
+			// If all checks pass, insert the pending bet
 			await PendingBetHandler.insertPending(userid)
+			// Call the newBet function only if all checks pass
 			await newBet(
 				interaction,
-				interaction.options.getString('team'),
+				teamName,
 				interaction.options.getInteger('amount'),
 			)
-		}
+		}).catch((error) => {
+			// Handle any errors that occur during the promise chain
+			console.error(error) // You can log the error here
+			interaction.editReply({
+				content: `An error occurred while processing your bet.`,
+				ephemeral: true,
+			})
+		})
 	}
 }

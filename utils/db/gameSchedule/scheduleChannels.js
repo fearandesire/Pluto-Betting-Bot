@@ -30,7 +30,6 @@ export async function scheduleChannels(
 	} else {
 		openChannelTime = cronStartTime
 	}
-
 	const HTEAM = await getShortName(homeTeam)
 	const ATEAM = await getShortName(awayTeam)
 

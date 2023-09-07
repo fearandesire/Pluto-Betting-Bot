@@ -1,12 +1,11 @@
 import async from 'async'
 import teamResolver from 'resolve-team'
-import { Log, QuickError } from '#config'
+import { QuickError } from '#config'
 
 import { gameActive } from '#dateUtil/gameActive'
 import PendingBetHandler from '#utilValidate/pendingBet'
 import { resolveMatchup } from '#cacheUtil/resolveMatchup'
 import { setupBet } from '#utilBetOps/setupBet'
-import { setupBetLog } from '#winstonLogger'
 import { verifyDupBet } from '#utilValidate/verifyDuplicateBet'
 import { SPORT } from '#env'
 /**
@@ -77,12 +76,6 @@ export async function newBet(
 		await PendingBetHandler.deletePending(user)
 		return
 	}
-	await setupBetLog.info(`New Betslip Created`, {
-		user,
-		team,
-		amount: betAmount,
-		matchupId,
-	})
 	// # using an async series to catch the errors and stop the process if any of the functions fail
 	async.series(
 		[
@@ -107,14 +100,7 @@ export async function newBet(
 			},
 		],
 		(err) => {
-			if (err) {
-				Log.Red(err)
-				setupBetLog.error({ errorMsg: err })
-				QuickError(
-					interaction,
-					`Unable to place your bet.`,
-				)
-			}
+			// Error catch handled internally
 		},
 	)
 }

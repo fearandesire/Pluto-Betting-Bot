@@ -1,18 +1,21 @@
 /** @module listMyBets */
 
 import stringifyObject from 'stringify-object'
+import _ from 'lodash'
 import {
 	accounting,
 	container,
 	embedReply,
 	QuickError,
 	BETSLIPS,
+	LIVEBETS,
 } from '#config'
 
 import { Log } from '#LogColor'
 import { db } from '#db'
 import { SapDiscClient } from '#main'
 import { guildImgURL } from '#embed'
+import embedColors from '../../lib/colorsConfig.js'
 
 /**
  * @module listMyBets
@@ -22,101 +25,74 @@ import { guildImgURL } from '#embed'
  *
  *
  */
-export function listMyBets(userid, interaction) {
-	container[`listBets-${userid}`] = []
-	db.map(
-		`SELECT * FROM "${BETSLIPS}" WHERE userid = $1`,
-		[userid],
-		async (row) => {
+export async function listMyBets(userid, interaction) {
+	const usersBetsArr = []
+	try {
+		const usersBets = await db.many(
+			`SELECT * FROM "${BETSLIPS}" WHERE userid = $1`,
+			[userid],
+		)
+		if (_.isEmpty(usersBets)) {
+			await Log.Red(
+				`User ${userid} does not have any bets.`,
+			)
+			throw new Error()
+		}
+		// # Remove any bet
+
+		// Store information into array
+		await _.forEach(usersBets, async (row) => {
+			const { betresult } = row
+			if (betresult !== `pending`) {
+				return
+			}
 			let { amount } = row
 			const teamId = row.teamid
 			const betId = row.betid
-			const result = row.betresult
-			if (
-				row === null ||
-				row.length === 0 ||
-				row.length < 1 ||
-				row === undefined
-			) {
-				return
-			}
-			if (result.toLowerCase() === 'pending') {
-				Log.Red(
-					`Pending bet found for user ${userid}`,
-				)
-				Log.Green(
-					`[listMyBets.js] Bets Collected for ${userid}:\n${stringifyObject(
-						row,
-					)}`,
-				)
-				const { format } = accounting
-				amount = format(amount)
-				const profit = format(row.profit) ?? `N/A`
-				const payout = format(row.payout) ?? `N/A`
-				container[`listBets-${userid}`].push(
-					`**•** __Bet #${betId}__
+			const { format } = accounting
+			amount = format(amount)
+			const profit = format(row.profit) ?? `N/A`
+			const payout = format(row.payout) ?? `N/A`
+			usersBetsArr.push(
+				`**•** __Bet #${betId}__
             Team: **${teamId}** | Amount: \`$${amount}\`
             Profit: \`$${profit}\` | Payout: \`$${payout}\``,
-				)
-			} else {
-				Log.Red(
-					`Something went wrong when listing bets for user ${userid}`,
-				)
-			}
-		},
-	)
-		.then(async () => {
-			await Log.Green(
-				`[listMyBets.js] Collected User (${userid}) Bet Information [Memory - Stage 2]:`,
 			)
-			await Log.BrightBlue(
-				container[`listBets-${userid}`],
-			)
-			const userName = interaction?.author?.username
-				? interaction?.author?.username
-				: interaction?.user?.id
-			const isSelf =
-				interaction?.author?.id === userid
-					? true
-					: interaction?.user?.id === userid
-			let title
-			if (isSelf === true) {
-				title = `:tickets: Your Active Bets`
-			} else {
-				title = `${userName}'s Active Bet Slips`
-			}
-			const joinedBetsArr =
-				container[`listBets-${userid}`].join(
-					'\n───────\n',
-				)
-			const embedcontent = {
-				title,
-				color: '#00FF00',
-				description: joinedBetsArr,
-				target: `reply`,
-				thumbnail: `${guildImgURL(SapDiscClient)}`,
-				footer: `The payout and profit numbers are potential values, as these games have yet to be completed.`,
-			}
-			await Log.Yellow(
-				`Sending ${userid} their betslips - Embed`,
-			)
-			await embedReply(interaction, embedcontent)
-			//! SECTION
-			Log.Green(
-				`[listMyBets.js] Storing User (${userid}) collected Array of Bet Information.`,
-			)
-			delete container[`listBets-${userid}`]
 		})
-		.catch((err) => {
-			Log.Error(
-				`[listMyBets.js] Error checking for active bet\n${err}`,
-			)
-			QuickError(
-				interaction,
-				`You currently have no active bets`,
-				true,
-			)
-			return false
-		})
-		.finally(() => {})
+
+		const betsJoined = usersBetsArr.join('\n───────\n')
+
+		const userName = interaction?.author?.username
+			? interaction?.author?.username
+			: interaction?.user?.id
+		const isSelf =
+			interaction?.author?.id === userid
+				? true
+				: interaction?.user?.id === userid
+		let title
+		if (isSelf === true) {
+			title = `:tickets: Your Active Bets`
+		} else {
+			title = `${userName}'s Active Bet Slips`
+		}
+		const embObj = {
+			title,
+			color: embedColors.PlutoGreen,
+			description: betsJoined,
+			target: `reply`,
+			footer: `The payout and profit numbers are potential values, as these games have yet to be completed.`,
+		}
+		await embedReply(interaction, embObj)
+	} catch (err) {
+		Log.Error(
+			`[listMyBets.js] Error checking for active bet\n${err}`,
+		)
+		console.log(err)
+		QuickError(
+			interaction,
+			`You currently have no active bets`,
+			true,
+		)
+		return false
+	}
 }

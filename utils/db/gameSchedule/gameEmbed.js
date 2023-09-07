@@ -98,7 +98,7 @@ export async function gameEmbedOdds(homeTeam, awayTeam) {
 			`
 **The ${teamEmoji} ${favoredTeam} are favored to win this game!**
 
-*Type \`/help\` in the <#${process.env.bettingChan}> channel to place bets with Pluto*`,
+*Type \`/commands\` in the <#${process.env.bettingChan}> channel to place bets with Pluto*`,
 		)
 		.setFooter({
 			text: `Pluto | Created by fenixforever`,

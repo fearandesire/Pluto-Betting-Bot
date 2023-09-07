@@ -30,13 +30,19 @@ export default async function parseScheduled(
 	if (includeOdds) {
 		embColor = `${embedColors.PlutoBlue}`
 		title = `:mega: H2H Odds`
-		createMatchStr = (game) =>
-			`${game.away_team} *(${game.away_odds})* *@* ${game.home_team} *(${game.home_odds})* | *${game.start}*`
+		createMatchStr = (game) => {
+			const aTeam = shortNameParse(game.away_team)
+			const hTeam = shortNameParse(game.home_team)
+			return `${aTeam} *(${game.away_odds})* *@* ${hTeam} *(${game.home_odds})* | *${game.start}*`
+		}
 	} else {
 		title = `Scheduled Games`
 		embColor = `${embedColors.PlutoYellow}`
-		createMatchStr = (game) =>
-			`${game.away_team} @ ${game.home_team} | *${game.start}*`
+		createMatchStr = (game) => {
+			const aTeam = shortNameParse(game.away_team)
+			const hTeam = shortNameParse(game.home_team)
+			return `${aTeam} @ ${hTeam} | *${game.start}*`
+		}
 	}
 
 	// Group the scheduled games by day using Lodash's `groupBy` function
@@ -72,4 +78,12 @@ export default async function parseScheduled(
 	})
 	emb.addFields(fields)
 	return emb
+}
+
+function shortNameParse(name) {
+	const nameParts = name.split(' ')
+	if (nameParts.length > 0) {
+		return nameParts[nameParts.length - 1]
+	}
+	return ''
 }

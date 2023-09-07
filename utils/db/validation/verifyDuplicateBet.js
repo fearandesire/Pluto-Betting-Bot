@@ -18,7 +18,6 @@ export async function verifyDupBet(
 	userid,
 	matchId,
 ) {
-	new FileRunning(`verifyDupBet`)
 	await isDuplicateBet(userid, matchId).then(
 		async (data) => {
 			if (data) {

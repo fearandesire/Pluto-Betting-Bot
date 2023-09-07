@@ -1,5 +1,5 @@
 // import { updateclaim } from './addClaimTime.js';
-
+import discord from 'discord.js'
 import {
 	addHours,
 	format,
@@ -13,6 +13,10 @@ import {
 import { db } from '#db'
 import { CURRENCY } from '#config'
 import PlutoLogger from '#PlutoLogger'
+import { convertColor } from '../../bot_res/embeds/embedReply.js'
+import embedColors from '../../../lib/colorsConfig.js'
+
+const { EmbedBuilder } = discord
 
 export async function processClaim(
 	inputuserid,
@@ -33,24 +37,29 @@ export async function processClaim(
 		}
 		// ? User exists in the DB, but has never used the claim command.
 		// ? Therefor we process the claim request (add 20 dollars to user's balance & save current time to lastclaimtime cell)
-		if (findUser.lastclaimtime == null) {
+		if (findUser.lastclaimtime === null) {
 			const updatedBalance =
 				Number(findUser.balance) + 20
-			t.any(
+			await t.any(
 				`UPDATE "${CURRENCY}" SET lastclaimtime = $1, balance = $2 WHERE userid = $3 RETURNING *`,
 				[rightNow, updatedBalance, inputuserid],
 			)
 			embObj = {
 				title: 'Daily Claim',
 				description: `Welcome to Pluto! You have claimed your daily $20.\nYou can use this command again in 24 hours.\nYour new balance: $${updatedBalance}`,
-				color: `#00ff00`,
+				color: convertColor(
+					embedColors.PlutoBrightGreen,
+				),
 			}
 			await interaction.reply({ embeds: [embObj] })
 		}
 
 		// ? Use Case: User has claimed at least once prior to now
 		// ? Now we need to determine if the user is on cooldown.
-		if (findUser.userid === inputuserid) {
+		if (
+			findUser.userid === inputuserid &&
+			findUser.lastclaimtime !== null
+		) {
 			const lastClaim = await getUnixTime(
 				fromUnixTime(findUser.lastclaimtime),
 			)
@@ -93,11 +102,18 @@ export async function processClaim(
 					`UPDATE "${CURRENCY}" SET lastclaimtime = $1, balance = $2 WHERE userid = $3 RETURNING *`,
 					[rightNow, balance, inputuserid],
 				)
-				const claimedEmb = {
+				const cEmb = {
 					title: 'Daily Claim',
 					description: `Welcome back! You have claimed your daily $20.\nYou can use this command again in 24 hours.\nYour new balance is: **$${balance}**.`,
-					color: `#00ff00`,
 				}
+				const claimedEmb = new EmbedBuilder()
+					.setTitle('Daily Claim')
+					.setDescription(cEmb.description)
+					.setColor(
+						convertColor(
+							embedColors.PlutoBrightGreen,
+						),
+					)
 				await interaction.reply({
 					embeds: [claimedEmb],
 					ephemeral: true,
