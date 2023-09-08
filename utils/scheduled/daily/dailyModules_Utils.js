@@ -1,7 +1,13 @@
 import { format } from 'date-fns'
 import { db } from '#db'
 import { _ } from '#config'
-import { LIVEMATCHUPS } from '#serverConf'
+import { LIVEMATCHUPS, PENDING } from '#serverConf'
+/**
+ * Completely wipes clear pending bets
+ */
+export async function clearPendingBets() {
+	await db.none(`DELETE FROM "${PENDING}"`)
+}
 
 /**
  * @module fetchTodaysMatches

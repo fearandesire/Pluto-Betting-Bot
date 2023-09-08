@@ -1,4 +1,4 @@
-import { LIVEMATCHUPS, flatcache } from '#config'
+import { LIVEMATCHUPS } from '#config'
 
 import { db } from '#db'
 import { resolveMatchupLog } from '../logging.js'
@@ -12,21 +12,24 @@ import { resolveMatchupLog } from '../logging.js'
  */
 
 export async function resolveMatchup(teamName, reqInfo) {
-    const dbMatchup = await db.manyOrNone(
-        `SELECT * FROM "${LIVEMATCHUPS}" WHERE teamone = '${teamName}' OR teamtwo = '${teamName}'`,
-    )
-    if (!dbMatchup || Object.keys(dbMatchup).length === 0) {
-        resolveMatchupLog.info(`No match found for: ${teamName}`)
-        return false
-    }
-    if (!reqInfo) {
-        return dbMatchup[0]
-    }
-    if (reqInfo === 'odds') {
-        if (teamName === dbMatchup[0].teamone) {
-            return dbMatchup[0].teamoneodds
-        } if (teamName === dbMatchup[0].teamtwo) {
-            return dbMatchup[0].teamtwoodds
-        }
-    }
+	const dbMatchup = await db.manyOrNone(
+		`SELECT * FROM "${LIVEMATCHUPS}" WHERE teamone = '${teamName}' OR teamtwo = '${teamName}'`,
+	)
+	if (!dbMatchup || Object.keys(dbMatchup).length === 0) {
+		resolveMatchupLog.info(
+			`No match found for: ${teamName}`,
+		)
+		return false
+	}
+	if (!reqInfo) {
+		return dbMatchup[0]
+	}
+	if (reqInfo === 'odds') {
+		if (teamName === dbMatchup[0].teamone) {
+			return dbMatchup[0].teamoneodds
+		}
+		if (teamName === dbMatchup[0].teamtwo) {
+			return dbMatchup[0].teamtwoodds
+		}
+	}
 }

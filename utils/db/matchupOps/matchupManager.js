@@ -1,10 +1,31 @@
+import _ from 'lodash'
 import { db } from '#db'
-import { LIVEMATCHUPS } from '#config'
+import { LIVEMATCHUPS, BETSLIPS } from '#config'
+import { resolveMatchup } from '#cacheUtil/resolveMatchup'
 import logClr from '#colorConsole'
 import { SCORETABLE } from '#serverConf'
 import PlutoLogger from '#PlutoLogger'
 
 export class MatchupManager {
+	/**
+	 * Locate bets that are placed for a specified team
+	 * @param {string} team - Team to locate bets on the matchup
+	 * @returns {boolean} True if found, false otherwise
+	 */
+	static async outstandingBets(team) {
+		const matchData = await resolveMatchup(team)
+		// use ID to find if there's any bets
+		const { matchid } = matchData
+		// check BETSLIPS for any bets with matchid
+		const bets = await db.any(
+			`SELECT * FROM "${BETSLIPS}" WHERE matchid = '${matchid}'`,
+		)
+		if (_.isEmpty(bets)) {
+			return false
+		}
+		return true
+	}
+
 	static async storeMatchups(columnData) {
 		const {
 			teamOne,

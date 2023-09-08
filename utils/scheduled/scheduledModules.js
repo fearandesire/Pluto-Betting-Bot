@@ -8,6 +8,7 @@ import {
 	getRanges,
 	gameHeartbeat,
 	scheduledGames,
+	getOdds,
 } from '#serverConf'
 import completedChecks from '../bot_res/cronCompletedChecks.js'
 import Cache from '#rCache'
@@ -77,6 +78,34 @@ export async function init_Cron_Ranges() {
 			await PlutoLogger.log({
 				id: 2,
 				description: `An error occured when creating Completed Check Cron Ranges\nError: \`${err.message}\``,
+			})
+		}
+	})
+}
+
+/**
+ * Collect Odds based on Cron Timer
+ */
+
+export async function init_Cron_Odds() {
+	logClr({
+		text: `Init Cron Job for Collecting Odds`,
+		color: `yellow`,
+		status: `processing`,
+	})
+	// eslint-disable-next-line no-unused-vars
+	const cron = new Cron(`${getOdds}`, async () => {
+		try {
+			const games = await Cache().get(`scheduled`)
+			if (_.isEmpty(games)) {
+				return
+			}
+			const dates = _.map(games, (game) => game?.date)
+			await gameHeartbeat(dates)
+		} catch (err) {
+			await PlutoLogger.log({
+				id: 2,
+				description: `An error occured when creating Game Heartbeat Cron Job\nError: \`${err.message}\``,
 			})
 		}
 	})

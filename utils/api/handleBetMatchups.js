@@ -9,11 +9,11 @@ import { SCORE } from '#env'
 import { checkBetQueue } from '../db/matchupOps/progress/checkBetQueue.js'
 import { closeLostBets } from '../db/betOps/closeBets/closeLostBets.js'
 import { closeWonBets } from '../db/betOps/closeBets/closeWonBets.js'
-import dmMe from '../bot_res/dmMe.js'
 import { idApiExisting } from '../db/validation/idApiExisting.js'
 import { setProgress } from '../db/matchupOps/progress/setProgress.js'
 import { determineWinner } from '../bot_res/betOps/determineWinner.js'
 import { MatchupManager } from '#MatchupManager'
+import PlutoLogger from '#PlutoLogger'
 
 const url = SCORE
 const options = {
@@ -57,6 +57,7 @@ export async function handleBetMatchups() {
 	})
 	const skippedGames = []
 
+	const matchupManager = new MatchupManager()
 	// eslint-disable-next-line no-unused-vars
 	for await (const [key, value] of Object.entries(
 		compResults,
@@ -115,13 +116,20 @@ export async function handleBetMatchups() {
 						apiId: idApi,
 					})
 				})
-				await dmMe(
-					`Closed Bets for ${value.home_team} vs ${value.away_team}`,
-				)
-				await MatchupManager.rmvMatchupOdds(
-					value.home_team,
-					value.away_team,
-				)
+				const betsExisting =
+					await matchupManager.outstandingBets(
+						value.home_team,
+					)
+				if (!betsExisting) {
+					await PlutoLogger.log({
+						id: 3,
+						description: `Processed bets for matchup ${value.home_team} vs ${value.away_team}`,
+					})
+					await MatchupManager.rmvMatchupOdds(
+						value.home_team,
+						value.away_team,
+					)
+				}
 			} else {
 				await checkCompletedLog.info({
 					hometeam: value.home_team,

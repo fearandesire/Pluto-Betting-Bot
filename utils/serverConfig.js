@@ -33,6 +33,7 @@ const serverEnv = {
 	gameHeartbeat: configData.gameHeartbeat,
 	scheduledGames: configData.scheduledGames,
 	getRanges: configData.getRanges,
+	getOdds: configData.getOdds,
 }
 
 const {
@@ -55,6 +56,7 @@ const {
 	gameHeartbeat,
 	scheduledGames,
 	getRanges,
+	getOdds,
 } = serverEnv
 
 export {
@@ -77,6 +79,7 @@ export {
 	gameHeartbeat,
 	scheduledGames,
 	getRanges,
+	getOdds,
 }
 
 export { configData as serverConf, serverEnv }

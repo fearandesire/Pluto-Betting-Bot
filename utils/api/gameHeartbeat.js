@@ -81,9 +81,21 @@ export async function getHeartbeat() {
 		}
 		// ! Close Bets
 		await handleBetMatchups()
-		// ! Remove from Score Tbl
-		await MatchupManager.clearScoreTable(game.id)
-		deletionTally[0] += 1
+
+		// # Sort of a hack around the APIs being used: We only remove the match from the score table if there's no outstanding bets
+		// # This is done for two reasons: Limit API calls from The-Odds API as there can be a gap in time before the game is set to 'complete' for them
+		// # Secondly, we don't want to remove the game from the score table if there are outstanding bets - as currently,the score table is used to check for completes games, and no longer The-Odds-API
+		// # Another solution would be to remove completed checks from handleBetMatchups, or passing in the game ID and winner to handleBetMatchups directly
+		const matchupManager = new MatchupManager()
+		const betsExisting =
+			await matchupManager.outstandingBets(
+				game.home_team,
+			)
+		if (!betsExisting) {
+			// ! Remove from Score Tbl
+			await MatchupManager.clearScoreTable(game.id)
+			deletionTally[0] += 1
+		}
 	})
 	// await logClr({
 	// 	text: `Completed game channel deletion que process. =>\n Count: ${deletionTally} `,
