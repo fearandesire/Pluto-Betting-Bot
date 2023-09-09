@@ -18,6 +18,7 @@ import {
 	addMinutes,
 	isBefore,
 	isSameWeek,
+	isSameDay,
 } from 'date-fns'
 
 export default class IsoBuilder {
@@ -25,9 +26,21 @@ export default class IsoBuilder {
 	 * Creates a new instance of IsoBuilder with the given time.
 	 * @param {string} time - A string representing a valid date and time in ISO format.
 	 */
-	constructor(time) {
+	constructor(time, compare) {
 		this.parseTime = parseISO(time)
+		this.compare = parseISO(compare) || null
 		this.dateObj = new Date()
+		this.hours = getHours(this.parseTime)
+		this.minutes = getMinutes(this.parseTime)
+		this.day = getDay(this.parseTime)
+	}
+
+	isMatchingDate() {
+		// Check if they are the same day
+		if (isSameDay(this.parseTime, this.compare)) {
+			return true
+		}
+		return false
 	}
 
 	/**
@@ -115,9 +128,9 @@ export default class IsoBuilder {
 	 * @returns {string} The date formatted as a cron job.
 	 */
 	toCron() {
-		const startHour = getHours(this.parseTime)
-		const startMin = getMinutes(this.parseTime)
-		const startDay = getDay(this.parseTime)
+		const startHour = this.hours
+		const startMin = this.minutes
+		const startDay = this.day
 		const startMonth = Number(
 			format(this.parseTime, `M`),
 		)

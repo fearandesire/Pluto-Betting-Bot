@@ -1,12 +1,64 @@
 import _ from 'lodash'
+import { formatISO } from 'date-fns'
 import { db } from '#db'
 import { LIVEMATCHUPS, BETSLIPS } from '#config'
 import { resolveMatchup } from '#cacheUtil/resolveMatchup'
 import logClr from '#colorConsole'
 import { SCORETABLE } from '#serverConf'
 import PlutoLogger from '#PlutoLogger'
+import IsoManager from '#iso'
 
 export class MatchupManager {
+	/**
+	 *  Get all matchups
+	 */
+	static async getAllMatchups() {
+		const matchups = await db.manyOrNone(
+			`SELECT * FROM "${LIVEMATCHUPS}"`,
+		)
+		return matchups
+	}
+
+	/**
+	 *  Get matchups for a specific day
+	 * If no date is provided, get matchups for the current day
+	 * @param {string} ISODate - ISO 8601 Date
+	 */
+	static async matchupsForDay(ISODate) {
+		/**
+		 * Supplied the ISO Date String
+		 * @type {string}  */
+		let isoTime
+		if (!ISODate) {
+			const today = new Date()
+			isoTime = formatISO(today, {
+				representation: 'complete',
+			})
+		} else {
+			isoTime = ISODate
+		}
+		const matchups = await db.manyOrNone(
+			`SELECT * FROM "${LIVEMATCHUPS}"`,
+		)
+		const todaysMatches = _.filter(
+			matchups,
+			(matchup) =>
+				new IsoManager(matchup.startTime, isoTime)
+					.isSameDay,
+		)
+		return todaysMatches
+	}
+
+	/**
+	 * Get the ID of the matchup
+	 * @param {string} team - Team to locate the matchup ID for
+	 * @returns {number} Matchup ID
+	 */
+	static async getMatchId(team) {
+		const matchData = await resolveMatchup(team, `id`)
+		return matchData
+	}
+
 	/**
 	 * Locate bets that are placed for a specified team
 	 * @param {string} team - Team to locate bets on the matchup

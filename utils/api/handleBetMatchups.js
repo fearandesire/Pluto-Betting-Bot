@@ -1,10 +1,6 @@
 /* eslint-disable no-continue */
 import fetch from 'node-fetch'
 import { Log, _ } from '#config'
-import {
-	apiReqLog,
-	checkCompletedLog,
-} from '#winstonLogger'
 import { SCORE } from '#env'
 import { checkBetQueue } from '../db/matchupOps/progress/checkBetQueue.js'
 import { closeLostBets } from '../db/betOps/closeBets/closeLostBets.js'
@@ -36,49 +32,41 @@ const options = {
  */
 
 export async function handleBetMatchups() {
-	const fileName = `[handleBetMatchups.js]`
-	await checkCompletedLog.info(`Init Check Completed`, {
-		status: `Initilization check for completed games`,
-	})
 	let response
 	let apiJSON
 	try {
 		response = await fetch(url, options)
 		apiJSON = await response.json()
 	} catch (error) {
-		await checkCompletedLog.error(`API Call Error`, {
-			errorMsg: error,
+		await PlutoLogger.log({
+			id: 4,
+			description: `Failed to fetch API Data.\nError: \`${error.message}\``,
 		})
 		return
 	}
-	const compResults = apiJSON
-	await apiReqLog.info(`API Connection Info`, {
-		status: `Connection successful`,
-	})
-	const skippedGames = []
-
-	const matchupManager = new MatchupManager()
+	const gamesCollected = apiJSON
 	// eslint-disable-next-line no-unused-vars
 	for await (const [key, value] of Object.entries(
-		compResults,
+		gamesCollected,
 	)) {
 		const idApi = value.id
-		// # check for API ID in the DB
-		if (
-			value.completed === true &&
-			!_.isEmpty(await idApiExisting(idApi))
-		) {
-			// # Check if we are in the middle of processing bets
-			const betQueueFlag = await checkBetQueue(
+		const game = value
+		const { completed } = game
+		const isCompleted = completed === true
+		const gameInMatchups = await idApiExisting(idApi)
+		// ? Matchup is completed & Game is found in DB
+		if (isCompleted && !_.isEmpty(gameInMatchups)) {
+			// # Check if we are in the middle of processing bets for this game
+			const alreadyProcessing = await checkBetQueue(
 				value.home_team,
 				value.away_team,
 			)
-			if (betQueueFlag === 'empty') {
+			if (alreadyProcessing === 'empty') {
 				await Log.Red(
 					`Unable to find matchup in database: ${value.home_team} vs ${value.away_team}`,
 				)
 				continue
-			} else if (betQueueFlag === false) {
+			} else if (alreadyProcessing === false) {
 				const detWin = await determineWinner(value)
 				const {
 					winner,
@@ -87,7 +75,7 @@ export async function handleBetMatchups() {
 					losingTeamHomeOrAway,
 				} = detWin
 
-				// & Declare the matchup as being processed to prevent overlapping the process of closing bets
+				// ? Declare the matchup as being processed to prevent overlapping the process of closing bets
 				await setProgress(
 					value.home_team,
 					value.away_team,
@@ -98,9 +86,10 @@ export async function handleBetMatchups() {
 					winner,
 					homeOrAwayWon,
 					losingTeam,
-				).catch((err) => {
-					checkCompletedLog.error(`${fileName}`, {
-						error: `Error closing won bets for ${winner} || ${err}`,
+				).catch(async (err) => {
+					await PlutoLogger.log({
+						id: 3,
+						description: `Error occured when closing winning bets for ${winner}\nError: \`${err.message}\``,
 					})
 				})
 				// # Close the bets for the losers of the matchup
@@ -108,55 +97,35 @@ export async function handleBetMatchups() {
 					losingTeam,
 					losingTeamHomeOrAway,
 					winner,
-				).catch((err) => {
-					checkCompletedLog.error(`Error`, {
-						errorMsg: `Error closing lost bets for ${losingTeam} || ${err}`,
-						hometeam: value.home_team,
-						awayteam: value.away_team,
-						apiId: idApi,
+				).catch(async (err) => {
+					await PlutoLogger.log({
+						id: 3,
+						description: `Error occured when closing winning bets for ${winner}\nError: \`${err.message}\``,
 					})
 				})
 				const betsExisting =
-					await matchupManager.outstandingBets(
+					await MatchupManager.outstandingBets(
 						value.home_team,
 					)
 				if (!betsExisting) {
-					await PlutoLogger.log({
-						id: 3,
-						description: `Processed bets for matchup ${value.home_team} vs ${value.away_team}`,
-					})
 					await MatchupManager.rmvMatchupOdds(
 						value.home_team,
 						value.away_team,
 					)
+					await PlutoLogger.log({
+						id: 3,
+						description: `Processed bets for matchup ${value.home_team} vs ${value.away_team}`,
+					})
 				}
 			} else {
-				await checkCompletedLog.info({
-					hometeam: value.home_team,
-					awayteam: value.away_team,
-					apiId: idApi,
-					status: `Matchup already being processed`,
-					skipped: true,
-				})
 				await Log.Yellow(
 					`Bets for Matchup: ${value.home_team} vs. ${value.away_team} are already being closed. This game will not be queued to be processed.`,
 				)
 				continue
 			}
 		} else {
-			await skippedGames.push(
-				`${value.home_team} vs. ${value.away_team}`,
-			)
+			// Skip matchups still going / not yet completed
 			continue
 		}
 	}
-	await checkCompletedLog.info(`Games Skipped`, {
-		status: `Skipped games:\n${skippedGames.join(
-			`\n`,
-		)}\n`,
-	})
-	await Log.Green(`{
-        "stack": 'checkCompleted',
-        "status": 'Completed',
-    }`)
 }

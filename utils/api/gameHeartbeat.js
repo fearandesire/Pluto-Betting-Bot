@@ -86,9 +86,8 @@ export async function getHeartbeat() {
 		// # This is done for two reasons: Limit API calls from The-Odds API as there can be a gap in time before the game is set to 'complete' for them
 		// # Secondly, we don't want to remove the game from the score table if there are outstanding bets - as currently,the score table is used to check for completes games, and no longer The-Odds-API
 		// # Another solution would be to remove completed checks from handleBetMatchups, or passing in the game ID and winner to handleBetMatchups directly
-		const matchupManager = new MatchupManager()
 		const betsExisting =
-			await matchupManager.outstandingBets(
+			await MatchupManager.outstandingBets(
 				game.home_team,
 			)
 		if (!betsExisting) {

@@ -1,9 +1,10 @@
 import Promise from 'bluebird'
 import { Log } from '#config'
 import {
+	genRanges,
 	init_Cron_Chan_Scheduler,
 	init_Cron_Heartbeat,
-	init_Cron_Ranges,
+	initMatchupHandling,
 } from '../scheduledModules.js'
 import logClr from '#colorConsole'
 import cronScheduleGames from '../../db/gameSchedule/cronScheduleGames.js'
@@ -34,7 +35,8 @@ export async function dbDailyOps() {
 			await cronScheduleGames(), // Check for any games that need to be scheduled now (Game Channels)
 			await init_Cron_Chan_Scheduler(), // Start Cron to schedule games daily (Game Channels)
 			await collectOdds(), // Collect Odds on-start
-			// await init_Cron_Ranges(), // Start Cron to generate Cron Ranges for completed games
+			await genRanges(), // Generate Cron Ranges on-start as well
+			await initMatchupHandling(), // Start Cron to generate Cron Ranges & Check for completed games
 		])
 	} catch (err) {
 		Log.Red(err)

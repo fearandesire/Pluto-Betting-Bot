@@ -9,8 +9,8 @@ export default class IsoManager {
 	 * Creates a new instance of IsoManager with the given time.
 	 * @param {string} time - A string representing a valid date and time in ISO format.
 	 */
-	constructor(time) {
-		const builder = new IsoBuilder(time)
+	constructor(time, compare) {
+		const builder = new IsoBuilder(time, compare)
 
 		/**
 		 * Filter within NFL Week
@@ -62,6 +62,7 @@ export default class IsoManager {
 		 */
 		this.cron = builder.toCron()
 
+		/** @type {string} Cron Job of current time + 1 minute */
 		this.cronRightNow = builder.rightNowToCron()
 
 		/**
@@ -81,5 +82,11 @@ export default class IsoManager {
 		 * @returns {boolean} True - Same Week | False - Different Week
 		 */
 		this.isSameWeek = builder.isSameWeek()
+
+		/**
+		 * @type {boolean}
+		 * @returns {boolean} True - Same Day | False - Different Day
+		 */
+		this.isSameDay = builder.isMatchingDate()
 	}
 }

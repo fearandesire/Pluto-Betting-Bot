@@ -7,11 +7,11 @@ import { LIVEMATCHUPS } from '#config'
  */
 
 export async function setProgress(homeTeam, awayTeam) {
-    var setInProg = await db.none(
-        `
+	const setInProg = await db.none(
+		`
   UPDATE "${LIVEMATCHUPS}" SET inprogress = true WHERE teamone = $1 OR teamtwo = $2
   `,
-        [homeTeam, awayTeam],
-    )
-    return setInProg
+		[homeTeam, awayTeam],
+	)
+	return setInProg
 }

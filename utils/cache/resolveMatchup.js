@@ -32,4 +32,7 @@ export async function resolveMatchup(teamName, reqInfo) {
 			return dbMatchup[0].teamtwoodds
 		}
 	}
+	if (reqInfo === 'id') {
+		return dbMatchup[0].idapi
+	}
 }

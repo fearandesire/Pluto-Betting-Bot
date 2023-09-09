@@ -37,6 +37,6 @@ export class removeAllMatchupsSlash extends Command {
 			content: `Clearing all matchups in the database.`,
 			ephemeral: true,
 		})
-		await new MatchupManager().clearOddsTable()
+		await MatchupManager().clearOddsTable()
 	}
 }

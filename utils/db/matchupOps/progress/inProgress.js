@@ -6,10 +6,10 @@ import { LIVEMATCHUPS } from '#config'
  * Query DB to see if the matchup is in progress of being closed
  */
 export async function inProgress(homeTeam, awayTeam) {
-    return await db.oneOrNone(
-        `
+	return db.oneOrNone(
+		`
     SELECT inprogress FROM "${LIVEMATCHUPS}" WHERE teamone = $1 OR teamtwo = $2
     `,
-        [homeTeam, awayTeam],
-    )
+		[homeTeam, awayTeam],
+	)
 }
