@@ -10,7 +10,8 @@ export default class IsoManager {
 	 * @param {string} time - A string representing a valid date and time in ISO format.
 	 */
 	constructor(time, compare) {
-		const builder = new IsoBuilder(time, compare)
+		const builder =
+			new IsoBuilder(time, compare) || null
 
 		/**
 		 * Filter within NFL Week

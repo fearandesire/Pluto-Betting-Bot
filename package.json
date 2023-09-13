@@ -122,7 +122,7 @@
 		"winston-daily-rotate-file": "^4.7.1"
 	},
 	"devDependencies": {
-		"ava": "^5.2.0",
+		"ava": "^5.3.1",
 		"bluebird": "^3.7.2",
 		"eslint-config-airbnb": "^19.0.4",
 		"eslint-config-prettier": "^8.6.0",

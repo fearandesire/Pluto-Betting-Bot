@@ -1,7 +1,6 @@
 import { LIVEMATCHUPS } from '#config'
 
 import { db } from '#db'
-import { resolveMatchupLog } from '../logging.js'
 
 /**
  * @module resolveMatchup
@@ -16,9 +15,6 @@ export async function resolveMatchup(teamName, reqInfo) {
 		`SELECT * FROM "${LIVEMATCHUPS}" WHERE teamone = '${teamName}' OR teamtwo = '${teamName}'`,
 	)
 	if (!dbMatchup || Object.keys(dbMatchup).length === 0) {
-		resolveMatchupLog.info(
-			`No match found for: ${teamName}`,
-		)
 		return false
 	}
 	if (!reqInfo) {

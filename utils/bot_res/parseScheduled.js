@@ -26,7 +26,25 @@ export default async function parseScheduled(
 	let createMatchStr
 	let embColor
 	let title
+	let description
 
+	if (_.isEmpty(scheduledArr)) {
+		// Embed should just state no games for today
+		if (includeOdds) {
+			title = `No Odds Available`
+			description = `There are no odds currently stored right now.`
+		} else {
+			title = `No Games Available`
+			description = `No games are scheduled for the day.`
+		}
+		const emb = new EmbedBuilder()
+			.setTitle(title)
+			.setColor(embedColors.PlutoRed)
+			.setDescription(description)
+			.setFooter({ text: footer || helpfooter })
+			.setThumbnail(thumbnail)
+		return emb
+	}
 	if (includeOdds) {
 		embColor = `${embedColors.PlutoBlue}`
 		title = `:mega: H2H Odds`

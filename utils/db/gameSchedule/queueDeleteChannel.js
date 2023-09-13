@@ -2,7 +2,7 @@ import { addMinutes, format } from 'date-fns'
 
 import cron from 'node-cron'
 import { deleteChan } from './deleteChan.js'
-import dmMe from '../../bot_res/dmMe.js'
+import PlutoLogger from '#PlutoLogger'
 
 /**
  * @module queueDeleteChannel
@@ -22,31 +22,33 @@ export async function queueDeleteChannel(gameChanName) {
 	const month = splitTime[4]
 	const dayOfWeek = splitTime[5]
 	const cronString = `0 ${mins} ${hours} ${day} ${month} ${dayOfWeek}`
-	await dmMe(`Deleting ${gameChanName} in 30 minutes`)
+	await PlutoLogger.log({
+		id: 2,
+		description: `Deleting game channel ${gameChanName} in 30 minutes.`,
+	})
 	cron.schedule(cronString, async () => {
 		try {
 			await deleteChan(gameChanName).then(
 				async (res) => {
 					if (res) {
-						await dmMe(
-							`Deleted ${gameChanName}`,
-						)
+						await PlutoLogger.log({
+							id: 2,
+							description: `Deleted game channel ${gameChanName}`,
+						})
 						return true
 					}
-					await dmMe(
-						`Ran into trouble when trying to delete: ${gameChanName}`,
-					)
+					await PlutoLogger.log({
+						id: 2,
+						description: `Failed to delete game channel ${gameChanName}\nThis channel was likely already deleted.`,
+					})
 					return false
 				},
 			)
 		} catch (error) {
-			await dmMe(
-				`Error deleting ${gameChanName.name}`,
-			)
-			throw new Error(
-				`Unable to delete game channel ${gameChanName} >>\n`,
-				error,
-			)
+			await PlutoLogger.log({
+				id: 2,
+				description: `Failed to delete game channel ${gameChanName}\nError: ${error.message}`,
+			})
 		}
 	})
 }

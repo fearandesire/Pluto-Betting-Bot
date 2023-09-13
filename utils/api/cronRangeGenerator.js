@@ -5,6 +5,8 @@ import {
 	getDaysInMonth,
 	addDays,
 } from 'date-fns'
+import _ from 'lodash'
+
 /**
  * @module cronRangeGenerator
  * @summary Generate a set of Cron Ranges based on the provided array of matchups.
@@ -26,6 +28,9 @@ import {
  */
 
 export default function cronRangeGenerator(matches) {
+	if (_.isEmpty(matches)) {
+		return
+	}
 	const earliestMatch = matches[0]
 	const latestMatch = matches[matches.length - 1]
 	const earliestMatchStart = parseISO(earliestMatch)

@@ -27,7 +27,7 @@ export default class IsoBuilder {
 	 * @param {string} time - A string representing a valid date and time in ISO format.
 	 */
 	constructor(time, compare) {
-		this.parseTime = parseISO(time)
+		this.parseTime = parseISO(time) || null
 		this.compare = parseISO(compare) || null
 		this.dateObj = new Date()
 		this.hours = getHours(this.parseTime)

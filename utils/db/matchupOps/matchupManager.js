@@ -1,7 +1,7 @@
 import _ from 'lodash'
 import { formatISO } from 'date-fns'
 import { db } from '#db'
-import { LIVEMATCHUPS, BETSLIPS } from '#config'
+import { LIVEMATCHUPS, LIVEBETS } from '#config'
 import { resolveMatchup } from '#cacheUtil/resolveMatchup'
 import logClr from '#colorConsole'
 import { SCORETABLE } from '#serverConf'
@@ -65,12 +65,24 @@ export class MatchupManager {
 	 * @returns {boolean} True if found, false otherwise
 	 */
 	static async outstandingBets(team) {
+		console.log(
+			`[outstandingBets] Looking for bets for ${team}`,
+		)
 		const matchData = await resolveMatchup(team)
+		if (!matchData) {
+			console.log(
+				`[outstandingBets] Unable to find matchup for ${team}`,
+			)
+			return false
+		}
 		// use ID to find if there's any bets
 		const { matchid } = matchData
-		// check BETSLIPS for any bets with matchid
+		console.log(
+			`[outstandingBets] Match ID:\n${matchid}`,
+		)
+		// check currently active bets for any bets with matchid
 		const bets = await db.any(
-			`SELECT * FROM "${BETSLIPS}" WHERE matchid = '${matchid}'`,
+			`SELECT * FROM "${LIVEBETS}" WHERE matchid = '${matchid}'`,
 		)
 		if (_.isEmpty(bets)) {
 			return false

@@ -1,7 +1,8 @@
 import Promise from 'bluebird'
 import { Log } from '#config'
+import { handleBetMatchups } from '#api/handleBetMatchups'
 import {
-	genRanges,
+	init_Cron_Completed,
 	init_Cron_Chan_Scheduler,
 	init_Cron_Heartbeat,
 	initMatchupHandling,
@@ -21,6 +22,7 @@ import { clearPendingBets } from './dailyModules_Utils.js'
  * - Scheduling game channels
  * - Processing bets for completed games
  */
+// TODO: FIX SENDING DMS TO BET WINNERS & LOSERS
 export async function dbDailyOps() {
 	logClr({
 		text: `Starting daily operations`,
@@ -30,13 +32,14 @@ export async function dbDailyOps() {
 	try {
 		await Promise.all([
 			await clearScheduled(), // Clear Cached Scheduled Games
-			await clearPendingBets(), // Clear Pending Bets
-			await init_Cron_Heartbeat(), // Start Cron for Heartbeats
-			await cronScheduleGames(), // Check for any games that need to be scheduled now (Game Channels)
-			await init_Cron_Chan_Scheduler(), // Start Cron to schedule games daily (Game Channels)
-			await collectOdds(), // Collect Odds on-start
-			await genRanges(), // Generate Cron Ranges on-start as well
-			await initMatchupHandling(), // Start Cron to generate Cron Ranges & Check for completed games
+			await clearPendingBets(), // Clear Pending Bets - In this context, bets that have not been confirmed or cancelled.
+			// await init_Cron_Heartbeat(), // Start Cron for Heartbeats
+			await cronScheduleGames(), // Check for any games that need to be scheduled now (Game Channels) [Instant]
+			await init_Cron_Chan_Scheduler(), // Start Cron to schedule games daily (Game Channels) [Daily]
+			await collectOdds(), // Collect Odds on-start [Instant]
+			await init_Cron_Completed(), // Start range generation on-startup [Instant]
+			await initMatchupHandling(), // Start Cron to generate Cron Ranges & Check for completed games [Daily]
+			await handleBetMatchups(),
 		])
 	} catch (err) {
 		Log.Red(err)

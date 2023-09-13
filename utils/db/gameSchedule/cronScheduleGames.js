@@ -10,6 +10,7 @@ import Promise from 'bluebird'
 import { db } from '#db'
 // import { PRESZN_MATCHUPS_TABLE, spinner } from '#config'
 import { SPORT } from '#env'
+import { resolveMatchup } from '#cacheUtil/resolveMatchup'
 import { getShortName } from '../../bot_res/getShortName.js'
 import { scheduleChannels } from './scheduleChannels.js'
 import IsoManager from '#iso'
@@ -21,12 +22,16 @@ import PlutoLogger from '#PlutoLogger'
 import parseScheduled from '../../bot_res/parseScheduled.js'
 
 /**
- * @module cronScheduleGames
- * Generate Cron Jobs for Game Channel creation
- * Captures games that are wtihin today to be scheduled
+ *
+ *  @summary Generate Cron Jobs for Game Channel creation
+ *  @description Captures games that are wtihin today to be scheduled
  * If there's games that are within the current day & have yet to have a game channel created, they will be created
- * Game channels are scheduled to be by default 1 hour ahead of the game. If we are within 1 hour or already past (game started):
- * This module will create the channels right now
+ * Game channels are scheduled to be by default 1 hour ahead of the game.
+ * If we are within 1 hour or already past (game started), this module will create the channels right now
+ *
+ * Overall, responsible for
+ * - Scheduling the creation of game channels
+ * - Sending notification to log channel what channels have been scheduled
  */
 
 export default async function cronScheduleGames() {
@@ -67,16 +72,35 @@ export default async function cronScheduleGames() {
 			const awayTeam = await getShortName(
 				game.away_team,
 			)
-			const chanTitle = `${awayTeam}-vs-${homeTeam}`
-			// Don't schedule channels already open
-			const chanExist = await locateChannel(chanTitle)
+
+			let matchupStr
+			if (SPORT === 'nba') {
+				matchupStr = `${awayTeam}-vs-${homeTeam}`
+			} else {
+				matchupStr = `${awayTeam}-at-${homeTeam}`
+			}
+			// Don't schedule channels that already exist
+			const chanExist = await locateChannel(
+				matchupStr,
+			)
 			if (chanExist) {
+				return
+			}
+
+			// Ensure matchup is still active
+			const isMatchupActive = await resolveMatchup(
+				homeTeam,
+			)
+
+			if (!isMatchupActive) {
+				console.log(
+					`Matchup ${matchupStr} is no longer active.`,
+				)
 				return
 			}
 
 			/**
 			 * Checks if the game with the given id is already scheduled.
-			 *
 			 * @return {boolean} True if the game is already scheduled, false otherwise.
 			 */
 			const checkIfScheduled = async () => {
@@ -142,10 +166,13 @@ export default async function cronScheduleGames() {
 		},
 		{ concurrency: 1 },
 	)
-	await Cache().set(`scheduled`, scheduledTally)
-	await Cache().set(`scheduledIds`, scheduledIds)
+	if (!_.isEmpty(scheduledTally)) {
+		await Cache().set(`scheduled`, scheduledTally)
+		await Cache().set(`scheduledIds`, scheduledIds)
+	}
+	// ? Tally is at 0 if no new games were scheduled. This means the app likely still has games for the week scheduled.
 	await logClr({
-		text: `# of Scheduled Games: ${scheduledTally.length}`,
+		text: `# of New Scheduled Games: ${scheduledTally.length}`,
 		color: `green`,
 		status: `done`,
 	})

@@ -1,6 +1,5 @@
 import _ from 'lodash'
 import { parseISO, isBefore, addHours } from 'date-fns'
-import IsoManager from '#iso'
 
 /**
  * Creates Cron Jobs to make API Calls to check for completed games to close bets
@@ -12,12 +11,18 @@ import IsoManager from '#iso'
 export default async function completedChecks(dates) {
 	// Place every start_date into an array
 	const earliestDate = findEarliestDate(dates)
-	// Add 1 hour to the date
-	const betsHeartbeat = addHours(earliestDate, 1)
+	console.log(`Earliest Date: ${earliestDate}`)
+	// Add 2 hours to the date
+	const betsHeartbeat = addHours(earliestDate, 2)
+	console.log(`Bets Heartbeat: ${betsHeartbeat}`)
+	// Get hour
+	const hour = betsHeartbeat.getHours()
+	const hourStr = `${hour}-23`
+	const day = betsHeartbeat.getDay()
+	const month = betsHeartbeat.getMonth()
+	const cronStr1 = `*/5 ${hourStr} ${day} ${month} *`
 	// Return the time in Cron via IsoManager
-	const isoManager = new IsoManager(betsHeartbeat)
-	const cronTime = isoManager.cron
-	return cronTime
+	return cronStr1
 }
 
 /**

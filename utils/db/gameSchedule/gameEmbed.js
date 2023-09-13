@@ -45,6 +45,9 @@ export async function gameEmbedPlain(homeTeam, awayTeam) {
  */
 
 export async function gameEmbedOdds(homeTeam, awayTeam) {
+	await console.log(
+		`[gameEmbed]  ${homeTeam} vs ${awayTeam}`,
+	)
 	const hTeamObj = await teamResolver(SPORT, homeTeam, {
 		full: true,
 	})

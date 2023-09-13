@@ -1,10 +1,18 @@
-import { Log, LIVEMATCHUPS, BETSLIPS, LIVEBETS, CURRENCY } from '#config'
-
 import _ from 'lodash'
-import { closeBetLog } from '../../../logging.js'
+import {
+	Log,
+	LIVEMATCHUPS,
+	BETSLIPS,
+	LIVEBETS,
+	CURRENCY,
+} from '#config'
+
 import { db } from '#db'
 import { resolvePayouts } from '#utilBetOps/resolvePayouts'
-import { wonDm } from '../wonDm.js'
+import { SapDiscClient } from '#main'
+import { PlutoLogger } from '#PlutoLogger'
+import { getBalance } from '../../validation/getBalance.js'
+import BetNotify from '../BetNotify.js'
 
 /**
  * @module closeWonBets
@@ -17,90 +25,92 @@ import { wonDm } from '../wonDm.js'
  * @param {string} losingTeam - The losing team
  */
 
-export async function closeWonBets(winningTeam, homeOrAway, losingTeam) {
-    return new Promise(async (resolve, reject) => {
-        await db.tx(async (t) => {
-            // Start a db transaction
-            let getMatchInfo = await t.oneOrNone(
-                `SELECT * FROM "${LIVEMATCHUPS}" WHERE teamone = $1 AND teamtwo = $2 OR teamone = $2 AND teamtwo = $1`,
-                [winningTeam, losingTeam],
-            ) // Query DB for matchup info
-            if (!getMatchInfo || _.isEmpty(getMatchInfo)) {
-                await closeBetLog.error(`No match found for ${winningTeam}`)
-                return reject(`No match found for ${winningTeam}`)
-            }
-            let getWinners = await t.manyOrNone(
-                `SELECT * FROM "${BETSLIPS}" WHERE teamid = $1 AND betresult = 'pending'`,
-                [winningTeam],
-            )
-            if (getWinners) {
-                for await (const betslip of getWinners) {
-                    //# bet information
-                    let betAmount = betslip.amount
-                    let betId = betslip.betid
-                    let userid = betslip.userid
-                    let betOdds
-                    let opposingTeam
-                    let teamBetOn
-                    if (homeOrAway === 'home') {
-                        betOdds = getMatchInfo.teamoneodds
-                        opposingTeam = getMatchInfo.teamtwo
-                        teamBetOn = getMatchInfo.teamone
-                    } else if (homeOrAway === 'away') {
-                        betOdds = getMatchInfo.teamtwoodds
-                        opposingTeam = getMatchInfo.teamone
-                        teamBetOn = getMatchInfo.teamtwo
-                    }
-                    Log.Yellow(
-                        `Bet ID: ${betId} || Bet Odds: ${betOdds} || Bet Amount: ${betAmount}`,
-                    )
-                    //# calc payout
-                    let payAndProfit = await resolvePayouts(betOdds, betAmount)
-                    let payout = payAndProfit.payout
-                    let profit = payAndProfit.profit
-                    let payoutAmount = parseFloat(payout)
-                    let profitAmount = parseFloat(profit)
-                    await closeBetLog.info(
-                        `Closing Bet Information:\nUser ID: ${userid}\nBet ID: ${betId}\nBet Result: Won\nBet Amount: ${betAmount}\nBet Odds: ${betOdds}\nTeam Bet On: ${teamBetOn}\nOpposing Team: ${opposingTeam}\nWinning Team: ${winningTeam}\nHome or Away: ${homeOrAway}\nPayout: ${payoutAmount}\nProfit: ${profitAmount}`,
-                    )
-                    //# update betslip with bet result
-                    await t.none(
-                        `UPDATE "${BETSLIPS}" SET betresult = 'won', payout = $1, profit = $2 WHERE betid = $3`,
-                        [payoutAmount, profitAmount, betId],
-                    )
-                    //# get balance of the user to update it with the winnings
-                    const userBal = await t.oneOrNone(
-                        `SELECT balance FROM "${CURRENCY}" WHERE userid = $1`,
-                        [userid],
-                    )
-                    //# calc winnings
-                    const newUserBal = parseFloat(userBal?.balance) + payoutAmount
-                    await t.oneOrNone(
-                        `UPDATE "${CURRENCY}" SET balance = $1 WHERE userid = $2`,
-                        [newUserBal, userid],
-                    )
-                    //# Delete bet from activebets
-                    await t.none(`DELETE FROM "${LIVEBETS}" WHERE betid = $1`, [betId])
-                    let wonBetInformation = {
-                        [`userId`]: userid,
-                        [`betId`]: betId,
-                        [`wonOrLost`]: `won`,
-                        [`payout`]: payout,
-                        [`profit`]: profit,
-                        [`teamBetOn`]: teamBetOn,
-                        [`opposingTeam`]: opposingTeam,
-                        [`betAmount`]: betAmount,
-                        [`newBalance`]: newUserBal,
-                    }
-                    await wonDm(wonBetInformation)
-                    await Log.Green(`Successfully closed bet ${betId} || ${userid}`)
-                    await closeBetLog.info(
-                        `Successfully closed bet ${betId} || User ID: ${userid}`,
-                    )
+export async function closeWonBets(
+	winningTeam,
+	homeOrAway,
+	losingTeam,
+) {
+	const getMatchInfo = await db.oneOrNone(
+		`SELECT * FROM "${LIVEMATCHUPS}" WHERE teamone = $1 AND teamtwo = $2 OR teamone = $2 AND teamtwo = $1`,
+		[winningTeam, losingTeam],
+	) // Query DB for matchup info
 
-                }
-                resolve()
-            }
-        })
-    })
+	if (!getMatchInfo || _.isEmpty(getMatchInfo)) {
+		await PlutoLogger.log({
+			id: 4,
+			description: `An error occured when closing winning bets.\nUnable to find matchup in database: ${winningTeam} vs ${losingTeam}`,
+		})
+		return false
+	}
+
+	const winningBets = await db.manyOrNone(
+		`SELECT * FROM "${BETSLIPS}" WHERE teamid = $1 AND betresult = 'pending'`,
+		[winningTeam],
+	)
+	// No bets for the winning team
+	if (_.isEmpty(winningBets)) {
+		return
+	}
+
+	const betNotify = new BetNotify(SapDiscClient)
+	for await (const betslip of winningBets) {
+		const betAmount = betslip.amount
+		const betId = betslip.betid
+		const { userid } = betslip
+		let betOdds
+		let opposingTeam
+		let teamBetOn
+
+		if (homeOrAway === 'home') {
+			betOdds = getMatchInfo.teamoneodds
+			opposingTeam = getMatchInfo.teamtwo
+			teamBetOn = getMatchInfo.teamone
+		} else if (homeOrAway === 'away') {
+			betOdds = getMatchInfo.teamtwoodds
+			opposingTeam = getMatchInfo.teamone
+			teamBetOn = getMatchInfo.teamtwo
+		}
+
+		const { payout, profit } = await resolvePayouts(
+			betOdds,
+			betAmount,
+		)
+		const payoutAmount = Math.floor(parseFloat(payout))
+		const profitAmount = Math.floor(parseFloat(profit))
+		const currentBalance = await getBalance(userid)
+		await Promise.all([
+			PlutoLogger.log({
+				id: 3,
+				description: `Closing Bet Information:\nUser ID: ${userid}\nBet ID: ${betId}\nBet Result: Won\nBet Amount: ${betAmount}\nBet Odds: ${betOdds}\nTeam Bet On: ${teamBetOn}\nOpposing Team: ${opposingTeam}\nWinning Team: ${winningTeam}\nHome or Away: ${homeOrAway}\nPayout: ${payoutAmount}\nProfit: ${profitAmount}`,
+			}),
+			// ? Update Betslip
+			db.none(
+				`UPDATE "${BETSLIPS}" SET betresult = 'won', payout = $1, profit = $2 WHERE betid = $3`,
+				[payoutAmount, profitAmount, betId],
+			),
+			// ? Delete Live Bet
+			db.none(
+				`DELETE FROM "${LIVEBETS}" WHERE betid = $1`,
+				[betId],
+			),
+			//  ? Update user balance
+			db.none(
+				`UPDATE "${CURRENCY}" SET balance = balance + $1 WHERE userid = $2`,
+				[payoutAmount, userid],
+			),
+			betNotify.notifyUser(userid, {
+				betId,
+				teamBetOn,
+				opposingTeam,
+				betAmount,
+				payout,
+				profit,
+				currentBalance,
+				betResult: 'won',
+			}),
+			Log.Green(
+				`Successfully closed bet ${betId} || ${userid}`,
+			),
+		])
+	}
 }
