@@ -12,23 +12,9 @@ import { SapDiscClient } from '#main'
 import PlutoLogger from '#PlutoLogger'
 import { getBalance } from '../../validation/getBalance.js'
 import BetNotify from '../BetNotify.js'
+import logClr from '#colorConsole'
 
 const betNotify = new BetNotify(SapDiscClient)
-
-/**
- * Retrieves match information for two teams.
- *
- * @param {string} teamOne - The name of team one.
- * @param {string} teamTwo - The name of team two.
- * @return {Promise<Object|null>} A Promise that resolves to the match information for the two teams,
- *         or null if no match information is found.
- */
-async function getMatchInfo(teamOne, teamTwo) {
-	return db.oneOrNone(
-		`SELECT * FROM "${LIVEMATCHUPS}" WHERE teamone = $1 AND teamtwo = $2 OR teamone = $2 AND teamtwo = $1`,
-		[teamOne, teamTwo],
-	)
-}
 
 async function getBets(winningTeam, losingTeam) {
 	return db.manyOrNone(
@@ -114,91 +100,125 @@ async function handleClosingBet(
  *
  * @param {string} winningTeam - The team that won the match.
  * @param {string} losingTeam - The team that lost the match.
+ * @param {Object} matchInfo - The match information (Odds, etc)
  * @return {boolean} Returns false if an error occurred, otherwise nothing is returned.
  */
-async function closeBets(winningTeam, losingTeam) {
-	const matchInfo = await getMatchInfo(
-		winningTeam,
-		losingTeam,
-	)
-	await PlutoLogger.log({
-		id: 3,
-		description: `Closing bets for ${winningTeam} vs ${losingTeam}`,
+async function closeBets(
+	winningTeam,
+	losingTeam,
+	matchInfo,
+) {
+	return new Promise(async (resolve) => {
+		;(async () => {
+			try {
+				await PlutoLogger.log({
+					id: 3,
+					description: `Closing bets for ${winningTeam} vs ${losingTeam}`,
+				})
+				if (!matchInfo || _.isEmpty(matchInfo)) {
+					await PlutoLogger.log({
+						id: 4,
+						description: `An error occured when closing bets.\nUnable to find matchup in database: ${winningTeam} vs ${losingTeam}`,
+					})
+					return false
+				}
+
+				const bets = await getBets(
+					winningTeam,
+					losingTeam,
+				)
+
+				if (_.isEmpty(bets)) {
+					return
+				}
+
+				for await (const betslip of bets) {
+					const betAmount = betslip.amount
+					const betId = betslip.betid
+					const { userid: userId } = betslip
+
+					const teamBetOn = betslip.teamid
+					const { odds: betOdds, opposingTeam } =
+						await selectOdds(
+							matchInfo,
+							teamBetOn,
+						)
+
+					let betResult
+
+					if (teamBetOn === winningTeam) {
+						betResult = 'won'
+					} else if (teamBetOn === losingTeam) {
+						betResult = 'lost'
+					}
+
+					if (betResult === 'won') {
+						const { payout, profit } =
+							await resolvePayouts(
+								betOdds,
+								betAmount,
+							)
+						const payoutAmount = Number(payout)
+						const profitAmount = Number(profit)
+						const oldBalance = await getBalance(
+							userId,
+						)
+						await PlutoLogger.log({
+							id: 3,
+							description: `Closing Bet Information:\nUser ID: ${userId}\nBet ID: ${betId}\nBet Result: Won\nBet Amount: ${betAmount}\nBet Odds: ${betOdds}\nTeam Bet On: ${teamBetOn}\nOpposing Team: ${opposingTeam}\nWinning Team: ${winningTeam}\nPayout: ${payoutAmount}\nProfit: ${profitAmount}`,
+						})
+						await handleClosingBet(
+							userId,
+							betResult,
+							betId,
+							{
+								payoutAmount,
+								profitAmount,
+							},
+						)
+						const updatedBalance =
+							await getBalance(userId)
+						await betNotify.notifyUser(userId, {
+							betId,
+							teamBetOn,
+							opposingTeam,
+							betAmount,
+							payout,
+							profit,
+							currentBalance: updatedBalance,
+							oldBalance,
+							betResult,
+						})
+					} else if (betResult === 'lost') {
+						await PlutoLogger.log({
+							id: 3,
+							description: `Closing Bet Information:\nUser ID: ${userId}\nBet ID: ${betId}\nBet Result: Won\nBet Amount: ${betAmount}\nBet Odds: ${betOdds}\nTeam Bet On: ${teamBetOn}\nOpposing Team: ${opposingTeam}\nWinning Team: ${winningTeam}\n`,
+						})
+						await handleClosingBet(
+							userId,
+							betResult,
+							betId,
+						)
+						await betNotify.notifyUser(userId, {
+							betId,
+							teamBetOn,
+							opposingTeam,
+							betAmount,
+							betResult,
+						})
+					}
+				}
+			} catch (err) {
+				await logClr({
+					text: `An error occured when closing bets.\nError: \`${err.message}\``,
+					color: `red`,
+					status: `error`,
+				})
+				console.log(err)
+				return false
+			}
+		})().then(resolve)
 	})
-	if (!matchInfo || _.isEmpty(matchInfo)) {
-		await PlutoLogger.log({
-			id: 4,
-			description: `An error occured when closing bets.\nUnable to find matchup in database: ${winningTeam} vs ${losingTeam}`,
-		})
-		return false
-	}
-
-	const bets = await getBets(winningTeam, losingTeam)
-
-	if (_.isEmpty(bets)) {
-		return
-	}
-
-	for await (const betslip of bets) {
-		const betAmount = betslip.amount
-		const betId = betslip.betid
-		const { userid: userId } = betslip
-
-		const teamBetOn = betslip.teamid
-		const { odds: betOdds, opposingTeam } =
-			await selectOdds(matchInfo, teamBetOn)
-
-		let betResult
-
-		if (teamBetOn === winningTeam) {
-			betResult = 'won'
-		} else if (teamBetOn === losingTeam) {
-			betResult = 'lost'
-		}
-
-		if (betResult === 'won') {
-			const { payout, profit } = await resolvePayouts(
-				betOdds,
-				betAmount,
-			)
-			const payoutAmount = Math.floor(
-				parseFloat(payout),
-			)
-			const profitAmount = Math.floor(
-				parseFloat(profit),
-			)
-			const currentBalance = await getBalance(userId)
-			await PlutoLogger.log({
-				id: 3,
-				description: `Closing Bet Information:\nUser ID: ${userId}\nBet ID: ${betId}\nBet Result: Won\nBet Amount: ${betAmount}\nBet Odds: ${betOdds}\nTeam Bet On: ${teamBetOn}\nOpposing Team: ${opposingTeam}\nWinning Team: ${winningTeam}\nPayout: ${payoutAmount}\nProfit: ${profitAmount}`,
-			})
-			await handleClosingBet(
-				userId,
-				betResult,
-				betId,
-				{
-					payoutAmount,
-					profitAmount,
-				},
-			)
-			await betNotify.notifyUser(userId, {
-				betId,
-				teamBetOn,
-				opposingTeam,
-				betAmount,
-				payout,
-				profit,
-				currentBalance,
-				betResult: 'won',
-			})
-		} else if (betResult === 'lost') {
-			await PlutoLogger.log({
-				id: 3,
-				description: `Closing Bet Information:\nUser ID: ${userId}\nBet ID: ${betId}\nBet Result: Won\nBet Amount: ${betAmount}\nBet Odds: ${betOdds}\nTeam Bet On: ${teamBetOn}\nOpposing Team: ${opposingTeam}\nWinning Team: ${winningTeam}\n`,
-			})
-			await handleClosingBet(userId, betResult, betId)
-		}
-	}
 }
 
 export { closeBets }

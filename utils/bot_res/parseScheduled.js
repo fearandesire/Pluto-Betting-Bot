@@ -31,10 +31,10 @@ export default async function parseScheduled(
 	if (_.isEmpty(scheduledArr)) {
 		// Embed should just state no games for today
 		if (includeOdds) {
-			title = `No Odds Available`
+			title = `:mega: H2H Odds`
 			description = `There are no odds currently stored right now.`
 		} else {
-			title = `No Games Available`
+			title = `Scheduled Games`
 			description = `No games are scheduled for the day.`
 		}
 		const emb = new EmbedBuilder()

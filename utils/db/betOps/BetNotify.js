@@ -20,11 +20,11 @@ export default class BetNotify {
 		const {
 			betId,
 			teamBetOn,
-			opposingTeam,
 			betAmount,
 			payout,
 			profit,
 			currentBalance,
+			oldBalance,
 			betResult,
 		} = betData || null
 
@@ -32,17 +32,17 @@ export default class BetNotify {
 		let color
 		if (betResult === `won`) {
 			const newUserBal = Math.floor(currentBalance)
-			msg = `You won your bet on the ${teamBetOn}!\n\n**You had bet:** $${betAmount}\n**Profit:** $${profit}\n**Payout:** $${payout}\n**:moneybag: Balance**: $${newUserBal}`
+			msg = `You won your bet on the ${teamBetOn}! :moneybag: \n\n**You had bet:** **\`$${betAmount}\`**\n**Profit:** **\`$${profit}\`**\n**Payout:** **\`$${payout}\`**\n**Balance**: *\`$${oldBalance}\`* => **\`$${newUserBal}\`**`
 			color = embedColors.PlutoBrightGreen
 		} else if (betResult === `lost`) {
-			msg = `You lost your $${betAmount} bet on the ${teamBetOn}. Sorry, better luck next time!`
+			msg = `You lost your $${betAmount} bet on the ${teamBetOn}.\nSorry, better luck next time!`
 			color = embedColors.PlutoRed
 		}
 
 		msg += `\n\n*See an issue here? Please contact <@208016830491525120> | Bet ID: ${betId}*`
 
 		const embed = new EmbedBuilder()
-			.setTitle(`${teamBetOn} vs. ${opposingTeam}`)
+			.setTitle(`Bet Result`)
 			.setDescription(msg)
 			.setColor(color)
 			.setFooter({

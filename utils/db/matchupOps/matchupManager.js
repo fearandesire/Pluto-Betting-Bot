@@ -2,13 +2,29 @@ import _ from 'lodash'
 import { formatISO } from 'date-fns'
 import { db } from '#db'
 import { LIVEMATCHUPS, LIVEBETS } from '#config'
-import { resolveMatchup } from '#cacheUtil/resolveMatchup'
 import logClr from '#colorConsole'
 import { SCORETABLE } from '#serverConf'
 import PlutoLogger from '#PlutoLogger'
 import IsoManager from '#iso'
+import resolveMatchup from './resolveMatchup.js'
 
 export class MatchupManager {
+	/**
+	 * Locate matchup via ID
+	 */
+
+	static async getViaId(id) {
+		const matchup = db.oneOrNone(
+			`
+		SELECT * FROM "${LIVEMATCHUPS}" WHERE id = $1`,
+			[id],
+		)
+		if (!matchup) {
+			return null
+		}
+		return matchup
+	}
+
 	/**
 	 *  Get all matchups
 	 */
@@ -43,7 +59,7 @@ export class MatchupManager {
 		const todaysMatches = _.filter(
 			matchups,
 			(matchup) =>
-				new IsoManager(matchup.startTime, isoTime)
+				new IsoManager(matchup.start, isoTime)
 					.isSameDay,
 		)
 		return todaysMatches
@@ -65,21 +81,12 @@ export class MatchupManager {
 	 * @returns {boolean} True if found, false otherwise
 	 */
 	static async outstandingBets(team) {
-		console.log(
-			`[outstandingBets] Looking for bets for ${team}`,
-		)
 		const matchData = await resolveMatchup(team)
 		if (!matchData) {
-			console.log(
-				`[outstandingBets] Unable to find matchup for ${team}`,
-			)
 			return false
 		}
 		// use ID to find if there's any bets
 		const { matchid } = matchData
-		console.log(
-			`[outstandingBets] Match ID:\n${matchid}`,
-		)
 		// check currently active bets for any bets with matchid
 		const bets = await db.any(
 			`SELECT * FROM "${LIVEBETS}" WHERE matchid = '${matchid}'`,
@@ -98,7 +105,7 @@ export class MatchupManager {
 			teamTwoOdds,
 			matchupId,
 			gameDate,
-			startTimeISO,
+			start,
 			cronStartTime,
 			legibleStartTime,
 			idApi,
@@ -106,7 +113,7 @@ export class MatchupManager {
 
 		await db
 			.none(
-				`INSERT INTO "${LIVEMATCHUPS}" (matchid, teamOne, teamTwo, teamOneOdds, teamTwoOdds, dateofmatchup, "startTime", cronstart, legiblestart, idapi) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+				`INSERT INTO "${LIVEMATCHUPS}" (matchid, teamOne, teamTwo, teamOneOdds, teamTwoOdds, dateofmatchup, start, cronstart, legiblestart, id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
 				[
 					matchupId,
 					teamOne,
@@ -114,7 +121,7 @@ export class MatchupManager {
 					teamOneOdds,
 					teamTwoOdds,
 					gameDate,
-					startTimeISO,
+					start,
 					cronStartTime,
 					legibleStartTime,
 					idApi,

@@ -1,10 +1,10 @@
 import { QuickError, embedReply } from '#embed'
 
-import { TodaysDate } from '#cmdUtil/TodaysDate'
 import { db } from '#db'
 import { CURRENCY, helpfooter } from '#config'
 import PlutoLogger from '#PlutoLogger'
 import embedColors from '../../lib/colorsConfig.js'
+import { TodaysDate } from '../date/TodaysDate.js'
 
 /**
  * Create a new user in the database. By default, we will store their userID (required) and their default balance: 100 (optional)

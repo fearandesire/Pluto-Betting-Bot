@@ -11,10 +11,8 @@ import { parseISO, isBefore, addHours } from 'date-fns'
 export default async function completedChecks(dates) {
 	// Place every start_date into an array
 	const earliestDate = findEarliestDate(dates)
-	console.log(`Earliest Date: ${earliestDate}`)
 	// Add 2 hours to the date
 	const betsHeartbeat = addHours(earliestDate, 2)
-	console.log(`Bets Heartbeat: ${betsHeartbeat}`)
 	// Get hour
 	const hour = betsHeartbeat.getHours()
 	const hourStr = `${hour}-23`

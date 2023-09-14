@@ -1,6 +1,6 @@
 import { Listener } from '@sapphire/framework'
 import logClr from '../utils/bot_res/ColorConsole.js'
-import { dbDailyOps } from '../utils/scheduled/daily/dailyModules.js'
+import { dbDailyOps } from '../utils/scheduled/dailyModules.js'
 
 // eslint-disable-next-line no-unused-vars
 export class ReadyListener extends Listener {

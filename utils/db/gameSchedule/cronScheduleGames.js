@@ -10,7 +10,6 @@ import Promise from 'bluebird'
 import { db } from '#db'
 // import { PRESZN_MATCHUPS_TABLE, spinner } from '#config'
 import { SPORT } from '#env'
-import { resolveMatchup } from '#cacheUtil/resolveMatchup'
 import { getShortName } from '../../bot_res/getShortName.js'
 import { scheduleChannels } from './scheduleChannels.js'
 import IsoManager from '#iso'
@@ -20,6 +19,8 @@ import logClr from '#colorConsole'
 import { SCORETABLE } from '#serverConf'
 import PlutoLogger from '#PlutoLogger'
 import parseScheduled from '../../bot_res/parseScheduled.js'
+import resolveMatchup from '../matchupOps/resolveMatchup.js'
+import { LIVEMATCHUPS } from '#config'
 
 /**
  *
@@ -31,19 +32,19 @@ import parseScheduled from '../../bot_res/parseScheduled.js'
  *
  * Overall, responsible for
  * - Scheduling the creation of game channels
- * - Sending notification to log channel what channels have been scheduled
+ * - Sending notification to log channel what channels have been scheduled for the day
  */
 
 export default async function cronScheduleGames() {
 	const scheduledTally = []
 	const scheduledIds = []
 	const games = await db.manyOrNone(
-		`SELECT * FROM "${SCORETABLE}" WHERE completed = false`,
+		`SELECT * FROM "${LIVEMATCHUPS}" WHERE inprogress = false OR inprogress IS NULL`,
 	)
 
 	const filterGames = _.filter(games, async (game) => {
 		let thisWeek
-		const dateManager = new IsoManager(game.date)
+		const dateManager = new IsoManager(game.start)
 		if (SPORT === 'nba') {
 			thisWeek = dateManager.sevenDayWeek
 		} else if (SPORT === 'nfl') {
@@ -60,17 +61,17 @@ export default async function cronScheduleGames() {
 	await Promise.map(
 		filterGames,
 		async (game) => {
-			const isoManager = new IsoManager(game.date)
+			const isoManager = new IsoManager(game.start)
 			let cronTime = null
-			const parsedGameDate = parseISO(game.date)
+			const parsedGameDate = parseISO(game.start)
 			const now = new Date()
 			const oneHourFromNow = addHours(now, 1)
 
 			const homeTeam = await getShortName(
-				game.home_team,
+				game.teamone,
 			)
 			const awayTeam = await getShortName(
-				game.away_team,
+				game.teamtwo,
 			)
 
 			let matchupStr
@@ -84,18 +85,6 @@ export default async function cronScheduleGames() {
 				matchupStr,
 			)
 			if (chanExist) {
-				return
-			}
-
-			// Ensure matchup is still active
-			const isMatchupActive = await resolveMatchup(
-				homeTeam,
-			)
-
-			if (!isMatchupActive) {
-				console.log(
-					`Matchup ${matchupStr} is no longer active.`,
-				)
 				return
 			}
 
@@ -147,8 +136,8 @@ export default async function cronScheduleGames() {
 				cronTime = isoManager.cron
 			}
 			await scheduleChannels(
-				game.home_team,
-				game.away_team,
+				game.teamone,
+				game.teamtwo,
 				{
 					cronStartTime: cronTime,
 					legible: isoManager.legible,
@@ -156,11 +145,11 @@ export default async function cronScheduleGames() {
 				},
 			)
 			await scheduledTally.push({
-				home_team: game.home_team,
-				away_team: game.away_team,
+				home_team: game.teamone,
+				away_team: game.teamtwo,
 				start: isoManager.timeOnly,
 				day: isoManager.dayName,
-				date: game.date,
+				date: game.start,
 			})
 			await scheduledIds.push(game.id)
 		},

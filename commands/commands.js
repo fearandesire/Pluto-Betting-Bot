@@ -46,6 +46,8 @@ export class commands extends Command {
 				help: 'View information on how to use the bot',
 				commands:
 					'View all commands available to you',
+				bethistory:
+					'View the track record of your bets',
 			},
 		}
 

@@ -1,16 +1,14 @@
 import { Command } from '@sapphire/framework'
 import { validateUser } from '#utilValidate/validateExistingUser'
-import { isPreSzn } from '#config'
-import fetchUsersBets from '../utils/bot_res/betOps/fetchUsersBets.js'
+import { fetchBetHistory } from '../utils/db/fetchBetHistory.js'
 
-export class myBetsSlash extends Command {
+export class betHistorySlash extends Command {
 	constructor(context, options) {
 		super(context, {
 			...options,
-			name: 'myBetsSlash',
+			name: 'betHistorySlash',
 			aliases: [''],
-			description:
-				'🪙 View your currently active bets',
+			description: 'View the history of your bets',
 			chatInputCommand: {
 				register: true,
 			},
@@ -21,27 +19,21 @@ export class myBetsSlash extends Command {
 		registry.registerChatInputCommand(
 			(builder) =>
 				builder //
-					.setName('mybets')
+					.setName('bethistory')
 					.setDescription(this.description),
-			{ idHints: [`1023323729540952075`] },
+			//    { idHints: [`1022940422974226432`] },
 		)
 	}
 
 	async chatInputRun(interaction) {
-		if (isPreSzn()) {
-			return interaction.reply({
-				content: `This is unavailable in the preseason.`,
-				ephemeral: true,
-			})
-		}
 		const userid = interaction.user.id
 		const interactionEph = true
-		const isRegistered = await validateUser(
+		await validateUser(
 			interaction,
 			userid,
+			interactionEph,
 		)
-		if (!isRegistered) return
-		await fetchUsersBets(
+		await fetchBetHistory(
 			interaction,
 			userid,
 			interactionEph,

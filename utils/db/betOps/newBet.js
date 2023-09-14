@@ -4,10 +4,11 @@ import { QuickError } from '#config'
 
 import { gameActive } from '#dateUtil/gameActive'
 import PendingBetHandler from '#utilValidate/pendingBet'
-import { resolveMatchup } from '#cacheUtil/resolveMatchup'
 import { setupBet } from '#utilBetOps/setupBet'
 import { verifyDupBet } from '#utilValidate/verifyDuplicateBet'
 import { SPORT } from '#env'
+import resolveMatchup from '../matchupOps/resolveMatchup.js'
+
 /**
  * @module newBet - This module is used to setup a bet in the DB.
  * Runs checks to validate the user, their bet, and then operations to get the bet setup.

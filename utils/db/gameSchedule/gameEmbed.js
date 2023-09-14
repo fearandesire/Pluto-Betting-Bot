@@ -1,11 +1,9 @@
 import discord from 'discord.js'
 import teamResolver from 'resolve-team'
 import { SapDiscClient } from '#main'
-import { resolveMatchup } from '#cacheUtil/resolveMatchup'
-
 import { SPORT } from '#env'
-import { validateData } from '../validation/validateData.js'
 import { findEmoji } from '../../bot_res/findEmoji.js'
+import resolveMatchup from '../matchupOps/resolveMatchup.js'
 
 const { EmbedBuilder } = discord
 export async function gameEmbedPlain(homeTeam, awayTeam) {
@@ -45,9 +43,6 @@ export async function gameEmbedPlain(homeTeam, awayTeam) {
  */
 
 export async function gameEmbedOdds(homeTeam, awayTeam) {
-	await console.log(
-		`[gameEmbed]  ${homeTeam} vs ${awayTeam}`,
-	)
 	const hTeamObj = await teamResolver(SPORT, homeTeam, {
 		full: true,
 	})

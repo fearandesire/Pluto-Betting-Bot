@@ -119,10 +119,6 @@ export async function embedReply(
 			reqChan.send({ embeds: [noFieldsEmbed] })
 			return
 		}
-	} else {
-		return Log.Error(
-			`[embedReply.js] Error: Something went wrong with the embedReply function.`,
-		)
 	}
 
 	// # Embeds with fields response

@@ -160,3 +160,7 @@ daily.drawio
 .VSCodeCounter/
 commands/devEval.js
 commands/devEval2.js
+commands/commands.js
+.gitignore
+test/createISODates.js
+utils/bot_res/betOps/MatchupsArr.test.js

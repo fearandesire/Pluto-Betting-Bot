@@ -20,12 +20,17 @@ export async function gameActive(teamName, matchupId) {
 			[teamName, matchupId],
 		)
 		.then((dbMatchup) => {
-			const gameStart = dbMatchup.startTime
+			const gameStart = dbMatchup.start
 			const today = new Date()
 			const gameTimeIso = parseISO(gameStart)
-			const todayISO = formatISO(today, { representation: 'complete' })
+			const todayISO = formatISO(today, {
+				representation: 'complete',
+			})
 			const todayParsed = parseISO(todayISO)
-			const startedOrNot = isAfter(todayParsed, gameTimeIso)
+			const startedOrNot = isAfter(
+				todayParsed,
+				gameTimeIso,
+			)
 			if (startedOrNot) {
 				return true
 			}

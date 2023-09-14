@@ -1,17 +1,14 @@
-import {
-	LIVEMATCHUPS,
-	queryBuilder as qBuilder,
-} from '#config'
+import { LIVEMATCHUPS } from '#config'
 import { QuickError, embedReply } from '#embed'
 
 import { Log } from '#LogColor'
 import { confirmBet } from '#utilBetOps/confirmBet'
 import { fetchBalance } from '#utilCurrency/fetchBalance'
 import PendingBetHandler from '#utilValidate/pendingBet'
-import { resolveMatchup } from '#cacheUtil/resolveMatchup'
 import { resolvePayouts } from '#utilBetOps/resolvePayouts'
-import { validateData } from '../validation/validateData.js'
+import QueryHandler from '../QueryHandler.js'
 import embedColors from '../../../lib/colorsConfig.js'
+import resolveMatchup from '../matchupOps/resolveMatchup.js'
 
 /**
  * @module setupBet - This module is used to setup a bet in the DB.
@@ -29,12 +26,12 @@ export async function setupBet(
 	betamount,
 	user,
 ) {
-	const dbQuery = qBuilder(
-		`${LIVEMATCHUPS}`,
-		[`teamone`, `teamtwo`],
-		teamName,
-	)
-	await new validateData(dbQuery)
+	const query = {
+		tables: `${LIVEMATCHUPS}`,
+		columns: [`teamone`, `teamtwo`],
+		values: teamName,
+	}
+	await new QueryHandler(query)
 		.uniqueRowOr()
 		.then(async (data) => {
 			// ? if team user wishes to bet on exists in the matchups DB, Do:
