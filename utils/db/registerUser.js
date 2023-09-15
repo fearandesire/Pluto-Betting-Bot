@@ -32,7 +32,7 @@ export async function registerUser(
 					)
 					const embedObj = {
 						title: `Welcome to Pluto! 🎉`,
-						description: `You  will start with $50.\nUse the command **/commands** to see everything you can do, or use **/help** for a quick general how-to.\n*Tip: You can use **\`/dailyclaim\`** to get bonus $$ everyday!*`,
+						description: `You  will start with $50.\nUse the command **/commands** for a full overview\nUse **/help** quick how-to.\n*Tip: You can use **\`/dailyclaim\`** to get bonus $$ everyday!*`,
 						color: `${embedColors.PlutoGreen}`,
 						footer: `${helpfooter}`,
 						silent: true,

@@ -29,7 +29,7 @@ export class help extends Command {
 
                **Getting Started**
                 
-                To get started, first run the slash command **/register** to create your account. You'll start with $100 to bet with. From there, you have a few options.
+                To get started, first run the slash command **/register** to create your account. You'll start with $50 to bet with. From there, you have a few options.
                 
                 You can:
 - View odds for the day with /odds
