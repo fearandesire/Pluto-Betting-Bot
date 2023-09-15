@@ -19,7 +19,7 @@ export async function validateUser(
 			let errorMsg
 			const currentUser = interaction.user.id
 			if (currentUser === userid) {
-				errorMsg = `It looks like you aren't in the system yet. Use the \`/register\` slash command to instantly register.`
+				errorMsg = `You must create an account with Pluto first!\nUse the \`/register\` slash command to instantly register.`
 			} else {
 				errorMsg = `User <@${userid}> is not registered with Pluto.`
 			}

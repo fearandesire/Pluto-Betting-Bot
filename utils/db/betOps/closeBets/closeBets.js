@@ -111,10 +111,11 @@ async function closeBets(
 	return new Promise(async (resolve) => {
 		;(async () => {
 			try {
-				await PlutoLogger.log({
-					id: 3,
-					description: `Closing bets for ${winningTeam} vs ${losingTeam}`,
-				})
+				// TODO: Enable with Debug Logging Config
+				// await PlutoLogger.log({
+				// 	id: 3,
+				// 	description: `Closing bets for ${winningTeam} vs ${losingTeam}`,
+				// })
 				if (!matchInfo || _.isEmpty(matchInfo)) {
 					await PlutoLogger.log({
 						id: 4,
@@ -163,10 +164,11 @@ async function closeBets(
 						const oldBalance = await getBalance(
 							userId,
 						)
-						await PlutoLogger.log({
-							id: 3,
-							description: `Closing Bet Information:\nUser ID: ${userId}\nBet ID: ${betId}\nBet Result: Won\nBet Amount: ${betAmount}\nBet Odds: ${betOdds}\nTeam Bet On: ${teamBetOn}\nOpposing Team: ${opposingTeam}\nWinning Team: ${winningTeam}\nPayout: ${payoutAmount}\nProfit: ${profitAmount}`,
-						})
+						// TODO: Enable with Debug Logging Config
+						// await PlutoLogger.log({
+						// 	id: 3,
+						// 	description: `Closing Bet Information:\nUser ID: ${userId}\nBet ID: ${betId}\nBet Result: Won\nBet Amount: ${betAmount}\nBet Odds: ${betOdds}\nTeam Bet On: ${teamBetOn}\nOpposing Team: ${opposingTeam}\nWinning Team: ${winningTeam}\nPayout: ${payoutAmount}\nProfit: ${profitAmount}`,
+						// })
 						await handleClosingBet(
 							userId,
 							betResult,
@@ -190,10 +192,11 @@ async function closeBets(
 							betResult,
 						})
 					} else if (betResult === 'lost') {
-						await PlutoLogger.log({
-							id: 3,
-							description: `Closing Bet Information:\nUser ID: ${userId}\nBet ID: ${betId}\nBet Result: Won\nBet Amount: ${betAmount}\nBet Odds: ${betOdds}\nTeam Bet On: ${teamBetOn}\nOpposing Team: ${opposingTeam}\nWinning Team: ${winningTeam}\n`,
-						})
+						// TODO: Enable with Debug Logging Config
+						// await PlutoLogger.log({
+						// 	id: 3,
+						// 	description: `Closing Bet Information:\nUser ID: ${userId}\nBet ID: ${betId}\nBet Result: Won\nBet Amount: ${betAmount}\nBet Odds: ${betOdds}\nTeam Bet On: ${teamBetOn}\nOpposing Team: ${opposingTeam}\nWinning Team: ${winningTeam}\n`,
+						// })
 						await handleClosingBet(
 							userId,
 							betResult,
