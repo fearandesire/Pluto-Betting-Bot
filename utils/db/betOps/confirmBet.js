@@ -9,6 +9,7 @@ import { guildImgURL } from '#embed'
 import { isBetIdExisting } from '../validation/isBetIdExisting.js'
 import PendingBetHandler from '../validation/pendingBet.js'
 import { findEmoji } from '../../bot_res/findEmoji.js'
+import embedColors from '../../../lib/colorsConfig.js'
 
 const { EmbedBuilder } = discord
 /**
@@ -129,7 +130,7 @@ export async function confirmBet(
 			const embTimeout = {
 				title: `:x: Bet Cancellation`,
 				description: `<@${userId}>, your \`$${amount}\` bet on the **${betslip.teamid}**  has been cancelled since you didn't respond in time..`,
-				color: `#191919`,
+				color: embedColors.PlutoGray,
 				followUp: true,
 			}
 			// # Edit embed with new info
