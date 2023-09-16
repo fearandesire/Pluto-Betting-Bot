@@ -7,6 +7,7 @@ import { guildImgURL } from '#embed'
 import parseScheduled from '../parseScheduled.js'
 import IsoManager from '#iso'
 import { formatOdds } from './formatOdds.js'
+import { findEmoji } from '../findEmoji.js'
 
 const { EmbedBuilder } = discord
 /**
@@ -39,9 +40,16 @@ export default async function returnOdds(interaction) {
 async function compileOdds(oddsArr, thumbnail) {
 	const oddsFields = []
 	// eslint-disable-next-line guard-for-in
+	const withEmoji = async (t) => findEmoji(t)
 	for await (const match of Object.values(oddsArr)) {
-		const hTeam = match.teamone
-		const aTeam = match.teamtwo
+		const hTeam = `${
+			(await withEmoji(match.teamone)) ||
+			match.teamone
+		}`
+		const aTeam = `${
+			(await withEmoji(match.teamtwo)) ||
+			match.teamtwo
+		}`
 		let hOdds = match.teamoneodds
 		let aOdds = match.teamtwoodds
 		const oddsFormat = await formatOdds(hOdds, aOdds)
@@ -49,7 +57,7 @@ async function compileOdds(oddsArr, thumbnail) {
 		aOdds = oddsFormat.awayOdds
 		const isoManager = new IsoManager(match.start)
 		const day = isoManager.dayName
-		oddsFields.push({
+		await oddsFields.push({
 			day,
 			date: match.start,
 			start: isoManager.timeOnly,
