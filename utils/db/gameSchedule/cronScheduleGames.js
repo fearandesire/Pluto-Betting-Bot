@@ -126,13 +126,15 @@ export default async function cronScheduleGames() {
 					end: oneHourFromNow,
 				},
 			)
+			let queue1HEarly = false
 			const past = isPast(parsedGameDate)
 			if (hourOrLess || past) {
-				// Game is scheduled within 1 hour
-				// Create Cron set to exactly 1 minute from the current time
+				// ? Game ISO time is within an hour
+				// ? Create Cron set to exactly 1 minute from the current time
 				cronTime = isoManager.cronRightNow
 			} else {
-				// Game is scheduled in the future beyond 1 hour
+				// ? Game ISO time is beyond 1 hour
+				queue1HEarly = true
 				cronTime = isoManager.cron
 			}
 			await scheduleChannels(
@@ -142,6 +144,7 @@ export default async function cronScheduleGames() {
 					cronStartTime: cronTime,
 					legible: isoManager.legible,
 					gameid: game.id,
+					queue1HEarly,
 				},
 			)
 			await scheduledTally.push({

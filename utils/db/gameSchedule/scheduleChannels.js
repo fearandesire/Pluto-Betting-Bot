@@ -19,11 +19,11 @@ export async function scheduleChannels(
 	awayTeam,
 	options,
 ) {
-	const { cronStartTime, queueEarly, gameId } =
+	const { cronStartTime, queue1HEarly, gameId } =
 		options || null
 	let openChannelTime
 
-	if (queueEarly) {
+	if (queue1HEarly) {
 		openChannelTime = await new CronMath(
 			cronStartTime,
 		).subtract(1, `hours`)
