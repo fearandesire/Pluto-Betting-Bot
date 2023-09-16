@@ -1,9 +1,9 @@
 import discord from 'discord.js'
 import { SapDiscClient } from '#main'
 import { fetchVsImg } from '#utilBot/fetchVsImg'
+import { SPORT } from '#env'
 import { gameEmbedOdds } from './gameEmbed.js'
 import PlutoLogger from '#PlutoLogger'
-import { SPORT } from '#env'
 
 const { AttachmentBuilder, ChannelType } = discord
 /**
