@@ -39,10 +39,13 @@ export async function confirmBet(
 		.setColor('#ffd600')
 		.setTitle(':receipt: Bet Pending')
 		.setDescription(
-			`:white_check_mark: to confirm  | :x: to cancel\n\n**__Bet Details:__**
-        
-        Team: **${betslip.teamid}** ${teamEmoji} | Amount: \`$${amount}\` 
-        Profit: \`$${profit}\` | Payout: \`$${payout}\``,
+			`
+		:white_check_mark: to confirm  | :x: to cancel
+
+		**__Bet Details:__**
+        Team: **${betslip.teamid}** ${teamEmoji}
+		Amount: \`$${amount}\` 
+        Profit: \`$${profit}\` ➞ Payout: \`$${payout}\``,
 		)
 		.setTimestamp()
 		.setThumbnail(`${guildImgURL(interaction.client)}`)
@@ -92,6 +95,8 @@ export async function confirmBet(
 				betslip.amount,
 				'sub',
 			) //! Subtract users bet amount from their balance
+			// Remove reactions
+			await previewEmbed.reactions.removeAll()
 		} else if (
 			reaction.emoji.name === '❌' &&
 			user.id === userId
@@ -117,10 +122,12 @@ export async function confirmBet(
 							embCancel.description,
 						)
 						.setColor(embCancel.color)
-						.setFooter({ text: '' })
+						.setFooter({ text: '123' })
 						.setTimestamp(null),
 				],
 			})
+			// Delete reactions
+			await previewEmbed.reactions.removeAll()
 		}
 	})
 	collector.on('end', async (collected, reason) => {
@@ -146,6 +153,8 @@ export async function confirmBet(
 						.setTimestamp(null),
 				],
 			})
+			// Delete reactions
+			await previewEmbed.reactions.removeAll()
 		}
 	})
 }

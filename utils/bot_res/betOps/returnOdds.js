@@ -42,14 +42,8 @@ async function compileOdds(oddsArr, thumbnail) {
 	// eslint-disable-next-line guard-for-in
 	const withEmoji = async (t) => findEmoji(t)
 	for await (const match of Object.values(oddsArr)) {
-		const hTeam = `${
-			(await withEmoji(match.teamone)) ||
-			match.teamone
-		}`
-		const aTeam = `${
-			(await withEmoji(match.teamtwo)) ||
-			match.teamtwo
-		}`
+		const hTeam = `${match.teamone}`
+		const aTeam = `${match.teamtwo}`
 		let hOdds = match.teamoneodds
 		let aOdds = match.teamtwoodds
 		const oddsFormat = await formatOdds(hOdds, aOdds)

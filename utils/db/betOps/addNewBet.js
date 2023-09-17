@@ -13,6 +13,7 @@ import { embedReply, guildImgURL } from '#embed'
 import { setupBetLog } from '#winstonLogger'
 
 import { TodaysDate } from '../../date/TodaysDate.js'
+import embedColors from '../../../lib/colorsConfig.js'
 
 /**
  * @module addNewBet -
@@ -87,16 +88,15 @@ export function addNewBet(interaction, betslip) {
 					description: `<@${betslip.userid}>, your bet is locked in! :lock:
                     
                     **:money_mouth: __Details__**
-                    **Bet ID:** ${betslip.betid}
-                    **Team:** **${betslip.teamid}** ${betslip.teamEmoji}
-                    **Amount:** \`$${amount}\`
-                    **Profit:** \`$${profit}\`
-                    **Payout:** \`$${payout}\`
+                    **${betslip.teamid}** ${betslip.teamEmoji}
+                    **Amount:** **\`$${amount}\`**
+                    **Profit:** **\`$${profit}\`** ➞ **Payout:** **\`$${payout}\`**
 
                     *To view all of your active bets, type \`/mybets\`
                     To view your history of betting with Pluto, type \`/bethistory\`*
+					*Bet ID: \`${betslip.betid}\`*
                     `,
-					color: '#00FF00',
+					color: embedColors.PlutoBrightGreen,
 					// footer: 'For more commands, type: ?help',
 					target: `reply`,
 					thumbnail: `${guildImgURL(
