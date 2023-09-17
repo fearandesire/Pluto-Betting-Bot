@@ -36,6 +36,7 @@ const serverEnv = {
 	getOdds: configData.getOdds,
 }
 
+console.log(`serverEnv =>\n`, serverEnv)
 const {
 	ODDS,
 	SCORE,
