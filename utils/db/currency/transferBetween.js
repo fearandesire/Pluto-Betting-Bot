@@ -1,6 +1,12 @@
+import discord from 'discord.js'
+import accounting from 'accounting'
 import { db } from '#db'
 import { embedReply, CURRENCY } from '#config'
 import { validateUser } from '#utilValidate/validateExistingUser'
+import { SapDiscClient } from '#main'
+import embedColors from '../../../lib/colorsConfig.js'
+
+const { EmbedBuilder } = discord
 
 /**
  * Transfer money between two users
@@ -15,7 +21,6 @@ export async function transferTo(
 	userid,
 	targetUserId,
 	amountBeingSent,
-	interactionEph,
 ) {
 	let newUserBal
 	let newTargetUserBal
@@ -26,7 +31,7 @@ export async function transferTo(
 		true,
 	)
 	if (!isRegistered) return
-
+	let formattedAmount
 	const transferAmount = Number(amountBeingSent)
 	db.tx(`transferTo`, async (t) => {
 		const getUserBal = await t.oneOrNone(
@@ -62,15 +67,26 @@ export async function transferTo(
 			`UPDATE "${CURRENCY}" SET balance = $1 WHERE userid = $2`,
 			[newTargetUserBal, targetUserId],
 		)
-	}).then(() => {
-		const isSilent = !!interactionEph
+		formattedAmount = accounting.format(transferAmount)
+	}).then(async () => {
 		const embObj = {
 			title: `:moneybag: Credit Transfer :moneybag:`,
-			description: `You have successfully transferred **$${transferAmount}** to <@${targetUserId}>\nYour balance is now: **$${newUserBal}**`,
-			color: `GREEN`,
+			description: `You have successfully transferred **$${formattedAmount}** to <@${targetUserId}>\nYour balance is now: **$${newUserBal}**`,
+			color: embedColors.PlutoBrightGreen,
 			target: `reply`,
-			silent: isSilent,
 		}
-		embedReply(interaction, embObj)
+
+		await embedReply(interaction, embObj)
+
+		// ? Notify the user
+		const userEmb = new EmbedBuilder()
+			.setTitle(embObj.title)
+			.setDescription(
+				`${interaction.user.tag} has transferred **${formattedAmount}** to you`,
+			)
+			.setColor(embObj.color)
+		await SapDiscClient.users.send(targetUserId, {
+			embeds: [userEmb],
+		})
 	})
 }
