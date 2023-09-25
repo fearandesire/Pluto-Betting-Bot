@@ -1,5 +1,5 @@
 import _ from 'lodash'
-import cron from 'node-cron'
+import { Cron } from 'croner'
 import logClr from '#colorConsole'
 import cronScheduleGames from '../db/gameSchedule/cronScheduleGames.js'
 import PlutoLogger from '#PlutoLogger'
@@ -42,16 +42,20 @@ export async function genRanges() {
  */
 
 async function checkForCompleted(cronTime) {
-	logClr({
+	await logClr({
 		text: `Cron Timer |> ${cronTime}`,
 		color: `blue`,
 		status: `processing`,
 	})
-	await cron.schedule(
+	await Cron(
 		`${cronTime}`,
+		{
+			timezone: 'America/New_York',
+			name: `checkCompleted`,
+		},
 		async () => {
 			try {
-				logClr({
+				await logClr({
 					text: `Checking for completed games`,
 					color: `blue`,
 					status: `processing`,
@@ -63,11 +67,6 @@ async function checkForCompleted(cronTime) {
 					description: `An error occured when checking & processing bets\nError: \`${err.message}\``,
 				})
 			}
-		},
-		{
-			timezone: 'America/New_York',
-			name: `checkCompleted`,
-			scheduled: true,
 		},
 	)
 }
@@ -83,8 +82,12 @@ export async function init_Cron_Odds() {
 		color: `yellow`,
 		status: `processing`,
 	})
-	await cron.schedule(
+	await Cron(
 		`${getOdds}`,
+		{
+			timezone: 'America/New_York',
+			name: `collectOdds`,
+		},
 		async () => {
 			try {
 				await collectOdds()
@@ -94,10 +97,6 @@ export async function init_Cron_Odds() {
 					description: `An error occured when creating Game Heartbeat Cron Job\nError: \`${err.message}\``,
 				})
 			}
-		},
-		{
-			timezone: 'America/New_York',
-			name: `collectOdds`,
 		},
 	)
 }
@@ -113,7 +112,7 @@ export async function init_Cron_Chan_Scheduler() {
 		status: `processing`,
 	})
 	// # Run Cron every day at 2 AM to schedule new games
-	await cron.schedule(`${scheduledGames}`, async () => {
+	await Cron(`${scheduledGames}`, async () => {
 		await cronScheduleGames()
 	})
 }
@@ -131,7 +130,7 @@ export async function initMatchupHandling() {
 		status: `processing`,
 	})
 
-	await cron.schedule(`${getRanges}`, async () => {
+	await Cron(`${getRanges}`, async () => {
 		try {
 			const cronRanges = await genRanges()
 			if (cronRanges !== null) {
@@ -183,7 +182,7 @@ export async function init_Cron_Heartbeat() {
 	})
 	// # Run Cron every 10 minutes to check for completed games & score
 	// eslint-disable-next-line no-unused-vars
-	cron.schedule(`${gameHeartbeat}`, async () => {
+	Cron(`${gameHeartbeat}`, async () => {
 		try {
 			await getHeartbeat()
 		} catch (err) {

@@ -164,3 +164,4 @@ commands/commands.js
 .gitignore
 test/createISODates.js
 utils/bot_res/betOps/MatchupsArr.test.js
+utils/vsImg/matchupImgs.js

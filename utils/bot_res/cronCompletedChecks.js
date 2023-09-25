@@ -17,7 +17,7 @@ export default async function completedChecks(dates) {
 	// Place every start_date into an array
 	const earliestDate = findEarliestDate(dates)
 	// Add 2 hours to the date
-	const betsHeartbeat = addHours(earliestDate, 2)
+	const betsHeartbeat = addHours(earliestDate, 1)
 	// Get hour
 	const hour = betsHeartbeat.getHours()
 	const hourStr = `${hour}-23`

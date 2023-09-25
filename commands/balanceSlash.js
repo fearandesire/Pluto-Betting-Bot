@@ -43,17 +43,25 @@ export class balanceSlash extends Command {
 		const target =
 			interaction.options.getMentionable('user')
 		const userid = interaction.user.id
-		if (!target) {
-			const isRegistered = await validateUser(
-				interaction,
-				userid,
-			)
-			if (!isRegistered) return
-			await checkbalance(userid, interaction)
-			return
-		}
-		if (target) {
-			await checkbalance(userid, interaction, target)
+		try {
+			if (!target) {
+				const isRegistered = await validateUser(
+					interaction,
+					userid,
+				)
+				if (!isRegistered) return
+				await checkbalance(userid, interaction)
+				return
+			}
+			if (target) {
+				await checkbalance(
+					userid,
+					interaction,
+					target,
+				)
+			}
+		} catch (e) {
+			console.log(e)
 		}
 	}
 }

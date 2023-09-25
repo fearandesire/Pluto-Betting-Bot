@@ -4,6 +4,7 @@ import { SapDiscClient } from '#main'
 import { SPORT } from '#env'
 import { findEmoji } from '../../bot_res/findEmoji.js'
 import resolveMatchup from '../matchupOps/resolveMatchup.js'
+import { bettingChan } from '../../serverConfig.js'
 
 const { EmbedBuilder } = discord
 export async function gameEmbedPlain(homeTeam, awayTeam) {
@@ -96,7 +97,7 @@ export async function gameEmbedOdds(homeTeam, awayTeam) {
 			`
 **The ${teamEmoji} ${favoredTeam} are favored to win this game!**
 
-*Type \`/commands\` in the <#${process.env.bettingChan}> channel to place bets with Pluto*`,
+*Type \`/commands\` in the <#${bettingChan}> channel to place bets with Pluto*`,
 		)
 		.setFooter({
 			text: `Pluto | Created by fenixforever`,

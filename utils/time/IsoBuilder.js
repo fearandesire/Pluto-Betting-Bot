@@ -35,6 +35,13 @@ export default class IsoBuilder {
 		this.day = getDay(this.parseTime)
 	}
 
+	isAfter() {
+		if (isAfter(this.parseTime, this.compare)) {
+			return true
+		}
+		return false
+	}
+
 	isMatchingDate() {
 		// Check if they are the same day
 		if (isSameDay(this.parseTime, this.compare)) {

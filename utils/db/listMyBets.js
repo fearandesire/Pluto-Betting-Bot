@@ -82,6 +82,15 @@ export async function listMyBets(userid, interaction) {
 			target: `reply`,
 			footer: `The payout and profit numbers are potential values, as these games have yet to be completed.`,
 		}
+
+		if (betsJoined === '' || _.isEmpty(betsJoined)) {
+			await QuickError(
+				interaction,
+				`You currently have no **active** bets!\nPlace a bet with the \`/bet slash command`,
+				true,
+			)
+			return false
+		}
 		await embedReply(interaction, embObj)
 	} catch (err) {
 		Log.Error(

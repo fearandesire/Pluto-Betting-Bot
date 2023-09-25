@@ -10,6 +10,7 @@ import PlutoLogger from '#PlutoLogger'
 import { closeBets } from '../../db/betOps/closeBets/closeBets.js'
 import { queueDeleteChannel } from '../../db/gameSchedule/queueDeleteChannel.js'
 import ClosingQueue from '../../db/matchupOps/ClosingQueue.js'
+import logClr from '#colorConsole'
 
 const url = SCORE
 const options = {
@@ -32,6 +33,16 @@ const options = {
  */
 
 export async function handleBetMatchups() {
+	// Create timestamp: [`MM-DD-YYYY/HH:MM:SS`]
+	const date = new Date()
+	const timestamp = `${
+		date.getMonth() + 1
+	}-${date.getDate()}-${date.getFullYear()}/${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`
+	await logClr({
+		text: `[handleBetMatchups] Checking for completed games`,
+		color: `blue`,
+		status: `processing`,
+	})
 	let response
 	let apiJSON
 	try {

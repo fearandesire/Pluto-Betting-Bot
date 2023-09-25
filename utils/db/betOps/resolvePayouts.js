@@ -16,9 +16,11 @@ export async function resolvePayouts(matchOdds, betAmount) {
 		const profit = Math.ceil(ogBetAmount * equation)
 		const payout = Math.ceil(profit + ogBetAmount)
 
+		/** 
 		await Log.Green(
 			`Odds: ${oddsNum}\nbetAmount: ${ogBetAmount}\nEquation: ${equation}\nProfit: ${profit}\nPayout: ${payout}`,
 		)
+		* */
 
 		return {
 			payout,

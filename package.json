@@ -75,6 +75,7 @@
 		"cron": "^2.1.0",
 		"cron-job-manager": "^2.3.1",
 		"cron-parser": "^4.8.1",
+		"croner": "^7.0.1",
 		"cronitor": "^2.3.2",
 		"cronstrue": "^2.14.0",
 		"cross-env": "^7.0.3",

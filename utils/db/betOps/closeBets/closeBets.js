@@ -89,10 +89,10 @@ async function handleClosingBet(
 			[betId],
 		)
 	}
-	// await db.none(
-	// 	`DELETE FROM "${LIVEBETS}" WHERE betid = $1`,
-	// 	[betId],
-	// )
+	await db.none(
+		`DELETE FROM "${LIVEBETS}" WHERE betid = $1`,
+		[betId],
+	)
 }
 
 /**

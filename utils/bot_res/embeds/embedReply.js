@@ -50,8 +50,9 @@ export async function embedReply(
 	const embedColor =
 		convertColor(embedContent.color) ||
 		embedColors.PlutoYellow
-	const embedTitle = embedContent?.title ?? ''
-	const embedDescription = embedContent?.description ?? ''
+	const embedTitle = embedContent?.title ?? null
+	const embedDescription =
+		embedContent?.description ?? null
 	const embedFields = embedContent?.fields
 	const embedFooter =
 		embedContent?.footer ??

@@ -78,6 +78,11 @@ export default class IsoManager {
 		this.isBefore = builder.isBefore()
 
 		/**
+		 *  Determines whether the date is after the current time.
+		 */
+		this.isAfter = builder.isAfter()
+
+		/**
 		 *
 		 * @type {boolean}
 		 * @returns {boolean} True - Same Week | False - Different Week

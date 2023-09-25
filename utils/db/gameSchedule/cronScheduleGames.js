@@ -10,17 +10,15 @@ import Promise from 'bluebird'
 import { db } from '#db'
 // import { PRESZN_MATCHUPS_TABLE, spinner } from '#config'
 import { SPORT } from '#env'
+import { LIVEMATCHUPS } from '#config'
 import { getShortName } from '../../bot_res/getShortName.js'
 import { scheduleChannels } from './scheduleChannels.js'
 import IsoManager from '#iso'
 import locateChannel from '../../bot_res/locateChan.js'
 import Cache from '#rCache'
 import logClr from '#colorConsole'
-import { SCORETABLE } from '#serverConf'
 import PlutoLogger from '#PlutoLogger'
 import parseScheduled from '../../bot_res/parseScheduled.js'
-import resolveMatchup from '../matchupOps/resolveMatchup.js'
-import { LIVEMATCHUPS } from '#config'
 
 /**
  *
@@ -43,6 +41,7 @@ export default async function cronScheduleGames() {
 	)
 
 	const filterGames = _.filter(games, async (game) => {
+		// ? Filter via date
 		let thisWeek
 		const dateManager = new IsoManager(game.start)
 		if (SPORT === 'nba') {
@@ -55,7 +54,24 @@ export default async function cronScheduleGames() {
 				description: `Error: ${SPORT} is not supported.\nCheck app configuration`,
 			})
 		}
-		return thisWeek
+
+		// ? Filter completed games
+		let isCompleted
+		if (
+			game?.completed === true ||
+			game?.status === 'completed'
+		) {
+			isCompleted = true
+		}
+
+		// ? Filter old games
+		let isInPast
+		if (dateManager.notInPast) {
+			isInPast = true
+		} else {
+			isInPast = false
+		}
+		return thisWeek && !isCompleted && !isInPast
 	})
 
 	await Promise.map(
