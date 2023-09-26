@@ -24,6 +24,7 @@ export default async function returnOdds(interaction) {
 			interaction,
 			'No odds available to view.',
 		)
+		return
 	}
 
 	const thumbnail = await guildImgURL(interaction.client)

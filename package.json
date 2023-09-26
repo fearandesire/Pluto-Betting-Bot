@@ -12,8 +12,12 @@
 		"docs": "jsdoc2md lib/*.js > addNewBet.js",
 		"auto": "nodemon node ./Pluto.mjs",
 		"nflc": "cross-env NODE_ENV=production SEASON_TYPE=REGULAR SERVERNAME=nfl SPORT=nfl EXP_PORT=4442 node Pluto.mjs -r dotenv/config dotenv_config_path=./.env.nflc",
-		"nbac": "cross-env NODE_ENV=production SEASONTYPE=REGULAR SERVERNAME=nba SPORT=nba EXP_PORT=4443 node Pluto.mjs -r dotenv/config dotenv_config_path=./.env.nbac ",
-		"dev": "cross-env SERVERNAME=nfl-dev SEASON_TYPE=REGULAR node ./Pluto.mjs -r dotenv/config dotenv_config_path=./.env.dev"
+		"nbac": "cross-env NODE_ENV=production SEASONTYPE=REGULAR SERVERNAME=nba SPORT=nba EXP_PORT=4443  node Pluto.mjs -r dotenv/config dotenv/config dotenv_config_path=./.env.nbac ",
+		"dev": "cross-env SERVERNAME=nfl-dev SEASON_TYPE=REGULAR node ./Pluto.mjs -r dotenv/config ./Pluto.mjs dotenv_config_path=./.env.dev",
+		"vault-open": "npx dotenv-vault@latest open",
+		"vault-login": "npx dotenv-vault@latest login",
+		"vault-push": "npx dotenv-vault@latest push",
+		"vault-pull": "npx dotenv-vault@latest pull"
 	},
 	"imports": {
 		"#serverConf": "./utils/serverConfig.js",
@@ -87,6 +91,7 @@
 		"discord": "^0.8.2",
 		"discord.js": "^14.13.0",
 		"dotenv": "^16.0.1",
+		"dotenv-vault": "^1.25.0",
 		"express": "^4.18.2",
 		"express-async-router": "^0.1.15",
 		"express-promise-router": "^4.1.1",

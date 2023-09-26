@@ -124,6 +124,7 @@ utils/unitTesting/**
 # Images Dir
 lib/images/**
 lib/teamList.js
+
 commands/slash/devEval.js
 .env.nbac
 .env.nflc
@@ -165,3 +166,12 @@ commands/commands.js
 test/createISODates.js
 utils/bot_res/betOps/MatchupsArr.test.js
 utils/vsImg/matchupImgs.js
+utils/vsImg/matchupImgs.js
+launch.json
+test/devTesting.js
+
+.env*
+.flaskenv*
+!.env.project
+!.env.vault
+.env.*

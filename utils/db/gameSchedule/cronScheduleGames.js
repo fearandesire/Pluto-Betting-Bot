@@ -36,9 +36,13 @@ import parseScheduled from '../../bot_res/parseScheduled.js'
 export default async function cronScheduleGames() {
 	const scheduledTally = []
 	const scheduledIds = []
-	const games = await db.manyOrNone(
-		`SELECT * FROM "${LIVEMATCHUPS}" WHERE inprogress = false OR inprogress IS NULL`,
-	)
+	const games = await db
+		.manyOrNone(
+			`SELECT * FROM "${LIVEMATCHUPS}" WHERE inprogress = false OR inprogress IS NULL`,
+		)
+		.catch((err) => {
+			throw err
+		})
 
 	const filterGames = _.filter(games, async (game) => {
 		// ? Filter via date
