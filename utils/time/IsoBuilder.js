@@ -100,8 +100,8 @@ export default class IsoBuilder {
 	 * Determines whether the date is in the past.
 	 * @returns {boolean} True if the date is in the past, otherwise false.
 	 */
-	filterPast() {
-		return isAfter(this.parseTime, new Date())
+	isInPast() {
+		return isAfter(new Date(), this.parseTime)
 	}
 
 	/**

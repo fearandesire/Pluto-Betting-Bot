@@ -43,7 +43,7 @@ export default class IsoManager {
 		 * @returns {boolean} True if the date is in the past, otherwise false.
 		 * @type {boolean}
 		 */
-		this.notInPast = builder.filterPast()
+		this.isInPast = builder.isInPast()
 
 		/**
 		 * Determines whether the date is today.
