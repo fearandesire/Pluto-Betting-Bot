@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 import stringifyObject from 'stringify-object'
 import discord from 'discord.js'
 import { Log, accounting } from '#config'

@@ -59,7 +59,7 @@ export async function setupBet(
 					)
 					const embedcontent = {
 						title: 'Insufficient Funds',
-						description: `You do not have sufficient funds to place this bet. Your current balance is $**${checkFunds}**`,
+						description: `You do not have sufficient funds to place this bet. Your current balance is **$${checkFunds}**`,
 						color: embedColors.PlutoRed,
 						target: `reply`,
 						followUp: true,

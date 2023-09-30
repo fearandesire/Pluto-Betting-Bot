@@ -175,3 +175,4 @@ test/devTesting.js
 !.env.project
 !.env.vault
 .env.*
+dev/

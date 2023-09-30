@@ -4,6 +4,7 @@ import { modifyAmount } from '#utilBetOps/modifyAmount'
 import { validateUser } from '#utilValidate/validateExistingUser'
 import { verifyBetAuthor } from '#utilValidate/verifyBetAuthor'
 import { verifyCancellation } from '#utilBetOps/verifyCancellation'
+import { fetchBalance } from '#utilCurrency/fetchBalance'
 
 export class changeBetSlash extends Command {
 	constructor(context, options) {
@@ -70,6 +71,20 @@ export class changeBetSlash extends Command {
 			userid,
 		)
 		if (!isRegistered) return
+
+		// Check user has enough for change
+		const balance = await fetchBalance(
+			interaction,
+			userid,
+		)
+		if (balance < amount) {
+			await QuickError(
+				interaction,
+				`You do not have enough money to make this change.\nCurrent Balance: **\`$${balance}\`**`,
+				true,
+			)
+			return
+		}
 		const interactionEph = true // ? client-side / silent reply
 		const betVerificaiton = await verifyBetAuthor(
 			interaction,
