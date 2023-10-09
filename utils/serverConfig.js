@@ -21,7 +21,7 @@ dotenv.config({
 	override: true,
 })
 
-console.log(process.env)
+// console.log(process.env)
 // # Retrieve server configuration on startup
 const configResp = await db.oneOrNone(
 	`SELECT config FROM serverconfigs WHERE serverid=$1`,
@@ -46,6 +46,7 @@ const serverEnv = {
 	PROFILES: configData.PROFILES,
 	LIVEMATCHUPS: configData.LIVEMATCHUPS,
 	SCORETABLE: configData.SCORETABLE,
+	EXPERIENCE: configData.EXPERIENCE,
 	server_ID: configData.server_ID,
 	gameCat_ID: configData.gameCat_ID,
 	sportsLogo: configData.sportsLogo,
@@ -61,6 +62,7 @@ const serverEnv = {
 // console.log(`serverEnv =>\n`, serverEnv)
 
 const {
+	// Tables
 	ODDS,
 	SCORE,
 	RANGES,
@@ -71,12 +73,15 @@ const {
 	LIVEMATCHUPS,
 	SCORETABLE,
 	LIVEBETS,
+	EXPERIENCE,
+	// IDs
 	server_ID,
 	gameCat_ID,
 	sportsLogo,
 	bettingChan,
 	logChan,
 	statcordKey,
+	// Settings
 	gameHeartbeat,
 	scheduledGames,
 	getRanges,
@@ -94,6 +99,7 @@ export {
 	LIVEMATCHUPS,
 	SCORETABLE,
 	LIVEBETS,
+	EXPERIENCE,
 	server_ID,
 	gameCat_ID,
 	sportsLogo,

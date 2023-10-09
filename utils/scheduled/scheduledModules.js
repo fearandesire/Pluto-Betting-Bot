@@ -51,7 +51,6 @@ async function checkForCompleted(cronTime) {
 		`${cronTime}`,
 		{
 			timezone: 'America/New_York',
-			name: `checkCompleted`,
 		},
 		async () => {
 			try {
@@ -86,7 +85,6 @@ export async function init_Cron_Odds() {
 		`${getOdds}`,
 		{
 			timezone: 'America/New_York',
-			name: `collectOdds`,
 		},
 		async () => {
 			try {
@@ -111,7 +109,7 @@ export async function init_Cron_Chan_Scheduler() {
 		color: `yellow`,
 		status: `processing`,
 	})
-	// # Run Cron every day at 2 AM to schedule new games
+	// # Run Cron
 	await Cron(`${scheduledGames}`, async () => {
 		await cronScheduleGames()
 	})

@@ -4,7 +4,7 @@ import { packageDirectory } from 'pkg-dir'
 import { db } from '#db'
 import { SPORT } from '#env'
 import { SapDiscClient } from '#main'
-import { helpfooter } from '#config'
+import { helpfooter, EXPERIENCE } from '#config'
 import { levelTiers, levelIcons } from './XPLevels.js'
 import embedColors from '../../lib/colorsConfig.js'
 
@@ -22,7 +22,7 @@ export default class XPHandler {
 		this.userId = userId
 		this.userXP = null
 		this.userLevel = null
-		this.xpTable = 'user_experience'
+		this.xpTable = `${EXPERIENCE}`
 		this.XP_WIN_BET = 50
 		this.XP_LOSE_BET = 20
 		this.defaultXP = 1
@@ -39,7 +39,7 @@ export default class XPHandler {
 	async get_XP_Profile() {
 		// Query database to get user's current XP
 		const xpProfile = await db.oneOrNone(
-			`SELECT * FROM ${this.xpTable} WHERE userid = $1`,
+			`SELECT * FROM "${this.xpTable}" WHERE userid = $1`,
 			[this.userId],
 		)
 		const { xp, level } = xpProfile
@@ -55,14 +55,14 @@ export default class XPHandler {
 	async createNewUser() {
 		// Check if user exists
 		const exists = await db.oneOrNone(
-			`SELECT * FROM ${this.xpTable} WHERE userid = $1`,
+			`SELECT * FROM "${this.xpTable}" WHERE userid = $1`,
 			[this.userId],
 		)
 
 		// If not, insert them with default XP
 		if (!exists) {
 			await db.none(`
-			INSERT INTO ${this.xpTable} (userId, xp, level)
+			INSERT INTO "${this.xpTable}" (userId, xp, level)
 			VALUES (${this.userId}, 1, 0)
 		  `)
 		}
@@ -111,7 +111,7 @@ export default class XPHandler {
 	async updateXP(xp) {
 		const newXP = this.restrictUnderMax(xp)
 		await db.oneOrNone(
-			`UPDATE ${this.xpTable} SET xp = ${newXP} WHERE userid = $1`,
+			`UPDATE "${this.xpTable}" SET xp = ${newXP} WHERE userid = $1`,
 			[this.userId],
 		)
 		this.userXP = newXP
