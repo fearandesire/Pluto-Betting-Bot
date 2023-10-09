@@ -11,7 +11,6 @@ import { MatchupManager } from '#MatchupManager'
 /**
  * @function collectOdds
  * Calls the API and stores the matchup odds for the week into the database & cache.
- *
  * Steps:
  * - Fetches the matchup odds data from the API endpoint specified in the configuration.
  * - Filters the games to find only those that are scheduled for today.
@@ -40,7 +39,7 @@ export default async function collectOdds() {
 		const isoHandler = new IsoManager(
 			game.commence_time,
 		)
-		return isoHandler.notInPast && isoHandler.isSameWeek
+		return isoHandler.isSameWeek
 	})
 
 	if (_.isEmpty(filteredPastGames)) {

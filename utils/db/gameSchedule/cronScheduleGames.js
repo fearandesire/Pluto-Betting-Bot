@@ -7,10 +7,7 @@ import {
 	isPast,
 } from 'date-fns'
 import Promise from 'bluebird'
-import { db } from '#db'
-// import { PRESZN_MATCHUPS_TABLE, spinner } from '#config'
 import { SPORT } from '#env'
-import { LIVEMATCHUPS } from '#config'
 import { getShortName } from '../../bot_res/getShortName.js'
 import { scheduleChannels } from './scheduleChannels.js'
 import IsoManager from '#iso'
@@ -19,6 +16,7 @@ import Cache from '#rCache'
 import logClr from '#colorConsole'
 import PlutoLogger from '#PlutoLogger'
 import parseScheduled from '../../bot_res/parseScheduled.js'
+import { filterGamesArr } from './schedChanFilter.js'
 
 /**
  *
@@ -33,49 +31,13 @@ import parseScheduled from '../../bot_res/parseScheduled.js'
  * - Sending notification to log channel what channels have been scheduled for the day
  */
 
-export default async function cronScheduleGames() {
+export default async function cronScheduleGames(gamesArr) {
 	const scheduledTally = []
 	const scheduledIds = []
-	const games = await db
-		.manyOrNone(
-			`SELECT * FROM "${LIVEMATCHUPS}" WHERE inprogress = false OR inprogress IS NULL`,
-		)
-		.catch((err) => {
-			throw err
-		})
 
-	const filterGames = _.filter(games, async (game) => {
-		// ? Filter via date
-		let thisWeek
-		const dateManager = new IsoManager(game.start)
-		if (SPORT === 'nba') {
-			thisWeek = dateManager.sevenDayWeek
-		} else if (SPORT === 'nfl') {
-			thisWeek = await dateManager.nflWeek
-		} else {
-			await PlutoLogger.log({
-				title: `Game Scheduling Logs`,
-				description: `Error: ${SPORT} is not supported.\nCheck app configuration`,
-			})
-		}
-
-		// ? Filter completed games
-		let isCompleted
-		if (
-			game?.completed === true ||
-			game?.status === 'completed'
-		) {
-			isCompleted = true
-		}
-
-		// ? Filter old games
-		let isInPast
-		if (dateManager.notInPast) {
-			isInPast = true
-		} else {
-			isInPast = false
-		}
-		return thisWeek && !isCompleted && !isInPast
+	const filterGames = await filterGamesArr({
+		gamesArr,
+		SPORT,
 	})
 
 	await Promise.map(
