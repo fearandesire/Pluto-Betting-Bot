@@ -176,3 +176,4 @@ test/devTesting.js
 !.env.vault
 .env.*
 dev/
+utils/xp/xpmath.js

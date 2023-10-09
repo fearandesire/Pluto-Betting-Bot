@@ -1,7 +1,7 @@
 {
 	"name": "bettingbot",
 	"version": "1.17.1",
-	"description": "",
+	"description": "Pluto Betting App",
 	"main": "Pluto.mjs",
 	"prettier": "./.prettierrc.json",
 	"scripts": {
@@ -63,6 +63,7 @@
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
+		"@faker-js/faker": "^8.1.0",
 		"@favware/colorette-spinner": "^1.0.1",
 		"@kaname-png/plugin-statcord": "^2.1.4",
 		"@sapphire/framework": "^4.6.0",
