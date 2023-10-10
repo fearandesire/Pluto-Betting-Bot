@@ -26,6 +26,7 @@ export class faq extends Command {
 	}
 
 	async chatInputRun(interaction) {
+		await interaction.deferReply({ ephemeral: true })
 		const embObj = {
 			title: `❓ FAQ`,
 			description: `# **__Leveling__**

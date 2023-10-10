@@ -61,7 +61,10 @@ export async function embedReply(
 	const confirmFields = !!hasFields
 	const target = embedContent?.target || 'reply'
 	const isSilent = embedContent?.silent || false
-	let followUp = embedContent?.followUp || false
+	const isDeferred = interaction?.deferred || false
+	const isFollowUp = !!isDeferred // Holds boolean of whether or not the interaction is a follow-up based on isDeferred
+	let followUp =
+		embedContent?.followUp || isFollowUp || false
 	const editReply = embedContent?.editReply || false
 	const thumbnail =
 		embedContent?.thumbnail ||
@@ -156,7 +159,8 @@ export async function embedReply(
 				return reqChan.send({
 					embeds: [embedWithFields],
 				})
-			} if (isSilent) {
+			}
+			if (isSilent) {
 				return reqChan.send({
 					embeds: [embedWithFields],
 					ephemeral: true,
