@@ -1,10 +1,7 @@
 import Promise from 'bluebird'
 import { EmbedBuilder } from 'discord.js'
-import color from 'color'
 import { SapDiscClient } from '#main'
-import { embedReply } from '#config'
 import { reqLeaderboard } from './reqLeaderboard.js'
-import embedColors from '../../../lib/colorsConfig.js'
 
 /**
  * Retrieve the data from the currency/profile table in the DB - sort by the highest values to the lowest.
