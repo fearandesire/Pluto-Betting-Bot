@@ -46,7 +46,7 @@ export async function checkbalance(
 		if (!balQuery && target) {
 			QuickError(
 				interaction,
-				`User ${targetId} is not registered with Pluto.`,
+				`This user is not registered with Pluto!`,
 			)
 			return
 		}
