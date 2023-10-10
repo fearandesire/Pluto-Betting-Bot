@@ -30,6 +30,13 @@ export default class XPHandler {
 		this.LEVELS_ICONS = levelIcons
 		this.usersLevelTier = null
 		this.usersTierObj = null
+		this.tiers = {
+			bronze: 15,
+			silver: 30,
+			gold: 50,
+			emerald: 75,
+			diamond: 100,
+		}
 	}
 
 	/**
@@ -238,16 +245,9 @@ export default class XPHandler {
 		 * Lists the max level for each tier
 		 * E.g, Bronze at 15 would mean any user between 0-15 is in the Bronze Tier
 		 */
-		const tiers = {
-			bronze: 15,
-			silver: 30,
-			gold: 50,
-			emerald: 75,
-			diamond: 100,
-		}
 		// Identify which tier the user is in by checking which tier value is closest to the user's level
-		const tier = Object.keys(tiers).find(
-			(t) => tiers[t] >= level,
+		const tier = Object.keys(this.tiers).find(
+			(t) => this.tiers[t] >= level,
 		)
 		return tier
 	}
