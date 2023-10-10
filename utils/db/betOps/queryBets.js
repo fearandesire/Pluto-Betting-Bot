@@ -27,7 +27,7 @@ export async function queryBets(
 			[userid],
 			(c) => c.count,
 		)
-		const betCount = parseInt(getBetCount[0].count) // ? convert count of bets to integer
+		const betCount = Number(getBetCount[0].count) // ? convert count of bets to integer
 		if (betCount < 1) {
 			await QuickError(
 				interaction,
@@ -50,8 +50,8 @@ export async function queryBets(
 			)
 			// add current user balance + the bet amount
 			const newBal =
-				parseInt(userBal.balance) +
-				parseInt(betData.amount)
+				Number(userBal.balance) +
+				Number(betData.amount)
 			await t.batch([
 				await t.oneOrNone(
 					`UPDATE "${CURRENCY}" SET balance = $1 WHERE userid = $2`,
