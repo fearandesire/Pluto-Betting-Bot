@@ -1,14 +1,15 @@
 import accounting from 'accounting'
+import _ from 'lodash'
 import {
 	Log,
 	QuickError,
 	embedReply,
 	CURRENCY,
 } from '#config'
-
 import { SapDiscClient } from '#main'
 import { db } from '#db'
 import embedColors from '../../../lib/colorsConfig.js'
+import XPHandler from '../../xp/XPHandler.js'
 
 /**
  * @module checkBalance -
@@ -72,9 +73,17 @@ export async function checkbalance(
 			// discordName = discordName || 'User'
 			// Get avatar URL of user
 			const avatarURL = userAcc.avatarURL()
+			const xpHandler = new XPHandler(inputuserid)
+			const userTier = await xpHandler.getUserTier()
+			await xpHandler.get_XP_Profile()
+			const { tier } = userTier
 			const balEmbed = {
 				title: `:money_with_wings: Your Funds`,
-				description: `**Current Balance: \`$${balance}\`**`,
+				description: `**💰 Balance: \`$${balance}\`**\n**🔰 Level: \`${
+					xpHandler.userLevel
+				}\`**\n**💫 Tier: ${_.upperFirst(
+					tier,
+				)}**\n*View information on levels & tiers via /faq*`,
 				color: `${embedColors.PlutoBrightGreen}`,
 				footer: 'To view all commands, type /commands',
 				thumbnail: avatarURL,

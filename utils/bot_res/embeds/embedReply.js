@@ -90,11 +90,10 @@ export async function embedReply(
 					ephemeral: true,
 				})
 			}
-			await interaction.reply({
+			return interaction.reply({
 				embeds: [noFieldsEmbed],
 				ephemeral: true,
 			})
-			return
 		}
 		if (target === 'reply' && isSilent === false) {
 			if (editReply) {
@@ -107,18 +106,16 @@ export async function embedReply(
 					embeds: [noFieldsEmbed],
 				})
 			}
-			await interaction.reply({
+			return interaction.reply({
 				embeds: [noFieldsEmbed],
 			})
-			return
 		}
 		// # Fields-Embed Destination to a specific channel
 		if (target !== 'reply') {
 			reqChan = await Promise.resolve(
 				fetchChanId(target),
 			)
-			reqChan.send({ embeds: [noFieldsEmbed] })
-			return
+			return reqChan.send({ embeds: [noFieldsEmbed] })
 		}
 	}
 
@@ -148,7 +145,7 @@ export async function embedReply(
 				ephemeral: true,
 			})
 		} else if (target === 'reply' && !interactionEph) {
-			await interaction.reply({
+			return await interaction.reply({
 				embeds: [embedWithFields],
 			})
 
@@ -156,9 +153,11 @@ export async function embedReply(
 		} else if (target !== 'reply') {
 			if (isSilent === false) {
 				reqChan = await fetchChanId(target)
-				reqChan.send({ embeds: [embedWithFields] })
-			} else if (isSilent) {
-				reqChan.send({
+				return reqChan.send({
+					embeds: [embedWithFields],
+				})
+			} if (isSilent) {
+				return reqChan.send({
 					embeds: [embedWithFields],
 					ephemeral: true,
 				})
