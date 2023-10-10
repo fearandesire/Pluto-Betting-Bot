@@ -94,9 +94,7 @@ export default class XPHandler {
 
 		// Check if the user has to level up!
 		const level = await this.fetchLevel(newXP)
-		await console.log(`level: ${level}`)
 		if (level > this.userLevel) {
-			console.log(`level up!`)
 			await this.updateUserLevel(level)
 			await this.notifyOfLevelUp()
 		}

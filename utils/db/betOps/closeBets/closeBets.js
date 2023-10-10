@@ -1,10 +1,5 @@
 import _ from 'lodash'
-import {
-	LIVEMATCHUPS,
-	BETSLIPS,
-	LIVEBETS,
-	CURRENCY,
-} from '#config'
+import { BETSLIPS, LIVEBETS, CURRENCY } from '#config'
 
 import { db } from '#db'
 import { resolvePayouts } from '#utilBetOps/resolvePayouts'
@@ -13,6 +8,7 @@ import PlutoLogger from '#PlutoLogger'
 import { getBalance } from '../../validation/getBalance.js'
 import BetNotify from '../BetNotify.js'
 import logClr from '#colorConsole'
+import XPHandler from '../../../xp/XPHandler.js'
 
 const betNotify = new BetNotify(SapDiscClient)
 
@@ -191,6 +187,13 @@ async function closeBets(
 							oldBalance,
 							betResult,
 						})
+						// XP Handling
+						const xpHandler = new XPHandler(
+							userId,
+						)
+						await xpHandler.updateXP({
+							isWin: true,
+						})
 					} else if (betResult === 'lost') {
 						// TODO: Enable with Debug Logging Config
 						// await PlutoLogger.log({
@@ -208,6 +211,13 @@ async function closeBets(
 							opposingTeam,
 							betAmount,
 							betResult,
+						})
+						// XP Handling
+						const xpHandler = new XPHandler(
+							userId,
+						)
+						await xpHandler.updateXP({
+							isWin: false,
 						})
 					}
 				}

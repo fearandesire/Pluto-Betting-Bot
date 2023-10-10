@@ -33,11 +33,6 @@ const options = {
  */
 
 export async function handleBetMatchups() {
-	// Create timestamp: [`MM-DD-YYYY/HH:MM:SS`]
-	const date = new Date()
-	const timestamp = `${
-		date.getMonth() + 1
-	}-${date.getDate()}-${date.getFullYear()}/${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`
 	await logClr({
 		text: `[handleBetMatchups] Checking for completed games`,
 		color: `blue`,
@@ -103,8 +98,10 @@ export async function handleBetMatchups() {
 			winningTeam,
 			losingTeam,
 		)
-		// # Close Bets for this matchup
+
+		// ! Close Bets for this matchup
 		await closeBets(winningTeam, losingTeam, matchInfo)
+
 		// # Ensure bets are closed for the matchup. If not, don't delete the matchup from the DB.
 		// # However, it will currently need to be manually supervised in this case. The match is set to `inprogress` so it won't be procssed for bets again.
 		const betsExisting =

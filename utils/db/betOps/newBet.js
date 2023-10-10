@@ -42,7 +42,7 @@ export async function newBet(
 	if (Number(betAmount) < 1) {
 		await QuickError(
 			interaction,
-			`You must bet an amount greater than 0.`,
+			`You must bet at leat $1.`,
 			true,
 		)
 		await PendingBetHandler.deletePending(user)
@@ -71,7 +71,7 @@ export async function newBet(
 	if (activeCheck === true) {
 		await QuickError(
 			interaction,
-			`This match has already started. You are unable to place a bet on active games.`,
+			`This match has already started! It's not possible to place a bet on games currently in progress.`,
 			true,
 		)
 		await PendingBetHandler.deletePending(user)
@@ -100,7 +100,7 @@ export async function newBet(
 				)
 			},
 		],
-		(err) => {
+		() => {
 			// Error catch handled internally
 		},
 	)
