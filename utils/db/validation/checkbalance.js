@@ -5,6 +5,7 @@ import {
 	QuickError,
 	embedReply,
 	CURRENCY,
+	helpfooter,
 } from '#config'
 import { SapDiscClient } from '#main'
 import { db } from '#db'
@@ -29,7 +30,6 @@ export async function checkbalance(
 	const targetName = target?.user?.username
 	const targetId = target?.id
 	let queryUserOrTarget
-	Log.Yellow(`[checkbalance.js] Checking balance.`)
 	if (target) {
 		queryUserOrTarget = targetId
 	} else {
@@ -48,7 +48,6 @@ export async function checkbalance(
 				interaction,
 				`User ${targetId} is not registered with Pluto.`,
 			)
-			Log.Error('User has no Betting history')
 			return
 		}
 		if (!balQuery) {
@@ -66,7 +65,10 @@ export async function checkbalance(
 		}
 		const balance = accounting.format(balQuery.balance)
 		// ? The user exists in the database
-		if (balQuery.userid === inputuserid && !target) {
+		if (
+			(balQuery.userid === inputuserid && !target) ||
+			inputuserid === targetId
+		) {
 			const userAcc = await SapDiscClient.users.fetch(
 				inputuserid,
 			) // ? Fetch the target user
@@ -78,12 +80,12 @@ export async function checkbalance(
 			await xpHandler.get_XP_Profile()
 			const { tier } = userTier
 			const balEmbed = {
-				title: `:money_with_wings: Your Funds`,
+				title: `:money_with_wings: ${userAcc.tag}'s Profile`,
 				description: `**💰 Balance: \`$${balance}\`**\n**🔰 Level: \`${
 					xpHandler.userLevel
 				}\`**\n**💫 Tier: ${_.upperFirst(
 					tier,
-				)}**\n*View information on levels & tiers via /faq*`,
+				)}**\n\n*View information on levels & tiers via /faq*`,
 				color: `${embedColors.PlutoBrightGreen}`,
 				footer: 'To view all commands, type /commands',
 				thumbnail: avatarURL,
@@ -93,11 +95,21 @@ export async function checkbalance(
 			const calledBy =
 				await SapDiscClient.users.fetch(inputuserid) // ? Fetch user who called the command
 			const targetAvatarURL = await target.avatarURL()
+			const xpHandler = new XPHandler(targetId)
+			const userTier = await xpHandler.getUserTier()
+			await xpHandler.get_XP_Profile()
+			const { tier } = userTier
 			const targetBalEmbd = {
-				title: `:money_with_wings: ${targetName}'s Funds`,
-				description: `**Current Balance: \`$${balance}\`**\n*Requested by ${calledBy.username}*`,
+				title: `:money_with_wings: ${targetName}'s Profile`,
+				description: `**💰 Balance: \`$${balance}\`**\n**🔰 Level: \`${
+					xpHandler.userLevel
+				}\`**\n**💫 Tier: ${_.upperFirst(
+					tier,
+				)}**\n*View information on levels & tiers via /faq*\n\n*Requested by ${
+					calledBy.nickname
+				}*`,
 				color: `${embedColors.PlutoBrightGreen}`,
-				footer: 'For assistance, DM FENIX#7559',
+				footer: helpfooter,
 				thumbnail: targetAvatarURL,
 			}
 			embedReply(interaction, targetBalEmbd) // ? Sending embed with balance to user
