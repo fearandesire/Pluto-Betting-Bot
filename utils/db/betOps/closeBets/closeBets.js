@@ -104,6 +104,7 @@ async function closeBets(
 	losingTeam,
 	matchInfo,
 ) {
+	// eslint-disable-next-line no-async-promise-executor
 	return new Promise(async (resolve) => {
 		;(async () => {
 			try {
@@ -227,7 +228,10 @@ async function closeBets(
 					color: `red`,
 					status: `error`,
 				})
-				console.log(err)
+				await PlutoLogger.log({
+					id: 4,
+					description: `An error occured when closing bets.\nError: \`${err.message}\``,
+				})
 				return false
 			}
 		})().then(resolve)
