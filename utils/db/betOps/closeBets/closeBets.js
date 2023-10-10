@@ -191,7 +191,7 @@ async function closeBets(
 						const xpHandler = new XPHandler(
 							userId,
 						)
-						await xpHandler.updateXP({
+						await xpHandler.updateUserXP({
 							isWin: true,
 						})
 					} else if (betResult === 'lost') {
@@ -216,7 +216,7 @@ async function closeBets(
 						const xpHandler = new XPHandler(
 							userId,
 						)
-						await xpHandler.updateXP({
+						await xpHandler.updateUserXP({
 							isWin: false,
 						})
 					}

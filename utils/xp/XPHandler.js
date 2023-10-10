@@ -70,7 +70,7 @@ export default class XPHandler {
 		if (!exists) {
 			await db.none(`
 			INSERT INTO "${this.xpTable}" (userId, xp, level)
-			VALUES (${this.userId}, 1, 0)
+			VALUES (${this.userId}, 0, 0)
 		  `)
 		}
 	}
@@ -223,6 +223,7 @@ export default class XPHandler {
 	 * @return {Object} An object containing the user's tier and tier image.
 	 */
 	async getUserTier() {
+		await this.createNewUser()
 		const tier = await this.matchLevelToTier(
 			this.userLevel,
 		)
