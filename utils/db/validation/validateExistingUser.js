@@ -21,7 +21,7 @@ export async function validateUser(
 			if (currentUser === userid) {
 				errorMsg = `You must create an account with Pluto first!\nUse the \`/register\` slash command to instantly register.`
 			} else {
-				errorMsg = `User <@${userid}> is not registered with Pluto.`
+				errorMsg = `This user is not registered with Pluto!`
 			}
 			if (betProcess) {
 				// # delete from pending
