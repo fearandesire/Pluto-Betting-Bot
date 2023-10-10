@@ -29,7 +29,7 @@ export class leaderboardSlash extends Command {
 	async chatInputRun(interaction) {
 		await interaction.deferReply({ ephemeral: true })
 		await reply(interaction, {
-			content: `Collecting the leaderboard, this take 1 minute. I'll ping you when it's ready!`,
+			content: `Collecting the leaderboard data for you..`,
 		})
 		const interactionEph = true
 		const lb = await leaderboard(
