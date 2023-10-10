@@ -1,7 +1,7 @@
 /* eslint-disable no-param-reassign */
 import stringifyObject from 'stringify-object'
 import discord from 'discord.js'
-import { Log, accounting } from '#config'
+import { Log, accounting, helpfooter } from '#config'
 import { AssignBetID } from '#botUtil/AssignIDs'
 import { addNewBet } from '#utilBetOps/addNewBet'
 import { setupBetLog } from '#winstonLogger'
@@ -123,7 +123,7 @@ export async function confirmBet(
 							embCancel.description,
 						)
 						.setColor(embCancel.color)
-						.setFooter({ text: '123' })
+						.setFooter({ text: helpfooter })
 						.setTimestamp(null),
 				],
 			})
