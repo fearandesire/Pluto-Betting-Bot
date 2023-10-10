@@ -1,7 +1,10 @@
 import Promise from 'bluebird'
+import { EmbedBuilder } from 'discord.js'
+import color from 'color'
 import { SapDiscClient } from '#main'
-import { embedReply, container } from '#config'
+import { embedReply } from '#config'
 import { reqLeaderboard } from './reqLeaderboard.js'
+import embedColors from '../../../lib/colorsConfig.js'
 
 /**
  * Retrieve the data from the currency/profile table in the DB - sort by the highest values to the lowest.
@@ -9,43 +12,46 @@ import { reqLeaderboard } from './reqLeaderboard.js'
  * @returns {object} - Returns an embed containing the leaderboard information with user tags and their balances.
  */
 
-let memberCache = container.leaderboardCache
-memberCache = new Map()
+// Use a Map to store memberCache instead of reassigning it
+const memberCache = new Map()
 
 export async function leaderboard(interaction) {
 	const lb = await reqLeaderboard()
-	const server = await SapDiscClient.guilds.cache.get(
+	const server = SapDiscClient.guilds.cache.get(
 		`${process.env.server_ID}`,
 	)
-	await server.members.fetch()
+	const interactionUserId = interaction?.user?.id
 
 	const lbArray = []
-	let usersIndex
+	let usersIndex = 0
 
-	for (let i = 0; i < lb.length; i += 1) {
-		const lbUserId = lb[i].userid
-		const lbUserBal = lb[i].balance
+	// Pre-fetch all members at once
+	const lbUserIds = lb.map((lbEntry) => lbEntry.userid)
+	const lbMembers = await server.members.fetch({
+		user: lbUserIds,
+	})
 
-		if (lbUserId === interaction?.user?.id) {
-			usersIndex = i + 1
+	for await (const lbEntry of lb) {
+		const lbUserId = lbEntry.userid
+		const lbUserBal = lbEntry.balance
+
+		if (lbUserId === interactionUserId) {
+			usersIndex = lb.indexOf(lbEntry) + 1
 		}
 
-		if (!memberCache.has(lbUserId)) {
-			const member =
-				server.members.cache.get(lbUserId) || null
-
-			if (member) {
-				memberCache.set(lbUserId, member)
-			}
+		const member = lbMembers.get(lbUserId)
+		if (member) {
+			await memberCache.set(lbUserId, member)
 		}
 
 		const mappedUserCache =
-			memberCache.get(lbUserId) || null
+			(await memberCache.get(lbUserId)) || null
 		const formatId =
-			mappedUserCache?.user || `<@${lbUserId}>`
-		const humanIndex = i + 1
-		const lbEntry = `**${humanIndex}.** ${formatId}: ${lbUserBal}`
-		lbArray.push(lbEntry)
+			mappedUserCache?.user?.tag || `<@${lbUserId}>`
+
+		const humanIndex = lb.indexOf(lbEntry) + 1
+		const formattedEntry = `**${humanIndex}.** ${formatId}: **\`$${lbUserBal}\`**`
+		lbArray.push(formattedEntry)
 	}
 
 	const lbString = lbArray.join('\n')
@@ -55,30 +61,94 @@ export async function leaderboard(interaction) {
 		return false
 	}
 
-	const pageSize = 4096
-	const pages = Math.ceil(lbLength / pageSize)
+	// Define the number of users to display per page
+	const usersPerPage = 20
 
-	await Promise.each(
-		Array.from({ length: pages }),
-		async (_, indx) => {
-			const start = indx * pageSize
-			const end = start + pageSize
-			const page = indx + 1
-			const pageData = lbString.slice(start, end)
+	// Calculate the total number of pages based on the number of users
+	const pages = Math.ceil(lbArray.length / usersPerPage)
 
-			const embObj = {
-				title: `Betting Leaderboard [Page ${page}]`,
-				description: pageData,
-				color: `#ffff00`,
-				footer: `You are currently #${usersIndex} on the Leaderboard! | Page ${page}`,
-				target: `reply`,
-				silent: true,
-				followUp: true,
-			}
+	// Initial page
+	let currentPage = 1
 
-			await embedReply(interaction, embObj, true)
+	// Function to generate the leaderboard string for a specific page
+	function generateLeaderboardPage(page) {
+		const startIndex = (page - 1) * usersPerPage
+		const endIndex = startIndex + usersPerPage
+		return lbArray
+			.slice(startIndex, endIndex)
+			.join('\n')
+	}
+
+	const embColor = 16760832 // #ffc000
+	const embObj = {
+		title: `💹 Betting Leaderboard | Page ${currentPage}`,
+		description: generateLeaderboardPage(currentPage),
+		color: embColor,
+		footer: {
+			text: `You're #${usersIndex} on the Leaderboard! | Pg. ${currentPage}`,
 		},
+	}
+
+	const embed = new EmbedBuilder()
+		.setTitle(embObj.title)
+		.setDescription(embObj.description)
+		.setColor(embColor)
+		.setFooter(embObj.footer) // Pass the object directly
+
+	const msg = await interaction.followUp({
+		embeds: [embed],
+	})
+
+	// Define reaction emojis
+	const emojis = ['⬅️', '➡️']
+
+	// Add reactions to the message
+	await Promise.all(
+		emojis.map((emoji) => msg.react(emoji)),
 	)
+
+	// Create a filter to listen for reactions
+	const filter = (reaction, user) =>
+		emojis.includes(reaction.emoji.name) &&
+		user.id === interactionUserId
+
+	// Create a collector for reactions
+	const collector = msg.createReactionCollector(filter)
+
+	collector.on('collect', async (reaction) => {
+		if (
+			reaction.emoji.name === '⬅️' &&
+			currentPage > 1
+		) {
+			// Move to the previous page
+			currentPage -= 1
+		} else if (
+			reaction.emoji.name === '➡️' &&
+			currentPage < pages
+		) {
+			// Move to the next page
+			currentPage += 1
+		}
+
+		// Update the embed with the new page
+		embObj.title = `Betting Leaderboard | Page ${currentPage}`
+		embObj.description =
+			generateLeaderboardPage(currentPage)
+		embObj.footer = {
+			text: `You are currently #${usersIndex} on the Leaderboard! | Page ${currentPage}`,
+		}
+
+		// Edit the message to update the embed
+		await msg.edit({ embeds: [embObj] })
+
+		// Remove the user's reaction
+		await reaction.users.remove(interaction.user)
+	})
+
+	collector.on('end', () => {
+		// Remove all reactions when the collector ends
+		msg.reactions.removeAll()
+	})
 
 	return true
 }
