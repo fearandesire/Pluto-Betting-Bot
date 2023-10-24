@@ -51,7 +51,7 @@ export async function newBet(
 	if (!matchInfo) {
 		QuickError(
 			interaction,
-			`Unable to locate a match for ${team}\nPlease check currently available matchups with \`/odds\`\nMatchups will become available as DraftKings provides them.`,
+			`No match/odds are currently available for this team.`,
 			true,
 		)
 		await PendingBetHandler.deletePending(user)
