@@ -1,4 +1,3 @@
-import '@kaname-png/plugin-statcord/register'
 import '@sapphire/plugin-hmr/register'
 import {
 	LogLevel,
@@ -40,13 +39,6 @@ const SapDiscClient = new SapphireClient({
 	},
 	typing: true,
 	loadMessageCommandListeners: true,
-	statcord: {
-		client_id: `${process.env.botsId}`,
-		key: process.env.STATCORD_KEY,
-		autopost: true, // (Optional) Allows automatic posting of statistics.
-		debug: false, // (Optional) Show debug messages.
-		sharding: false, // (Optional) Activate the sharding mode, it is important to read the notes below.
-	},
 })
 
 await logClr({
