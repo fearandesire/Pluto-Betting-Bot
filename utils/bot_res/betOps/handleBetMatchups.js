@@ -118,10 +118,11 @@ export async function handleBetMatchups() {
 				description: `Processed bets for matchup ${MATCHUP.home_team} vs ${MATCHUP.away_team}`,
 			})
 			let channelTitle
+			// ? Account for public-facing channel difference of `vs` anad `at`; Preference for each server
 			if (SPORT === 'nba') {
-				channelTitle = `${MATCHUP.home_team} vs ${MATCHUP.away_team}`
+				channelTitle = `${MATCHUP.away_team} vs ${MATCHUP.home_team}`
 			} else {
-				channelTitle = `${MATCHUP.home_team} at ${MATCHUP.away_team}`
+				channelTitle = `${MATCHUP.away_team} at ${MATCHUP.home_team}`
 			}
 			await queueDeleteChannel(channelTitle)
 		}
