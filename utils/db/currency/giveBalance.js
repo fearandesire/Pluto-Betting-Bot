@@ -9,7 +9,7 @@ import {
 import { giveMoneyLog, dmLog } from '#winstonLogger'
 
 import { isInServer } from '../../bot_res/isInServer.js'
-import embedColors from "../../../lib/colorsConfig.js"
+import embedColors from '../../../lib/colorsConfig.js'
 
 /**
  * @module giveBalance - Give money / dollars to a specified user
@@ -54,7 +54,7 @@ export async function giveBalance(
 			const receivedMoneyEmb = {
 				title: `:moneybag: Received Money`,
 				description: `You have received $${transferammount} from <@${interaction.user.id}>!`,
-				color: `#00ff40`,
+				color: `${embedColors.PlutoBrightGreen}`,
 				footer: '',
 			}
 			await SapDiscClient.users
