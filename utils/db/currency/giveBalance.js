@@ -10,6 +10,7 @@ import { giveMoneyLog, dmLog } from '#winstonLogger'
 
 import { isInServer } from '../../bot_res/isInServer.js'
 import embedColors from '../../../lib/colorsConfig.js'
+import { convertColor } from '../../bot_res/embeds/embedReply.js'
 
 /**
  * @module giveBalance - Give money / dollars to a specified user
@@ -25,7 +26,9 @@ export async function giveBalance(
 	interactionEph,
 ) {
 	Log.Yellow(`[transfer.js] Running transfer!`)
-
+	const embColor = await convertColor(
+		embedColors.PlutoBrightGreen,
+	)
 	db.tx('processClaim-Transaction', async (t) => {
 		const findUser = await t.oneOrNone(
 			`SELECT * FROM "${CURRENCY}" WHERE userid = $1`,
@@ -54,9 +57,10 @@ export async function giveBalance(
 			const receivedMoneyEmb = {
 				title: `:moneybag: Received Money`,
 				description: `You have received $${transferammount} from <@${interaction.user.id}>!`,
-				color: `${embedColors.PlutoBrightGreen}`,
+				color: `${embColor}`,
 				footer: '',
 			}
+
 			await SapDiscClient.users
 				.fetch(`${targetUserId}`)
 				.then(async (user) => {
