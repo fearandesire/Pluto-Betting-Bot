@@ -1,8 +1,8 @@
 /* eslint-disable no-continue */
 import fetch from 'node-fetch'
 import Promise from 'bluebird'
-import { LIVEMATCHUPS } from '#config'
-import { SCORE, SPORT } from '#env'
+import { LIVEMATCHUPS, SCORE } from '#config'
+import { SPORT } from '#env'
 import { db } from '#db'
 import { determineWinner } from './determineWinner.js'
 import { MatchupManager } from '#MatchupManager'
