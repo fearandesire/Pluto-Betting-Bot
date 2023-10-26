@@ -76,6 +76,7 @@ export async function handleBetMatchups() {
 		const isBeingClosed = await closingQueue.inProgress(
 			MATCHUP.home_team,
 			MATCHUP.away_team,
+			id,
 		)
 
 		if (isBeingClosed) {
