@@ -23,7 +23,7 @@ export default async function completedChecks(dates) {
 	const hourStr = `${hour}-23`
 	const day = getDate(betsHeartbeat)
 	const month = betsHeartbeat.getMonth()
-	const cronStr1 = `*/5 ${hourStr} ${day} ${month} *`
+	const cronStr1 = `*/5 ${hourStr} ${day} ${month + 1} *`
 	// Return the time in Cron via IsoManager
 	return cronStr1
 }
