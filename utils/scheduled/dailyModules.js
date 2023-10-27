@@ -41,7 +41,6 @@ export async function dbDailyOps() {
 			await clearScheduled(), // Clear Cached Scheduled Games
 			await clearPendingBets(), // Clear Pending Bets - In this context, bets that have not been confirmed or cancelled.
 			await collectOdds(), // Collect Odds on-start [Instant]
-
 			await cronScheduleGames(games), // Check for any games that need to be scheduled now (Game Channels) [Instant]
 			await init_Cron_Chan_Scheduler(), // Start Cron to schedule games daily (Game Channels) [Daily]
 			await init_Cron_Completed(), // Start range generation on-startup [Instant]
