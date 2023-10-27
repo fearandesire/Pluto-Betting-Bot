@@ -21,7 +21,6 @@ test('generateCronJobs returns true on success', async (t) => {
 	]
 
 	const result = await cronRangeGenerator(matchesArr)
-	console.log(`Test Result:\n`, result)
 	// # Ensure result is an object
 	t.true(typeof result === 'object')
 	// # Ensure we have `range1` and `range2` properties which both should be strings

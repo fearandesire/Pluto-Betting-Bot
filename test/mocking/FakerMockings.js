@@ -30,6 +30,45 @@ const NFLTEAMS = [
 ]
 
 export default class GameSchema {
+	static generateGame(args) {
+		const { startInPast, completed } = args
+		let start = formatISO(faker.date.future())
+		if (startInPast === true) {
+			start = formatISO(faker.date.recent())
+		}
+		const home_team =
+			faker.helpers.arrayElement(NFLTEAMS)
+		const away_team =
+			faker.helpers.arrayElement(NFLTEAMS)
+		const game = {
+			id: faker.string.uuid(),
+			sport_key: 'basketball_nba',
+			sport_title: 'NBA',
+			commence_time: start,
+			completed,
+			home_team,
+			away_team,
+			scores: [
+				{
+					name: home_team,
+					// Random score
+					score: faker.datatype.number({
+						min: 0,
+						max: 100,
+					}),
+				},
+				{
+					name: away_team,
+					score: faker.datatype.number({
+						min: 0,
+						max: 100,
+					}),
+				},
+			],
+		}
+		return game
+	}
+
 	/**
 	 * Generates a game object with random data.
 	 *
@@ -39,7 +78,7 @@ export default class GameSchema {
 	 * @return {Object} The generated game object.
 	 */
 
-	static generateGame(args) {
+	static generateGameESPN(args) {
 		const { startInPast, completed } = args
 		let start = formatISO(faker.date.future())
 		if (startInPast === true) {
