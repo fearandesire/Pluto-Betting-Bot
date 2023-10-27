@@ -1,6 +1,7 @@
 /* eslint-disable no-continue */
 import fetch from 'node-fetch'
 import Promise from 'bluebird'
+import _ from 'lodash'
 import { LIVEMATCHUPS } from '#config'
 import { SCORE, SPORT } from '#env'
 import { db } from '#db'
@@ -51,11 +52,17 @@ export async function handleBetMatchups() {
 		return
 	}
 	const gamesCollected = apiJSON
+
+	// Only handle completed games
+	const filteredForCompleted = await _.filter(
+		gamesCollected,
+		(game) => game.completed,
+	)
 	// Class to check progress of closing games
 	const closingQueue = new ClosingQueue()
 	// eslint-disable-next-line no-unused-vars
 	const betPromises = await Object.entries(
-		gamesCollected,
+		filteredForCompleted,
 	).map(async ([, MATCHUP]) => {
 		const { id } = MATCHUP
 		const { completed } = MATCHUP
@@ -79,6 +86,14 @@ export async function handleBetMatchups() {
 		)
 
 		if (isBeingClosed) {
+			return
+		}
+
+		if (MATCHUP.scores === null) {
+			await PlutoLogger.log({
+				id: 3,
+				description: `No scores found for matchup ${MATCHUP.home_team} vs ${MATCHUP.away_team}`,
+			})
 			return
 		}
 
