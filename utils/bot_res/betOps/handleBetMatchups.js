@@ -1,6 +1,7 @@
 /* eslint-disable no-continue */
 import fetch from 'node-fetch'
 import Promise from 'bluebird'
+import _ from 'lodash'
 import { LIVEMATCHUPS, SCORE } from '#config'
 import { SPORT } from '#env'
 import { db } from '#db'
