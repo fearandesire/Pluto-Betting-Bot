@@ -1,9 +1,8 @@
 /* eslint-disable no-continue */
 import fetch from 'node-fetch'
 import Promise from 'bluebird'
-import _ from 'lodash'
-import { LIVEMATCHUPS } from '#config'
-import { SCORE, SPORT } from '#env'
+import { LIVEMATCHUPS, SCORE } from '#config'
+import { SPORT } from '#env'
 import { db } from '#db'
 import { determineWinner } from './determineWinner.js'
 import { MatchupManager } from '#MatchupManager'
@@ -83,6 +82,7 @@ export async function handleBetMatchups() {
 		const isBeingClosed = await closingQueue.inProgress(
 			MATCHUP.home_team,
 			MATCHUP.away_team,
+			id,
 		)
 
 		if (isBeingClosed) {

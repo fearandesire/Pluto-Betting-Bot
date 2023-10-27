@@ -177,7 +177,7 @@ export default class XPHandler {
 	async updateUserLevel(newLevel) {
 		// Update user's level in database
 		await db.none(
-			`UPDATE ${this.xpTable} SET level = ${newLevel} WHERE userid = $1`,
+			`UPDATE "${this.xpTable}" SET level = ${newLevel} WHERE userid = $1`,
 			[this.userId],
 		)
 		this.userLevel = newLevel // Update cached level
