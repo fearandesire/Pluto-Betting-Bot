@@ -1,6 +1,7 @@
 import discord from 'discord.js'
 import embedColors from '../../../lib/colorsConfig.js'
 import logClr from '#colorConsole'
+import { bettingChan } from '../../serverConfig.js'
 
 const { EmbedBuilder } = discord
 
@@ -30,6 +31,7 @@ export default class BetNotify {
 
 		let msg
 		let color
+		const extraInfo = `Go to the <#${bettingChan}> channel and:\n- View your place on the \`/leaderboard\`\n- Place more bets with \`/bet\`!`
 		if (betResult === `won`) {
 			const newUserBal = Math.floor(currentBalance)
 			msg = `You won your bet on the ${teamBetOn}! :moneybag: \n\n**You had bet:** **\`$${betAmount}\`**\n**Profit:** **\`$${profit}\`**\n**Payout:** **\`$${payout}\`**\n**Balance**: *\`$${oldBalance}\`* => **\`$${newUserBal}\`**`
@@ -38,8 +40,7 @@ export default class BetNotify {
 			msg = `You lost your $${betAmount} bet on the ${teamBetOn}.\nSorry, better luck next time!`
 			color = embedColors.PlutoRed
 		}
-
-		msg += `\n\n*See an issue here? Please contact <@208016830491525120> | Bet ID: ${betId}*`
+		msg += `\n\n${extraInfo}\n*Issues? please contact: <@208016830491525120> | Bet ID: \`${betId}\`*`
 
 		const embed = new EmbedBuilder()
 			.setTitle(`Bet Result`)
