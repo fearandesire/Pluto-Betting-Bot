@@ -9,20 +9,16 @@ import locateChannel from '../../bot_res/locateChan.js'
  */
 
 export async function deleteChan(channelName) {
-    console.log(
-        `Locating channel ${channelName.toLowerCase()}`,
-    )
-    const gameChan = await locateChannel(channelName)
-    if (!gameChan) {
-        await Log.Red(
-            `Unable to locate channel ${channelName} to delete.`,
-            `#ff0000`,
-        )
-        return false
-    }
-    console.log(
-        `Located channel ${gameChan.name} | ${gameChan.id}`,
-    )
-    await gameChan.delete()
-    return true
+	// Replace spaces with -
+	const parsedChanName = channelName.replace(/\s/g, '-')
+	const gameChan = await locateChannel(parsedChanName)
+	if (!gameChan) {
+		await Log.Red(
+			`Unable to locate channel ${parsedChanName} to delete.`,
+			`#ff0000`,
+		)
+		return false
+	}
+	await gameChan.delete()
+	return true
 }
