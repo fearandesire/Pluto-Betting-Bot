@@ -12,6 +12,7 @@ import { closeBets } from '../../db/betOps/closeBets/closeBets.js'
 import { queueDeleteChannel } from '../../db/gameSchedule/queueDeleteChannel.js'
 import ClosingQueue from '../../db/matchupOps/ClosingQueue.js'
 import logClr from '#colorConsole'
+import { getShortName } from '../getShortName.js'
 
 const url = SCORE
 const options = {
@@ -134,11 +135,18 @@ export async function handleBetMatchups() {
 				description: `Processed bets for matchup ${MATCHUP.home_team} vs ${MATCHUP.away_team}`,
 			})
 			let channelTitle
+			// Channels are using the 'shortname' of a team - e.g Celtics vs Lakers
+			const aTeamShortName = getShortName(
+				MATCHUP.away_team,
+			)
+			const hTeamShortName = getShortName(
+				MATCHUP.home_team,
+			)
 			// ? Account for public-facing channel difference of `vs` anad `at`; Preference for each server
 			if (SPORT === 'nba') {
-				channelTitle = `${MATCHUP.away_team} vs ${MATCHUP.home_team}`
+				channelTitle = `${aTeamShortName.toLowerCase()} vs ${hTeamShortName.toLowerCase()}`
 			} else {
-				channelTitle = `${MATCHUP.away_team} at ${MATCHUP.home_team}`
+				channelTitle = `${aTeamShortName.toLowerCase()} at ${hTeamShortName.toLowerCase()}`
 			}
 			await queueDeleteChannel(channelTitle)
 		}
