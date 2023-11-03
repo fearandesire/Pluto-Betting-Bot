@@ -11,7 +11,7 @@ import PlutoLogger from '#PlutoLogger'
  */
 export async function queueDeleteChannel(gameChanName) {
 	const rn = new Date()
-	const currMin = addMinutes(rn, 30) // format current time + x minutes
+	const currMin = addMinutes(rn, 5) // format current time + x minutes
 	const newMinRaw = format(currMin, 's mm H d M i')
 	const splitTime = newMinRaw.split(' ')
 	// eslint-disable-next-line no-unused-vars
@@ -24,7 +24,7 @@ export async function queueDeleteChannel(gameChanName) {
 	const cronString = `0 ${mins} ${hours} ${day} ${month} ${dayOfWeek}`
 	await PlutoLogger.log({
 		id: 2,
-		description: `Deleting game channel ${gameChanName} in 30 minutes.`,
+		description: `Deleting game channel ${gameChanName} in 5 minutes.`,
 	})
 	cron.schedule(cronString, async () => {
 		try {

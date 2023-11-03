@@ -25,8 +25,8 @@ export default class ClosingQueue {
 
 	async inProgress(homeTeam, awayTeam, id) {
 		const match = await db.oneOrNone(
-			` SELECT * FROM "${LIVEMATCHUPS}" WHERE teamone = $1 OR teamtwo = $2 AND id = $3`,
-			[homeTeam, awayTeam, id],
+			` SELECT * FROM "${LIVEMATCHUPS}" WHERE id = $1`,
+			[id],
 		)
 		return match?.inprogress || false
 	}
