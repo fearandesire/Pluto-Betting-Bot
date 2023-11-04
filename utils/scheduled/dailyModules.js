@@ -52,5 +52,6 @@ export async function dbDailyOps() {
 		])
 	} catch (err) {
 		Log.Red(err)
+		console.log(err)
 	}
 }
