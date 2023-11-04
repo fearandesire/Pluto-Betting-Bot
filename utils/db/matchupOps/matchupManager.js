@@ -13,8 +13,8 @@ export class MatchupManager {
 	 * Locate matchup via ID
 	 */
 
-	static async getViaId(id) {
-		const matchup = db.oneOrNone(
+	static async getViaId(id, dbCnx) {
+		const matchup = dbCnx.oneOrNone(
 			`
 		SELECT * FROM "${LIVEMATCHUPS}" WHERE id = $1`,
 			[id],
@@ -80,16 +80,9 @@ export class MatchupManager {
 	 * @param {string} team - Team to locate bets on the matchup
 	 * @returns {boolean} True if found, false otherwise
 	 */
-	static async outstandingBets(team) {
-		const matchData = await resolveMatchup(team)
-		if (!matchData) {
-			return false
-		}
-		// use ID to find if there's any bets
-		const { matchid } = matchData
-		// check currently active bets for any bets with matchid
-		const bets = await db.any(
-			`SELECT * FROM "${LIVEBETS}" WHERE matchid = '${matchid}'`,
+	static async outstandingBets(id, dbCnx) {
+		const bets = await dbCnx.any(
+			`SELECT * FROM "${LIVEBETS}" WHERE matchid = '${id}'`,
 		)
 		if (_.isEmpty(bets)) {
 			return false
@@ -97,7 +90,7 @@ export class MatchupManager {
 		return true
 	}
 
-	static async storeMatchups(columnData) {
+	static async storeMatchups(columnData, dbCnx) {
 		const {
 			teamOne,
 			teamTwo,
@@ -111,7 +104,7 @@ export class MatchupManager {
 			idApi,
 		} = columnData
 
-		await db
+		await dbCnx
 			.none(
 				`INSERT INTO "${LIVEMATCHUPS}" (matchid, teamOne, teamTwo, teamOneOdds, teamTwoOdds, dateofmatchup, start, cronstart, legiblestart, id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
 				[
@@ -190,17 +183,17 @@ export class MatchupManager {
 	 * @param {string} hTeam - Home team
 	 * @param {string} aTeam - Away team
 	 */
-	static async rmvMatchupOdds(hTeam, aTeam) {
+	static async rmvMatchupOdds(id, dbCnx) {
 		try {
-			await db.none(
-				`DELETE FROM "${LIVEMATCHUPS}" WHERE teamone = $1 AND teamtwo = $2`,
-				[hTeam, aTeam],
+			await dbCnx.none(
+				`DELETE FROM "${LIVEMATCHUPS}" WHERE id = $1`,
+				[id],
 			)
 			return true
 		} catch (err) {
 			await PlutoLogger.log({
 				id: 1,
-				description: `Error occured removing matchup ${hTeam} vs ${aTeam} from the database`,
+				description: `Error occured removing matchup from the database.\nMatch ID: ${id}`,
 			})
 			return false
 		}

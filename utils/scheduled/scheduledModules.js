@@ -18,6 +18,10 @@ import collectOdds from '../bot_res/betOps/collectOdds.js'
 import { TodaysDate } from '../date/TodaysDate.js'
 
 export async function queueMidnightCheck() {
+	await PlutoLogger.log({
+		id: 0,
+		description: `Queueing midnight check for completed games`,
+	})
 	await Cron(
 		`00 00 * * *`,
 		{

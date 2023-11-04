@@ -12,10 +12,10 @@ import XPHandler from '../../../xp/XPHandler.js'
 
 const betNotify = new BetNotify(SapDiscClient)
 
-async function getBets(winningTeam, losingTeam) {
-	return db.manyOrNone(
-		`SELECT * FROM "${BETSLIPS}" WHERE teamid = $1 AND betresult = 'pending' OR teamid = $2 AND betresult = 'pending'`,
-		[winningTeam, losingTeam],
+async function getBets(matchid, dbCnx) {
+	return dbCnx.manyOrNone(
+		`SELECT * FROM "${BETSLIPS}" WHERE matchid = $1 and betresult = 'pending`,
+		[matchid],
 	)
 }
 
@@ -103,6 +103,7 @@ async function closeBets(
 	winningTeam,
 	losingTeam,
 	matchInfo,
+	dbCnx,
 ) {
 	// eslint-disable-next-line no-async-promise-executor
 	return new Promise(async (resolve) => {
@@ -122,8 +123,8 @@ async function closeBets(
 				}
 
 				const bets = await getBets(
-					winningTeam,
-					losingTeam,
+					matchInfo.matchid,
+					dbCnx,
 				)
 
 				if (_.isEmpty(bets)) {

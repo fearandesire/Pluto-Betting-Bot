@@ -49,80 +49,92 @@ export default async function collectOdds() {
 		})
 		return false
 	}
-
-	const matchups = {}
-	await Promise.map(filteredPastGames, async (game) => {
-		const idApi = game.id
-
-		// # Prevent duplicates by checking for the id
-		const existingMatchup = await db.oneOrNone(
-			`SELECT * FROM "${LIVEMATCHUPS}" WHERE id = $1`,
-			[idApi],
+	// Create db transaction as we will have several queries
+	await db.tx(`collectOdds`, async (t) => {
+		// Make a single query to get an array of all `id` values in matchups table
+		const matchupIds = await t.manyOrNone(
+			`SELECT id FROM "${LIVEMATCHUPS}"`,
 		)
-		if (!_.isEmpty(existingMatchup)) {
-			return
-		}
+		const matchups = {}
+		await Promise.map(
+			filteredPastGames,
+			async (game) => {
+				const idApi = game.id
 
-		const homeTeam = game.home_team
-		const awayTeam = game.away_team
-		const matchupPath =
-			game.bookmakers[0]?.markets[0].outcomes
-		const homeOdds = _.find(matchupPath, {
-			name: homeTeam,
-		})?.price
-		const awayOdds = _.find(matchupPath, {
-			name: awayTeam,
-		})?.price
+				// # Prevent duplicates by checking for the id
+				const existingMatchup =
+					_.find(matchupIds, {
+						id: idApi,
+					}) || null
+				if (existingMatchup !== null) {
+					return
+				}
+				const homeTeam = game.home_team
+				const awayTeam = game.away_team
+				const matchupPath =
+					game.bookmakers[0]?.markets[0].outcomes
+				const homeOdds = _.find(matchupPath, {
+					name: homeTeam,
+				})?.price
+				const awayOdds = _.find(matchupPath, {
+					name: awayTeam,
+				})?.price
 
-		// Skip games without odds information
-		if (!homeOdds || !awayOdds) {
-			return
-		}
-		// Generate unique ID for the game
-		const gameId = await assignMatchID()
+				// Skip games without odds information
+				if (!homeOdds || !awayOdds) {
+					return
+				}
+				// Generate unique ID for the game
+				const gameId = await assignMatchID()
 
-		// Store the odds information and other data for the game
-		_.assign(matchups, {
-			[gameId]: {
-				home_team: homeTeam,
-				away_team: awayTeam,
-				home_teamOdds: homeOdds,
-				away_teamOdds: awayOdds,
-				matchupId: gameId,
-				start_time: game.commence_time,
+				// Store the odds information and other data for the game
+				_.assign(matchups, {
+					[gameId]: {
+						home_team: homeTeam,
+						away_team: awayTeam,
+						home_teamOdds: homeOdds,
+						away_teamOdds: awayOdds,
+						matchupId: gameId,
+						start_time: game.commence_time,
+					},
+				})
+
+				// Generate date & time info
+				const isoManager = new IsoManager(
+					game.commence_time,
+				)
+				const gameDate = isoManager.mdy
+				const cronStartTime = isoManager.cron
+
+				const legibleStart = isoManager.legible
+				const colmdata = {
+					teamOne: homeTeam,
+					teamTwo: awayTeam,
+					teamOneOdds: homeOdds,
+					teamTwoOdds: awayOdds,
+					matchupId: gameId,
+					gameDate,
+					start: game.commence_time,
+					cronStartTime,
+					legibleStartTime: legibleStart,
+					idApi,
+				}
+				await MatchupManager.storeMatchups(
+					colmdata,
+					t,
+				)
 			},
-		})
-
-		// Generate date & time info
-		const isoManager = new IsoManager(
-			game.commence_time,
 		)
-		const gameDate = isoManager.mdy
-		const cronStartTime = isoManager.cron
 
-		const legibleStart = isoManager.legible
-		const colmdata = {
-			teamOne: homeTeam,
-			teamTwo: awayTeam,
-			teamOneOdds: homeOdds,
-			teamTwoOdds: awayOdds,
-			matchupId: gameId,
-			gameDate,
-			start: game.commence_time,
-			cronStartTime,
-			legibleStartTime: legibleStart,
-			idApi,
-		}
-		await MatchupManager.storeMatchups(colmdata) // # Store in database
-	})
-	const gameCount = _.size(matchups)
-	const msg =
-		gameCount > 0
-			? `Collected & updated odds for ${gameCount} games.`
-			: `Collected odds, but no new data was to be updated.`
-	await PlutoLogger.log({
-		id: 3,
-		description: msg,
+		const gameCount = _.size(matchups)
+		const msg =
+			gameCount > 0
+				? `Collected & updated odds for ${gameCount} games.`
+				: `Collected odds, but no new data was to be updated.`
+		await PlutoLogger.log({
+			id: 3,
+			description: msg,
+		})
 	})
 	return true
 }

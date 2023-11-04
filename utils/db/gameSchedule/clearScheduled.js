@@ -20,7 +20,6 @@ export default async function clearScheduled() {
 			}
 			return false
 		})
-	await Cache().remove(`scheduled`)
 
 	await logClr({
 		text: `Cleared scheduled games`,

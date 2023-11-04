@@ -82,7 +82,8 @@ export async function getHeartbeat() {
 		// # Another solution would be to remove completed checks from handleBetMatchups, or passing in the game ID and winner to handleBetMatchups directly
 		const betsExisting =
 			await MatchupManager.outstandingBets(
-				game.home_team,
+				game.id,
+				db,
 			)
 		if (!betsExisting) {
 			// ! Remove from Score Tbl

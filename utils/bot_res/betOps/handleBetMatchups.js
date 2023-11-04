@@ -59,99 +59,104 @@ export async function handleBetMatchups() {
 		gamesCollected,
 		(game) => game.completed,
 	)
-	// Class to check progress of closing games
-	const closingQueue = new ClosingQueue()
-	// eslint-disable-next-line no-unused-vars
-	const betPromises = await Object.entries(
-		filteredForCompleted,
-	).map(async ([, MATCHUP]) => {
-		const { id } = MATCHUP
-		const { completed } = MATCHUP
-		const isCompleted = completed
+	// Init db transaction
+	const dbCnx = await db.tx(
+		`handleBetMatchups`,
+		async (t) => {
+			// Init class to check progress of closing games
+			const closingQueue = new ClosingQueue()
+			// eslint-disable-next-line no-unused-vars
+			const betPromises = await Object.entries(
+				filteredForCompleted,
+			).map(async ([, MATCHUP]) => {
+				const { id } = MATCHUP
+				const { completed } = MATCHUP
+				const isCompleted = completed
 
-		if (!isCompleted) {
-			return
-		}
+				if (!isCompleted) {
+					return
+				}
 
-		const matchExists = await MatchupManager.getViaId(
-			id,
-		)
+				const matchExists =
+					await MatchupManager.getViaId(id, t)
 
-		if (!matchExists) {
-			return
-		}
-		// ? Validation: Bets are not in the process of being closed right now for this matchup
-		const isBeingClosed = await closingQueue.inProgress(
-			MATCHUP.home_team,
-			MATCHUP.away_team,
-			id,
-		)
+				if (!matchExists) {
+					return
+				}
+				// ? Validation: Bets are not in the process of being closed right now for this matchup
+				const isBeingClosed =
+					await closingQueue.inProgress(id, t)
 
-		if (isBeingClosed) {
-			return
-		}
+				if (isBeingClosed) {
+					return
+				}
 
-		if (MATCHUP.scores === null) {
-			await PlutoLogger.log({
-				id: 3,
-				description: `No scores found for matchup ${MATCHUP.home_team} vs ${MATCHUP.away_team}`,
+				if (MATCHUP.scores === null) {
+					await PlutoLogger.log({
+						id: 3,
+						description: `No scores found for matchup ${MATCHUP.home_team} vs ${MATCHUP.away_team}`,
+					})
+					return
+				}
+
+				// ? Matchup is validated |> Process matchup
+
+				const detWin = await determineWinner(
+					MATCHUP,
+				)
+
+				const { winner: winningTeam, losingTeam } =
+					detWin
+
+				// ? Set status of matchup closing to true
+				await closingQueue.setProgress(id, dbCnx)
+
+				const matchInfo = await getMatchInfo(id, t)
+
+				// ! Close Bets for this matchup
+				await closeBets(
+					winningTeam,
+					losingTeam,
+					matchInfo,
+					t,
+				)
+
+				// # Ensure bets are closed for the matchup. If not, don't delete the matchup from the DB.
+				// # However, it will currently need to be manually supervised in this case. The match is set to `inprogress` so it won't be procssed for bets again.
+				const betsExisting =
+					await MatchupManager.outstandingBets(
+						id,
+						dbCnx,
+					)
+				if (!betsExisting) {
+					await MatchupManager.rmvMatchupOdds(
+						id,
+						dbCnx,
+					)
+					await PlutoLogger.log({
+						id: 3,
+						description: `Processed bets for matchup ${MATCHUP.home_team} vs ${MATCHUP.away_team}`,
+					})
+					let channelTitle
+					// Channels are using the 'shortname' of a team - e.g Celtics vs Lakers
+					const aTeamShortName = getShortName(
+						MATCHUP.away_team,
+					)
+					const hTeamShortName = getShortName(
+						MATCHUP.home_team,
+					)
+					// ? Account for public-facing channel difference of `vs` anad `at`; Preference for each server
+					if (SPORT === 'nba') {
+						channelTitle = `${aTeamShortName.toLowerCase()} vs ${hTeamShortName.toLowerCase()}`
+					} else {
+						channelTitle = `${aTeamShortName.toLowerCase()} at ${hTeamShortName.toLowerCase()}`
+					}
+					await queueDeleteChannel(channelTitle)
+				}
 			})
-			return
-		}
-
-		// ? Matchup is validated |> Process matchup
-
-		const detWin = await determineWinner(MATCHUP)
-
-		const { winner: winningTeam, losingTeam } = detWin
-
-		// ? Set status of matchup closing to true
-		await closingQueue.setProgress(
-			MATCHUP.home_team,
-			MATCHUP.away_team,
-		)
-
-		const matchInfo = await getMatchInfo(
-			winningTeam,
-			losingTeam,
-		)
-
-		// ! Close Bets for this matchup
-		await closeBets(winningTeam, losingTeam, matchInfo)
-
-		// # Ensure bets are closed for the matchup. If not, don't delete the matchup from the DB.
-		// # However, it will currently need to be manually supervised in this case. The match is set to `inprogress` so it won't be procssed for bets again.
-		const betsExisting =
-			await MatchupManager.outstandingBets(
-				MATCHUP.home_team,
-			)
-		if (!betsExisting) {
-			await MatchupManager.rmvMatchupOdds(
-				MATCHUP.home_team,
-				MATCHUP.away_team,
-			)
-			await PlutoLogger.log({
-				id: 3,
-				description: `Processed bets for matchup ${MATCHUP.home_team} vs ${MATCHUP.away_team}`,
-			})
-			let channelTitle
-			// Channels are using the 'shortname' of a team - e.g Celtics vs Lakers
-			const aTeamShortName = getShortName(
-				MATCHUP.away_team,
-			)
-			const hTeamShortName = getShortName(
-				MATCHUP.home_team,
-			)
-			// ? Account for public-facing channel difference of `vs` anad `at`; Preference for each server
-			if (SPORT === 'nba') {
-				channelTitle = `${aTeamShortName.toLowerCase()} vs ${hTeamShortName.toLowerCase()}`
-			} else {
-				channelTitle = `${aTeamShortName.toLowerCase()} at ${hTeamShortName.toLowerCase()}`
-			}
-			await queueDeleteChannel(channelTitle)
-		}
-	})
-	await Promise.all(betPromises)
+			await Promise.all(betPromises)
+		},
+	)
 }
 
 /**
@@ -162,9 +167,9 @@ export async function handleBetMatchups() {
  * @return {Promise<Object|null>} A Promise that resolves to the match information for the two teams,
  *         or null if no match information is found.
  */
-async function getMatchInfo(teamOne, teamTwo) {
-	return db.oneOrNone(
-		`SELECT * FROM "${LIVEMATCHUPS}" WHERE teamone = $1 AND teamtwo = $2 OR teamone = $2 AND teamtwo = $1`,
-		[teamOne, teamTwo],
+async function getMatchInfo(id, dbCnx) {
+	return dbCnx.oneOrNone(
+		`SELECT * FROM "${LIVEMATCHUPS}" WHERE id = $1`,
+		[id],
 	)
 }

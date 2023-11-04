@@ -31,7 +31,8 @@ const sslrootcert = `${rootDir}/ca-certificate.crt`
 
 const cnString = `${SQLStr}sslrootcert=${sslrootcert}`
 
-export const db = pgp(cnString, {
+export const db = pgp({
+	connectionString: cnString,
 	idleTimeoutMillis: 5000,
-	max: 2,
+	max: 10,
 })
