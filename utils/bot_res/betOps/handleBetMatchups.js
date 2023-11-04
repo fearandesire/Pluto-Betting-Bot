@@ -124,8 +124,8 @@ export async function handleBetMatchups() {
 				// # However, it will currently need to be manually supervised in this case. The match is set to `inprogress` so it won't be procssed for bets again.
 				const betsExisting =
 					await MatchupManager.outstandingBets(
-						id,
-						dbCnx,
+						matchInfo.matchid,
+						t,
 					)
 				if (!betsExisting) {
 					await MatchupManager.rmvMatchupOdds(
