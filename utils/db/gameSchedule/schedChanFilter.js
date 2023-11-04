@@ -14,6 +14,7 @@ import IsoManager from '#iso'
 export async function filterGamesArr(args) {
 	const { gamesArr, SPORT } = args
 	const filterGames = gamesArr.filter((game) => {
+		const gameInfo = `${game.teamone} vs ${game.teamtwo}\n${game.id}`
 		// ? Filter via date
 		let thisWeek
 		const dateManager = new IsoManager(game.start)
@@ -40,6 +41,9 @@ export async function filterGamesArr(args) {
 			return false
 		}
 		if (!thisWeek) {
+			console.log(
+				`Skipped scheduling game due to it being in another week\n${gameInfo}`,
+			)
 			return false
 		}
 

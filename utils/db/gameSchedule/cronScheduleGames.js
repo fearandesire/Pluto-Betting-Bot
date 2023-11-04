@@ -43,6 +43,9 @@ export default async function cronScheduleGames(gamesArr) {
 	await Promise.map(
 		filterGames,
 		async (game) => {
+			if (game.completed) {
+				return
+			}
 			const isoManager = new IsoManager(game.start)
 			let cronTime = null
 			const parsedGameDate = parseISO(game.start)
@@ -66,7 +69,11 @@ export default async function cronScheduleGames(gamesArr) {
 			const chanExist = await locateChannel(
 				matchupStr,
 			)
+			const gameInfo = `${game.teamone} vs ${game.teamtwo}\n${game.id}`
 			if (chanExist) {
+				console.log(
+					`Skipped scheduling game due to the channel existing already \n${gameInfo}`,
+				)
 				return
 			}
 
