@@ -1,5 +1,6 @@
 import _ from 'lodash'
 import { Cron } from 'croner'
+import { subDays } from 'date-fns'
 import logClr from '#colorConsole'
 import cronScheduleGames from '../db/gameSchedule/cronScheduleGames.js'
 import PlutoLogger from '#PlutoLogger'
@@ -14,6 +15,72 @@ import cronCompletedChecks from '../bot_res/cronCompletedChecks.js'
 import { getHeartbeat } from '../bot_res/betOps/gameHeartbeat.js'
 import { handleBetMatchups } from '../bot_res/betOps/handleBetMatchups.js'
 import collectOdds from '../bot_res/betOps/collectOdds.js'
+import { TodaysDate } from '../date/TodaysDate.js'
+
+export async function queueMidnightCheck() {
+	await Cron(
+		`00 00 * * *`,
+		{
+			timezone: 'America/New_York',
+		},
+		async () => {
+			await midnightCheckCompleted()
+		},
+	)
+}
+
+/**
+ * West Coast games start late and tend to end after midnight
+ * This function is a solution to the `checkCompleted` Cron strings we generate
+ */
+export async function midnightCheckCompleted() {
+	const wasGameDay = await priorGameDay()
+	if (wasGameDay) {
+		await Cron(
+			`*/5 00-02 * * *`,
+			{
+				timezone: 'America/New_York',
+			},
+			async () => {
+				await PlutoLogger.log({
+					description: `Executing completed game checks\nMidnight - 2 AM`,
+					id: 2,
+				})
+				await handleBetMatchups()
+			},
+		)
+	}
+}
+
+/**
+ * Checks if there are games that were scheduled for the prior day
+ * Call matchups table in DB and verify against `dateofmatchup` (MM/DD/YYYY) against today
+ *
+ */
+
+export async function priorGameDay() {
+	const matches = await MatchupManager.getAllMatchups()
+	if (_.isEmpty(matches)) {
+		return false
+	}
+	const dates = _.map(matches, 'dateofmatchup')
+	// Get todays date in MM/DD/YYYY
+	const todaysDate = TodaysDate()
+	// Minus 1 day from the date
+	const priorDate = subtractOneDay(todaysDate)
+	if (dates.includes(priorDate)) {
+		return true
+	}
+	return false
+}
+
+function subtractOneDay(dateString) {
+	const date = new Date(dateString)
+	const previousDay = subDays(date, 1)
+	const formattedDate =
+		previousDay.toLocaleDateString('en-GB')
+	return formattedDate
+}
 
 /**
  * @instant
@@ -47,6 +114,7 @@ async function checkForCompleted(cronTime) {
 		color: `blue`,
 		status: `processing`,
 	})
+	// Set 1: Based on time of games collected
 	await Cron(
 		`${cronTime}`,
 		{
@@ -149,6 +217,16 @@ export async function initMatchupHandling() {
  */
 
 export async function init_Cron_Completed() {
+	await Cron(
+		`50 10 * * *`,
+		{
+			timezone: 'America/New_York',
+			name: `testing321`,
+		},
+		async () => {
+			await console.log(`hi`)
+		},
+	)
 	logClr({
 		text: `Init Cron Completed`,
 		color: `yellow`,

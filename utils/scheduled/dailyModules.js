@@ -5,6 +5,7 @@ import {
 	init_Cron_Completed,
 	init_Cron_Chan_Scheduler,
 	initMatchupHandling,
+	queueMidnightCheck,
 } from './scheduledModules.js'
 import logClr from '#colorConsole'
 import cronScheduleGames from '../db/gameSchedule/cronScheduleGames.js'
@@ -44,6 +45,7 @@ export async function dbDailyOps() {
 			await cronScheduleGames(games), // Check for any games that need to be scheduled now (Game Channels) [Instant]
 			await init_Cron_Chan_Scheduler(), // Start Cron to schedule games daily (Game Channels) [Daily]
 			await init_Cron_Completed(), // Start range generation on-startup [Instant]
+			await queueMidnightCheck(), // Cron for checking games @ Midnight - 2 AM
 			await initMatchupHandling(), // Start Cron to generate Cron Ranges & Check for completed games [Daily]
 			await handleBetMatchups(),
 			// await init_Cron_Heartbeat(), // Start Cron for Heartbeats
