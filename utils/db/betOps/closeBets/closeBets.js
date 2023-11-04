@@ -14,7 +14,7 @@ const betNotify = new BetNotify(SapDiscClient)
 
 async function getBets(matchid, dbCnx) {
 	return dbCnx.manyOrNone(
-		`SELECT * FROM "${BETSLIPS}" WHERE matchid = $1 and betresult = 'pending`,
+		`SELECT * FROM "${BETSLIPS}" WHERE matchid = $1 and betresult = 'pending'`,
 		[matchid],
 	)
 }
