@@ -104,12 +104,11 @@ export async function handleBetMatchups() {
 				const detWin = await determineWinner(
 					MATCHUP,
 				)
-
 				const { winner: winningTeam, losingTeam } =
 					detWin
 
 				// ? Set status of matchup closing to true
-				await closingQueue.setProgress(id, dbCnx)
+				await closingQueue.setProgress(id, t)
 
 				const matchInfo = await getMatchInfo(id, t)
 
@@ -131,7 +130,7 @@ export async function handleBetMatchups() {
 				if (!betsExisting) {
 					await MatchupManager.rmvMatchupOdds(
 						id,
-						dbCnx,
+						t,
 					)
 					await PlutoLogger.log({
 						id: 3,
