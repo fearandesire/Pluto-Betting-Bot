@@ -4,6 +4,7 @@ import { newBet } from '#utilBetOps/newBet'
 import { validateUser } from '#utilValidate/validateExistingUser'
 import { isPreSzn } from '#config'
 import PendingBetHandler from '../utils/db/validation/pendingBet.js'
+import isInGuild from '../utils/isInGuild.js'
 
 export class bet extends Command {
 	constructor(context, options) {
@@ -46,6 +47,8 @@ export class bet extends Command {
 	}
 
 	async chatInputRun(interaction) {
+		await isInGuild(interaction)
+
 		if (isPreSzn()) {
 			return interaction.reply({
 				content: `This is unavailable in the preseason.`,

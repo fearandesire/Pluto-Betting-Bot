@@ -71,9 +71,12 @@ export default async function cronScheduleGames(gamesArr) {
 			)
 			const gameInfo = `${game.teamone} vs ${game.teamtwo}\n${game.id}`
 			if (chanExist) {
-				await logClr(
+				await logClr({
+					text:
 					`Skipped scheduling game due to the channel existing already \n${gameInfo}`,
-				)
+					color: `yellow`,
+					status: `done`,
+				})
 				return
 			}
 
