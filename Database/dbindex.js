@@ -34,5 +34,5 @@ const cnString = `${SQLStr}sslrootcert=${sslrootcert}`
 export const db = pgp({
 	connectionString: cnString,
 	idleTimeoutMillis: 60000,
-	max: 15,
+	max: 4,
 })

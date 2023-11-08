@@ -221,16 +221,6 @@ export async function initMatchupHandling() {
  */
 
 export async function init_Cron_Completed() {
-	await Cron(
-		`50 10 * * *`,
-		{
-			timezone: 'America/New_York',
-			name: `testing321`,
-		},
-		async () => {
-			await console.log(`hi`)
-		},
-	)
 	logClr({
 		text: `Init Cron Completed`,
 		color: `yellow`,

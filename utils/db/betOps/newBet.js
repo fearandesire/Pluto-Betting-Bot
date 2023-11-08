@@ -42,7 +42,7 @@ export async function newBet(
 	if (Number(betAmount) < 1) {
 		await QuickError(
 			interaction,
-			`You must bet at leat $1.`,
+			`You must bet at least $1.`,
 			true,
 		)
 		await PendingBetHandler.deletePending(user)
