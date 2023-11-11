@@ -9,6 +9,21 @@ import IsoManager from '#iso'
 import resolveMatchup from './resolveMatchup.js'
 
 export class MatchupManager {
+
+	/**
+	 * Get upcoming games
+	 */
+
+	static async getUpcoming() {
+		const games = await db
+			.manyOrNone(
+				`SELECT * FROM "${LIVEMATCHUPS}" WHERE inprogress = false OR inprogress IS NULL`,
+			)
+			.catch((err) => {
+				throw err
+			})
+		return games
+	}
 	/**
 	 * Locate matchup via ID
 	 */

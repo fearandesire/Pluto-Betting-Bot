@@ -76,7 +76,7 @@ export default async function parseScheduled(
 		groupedGames,
 		dayOrder,
 	)
-
+	const gamesCount = _.size(scheduledArr)
 	const fields = []
 	// Create the Discord Embed
 	const emb = new EmbedBuilder()
@@ -91,7 +91,7 @@ export default async function parseScheduled(
 			.join('\n')
 		fields.push({
 			name: day,
-			value: gamesStr,
+			value: `${gamesStr}\n\n*${gamesCount} games total*`,
 		})
 	})
 	emb.addFields(fields)

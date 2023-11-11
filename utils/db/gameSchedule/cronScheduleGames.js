@@ -17,6 +17,7 @@ import logClr from '#colorConsole'
 import PlutoLogger from '#PlutoLogger'
 import parseScheduled from '../../bot_res/parseScheduled.js'
 import { filterGamesArr } from './schedChanFilter.js'
+import { MatchupManager } from '#MatchupManager'
 
 /**
  *
@@ -31,10 +32,10 @@ import { filterGamesArr } from './schedChanFilter.js'
  * - Sending notification to log channel what channels have been scheduled for the day
  */
 
-export default async function cronScheduleGames(gamesArr) {
+export default async function cronScheduleGames() {
 	const scheduledTally = []
 	const scheduledIds = []
-
+	const gamesArr = await MatchupManager.getUpcoming()
 	const filterGames = await filterGamesArr({
 		gamesArr,
 		SPORT,
@@ -72,8 +73,7 @@ export default async function cronScheduleGames(gamesArr) {
 			const gameInfo = `${game.teamone} vs ${game.teamtwo}\n${game.id}`
 			if (chanExist) {
 				await logClr({
-					text:
-					`Skipped scheduling game due to the channel existing already \n${gameInfo}`,
+					text: `Skipped scheduling game due to the channel existing already \n${gameInfo}`,
 					color: `yellow`,
 					status: `done`,
 				})
@@ -150,6 +150,7 @@ export default async function cronScheduleGames(gamesArr) {
 		},
 		{ concurrency: 1 },
 	)
+
 	if (!_.isEmpty(scheduledTally)) {
 		await Cache().set(`scheduled`, scheduledTally)
 		await Cache().set(`scheduledIds`, scheduledIds)

@@ -85,8 +85,7 @@ export function addNewBet(interaction, betslip) {
 				const embedcontent = {
 					// ? Compiling the properties of the embed to return to the user: confirming their bet has been added to DB
 					title: `:ticket: Bet confirmed!`,
-					description: `<@${betslip.userid}>, your bet is locked in! :lock:\n\n**:money_mouth: __Details__**\n\n**${betslip.teamid}** ${betslip.teamEmoji}\n**Amount:** **\`$${amount}\`**\n**Profit:** **\`$${profit}\`** ➞ **Payout:** **\`$${payout}\`**\n\n*To view all of your active bets, type \`/mybets\`
-\nTo view your history of betting with Pluto, type \`/bethistory\`*\n*Bet ID: \`${betslip.betid}\`*`,
+					description: `Your bet is locked in! :lock:\n\n**:money_mouth: __Details__**\n**${betslip.teamid}** ${betslip.teamEmoji}\n**Amount:** **\`$${amount}\`**\n**Profit:** **\`$${profit}\`** ➞ **Payout:** **\`$${payout}\`**\n*View all of your active bets via \`/mybets\`\nView your betting record via \`/bethistory\`*\n*Bet ID: \`${betslip.betid}\`*`,
 					color: embedColors.PlutoBrightGreen,
 					// footer: 'For more commands, type: ?help',
 					target: `reply`,
