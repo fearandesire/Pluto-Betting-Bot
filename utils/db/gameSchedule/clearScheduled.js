@@ -12,7 +12,7 @@ export default async function clearScheduled() {
 		color: `yellow`,
 		status: `processing`,
 	})
-	const clear = await Cache()
+	const clearIds = await Cache()
 		.remove(`scheduledIds`)
 		.then((res) => {
 			if (res) {
@@ -21,10 +21,12 @@ export default async function clearScheduled() {
 			return false
 		})
 
+	await Cache().remove(`scheduled_games`)
+
 	await logClr({
 		text: `Cleared scheduled games`,
 		color: `green`,
 		status: `done`,
 	})
-	return clear
+	return clearIds
 }
