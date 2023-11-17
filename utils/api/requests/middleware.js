@@ -1,64 +1,87 @@
-import bodyParser from 'body-parser'
-import express from 'express'
-import { createRequire } from 'module'
-import { Log } from '#config'
-import resolveRanges from '../ranges/resolveRanges.js'
-import fetchRanges from '../ranges/fetchRanges.js'
-import collectOdds from '../collectOdds.js'
+/* eslint-disable no-console */
+export async function responseTime(ctx, next) {
+	const started = Date.now()
+	await next()
+	// once all middleware below completes, this continues
+	const ellapsed = `${Date.now() - started}ms`
+	// Timestamp HH:MM:SS
+	const timestamp = `[${new Date().toLocaleTimeString()}]`
+	console.log(
+		`${timestamp} API Response time is: ${ellapsed}`,
+	)
+	ctx.set('X-ResponseTime', ellapsed)
+}
 
-// use require in ES6
-const require = createRequire(import.meta.url)
-const app = express()
-
-export async function startExpress() {
-	app.use(require('express-status-monitor')())
-	app.use(bodyParser.json()) // for parsing application/json
-	app.use(
-		bodyParser.urlencoded({
-			extended: true,
-		}),
-	) // for parsing application/x-www-form-urlencoded
-
-	// # Create a simple test route
-	app.get('/api/test', (req, res) => {
-		res.send('Hello World!')
-	})
-
-	app.listen(process.env.EXP_PORT, () => {
-		Log.Green(
-			`[Startup]: Init Express Server\nPort: ${process.env.EXP_PORT}!`,
-		)
-	})
-
-	// # Handle request for ranges
-	app.get('/api/ranges', async (req, res) => {
-		try {
-			const ranges = await fetchRanges()
-			const output = await resolveRanges(ranges, {
-				api: true,
-			})
-			res.send(output)
-		} catch (err) {
-			Log.Red(err)
-			res.status(404).send(
-				'Error occured while resolving ranges',
+/* Boilerplate: http://localhost:5010/api/123456695 */
+export async function pageNotFound(ctx, next) {
+	return next().then(() => {
+		if (ctx.status === 404) {
+			ctx.body = `
+            <!doctype html>
+            <html lang="en">
+            
+            <head>
+              <meta charset="utf-8">
+              <title>Page Not Found</title>
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <style>
+                * {
+                  line-height: 1.2;
+                  margin: 0;
+                }
+            
+                html {
+                  color: white;
+                  display: table;
+                  font-family: sans-serif;
+                  height: 100%;
+                  text-align: center;
+                  width: 100%;
+                }
+            
+                body {
+                  background-color: #212120;
+                  display: table-cell;
+                  vertical-align: middle;
+                  margin: 2em auto;
+                }
+            
+                h1 {
+                  font-size: 2em;
+                  font-weight: 400;
+                }
+            
+                p {
+                  margin: 0 auto;
+                  width: 280px;
+                }
+            
+                @media only screen and (max-width: 280px) {
+            
+                  body,
+                  p {
+                    width: 95%;
+                  }
+            
+                  h1 {
+                    font-size: 1.5em;
+                    margin: 0 0 0.3em;
+                  }
+            
+                }
+              </style>
+            </head>
+            
+            <body>
+              <h1>Page Not Found</h1>
+              <p>Sorry, but the page you were trying to view does not exist.</p>
+            </body>
+            
+            </html>
+        `
+			console.error(
+				`404 - Page Not Found - Endpoint => ${ctx.request.url}`,
 			)
 		}
-	})
-
-	app.get('/api/collect', async (req, res) => {
-		await console.log(
-			`[API]: Odds collection request received`,
-		)
-		res.send('Odds successfully collected')
-		// await console.log(
-		// 	`[API]: Odds collection request received`,
-		// )
-		// const odds = await collectOdds()
-		// if (odds) {
-		// 	res.send('Odds successfully collected')
-		// } else {
-		// 	res.send('Failed to collect odds')
-		// }
 	})
 }
