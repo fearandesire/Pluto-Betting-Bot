@@ -1,6 +1,5 @@
 import Promise from 'bluebird'
-import { Log, LIVEMATCHUPS } from '#config'
-import { db } from '#db'
+import { Log } from '#config'
 import {
 	init_Cron_Completed,
 	init_Cron_Chan_Scheduler,
