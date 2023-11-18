@@ -34,7 +34,10 @@ export default async function cronScheduleGames() {
 		const aTeamShortName = await getShortName(
 			game.teamtwo,
 		)
-		const matchupStr = `${aTeamShortName}-vs-${hTeamShortName}`
+		const matchupStr =
+			SPORT === `nba`
+				? `${aTeamShortName}-vs-${hTeamShortName}`
+				: `${aTeamShortName}-at-${hTeamShortName}`
 
 		const isCompleted = game.complete || false
 
