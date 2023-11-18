@@ -25,7 +25,8 @@ export default async function cronScheduleGames() {
 	const scheduledIds = []
 	const scheduledContainer = []
 	const gamesArr = await MatchupManager.getAllMatchups()
-
+	const scheduledCache =
+		(await Cache().get(`scheduled_games`)) || []
 	for await (const game of gamesArr) {
 		const hTeamShortName = await getShortName(
 			game.teamone,
@@ -33,16 +34,24 @@ export default async function cronScheduleGames() {
 		const aTeamShortName = await getShortName(
 			game.teamtwo,
 		)
-		const matchupStr = `${hTeamShortName}-vs-${aTeamShortName}`
+		const matchupStr = `${aTeamShortName}-vs-${hTeamShortName}`
 
 		const isCompleted = game.complete || false
-		const scheduledCache =
-			(await Cache().get(`scheduled_games`)) || []
-		let isScheduled
-		if (!_.isEmpty(scheduledCache)) {
-			isScheduled = _.find(scheduledCache, {
-				gameid: game.id,
-			})
+
+		let isScheduled = false
+		if (
+			!_.isEmpty(scheduledCache) ||
+			!_.isUndefined(scheduledCache) ||
+			scheduledCache
+		) {
+			// Search for matching game.id
+			const locateInCache =
+				(await scheduledCache.find(
+					(g) => g.id === game.id,
+				)) || false
+			if (locateInCache) {
+				isScheduled = true
+			}
 		} else {
 			isScheduled = false
 		}
@@ -61,16 +70,15 @@ export default async function cronScheduleGames() {
 			game.cronstart,
 		)
 		if (
-			(!isCompleted &&
-				!isScheduled &&
-				!resolveChanExist &&
-				todaysPriorGame) ||
-			isFutureGame
+			(todaysPriorGame || isFutureGame) &&
+			!isCompleted &&
+			!isScheduled &&
+			!resolveChanExist
 		) {
 			let cronTime = game.cronstart
 			let queueEarly = true
-			if (createNow) {
-				cronTime = new IsoManager(game.start)
+			if (createNow || todaysPriorGame) {
+				cronTime = await new IsoManager(game.start)
 					.cronRightNow
 				queueEarly = false
 			}
