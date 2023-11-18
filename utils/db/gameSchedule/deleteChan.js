@@ -11,7 +11,7 @@ import locateChannel from '../../bot_res/locateChan.js'
 export async function deleteChan(channelName) {
 	// Replace spaces with -
 	const parsedChanName = channelName.replace(/\s/g, '-')
-	const gameChan = await locateChannel(parsedChanName)
+	const gameChan = await locateChannel(parsedChanName, true)
 	if (!gameChan) {
 		await Log.Red(
 			`Unable to locate channel ${parsedChanName} to delete.`,

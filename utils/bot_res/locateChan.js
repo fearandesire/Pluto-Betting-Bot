@@ -1,7 +1,10 @@
 import { SapDiscClient } from '#main'
 import { server_ID } from '#env'
 
-export default async function locateChannel(channelName) {
+export default async function locateChannel(
+	channelName,
+	getChan,
+) {
 	const guild = await SapDiscClient.guilds.cache.get(
 		`${server_ID}`,
 	)
@@ -12,6 +15,9 @@ export default async function locateChannel(channelName) {
 	)
 	if (!gameChan) {
 		return false
+	}
+	if (getChan) {
+		return gameChan
 	}
 	return true
 }
