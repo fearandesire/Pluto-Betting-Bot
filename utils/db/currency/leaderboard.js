@@ -128,11 +128,11 @@ export async function leaderboard(interaction) {
 		}
 
 		// Update the embed with the new page
-		embObj.title = `Betting Leaderboard | Page ${currentPage}`
+		embObj.title = `🏆 Betting Leaderboard | Page ${currentPage}`
 		embObj.description =
 			generateLeaderboardPage(currentPage)
 		embObj.footer = {
-			text: `You are currently #${usersIndex} on the Leaderboard! | Page ${currentPage}`,
+			text: `You are currently position #${usersIndex} on the Leaderboard! | Page ${currentPage}`,
 		}
 
 		// Edit the message to update the embed
