@@ -177,3 +177,6 @@ test/devTesting.js
 .env.*
 dev/
 utils/xp/xpmath.js
+
+# Local Documentation
+Docs.MD
