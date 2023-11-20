@@ -154,6 +154,7 @@ export async function handleBetMatchups() {
 				}
 			})
 			await Promise.all(betPromises)
+			return true
 		},
 	)
 }
