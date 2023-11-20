@@ -21,7 +21,9 @@ import IsoManager from '#iso'
  * @description Uses `cronstart` for scheduling game channels.
  * Ensures that channels for today's games are created.
  */
-export default async function cronScheduleGames() {
+export default async function cronScheduleGames(
+	createPrior,
+) {
 	const scheduledIds = []
 	const scheduledContainer = []
 	const gamesArr = await MatchupManager.getAllMatchups()
@@ -69,7 +71,7 @@ export default async function cronScheduleGames() {
 		const isFutureGame =
 			new Date() < new Date(game.start)
 
-		const createNow = await isWithinOneHour(
+		const gameIsWithinOneHour = await isWithinOneHour(
 			game.cronstart,
 		)
 		if (
@@ -80,7 +82,10 @@ export default async function cronScheduleGames() {
 		) {
 			let cronTime = game.cronstart
 			let queueEarly = true
-			if (createNow || todaysPriorGame) {
+			if (
+				(gameIsWithinOneHour || todaysPriorGame) &&
+				createPrior
+			) {
 				cronTime = await new IsoManager(game.start)
 					.cronRightNow
 				queueEarly = false
