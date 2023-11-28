@@ -50,7 +50,7 @@ export async function handleBetMatchups() {
 			id: 4,
 			description: `Failed to fetch API Data.\nError: \`${error.message}\``,
 		})
-		return
+		return false
 	}
 	const gamesCollected = apiJSON
 

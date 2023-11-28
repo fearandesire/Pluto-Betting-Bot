@@ -10,8 +10,6 @@ import BetNotify from '../BetNotify.js'
 import logClr from '#colorConsole'
 import XPHandler from '../../../xp/XPHandler.js'
 
-const betNotify = new BetNotify(SapDiscClient)
-
 async function getBets(matchid, dbCnx) {
 	return dbCnx.manyOrNone(
 		`SELECT * FROM "${BETSLIPS}" WHERE matchid = $1 and betresult = 'pending'`,
@@ -107,6 +105,7 @@ async function closeBets(
 ) {
 	// eslint-disable-next-line no-async-promise-executor
 	return new Promise(async (resolve) => {
+		const betNotify = new BetNotify(SapDiscClient)
 		;(async () => {
 			try {
 				// TODO: Enable with Debug Logging Config
