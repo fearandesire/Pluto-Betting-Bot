@@ -22,7 +22,6 @@ import { handleBetMatchups } from '../bot_res/betOps/handleBetMatchups.js'
  * - Scheduling game channels
  * - Processing bets for completed games
  */
-// TODO: FIX SENDING DMS TO BET WINNERS & LOSERS
 export async function dbDailyOps() {
 	logClr({
 		text: `Starting daily operations`,
