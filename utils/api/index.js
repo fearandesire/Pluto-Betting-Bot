@@ -11,6 +11,7 @@ import checkGamesRouter from '#routes/checkGames'
 import fetchBetsRouter from '#routes/fetchBets'
 import logClr from '#colorConsole'
 import fetchAccountsRouter from '#routes/fetchAccounts'
+import fetchScheduledRouter from "#routes/fetchScheduledChannels"
 
 const app = new Koa()
 app.use(logger())
@@ -29,6 +30,9 @@ app.use(fetchBetsRouter.routes()).use(
 )
 app.use(fetchAccountsRouter.routes()).use(
 	fetchAccountsRouter.allowedMethods(),
+)
+app.use(fetchScheduledRouter.routes()).use(
+	fetchScheduledRouter.allowedMethods(),
 )
 
 const { apiPort, apiURL } = process.env

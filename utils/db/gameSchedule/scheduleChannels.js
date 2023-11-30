@@ -19,16 +19,16 @@ export async function scheduleChannels(
 	awayTeam,
 	options,
 ) {
-	const { cronStartTime, queue1HEarly, gameId } =
+	const { scheduledCreationTime, queue1HEarly, gameId } =
 		options || null
 	let openChannelTime
 
 	if (queue1HEarly) {
 		openChannelTime = await new CronMath(
-			cronStartTime,
+			scheduledCreationTime,
 		).subtract(1, `hours`)
 	} else {
-		openChannelTime = cronStartTime
+		openChannelTime = scheduledCreationTime
 	}
 	const HTEAM = await getShortName(homeTeam)
 	const ATEAM = await getShortName(awayTeam)
