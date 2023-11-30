@@ -8,16 +8,7 @@ import { GatewayIntentBits, Partials } from 'discord.js'
 import logClr from './utils/bot_res/ColorConsole.js'
 import '#serverConf'
 import '@sapphire/plugin-api/register'
-import * as api from './utils/api/index.js'
-
-const { apiPort, apiURL } = process.env
-api.app.listen(apiPort, async () => {
-	await logClr({
-		text: `API running at ${apiURL}:${apiPort}/`,
-		status: `done`,
-		color: `green`,
-	})
-})
+import './utils/api/index.js'
 
 const SapDiscClient = new SapphireClient({
 	defaultPrefix: process.env.PREFIX,

@@ -38,7 +38,7 @@ export class viewScheduled extends Command {
 			})
 			return
 		}
-		const scheduled = await Cache().get(`scheduled`)
+		const scheduled = await Cache().get(`scheduled_games`)
 		if (!scheduled || _.isEmpty(scheduled)) {
 			await interaction.reply({
 				content: `There are no games currently scheduled to be created.`,

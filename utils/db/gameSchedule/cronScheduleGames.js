@@ -17,15 +17,16 @@ import {
 import IsoManager from '#iso'
 
 /**
- * @summary Generate Cron Jobs for Game Channel creation
- * @description Uses `cronstart` for scheduling game channels.
- * Ensures that channels for today's games are created.
+ * Generate Cron Jobs for Game Channel creation
+ * Uses game Cron Time (prop `cronstart`) for scheduling game channels.
+ * @param {boolean} createPrior - Flag to indicate that games within the current day should be created, specifically for games that are already active.
+ * This is necessary in the event of an app restart / service issues and game channels need to be created
  */
 export default async function cronScheduleGames(
 	createPrior,
 ) {
 	const scheduledIds = []
-	const scheduledContainer = []
+	const matchupsContainer = []
 	const gamesArr = await MatchupManager.getAllMatchups()
 	const scheduledCache =
 		(await Cache().get(`scheduled_games`)) || []
@@ -36,13 +37,11 @@ export default async function cronScheduleGames(
 		const aTeamShortName = await getShortName(
 			game.teamtwo,
 		)
-		const matchupStr =
-			SPORT === `nba`
-				? `${aTeamShortName}-vs-${hTeamShortName}`
-				: `${aTeamShortName}-at-${hTeamShortName}`
+		let scheduledCreationTime = null
+		const cronTime = game.cronstart
+		const matchupStr = `${aTeamShortName}-at-${hTeamShortName}`
 
 		const isCompleted = game.complete || false
-
 		let isScheduled = false
 		if (
 			!_.isEmpty(scheduledCache) ||
@@ -64,15 +63,12 @@ export default async function cronScheduleGames(
 		const resolveChanExist = await Promise.resolve(
 			chanExist,
 		)
-
-		const todaysPriorGame = isDateTodayAndPast(
-			game.cronstart,
-		)
+		const todaysPriorGame = isDateTodayAndPast(cronTime)
 		const isFutureGame =
 			new Date() < new Date(game.start)
 
 		const gameIsWithinOneHour = await isWithinOneHour(
-			game.cronstart,
+			cronTime,
 		)
 		if (
 			(todaysPriorGame || isFutureGame) &&
@@ -80,31 +76,38 @@ export default async function cronScheduleGames(
 			!isScheduled &&
 			!resolveChanExist
 		) {
-			let cronTime = game.cronstart
 			let queueEarly = true
 			if (
 				(gameIsWithinOneHour || todaysPriorGame) &&
 				createPrior
 			) {
-				cronTime = await new IsoManager(game.start)
-					.cronRightNow
+				scheduledCreationTime =
+					await new IsoManager(game.start)
+						.cronRightNow
 				queueEarly = false
+			} else {
+				scheduledCreationTime = cronTime
 			}
-			await scheduledContainer.push({
+			// Used to schedule the game based on the input information
+			await matchupsContainer.push({
 				home_team: game.teamone,
 				away_team: game.teamtwo,
-				cronStartTime: cronTime,
+				cronStart: cronTime,
 				legible: game.legiblestart,
 				gameid: game.id,
 				queue1HEarly: queueEarly,
+				scheduledCreationTime,
 			})
+			// Used to keep track of what we have successfully scheduled
 			await scheduledCache.push({
 				home_team: game.teamone,
 				away_team: game.teamtwo,
-				cronstart: cronTime,
+				chanName: matchupStr.toLowerCase(),
+				cronStart: cronTime,
 				start: game.legiblestart,
 				date: game.dateofmatchup,
 				gameid: game.id,
+				scheduledCreationTime,
 			})
 			await scheduledIds.push(game.id)
 			await Cache().set(
@@ -114,12 +117,13 @@ export default async function cronScheduleGames(
 		}
 	}
 
-	for await (const match of scheduledContainer) {
+	for await (const match of matchupsContainer) {
 		await scheduleChannels(
 			match.home_team,
 			match.away_team,
 			{
-				cronStartTime: match.cronStartTime,
+				scheduledCreationTime:
+					match.scheduledCreationTime,
 				queue1HEarly: match.queue1HEarly,
 				gameId: match.gameid,
 			},
