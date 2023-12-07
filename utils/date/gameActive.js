@@ -13,11 +13,11 @@ import { LIVEMATCHUPS } from '#config'
  * @returns {boolean} - True if the game has already started, false if it has not.
  */
 
-export async function gameActive(teamName, matchupId) {
+export async function gameActive(matchupId) {
 	const searchForActive = await db
 		.oneOrNone(
-			`SELECT * FROM "${LIVEMATCHUPS}" WHERE "teamone" = $1 OR "teamtwo" = $1 AND "matchid" = $2 OR "teamone" = $1 OR "teamtwo" = $1`,
-			[teamName, matchupId],
+			`SELECT * FROM "${LIVEMATCHUPS}" WHERE matchid = $1`,
+			[matchupId],
 		)
 		.then((dbMatchup) => {
 			const gameStart = dbMatchup.start
