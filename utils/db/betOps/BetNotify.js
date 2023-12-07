@@ -34,10 +34,10 @@ export default class BetNotify {
 		const extraInfo = `Go to the <#${bettingChan}> channel and:\n- View your place on the \`/leaderboard\`\n- Place more bets with \`/bet\`!`
 		if (betResult === `won`) {
 			const newUserBal = Math.floor(currentBalance)
-			msg = `You won your bet on the ${teamBetOn}! :moneybag: \n\n**You had bet:** **\`$${betAmount}\`**\n**Profit:** **\`$${profit}\`**\n**Payout:** **\`$${payout}\`**\n**Balance**: *\`$${oldBalance}\`* => **\`$${newUserBal}\`**`
+			msg = `### Congrats, your won your bet! 🎊\n# Details\n\n**\`$${betAmount}\`** on the **${teamBetOn}**\n**Profit:** **\`$${profit}\`**\n**Payout:** **\`$${payout}\`**\n**Balance**: *\`$${oldBalance}\`* => **\`$${newUserBal}\` 💰**`
 			color = embedColors.PlutoBrightGreen
 		} else if (betResult === `lost`) {
-			msg = `You lost your $${betAmount} bet on the ${teamBetOn}.\nSorry, better luck next time!`
+			msg = `### Bad news...you lost a bet\n# Details $${betAmount} bet on the **${teamBetOn}**.\nBetter luck next time!`
 			color = embedColors.PlutoRed
 		}
 		msg += `\n\n${extraInfo}\n*Issues? please contact: <@208016830491525120> | Bet ID: \`${betId}\`*`
