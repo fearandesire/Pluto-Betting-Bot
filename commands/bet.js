@@ -98,12 +98,14 @@ export class bet extends Command {
 				teamName,
 				interaction.options.getInteger('amount'),
 			)
-		}).catch((error) => {
+		}).catch(async (error) => {
+			await PendingBetHandler.deletePending(userid)
 			// Handle any errors that occur during the promise chain
 			console.error(error) // You can log the error here
 			interaction.editReply({
 				content: `An error occurred while processing your bet.`,
 				ephemeral: true,
+				components: [],
 			})
 		})
 	}
