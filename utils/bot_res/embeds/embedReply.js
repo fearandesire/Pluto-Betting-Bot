@@ -1,6 +1,5 @@
 import discord from 'discord.js'
 import color from 'color'
-import { Log } from '#LogColor'
 import { fetchChanId } from '#botUtil/fetchChanId'
 import { SapDiscClient } from '#main'
 import embedColors from '../../../lib/colorsConfig.js'
@@ -148,7 +147,7 @@ export async function embedReply(
 				ephemeral: true,
 			})
 		} else if (target === 'reply' && !interactionEph) {
-			return await interaction.reply({
+			return interaction.reply({
 				embeds: [embedWithFields],
 			})
 
@@ -168,6 +167,45 @@ export async function embedReply(
 			}
 		}
 	}
+}
+
+export async function sendErrorEmbed(
+	interaction,
+	str,
+	replyType,
+) {
+	const errorEmb = new EmbedBuilder()
+		.setColor(embedColors.error)
+		.setTitle('🚩 Error')
+		.setDescription(str)
+		.setFooter({ text: `Pluto | Dev. by fenixforever` })
+		.setTimestamp()
+	if (replyType === 1) {
+		return interaction.editReply({
+			content: ``,
+			embeds: [errorEmb],
+			components: [],
+		})
+	}
+	if (replyType === 2) {
+		return interaction.followUp({
+			content: ``,
+			embeds: [errorEmb],
+			components: [],
+		})
+	}
+	if (replyType === 3) {
+		return interaction.reply({
+			content: ``,
+			embeds: [errorEmb],
+			components: [],
+		})
+	}
+	return interaction.followUp({
+		content: ``,
+		embeds: [errorEmb],
+		components: [],
+	})
 }
 
 export async function QuickError(
