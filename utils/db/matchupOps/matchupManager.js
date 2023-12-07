@@ -1,5 +1,5 @@
 import _ from 'lodash'
-import { formatISO } from 'date-fns'
+import { formatISO, isAfter, parseISO } from 'date-fns'
 import { db } from '#db'
 import { LIVEMATCHUPS, LIVEBETS } from '#config'
 import logClr from '#colorConsole'
@@ -9,6 +9,87 @@ import IsoManager from '#iso'
 import resolveMatchup from './resolveMatchup.js'
 
 export class MatchupManager {
+	constructor() {
+		this.team = null
+		this.matchInfo = null
+		this.oddsForTeam = null
+	}
+
+	async getMatchViaTeam(team) {
+		this.matchInfo = await db.oneOrNone(
+			`SELECT * FROM "${LIVEMATCHUPS}" WHERE teamone = $1 OR teamtwo = $1`,
+			[team],
+		)
+		await this.getOddsForTeam(this.matchInfo)
+		return this
+	}
+
+	static async getOddsViaId(id, team) {
+		const matchInfo = await db.oneOrNone(
+			`SELECT * FROM "${LIVEMATCHUPS}" WHERE matchid = $1`,
+			[id],
+		)
+		if (matchInfo.teamone === team) {
+			return matchInfo.teamoneodds
+		}
+
+		return matchInfo.teamtwoodds
+	}
+
+	async getOddsForTeam(matchInfo, team) {
+		// Identify which team is selected, return the odds for that team
+		if (matchInfo.teamone === team) {
+			this.oddsForTeam = matchInfo.teamoneodds
+			return this
+		}
+		this.oddsForTeam = matchInfo.teamtwoodds
+		return this
+	}
+
+	static async gameIsLive(matchId) {
+		return db
+			.oneOrNone(
+				`SELECT * FROM "${LIVEMATCHUPS}" WHERE matchid = $1`,
+				[matchId],
+			)
+			.then((dbMatchup) => {
+				const gameStart = dbMatchup.start
+				const today = new Date()
+				const gameTimeIso = parseISO(gameStart)
+				const todayISO = formatISO(today, {
+					representation: 'complete',
+				})
+				const todayParsed = parseISO(todayISO)
+				const startedOrNot = isAfter(
+					todayParsed,
+					gameTimeIso,
+				)
+				if (startedOrNot) {
+					return true
+				}
+				return false
+			})
+	}
+
+	/**
+	 * Checks if a team has more than 1 match in the current week
+	 * @param {string} team - Team to search for
+	 * @returns {boolean | array}
+	 */
+	async repeatTeamCheck(team) {
+		const teamCheck = await db
+			.manyOrNone(
+				`SELECT * FROM "${LIVEMATCHUPS}" WHERE teamone = $1 OR teamtwo = $1`,
+				[team],
+			)
+			.catch((err) => {
+				throw err
+			})
+		if (teamCheck.length > 1) {
+			return teamCheck
+		}
+		return false
+	}
 
 	/**
 	 * Get upcoming games
