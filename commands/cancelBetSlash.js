@@ -1,8 +1,13 @@
 import { Command } from '@sapphire/framework'
-import { queryBets } from '#utilBetOps/queryBets'
 import { validateUser } from '#utilValidate/validateExistingUser'
 import { verifyBetAuthor } from '#utilValidate/verifyBetAuthor'
-import { verifyCancellation as invalidCancel } from '../utils/db/betOps/verifyCancellation.js'
+import {
+	PROFILES,
+	BETSLIPS,
+	CURRENCY,
+	LIVEBETS,
+} from '#config'
+import BetManager from '../utils/bot_res/classes/BetManager.js'
 
 export class cancelBetSlash extends Command {
 	constructor(context, options) {
@@ -54,21 +59,11 @@ export class cancelBetSlash extends Command {
 		)
 		if (!isRegistered) return
 		await verifyBetAuthor(interaction, userid, betId) // ? Verify the bet belongs to the user
-		await invalidCancel(userid, betId).then(
-			async (response) => {
-				if (response === true) {
-					interaction.reply({
-						content: `**You cannot cancel a bet on a game that has already started.**`,
-						ephemeral: true,
-					})
-				} else {
-					await queryBets(
-						interaction,
-						userid,
-						betId,
-					) // ? Query DB & delete specified bet
-				}
-			},
-		)
+		await new BetManager({
+			PROFILES,
+			BETSLIPS,
+			CURRENCY,
+			LIVEBETS,
+		}).cancelBet(interaction, userid, betId)
 	}
 }

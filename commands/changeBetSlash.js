@@ -3,8 +3,9 @@ import { QuickError } from '#embed'
 import { modifyAmount } from '#utilBetOps/modifyAmount'
 import { validateUser } from '#utilValidate/validateExistingUser'
 import { verifyBetAuthor } from '#utilValidate/verifyBetAuthor'
-import { verifyCancellation } from '#utilBetOps/verifyCancellation'
 import { fetchBalance } from '#utilCurrency/fetchBalance'
+import { MatchupManager } from '#MatchupManager'
+import BetManager from '../utils/bot_res/classes/BetManager.js'
 
 export class changeBetSlash extends Command {
 	constructor(context, options) {
@@ -97,32 +98,26 @@ export class changeBetSlash extends Command {
 				content: `**You do not have a bet with that ID.**`,
 				ephemeral: true,
 			})
-		} else {
-			await verifyCancellation(userid, betId).then(
-				async (response) => {
-					if (response === true) {
-						QuickError(
-							interaction,
-							`It's too late to change your bet. This game has already started.`,
-							true,
-						)
-					} else if (response === false) {
-						await modifyAmount(
-							interaction,
-							userid,
-							betId,
-							amount,
-							interactionEph,
-						)
-					} else {
-						QuickError(
-							interaction,
-							`Something went wrong. Please verify your information and try again.`,
-							true,
-						)
-					}
-				},
-			)
+			return
 		}
+		const matchupId =
+			await new BetManager().matchupIdViaBetId(betId)
+		const validGameStatus =
+			await MatchupManager.gameIsLive(matchupId)
+		if (!validGameStatus) {
+			await QuickError(
+				interaction,
+				`You are unable to change this bet because the game has already started!`,
+				true,
+			)
+			return
+		}
+		await modifyAmount(
+			interaction,
+			userid,
+			betId,
+			amount,
+			interactionEph,
+		)
 	}
 }
