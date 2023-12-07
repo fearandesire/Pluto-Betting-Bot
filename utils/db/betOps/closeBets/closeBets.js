@@ -108,11 +108,6 @@ async function closeBets(
 		const betNotify = new BetNotify(SapDiscClient)
 		;(async () => {
 			try {
-				// TODO: Enable with Debug Logging Config
-				// await PlutoLogger.log({
-				// 	id: 3,
-				// 	description: `Closing bets for ${winningTeam} vs ${losingTeam}`,
-				// })
 				if (!matchInfo || _.isEmpty(matchInfo)) {
 					await PlutoLogger.log({
 						id: 4,
@@ -161,11 +156,6 @@ async function closeBets(
 						const oldBalance = await getBalance(
 							userId,
 						)
-						// TODO: Enable with Debug Logging Config
-						// await PlutoLogger.log({
-						// 	id: 3,
-						// 	description: `Closing Bet Information:\nUser ID: ${userId}\nBet ID: ${betId}\nBet Result: Won\nBet Amount: ${betAmount}\nBet Odds: ${betOdds}\nTeam Bet On: ${teamBetOn}\nOpposing Team: ${opposingTeam}\nWinning Team: ${winningTeam}\nPayout: ${payoutAmount}\nProfit: ${profitAmount}`,
-						// })
 						await handleClosingBet(
 							userId,
 							betResult,
@@ -196,11 +186,6 @@ async function closeBets(
 							isWin: true,
 						})
 					} else if (betResult === 'lost') {
-						// TODO: Enable with Debug Logging Config
-						// await PlutoLogger.log({
-						// 	id: 3,
-						// 	description: `Closing Bet Information:\nUser ID: ${userId}\nBet ID: ${betId}\nBet Result: Won\nBet Amount: ${betAmount}\nBet Odds: ${betOdds}\nTeam Bet On: ${teamBetOn}\nOpposing Team: ${opposingTeam}\nWinning Team: ${winningTeam}\n`,
-						// })
 						await handleClosingBet(
 							userId,
 							betResult,

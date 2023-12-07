@@ -1,5 +1,3 @@
-import { Log } from '#config'
-
 /**
  * Determine the payout and profits for bets based on the bet amount and odds.
  * @param {integer} oddsNum - The odds of the team the user bet on.
@@ -16,12 +14,6 @@ export async function resolvePayouts(matchOdds, betAmount) {
 		const profit = Math.ceil(ogBetAmount * equation)
 		const payout = Math.ceil(profit + ogBetAmount)
 
-		/** 
-		await Log.Green(
-			`Odds: ${oddsNum}\nbetAmount: ${ogBetAmount}\nEquation: ${equation}\nProfit: ${profit}\nPayout: ${payout}`,
-		)
-		* */
-
 		return {
 			payout,
 			profit,
@@ -32,11 +24,6 @@ export async function resolvePayouts(matchOdds, betAmount) {
 		const equation = oddsNum / 100 + 1
 		const payout = Math.ceil(ogBetAmount * equation)
 		const profit = Math.ceil(payout - ogBetAmount)
-
-		await Log.Green(
-			`Odds: ${oddsNum}\nbetAmount: ${ogBetAmount}\nEquation: ${equation}\nProfit: ${profit}\nPayout: ${payout}`,
-		)
-
 		return {
 			payout,
 			profit,
