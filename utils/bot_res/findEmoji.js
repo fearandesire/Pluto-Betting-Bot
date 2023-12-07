@@ -1,4 +1,3 @@
-import Promise from 'bluebird'
 import _ from 'lodash'
 import { SapDiscClient } from '#main'
 
@@ -10,33 +9,35 @@ import { SapDiscClient } from '#main'
  * @return {Promise<string>} A promise that resolves to the closest match emoji or a combined string.
  */
 export async function findEmoji(inputEmojiName, combine) {
-	return new Promise(async (resolve, reject) => {
-		let res
-		// Find an emoji by name, retrieve the closest match
-		const emoji =
-			(await SapDiscClient.emojis.cache.find(
-				(foundEmoji) => {
-					const lowerEmojiName =
-						_.toLower(inputEmojiName)
-					const lowerEmoji = _.toLower(
-						foundEmoji.name,
-					)
-					return (
-						lowerEmoji.includes(
-							lowerEmojiName,
-						) ||
-						lowerEmojiName.includes(lowerEmoji)
-					)
-				},
-			)) || null
+	// Take last word if there's spaces
+	let emojiSearchName
 
-		if (emoji === null && combine) {
-			res = inputEmojiName
-		} else if (combine) {
-			res = `${emoji} ${inputEmojiName}`
-		} else {
-			res = emoji
-		}
-		resolve(res)
-	})
+	if (inputEmojiName.includes(' ')) {
+		emojiSearchName = await _.last(
+			_.split(inputEmojiName, ' '),
+		)
+	} else {
+		emojiSearchName = inputEmojiName
+	}
+	// Convert input to lowercase for case-insensitive comparison
+	const lowerEmojiName = _.toLower(emojiSearchName)
+
+	// Find an emoji by name, retrieve the closest match
+	const emoji = SapDiscClient.emojis.cache.find(
+		(foundEmoji) => {
+			const lowerEmoji = _.toLower(foundEmoji.name)
+			return (
+				lowerEmoji.includes(lowerEmojiName) ||
+				lowerEmojiName.includes(lowerEmoji)
+			)
+		},
+	)
+
+	// Handle the combination or return the emoji
+	if (emoji) {
+		return combine
+			? `${emoji} ${emojiSearchName}`
+			: emoji
+	}
+	return combine ? emojiSearchName : ''
 }
