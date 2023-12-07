@@ -34,6 +34,7 @@ export default class BetNotify {
 		const extraInfo = `Go to the <#${bettingChan}> channel and:\n- View your place on the \`/leaderboard\`\n- Place more bets with \`/bet\`!`
 		if (betResult === `won`) {
 			const newUserBal = Math.floor(currentBalance)
+
 			msg = `### Congrats, your won your bet! 🎊\n# Details\n\n**\`$${betAmount}\`** on the **${teamBetOn}**\n**Profit:** **\`$${profit}\`**\n**Payout:** **\`$${payout}\`**\n**Balance**: *\`$${oldBalance}\`* => **\`$${newUserBal}\` 💰**`
 			color = embedColors.PlutoBrightGreen
 		} else if (betResult === `lost`) {

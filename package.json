@@ -1,6 +1,6 @@
 {
 	"name": "bettingbot",
-	"version": "2.2.2",
+	"version": "2.3.0",
 	"description": "Pluto Betting App",
 	"main": "Pluto.mjs",
 	"prettier": "./.prettierrc.json",
@@ -56,7 +56,7 @@
 		"#main": "./Pluto.mjs",
 		"#winstonLogger": "./utils/logging.js",
 		"#iso": "./utils/time/IsoManager.js",
-		"#MatchupManager": "./utils/db/matchupOps/matchupManager.js",
+		"#MatchupManager": "./utils/db/matchupOps/MatchupManager.js",
 		"#qBuilder": "./utils/db/queryBuilder.js",
 		"#routes/*": "./utils/api/routes/*.js"
 	},
