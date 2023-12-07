@@ -1,20 +1,15 @@
 /** @module listMyBets */
 
-import stringifyObject from 'stringify-object'
 import _ from 'lodash'
 import {
 	accounting,
-	container,
 	embedReply,
 	QuickError,
 	BETSLIPS,
-	LIVEBETS,
 } from '#config'
 
 import { Log } from '#LogColor'
 import { db } from '#db'
-import { SapDiscClient } from '#main'
-import { guildImgURL } from '#embed'
 import embedColors from '../../lib/colorsConfig.js'
 
 /**
@@ -54,13 +49,12 @@ export async function listMyBets(userid, interaction) {
 			const profit = format(row.profit) ?? `N/A`
 			const payout = format(row.payout) ?? `N/A`
 			usersBetsArr.push(
-				`**•** __Bet #${betId}__
-            Team: **${teamId}** | Amount: \`$${amount}\`
-            Profit: \`$${profit}\` | Payout: \`$${payout}\``,
+				`## Betslip #\`${betId}\`\n**${teamId}** ➞ Amount: \`$${amount}\`
+            Profit: \`$${profit}\` ➞ Payout: \`$${payout}\``,
 			)
 		})
 
-		const betsJoined = usersBetsArr.join('\n───────\n')
+		const betsJoined = usersBetsArr.join('\n⎯⎯⎯⎯⎯⎯\n')
 
 		const userName = interaction?.author?.username
 			? interaction?.author?.username
@@ -93,13 +87,10 @@ export async function listMyBets(userid, interaction) {
 		}
 		await embedReply(interaction, embObj)
 	} catch (err) {
-		Log.Error(
-			`[listMyBets.js] Error checking for active bet\n${err}`,
-		)
-		console.log(err)
-		QuickError(
+		console.error(err)
+		await QuickError(
 			interaction,
-			`You currently have no active bets`,
+			`An error occured when checking for your active bets.`,
 			true,
 		)
 		return false
