@@ -6,6 +6,12 @@ import { verifyBetAuthor } from '#utilValidate/verifyBetAuthor'
 import { fetchBalance } from '#utilCurrency/fetchBalance'
 import { MatchupManager } from '#MatchupManager'
 import BetManager from '../utils/bot_res/classes/BetManager.js'
+import {
+	PROFILES,
+	BETSLIPS,
+	CURRENCY,
+	LIVEBETS,
+} from '#serverConf'
 
 export class changeBetSlash extends Command {
 	constructor(context, options) {
@@ -100,8 +106,13 @@ export class changeBetSlash extends Command {
 			})
 			return
 		}
-		const matchupId =
-			await new BetManager().matchupIdViaBetId(betId)
+		const matchup = await new BetManager({
+			PROFILES,
+			BETSLIPS,
+			CURRENCY,
+			LIVEBETS,
+		}).matchupIdViaBetId(betId)
+		const matchupId = matchup.matchid
 		const validGameStatus =
 			await MatchupManager.gameIsLive(matchupId)
 		if (!validGameStatus) {

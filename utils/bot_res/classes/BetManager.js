@@ -320,6 +320,11 @@ export default class BetManager {
 	*/
 		return db.tx('createNewBet', async (t) => {
 			const date = TodaysDate()
+
+			await t.none(
+				`UPDATE "${this.CURRENCY}" SET balance = balance - $1 WHERE userid = $2`,
+				[betslip.amount, betslip.userid],
+			)
 			await t.none(
 				`INSERT INTO "${this.BETSLIPS}" (userid, teamid, betid, amount, matchid, dateofbet, betresult, profit, payout) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
 				[

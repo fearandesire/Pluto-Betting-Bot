@@ -1,5 +1,10 @@
 import _ from 'lodash'
-import { formatISO, isAfter, parseISO } from 'date-fns'
+import {
+	formatISO,
+	isAfter,
+	isBefore,
+	parseISO,
+} from 'date-fns'
 import { db } from '#db'
 import { LIVEMATCHUPS, LIVEBETS } from '#config'
 import logClr from '#colorConsole'
@@ -47,28 +52,19 @@ export class MatchupManager {
 	}
 
 	static async gameIsLive(matchId) {
-		return db
-			.oneOrNone(
-				`SELECT * FROM "${LIVEMATCHUPS}" WHERE matchid = $1`,
-				[matchId],
-			)
-			.then((dbMatchup) => {
-				const gameStart = dbMatchup.start
-				const today = new Date()
-				const gameTimeIso = parseISO(gameStart)
-				const todayISO = formatISO(today, {
-					representation: 'complete',
-				})
-				const todayParsed = parseISO(todayISO)
-				const startedOrNot = isAfter(
-					todayParsed,
-					gameTimeIso,
-				)
-				if (startedOrNot) {
-					return true
-				}
-				return false
-			})
+		const dbMatchup = await db.oneOrNone(
+			`SELECT * FROM "${LIVEMATCHUPS}" WHERE matchid = $1`,
+			[matchId],
+		)
+
+		if (!dbMatchup) {
+			// Handle the case where the matchup is not found
+			return false
+		}
+
+		const gameStart = parseISO(dbMatchup.start) // Assuming dbMatchup.start is in ISO 8601 format
+		const now = new Date() // Current time in UTC
+		return isBefore(now, gameStart) // Check if the current time is before the game start time
 	}
 
 	/**

@@ -10,7 +10,6 @@ import {
 import PendingBetHandler from '#utilValidate/pendingBet'
 import { verifyDupBet } from '#utilValidate/verifyDuplicateBet'
 import { SPORT } from '#env'
-import { AssignBetID } from '#botUtil/AssignIDs'
 import { MatchupManager } from '#MatchupManager'
 import SelectMenuManager from '../../bot_res/classes/SelectMenuManager.js'
 import BetManager from '../../bot_res/classes/BetManager.js'
