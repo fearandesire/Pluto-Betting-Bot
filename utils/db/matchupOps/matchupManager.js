@@ -62,9 +62,9 @@ export class MatchupManager {
 			return false
 		}
 
-		const gameStart = parseISO(dbMatchup.start) // Assuming dbMatchup.start is in ISO 8601 format
-		const now = new Date() // Current time in UTC
-		return isBefore(now, gameStart) // Check if the current time is before the game start time
+		const gameStart = parseISO(dbMatchup.start)
+		const now = new Date()
+		return isBefore(gameStart, now)
 	}
 
 	/**
