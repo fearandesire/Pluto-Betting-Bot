@@ -38,7 +38,7 @@ export default class BetNotify {
 			msg = `### Congrats, your won your bet! 🎊\n# Details\n\n**\`$${betAmount}\`** on the **${teamBetOn}**\n**Profit:** **\`$${profit}\`**\n**Payout:** **\`$${payout}\`**\n**Balance**: *\`$${oldBalance}\`* => **\`$${newUserBal}\` 💰**`
 			color = embedColors.PlutoBrightGreen
 		} else if (betResult === `lost`) {
-			msg = `### Bad news...you lost a bet\n# Details $${betAmount} bet on the **${teamBetOn}**.\nBetter luck next time!`
+			msg = `### Bad news...you lost a bet\n# Details\n\n$${betAmount} bet on the **${teamBetOn}**.\nBetter luck next time!`
 			color = embedColors.PlutoRed
 		}
 		msg += `\n\n${extraInfo}\n*Issues? please contact: <@208016830491525120> | Bet ID: \`${betId}\`*`
