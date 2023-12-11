@@ -7,7 +7,6 @@ import { MatchupManager } from '#MatchupManager'
 import BtnManager from './BtnManager.js'
 import AccountManager from './AccountManager.js'
 import PendingBetHandler from '../../db/validation/pendingBet.js'
-import { resolvePayouts } from '../../db/betOps/resolvePayouts.js'
 import { TodaysDate } from '../../date/TodaysDate.js'
 import embedColors from '../../../lib/colorsConfig.js'
 
@@ -206,12 +205,13 @@ export default class BetManager {
 			const {
 				teamName,
 				betAmount,
-				oddsForTeam,
 				matchId,
 				betId,
 				matchupDate,
 				matchupStr,
 				teamEmoji,
+				profit,
+				payout,
 			} = betDetails
 			const userBalance = await new AccountManager(
 				this.CURRENCY,
@@ -229,11 +229,7 @@ export default class BetManager {
 					followUp: true,
 				})
 			}
-			const potentialPayout = await resolvePayouts(
-				oddsForTeam,
-				betAmount,
-			)
-			const { profit, payout } = potentialPayout
+
 			const betslip = {
 				userid: userId,
 				amount: betAmount,

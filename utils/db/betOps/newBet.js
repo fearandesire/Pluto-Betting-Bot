@@ -10,6 +10,7 @@ import {
 import PendingBetHandler from '#utilValidate/pendingBet'
 import { verifyDupBet } from '#utilValidate/verifyDuplicateBet'
 import { SPORT } from '#env'
+import { resolvePayouts } from '#utilBetOps/resolvePayouts'
 import { MatchupManager } from '#MatchupManager'
 import SelectMenuManager from '../../bot_res/classes/SelectMenuManager.js'
 import BetManager from '../../bot_res/classes/BetManager.js'
@@ -55,6 +56,8 @@ export async function newBet(
 	const team = await teamResolver(SPORT, betOnTeam)
 	let matchInfo
 	const matchupMngr = new MatchupManager()
+	// Check if the user is betting on a team that has more than one game in the collected odds
+	// Serve the user with a select menu if they are, so they are able to choose the game
 	const repeatTeamsMatchups =
 		await matchupMngr.repeatTeamCheck(team)
 	let oddsForTeam
@@ -116,19 +119,23 @@ export async function newBet(
 		console.error(err)
 		throw err
 	}
-	// const activeCheck = await MatchupManager.gameIsLive(
-	// 	matchupId,
-	// )
-	// if (activeCheck === true) {
-	// 	await QuickError(
-	// 		interaction,
-	// 		`This match has already started! It's not possible to place a bet on games currently in progress.`,
-	// 		true,
-	// 	)
-	// 	await PendingBetHandler.deletePending(user)
-	// 	return
-	// }
-
+	const activeCheck = await MatchupManager.gameIsLive(
+		matchInfo.matchid,
+	)
+	if (activeCheck === true) {
+		await QuickError(
+			interaction,
+			`This match has already started! It's not possible to place a bet on games currently in progress.`,
+			true,
+		)
+		await PendingBetHandler.deletePending(userId)
+		return
+	}
+	const potentialPayout = await resolvePayouts(
+		oddsForTeam,
+		betAmount,
+	)
+	const { payout, profit } = potentialPayout
 	let teamEmoji
 	try {
 		// verify if the user already has a bet on this matchup
@@ -138,7 +145,6 @@ export async function newBet(
 			matchInfo.matchid,
 			true,
 		)
-
 		teamEmoji = await findEmoji(team)
 		const betManager = new BetManager({
 			BETSLIPS,
@@ -161,6 +167,8 @@ export async function newBet(
 				matchupStr: `${matchInfo.teamone} vs ${matchInfo.teamtwo}`,
 				betId,
 				teamEmoji,
+				payout,
+				profit,
 			},
 		)
 	} catch (err) {
