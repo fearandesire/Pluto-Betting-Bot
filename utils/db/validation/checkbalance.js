@@ -77,13 +77,10 @@ export async function checkbalance(
 			const avatarURL = userAcc.avatarURL()
 			const xpHandler = new XPHandler(inputuserid)
 			const userTier = await xpHandler.getUserTier()
-			await xpHandler.get_XP_Profile()
-			const { tier } = userTier
+			const { tier, userLevel } = userTier
 			const balEmbed = {
 				title: `:money_with_wings: ${userAcc.tag}'s Profile`,
-				description: `**💰 Balance: \`$${balance}\`**\n**🔰 Level: \`${
-					xpHandler.userLevel
-				}\`**\n**💫 Tier: ${_.upperFirst(
+				description: `**💰 Balance: \`$${balance}\`**\n**🔰 Level: \`${userLevel}\`**\n**💫 Tier: ${_.upperFirst(
 					tier,
 				)}**\n\n*View information on levels & tiers via /faq*`,
 				color: `${embedColors.PlutoBrightGreen}`,
@@ -95,15 +92,15 @@ export async function checkbalance(
 			const calledBy =
 				await SapDiscClient.users.fetch(inputuserid) // ? Fetch user who called the command
 			const targetAvatarURL = await target.avatarURL()
-			const xpHandler = new XPHandler(targetId)
-			const userTier = await xpHandler.getUserTier()
-			await xpHandler.get_XP_Profile()
-			const { tier } = userTier
+			const xpHandler = new XPHandler(inputuserid)
+			const userTier = await xpHandler.getUserTier(
+				inputuserid,
+			)
+
+			const { tier, userLevel } = userTier
 			const targetBalEmbd = {
 				title: `:money_with_wings: ${targetName}'s Profile`,
-				description: `**💰 Balance: \`$${balance}\`**\n**🔰 Level: \`${
-					xpHandler.userLevel
-				}\`**\n**💫 Tier: ${_.upperFirst(
+				description: `**💰 Balance: \`$${balance}\`**\n**🔰 Level: \`${userLevel}\`**\n**💫 Tier: ${_.upperFirst(
 					tier,
 				)}**\n*View information on levels & tiers via /faq*\n\n*Requested by ${
 					calledBy.nickname

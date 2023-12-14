@@ -1,4 +1,5 @@
 import _ from 'lodash'
+import { AttachmentBuilder, EmbedBuilder } from 'discord.js'
 import { BETSLIPS, LIVEBETS, CURRENCY } from '#config'
 
 import { db } from '#db'
@@ -9,6 +10,7 @@ import { getBalance } from '../../validation/getBalance.js'
 import BetNotify from '../BetNotify.js'
 import logClr from '#colorConsole'
 import XPHandler from '../../../xp/XPHandler.js'
+import embedColors from '../../../../lib/colorsConfig.js'
 
 async function getBets(matchid, dbCnx) {
 	return dbCnx.manyOrNone(
@@ -182,9 +184,54 @@ async function closeBets(
 						const xpHandler = new XPHandler(
 							userId,
 						)
-						await xpHandler.updateUserXP({
-							isWin: true,
-						})
+						const tierInfo =
+							await xpHandler.handleBetXp({
+								userId,
+								isWin: true,
+							})
+						if (tierInfo.leveledUp === true) {
+							const {
+								tierImg,
+								tier,
+								userLevel,
+							} = tierInfo
+							const imageAttachment =
+								new AttachmentBuilder(
+									tierImg,
+									{
+										name: `${tier}.png`,
+									},
+								)
+							// DM user that they leveled up
+							const embed = new EmbedBuilder()
+								.setTitle(`🔰 Level Up!`)
+								.setDescription(
+									`**You've reached level ${userLevel} 👏**\n**Current Tier: ${tier}**`,
+								)
+								.setThumbnail(
+									`attachment://${tier}.png`,
+								)
+								.setColor(
+									`${embedColors.Gold}`,
+								)
+								.setFooter({
+									text: `XP Tiers have been fixed - You may have jumped a tier or two!`,
+								})
+							try {
+								await SapDiscClient.users.send(
+									this.userId,
+									{
+										embeds: [embed],
+										files: [
+											imageAttachment,
+										],
+									},
+								)
+							} catch (err) {
+								return false
+								// Failed to DM User, likely to privacy settings or blocked
+							}
+						}
 					} else if (betResult === 'lost') {
 						await handleClosingBet(
 							userId,
@@ -202,9 +249,55 @@ async function closeBets(
 						const xpHandler = new XPHandler(
 							userId,
 						)
-						await xpHandler.updateUserXP({
-							isWin: false,
-						})
+						const tierInfo =
+							await xpHandler.handleBetXp({
+								userId,
+								isWin: true,
+							})
+						if (tierInfo.leveledUp === true) {
+							const {
+								tierImg,
+								tier,
+								userLevel,
+							} = tierInfo
+							const imageAttachment =
+								new AttachmentBuilder(
+									tierImg,
+									{
+										name: `${tier}.png`,
+									},
+								)
+							// DM user that they leveled up
+							const embed = new EmbedBuilder()
+								.setTitle(`🔰 Level Up!`)
+								.setDescription(
+									`**You've reached level ${userLevel} 👏**\n**Current Tier: ${tier}**`,
+								)
+								.setThumbnail(
+									`attachment://${tier}.png`,
+								)
+								.setColor(
+									`${embedColors.Gold}`,
+								)
+								.setFooter({
+									text: `XP Tiers have been fixed - You may have jumped a tier or two!`,
+								})
+							// Msg user
+							try {
+								await SapDiscClient.users.send(
+									this.userId,
+									{
+										embeds: [embed],
+										files: [
+											imageAttachment,
+										],
+									},
+								)
+							} catch (err) {
+								return false
+								// Failed to DM User, likely to privacy settings or blocked
+							}
+						}
 					}
 				}
 			} catch (err) {
