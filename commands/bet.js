@@ -26,6 +26,7 @@ export class bet extends Command {
 				builder //
 					.setName(this.name)
 					.setDescription(this.description)
+					.setDMPermission(false)
 					.addStringOption((option) =>
 						option //
 							.setName('team')

@@ -29,6 +29,7 @@ export class cancelBetSlash extends Command {
 				builder //
 					.setName('cancelbet')
 					.setDescription(this.description)
+					.setDMPermission(false)
 					.addIntegerOption((option) =>
 						option //
 							.setName('betid')

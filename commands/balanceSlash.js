@@ -22,6 +22,7 @@ export class balanceSlash extends Command {
 				builder //
 					.setName('balance')
 					.setDescription(this.description)
+					.setDMPermission(false)
 					.addMentionableOption((option) =>
 						option //
 							.setName('user')

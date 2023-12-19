@@ -21,7 +21,8 @@ export class leaderboardSlash extends Command {
 			(builder) =>
 				builder //
 					.setName('leaderboard')
-					.setDescription(this.description),
+					.setDescription(this.description)
+					.setDMPermission(false),
 			{ idHints: [`1023293710567481536`] },
 		)
 	}

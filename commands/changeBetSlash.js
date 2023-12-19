@@ -33,6 +33,7 @@ export class changeBetSlash extends Command {
 				builder //
 					.setName('changebet')
 					.setDescription(this.description)
+					.setDMPermission(false)
 					.addIntegerOption((option) =>
 						option //
 							.setName('betid')

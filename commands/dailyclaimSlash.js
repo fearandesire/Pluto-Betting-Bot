@@ -21,7 +21,8 @@ export class dailyClaimSlash extends Command {
 			(builder) =>
 				builder //
 					.setName('dailyclaim')
-					.setDescription(this.description),
+					.setDescription(this.description)
+					.setDMPermission(false),
 			{ idHints: [`1022940422974226432`] },
 		)
 	}

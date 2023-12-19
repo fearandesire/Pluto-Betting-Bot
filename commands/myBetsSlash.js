@@ -22,7 +22,8 @@ export class myBetsSlash extends Command {
 			(builder) =>
 				builder //
 					.setName('mybets')
-					.setDescription(this.description),
+					.setDescription(this.description)
+					.setDMPermission(false),
 			{ idHints: [`1023323729540952075`] },
 		)
 	}

@@ -20,7 +20,8 @@ export class faq extends Command {
 			(builder) =>
 				builder //
 					.setName('faq')
-					.setDescription(this.description),
+					.setDescription(this.description)
+					.setDMPermission(false),
 			// { idHints: [``] },
 		)
 	}

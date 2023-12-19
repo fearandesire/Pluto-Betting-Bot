@@ -22,6 +22,7 @@ export class Stats extends Command {
 			builder //
 				.setName('stats')
 				.setDescription(this.description)
+				.setDMPermission(false)
 				.addSubcommand((subcommand) =>
 					subcommand
 						.setName('everyone')

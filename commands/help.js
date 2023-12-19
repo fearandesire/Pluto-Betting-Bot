@@ -20,7 +20,8 @@ export class help extends Command {
 		registry.registerChatInputCommand((builder) =>
 			builder //
 				.setName('help')
-				.setDescription(this.description),
+				.setDescription(this.description)
+				.setDMPermission(false),
 		)
 	}
 

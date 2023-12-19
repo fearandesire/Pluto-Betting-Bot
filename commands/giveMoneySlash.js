@@ -22,6 +22,7 @@ export class giveMoneySlash extends Command {
 				builder //
 					.setName('give')
 					.setDescription(this.description)
+					.setDMPermission(false)
 					.addMentionableOption((option) =>
 						option //
 							.setName('user')

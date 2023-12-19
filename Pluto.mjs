@@ -7,8 +7,8 @@ import { RateLimitManager } from '@sapphire/ratelimits'
 import { GatewayIntentBits, Partials } from 'discord.js'
 import logClr from './utils/bot_res/ColorConsole.js'
 import '#serverConf'
-import '@sapphire/plugin-api/register'
-import './utils/api/index.js'
+// import '@sapphire/plugin-api/register'
+// import './utils/api/index.js'
 
 const SapDiscClient = new SapphireClient({
 	defaultPrefix: process.env.PREFIX,

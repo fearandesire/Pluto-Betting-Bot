@@ -21,6 +21,7 @@ export class deleteSlashCmd extends Command {
 			builder //
 				.setName('deleteslash')
 				.setDescription(this.description)
+				.setDMPermission(false)
 				.addStringOption((option) =>
 					option //
 						.setName(`name`)

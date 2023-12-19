@@ -18,7 +18,8 @@ export class pingSlash extends Command {
 			(builder) =>
 				builder //
 					.setName('ping')
-					.setDescription(this.description),
+					.setDescription(this.description)
+					.setDMPermission(false),
 			//    { idHints: [`1022940422974226432`] },
 		)
 	}

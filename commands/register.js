@@ -19,7 +19,8 @@ export class registerSlash extends Command {
 			(builder) =>
 				builder //
 					.setName('register')
-					.setDescription(this.description),
+					.setDescription(this.description)
+					.setDMPermission(false),
 			//    { idHints: [`1022940422974226432`] },
 		)
 	}

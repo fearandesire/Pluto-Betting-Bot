@@ -25,7 +25,8 @@ export class viewScheduled extends Command {
 			(builder) =>
 				builder //
 					.setName('viewscheduled')
-					.setDescription(this.description),
+					.setDescription(this.description)
+					.setDMPermission(false),
 			//    { idHints: [`1022940422974226432`] },
 		)
 	}
@@ -38,7 +39,9 @@ export class viewScheduled extends Command {
 			})
 			return
 		}
-		const scheduled = await Cache().get(`scheduled_games`)
+		const scheduled = await Cache().get(
+			`scheduled_games`,
+		)
 		if (!scheduled || _.isEmpty(scheduled)) {
 			await interaction.reply({
 				content: `There are no games currently scheduled to be created.`,

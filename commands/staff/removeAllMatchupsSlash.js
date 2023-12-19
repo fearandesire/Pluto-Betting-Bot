@@ -20,7 +20,8 @@ export class removeAllMatchupsSlash extends Command {
 			(builder) =>
 				builder //
 					.setName('clear_matchups')
-					.setDescription(this.description),
+					.setDescription(this.description)
+					.setDMPermission(false),
 			{ idHints: [`1023342000562516019`] },
 		)
 	}

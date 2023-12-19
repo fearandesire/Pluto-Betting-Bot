@@ -22,6 +22,7 @@ export class addMoneySlash extends Command {
 					.setName('addmoney')
 					.setDMPermission(false)
 					.setDescription(this.description)
+					.setDMPermission(false)
 					.addMentionableOption((option) =>
 						option //
 							.setName('user')

@@ -20,7 +20,8 @@ export class about extends Command {
 			(builder) =>
 				builder //
 					.setName('about')
-					.setDescription(this.description),
+					.setDescription(this.description)
+					.setDMPermission(false),
 			//    { idHints: [`1022940422974226432`] },
 		)
 	}

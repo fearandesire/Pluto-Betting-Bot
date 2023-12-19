@@ -21,6 +21,7 @@ redisCache.on('connect', () => {
 		`[REDIS] Connected to Redis server\nDB Selection: ${process.env.R_DB}`,
 	)
 })
+
 redisCache.on('error', (err) => {
 	throw new Error(err)
 })
