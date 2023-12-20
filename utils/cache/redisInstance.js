@@ -2,9 +2,7 @@ import Redis from 'ioredis'
 import { Log } from '#config'
 import { R_HOST, R_PORT, R_PASS, R_DB } from '#serverConf'
 
-Log.Yellow(
-	`Connecting to Redis: ${process.env.R_HOST}:${process.env.R_PORT}`,
-)
+Log.Yellow(`Connecting to Redis: ${R_HOST}:${R_PORT}`)
 
 const redisCache = new Redis({
 	host: R_HOST,

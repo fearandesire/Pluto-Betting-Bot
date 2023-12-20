@@ -70,7 +70,7 @@ module.exports = {
 					'./**',
 				],
 				map: [
-					['#db', './Database/dbindex.js'],
+					['#db', './database/dbindex.js'],
 					['#utilBot', './utils/bot_res'],
 					['#cache', './utils/cache'],
 					[

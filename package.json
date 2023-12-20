@@ -23,7 +23,7 @@
 		"#serverConf": "./utils/serverConfig.js",
 		"#PlutoLogger": "./utils/PlutoLogger.js",
 		"#daily/*": "./utils/scheduled/daily/*.js",
-		"#db": "./Database/dbindex.js",
+		"#db": "./database/dbindex.js",
 		"#utilBot/*": "./utils/bot_res/*.js",
 		"#cache/*": "./utils/cache/*.js",
 		"#cacheMngr": "./utils/cache/cacheManager.js",
