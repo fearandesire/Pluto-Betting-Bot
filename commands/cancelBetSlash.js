@@ -1,12 +1,12 @@
 import { Command } from '@sapphire/framework'
-import { validateUser } from '#utilValidate/validateExistingUser'
-import { verifyBetAuthor } from '#utilValidate/verifyBetAuthor'
+import { validateUser } from '@pluto-validate/validateExistingUser.js'
+import { verifyBetAuthor } from '@pluto-validate/verifyBetAuthor.js'
 import {
 	PROFILES,
 	BETSLIPS,
 	CURRENCY,
 	LIVEBETS,
-} from '#config'
+} from '@pluto-core-config'
 import BetManager from '../utils/bot_res/classes/BetManager.js'
 
 export class cancelBetSlash extends Command {

@@ -1,5 +1,5 @@
-import { SapDiscClient } from '#main'
-import { server_ID } from '#serverConf'
+import { server_ID } from '@pluto-server-config'
+import { SapDiscClient } from '@pluto-core'
 
 export default async function locateChannel(
 	channelName,

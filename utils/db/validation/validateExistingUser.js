@@ -1,5 +1,5 @@
-import { QuickError } from '#embed'
-import { isExistingUser } from '#utilValidate/isExistingUser'
+import { isExistingUser } from '@pluto-validate/isExistingUser.js'
+import { QuickError } from '@pluto-embed-reply'
 import PendingBetHandler from './pendingBet.js'
 
 /**

@@ -1,4 +1,4 @@
-import { SapDiscClient } from '#main'
+import { SapDiscClient } from '@pluto-core'
 
 /**
  * Check if a user is in the server

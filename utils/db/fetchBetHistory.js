@@ -1,13 +1,13 @@
+import db from '@pluto-db'
 import {
 	QuickError,
 	_,
 	accounting,
 	BETSLIPS,
-} from '#config'
+} from '@pluto-core-config'
 
-import { db } from '#db'
-import { embedReply } from '#embed'
-import PlutoLogger from '#PlutoLogger'
+import { embedReply } from '@pluto-embed-reply'
+import PlutoLogger from '@pluto-logger'
 import embedColors from '../../lib/colorsConfig.js'
 
 /**

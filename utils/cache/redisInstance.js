@@ -1,6 +1,11 @@
 import Redis from 'ioredis'
-import { Log } from '#config'
-import { R_HOST, R_PORT, R_PASS, R_DB } from '#serverConf'
+import {
+	R_HOST,
+	R_PORT,
+	R_PASS,
+	R_DB,
+} from '@pluto-server-config'
+import { Log } from '@pluto-core-config'
 
 Log.Yellow(`Connecting to Redis: ${R_HOST}:${R_PORT}`)
 

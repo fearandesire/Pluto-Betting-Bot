@@ -1,8 +1,8 @@
 import { Command } from '@sapphire/framework'
 import Promise from 'bluebird' // Import Bluebird library
-import { newBet } from '#utilBetOps/newBet'
-import { validateUser } from '#utilValidate/validateExistingUser'
-import { isPreSzn } from '#config'
+import { newBet } from '@pluto-betOps/newBet.js'
+import { validateUser } from '@pluto-validate/validateExistingUser.js'
+import { isPreSzn } from '@pluto-core-config'
 import PendingBetHandler from '../utils/db/validation/pendingBet.js'
 import isInGuild from '../utils/isInGuild.js'
 

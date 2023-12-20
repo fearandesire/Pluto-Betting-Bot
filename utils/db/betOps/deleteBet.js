@@ -1,5 +1,5 @@
-import { db } from '#db'
-import { BETSLIPS } from '#config'
+import db from '@pluto-db'
+import { BETSLIPS } from '@pluto-core-config'
 /**
  * @module deleteBet -
  *⁡⁣⁣⁢ deletes a bet from the DB.⁡
@@ -10,8 +10,8 @@ import { BETSLIPS } from '#config'
  * CURRENTLY NOT REFERENCED ANYWHERE // NO USES
  */
 export function deleteBet(userid, betid) {
-    return db.oneOrNone(
-        `DELETE FROM "${BETSLIPS}" WHERE userid = $1 AND betid = $2`,
-        [userid, betid],
-    )
+	return db.oneOrNone(
+		`DELETE FROM "${BETSLIPS}" WHERE userid = $1 AND betid = $2`,
+		[userid, betid],
+	)
 }

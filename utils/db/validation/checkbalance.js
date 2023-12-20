@@ -1,14 +1,14 @@
 import accounting from 'accounting'
 import _ from 'lodash'
+import db from '@pluto-db'
 import {
 	Log,
 	QuickError,
 	embedReply,
 	CURRENCY,
 	helpfooter,
-} from '#config'
-import { SapDiscClient } from '#main'
-import { db } from '#db'
+} from '@pluto-core-config'
+import { SapDiscClient } from '@pluto-core'
 import embedColors from '../../../lib/colorsConfig.js'
 import XPHandler from '../../xp/XPHandler.js'
 

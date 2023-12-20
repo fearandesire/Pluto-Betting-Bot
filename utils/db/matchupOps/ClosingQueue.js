@@ -1,4 +1,4 @@
-import { LIVEMATCHUPS } from '#config'
+import { LIVEMATCHUPS } from '@pluto-core-config'
 
 /**
  * Checks & sets matchups to be in the process of bets for matchups being processed.

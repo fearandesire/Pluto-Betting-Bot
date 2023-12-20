@@ -1,5 +1,5 @@
-import { db } from '#db'
-import { PENDING } from '#config'
+import db from '@pluto-db'
+import { PENDING } from '@pluto-core-config'
 
 /**
  * Handle queries to the database regarding pending bets. Note: 'pending bets' here indicate that the user is in the process of closing a bet.

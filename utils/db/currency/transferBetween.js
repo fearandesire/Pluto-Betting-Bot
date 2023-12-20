@@ -1,9 +1,9 @@
 import discord from 'discord.js'
 import accounting from 'accounting'
-import { db } from '#db'
-import { embedReply, CURRENCY } from '#config'
-import { validateUser } from '#utilValidate/validateExistingUser'
-import { SapDiscClient } from '#main'
+import db from '@pluto-db'
+import { embedReply, CURRENCY } from '@pluto-core-config'
+import { validateUser } from '@pluto-validate/validateExistingUser.js'
+import { SapDiscClient } from '@pluto-core'
 import embedColors from '../../../lib/colorsConfig.js'
 
 const { EmbedBuilder } = discord

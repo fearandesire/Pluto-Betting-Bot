@@ -1,6 +1,6 @@
-import { QuickError } from '#config'
-import { hasActiveBets } from '#utilValidate/hasActiveBets'
-import { listMyBets } from '#utilDB/listMyBets'
+import { QuickError } from '@pluto-core-config'
+import { hasActiveBets } from '@pluto-validate/hasActiveBets.js'
+import { listMyBets } from '@pluto-list-user-bets'
 
 /**
  * Retrieve User Bet Information

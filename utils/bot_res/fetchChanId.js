@@ -1,4 +1,4 @@
-import { SapDiscClient } from '#main'
+import { SapDiscClient } from '@pluto-core'
 
 /**
  * @module fetchChanId
@@ -8,10 +8,10 @@ import { SapDiscClient } from '#main'
  */
 
 export async function fetchChanId(reqId) {
-    return new Promise((resolve, reject) => {
-        //debug: console.log(`FETCHING ${reqId}`)
-        var ID = process.env[`${reqId}`]
-        var reqChan = SapDiscClient.channels.fetch(ID)
-        resolve(reqChan)
-    })
+	return new Promise((resolve, reject) => {
+		// debug: console.log(`FETCHING ${reqId}`)
+		const ID = process.env[`${reqId}`]
+		const reqChan = SapDiscClient.channels.fetch(ID)
+		resolve(reqChan)
+	})
 }

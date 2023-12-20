@@ -1,6 +1,10 @@
-import { Log } from '#LogColor'
-import { db } from '#db'
-import { CURRENCY, BETSLIPS, LIVEBETS } from '#config'
+import db from '@pluto-db'
+import {
+	CURRENCY,
+	BETSLIPS,
+	LIVEBETS,
+} from '@pluto-core-config'
+import { Log } from '@pluto-internal-logger'
 
 /**
  * @module modifyAmount -

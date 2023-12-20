@@ -1,12 +1,12 @@
 import _ from 'lodash'
 import fetch from 'node-fetch'
 import Promise from 'bluebird'
-import { ODDS, LIVEMATCHUPS } from '#config'
-import { assignMatchID } from '#botUtil/AssignIDs'
-import { db } from '#db'
-import IsoManager from '#iso'
-import PlutoLogger from '#PlutoLogger'
-import { MatchupManager } from '#MatchupManager'
+import { ODDS, LIVEMATCHUPS } from '@pluto-core-config'
+import db from '@pluto-db'
+import { MatchupManager } from '@pluto-matchupOps/MatchupManager.js'
+import { assignMatchID } from '@pluto-general-utils/AssignIDs.js'
+import PlutoLogger from '@pluto-logger'
+import IsoManager from '@pluto-iso-manager'
 
 /**
  * @function collectOdds

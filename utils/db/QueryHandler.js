@@ -1,4 +1,4 @@
-import { db } from '#db'
+import db from '@pluto-db'
 
 /**
  * Validate the data in the database provided. This function is used to find if X data currently exists in Y table.

@@ -1,6 +1,6 @@
 import { Command } from '@sapphire/framework'
-import { processClaim } from '#utilBetOps/processClaim'
-import { validateUser } from '#utilValidate/validateExistingUser'
+import { processClaim } from '@pluto-process-claim'
+import { validateUser } from '@pluto-validate/validateExistingUser.js'
 
 export class dailyClaimSlash extends Command {
 	constructor(context, options) {

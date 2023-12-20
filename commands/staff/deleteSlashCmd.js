@@ -1,5 +1,5 @@
 import { Command } from '@sapphire/framework'
-import { SapDiscClient } from '#main'
+import { SapDiscClient } from '@pluto-core'
 import isInGuild from '../../utils/isInGuild.js'
 
 export class deleteSlashCmd extends Command {

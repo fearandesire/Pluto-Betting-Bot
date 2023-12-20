@@ -1,15 +1,15 @@
 /** @module listMyBets */
 
 import _ from 'lodash'
+import db from '@pluto-db'
 import {
 	accounting,
 	embedReply,
 	QuickError,
 	BETSLIPS,
-} from '#config'
+} from '@pluto-core-config'
 
-import { Log } from '#LogColor'
-import { db } from '#db'
+import { Log } from '@pluto-internal-logger'
 import embedColors from '../../lib/colorsConfig.js'
 
 /**

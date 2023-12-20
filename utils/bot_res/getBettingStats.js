@@ -1,9 +1,9 @@
 /* eslint-disable no-console */
 import _ from 'lodash'
-import { db } from '#db'
-import { statsEmbedBuilder } from '#botUtil/statsEmbBuilder'
-import { embedReply, BETSLIPS } from '#config'
-import { SapDiscClient } from '#main'
+import db from '@pluto-db'
+import { statsEmbedBuilder } from '@pluto-stats-embed-builder'
+import { embedReply, BETSLIPS } from '@pluto-core-config'
+import { SapDiscClient } from '@pluto-core'
 
 export async function getBettingStats(options) {
 	const results = await db.any(`

@@ -1,5 +1,5 @@
-import Cache from '#rCache'
-import logClr from '#colorConsole'
+import logClr from '@pluto-internal-color-logger'
+import Cache from '@pluto-redis'
 
 /**
  * @function clearScheduled

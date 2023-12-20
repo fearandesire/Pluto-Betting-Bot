@@ -1,6 +1,6 @@
 import Router from 'koa-router'
+import { MatchupManager } from '@pluto-matchupOps/MatchupManager.js'
 import apiVersion from '../apiVersioning.js'
-import { MatchupManager } from '#MatchupManager'
 import { allOddsRL } from '../requests/ratelimits.js'
 
 const oddsRouter = new Router()
@@ -28,7 +28,6 @@ oddsRouter.get(`/${apiVersion}/odds/all`, async (ctx) => {
 			error: `Unable to retrieve odds.`,
 		}
 		ctx.status = 500
-		
 	}
 })
 

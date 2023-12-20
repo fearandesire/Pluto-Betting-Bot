@@ -1,6 +1,6 @@
 import { Command } from '@sapphire/framework'
-import { validateUser } from '#utilValidate/validateExistingUser'
-import { isPreSzn } from '#config'
+import { validateUser } from '@pluto-validate/validateExistingUser.js'
+import { isPreSzn } from '@pluto-core-config'
 import fetchUsersBets from '../utils/bot_res/betOps/fetchUsersBets.js'
 
 export class myBetsSlash extends Command {

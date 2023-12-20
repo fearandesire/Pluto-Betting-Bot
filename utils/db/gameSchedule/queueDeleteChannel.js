@@ -1,8 +1,8 @@
 import { addMinutes, format } from 'date-fns'
 
 import cron from 'node-cron'
+import PlutoLogger from '@pluto-logger'
 import { deleteChan } from './deleteChan.js'
-import PlutoLogger from '#PlutoLogger'
 
 /**
  * @module queueDeleteChannel

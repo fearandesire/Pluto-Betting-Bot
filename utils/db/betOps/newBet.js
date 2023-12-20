@@ -1,4 +1,5 @@
 import teamResolver from 'resolve-team'
+import { SPORT } from '@pluto-server-config'
 import {
 	QuickError,
 	BETSLIPS,
@@ -6,12 +7,11 @@ import {
 	PROFILES,
 	LIVEBETS,
 	findEmoji,
-} from '#config'
-import PendingBetHandler from '#utilValidate/pendingBet'
-import { verifyDupBet } from '#utilValidate/verifyDuplicateBet'
-import { resolvePayouts } from '#utilBetOps/resolvePayouts'
-import { SPORT } from '#serverConf'
-import { MatchupManager } from '#MatchupManager'
+} from '@pluto-core-config'
+import PendingBetHandler from '@pluto-validate/pendingBet.js'
+import { verifyDupBet } from '@pluto-validate/verifyDuplicateBet.js'
+import { resolvePayouts } from '@pluto-betOps/resolvePayouts.js'
+import { MatchupManager } from '@pluto-matchupOps/MatchupManager.js'
 import SelectMenuManager from '../../bot_res/classes/SelectMenuManager.js'
 import BetManager from '../../bot_res/classes/BetManager.js'
 import { sendErrorEmbed } from '../../bot_res/embeds/embedReply.js'

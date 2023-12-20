@@ -1,14 +1,14 @@
+import db from '@pluto-db'
 import {
 	QuickError,
 	embedReply,
 	CURRENCY,
 	BETSLIPS,
 	LIVEBETS,
-} from '#config'
+} from '@pluto-core-config'
 
-import { Log } from '#LogColor'
-import { db } from '#db'
-import { guildImgURL } from '#embed'
+import { guildImgURL } from '@pluto-embed-reply'
+import { Log } from '@pluto-internal-logger'
 
 /**
  * @module queryBets -

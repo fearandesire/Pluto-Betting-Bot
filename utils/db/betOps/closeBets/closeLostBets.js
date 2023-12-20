@@ -1,11 +1,11 @@
+import db from '@pluto-db'
 import {
 	Log,
 	LIVEMATCHUPS,
 	BETSLIPS,
 	LIVEBETS,
-} from '#config'
+} from '@pluto-core-config'
 
-import { db } from '#db'
 import { closeBetLog } from '../../../logging.js'
 import { lostDm } from '../lostDm.js'
 /**

@@ -1,20 +1,20 @@
 /* eslint-disable camelcase */
 import _ from 'lodash'
 import Promise from 'bluebird'
-import { SPORT } from '#serverConf'
+import { SPORT } from '@pluto-server-config'
+import { MatchupManager } from '@pluto-matchupOps/MatchupManager.js'
+import logClr from '@pluto-internal-color-logger'
+import Cache from '@pluto-redis'
+import PlutoLogger from '@pluto-logger'
+import IsoManager from '@pluto-iso-manager'
 import { getShortName } from '../../bot_res/getShortName.js'
 import { scheduleChannels } from './scheduleChannels.js'
 import locateChannel from '../../bot_res/locateChan.js'
-import Cache from '#rCache'
-import logClr from '#colorConsole'
-import PlutoLogger from '#PlutoLogger'
 import parseScheduled from '../../bot_res/parseScheduled.js'
-import { MatchupManager } from '#MatchupManager'
 import {
 	isDateTodayAndPast,
 	isWithinOneHour,
 } from '../../bot_res/dateUtils.js'
-import IsoManager from '#iso'
 
 /**
  * Generate Cron Jobs for Game Channel creation

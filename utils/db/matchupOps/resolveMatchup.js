@@ -1,6 +1,5 @@
-import { LIVEMATCHUPS } from '#config'
-
-import { db } from '#db'
+import db from '@pluto-db'
+import { LIVEMATCHUPS } from '@pluto-core-config'
 
 /**
  * @module resolveMatchup

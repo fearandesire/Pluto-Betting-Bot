@@ -1,5 +1,5 @@
-import { db } from '#db'
-import { CURRENCY } from '#config'
+import db from '@pluto-db'
+import { CURRENCY } from '@pluto-core-config'
 
 /**
  * @module isExistingUser -

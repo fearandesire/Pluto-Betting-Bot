@@ -1,5 +1,5 @@
-import { db } from '#db'
-import { LIVEMATCHUPS } from '#config'
+import db from '@pluto-db'
+import { LIVEMATCHUPS } from '@pluto-core-config'
 
 /**
  * @module inProgress

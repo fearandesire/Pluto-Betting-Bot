@@ -1,5 +1,5 @@
-import { db } from '#db'
-import { LIVEMATCHUPS } from '#config'
+import db from '@pluto-db'
+import { LIVEMATCHUPS } from '@pluto-core-config'
 
 /**
  * @module isMatchExist -
@@ -11,8 +11,8 @@ import { LIVEMATCHUPS } from '#config'
  */
 
 export async function isMatchExist(teamid) {
-    return db.oneOrNone(
-        `SELECT * FROM "${LIVEMATCHUPS}" WHERE teamone = $1 OR teamtwo = $1`,
-        [teamid],
-    )
+	return db.oneOrNone(
+		`SELECT * FROM "${LIVEMATCHUPS}" WHERE teamone = $1 OR teamtwo = $1`,
+		[teamid],
+	)
 }

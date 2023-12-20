@@ -1,7 +1,11 @@
 import Router from 'koa-router'
+import {
+	BETSLIPS,
+	PROFILES,
+	LIVEBETS,
+} from '@pluto-server-config'
 import apiVersion from '../apiVersioning.js'
 import BetManager from '../../bot_res/classes/BetManager.js'
-import { BETSLIPS, PROFILES, LIVEBETS } from '#serverConf'
 
 const fetchBetsRouter = new Router()
 

@@ -1,7 +1,6 @@
 import _ from 'lodash'
-import { formatCurrency, embedReply } from '#config'
-import { SapDiscClient } from '#main'
-import { findEmoji } from '#botUtil/findEmoji'
+import { formatCurrency } from '@pluto-core-config'
+import { findEmoji } from '@pluto-general-utils/findEmoji.js'
 /**
  * @module statsEmbedBuilder - Builds the embed object for the stats command
  */

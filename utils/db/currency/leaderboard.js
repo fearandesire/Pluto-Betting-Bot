@@ -1,6 +1,6 @@
 import Promise from 'bluebird'
 import { EmbedBuilder } from 'discord.js'
-import { SapDiscClient } from '#main'
+import { SapDiscClient } from '@pluto-core'
 import { reqLeaderboard } from './reqLeaderboard.js'
 
 /**

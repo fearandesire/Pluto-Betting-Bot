@@ -1,7 +1,7 @@
 import { Command } from '@sapphire/framework'
-import { getBettingStats } from '#botUtil/getBettingStats'
-import { QuickError } from '#config'
-import PlutoLogger from '#PlutoLogger'
+import { getBettingStats } from '@pluto-bettingStats'
+import { QuickError } from '@pluto-core-config'
+import PlutoLogger from '@pluto-logger'
 
 export class Stats extends Command {
 	constructor(context, options) {
@@ -66,7 +66,7 @@ export class Stats extends Command {
 			await getBettingStats({
 				interaction,
 				type: 'all',
-			}).catch(async (err) => {
+			}).catch(async () => {
 				await QuickError(
 					interaction,
 					`Unable to collect stats.`,

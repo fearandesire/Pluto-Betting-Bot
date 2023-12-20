@@ -1,5 +1,5 @@
 import { Command } from '@sapphire/framework'
-import { helpfooter, embedReply } from '#config'
+import { helpfooter, embedReply } from '@pluto-core-config'
 import embedColors from '../lib/colorsConfig.js'
 
 export class faq extends Command {

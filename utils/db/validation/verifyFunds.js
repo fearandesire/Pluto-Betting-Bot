@@ -1,6 +1,6 @@
+import { embedReply } from '@pluto-embed-reply'
+import { Log } from '@pluto-internal-logger'
 import { FileRunning } from '../bot_res/classes/FileRunning.js'
-import { Log } from '#LogColor'
-import { embedReply } from '#embed'
 import { fetchBalance } from './fetchBalance.js'
 import PendingBetHandler from './pendingBet.js'
 

@@ -1,12 +1,12 @@
 import Promise from 'bluebird'
-import { Log } from '#config'
+import { Log } from '@pluto-core-config'
+import logClr from '@pluto-internal-color-logger'
 import {
 	init_Cron_Completed,
 	init_Cron_Chan_Scheduler,
 	initMatchupHandling,
 	queueMidnightCheck,
 } from './scheduledModules.js'
-import logClr from '#colorConsole'
 import cronScheduleGames from '../db/gameSchedule/cronScheduleGames.js'
 import clearScheduled from '../db/gameSchedule/clearScheduled.js'
 import collectOdds from '../bot_res/betOps/collectOdds.js'

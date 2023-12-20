@@ -1,6 +1,6 @@
-import { gameActive } from '#dateUtil/gameActive'
-import { LIVEBETS } from '#config'
-import { db } from '#db'
+import { LIVEBETS } from '@pluto-core-config'
+import db from '@pluto-db'
+import { gameActive } from '@pluto-date-utils/gameActive.js'
 
 /**
  * @module verifyCancellation
@@ -8,15 +8,14 @@ import { db } from '#db'
  */
 
 export async function verifyCancellation(userid, betId) {
-    var bet = await db.oneOrNone(
-        `SELECT * FROM "${LIVEBETS}" WHERE betid = $1 AND userid = $2`,
-        [betId, userid],
-    )
-    var teamName = bet.teamid
-    var gameStatus = await gameActive(teamName)
-    if (gameStatus) {
-        return true
-    } else {
-        return false
-    }
+	const bet = await db.oneOrNone(
+		`SELECT * FROM "${LIVEBETS}" WHERE betid = $1 AND userid = $2`,
+		[betId, userid],
+	)
+	const teamName = bet.teamid
+	const gameStatus = await gameActive(teamName)
+	if (gameStatus) {
+		return true
+	}
+	return false
 }

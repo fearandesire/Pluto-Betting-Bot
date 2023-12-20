@@ -26,13 +26,11 @@ setTimeout(async () => {
 		color: `yellow`,
 		mark: `🕒`,
 	})
-	// # Restart Operation: Check for game channels to be scheduled on restart
-	if (process.env.NODE_ENV === 'production') {
-		await dbDailyOps()
-		logClr({
-			text: `[Startup]: On-Load Processes completed!`,
-			mark: `✅`,
-			color: `green`,
-		})
-	}
+	// # Start-Up Operation: Check for game channels to be scheduled on restart
+	await dbDailyOps()
+	logClr({
+		text: `[Startup]: On-Load Processes completed!`,
+		mark: `✅`,
+		color: `green`,
+	})
 }, 5000)

@@ -1,9 +1,13 @@
 import { EmbedBuilder } from 'discord.js'
 import accounting from 'accounting'
-import { db } from '#db'
-import { guildImgURL } from '#embed'
-import { embedReply, QuickError, helpfooter } from '#config'
-import { MatchupManager } from '#MatchupManager'
+import db from '@pluto-db'
+import {
+	embedReply,
+	QuickError,
+	helpfooter,
+} from '@pluto-core-config'
+import { MatchupManager } from '@pluto-matchupOps/MatchupManager.js'
+import { guildImgURL } from '@pluto-embed-reply'
 import BtnManager from './BtnManager.js'
 import AccountManager from './AccountManager.js'
 import PendingBetHandler from '../../db/validation/pendingBet.js'

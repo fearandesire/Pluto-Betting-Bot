@@ -1,5 +1,5 @@
 import { Command } from '@sapphire/framework'
-import { registerUser } from '#register'
+import { registerUser } from '@pluto-db-utils/registerUser.js'
 
 export class registerSlash extends Command {
 	constructor(context, options) {

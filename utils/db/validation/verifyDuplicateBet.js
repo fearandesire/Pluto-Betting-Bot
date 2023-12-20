@@ -1,7 +1,6 @@
-import { FileRunning } from '#botClasses/FileRunning'
-import { Log } from '#LogColor'
-import { QuickError } from '#embed'
-import { isDuplicateBet } from '#utilValidate/isDuplicateBet'
+import { isDuplicateBet } from '@pluto-validate/isDuplicateBet.js'
+import { QuickError } from '@pluto-embed-reply'
+import { Log } from '@pluto-internal-logger'
 import PendingBetHandler from './pendingBet.js'
 
 /**

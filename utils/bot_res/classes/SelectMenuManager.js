@@ -3,7 +3,7 @@ import {
 	StringSelectMenuBuilder,
 	EmbedBuilder,
 } from 'discord.js'
-import { helpfooter } from '#config'
+import { helpfooter } from '@pluto-core-config'
 import embedColors from '../../../lib/colorsConfig.js'
 
 export default class SelectMenuManager {

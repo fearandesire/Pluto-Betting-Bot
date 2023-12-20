@@ -1,7 +1,7 @@
 import { format } from 'date-fns'
-import { db } from '#db'
-import { _ } from '#config'
-import { LIVEMATCHUPS, PENDING } from '#serverConf'
+import db from '@pluto-db'
+import { LIVEMATCHUPS, PENDING } from '@pluto-server-config'
+import { _ } from '@pluto-core-config'
 /**
  * Completely wipes clear pending bets
  */

@@ -1,11 +1,14 @@
 import discord from 'discord.js'
 
 import _ from 'lodash'
-import { LIVEMATCHUPS, QuickError } from '#config'
-import { db } from '#db'
-import { guildImgURL } from '#embed'
+import db from '@pluto-db'
+import {
+	LIVEMATCHUPS,
+	QuickError,
+} from '@pluto-core-config'
+import { guildImgURL } from '@pluto-embed-reply'
+import IsoManager from '@pluto-iso-manager'
 import parseScheduled from '../parseScheduled.js'
-import IsoManager from '#iso'
 import { formatOdds } from './formatOdds.js'
 import { findEmoji } from '../findEmoji.js'
 

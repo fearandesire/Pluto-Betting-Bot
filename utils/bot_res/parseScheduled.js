@@ -6,7 +6,7 @@ import {
 	helpfooter,
 	dayOrder,
 	orderByDays,
-} from '#config'
+} from '@pluto-core-config'
 import embedColors from '../../lib/colorsConfig.js'
 
 const { EmbedBuilder } = discord

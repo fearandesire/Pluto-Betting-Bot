@@ -1,9 +1,9 @@
 import { createRequire } from 'module'
+import logClr from '@pluto-internal-color-logger'
+import Cache from '@pluto-redis'
 import { createChannel } from './createChannel.js'
 import { getShortName } from '../../bot_res/getShortName.js'
 import CronMath from './CronMath.js'
-import logClr from '#colorConsole'
-import Cache from '#rCache'
 
 const require = createRequire(import.meta.url)
 const cron = require('node-cron')

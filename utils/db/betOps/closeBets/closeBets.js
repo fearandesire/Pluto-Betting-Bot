@@ -1,14 +1,18 @@
 import _ from 'lodash'
 import { AttachmentBuilder, EmbedBuilder } from 'discord.js'
-import { BETSLIPS, LIVEBETS, CURRENCY } from '#config'
+import db from '@pluto-db'
+import {
+	BETSLIPS,
+	LIVEBETS,
+	CURRENCY,
+} from '@pluto-core-config'
 
-import { db } from '#db'
-import { resolvePayouts } from '#utilBetOps/resolvePayouts'
-import { SapDiscClient } from '#main'
-import PlutoLogger from '#PlutoLogger'
+import { resolvePayouts } from '@pluto-betOps/resolvePayouts.js'
+import { SapDiscClient } from '@pluto-core'
+import logClr from '@pluto-internal-color-logger'
+import PlutoLogger from '@pluto-logger'
 import { getBalance } from '../../validation/getBalance.js'
 import BetNotify from '../BetNotify.js'
-import logClr from '#colorConsole'
 import XPHandler from '../../../xp/XPHandler.js'
 import embedColors from '../../../../lib/colorsConfig.js'
 

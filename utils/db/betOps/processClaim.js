@@ -10,9 +10,9 @@ import {
 	parseISO,
 } from 'date-fns'
 
-import { db } from '#db'
-import { CURRENCY } from '#config'
-import PlutoLogger from '#PlutoLogger'
+import db from '@pluto-db'
+import { CURRENCY } from '@pluto-core-config'
+import PlutoLogger from '@pluto-logger'
 import { convertColor } from '../../bot_res/embeds/embedReply.js'
 import embedColors from '../../../lib/colorsConfig.js'
 

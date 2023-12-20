@@ -1,5 +1,5 @@
 import Promise from 'bluebird'
-import { embedReply, findEmoji } from '#config'
+import { embedReply, findEmoji } from '@pluto-core-config'
 import { fetchTodaysMatches as fetchToday } from '../../scheduled/daily/dailyModules_Utils.js'
 
 /**

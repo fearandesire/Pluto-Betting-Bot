@@ -119,10 +119,13 @@ module.exports = {
 						'#botClasses',
 						'./utils/bot_res/classes',
 					],
-					['#config', './lib/PlutoConfig.js'],
+					[
+						'@pluto-core-config',
+						'./lib/PlutoConfig.js',
+					],
 					['#dateUtil', './utils/date'],
 					['#cacheUtil', './utils/cache'],
-					['#main', './Pluto.mjs'],
+					['@pluto-core', './Pluto.mjs'],
 					[
 						'#winstonLogger',
 						'./utils/logging.js',

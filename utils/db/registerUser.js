@@ -1,8 +1,8 @@
-import { QuickError, embedReply } from '#embed'
+import db from '@pluto-db'
+import { CURRENCY, helpfooter } from '@pluto-core-config'
+import { QuickError, embedReply } from '@pluto-embed-reply'
 
-import { db } from '#db'
-import { CURRENCY, helpfooter } from '#config'
-import PlutoLogger from '#PlutoLogger'
+import PlutoLogger from '@pluto-logger'
 import embedColors from '../../lib/colorsConfig.js'
 import { TodaysDate } from '../date/TodaysDate.js'
 

@@ -1,6 +1,6 @@
 import { Command } from '@sapphire/framework'
 import { loadJsonFile } from 'load-json-file'
-import { embedReply } from '#config'
+import { embedReply } from '@pluto-core-config'
 
 export class about extends Command {
 	constructor(context, options) {

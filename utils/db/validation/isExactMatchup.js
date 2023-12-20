@@ -1,6 +1,6 @@
 import _ from 'lodash'
-import { db } from '#db'
-import { LIVEMATCHUPS } from "#config"
+import db from '@pluto-db'
+import { LIVEMATCHUPS } from '@pluto-core-config'
 /**
  * @module isExactMatchup
  * Query the database to validate if the exact matchup is existing. The home and away teams inputted must match `teamone` and `teamtwo` in the database respectively.
@@ -11,14 +11,17 @@ import { LIVEMATCHUPS } from "#config"
  * @returns {boolean} - True if the matchup exists, false if it does not.
  */
 
-export async function isExactMatchup(homeTeam, awayTeam, matchupDate) {
-    var matchup = await db.oneOrNone(
-        `SELECT * FROM "${LIVEMATCHUPS}" WHERE "teamone" = $1 AND "teamtwo" = $2 AND "dateofmatchup" = $3`,
-        [homeTeam, awayTeam, matchupDate],
-    )
-    if (_.isEmpty(matchup) === true) {
-        return false
-    } else {
-        return true
-    }
+export async function isExactMatchup(
+	homeTeam,
+	awayTeam,
+	matchupDate,
+) {
+	const matchup = await db.oneOrNone(
+		`SELECT * FROM "${LIVEMATCHUPS}" WHERE "teamone" = $1 AND "teamtwo" = $2 AND "dateofmatchup" = $3`,
+		[homeTeam, awayTeam, matchupDate],
+	)
+	if (_.isEmpty(matchup) === true) {
+		return false
+	}
+	return true
 }

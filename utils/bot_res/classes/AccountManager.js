@@ -1,4 +1,4 @@
-import { db } from '#db'
+import db from '@pluto-db'
 
 export default class AccountManager {
 	constructor(accountTable) {

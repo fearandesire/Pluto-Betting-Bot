@@ -1,7 +1,7 @@
 import { Command } from '@sapphire/framework'
-import { checkbalance } from '#utilValidate/checkbalance'
-import { validateUser } from '#utilValidate/validateExistingUser'
-import { isPreSzn } from '#config'
+import { checkbalance } from '@pluto-check-balance'
+import { validateUser } from '@pluto-validate/validateExistingUser.js'
+import { isPreSzn } from '@pluto-core-config'
 
 export class balanceSlash extends Command {
 	constructor(context, options) {

@@ -2,7 +2,7 @@
  * Module to filter game channels to be scheduled
  */
 
-import IsoManager from '#iso'
+import IsoManager from '@pluto-iso-manager'
 
 /**
  * Filter/Remove games via specified criteria:

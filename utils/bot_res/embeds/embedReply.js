@@ -1,8 +1,8 @@
 import discord from 'discord.js'
 import color from 'color'
-import { fetchChanId } from '#botUtil/fetchChanId'
-import { SapDiscClient } from '#main'
+import { SapDiscClient } from '@pluto-core'
 import embedColors from '../../../lib/colorsConfig.js'
+import { GuildManager } from '../classes/GuildManager.js'
 
 const { EmbedBuilder } = discord
 
@@ -46,6 +46,9 @@ export async function embedReply(
 	embedContent,
 	interactionEph,
 ) {
+	const guildMngr = await new GuildManager(
+		interaction.guild,
+	)
 	const embedColor =
 		convertColor(embedContent.color) ||
 		embedColors.PlutoYellow
@@ -115,7 +118,7 @@ export async function embedReply(
 		// # Fields-Embed Destination to a specific channel
 		if (target !== 'reply') {
 			reqChan = await Promise.resolve(
-				fetchChanId(target),
+				guildMngr.fetchChannelViaId(target),
 			)
 			return reqChan.send({ embeds: [noFieldsEmbed] })
 		}
@@ -154,7 +157,9 @@ export async function embedReply(
 			// # Non-Field Embed Destination to a specific channel
 		} else if (target !== 'reply') {
 			if (isSilent === false) {
-				reqChan = await fetchChanId(target)
+				reqChan = await Promise.resolve(
+					guildMngr.fetchChannelViaId(target),
+				)
 				return reqChan.send({
 					embeds: [embedWithFields],
 				})

@@ -1,5 +1,5 @@
 import { Command } from '@sapphire/framework'
-import { isPreSzn } from '#config'
+import { isPreSzn } from '@pluto-core-config'
 import returnOdds from '../utils/bot_res/betOps/returnOdds.js'
 
 export class odds extends Command {

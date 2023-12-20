@@ -1,6 +1,6 @@
 import { format } from 'date-fns'
+import PlutoLogger from '@pluto-logger'
 import redisCache from './redisInstance.js'
-import PlutoLogger from '#PlutoLogger'
 
 export class CacheManager {
 	/**
@@ -69,9 +69,8 @@ export class CacheManager {
 					description: `Error deleting item from Cache`,
 				})
 				return false
-			} 
-				return true
-			
+			}
+			return true
 		})
 	}
 

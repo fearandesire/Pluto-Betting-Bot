@@ -1,9 +1,9 @@
 import { Command } from '@sapphire/framework'
-import { _, QuickError } from '#config'
-import { guildImgURL } from '#embed'
-import { SPORT } from '#serverConf'
-import Cache from '#rCache'
-import PlutoLogger from '#PlutoLogger'
+import { SPORT } from '@pluto-server-config'
+import { _, QuickError } from '@pluto-core-config'
+import { guildImgURL } from '@pluto-embed-reply'
+import Cache from '@pluto-redis'
+import PlutoLogger from '@pluto-logger'
 import parseScheduled from '../utils/bot_res/parseScheduled.js'
 
 export class viewScheduled extends Command {

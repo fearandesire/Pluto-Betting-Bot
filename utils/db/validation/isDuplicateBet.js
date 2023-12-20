@@ -1,5 +1,5 @@
-import { db } from '#db'
-import { LIVEBETS } from '#config'
+import db from '@pluto-db'
+import { LIVEBETS } from '@pluto-core-config'
 
 /**
  * @module isDuplicateBet -
@@ -11,8 +11,8 @@ import { LIVEBETS } from '#config'
  */
 
 export function isDuplicateBet(userid, matchupId) {
-    return db.oneOrNone(
-        `SELECT * FROM "${LIVEBETS}" WHERE userid = $1 AND matchid = $2`,
-        [userid, matchupId],
-    )
+	return db.oneOrNone(
+		`SELECT * FROM "${LIVEBETS}" WHERE userid = $1 AND matchid = $2`,
+		[userid, matchupId],
+	)
 }

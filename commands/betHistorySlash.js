@@ -1,6 +1,5 @@
 import { Command } from '@sapphire/framework'
-import { validateUser } from '#utilValidate/validateExistingUser'
-import { QuickError } from '#config'
+import { validateUser } from '@pluto-validate/validateExistingUser.js'
 import { fetchBetHistory } from '../utils/db/fetchBetHistory.js'
 
 export class betHistorySlash extends Command {

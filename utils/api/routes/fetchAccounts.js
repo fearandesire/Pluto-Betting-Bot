@@ -1,7 +1,7 @@
 import Router from 'koa-router'
+import { PROFILES } from '@pluto-server-config'
 import apiVersion from '../apiVersioning.js'
 import AccountManager from '../../bot_res/classes/AccountManager.js'
-import { PROFILES } from '#serverConf'
 
 const fetchAccountsRouter = new Router()
 

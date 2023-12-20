@@ -1,4 +1,4 @@
-import { Log } from '#config'
+import { Log } from '@pluto-core-config'
 import dmMe from '../dmMe.js'
 
 /**

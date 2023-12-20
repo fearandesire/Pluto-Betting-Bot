@@ -2,7 +2,7 @@
 import fs from 'fs/promises'
 import path from 'path'
 import { fileURLToPath } from 'node:url'
-import PlutoLogger from '#PlutoLogger'
+import PlutoLogger from '@pluto-logger'
 
 /**
  * @module fetchVsImg

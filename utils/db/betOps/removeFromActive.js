@@ -1,5 +1,5 @@
-import { db } from '#db'
-import { LIVEBETS } from '#config'
+import db from '@pluto-db'
+import { LIVEBETS } from '@pluto-core-config'
 
 /**
  * @module removeFromActive
@@ -7,10 +7,10 @@ import { LIVEBETS } from '#config'
  */
 
 export async function removeFromActive(userid, betid) {
-    return db.tx('removeFromActive', async (t) => {
-        await t.oneOrNone(
-            `DELETE FROM "${LIVEBETS}" WHERE userid = $1 AND betid = $2`,
-            [userid, betid],
-        )
-    })
+	return db.tx('removeFromActive', async (t) => {
+		await t.oneOrNone(
+			`DELETE FROM "${LIVEBETS}" WHERE userid = $1 AND betid = $2`,
+			[userid, betid],
+		)
+	})
 }

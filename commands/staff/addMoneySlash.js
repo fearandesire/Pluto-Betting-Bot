@@ -1,6 +1,6 @@
 import { Command } from '@sapphire/framework'
-import { giveBalance } from '#utilCurrency/giveBalance'
-import { validateUser } from '#utilValidate/validateExistingUser'
+import { validateUser } from '@pluto-validate/validateExistingUser.js'
+import { giveBalance } from '@pluto-currency/giveBalance.js'
 
 export class addMoneySlash extends Command {
 	constructor(context, options) {

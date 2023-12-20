@@ -4,7 +4,7 @@ import {
 	ButtonStyle,
 	EmbedBuilder,
 } from 'discord.js'
-import { helpfooter } from '#config'
+import { helpfooter } from '@pluto-core-config'
 import embedColors from '../../../lib/colorsConfig.js'
 import { sendErrorEmbed } from '../embeds/embedReply.js'
 

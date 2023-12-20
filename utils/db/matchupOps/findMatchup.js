@@ -1,5 +1,5 @@
-import { db } from '#db'
-import { LIVEMATCHUPS } from '#config'
+import db from '@pluto-db'
+import { LIVEMATCHUPS } from '@pluto-core-config'
 
 /**
  * @module findMatchup
@@ -9,20 +9,27 @@ import { LIVEMATCHUPS } from '#config'
  */
 
 export function findMatchup(teamOrId) {
-    console.log(`Searching for match containing: ${teamOrId}`)
-    if (typeof teamOrId === 'string') {
-        return db.tx('findMatchup', async (t) => {
-            return await t.oneOrNone(
-                `SELECT * from "${LIVEMATCHUPS}" WHERE teamone = $1 OR teamtwo = $1`,
-                [teamOrId],
-            )
-        })
-    } else if (typeof teamOrId === 'number') {
-        return db.tx('findMatchup', async (t) => {
-            return await t.oneOrNone(
-                `SELECT * from "${LIVEMATCHUPS}" WHERE matchid = $1`,
-                [teamOrId],
-            )
-        })
-    }
+	console.log(
+		`Searching for match containing: ${teamOrId}`,
+	)
+	if (typeof teamOrId === 'string') {
+		return db.tx(
+			'findMatchup',
+			async (t) =>
+				await t.oneOrNone(
+					`SELECT * from "${LIVEMATCHUPS}" WHERE teamone = $1 OR teamtwo = $1`,
+					[teamOrId],
+				),
+		)
+	}
+	if (typeof teamOrId === 'number') {
+		return db.tx(
+			'findMatchup',
+			async (t) =>
+				await t.oneOrNone(
+					`SELECT * from "${LIVEMATCHUPS}" WHERE matchid = $1`,
+					[teamOrId],
+				),
+		)
+	}
 }

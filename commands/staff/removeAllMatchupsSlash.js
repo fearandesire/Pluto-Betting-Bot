@@ -1,5 +1,5 @@
 import { Command } from '@sapphire/framework'
-import { MatchupManager } from '#MatchupManager'
+import { MatchupManager } from '@pluto-matchupOps/MatchupManager.js'
 
 export class removeAllMatchupsSlash extends Command {
 	constructor(context, options) {

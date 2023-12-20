@@ -1,5 +1,5 @@
 import discord from 'discord.js'
-import { SapDiscClient } from '#main'
+import { SapDiscClient } from '@pluto-core'
 
 const { EmbedBuilder } = discord
 /**

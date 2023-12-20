@@ -1,4 +1,4 @@
-import { Log } from '#config'
+import { Log } from '@pluto-core-config'
 import locateChannel from '../../bot_res/locateChan.js'
 
 /**
@@ -11,7 +11,10 @@ import locateChannel from '../../bot_res/locateChan.js'
 export async function deleteChan(channelName) {
 	// Replace spaces with -
 	const parsedChanName = channelName.replace(/\s/g, '-')
-	const gameChan = await locateChannel(parsedChanName, true)
+	const gameChan = await locateChannel(
+		parsedChanName,
+		true,
+	)
 	if (!gameChan) {
 		await Log.Red(
 			`Unable to locate channel ${parsedChanName} to delete.`,

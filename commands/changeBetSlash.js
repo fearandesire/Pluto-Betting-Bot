@@ -1,17 +1,17 @@
 import { Command } from '@sapphire/framework'
-import { QuickError } from '#embed'
-import { modifyAmount } from '#utilBetOps/modifyAmount'
-import { validateUser } from '#utilValidate/validateExistingUser'
-import { verifyBetAuthor } from '#utilValidate/verifyBetAuthor'
-import { fetchBalance } from '#utilCurrency/fetchBalance'
-import { MatchupManager } from '#MatchupManager'
-import BetManager from '../utils/bot_res/classes/BetManager.js'
+import { modifyAmount } from '@pluto-betOps/modifyAmount.js'
 import {
 	PROFILES,
 	BETSLIPS,
 	CURRENCY,
 	LIVEBETS,
-} from '#serverConf'
+} from '@pluto-server-config'
+import { validateUser } from '@pluto-validate/validateExistingUser.js'
+import { verifyBetAuthor } from '@pluto-validate/verifyBetAuthor.js'
+import { MatchupManager } from '@pluto-matchupOps/MatchupManager.js'
+import { fetchBalance } from '@pluto-currency/fetchBalance.js'
+import { QuickError } from '@pluto-embed-reply'
+import BetManager from '../utils/bot_res/classes/BetManager.js'
 
 export class changeBetSlash extends Command {
 	constructor(context, options) {

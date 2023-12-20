@@ -1,6 +1,6 @@
 import discord from 'discord.js'
+import logClr from '@pluto-internal-color-logger'
 import embedColors from '../../../lib/colorsConfig.js'
-import logClr from '#colorConsole'
 import { bettingChan } from '../../serverConfig.js'
 
 const { EmbedBuilder } = discord

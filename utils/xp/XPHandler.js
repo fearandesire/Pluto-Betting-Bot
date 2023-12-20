@@ -1,7 +1,7 @@
 import _ from 'lodash'
 import { packageDirectory } from 'pkg-dir'
-import { db } from '#db'
-import { EXPERIENCE, SPORT } from '#serverConf'
+import db from '@pluto-db'
+import { EXPERIENCE, SPORT } from '@pluto-server-config'
 import { levelTiers, levelIcons } from './XPLevels.js'
 
 /**

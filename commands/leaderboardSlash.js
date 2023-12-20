@@ -1,6 +1,6 @@
 import { Command } from '@sapphire/framework'
-import { leaderboard } from '#utilCurrency/leaderboard'
-import { reply } from '#botUtil/reply'
+import { leaderboard } from '@pluto-leaderboard'
+import { reply } from '@pluto-reply'
 
 export class leaderboardSlash extends Command {
 	constructor(context, options) {

@@ -1,6 +1,6 @@
 import _ from 'lodash'
-import { db } from '#db'
-import { RANGES } from '#serverConf'
+import db from '@pluto-db'
+import { RANGES } from '@pluto-server-config'
 
 export default async function fetchRanges() {
 	const rows = await db.query(

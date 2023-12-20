@@ -1,5 +1,5 @@
-import { db } from '#db'
-import { PROFILES } from '#serverConf'
+import db from '@pluto-db'
+import { PROFILES } from '@pluto-server-config'
 
 /**
  * Return the user's balance - Directly retrieves information without many params

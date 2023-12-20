@@ -1,13 +1,11 @@
-import { Log } from '#LogColor'
-import { SapDiscClient } from '#main'
-import { db } from '#db'
+import db from '@pluto-db'
 import {
 	embedReply,
 	CURRENCY,
 	formatCurrency,
-} from '#config'
-import { giveMoneyLog, dmLog } from '#winstonLogger'
-
+} from '@pluto-core-config'
+import { SapDiscClient } from '@pluto-core'
+import { Log } from '@pluto-internal-logger'
 import { isInServer } from '../../bot_res/isInServer.js'
 import embedColors from '../../../lib/colorsConfig.js'
 import { convertColor } from '../../bot_res/embeds/embedReply.js'
@@ -48,9 +46,6 @@ export async function giveBalance(
 			target: `reply`,
 		}
 		await embedReply(interaction, embObj)
-		await giveMoneyLog.info(
-			`${interaction.user.username} gave ${targetUserId} $${transferammount}!`,
-		)
 		// # DM the user they received money
 		const verifyUser = await isInServer(targetUserId)
 		if (verifyUser) {
@@ -65,7 +60,7 @@ export async function giveBalance(
 				.fetch(`${targetUserId}`)
 				.then(async (user) => {
 					if (!user) {
-						dmLog.error(
+						Log.Error(
 							`Failed to send DM to user ${targetUserId} is no longer in the server.`,
 						)
 						return
@@ -73,9 +68,6 @@ export async function giveBalance(
 					await user.send({
 						embeds: [receivedMoneyEmb],
 					})
-					await dmLog.info(
-						`DM'd ${targetUserId} successfully`,
-					)
 				})
 		}
 		return t.any(

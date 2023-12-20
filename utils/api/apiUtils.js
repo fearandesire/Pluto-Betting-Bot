@@ -5,7 +5,7 @@
 
 import { format } from 'date-fns'
 import cronstrue from 'cronstrue'
-import { Log } from '#colors'
+import { Log } from '@pluto-internal-logger'
 
 export function formatRange(cronString) {
 	const options = {

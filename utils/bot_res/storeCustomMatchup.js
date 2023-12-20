@@ -1,4 +1,4 @@
-import { Log } from '#config'
+import { Log } from '@pluto-core-config'
 import flatcache from 'flat-cache'
 
 /**
@@ -7,27 +7,30 @@ import flatcache from 'flat-cache'
  */
 
 export async function storeCustomMatchup(matchupObj) {
-    let oddsCache = flatcache.create(`oddsCache.json`, './cache/dailyOdds')
-    let matchupCache = oddsCache.getKey('matchups')
-    try {
-        var matchId = matchupObj.matchupId
-        matchupCache[matchId] = matchupObj
-        oddsCache.save(true)
-        //# store team names into custom teams cache
-        let customTeamsCache = flatcache.create(
-            `customTeamsCache.json`,
-            './cache/customTeams',
-        )
-        //# store custom team names
-        var cstmObj = {
-            [`home_team`]: matchupObj.home_team,
-            [`away_team`]: matchupObj.away_team,
-        }
-        customTeamsCache.setKey(`${matchId}`, cstmObj)
-        customTeamsCache.save(true)
-        return true
-    } catch (error) {
-        Log.Red(error)
-        return false
-    }
+	const oddsCache = flatcache.create(
+		`oddsCache.json`,
+		'./cache/dailyOdds',
+	)
+	const matchupCache = oddsCache.getKey('matchups')
+	try {
+		const matchId = matchupObj.matchupId
+		matchupCache[matchId] = matchupObj
+		oddsCache.save(true)
+		// # store team names into custom teams cache
+		const customTeamsCache = flatcache.create(
+			`customTeamsCache.json`,
+			'./cache/customTeams',
+		)
+		// # store custom team names
+		const cstmObj = {
+			[`home_team`]: matchupObj.home_team,
+			[`away_team`]: matchupObj.away_team,
+		}
+		customTeamsCache.setKey(`${matchId}`, cstmObj)
+		customTeamsCache.save(true)
+		return true
+	} catch (error) {
+		Log.Red(error)
+		return false
+	}
 }

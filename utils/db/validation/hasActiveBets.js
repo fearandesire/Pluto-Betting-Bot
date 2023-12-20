@@ -1,7 +1,7 @@
 import _ from 'lodash'
-import { db } from '#db'
-import { LIVEBETS } from '#config'
-import PlutoLogger from '#PlutoLogger'
+import db from '@pluto-db'
+import { LIVEBETS } from '@pluto-core-config'
+import PlutoLogger from '@pluto-logger'
 /**
  * Queries the database to validate any active user bets.
  * @param {integer} userid - The user ID of the user we are validating.
