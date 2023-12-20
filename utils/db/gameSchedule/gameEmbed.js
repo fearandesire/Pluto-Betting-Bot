@@ -1,7 +1,7 @@
 import discord from 'discord.js'
 import teamResolver from 'resolve-team'
 import { SapDiscClient } from '#main'
-import { SPORT } from '#env'
+import { SPORT } from '#serverConf'
 import { findEmoji } from '../../bot_res/findEmoji.js'
 import resolveMatchup from '../matchupOps/resolveMatchup.js'
 import { bettingChan } from '../../serverConfig.js'

@@ -55,12 +55,18 @@ const serverEnv = {
 	scheduledGames: configData.scheduledGames,
 	getRanges: configData.getRanges,
 	getOdds: configData.getOdds,
+	SPORT: configData.SPORT,
+	R_HOST: configData.R_HOST,
+	R_PORT: configData.R_PORT,
+	R_DB: configData.R_DB,
+	R_PASS: configData.R_PASS,
+	SEASON_TYPE: configData.SEASON_TYPE,
 }
 
 // console.log(`serverEnv =>\n`, serverEnv)
 
 const {
-	// Tables
+	// DB Tables
 	ODDS,
 	SCORE,
 	RANGES,
@@ -84,6 +90,12 @@ const {
 	scheduledGames,
 	getRanges,
 	getOdds,
+	SPORT,
+	R_HOST,
+	R_PORT,
+	R_DB,
+	R_PASS,
+	SEASON_TYPE,
 } = serverEnv
 
 export {
@@ -108,6 +120,12 @@ export {
 	scheduledGames,
 	getRanges,
 	getOdds,
+	SPORT,
+	R_HOST,
+	R_PORT,
+	R_DB,
+	R_PASS,
+	SEASON_TYPE,
 }
 
 export { configData as serverConf, serverEnv }

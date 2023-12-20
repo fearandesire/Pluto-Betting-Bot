@@ -1,6 +1,6 @@
-import { db } from '#db'
-import { RANGES } from '#env'
 import _ from 'lodash'
+import { db } from '#db'
+import { RANGES } from '#serverConf'
 
 export default async function fetchRanges() {
 	const rows = await db.query(

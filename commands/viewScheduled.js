@@ -1,7 +1,7 @@
 import { Command } from '@sapphire/framework'
 import { _, QuickError } from '#config'
-import { SPORT } from '#env'
 import { guildImgURL } from '#embed'
+import { SPORT } from '#serverConf'
 import Cache from '#rCache'
 import PlutoLogger from '#PlutoLogger'
 import parseScheduled from '../utils/bot_res/parseScheduled.js'

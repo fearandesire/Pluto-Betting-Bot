@@ -1,5 +1,5 @@
 import { SapDiscClient } from '#main'
-import { server_ID } from '#env'
+import { server_ID } from '#serverConf'
 
 export default async function locateChannel(
 	channelName,

@@ -1,8 +1,7 @@
 import _ from 'lodash'
 import { packageDirectory } from 'pkg-dir'
 import { db } from '#db'
-import { SPORT } from '#env'
-import { EXPERIENCE } from '#config'
+import { EXPERIENCE, SPORT } from '#serverConf'
 import { levelTiers, levelIcons } from './XPLevels.js'
 
 /**

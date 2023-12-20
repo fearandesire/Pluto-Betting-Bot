@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import _ from 'lodash'
 import Promise from 'bluebird'
-import { SPORT } from '#env'
+import { SPORT } from '#serverConf'
 import { getShortName } from '../../bot_res/getShortName.js'
 import { scheduleChannels } from './scheduleChannels.js'
 import locateChannel from '../../bot_res/locateChan.js'

@@ -1,7 +1,7 @@
 import discord from 'discord.js'
 import { SapDiscClient } from '#main'
 import { fetchVsImg } from '#utilBot/fetchVsImg'
-import { SPORT } from '#env'
+import { SPORT } from '#serverConf'
 import { gameEmbedOdds } from './gameEmbed.js'
 import PlutoLogger from '#PlutoLogger'
 
