@@ -7,11 +7,11 @@ import {
 	LIVEBETS,
 } from '@pluto-core-config'
 import { AttachmentBuilder, EmbedBuilder } from 'discord.js'
-import { resolvePayouts } from './resolvePayouts'
-import BetNotify from './BetNotify'
-import { getBalance } from '../validation/getBalance'
-import XPHandler from '../../xp/XPHandler'
-import embedColors from '../../../lib/colorsConfig'
+import { resolvePayouts } from './resolvePayouts.js'
+import BetNotify from './BetNotify.js'
+import { getBalance } from '../validation/getBalance.js'
+import XPHandler from '../../xp/XPHandler.js'
+import embedColors from '../../../lib/colorsConfig.js'
 
 export default class BetProcessor {
 	constructor(dbTrans) {
@@ -39,6 +39,66 @@ export default class BetProcessor {
 				description: `An error occured when closing bets.\n${err.message}`,
 			})
 			console.error(err)
+		}
+	}
+
+	async processBet(
+		betslip,
+		winningTeam,
+		losingTeam,
+		matchInfo,
+	) {
+		try {
+			console.log(
+				`Processing bet for betslip: ${betslip.betid}`,
+			)
+			const betResult = this.determineBetResult(
+				betslip.teamid,
+				winningTeam,
+				losingTeam,
+			)
+			const oddsForBet = await this.selectOdds(
+				matchInfo,
+				betslip.teamid,
+			)
+			const payoutData = await this.getPayoutData(
+				oddsForBet,
+				betslip.betAmount,
+			)
+			const oldBalance = await getBalance(
+				betslip.userid,
+			)
+
+			await this.updateBetResult(
+				betslip,
+				betResult,
+				payoutData,
+			)
+			await this.updateUserBalance(
+				betslip,
+				betResult,
+				payoutData,
+			)
+			await this.cleanUpBet(betslip)
+
+			const newBalance = await getBalance(
+				betslip.userid,
+			)
+			await this.notifyBetResult(
+				betslip,
+				betResult,
+				{ currentBalance: newBalance, oldBalance },
+				payoutData,
+			)
+			await this.handleUserXP(
+				betslip.userid,
+				betResult === 'won',
+			)
+		} catch (err) {
+			console.error(
+				`Error processing bet: ${err.message}`,
+			)
+			throw err
 		}
 	}
 
@@ -74,7 +134,9 @@ export default class BetProcessor {
 		const selectedOdds = oddsMapping[team]
 
 		if (!selectedOdds) {
-			return false
+			throw new Error(
+				`Unable to resolve odds for ${team} when closing a bet.`,
+			)
 		}
 
 		return selectedOdds
@@ -87,49 +149,6 @@ export default class BetProcessor {
 		return resolvePayouts(oddsForBet, betAmount)
 	}
 
-	async processBet(
-		betslip,
-		winningTeam,
-		losingTeam,
-		matchInfo,
-	) {
-		const betResult = this.determineBetResult(
-			betslip.teamid,
-			winningTeam,
-			losingTeam,
-		)
-		const oddsForBet = await this.selectOdds(
-			matchInfo,
-			betslip.teamid,
-		)
-		const payoutData = await this.getPayoutData(
-			oddsForBet,
-			betslip.betAmount,
-		)
-		const oldBalance = await getBalance(betslip.userid)
-		if (betResult === 'won') {
-			await this.handleBetResult(betslip, payoutData)
-		} else if (betResult === 'lost') {
-			await this.handleBetResult(betslip)
-		}
-		const newBalance = await getBalance(betslip.userid)
-		const betData = {
-			userId: betslip.userid,
-			betId: betslip.betid,
-			teamBetOn: betslip.teamid,
-			opposingTeam: oddsForBet.opposingTeam,
-			betAmount: betslip.betAmount,
-			payout: payoutData ? payoutData.payout : null,
-			profit: payoutData ? payoutData.profit : null,
-			currentBalance: newBalance,
-			oldBalance,
-			betResult,
-		}
-		await this.notifyUser(betData)
-		const isWin = betResult === 'won'
-		await this.handleUserXP(betslip.userid, isWin)
-	}
-
 	determineBetResult(teamBetOn, winningTeam, losingTeam) {
 		// Bet result determination logic
 		if (teamBetOn === winningTeam) {
@@ -138,6 +157,54 @@ export default class BetProcessor {
 		if (teamBetOn === losingTeam) {
 			return 'lost'
 		}
+	}
+
+	async updateBetResult(betslip, betResult, payoutData) {
+		console.log(
+			`Updating bet result for betslip: ${betslip.betid}`,
+		)
+		if (betResult === 'won') {
+			await this.dbTrans.none(
+				`UPDATE "${BETSLIPS}" SET betresult = 'won', payout = $1, profit = $2 WHERE betid = $3`,
+				[
+					payoutData.payout,
+					payoutData.profit,
+					betslip.betid,
+				],
+			)
+		} else if (betResult === 'lost') {
+			await this.dbTrans.none(
+				`UPDATE "${BETSLIPS}" SET betresult = 'lost', payout = 0, profit = 0 WHERE betid = $1`,
+				[betslip.betid],
+			)
+		}
+	}
+
+	async updateUserBalance(
+		betslip,
+		betResult,
+		payoutData,
+	) {
+		console.log(
+			`Updating user balance for user: ${betslip.userid}`,
+		)
+		if (betResult === 'won') {
+			await this.dbTrans.none(
+				`UPDATE "${CURRENCY}" SET balance = balance + $1 WHERE userid = $2`,
+				[payoutData.payout, betslip.userid],
+			)
+		}
+		// Note: Balance update logic for a lost bet (if any) would go here
+	}
+
+	async cleanUpBet(betslip) {
+		console.log(
+			`Cleaning up bet for betslip: ${betslip.betid}`,
+		)
+		await this.dbTrans.none(
+			`DELETE FROM "${LIVEBETS}" WHERE betid = $1`,
+			[betslip.betid],
+		)
 	}
 
 	async handleBetResult(betslip, payoutData = null) {
@@ -165,9 +232,31 @@ export default class BetProcessor {
 		)
 	}
 
-	async notifyUser(betData) {
+	async notifyBetResult(
+		betslip,
+		betResult,
+		balanceChanges = null,
+		payoutData = null,
+	) {
+		console.log(
+			`Notifying user about bet result for user: ${betslip.userid}`,
+		)
 		const betNotify = new BetNotify(SapDiscClient)
-		return betNotify.notifyUser(betData)
+		// Construct the notification data
+		const notificationData = {
+			userId: betslip.userid,
+			betId: betslip.betid,
+			betResult,
+			currentBalance: balanceChanges
+				? balanceChanges.currentBalance
+				: null,
+			newBalance: balanceChanges
+				? balanceChanges.newBalance
+				: null,
+			payout: payoutData ? payoutData.payout : null,
+			profit: payoutData ? payoutData.profit : null,
+		}
+		await betNotify.notifyUser(notificationData)
 	}
 
 	async handleUserXP(userId, isWin) {
