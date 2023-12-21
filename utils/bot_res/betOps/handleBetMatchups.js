@@ -3,7 +3,6 @@ import fetch from 'node-fetch'
 import Promise from 'bluebird'
 import _ from 'lodash'
 import db from '@pluto-db'
-import { SPORT } from '@pluto-server-config'
 import { SCORE } from '@pluto-core-config'
 import { MatchupManager } from '@pluto-matchupOps/MatchupManager.js'
 import logClr from '@pluto-internal-color-logger'
@@ -63,7 +62,6 @@ export async function handleBetMatchups() {
 	await db.tx(`handleBetMatchups`, async (t) => {
 		// Init class to check progress of closing games
 		const closingQueue = new ClosingQueue()
-		// eslint-disable-next-line no-unused-vars
 		const betPromises = await Object.entries(
 			filteredForCompleted,
 		).map(async ([, MATCHUP]) => {
@@ -75,17 +73,26 @@ export async function handleBetMatchups() {
 				return
 			}
 
-			const matchExists =
-				await MatchupManager.getViaId(id, t)
+			const matchInfo = await MatchupManager.getViaId(
+				id,
+				t,
+			)
 
-			if (!matchExists) {
+			if (!matchInfo) {
+				await PlutoLogger.log({
+					id: 3,
+					description: `Matchup ${MATCHUP.home_team} vs ${MATCHUP.away_team} not found in database - Unable to process bets for it.`,
+				})
 				return
 			}
-			// ? Validation: Bets are not in the process of being closed right now for this matchup
+
 			const isBeingClosed =
 				await closingQueue.inProgress(id, t)
-
 			if (isBeingClosed) {
+				await PlutoLogger.log({
+					id: 3,
+					description: `Matchup ${MATCHUP.home_team} vs ${MATCHUP.away_team} is already being closed\nSkipping this matchup for bet handling`,
+				})
 				return
 			}
 
@@ -97,32 +104,30 @@ export async function handleBetMatchups() {
 				return
 			}
 
-			// ? Matchup is validated |> Process matchup
-
+			// ? Identify which team won
 			const detWin = await determineWinner(MATCHUP)
 			const { winner: winningTeam, losingTeam } =
 				detWin
 
-			// ? Set status of matchup closing to true
+			// ? Prevent closing this matchup again if it's already been noted as being closed
 			await closingQueue.setProgress(id, t)
 
-			const matchInfo = await MatchupManager.getViaId(
-				id,
-				t,
-			)
-			if (!matchInfo) {
-				return PlutoLogger.log({
-					id: 3,
-					description: `Matchup ${MATCHUP.home_team} vs ${MATCHUP.away_team} not found in DB`,
-				})
-			}
 			// ! Close Bets for this matchup
-			await closeBets(
-				winningTeam,
-				losingTeam,
-				matchInfo,
-				t,
-			)
+			try {
+				await closeBets(
+					winningTeam,
+					losingTeam,
+					matchInfo,
+					t,
+				)
+			} catch (error) {
+				await PlutoLogger.log({
+					id: 4,
+					description: `Failed to close bets for matchup ${MATCHUP.home_team} vs ${MATCHUP.away_team}\nError: \`${error?.message}\``,
+				})
+				console.error(error)
+				return
+			}
 
 			// # Ensure bets are closed for the matchup. If not, don't delete the matchup from the DB.
 			// # However, it will currently need to be manually supervised in this case. The match is set to `inprogress` so it won't be procssed for bets again.
@@ -137,7 +142,7 @@ export async function handleBetMatchups() {
 					id: 3,
 					description: `Processed bets for matchup ${MATCHUP.home_team} vs ${MATCHUP.away_team}`,
 				})
-				let channelTitle
+				const channelTitle = `${aTeamShortName.toLowerCase()} vs ${hTeamShortName.toLowerCase()}`
 				// Channels are using the 'shortname' of a team - e.g Celtics vs Lakers
 				const aTeamShortName = getShortName(
 					MATCHUP.away_team,
@@ -146,12 +151,13 @@ export async function handleBetMatchups() {
 					MATCHUP.home_team,
 				)
 				// ? Account for public-facing channel difference of `vs` anad `at`; Preference for each server
-				if (SPORT === 'nba') {
-					channelTitle = `${aTeamShortName.toLowerCase()} vs ${hTeamShortName.toLowerCase()}`
-				} else {
-					channelTitle = `${aTeamShortName.toLowerCase()} at ${hTeamShortName.toLowerCase()}`
-				}
+
 				await queueDeleteChannel(channelTitle)
+			} else if (betsExisting) {
+				await PlutoLogger.log({
+					id: 3,
+					description: `Matchup ${MATCHUP.home_team} vs ${MATCHUP.away_team} has outstanding bets - skipping deletion of this matchup in the DB.`,
+				})
 			}
 		})
 		await Promise.all(betPromises)

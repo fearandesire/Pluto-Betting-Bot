@@ -232,6 +232,7 @@ async function closeBets(
 									},
 								)
 							} catch (err) {
+								console.error(err)
 								return false
 								// Failed to DM User, likely to privacy settings or blocked
 							}
@@ -298,6 +299,7 @@ async function closeBets(
 									},
 								)
 							} catch (err) {
+								console.error(err)
 								return false
 								// Failed to DM User, likely to privacy settings or blocked
 							}
@@ -314,6 +316,7 @@ async function closeBets(
 					id: 4,
 					description: `An error occured when closing bets.\nError: \`${err.message}\``,
 				})
+				console.error(err)
 				return false
 			}
 		})().then(resolve)
