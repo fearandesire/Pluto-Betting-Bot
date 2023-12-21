@@ -1,7 +1,7 @@
 import { Command } from '@sapphire/framework'
 import { MatchupManager } from '@pluto-matchupOps/MatchupManager.js'
 import { db } from '@pluto-db'
-import { closeBets } from '../../utils/db/betOps/closeBets/closeBets'
+import BetProcessor from '../../utils/db/betOps/BetProcessor'
 
 export class UserCommand extends Command {
 	constructor(context, options) {
@@ -30,14 +30,22 @@ export class UserCommand extends Command {
 		const matchups =
 			await MatchupManager().getAllMatchups()
 
-		await db.tx('forceCloseBets', async (t) => {
-			// Loop through all matchups, collect bets for them
-			for await (const matchup of matchups) {
-				const { winner, loser } = matchup
-				// Close bets
-				await closeBets(winner, loser, matchup, t)
-			}
-		})
+		try {
+			await db.tx('forceCloseBets', async (t) => {
+				// Loop through all matchups, collect bets for them
+				for await (const matchup of matchups) {
+					const { winner, loser } = matchup
+					// Close bets
+					await new BetProcessor(t).closeBets(
+						winner,
+						loser,
+						matchup,
+					)
+				}
+			})
+		} catch (error) {
+			console.log(error)
+		}
 		await interaction.reply({
 			content: 'Closed all bets',
 			ephemeral: true,
