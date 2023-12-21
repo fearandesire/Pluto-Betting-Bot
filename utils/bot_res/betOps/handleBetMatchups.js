@@ -142,7 +142,7 @@ export async function handleBetMatchups() {
 					id: 3,
 					description: `Processed bets for matchup ${MATCHUP.home_team} vs ${MATCHUP.away_team}`,
 				})
-				const channelTitle = `${aTeamShortName.toLowerCase()} vs ${hTeamShortName.toLowerCase()}`
+
 				// Channels are using the 'shortname' of a team - e.g Celtics vs Lakers
 				const aTeamShortName = getShortName(
 					MATCHUP.away_team,
@@ -150,6 +150,7 @@ export async function handleBetMatchups() {
 				const hTeamShortName = getShortName(
 					MATCHUP.home_team,
 				)
+				const channelTitle = `${aTeamShortName.toLowerCase()} vs ${hTeamShortName.toLowerCase()}`
 				// ? Account for public-facing channel difference of `vs` anad `at`; Preference for each server
 
 				await queueDeleteChannel(channelTitle)
