@@ -351,4 +351,18 @@ export default class BetManager {
 			)
 		})
 	}
+
+	async getBetsViaMatchId(matchId) {
+		return db.manyOrNone(
+			`SELECT * FROM "${this.BETSLIPS}" WHERE matchid = $1`,
+			[matchId],
+		)
+	}
+
+	async deleteActiveBet(betId) {
+		return db.none(
+			`DELETE FROM "${this.BETSLIPS}" WHERE betid = $1`,
+			[betId],
+		)
+	}
 }

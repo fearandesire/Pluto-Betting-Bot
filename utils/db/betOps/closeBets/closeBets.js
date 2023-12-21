@@ -1,6 +1,5 @@
 import _ from 'lodash'
 import { AttachmentBuilder, EmbedBuilder } from 'discord.js'
-import db from '@pluto-db'
 import {
 	BETSLIPS,
 	LIVEBETS,
@@ -68,28 +67,28 @@ async function handleClosingBet(
 	 * @param {number} betInfo.payoutAmount - The amount to be paid out if the bet is won.
 	 * @param {number} betInfo.profitAmount - The profit amount of the bet.
 	 */
-	userid,
-	betResult,
-	betId,
 	betInfo,
+	dbTrans,
 ) {
+	const { userid, betId, betResult } = betInfo
 	if (betResult === `won`) {
 		const { payoutAmount, profitAmount } = betInfo
-		await db.none(
+		await dbTrans.none(
 			`UPDATE "${BETSLIPS}" SET betresult = 'won', payout = $1, profit = $2 WHERE betid = $3`,
 			[payoutAmount, profitAmount, betId],
 		)
-		await db.none(
+		return dbTrans.none(
 			`UPDATE "${CURRENCY}" SET balance = balance + $1 WHERE userid = $2`,
 			[payoutAmount, userid],
 		)
-	} else if (betResult === `lost`) {
-		await db.none(
+	}
+	if (betResult === `lost`) {
+		await dbTrans.none(
 			`UPDATE "${BETSLIPS}" SET betresult = 'lost' WHERE betid = $1`,
 			[betId],
 		)
 	}
-	await db.none(
+	return dbTrans.none(
 		`DELETE FROM "${LIVEBETS}" WHERE betid = $1`,
 		[betId],
 	)
@@ -111,6 +110,10 @@ async function closeBets(
 ) {
 	// eslint-disable-next-line no-async-promise-executor
 	return new Promise(async (resolve) => {
+		await PlutoLogger.log({
+			id: 1,
+			description: `[closeBets]\nClosing bets for ${winningTeam} vs ${losingTeam}`,
+		})
 		const betNotify = new BetNotify(SapDiscClient)
 		;(async () => {
 			try {
@@ -121,13 +124,17 @@ async function closeBets(
 					})
 					return false
 				}
-
+				// ? Collect Bets for the match
 				const bets = await getBets(
 					matchInfo.matchid,
 					dbCnx,
 				)
 
 				if (_.isEmpty(bets)) {
+					await PlutoLogger.log({
+						id: 4,
+						description: `Unable to locate any bets for the match\nID: \`${matchInfo.matchid}\``,
+					})
 					return
 				}
 
@@ -163,13 +170,14 @@ async function closeBets(
 							userId,
 						)
 						await handleClosingBet(
-							userId,
-							betResult,
-							betId,
 							{
+								userId,
+								betResult,
+								betId,
 								payoutAmount,
 								profitAmount,
 							},
+							dbCnx,
 						)
 						const updatedBalance =
 							await getBalance(userId)
@@ -239,9 +247,8 @@ async function closeBets(
 						}
 					} else if (betResult === 'lost') {
 						await handleClosingBet(
-							userId,
-							betResult,
-							betId,
+							{ userId, betResult, betId },
+							dbCnx,
 						)
 						await betNotify.notifyUser(userId, {
 							betId,

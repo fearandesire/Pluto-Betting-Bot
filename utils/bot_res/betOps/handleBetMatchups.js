@@ -35,7 +35,7 @@ const options = {
 
 export async function handleBetMatchups() {
 	await logClr({
-		text: `[handleBetMatchups] Checking for completed games`,
+		text: `[handleBetMatchups] Checking for completed games\nURL: ${url}`,
 		color: `blue`,
 		status: `processing`,
 	})
