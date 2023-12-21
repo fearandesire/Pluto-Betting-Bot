@@ -1,32 +1,41 @@
-/**
- * Determine the payout and profits for bets based on the bet amount and odds.
- * @param {integer} oddsNum - The odds of the team the user bet on.
- * @param {integer} ogBetAmount - The amount of dollars the user bet.
- * @return {object} Returns an object containing the payout and profit for the bet.
- */
+import { isNaN } from 'lodash'
 
+/**
+ * Calculates payout and profit based on match odds and bet amount.
+ * Converts the odds to decimal format for calculation.
+ *
+ * @param {string|number} matchOdds - The odds of the match. Can be negative or positive.
+ * @param {string|number} betAmount - The amount of the bet.
+ * @return {Object} `{ payout: number, profit: number}`
+ * @throws {Error} Throws an error if inputs are invalid or odds are zero.
+ */
 export async function resolvePayouts(matchOdds, betAmount) {
 	const oddsNum = Number(matchOdds)
 	const ogBetAmount = Number(betAmount)
 
-	if (oddsNum < 0) {
-		const equation = (100 / oddsNum) * -1
-		const profit = Math.ceil(ogBetAmount * equation)
-		const payout = Math.ceil(profit + ogBetAmount)
-
-		return {
-			payout,
-			profit,
-		}
+	// Validate inputs
+	if (
+		isNaN(oddsNum) ||
+		isNaN(ogBetAmount) ||
+		oddsNum === 0
+	) {
+		throw new Error('Invalid match odds or bet amount')
 	}
+
+	let decimalOdds
 
 	if (oddsNum > 0) {
-		const equation = oddsNum / 100 + 1
-		const payout = Math.ceil(ogBetAmount * equation)
-		const profit = Math.ceil(payout - ogBetAmount)
-		return {
-			payout,
-			profit,
-		}
+		decimalOdds = oddsNum / 100 + 1
+	} else {
+		decimalOdds = 1 - 100 / oddsNum
 	}
+
+	const payout = parseFloat(
+		(ogBetAmount * decimalOdds).toFixed(2),
+	)
+	const profit = parseFloat(
+		(payout - ogBetAmount).toFixed(2),
+	)
+
+	return { payout, profit }
 }
