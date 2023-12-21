@@ -8,10 +8,10 @@ import { MatchupManager } from '@pluto-matchupOps/MatchupManager.js'
 import logClr from '@pluto-internal-color-logger'
 import PlutoLogger from '@pluto-logger'
 import { determineWinner } from './determineWinner.js'
-import { closeBets } from '../../db/betOps/closeBets/closeBets.js'
 import { queueDeleteChannel } from '../../db/gameSchedule/queueDeleteChannel.js'
 import ClosingQueue from '../../db/matchupOps/ClosingQueue.js'
 import { getShortName } from '../getShortName.js'
+import BetProcessor from '../../db/betOps/BetProcessor'
 
 const url = SCORE
 const options = {
@@ -114,11 +114,10 @@ export async function handleBetMatchups() {
 
 			// ! Close Bets for this matchup
 			try {
-				await closeBets(
+				await new BetProcessor(t).closeBets(
 					winningTeam,
 					losingTeam,
 					matchInfo,
-					t,
 				)
 			} catch (error) {
 				await PlutoLogger.log({
