@@ -1,7 +1,7 @@
 import { Command } from '@sapphire/framework'
 import { MatchupManager } from '@pluto-matchupOps/MatchupManager.js'
-import { db } from '@pluto-db'
-import BetProcessor from '../../utils/db/betOps/BetProcessor'
+import db from '@pluto-db'
+import BetProcessor from '../../utils/db/betOps/BetProcessor.js'
 
 export class UserCommand extends Command {
 	constructor(context, options) {

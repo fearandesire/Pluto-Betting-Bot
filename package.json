@@ -27,7 +27,6 @@
 		"@pluto-server-config": "./utils/serverConfig.js",
 		"@pluto-core-config": "./lib/PlutoConfig.js",
 		"@pluto-check-balance": "./utils/db/validation/checkbalance.js",
-		"#PlutoLogger": "./utils/PlutoLogger.js",
 		"@pluto-logger": "./utils/PlutoLogger.js",
 		"@pluto-db": "./database/dbindex.js",
 		"@pluto-redis": "./utils/cache/RedisCacheManager.js",

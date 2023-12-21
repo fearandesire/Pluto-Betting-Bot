@@ -11,7 +11,7 @@ import { determineWinner } from './determineWinner.js'
 import { queueDeleteChannel } from '../../db/gameSchedule/queueDeleteChannel.js'
 import ClosingQueue from '../../db/matchupOps/ClosingQueue.js'
 import { getShortName } from '../getShortName.js'
-import BetProcessor from '../../db/betOps/BetProcessor'
+import BetProcessor from '../../db/betOps/BetProcessor.js'
 
 const url = SCORE
 const options = {

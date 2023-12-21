@@ -1,5 +1,4 @@
-import { isNaN } from 'lodash'
-
+import _ from 'lodash'
 /**
  * Calculates payout and profit based on match odds and bet amount.
  * Converts the odds to decimal format for calculation.
@@ -15,8 +14,8 @@ export async function resolvePayouts(matchOdds, betAmount) {
 
 	// Validate inputs
 	if (
-		isNaN(oddsNum) ||
-		isNaN(ogBetAmount) ||
+		_.isNaN(oddsNum) ||
+		_.isNaN(ogBetAmount) ||
 		oddsNum === 0
 	) {
 		throw new Error('Invalid match odds or bet amount')

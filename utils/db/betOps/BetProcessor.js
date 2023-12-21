@@ -1,6 +1,6 @@
 import { SapDiscClient } from '@pluto-core'
 
-import { PlutoLogger } from '@pluto-logger'
+import PlutoLogger from '@pluto-logger'
 import {
 	BETSLIPS,
 	CURRENCY,
