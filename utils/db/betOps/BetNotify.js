@@ -17,8 +17,9 @@ export default class BetNotify {
 		this.client = client
 	}
 
-	async notifyUser(userId, betData) {
+	async notifyUser(betData) {
 		const {
+			userId,
 			betId,
 			teamBetOn,
 			betAmount,
