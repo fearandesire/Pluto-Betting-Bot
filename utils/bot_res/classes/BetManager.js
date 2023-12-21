@@ -318,9 +318,8 @@ export default class BetManager {
 	Querying DB using db.tx since we are handling multiple transactions
 	First query: Selecting the 'matchid' as its required for us to store the betslip information in the DB.
 	*/
+		const date = await TodaysDate()
 		return db.tx('createNewBet', async (t) => {
-			const date = TodaysDate()
-
 			await t.none(
 				`UPDATE "${this.CURRENCY}" SET balance = balance - $1 WHERE userid = $2`,
 				[betslip.amount, betslip.userid],
