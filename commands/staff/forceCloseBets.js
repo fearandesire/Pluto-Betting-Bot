@@ -28,7 +28,7 @@ export class UserCommand extends Command {
 	async chatInputRun(interaction) {
 		// Get all current matchups stored
 		const matchups =
-			await MatchupManager().getAllMatchups()
+			await new MatchupManager().getAllMatchups()
 
 		try {
 			await db.tx('forceCloseBets', async (t) => {

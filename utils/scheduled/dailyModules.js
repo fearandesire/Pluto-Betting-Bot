@@ -33,12 +33,12 @@ export async function dbDailyOps() {
 			await handleBetMatchups(),
 			await clearScheduled(), // Clear Cached Scheduled Games
 			await clearPendingBets(), // Clear Pending Bets - In this context, bets that have not been confirmed or cancelled.
-			await collectOdds(), // Collect Odds on-start [Instant]
-			await cronScheduleGames(), // Check for any games that need to be scheduled now (Game Channels) [Instant]
-			await init_Cron_Chan_Scheduler(), // Start Cron to schedule games daily (Game Channels) [Daily]
-			await init_Cron_Completed(true), // Start range generation on-startup [Instant]
-			await queueMidnightCheck(), // Cron for checking games @ Midnight - 2 AM
-			await initMatchupHandling(), // Start Cron to generate Cron Ranges & Check for completed games [Daily]
+			// await collectOdds(), // Collect Odds on-start [Instant]
+			// await cronScheduleGames(), // Check for any games that need to be scheduled now (Game Channels) [Instant]
+			// await init_Cron_Chan_Scheduler(), // Start Cron to schedule games daily (Game Channels) [Daily]
+			// await init_Cron_Completed(true), // Start range generation on-startup [Instant]
+			// await queueMidnightCheck(), // Cron for checking games @ Midnight - 2 AM
+			// await initMatchupHandling(), // Start Cron to generate Cron Ranges & Check for completed games [Daily]
 			// await init_Cron_Heartbeat(), // Start Cron for Heartbeats
 		])
 	} catch (err) {
