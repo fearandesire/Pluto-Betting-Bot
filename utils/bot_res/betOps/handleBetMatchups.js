@@ -79,10 +79,9 @@ export async function handleBetMatchups() {
 			)
 
 			if (!matchInfo) {
-				await PlutoLogger.log({
-					id: 3,
-					description: `Matchup ${MATCHUP.home_team} vs ${MATCHUP.away_team} not found in database - Unable to process bets for it.`,
-				})
+				console.error(
+					`[HandleBetMatchups]\n Matchup: ${MATCHUP.away_team} at ${MATCHUP.home_team} not found in DB\nUnable to close bets for this matchup.`,
+				)
 				return
 			}
 
@@ -108,6 +107,15 @@ export async function handleBetMatchups() {
 			const detWin = await determineWinner(MATCHUP)
 			const { winner: winningTeam, losingTeam } =
 				detWin
+			// ? Save winning and losing teams in DB
+			await MatchupManager.storeMatchResult(
+				{
+					winner: winningTeam,
+					loser: losingTeam,
+					id,
+				},
+				t,
+			)
 
 			// ? Prevent closing this matchup again if it's already been noted as being closed
 			await closingQueue.setProgress(id, t)
@@ -132,7 +140,7 @@ export async function handleBetMatchups() {
 			// # However, it will currently need to be manually supervised in this case. The match is set to `inprogress` so it won't be procssed for bets again.
 			const betsExisting =
 				await MatchupManager.outstandingBets(
-					matchInfo.matchid,
+					matchInfo.id,
 					t,
 				)
 			if (!betsExisting) {

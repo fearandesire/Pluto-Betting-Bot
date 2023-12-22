@@ -76,7 +76,7 @@ export default class BetManager {
 	   betid: number,
 	   userid: number,
 	   teamid: string,
-	   matchid: number,
+	   matchid: string,
 	   amount: number,
 	   dateofbet: string
 	   },

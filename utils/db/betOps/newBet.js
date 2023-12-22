@@ -71,7 +71,7 @@ export async function newBet(
 				await repeatTeamsMatchups.map(
 					(matchup) => ({
 						label: `${matchup.teamone} vs ${matchup.teamtwo}`,
-						value: matchup.matchid.toString(),
+						value: matchup.id.toString(),
 						description: `Date: ${matchup.dateofmatchup}`,
 					}),
 				)
@@ -88,11 +88,11 @@ export async function newBet(
 			if (selectedMatchId) {
 				matchInfo = repeatTeamsMatchups.find(
 					(matchup) =>
-						matchup.matchid === selectedMatchId,
+						matchup.id === selectedMatchId,
 				)
 				oddsForTeam =
 					await MatchupManager.getOddsViaId(
-						matchInfo.matchid,
+						matchInfo.id,
 						team,
 					)
 			} else {
@@ -120,7 +120,7 @@ export async function newBet(
 		throw err
 	}
 	const activeCheck = await MatchupManager.gameIsLive(
-		matchInfo.matchid,
+		matchInfo.id,
 	)
 	if (activeCheck === true) {
 		await QuickError(
@@ -142,7 +142,7 @@ export async function newBet(
 		await verifyDupBet(
 			interaction,
 			userId,
-			matchInfo.matchid,
+			matchInfo.id,
 			true,
 		)
 		teamEmoji = await findEmoji(team)
@@ -162,7 +162,7 @@ export async function newBet(
 				teamName: team,
 				betAmount,
 				oddsForTeam,
-				matchId: matchInfo.matchid,
+				matchId: matchInfo.id,
 				matchupDate: matchInfo.dateofmatchup,
 				matchupStr: `${matchInfo.teamone} vs ${matchInfo.teamtwo}`,
 				betId,

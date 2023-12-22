@@ -15,9 +15,9 @@ import PendingBetHandler from './pendingBet.js'
 export async function verifyDupBet(
 	message,
 	userid,
-	matchId,
+	matchApiId,
 ) {
-	await isDuplicateBet(userid, matchId).then(
+	await isDuplicateBet(userid, matchApiId).then(
 		async (data) => {
 			if (data) {
 				QuickError(
@@ -29,7 +29,7 @@ export async function verifyDupBet(
 					userid,
 				)
 				throw Log.Error(
-					`[verifyDupBet.js] User ${userid} has already placed a bet on Matchup: ${matchId} - ended event`,
+					`[verifyDupBet.js] User ${userid} has already placed a bet on Matchup: ${matchApiId} - ended event`,
 				)
 			} else {
 				return false

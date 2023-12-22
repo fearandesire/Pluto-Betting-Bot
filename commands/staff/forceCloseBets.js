@@ -1,7 +1,9 @@
+/* eslint-disable no-await-in-loop */
 import { Command } from '@sapphire/framework'
 import { MatchupManager } from '@pluto-matchupOps/MatchupManager.js'
 import db from '@pluto-db'
 import BetProcessor from '../../utils/db/betOps/BetProcessor.js'
+import { Log } from '@pluto-internal-logger';
 
 export class UserCommand extends Command {
 	constructor(context, options) {
@@ -26,17 +28,20 @@ export class UserCommand extends Command {
 	}
 
 	async chatInputRun(interaction) {
+		await interaction.deferReply({ ephemeral: true })
+		await interaction.followUp(`Closing bets...`)
 		// Get all current matchups stored
 		const matchups =
-			await new MatchupManager().getAllMatchups()
-
+			await MatchupManager.getAllMatchups()
 		try {
 			await db.tx('forceCloseBets', async (t) => {
+				const betProcessor = new BetProcessor(t)
 				// Loop through all matchups, collect bets for them
-				for await (const matchup of matchups) {
+				for (const matchup of matchups) {
 					const { winner, loser } = matchup
 					// Close bets
-					await new BetProcessor(t).closeBets(
+					await Log.Green(`[forceClose]\nInit for ${winner} vs ${loser}\nID: ${matchup.id}`)
+					await betProcessor.closeBets(
 						winner,
 						loser,
 						matchup,
@@ -46,7 +51,7 @@ export class UserCommand extends Command {
 		} catch (error) {
 			console.log(error)
 		}
-		await interaction.reply({
+		await interaction.followUp({
 			content: 'Closed all bets',
 			ephemeral: true,
 		})

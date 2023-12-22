@@ -4,7 +4,6 @@ import Promise from 'bluebird'
 import { ODDS, LIVEMATCHUPS } from '@pluto-core-config'
 import db from '@pluto-db'
 import { MatchupManager } from '@pluto-matchupOps/MatchupManager.js'
-import { assignMatchID } from '@pluto-general-utils/AssignIDs.js'
 import PlutoLogger from '@pluto-logger'
 import IsoManager from '@pluto-iso-manager'
 
@@ -84,17 +83,15 @@ export default async function collectOdds() {
 				if (!homeOdds || !awayOdds) {
 					return
 				}
-				// Generate unique ID for the game
-				const gameId = await assignMatchID()
 
 				// Store the odds information and other data for the game
 				_.assign(matchups, {
-					[gameId]: {
+					[idApi]: {
 						home_team: homeTeam,
 						away_team: awayTeam,
 						home_teamOdds: homeOdds,
 						away_teamOdds: awayOdds,
-						matchupId: gameId,
+						id: idApi,
 						start_time: game.commence_time,
 					},
 				})
@@ -112,12 +109,11 @@ export default async function collectOdds() {
 					teamTwo: awayTeam,
 					teamOneOdds: homeOdds,
 					teamTwoOdds: awayOdds,
-					matchupId: gameId,
+					id: idApi,
 					gameDate,
 					start: game.commence_time,
 					cronStartTime,
 					legibleStartTime: legibleStart,
-					idApi,
 				}
 				await MatchupManager.storeMatchups(
 					colmdata,

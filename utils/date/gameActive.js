@@ -16,7 +16,7 @@ import { LIVEMATCHUPS } from '@pluto-core-config'
 export async function gameActive(matchupId) {
 	const searchForActive = await db
 		.oneOrNone(
-			`SELECT * FROM "${LIVEMATCHUPS}" WHERE matchid = $1`,
+			`SELECT * FROM "${LIVEMATCHUPS}" WHERE id = $1`,
 			[matchupId],
 		)
 		.then((dbMatchup) => {

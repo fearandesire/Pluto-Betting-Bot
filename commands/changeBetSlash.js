@@ -113,9 +113,9 @@ export class changeBetSlash extends Command {
 			CURRENCY,
 			LIVEBETS,
 		}).matchupIdViaBetId(betId)
-		const matchupId = matchup.matchid
+		const matchupApiId = matchup.id
 		const validGameStatus =
-			await MatchupManager.gameIsLive(matchupId)
+			await MatchupManager.gameIsLive(matchupApiId)
 		if (!validGameStatus) {
 			await QuickError(
 				interaction,

@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 import { SapDiscClient } from '@pluto-core'
 
 import PlutoLogger from '@pluto-logger'
@@ -7,6 +8,7 @@ import {
 	LIVEBETS,
 } from '@pluto-core-config'
 import { AttachmentBuilder, EmbedBuilder } from 'discord.js'
+import { Log } from '@pluto-internal-logger';
 import { resolvePayouts } from './resolvePayouts.js'
 import BetNotify from './BetNotify.js'
 import { getBalance } from '../validation/getBalance.js'
@@ -23,9 +25,11 @@ export default class BetProcessor {
 			// Log and validation logic here
 
 			const bets = await this.getBets(
-				matchInfo.matchid,
+				matchInfo.id,
 			)
-			for await (const betslip of bets) {
+			const stringifiedBets = JSON.stringify(bets, null, 4)
+			await Log.Blue(`Bets for match: ${matchInfo.id}: ${stringifiedBets}`)
+			for (const betslip of bets) {
 				await this.processBet(
 					betslip,
 					winningTeam,
@@ -39,6 +43,7 @@ export default class BetProcessor {
 				description: `An error occured when closing bets.\n${err.message}`,
 			})
 			console.error(err)
+			throw err
 		}
 	}
 
@@ -49,10 +54,10 @@ export default class BetProcessor {
 		matchInfo,
 	) {
 		try {
-			console.log(
-				`Processing bet for betslip: ${betslip.betid}`,
+			await Log.Magenta(
+				`Processing bet for Bet ID: ${betslip.betid}\n\nMatch Info: ${JSON.stringify(matchInfo, null, 4)}`,
 			)
-			const betResult = this.determineBetResult(
+			const betResult = await this.determineBetResult(
 				betslip.teamid,
 				winningTeam,
 				losingTeam,
@@ -61,9 +66,11 @@ export default class BetProcessor {
 				matchInfo,
 				betslip.teamid,
 			)
+			await Log.Blue(`Amount: ${betslip.amount}\nOdds for bet: ${JSON.stringify(oddsForBet)}\nBet Result: ${betResult}`);
+			const { odds } = oddsForBet
 			const payoutData = await this.getPayoutData(
-				oddsForBet,
-				betslip.betAmount,
+				odds,
+				betslip.amount,
 			)
 			const oldBalance = await getBalance(
 				betslip.userid,
@@ -80,7 +87,6 @@ export default class BetProcessor {
 				payoutData,
 			)
 			await this.cleanUpBet(betslip)
-
 			const newBalance = await getBalance(
 				betslip.userid,
 			)
@@ -118,6 +124,7 @@ export default class BetProcessor {
 			teamoneodds,
 			teamtwoodds,
 		} = matchupData
+		await Log.Yellow(`Selecting odds for ${team}\nMatchup Data:\n${JSON.stringify(matchupData, null, 4)}`);
 		// Mapping teams to their odds and opponents
 		const oddsMapping = {
 			[teamone]: {
@@ -189,6 +196,7 @@ export default class BetProcessor {
 			`Updating user balance for user: ${betslip.userid}`,
 		)
 		if (betResult === 'won') {
+			// Ensure the user has not already been paid
 			await this.dbTrans.none(
 				`UPDATE "${CURRENCY}" SET balance = balance + $1 WHERE userid = $2`,
 				[payoutData.payout, betslip.userid],
@@ -301,11 +309,12 @@ export default class BetProcessor {
 		}
 	}
 
-	async getBets(matchId) {
+
+	async getBets(id) {
 		// Logic to retrieve bets from the database
 		return this.dbTrans.manyOrNone(
 			`SELECT * FROM "${BETSLIPS}" WHERE matchid = $1 and betresult = 'pending'`,
-			[matchId],
+			[id],
 		)
 	}
 }
