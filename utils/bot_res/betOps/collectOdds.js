@@ -1,6 +1,8 @@
+/* eslint-disable no-await-in-loop */
+/* eslint-disable guard-for-in */
+
 import _ from 'lodash'
 import fetch from 'node-fetch'
-import Promise from 'bluebird'
 import { ODDS, LIVEMATCHUPS } from '@pluto-core-config'
 import db from '@pluto-db'
 import { MatchupManager } from '@pluto-matchupOps/MatchupManager.js'
@@ -8,129 +10,170 @@ import PlutoLogger from '@pluto-logger'
 import IsoManager from '@pluto-iso-manager'
 
 /**
- * @function collectOdds
- * Calls the API and stores the matchup odds for the week into the database & cache.
- * Steps:
- * - Fetches the matchup odds data from the API endpoint specified in the configuration.
- * - Filters the games to find only those that are scheduled for today.
- * - Identifies and stores the details for each game into an object.
- * - Generates a unique ID for each game and stores the odds information and other data for the game in the object.
- * - Stores the matchup information into the cache and database.
- * - Generates and schedules the cron jobs for the game start times.
+ * Fetches the matchup odds data from the API.
+ * @returns {Promise<Array>} Array of games data
  */
+async function fetchGamesData(apiUrl, headers) {
+	return fetch(apiUrl, { method: 'GET', headers }).then(
+		(res) => res.json(),
+	)
+}
 
-export default async function collectOdds() {
-	const apiUrl = ODDS
-
-	// Set API headers
-	const headers = {
-		'X-RapidAPI-Host': 'api.the-odds-api.com',
-		'X-RapidAPI-Key': process.env.odds_API_XKEY,
-	}
-
-	// Fetch data from the API
-	const gamesArr = await fetch(apiUrl, {
-		method: 'GET',
-		headers,
-	}).then((res) => res.json())
-	// Filter out games from the past
-	const filteredPastGames = gamesArr.filter((game) => {
+/**
+ * Filters games that are scheduled for the current week.
+ * @param {Array} gamesArr - Array of games data
+ * @returns {Array} Filtered games array
+ */
+function filterGamesForCurrentWeek(gamesArr) {
+	return gamesArr.filter((game) => {
 		const isoHandler = new IsoManager(
 			game.commence_time,
 		)
 		return isoHandler.isSameWeek
 	})
+}
 
-	if (_.isEmpty(filteredPastGames)) {
+/**
+ * Checks and filters out games already present in the database.
+ * @param {Array} games - Array of games data
+ * @param {Object} t - Database transaction object
+ * @returns {Promise<Array>} Filtered array of new games
+ */
+async function filterOutExistingGames(games, t) {
+	const existingIds = (
+		await t.manyOrNone(
+			`SELECT id FROM "${LIVEMATCHUPS}"`,
+		)
+	).map((record) => record.id)
+
+	return games.filter(
+		(game) => !existingIds.includes(game.id),
+	)
+}
+
+/**
+ * Extracts odds and game info from a game object.
+ * @param {Object} game - Game object
+ * @returns {Object|null} Extracted game data or null if data is incomplete
+ */
+async function extractGameInfo(game) {
+	const homeTeam = game.home_team
+	const awayTeam = game.away_team
+	const matchupPath =
+		game.bookmakers[0]?.markets[0].outcomes
+
+	const homeOdds = _.find(matchupPath, {
+		name: homeTeam,
+	})?.price
+	const awayOdds = _.find(matchupPath, {
+		name: awayTeam,
+	})?.price
+
+	if (!homeOdds || !awayOdds) {
+		return null
+	}
+
+	const isoManager = new IsoManager(game.commence_time)
+
+	return {
+		teamOne: homeTeam,
+		teamTwo: awayTeam,
+		teamOneOdds: homeOdds,
+		teamTwoOdds: awayOdds,
+		id: game.id,
+		start: game.commence_time,
+		gameDate: isoManager.mdy,
+		cronStartTime: isoManager.cron,
+		legibleStartTime: isoManager.legible,
+	}
+}
+
+/**
+ * Stores the odds information and other game data in the database.
+ * @param {Object} matchups - Object containing game data keyed by game ID
+ * @param {Object} t - Database transaction object
+ */
+async function storeMatchupData(matchups, t) {
+	console.log(`Matchups:\n`, matchups)
+	for (const id in matchups) {
+		try {
+			const game = matchups[id]
+
+			console.log(`Storing game:\n`, game)
+			await MatchupManager.storeMatchups(
+				matchups[id],
+				t,
+			)
+		} catch (err) {
+			console.log(err)
+			throw err
+		}
+	}
+}
+
+/**
+ * Logs the result of the data collection process.
+ * @param {number} gameCount - Number of games processed
+ */
+async function logResult(gameCount) {
+	const msg =
+		gameCount > 0
+			? `Collected & updated odds for ${gameCount} games.`
+			: `Collected odds, but no new data was to be updated.`
+
+	await PlutoLogger.log({
+		id: 3,
+		description: msg,
+	})
+}
+
+/**
+ * Main function to collect odds.
+ */
+export default async function collectOdds() {
+	const apiUrl = ODDS
+	const headers = {
+		'X-RapidAPI-Host': 'api.the-odds-api.com',
+		'X-RapidAPI-Key': process.env.odds_API_XKEY,
+	}
+
+	const gamesArr = await fetchGamesData(apiUrl, headers)
+	const filteredGames =
+		filterGamesForCurrentWeek(gamesArr)
+
+	if (_.isEmpty(filteredGames)) {
 		await PlutoLogger.log({
 			id: 3,
 			description: `No games were found to store odds.`,
 		})
 		return false
 	}
-	// Create db transaction as we will have several queries
-	await db.tx(`collectOdds`, async (t) => {
-		// Make a single query to get an array of all `id` values in matchups table
-		const matchupIds = await t.manyOrNone(
-			`SELECT id FROM "${LIVEMATCHUPS}"`,
+
+	await db.tx('collectOdds', async (t) => {
+		const newGames = await filterOutExistingGames(
+			filteredGames,
+			t,
 		)
+
+		if (_.isEmpty(newGames)) {
+			await PlutoLogger.log({
+				id: 3,
+				description: `All games are already in the database.`,
+			})
+			return false
+		}
+
 		const matchups = {}
-		const promises = filteredPastGames.map(
-			async (game) => {
-				const idApi = game.id
+		for (const game of newGames) {
+			const gameData = await extractGameInfo(game)
+			if (gameData) {
+				matchups[gameData.id] = gameData
+			}
+		}
 
-				// # Prevent duplicates by checking for the id
-				const existingMatchup =
-					_.find(matchupIds, {
-						id: idApi,
-					}) || null
-				if (existingMatchup !== null) {
-					return
-				}
-				const homeTeam = game.home_team
-				const awayTeam = game.away_team
-				const matchupPath =
-					game.bookmakers[0]?.markets[0].outcomes
-				const homeOdds = _.find(matchupPath, {
-					name: homeTeam,
-				})?.price
-				const awayOdds = _.find(matchupPath, {
-					name: awayTeam,
-				})?.price
-
-				// Skip games without odds information
-				if (!homeOdds || !awayOdds) {
-					return
-				}
-
-				// Store the odds information and other data for the game
-				_.assign(matchups, {
-					[idApi]: {
-						home_team: homeTeam,
-						away_team: awayTeam,
-						home_teamOdds: homeOdds,
-						away_teamOdds: awayOdds,
-						id: idApi,
-						start_time: game.commence_time,
-					},
-				})
-
-				// Generate date & time info
-				const isoManager = new IsoManager(
-					game.commence_time,
-				)
-				const gameDate = isoManager.mdy
-				const cronStartTime = isoManager.cron
-
-				const legibleStart = isoManager.legible
-				const colmdata = {
-					teamOne: homeTeam,
-					teamTwo: awayTeam,
-					teamOneOdds: homeOdds,
-					teamTwoOdds: awayOdds,
-					id: idApi,
-					gameDate,
-					start: game.commence_time,
-					cronStartTime,
-					legibleStartTime: legibleStart,
-				}
-				await MatchupManager.storeMatchups(
-					colmdata,
-					t,
-				)
-			},
-		)
-		await Promise.all(promises)
-
-		const gameCount = _.size(matchups)
-		const msg =
-			gameCount > 0
-				? `Collected & updated odds for ${gameCount} games.`
-				: `Collected odds, but no new data was to be updated.`
-		await PlutoLogger.log({
-			id: 3,
-			description: msg,
-		})
+		await storeMatchupData(matchups, t)
+		await logResult(_.size(matchups))
 	})
+
 	return true
 }

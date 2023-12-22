@@ -200,14 +200,14 @@ export class MatchupManager {
 			teamTwo,
 			teamOneOdds,
 			teamTwoOdds,
-			id,
 			gameDate,
 			start,
 			cronStartTime,
 			legibleStartTime,
+			id,
 		} = columnData
 
-		await dbCnx
+		return dbCnx
 			.none(
 				`INSERT INTO "${LIVEMATCHUPS}" (teamOne, teamTwo, teamOneOdds, teamTwoOdds, dateofmatchup, start, cronstart, legiblestart, id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
 				[
