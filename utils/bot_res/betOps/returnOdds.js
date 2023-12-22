@@ -7,10 +7,8 @@ import {
 	QuickError,
 } from '@pluto-core-config'
 import { guildImgURL } from '@pluto-embed-reply'
-import IsoManager from '@pluto-iso-manager'
 import parseScheduled from '../parseScheduled.js'
 import { formatOdds } from './formatOdds.js'
-import { findEmoji } from '../findEmoji.js'
 
 const { EmbedBuilder } = discord
 /**
@@ -43,22 +41,22 @@ export default async function returnOdds(interaction) {
 
 async function compileOdds(oddsArr, thumbnail) {
 	const oddsFields = []
-	// eslint-disable-next-line guard-for-in
-	const withEmoji = async (t) => findEmoji(t)
+
 	for await (const match of Object.values(oddsArr)) {
 		const hTeam = `${match.teamone}`
 		const aTeam = `${match.teamtwo}`
 		let hOdds = match.teamoneodds
 		let aOdds = match.teamtwoodds
+
 		const oddsFormat = await formatOdds(hOdds, aOdds)
 		hOdds = oddsFormat.homeOdds
 		aOdds = oddsFormat.awayOdds
-		const isoManager = new IsoManager(match.start)
-		const day = isoManager.dayName
-		await oddsFields.push({
-			day,
-			date: match.start,
-			start: isoManager.timeOnly,
+
+		const parsedStart =
+			match.legiblestart.split(', ')[1]
+		oddsFields.push({
+			date: match.dateofmatchup, // Use actual date
+			start: parsedStart,
 			away_team: aTeam,
 			home_team: hTeam,
 			home_odds: hOdds,
@@ -66,13 +64,23 @@ async function compileOdds(oddsArr, thumbnail) {
 		})
 	}
 
-	const count = oddsFields.length
-	// Sort the grouped games by day using Lodash's `orderBy` function
+	// Sort the oddsFields by actual date
+	const sortedOddsFields = _.orderBy(
+		oddsFields,
+		['date'],
+		['asc'],
+	)
+
+	const count = sortedOddsFields.length
 	const options = {
 		includeOdds: true,
 		footer: `Odds are subject to change | ${count} games available to bet on.`,
 		thumbnail,
 	}
-	const gamesEmbed = parseScheduled(oddsFields, options)
+
+	const gamesEmbed = parseScheduled(
+		sortedOddsFields,
+		options,
+	)
 	return gamesEmbed
 }

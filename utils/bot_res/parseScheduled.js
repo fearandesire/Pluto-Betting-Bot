@@ -1,12 +1,7 @@
 /* eslint-disable no-useless-escape */
 import { format } from 'date-fns'
 import discord from 'discord.js'
-import {
-	_,
-	helpfooter,
-	dayOrder,
-	orderByDays,
-} from '@pluto-core-config'
+import { _, helpfooter } from '@pluto-core-config'
 import embedColors from '../../lib/colorsConfig.js'
 
 const { EmbedBuilder } = discord
@@ -21,81 +16,66 @@ export default async function parseScheduled(
 	scheduledArr,
 	options,
 ) {
-	const { includeOdds, thumbnail, footer } =
-		options || null
-	let createMatchStr
-	let embColor
-	let title
+	const { includeOdds, thumbnail, footer } = options || {}
+
 	let description
+	const embColor = includeOdds
+		? embedColors.PlutoBlue
+		: embedColors.PlutoYellow
+	const title = includeOdds
+		? `:mega: H2H Odds`
+		: `Scheduled Games`
 
 	if (_.isEmpty(scheduledArr)) {
-		// Embed should just state no games for today
-		if (includeOdds) {
-			title = `:mega: H2H Odds`
-			description = `There are no odds currently stored right now.`
-		} else {
-			title = `Scheduled Games`
-			description = `No games are scheduled for the day.`
-		}
-		const emb = new EmbedBuilder()
+		description = includeOdds
+			? `There are no odds currently stored right now.`
+			: `No games are scheduled for the day.`
+
+		return new EmbedBuilder()
 			.setTitle(title)
 			.setColor(embedColors.PlutoRed)
 			.setDescription(description)
 			.setFooter({ text: footer || helpfooter })
 			.setThumbnail(thumbnail)
-		return emb
-	}
-	if (includeOdds) {
-		embColor = `${embedColors.PlutoBlue}`
-		title = `:mega: H2H Odds`
-		createMatchStr = (game) => {
-			const aTeam = shortNameParse(game.away_team)
-			const hTeam = shortNameParse(game.home_team)
-			return `${aTeam} *(${game.away_odds})* *@* ${hTeam} *(${game.home_odds})* | *${game.start}*`
-		}
-	} else {
-		title = `Scheduled Games`
-		embColor = `${embedColors.PlutoYellow}`
-		createMatchStr = (game) => {
-			const aTeam = shortNameParse(game.away_team)
-			const hTeam = shortNameParse(game.home_team)
-			return `${aTeam} @ ${hTeam} | *${game.start}*`
-		}
 	}
 
-	// Group the scheduled games by day using Lodash's `groupBy` function
-	const groupedGames = _.groupBy(scheduledArr, (game) => {
-		const gameDate = new Date(game.date)
-		return _.startCase(
-			_.lowerCase(format(gameDate, 'EEEE')),
-		)
+	// Group and sort the games by actual date
+	const groupedGames = _.groupBy(scheduledArr, 'date')
+	const sortedDates = _.orderBy(
+		Object.keys(groupedGames),
+		[],
+		['asc'],
+	)
+
+	const fields = sortedDates.map((date) => {
+		const gamesList = groupedGames[date]
+			.map(createMatchStr(includeOdds))
+			.join('\n')
+
+		return {
+			name: format(new Date(date), 'PP'), // Format date as 'MM/DD/YYYY'
+			value: `${gamesList}\n\n*${groupedGames[date].length} games*`,
+		}
 	})
 
-	// Sort the grouped games by day using Lodash's `orderBy` function
-	const sortedGroupedGames = orderByDays(
-		groupedGames,
-		dayOrder,
-	)
-	const gamesCount = _.size(scheduledArr)
-	const fields = []
-	// Create the Discord Embed
-	const emb = new EmbedBuilder()
+	return new EmbedBuilder()
 		.setTitle(title)
 		.setColor(embColor)
 		.setFooter({ text: footer || helpfooter })
 		.setThumbnail(thumbnail)
-	// Add fields for each day and its corresponding games
-	sortedGroupedGames.forEach(([day, games]) => {
-		const gamesStr = games
-			.map(createMatchStr)
-			.join('\n')
-		fields.push({
-			name: day,
-			value: `${gamesStr}\n\n*${gamesCount} games total*`,
-		})
-	})
-	emb.addFields(fields)
-	return emb
+		.addFields(fields)
+}
+
+function createMatchStr(includeOdds) {
+	return (game) => {
+		const aTeam = shortNameParse(game.away_team)
+		const hTeam = shortNameParse(game.home_team)
+		const oddsStr = includeOdds
+			? ` *(${game.away_odds})* *@* ${hTeam} *(${game.home_odds})* | *${game.start}*`
+			: ` @ ${hTeam} | *${game.start}*`
+
+		return `${aTeam}${oddsStr}`
+	}
 }
 
 function shortNameParse(name) {

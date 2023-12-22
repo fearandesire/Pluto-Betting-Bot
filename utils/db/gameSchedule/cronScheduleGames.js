@@ -1,6 +1,5 @@
 /* eslint-disable camelcase */
 import _ from 'lodash'
-import { SPORT } from '@pluto-server-config'
 import { MatchupManager } from '@pluto-matchupOps/MatchupManager.js'
 import logClr from '@pluto-internal-color-logger'
 import Cache from '@pluto-redis'
@@ -131,7 +130,7 @@ export default async function cronScheduleGames(
 
 	const schCache = await Cache().get(`scheduled_games`)
 	if (schCache.length > 0) {
-		const emb = await parseScheduled(schCache, SPORT)
+		const emb = await parseScheduled(schCache)
 		await PlutoLogger.sendEmbed(emb)
 	}
 
