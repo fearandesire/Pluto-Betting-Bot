@@ -78,9 +78,6 @@ export async function handleBetMatchups() {
 			)
 
 			if (!matchInfo) {
-				console.error(
-					`[HandleBetMatchups]\n Matchup: ${MATCHUP.away_team} at ${MATCHUP.home_team} not found in DB\nUnable to close bets for this matchup.`,
-				)
 				return
 			}
 
