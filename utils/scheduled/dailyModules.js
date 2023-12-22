@@ -1,4 +1,3 @@
-import Promise from 'bluebird'
 import { Log } from '@pluto-core-config'
 import logClr from '@pluto-internal-color-logger'
 import {

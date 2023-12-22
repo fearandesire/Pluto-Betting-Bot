@@ -55,8 +55,7 @@ export default async function collectOdds() {
 			`SELECT id FROM "${LIVEMATCHUPS}"`,
 		)
 		const matchups = {}
-		await Promise.map(
-			filteredPastGames,
+		const promises = filteredPastGames.map(
 			async (game) => {
 				const idApi = game.id
 
@@ -121,6 +120,7 @@ export default async function collectOdds() {
 				)
 			},
 		)
+		await Promise.all(promises)
 
 		const gameCount = _.size(matchups)
 		const msg =

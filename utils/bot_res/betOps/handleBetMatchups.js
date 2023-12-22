@@ -1,6 +1,5 @@
 /* eslint-disable no-continue */
 import fetch from 'node-fetch'
-import Promise from 'bluebird'
 import _ from 'lodash'
 import db from '@pluto-db'
 import { SCORE } from '@pluto-core-config'

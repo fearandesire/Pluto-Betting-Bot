@@ -1,12 +1,11 @@
 import { Command } from '@sapphire/framework'
-import Promise from 'bluebird' // Import Bluebird library
 import { newBet } from '@pluto-betOps/newBet.js'
 import { validateUser } from '@pluto-validate/validateExistingUser.js'
 import { isPreSzn } from '@pluto-core-config'
+import { MatchupManager } from '@pluto-matchupOps/MatchupManager.js'
+import { QuickError } from '@pluto-embed-reply'
 import PendingBetHandler from '../utils/db/validation/pendingBet.js'
 import isInGuild from '../utils/isInGuild.js'
-import { MatchupManager } from '@pluto-matchupOps/MatchupManager.js';
-import { QuickError } from '@pluto-embed-reply';
 
 export class bet extends Command {
 	constructor(context, options) {
@@ -64,9 +63,7 @@ export class bet extends Command {
 		})
 
 		const userid = interaction.user.id
-
-		// Use Promise.try to handle promises and catch any errors
-		Promise.try(async () => {
+		try {
 			const isRegistered = await validateUser(
 				interaction,
 				userid,
@@ -74,7 +71,8 @@ export class bet extends Command {
 			)
 			if (!isRegistered) return
 
-			const oddsExist = await MatchupManager.getAllMatchups()
+			const oddsExist =
+				await MatchupManager.getAllMatchups()
 			if (!oddsExist) {
 				return interaction.editReply({
 					content: `No odds are currently stored, you cannot place a bet.`,
@@ -99,7 +97,7 @@ export class bet extends Command {
 					ephemeral: true,
 				})
 			}
-			
+
 			// If all checks pass, insert the pending bet
 			await PendingBetHandler.insertPending(userid)
 			// Call the newBet function only if all checks pass
@@ -108,18 +106,21 @@ export class bet extends Command {
 				teamName,
 				interaction.options.getInteger('amount'),
 			)
-		}).catch(async (error) => {
+		} catch (error) {
 			await PendingBetHandler.deletePending(userid)
 			// Handle any errors that occur during the promise chain
 			console.error(error)
 			if (error?.code === `MATCH_NOT_FOUND`) {
-				return QuickError(interaction, `Unable to locate odds for the team you specified.\nVerify available games via \`/odds\``)
+				return QuickError(
+					interaction,
+					`Unable to locate odds for the team you specified.\nVerify available games via \`/odds\``,
+				)
 			}
 			interaction.editReply({
 				content: `An error occurred while processing your bet.`,
 				ephemeral: true,
 				components: [],
 			})
-		})
+		}
 	}
 }

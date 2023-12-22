@@ -187,3 +187,4 @@ utils/bot_res/betOps/vs/matchupImgs.js
 Docs.MD
 ecosystem.config.js
 ecosystem.config.mjs
+ecosystem.config.cjs

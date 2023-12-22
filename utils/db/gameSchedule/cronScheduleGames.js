@@ -1,6 +1,5 @@
 /* eslint-disable camelcase */
 import _ from 'lodash'
-import Promise from 'bluebird'
 import { SPORT } from '@pluto-server-config'
 import { MatchupManager } from '@pluto-matchupOps/MatchupManager.js'
 import logClr from '@pluto-internal-color-logger'
