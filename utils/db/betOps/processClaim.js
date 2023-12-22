@@ -1,131 +1,109 @@
-// import { updateclaim } from './addClaimTime.js';
 import discord from 'discord.js'
 import {
-	addHours,
-	format,
-	formatDistanceStrict,
 	fromUnixTime,
 	getUnixTime,
 	isAfter,
 	parseISO,
+	addHours,
+	formatDistanceStrict,
 } from 'date-fns'
-
 import db from '@pluto-db'
 import { CURRENCY } from '@pluto-core-config'
-import PlutoLogger from '@pluto-logger'
+import { QuickError } from '@pluto-embed-reply'
 import { convertColor } from '../../bot_res/embeds/embedReply.js'
 import embedColors from '../../../lib/colorsConfig.js'
 
 const { EmbedBuilder } = discord
 
+async function formatTime(unixTime) {
+	return new Date(fromUnixTime(unixTime))
+}
+
+async function checkCooldown(lastClaimTime) {
+	const lastClaim = await getUnixTime(
+		fromUnixTime(lastClaimTime),
+	)
+	const rightNow = await getUnixTime(new Date())
+	const rightNowISO = await parseISO(
+		await formatTime(rightNow),
+	)
+	const lastClaimISO = await parseISO(
+		await formatTime(lastClaim),
+	)
+	const cooldown = addHours(lastClaimISO, 24)
+	return isAfter(rightNowISO, cooldown)
+}
+
+async function updateUserBalance(
+	userId,
+	balance,
+	transaction,
+) {
+	const rightNow = await getUnixTime(new Date())
+	await transaction.any(
+		`UPDATE "${CURRENCY}" SET lastclaimtime = $1, balance = $2 WHERE userid = $3 RETURNING *`,
+		[rightNow, balance, userId],
+	)
+}
+
+function createEmbed(title, description, color) {
+	return new EmbedBuilder()
+		.setTitle(title)
+		.setDescription(description)
+		.setColor(convertColor(color))
+}
+
 export async function processClaim(
-	inputuserid,
+	inputUserId,
 	interaction,
 ) {
-	const today = new Date()
-	// # Convert the current time & last claim time to unix
-	const rightNow = await getUnixTime(fromUnixTime(today))
-	let embObj
-	db.tx('processClaim-Transaction', async (t) => {
-		// ? Search for user via their Discord ID in the database
-		const findUser = await t.oneOrNone(
+	try {
+		const user = await db.oneOrNone(
 			`SELECT * FROM "${CURRENCY}" WHERE userid = $1`,
-			[inputuserid],
-		) //
-		if (!findUser) {
-			return false
-		}
-		// ? User exists in the DB, but has never used the claim command.
-		// ? Therefor we process the claim request (add 20 dollars to user's balance & save current time to lastclaimtime cell)
-		if (findUser.lastclaimtime === null) {
-			const updatedBalance =
-				Number(findUser.balance) + 20
-			await t.any(
-				`UPDATE "${CURRENCY}" SET lastclaimtime = $1, balance = $2 WHERE userid = $3 RETURNING *`,
-				[rightNow, updatedBalance, inputuserid],
-			)
-			embObj = {
-				title: 'Daily Claim',
-				description: `Welcome to Pluto! You have claimed your daily $20.\nYou can use this command again in 24 hours.\nYour new balance: $${updatedBalance}`,
-				color: convertColor(
-					embedColors.PlutoBrightGreen,
-				),
-			}
-			await interaction.reply({ embeds: [embObj] })
-		}
+			[inputUserId],
+		)
 
-		// ? Use Case: User has claimed at least once prior to now
-		// ? Now we need to determine if the user is on cooldown.
+		if (!user) return false
+
 		if (
-			findUser.userid === inputuserid &&
-			findUser.lastclaimtime !== null
+			user.lastclaimtime === null ||
+			(await checkCooldown(user.lastclaimtime))
 		) {
-			const lastClaim = await getUnixTime(
-				fromUnixTime(findUser.lastclaimtime),
+			const newBalance =
+				Number(user.balance || 0) + 20
+			await updateUserBalance(
+				inputUserId,
+				newBalance,
+				db,
 			)
-			// # Format the current time & last claim time
-			const formatRightNow = await format(
-				rightNow,
-				'yyyy-MM-dd HH:mm:ss',
+			const embed = createEmbed(
+				'Daily Claim',
+				`You have claimed your daily $20.\nYou can use this command again in 24 hours.\nYour new balance: $${newBalance}`,
+				embedColors.PlutoBrightGreen,
 			)
-			const formatLastClaim = await format(
-				lastClaim,
-				'yyyy-MM-dd HH:mm:ss',
+			await interaction.followUp({ embeds: [embed] })
+		} else {
+			const rightNow = new Date()
+			const lastClaimTime = await formatTime(
+				user.lastclaimtime,
 			)
-			// # Parse the times to ISO to get the difference in hours
-			const rightNowISO = await parseISO(
-				formatRightNow,
-			)
-			const lastClaimISO = await parseISO(
-				formatLastClaim,
-			)
-			// # add 24 hours to the last claim time
-			const cooldown = addHours(lastClaimISO, 24)
-			const passedCooldown = await isAfter(
-				rightNowISO,
-				cooldown,
-			)
-			if (passedCooldown === false) {
-				const timeLeft = await formatDistanceStrict(
-					rightNowISO,
-					cooldown,
+			const cooldownEnd = addHours(lastClaimTime, 24)
+			if (rightNow < cooldownEnd) {
+				const timeLeft = formatDistanceStrict(
+					cooldownEnd,
+					rightNow,
 				)
-				await interaction.reply({
+				await interaction.followUp({
 					content: `You are on cooldown! You can collect your daily $20 again in **${timeLeft}**`,
 					ephemeral: true,
 				})
-			} else {
-				const currentBalance = findUser.balance
-				const balance =
-					Number(currentBalance) + Number(20)
-				await t.any(
-					`UPDATE "${CURRENCY}" SET lastclaimtime = $1, balance = $2 WHERE userid = $3 RETURNING *`,
-					[rightNow, balance, inputuserid],
-				)
-				const cEmb = {
-					title: 'Daily Claim',
-					description: `Welcome back! You have claimed your daily $20.\nYou can use this command again in 24 hours.\nYour new balance is: **$${balance}**.`,
-				}
-				const claimedEmb = new EmbedBuilder()
-					.setTitle('Daily Claim')
-					.setDescription(cEmb.description)
-					.setColor(
-						convertColor(
-							embedColors.PlutoBrightGreen,
-						),
-					)
-				await interaction.reply({
-					embeds: [claimedEmb],
-					ephemeral: true,
-				})
 			}
 		}
-	}).catch(async (error) => {
-		await PlutoLogger.log({
-			id: 4,
-			description: `Error occured when processing claim for => \`${inputuserid}\`\nError: =>\`${
-				error?.message || error
-			}\``,
-		})
-	})
+	} catch (error) {
+		console.error(error)
+		return QuickError(
+			interaction,
+			`Something went wrong when processing your daily claim.`,
+		)
+	}
 }
