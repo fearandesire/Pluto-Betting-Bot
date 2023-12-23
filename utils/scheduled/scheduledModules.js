@@ -104,6 +104,10 @@ export async function genRanges() {
 	const cronRange = await cronCompletedChecks(
 		startTimesArr,
 	)
+	await PlutoLogger.log({
+		id: 0,
+		description: `Completed Games Check Cron Job: ${cronRange}`,
+	})
 	return cronRange
 }
 
