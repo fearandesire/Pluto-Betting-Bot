@@ -32,8 +32,7 @@ export async function newBet(
 ) {
 	const userAvatar = interaction.user.displayAvatarURL()
 	const negativeRgx = /-/g
-	const userId =
-		interaction?.author?.id || interaction.user.id
+	const userId = interaction.user.id
 
 	if (betAmount.toString().match(negativeRgx)) {
 		await QuickError(
@@ -46,9 +45,10 @@ export async function newBet(
 	}
 
 	const accountManager = new AccountManager(CURRENCY)
-	const currentUserBalance =
+	const { balance: userBal } =
 		await accountManager.getBalance(userId)
-	if (currentUserBalance < Number(betAmount)) {
+
+	if (Number(betAmount) > Number(userBal)) {
 		await QuickError(
 			interaction,
 			`You do not have enough money to place this bet.`,
