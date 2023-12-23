@@ -15,6 +15,7 @@ import { MatchupManager } from '@pluto-matchupOps/MatchupManager.js'
 import SelectMenuManager from '../../bot_res/classes/SelectMenuManager.js'
 import BetManager from '../../bot_res/classes/BetManager.js'
 import { sendErrorEmbed } from '../../bot_res/embeds/embedReply.js'
+import AccountManager from '../../bot_res/classes/AccountManager.js'
 
 /**
  * @module newBet - This module is used to setup a bet in the DB.
@@ -31,10 +32,26 @@ export async function newBet(
 ) {
 	const userAvatar = interaction.user.displayAvatarURL()
 	const negativeRgx = /-/g
+	const userId =
+		interaction?.author?.id || interaction.user.id
+
 	if (betAmount.toString().match(negativeRgx)) {
 		await QuickError(
 			interaction,
 			`You cannot enter a negative number for your bet amount.`,
+			true,
+		)
+		await PendingBetHandler.deletePending(userId)
+		return
+	}
+
+	const accountManager = new AccountManager(CURRENCY)
+	const currentUserBalance =
+		await accountManager.getBalance(userId)
+	if (currentUserBalance < Number(betAmount)) {
+		await QuickError(
+			interaction,
+			`You do not have enough money to place this bet.`,
 			true,
 		)
 		await PendingBetHandler.deletePending(userId)
@@ -51,8 +68,6 @@ export async function newBet(
 		return
 	}
 
-	const userId =
-		interaction?.author?.id || interaction.user.id
 	const team = await teamResolver(SPORT, betOnTeam)
 	let matchInfo
 	const matchupMngr = new MatchupManager()
