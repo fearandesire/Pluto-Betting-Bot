@@ -1,13 +1,17 @@
-/**
- * A module for managing ISO formatted dates.
- * @module IsoManager
- */
 import IsoBuilder from './IsoBuilder.js'
 
+/**
+ * Wrapper for IsoBuilder
+ * Offers various methods to format and manipulate ISO date strings.
+ */
 export default class IsoManager {
 	/**
-	 * Creates a new instance of IsoManager with the given time.
-	 * @param {string} time - A string representing a valid date and time in ISO format.
+	 * Creates an instance of IsoManager.
+	 * @date 12/23/2023 - 6:35:59 PM
+	 *
+	 * @constructor
+	 * @param {*} time
+	 * @param {*} compare
 	 */
 	constructor(time, compare) {
 		const builder =
