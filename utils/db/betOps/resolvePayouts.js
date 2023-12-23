@@ -29,12 +29,8 @@ export async function resolvePayouts(matchOdds, betAmount) {
 		decimalOdds = 1 - 100 / oddsNum
 	}
 
-	const payout = parseFloat(
-		(ogBetAmount * decimalOdds).toFixed(2),
-	)
-	const profit = parseFloat(
-		(payout - ogBetAmount).toFixed(2),
-	)
+	const payout = Math.round(ogBetAmount * decimalOdds)
+	const profit = Math.round(payout - ogBetAmount)
 
 	return { payout, profit }
 }
