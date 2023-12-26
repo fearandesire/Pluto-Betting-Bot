@@ -1,8 +1,5 @@
 import { createRequire } from 'module'
-import logClr from '@pluto-internal-color-logger'
-import Cache from '@pluto-redis'
 import { createChannel } from './createChannel.js'
-import { getShortName } from '../../bot_res/getShortName.js'
 import CronMath from './CronMath.js'
 
 const require = createRequire(import.meta.url)
@@ -17,58 +14,31 @@ const cron = require('node-cron')
 export async function scheduleChannels(
 	homeTeam,
 	awayTeam,
-	options,
+	args,
 ) {
-	const { scheduledCreationTime, queue1HEarly, gameId } =
-		options || null
-	let openChannelTime
-
-	if (queue1HEarly) {
+	const { scheduledCreationTime, chanName, createNow } =
+		args || null
+	let openChannelTime = ''
+	if (!createNow) {
 		openChannelTime = await new CronMath(
 			scheduledCreationTime,
 		).subtract(1, `hours`)
 	} else {
 		openChannelTime = scheduledCreationTime
 	}
-	const HTEAM = await getShortName(homeTeam)
-	const ATEAM = await getShortName(awayTeam)
-
 	const createSchedCron = async () => {
 		await cron.schedule(
 			`${openChannelTime}`,
 			async () => {
-				const creation = await createChannel({
-					awayTeam: ATEAM,
-					homeTeam: HTEAM,
+				await createChannel({
+					awayTeam,
+					homeTeam,
+					chanName,
 				})
-				if (creation) {
-					const cachedIds = await Cache().get(
-						`scheduledIds`,
-					)
-					// Find and remove game from cache via ID
-					const newIds = cachedIds.filter(
-						(id) => id !== gameId,
-					)
-					await Cache().set(
-						`scheduledIds`,
-						newIds,
-					)
-					await logClr({
-						text: `Removed game from cache`,
-						color: `green`,
-						status: `done`,
-					})
-				}
 			},
 			{ timezone: 'America/New_York' },
 		)
 	}
-	await createSchedCron().then(async () => {
-		// ! TODO: Create Adv. Logging toggle
-		// await PlutoLogger.log({
-		// 	id: 2,
-		// 	description: `Game Scheduled | ${homeTeam} vs ${awayTeam}`,
-		// })
-	})
+	await createSchedCron()
 	return true
 }

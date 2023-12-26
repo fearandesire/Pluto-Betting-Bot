@@ -40,7 +40,10 @@ export default async function parseScheduled(
 	}
 
 	// Group and sort the games by actual date
-	const groupedGames = _.groupBy(scheduledArr, 'date')
+	const groupedGames = _.groupBy(
+		scheduledArr,
+		'dateofmatchup',
+	)
 	const sortedDates = _.orderBy(
 		Object.keys(groupedGames),
 		[],
@@ -68,11 +71,11 @@ export default async function parseScheduled(
 
 function createMatchStr(includeOdds) {
 	return (game) => {
-		const aTeam = shortNameParse(game.away_team)
-		const hTeam = shortNameParse(game.home_team)
+		const aTeam = shortNameParse(game.teamone)
+		const hTeam = shortNameParse(game.teamtwo)
 		const oddsStr = includeOdds
-			? ` *(${game.away_odds})* *@* ${hTeam} *(${game.home_odds})* | *${game.start}*`
-			: ` @ ${hTeam} | *${game.start}*`
+			? ` *(${game.teamoneodds})* *@* ${hTeam} *(${game.teamtwoodds})* | *${game.legiblestart}*`
+			: ` @ ${hTeam} | *${game.legiblestart}*`
 
 		return `${aTeam}${oddsStr}`
 	}

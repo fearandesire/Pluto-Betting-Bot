@@ -7,11 +7,10 @@ import {
 	// init_Cron_Heartbeat,
 	queueMidnightCheck,
 } from './scheduledModules.js'
-import cronScheduleGames from '../db/gameSchedule/cronScheduleGames.js'
-import clearScheduled from '../db/gameSchedule/clearScheduled.js'
 import collectOdds from '../bot_res/betOps/collectOdds.js'
 import { clearPendingBets } from './dailyModules_Utils.js'
 import { handleBetMatchups } from '../bot_res/betOps/handleBetMatchups.js'
+import GameScheduler from '../db/gameSchedule/GameScheduler.js'
 
 /**
  * @function dbDailyOps
@@ -31,10 +30,11 @@ export async function dbDailyOps() {
 	try {
 		await Promise.all([
 			await handleBetMatchups(),
-			await clearScheduled(), // Clear Cached Scheduled Games
 			await clearPendingBets(), // Clear Pending Bets - In this context, bets that have not been confirmed or cancelled.
 			await collectOdds(), // Collect Odds on-start [Instant]
-			await cronScheduleGames(), // Check for any games that need to be scheduled now (Game Channels) [Instant]
+			await new GameScheduler().init({
+				forceSchedule: true,
+			}), // Check for any games that need to be scheduled now (Game Channels) [Instant]
 			await init_Cron_Chan_Scheduler(), // Start Cron to schedule games daily (Game Channels) [Daily]
 			await init_Cron_Completed(true), // Start range generation on-startup [Instant]
 			await queueMidnightCheck(), // Cron for checking games @ Midnight - 2 AM

@@ -2,8 +2,8 @@ import { Command } from '@sapphire/framework'
 import { SPORT } from '@pluto-server-config'
 import { _, QuickError } from '@pluto-core-config'
 import { guildImgURL } from '@pluto-embed-reply'
-import Cache from '@pluto-redis'
 import PlutoLogger from '@pluto-logger'
+import { MatchupManager } from '@pluto-matchupOps/MatchupManager.js'
 import parseScheduled from '../utils/bot_res/parseScheduled.js'
 
 export class viewScheduled extends Command {
@@ -39,9 +39,9 @@ export class viewScheduled extends Command {
 			})
 			return
 		}
-		const scheduled = await Cache().get(
-			`scheduled_games`,
-		)
+		const scheduled =
+			await MatchupManager.getAllMatchups()
+
 		if (!scheduled || _.isEmpty(scheduled)) {
 			await interaction.reply({
 				content: `There are no games currently scheduled to be created.`,
@@ -52,23 +52,23 @@ export class viewScheduled extends Command {
 		const thumbnail = await guildImgURL(
 			interaction.client,
 		)
-		await parseScheduled(scheduled, { thumbnail }).then(
-			async (res) => {
-				if (res === false) {
-					await QuickError(
-						interaction,
-						`Unable to view scheduled games - It appears something is setup wrong with the app!`,
-					)
-					await PlutoLogger.log({
-						title: `Game Scheduling Logs`,
-						description: `Error: ${SPORT} is not supported.\nCheck app configuration\nCmd: ${interaction.commandName} | Called By User: ${interaction.user.tag}`,
-					})
-				} else {
-					await interaction.reply({
-						embeds: [res],
-					})
-				}
-			},
-		)
+		await parseScheduled(scheduled, {
+			thumbnail,
+		}).then(async (res) => {
+			if (res === false) {
+				await QuickError(
+					interaction,
+					`Unable to view scheduled games - It appears something is setup wrong with the app!`,
+				)
+				await PlutoLogger.log({
+					title: `Game Scheduling Logs`,
+					description: `Error: ${SPORT} is not supported.\nCheck app configuration\nCmd: ${interaction.commandName} | Called By User: ${interaction.user.tag}`,
+				})
+			} else {
+				await interaction.reply({
+					embeds: [res],
+				})
+			}
+		})
 	}
 }

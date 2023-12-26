@@ -1,5 +1,4 @@
 import discord from 'discord.js'
-import { SPORT } from '@pluto-server-config'
 import { fetchVsImg } from '@pluto-general-utils/fetchVsImg.js'
 import { SapDiscClient } from '@pluto-core'
 import PlutoLogger from '@pluto-logger'
@@ -12,7 +11,7 @@ const { AttachmentBuilder, ChannelType } = discord
  */
 
 export async function createChannel(data) {
-	const { awayTeam, homeTeam } = data || null
+	const { awayTeam, homeTeam, chanName } = data || null
 	try {
 		const guild = SapDiscClient.guilds.cache.get(
 			`${process.env.server_ID}`,
@@ -20,14 +19,8 @@ export async function createChannel(data) {
 		const category = guild.channels.cache.get(
 			`${process.env.gameCat_ID}`,
 		)
-		let channelName
-		if (SPORT === 'nba') {
-			channelName = `${awayTeam} vs ${homeTeam}`
-		} else {
-			channelName = `${awayTeam} at ${homeTeam}`
-		}
 		const gameChan = await guild.channels.create({
-			name: channelName,
+			name: chanName,
 			type: ChannelType.GuildText,
 			topic: `Enjoy the Game!`,
 			parent: category,
@@ -41,7 +34,6 @@ export async function createChannel(data) {
 
 		const imgMatchupStr = `${awayTeam} vs ${homeTeam}`
 		const imgFile = await fetchVsImg(imgMatchupStr)
-		// const imgFile = false
 		if (!imgFile) {
 			await gameChan.send({
 				embeds: [gameInfo],

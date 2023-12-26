@@ -10,7 +10,7 @@ import {
 import { MatchupManager } from '@pluto-matchupOps/MatchupManager.js'
 import logClr from '@pluto-internal-color-logger'
 import PlutoLogger from '@pluto-logger'
-import cronScheduleGames from '../db/gameSchedule/cronScheduleGames.js'
+import GameScheduler from '../db/gameSchedule/GameScheduler.js'
 import cronCompletedChecks from '../bot_res/cronCompletedChecks.js'
 import { getHeartbeat } from '../bot_res/betOps/gameHeartbeat.js'
 import { handleBetMatchups } from '../bot_res/betOps/handleBetMatchups.js'
@@ -187,7 +187,7 @@ export async function init_Cron_Chan_Scheduler() {
 	})
 	// # Run Cron
 	await Cron(`${scheduledGames}`, async () => {
-		await cronScheduleGames()
+		await new GameScheduler().init()
 	})
 }
 
