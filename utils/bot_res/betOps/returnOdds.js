@@ -55,19 +55,20 @@ async function compileOdds(oddsArr, thumbnail) {
 		const parsedStart =
 			match.legiblestart.split(', ')[1]
 		oddsFields.push({
-			date: match.dateofmatchup, // Use actual date
+			dateofmatchup: match.dateofmatchup, // Use actual date
 			start: parsedStart,
-			away_team: aTeam,
-			home_team: hTeam,
-			home_odds: hOdds,
-			away_odds: aOdds,
+			teamone: aTeam,
+			teamtwo: hTeam,
+			teamtwoodds: hOdds,
+			teamoneodds: aOdds,
+			legiblestart: match.legiblestart,
 		})
 	}
 
 	// Sort the oddsFields by actual date
 	const sortedOddsFields = _.orderBy(
 		oddsFields,
-		['date'],
+		['dateofmatchup'],
 		['asc'],
 	)
 

@@ -71,10 +71,18 @@ export default async function parseScheduled(
 
 function createMatchStr(includeOdds) {
 	return (game) => {
-		const aTeam = shortNameParse(game.teamone)
-		const hTeam = shortNameParse(game.teamtwo)
+		const aTeam = shortNameParse(
+			game?.teamone || game.away_team,
+		)
+		const hTeam = shortNameParse(
+			game?.teamtwo || game.home_team,
+		)
 		const oddsStr = includeOdds
-			? ` *(${game.teamoneodds})* *@* ${hTeam} *(${game.teamtwoodds})* | *${game.legiblestart}*`
+			? ` *(${
+					(game.away_teaum, game.teamoneodds)
+			  })* *@* ${hTeam} *(${game.teamtwoodds})* | *${
+					game.legiblestart
+			  }*`
 			: ` @ ${hTeam} | *${game.legiblestart}*`
 
 		return `${aTeam}${oddsStr}`
