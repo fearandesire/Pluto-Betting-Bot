@@ -292,7 +292,7 @@ export default class BetManager {
 		const payout = format(betslip.payout)
 		const successEmb = {
 			title: `Bet confirmed! :ticket:`,
-			description: `## **__Betslip__**\n**${betslip.teamid}** ${betslip.teamEmoji}\n**Amount:** **\`$${amount}\`**\n**Profit:** **\`$${profit}\`** ➞ **Payout:** **\`$${payout}\`**\n\n*View more commands via \`/commands\`*\n*Betslip ID: \`${betslip.betId}\`*`,
+			description: `## **__Betslip__**\n**${betslip.teamid}** ${betslip.teamEmoji}\n**Bet:** **\`$${amount}\`**\n**Profit:** **\`$${profit}\`** ➞ **Payout:** **\`$${payout}\`**\n\n*View more commands via \`/commands\`*\n*Betslip ID: \`${betslip.betId}\`*`,
 			color: embedColors.PlutoBrightGreen,
 			thumbnail: `${userAvatar}`,
 		}

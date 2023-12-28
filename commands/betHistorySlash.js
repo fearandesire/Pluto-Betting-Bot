@@ -27,17 +27,14 @@ export class betHistorySlash extends Command {
 	}
 
 	async chatInputRun(interaction) {
+		await interaction.deferReply({ ephemeral: false })
 		const userid = interaction.user.id
-		const interactionEph = true
+		const interactionEph = false
 		await validateUser(
 			interaction,
 			userid,
 			interactionEph,
 		)
-		await fetchBetHistory(
-			interaction,
-			userid,
-			interactionEph,
-		)
+		await fetchBetHistory(interaction, userid)
 	}
 }
