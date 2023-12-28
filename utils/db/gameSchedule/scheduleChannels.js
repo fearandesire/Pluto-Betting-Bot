@@ -1,9 +1,8 @@
-import { createRequire } from 'module'
+import { Log } from '@pluto-internal-logger'
+import Cache from '@pluto-redis'
 import { createChannel } from './createChannel.js'
 import CronMath from './CronMath.js'
-
-const require = createRequire(import.meta.url)
-const cron = require('node-cron')
+import CronJobManager from '../../bot_res/classes/CronJobManager.js'
 
 /**
  * @module scheduleChannels
@@ -26,9 +25,11 @@ export async function scheduleChannels(
 	} else {
 		openChannelTime = scheduledCreationTime
 	}
-	const createSchedCron = async () => {
-		await cron.schedule(
-			`${openChannelTime}`,
+	try {
+		const cJobManager = new CronJobManager(Cache)
+		await cJobManager.scheduleJob(
+			`${chanName}-${openChannelTime}`,
+			openChannelTime,
 			async () => {
 				await createChannel({
 					awayTeam,
@@ -36,9 +37,11 @@ export async function scheduleChannels(
 					chanName,
 				})
 			},
-			{ timezone: 'America/New_York' },
 		)
+		return true
+	} catch (err) {
+		Log.Error(`Error scheduling channel | ${chanName}`)
+		console.error(err)
+		return false
 	}
-	await createSchedCron()
-	return true
 }

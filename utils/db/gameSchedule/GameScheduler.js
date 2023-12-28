@@ -81,7 +81,6 @@ export default class GameScheduler {
 			game.teamtwo,
 			SPORT,
 		)
-		const isScheduled = game.scheduled || false
 		const chanExist = await locateChannel(title)
 		const todaysPriorGame = isDateTodayAndPast(
 			game.cronstart,
@@ -90,9 +89,7 @@ export default class GameScheduler {
 			new Date() < new Date(game.start)
 
 		return (
-			(todaysPriorGame || isFutureGame) &&
-			!isScheduled &&
-			!chanExist
+			(todaysPriorGame || isFutureGame) && !chanExist
 		)
 	}
 
@@ -105,6 +102,7 @@ export default class GameScheduler {
 			)
 		let scheduledCreationTime = null
 		let createNow = false
+
 		// Log details
 		const { cronstart: cronStart } = game
 		const gameIsWithinOneHour = await isWithinOneHour(

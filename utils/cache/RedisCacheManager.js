@@ -11,7 +11,7 @@ export class CacheManager {
 		this.cache = redisCache
 	}
 
-	async set(key, data) {
+	async set(key, data, TTL) {
 		if (!key) {
 			throw new Error(
 				'No key was provided to save into cache',
@@ -22,7 +22,7 @@ export class CacheManager {
 			key,
 			JSON.stringify(data),
 			'EX',
-			MAX_EXPIRATION,
+			TTL || MAX_EXPIRATION,
 		)
 		return true
 	}
