@@ -4,7 +4,7 @@ import { Log } from '@pluto-internal-logger'
 export default class CronJobManager {
 	constructor(cacheManager) {
 		this.cacheManager = cacheManager
-		this.keepAliveInterval = 3600 // Time in seconds to reset the TTL, e.g., 5 minutes
+		this.keepAliveInterval = 300 // Time in seconds to reset the TTL
 	}
 
 	async scheduleJob(id, cronExpression, task) {
@@ -18,9 +18,13 @@ export default class CronJobManager {
 
 		await schedule(cronExpression, task)
 		const jobData = { id, cronExpression } // Store only the necessary details
-		await this.cacheManager().set(id, jobData)
+		await this.cacheManager().set(
+			id,
+			jobData,
+			this.keepAliveInterval,
+		)
 		await this.startJobKeepAlive(id)
-		Log.Blue(`Scheduled new job with ID ${id}`)
+		return Log.Blue(`Scheduled new job with ID ${id}`)
 	}
 
 	async resetJobTTL(id) {
