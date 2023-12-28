@@ -1,5 +1,4 @@
 import {
-	bgYellowBright,
 	blue,
 	blueBright,
 	bold,
@@ -7,7 +6,6 @@ import {
 	magentaBright,
 	red,
 	yellow,
-	yellowBright,
 } from 'colorette'
 
 const cborder = '\u2500'.repeat(30)
