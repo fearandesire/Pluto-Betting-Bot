@@ -28,13 +28,17 @@ export class dailyClaimSlash extends Command {
 	}
 
 	async chatInputRun(interaction) {
-		await interaction.deferReply({ephemeral: true})
-		const userid = interaction.user.id
+		await interaction.deferReply({ ephemeral: true })
+		const userid = `448227000243585034`
 		const isRegistered = await validateUser(
 			interaction,
 			userid,
 		)
 		if (!isRegistered) return
-		await processClaim(userid, interaction)
+		try {
+			await processClaim(userid, interaction)
+		} catch (error) {
+			console.log(error)
+		}
 	}
 }
