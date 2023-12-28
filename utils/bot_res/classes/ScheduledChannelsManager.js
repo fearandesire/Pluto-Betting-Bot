@@ -17,6 +17,10 @@ export default class ScheduledChannelsManager {
 					[scheduled_cron, id],
 				)
 			}
+			await console.log(
+				`Saved scheduled times into DB`,
+			)
+			return true
 		})
 	}
 }

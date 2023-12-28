@@ -19,11 +19,10 @@ export default class GameScheduler {
 		this.newScheduledData = []
 	}
 
-	async init(args) {
-		const { forceSchedule } = args || false
+	async init() {
 		try {
 			const newScheduledGames =
-				await this.getScheduledGames(forceSchedule)
+				await this.getScheduledGames()
 
 			await this.processScheduledGames(
 				newScheduledGames,
@@ -59,17 +58,14 @@ export default class GameScheduler {
 		}
 	}
 
-	async getScheduledGames(forceSchedule) {
+	async getScheduledGames() {
 		const gamesArr =
 			await MatchupManager.getAllMatchups()
 		const newScheduledGames = []
 
 		for (const game of gamesArr) {
 			const shouldSchedule =
-				await this.shouldScheduleGame(
-					game,
-					forceSchedule,
-				)
+				await this.shouldScheduleGame(game)
 			if (shouldSchedule) {
 				const scheduledGame =
 					await this.prepareScheduledGame(game)
@@ -79,7 +75,7 @@ export default class GameScheduler {
 		return newScheduledGames
 	}
 
-	async shouldScheduleGame(game, forceSchedule) {
+	async shouldScheduleGame(game) {
 		const { title } = await this.parseMatchTitle(
 			game.teamone,
 			game.teamtwo,
@@ -96,8 +92,7 @@ export default class GameScheduler {
 		return (
 			(todaysPriorGame || isFutureGame) &&
 			!isScheduled &&
-			!chanExist &&
-			forceSchedule === false
+			!chanExist
 		)
 	}
 
