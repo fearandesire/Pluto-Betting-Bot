@@ -50,7 +50,7 @@ export async function fetchBetHistory(interaction, userid) {
 				wonCount += 1
 				return {
 					name: `:white_check_mark: ${entry.dateofbet} `,
-					value: `**Team:** ${entry.teamid}\n**Bet:** \`${amount}\`\n**Profit:** \`$${profit}\` | **Payout:** \`$${payout}\``,
+					value: `**Team:** ${entry.teamid}\n**Bet:** \`$${amount}\`\n**Profit:** \`$${profit}\` | **Payout:** \`$${payout}\``,
 					inline: true,
 				}
 			}
