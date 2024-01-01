@@ -36,6 +36,12 @@ export default class XPHandler {
 		}
 	}
 
+	async createStarterProfile() {
+		return db.none(
+			`INSERT INTO "${this.xpTable}" (userId, xp, level) VALUES ($1, 0, 0)`,
+		)
+	}
+
 	async userExists() {
 		const user = await db.oneOrNone(
 			`SELECT 1 FROM "${this.xpTable}" WHERE userid = $1`,
@@ -159,7 +165,7 @@ export default class XPHandler {
 		}
 		const xpProfile = await this.getXpProfile()
 		const { userLevel } = xpProfile
-		if (!userLevel) {
+		if (userLevel === undefined || userLevel === null) {
 			throw new Error(
 				`Failed to retrieve user's (${userId}) XP Level.`,
 			)
