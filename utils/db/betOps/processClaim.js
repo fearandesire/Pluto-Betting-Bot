@@ -2,7 +2,6 @@ import discord from 'discord.js'
 import {
 	fromUnixTime,
 	getUnixTime,
-	isAfter,
 	isBefore,
 	addHours,
 	formatDistanceStrict,
