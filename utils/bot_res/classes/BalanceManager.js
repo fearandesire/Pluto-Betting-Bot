@@ -86,7 +86,7 @@ export default class BalanceHandler {
 			balanceRecord.balance,
 		)
 		const xpHandler = new XPHandler(inputUserId)
-		const userTier = await xpHandler.getUserTier()
+		const userTier = await xpHandler.getUserTier(inputUserId)
 		const { tier, userLevel } = userTier
 
 		const embedData = await this.prepareEmbedData(
