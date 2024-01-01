@@ -1,7 +1,7 @@
 import { Command } from '@sapphire/framework'
-import { checkbalance } from '@pluto-check-balance'
 import { validateUser } from '@pluto-validate/validateExistingUser.js'
 import { isPreSzn } from '@pluto-core-config'
+import BalanceHandler from '../utils/bot_res/classes/BalanceManager.js'
 
 export class balanceSlash extends Command {
 	constructor(context, options) {
@@ -44,6 +44,9 @@ export class balanceSlash extends Command {
 		const target =
 			interaction.options.getMentionable('user')
 		const userid = interaction.user.id
+		const balanceManager = new BalanceHandler(
+			interaction,
+		)
 		try {
 			if (!target) {
 				const isRegistered = await validateUser(
@@ -51,18 +54,20 @@ export class balanceSlash extends Command {
 					userid,
 				)
 				if (!isRegistered) return
-				await checkbalance(userid, interaction)
+				await balanceManager.checkBalance(
+					userid,
+					target,
+				)
 				return
 			}
 			if (target) {
-				await checkbalance(
+				await balanceManager.checkBalance(
 					userid,
-					interaction,
 					target,
 				)
 			}
 		} catch (e) {
-			console.log(e)
+			console.error(e)
 		}
 	}
 }
