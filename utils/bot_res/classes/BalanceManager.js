@@ -25,6 +25,11 @@ export default class BalanceHandler {
 			const balanceRecord = await this.queryBalance(
 				queryUserId,
 			)
+			console.log(
+				(`[checkBalance] balanceRecord: -> \n`,
+				balanceRecord,
+				`Query UserID: ${queryUserId}`),
+			)
 
 			if (!balanceRecord) {
 				return target

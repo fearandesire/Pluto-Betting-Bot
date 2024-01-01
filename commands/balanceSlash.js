@@ -44,6 +44,7 @@ export class balanceSlash extends Command {
 		const target =
 			interaction.options.getMentionable('user')
 		const userid = interaction.user.id
+		console.log(`Entering BalanceHandler`)
 		const balanceManager = new BalanceHandler(
 			interaction,
 		)
