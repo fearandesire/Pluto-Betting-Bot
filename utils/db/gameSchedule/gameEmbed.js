@@ -52,20 +52,6 @@ export async function gameEmbedOdds(homeTeam, awayTeam) {
 	})
 	const hTeam = hTeamObj.name
 	const aTeam = aTeamObj.name
-	/** 
-	const hTeamQuery = new validateData({
-		tables: `${LIVEBETS}`,
-		columns: `amount`,
-		where: `teamid`,
-		values: hTeam,
-	})
-	const aTeamQuery = new validateData({
-		tables: `${LIVEBETS}`,
-		columns: `amount`,
-		where: `teamid`,
-		values: aTeam,
-	})
-	* */
 	const home_team_odds = await resolveMatchup(
 		hTeam,
 		`odds`,
