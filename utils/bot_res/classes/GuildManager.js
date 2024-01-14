@@ -1,4 +1,3 @@
-
 export class GuildManager {
 	constructor(guild) {
 		this.guild = guild

@@ -1,14 +1,13 @@
 /* eslint-disable no-await-in-loop */
-import { SapDiscClient } from '@pluto-core'
-
 import PlutoLogger from '@pluto-logger'
 import {
 	BETSLIPS,
 	CURRENCY,
 	LIVEBETS,
-} from '@pluto-core-config'
+} from '@pluto-server-config'
 import { AttachmentBuilder, EmbedBuilder } from 'discord.js'
-import { Log } from '@pluto-internal-logger';
+import { Log } from '@pluto-internal-logger'
+import { SapDiscClient } from '@pluto-core'
 import { resolvePayouts } from './resolvePayouts.js'
 import BetNotify from './BetNotify.js'
 import { getBalance } from '../validation/getBalance.js'
@@ -24,11 +23,15 @@ export default class BetProcessor {
 		try {
 			// Log and validation logic here
 
-			const bets = await this.getBets(
-				matchInfo.id,
+			const bets = await this.getBets(matchInfo.id)
+			const stringifiedBets = JSON.stringify(
+				bets,
+				null,
+				4,
 			)
-			const stringifiedBets = JSON.stringify(bets, null, 4)
-			await Log.Blue(`Bets for match: ${matchInfo.id}: ${stringifiedBets}`)
+			await Log.Blue(
+				`Bets for match: ${matchInfo.id}: ${stringifiedBets}`,
+			)
 			for (const betslip of bets) {
 				await this.processBet(
 					betslip,
@@ -55,7 +58,13 @@ export default class BetProcessor {
 	) {
 		try {
 			await Log.Magenta(
-				`Processing bet for Bet ID: ${betslip.betid}\n\nMatch Info: ${JSON.stringify(matchInfo, null, 4)}`,
+				`Processing bet for Bet ID: ${
+					betslip.betid
+				}\n\nMatch Info: ${JSON.stringify(
+					matchInfo,
+					null,
+					4,
+				)}`,
 			)
 			const betResult = await this.determineBetResult(
 				betslip.teamid,
@@ -66,7 +75,13 @@ export default class BetProcessor {
 				matchInfo,
 				betslip.teamid,
 			)
-			await Log.Blue(`Amount: ${betslip.amount}\nOdds for bet: ${JSON.stringify(oddsForBet)}\nBet Result: ${betResult}`);
+			await Log.Blue(
+				`Amount: ${
+					betslip.amount
+				}\nOdds for bet: ${JSON.stringify(
+					oddsForBet,
+				)}\nBet Result: ${betResult}`,
+			)
 			const { odds } = oddsForBet
 			const payoutData = await this.getPayoutData(
 				odds,
@@ -124,7 +139,13 @@ export default class BetProcessor {
 			teamoneodds,
 			teamtwoodds,
 		} = matchupData
-		await Log.Yellow(`Selecting odds for ${team}\nMatchup Data:\n${JSON.stringify(matchupData, null, 4)}`);
+		await Log.Yellow(
+			`Selecting odds for ${team}\nMatchup Data:\n${JSON.stringify(
+				matchupData,
+				null,
+				4,
+			)}`,
+		)
 		// Mapping teams to their odds and opponents
 		const oddsMapping = {
 			[teamone]: {
@@ -308,7 +329,6 @@ export default class BetProcessor {
 			}
 		}
 	}
-
 
 	async getBets(id) {
 		// Logic to retrieve bets from the database
