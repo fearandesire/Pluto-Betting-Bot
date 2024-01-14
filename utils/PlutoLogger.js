@@ -69,6 +69,15 @@ export default class PlutoLogger {
 				color = '#ff0000' // Red for Error Logs
 				title = 'Error'
 				break
+
+			case 5:
+				color = '#ffff00' // Yellow for Warning Logs
+				title = 'Warning'
+				break
+			case 'api':
+				color = '#9db08d' // Yellow for Warning Logs
+				title = 'API'
+				break
 			default:
 				// Default to General Logs
 				color = data?.color || `#c4f3fd`
