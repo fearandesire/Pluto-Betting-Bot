@@ -61,6 +61,9 @@ const serverEnv = {
 	R_DB: configData.R_DB,
 	R_PASS: configData.R_PASS,
 	SEASON_TYPE: configData.SEASON_TYPE,
+	admin_token: configData.admin_token,
+	pluto_api_url: configData.pluto_api_url,
+	pluto_api_username: configData.pluto_api_username,
 }
 
 // console.log(`serverEnv =>\n`, serverEnv)
@@ -96,6 +99,9 @@ const {
 	R_DB,
 	R_PASS,
 	SEASON_TYPE,
+	admin_token,
+	pluto_api_url,
+pluto_api_username
 } = serverEnv
 
 export {
@@ -126,6 +132,9 @@ export {
 	R_DB,
 	R_PASS,
 	SEASON_TYPE,
+	admin_token,
+	pluto_api_url,
+	pluto_api_username
 }
 
 export { configData as serverConf, serverEnv }
