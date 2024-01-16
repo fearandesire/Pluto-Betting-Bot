@@ -1,5 +1,4 @@
 import { Log } from '@pluto-core-config'
-import dmMe from '../dmMe.js'
 
 /**
  * @class NoDataFound -
@@ -16,8 +15,5 @@ export class NoDataFoundError extends Error {
 		Log.Error(
 			`[${this.filename}] UNABLE TO RETRIEVE ANY DATA:\n${this.message}`,
 		)
-		if (this.errToSpam !== `no`) {
-			dmMe(this.message, `error`)
-		}
 	}
 }

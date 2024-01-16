@@ -2,15 +2,16 @@
 import fetch from 'node-fetch'
 import _ from 'lodash'
 import db from '@pluto-db'
-import { SCORE } from '@pluto-core-config'
+import { SCORE } from '@pluto-server-config'
 import { MatchupManager } from '@pluto-matchupOps/MatchupManager.js'
 import logClr from '@pluto-internal-color-logger'
 import PlutoLogger from '@pluto-logger'
 import { determineWinner } from './determineWinner.js'
-import { queueDeleteChannel } from '../../db/gameSchedule/queueDeleteChannel.js'
 import ClosingQueue from '../../db/matchupOps/ClosingQueue.js'
 import { getShortName } from '../getShortName.js'
 import BetProcessor from '../../db/betOps/BetProcessor.js'
+import ChannelManager from '../../db/gameSchedule/ChannelManager.js'
+import { server_ID } from '../../serverConfig.js'
 
 const url = SCORE
 const options = {
@@ -156,7 +157,12 @@ export async function handleBetMatchups() {
 				const channelTitle = `${aTeamShortName.toLowerCase()} vs ${hTeamShortName.toLowerCase()}`
 				// ? Account for public-facing channel difference of `vs` anad `at`; Preference for each server
 
-				await queueDeleteChannel(channelTitle)
+				await new ChannelManager(
+					server_ID,
+				).queueDeleteChannel(
+					channelTitle,
+					MATCHUP.id,
+				)
 			} else if (betsExisting) {
 				await PlutoLogger.log({
 					id: 3,
