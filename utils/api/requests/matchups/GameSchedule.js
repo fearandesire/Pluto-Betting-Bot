@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { pluto_api_url } from '../../../serverConfig.js'
+import { findEmoji } from '../../../bot_res/findEmoji.js'
 
 export default class GameSchedule {
 	/**
@@ -75,9 +76,17 @@ export default class GameSchedule {
 		const awayTeamShort = game.away_team
 			.split(' ')
 			.pop()
+		const homeTeamEmoji =
+			(await findEmoji(game.home_team)) || ''
+		const awayTeamEmoji =
+			(await findEmoji(game.away_team)) || ''
+		const unixTimestamp = Math.floor(
+			new Date(game.commence_time).getTime() / 1000,
+		)
 
 		// Format game string with bold team names and italic records
-		return `**${awayTeamShort}** (${game.teamRecords[1]}) at **${homeTeamShort}** (${game.teamRecords[0]}) @ ${game.legiblestart}`
+		const gameStr = `**${awayTeamEmoji} ${awayTeamShort} *(${game.teamRecords[1]})*** at **${homeTeamEmoji} ${homeTeamShort} *(${game.teamRecords[0]})*** @ *<t:${unixTimestamp}:t>*`
+		return gameStr
 	}
 
 	async reqAll() {
