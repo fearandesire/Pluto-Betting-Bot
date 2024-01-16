@@ -8,7 +8,6 @@ import { GatewayIntentBits, Partials } from 'discord.js'
 import logClr from './utils/bot_res/ColorConsole.js'
 import '@pluto-server-config'
 // import '@sapphire/plugin-api/register'
-// import './utils/api/index.js'
 
 const SapDiscClient = new SapphireClient({
 	defaultPrefix: process.env.PREFIX,
