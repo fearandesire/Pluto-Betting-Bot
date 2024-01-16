@@ -17,7 +17,7 @@ export class CacheManager {
 				'No key was provided to save into cache',
 			)
 		}
-		const MAX_EXPIRATION = 2147483647 // TTL of cached item
+		const MAX_EXPIRATION = 1800 // Default: 30 Minutes
 		await this.cache.set(
 			key,
 			JSON.stringify(data),
@@ -83,6 +83,6 @@ export class CacheManager {
 	}
 }
 
-export default function Cache() {
+export function Cache() {
 	return new CacheManager()
 }
