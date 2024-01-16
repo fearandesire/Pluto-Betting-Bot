@@ -6,8 +6,9 @@ import { MatchupManager } from '@pluto-matchupOps/MatchupManager.js'
 import logClr from '@pluto-internal-color-logger'
 import { handleBetMatchups } from './handleBetMatchups.js'
 import { getShortName } from '../getShortName.js'
-import { queueDeleteChannel } from '../../db/gameSchedule/queueDeleteChannel.js'
 import locateChannel from '../locateChan.js'
+import ChannelManager from '../../db/gameSchedule/ChannelManager.js'
+import { server_ID } from '../../serverConfig.js'
 
 // TODO: Implement score tracking features with heartbeat
 
@@ -67,7 +68,13 @@ export async function getHeartbeat() {
 				color: `red`,
 			})
 		} else {
-			await queueDeleteChannel(chanName)
+			const chanManager = new ChannelManager(
+				server_ID,
+			)
+			await chanManager.queueDeleteChannel(
+				chanName,
+				game.id,
+			)
 			await logClr({
 				text: `Queued ${chanName} to be deleted`,
 				color: `blue`,

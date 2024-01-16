@@ -5,15 +5,12 @@
 
 import Router from 'koa-router'
 import _ from 'lodash'
-import teamResolver from 'resolve-team'
-import { findEmoji } from '@pluto-general-utils/findEmoji.js'
-import discord, { EmbedBuilder } from 'discord.js'
 import axios from 'axios'
-import { getCategories } from '../../utils/getCategories.js'
-import { SapDiscClient } from '../../../../Pluto.mjs'
+import teamResolver from 'resolve-team'
 import { pluto_api_url } from '../../../serverConfig.js'
+import { getCategories } from '../../utils/getCategories.js'
+import ChannelManager from '../../../db/gameSchedule/ChannelManager.js'
 
-const { ChannelType } = discord
 const incomingChannelsRouter = new Router()
 
 /**
@@ -55,6 +52,44 @@ incomingChannelsRouter.post(
 )
 
 /**
+ * Processes each channel and handles creation and embed sending.
+ * @async
+ * @param {Object} channel - The channel data to process.
+ * @param {Array} bettingChanRows - Array of betting channel data.
+ * @
+ */
+async function processChannel(channel, bettingChanRows) {
+	const { matchupOdds } = channel
+	const { favored } = matchupOdds
+	const favoredTeamInfo = await teamResolver(
+		channel.sport.toLowerCase(),
+		favored,
+		{ full: true },
+	)
+	validateFavoredTeamInfo(favoredTeamInfo)
+	const categoriesData = await getCategories()
+	if (!categoriesData)
+		throw new Error(`Could not get categories.`)
+
+	/**
+	 * @const {Object} category
+	 *	guild_id
+	 *	setting_value
+	 *	setting_name
+	 */
+	for (const category of categoriesData) {
+		await new ChannelManager(
+			category.guild_id,
+		).createChannelAndSendEmbed(
+			channel,
+			category,
+			bettingChanRows,
+			favoredTeamInfo,
+		)
+	}
+}
+
+/**
  * Validates and parses incoming channel data from the request.
  * @async
  * @param {Object} ctx - Koa context containing the request body.
@@ -68,53 +103,6 @@ async function validateAndParseChannels(ctx) {
 		throw new Error('No channels were received.')
 	}
 	return channels
-}
-
-/**
- * Fetches betting channel IDs from the Pluto API.
- * @async
- * @returns {Array} Array of betting channel data.
- */
-async function fetchBettingChannelIds() {
-	const response = await axios.get(
-		`${pluto_api_url}/discord/configs/all/betting-channels`,
-		{
-			headers: {
-				'admin-token': `${process.env.PLUTO_API_TOKEN}`,
-			},
-		},
-	)
-	return response.data
-}
-
-/**
- * Processes each channel and handles creation and embed sending.
- * @async
- * @param {Object} channel - The channel data to process.
- * @param {Array} bettingChanRows - Array of betting channel data.
- */
-async function processChannel(channel, bettingChanRows) {
-	const { matchupOdds } = channel
-	const { favored } = matchupOdds
-	const favoredTeamInfo = await teamResolver(
-		channel.sport.toLowerCase(),
-		favored,
-		{ full: true },
-	)
-	validateFavoredTeamInfo(favoredTeamInfo)
-
-	const categoriesData = await getCategories()
-	if (!categoriesData)
-		throw new Error(`Could not get categories.`)
-
-	for (const category of categoriesData) {
-		await createChannelAndSendEmbed(
-			channel,
-			category,
-			bettingChanRows,
-			favoredTeamInfo,
-		)
-	}
 }
 
 /**
@@ -134,83 +122,20 @@ function validateFavoredTeamInfo(favoredTeamInfo) {
 }
 
 /**
- * Creates a channel and sends an embed message to it.
+ * Fetches betting channel IDs from the Pluto API.
  * @async
- * @param {Object} channel - Channel data.
- * @param {Object} category - Category data.
- * @param {Array} bettingChanRows - Array of betting channel data.
- * @param {Object} favoredTeamInfo - Resolved team information.
+ * @returns {Array} Array of betting channel data.
  */
-async function createChannelAndSendEmbed(
-	channel,
-	category,
-	bettingChanRows,
-	favoredTeamInfo,
-) {
-	const guild = SapDiscClient.guilds.cache.get(
-		category.guild_id,
+async function fetchBettingChannelIds() {
+	const response = await axios.get(
+		`${pluto_api_url}/discord/configs/all/betting-channels`,
+		{
+			headers: {
+				'admin-token': `${process.env.PLUTO_API_TOKEN}`,
+			},
+		},
 	)
-	const guildsCategory = guild.channels.cache.get(
-		`${category.setting_value}`,
-	)
-	const sortedBetChan = bettingChanRows.find(
-		(row) => row.guild_id === guild.id,
-	)
-
-	const bettingChanId = sortedBetChan?.setting_value
-	const { home_team, away_team } = channel
-	if (_.isEmpty(home_team) || _.isEmpty(away_team)) {
-		throw new Error(
-			`Missing home and away teams in channel data.`,
-		)
-	}
-
-	const { matchupOdds } = channel
-
-	const matchEmbed = await prepareMatchupEmbed({
-		favored: matchupOdds.favored,
-		favoredTeamClr: favoredTeamInfo.colors[0],
-		home_team,
-		away_team,
-		bettingChanId,
-	})
-
-	const gameChan = await guild.channels.create({
-		name: `${channel.channelname}`,
-		type: ChannelType.GuildText,
-		topic: `Enjoy the Game!`,
-		parent: guildsCategory,
-	})
-
-	await gameChan.send({ embeds: [matchEmbed.embed] })
-	console.log(`Created channel: ${channel.channelname} `)
-}
-
-async function prepareMatchupEmbed({
-	favored,
-	favoredTeamClr,
-	home_team,
-	away_team,
-	bettingChanId,
-}) {
-	const embedClr = favoredTeamClr
-	const teamEmoji = (await findEmoji(favored)) || ''
-	const title = `${away_team} @ ${home_team}`
-
-	const matchEmbed = new EmbedBuilder()
-		.setColor(embedClr)
-		.setTitle(title)
-		.setDescription(
-			`
-**The ${teamEmoji} ${favored} are favored to win this game!**
-
-*Type \`/commands\` in the <#${bettingChanId}> channel to place bets with Pluto*`,
-		)
-		.setFooter({
-			text: `Pluto | Created by fenixforever`,
-		})
-
-	return { embed: matchEmbed }
+	return response.data
 }
 
 export default incomingChannelsRouter
