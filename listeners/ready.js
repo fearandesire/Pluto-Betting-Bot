@@ -1,6 +1,7 @@
 import { Listener } from '@sapphire/framework'
 import logClr from '../utils/bot_res/ColorConsole.js'
 import { dbDailyOps } from '../utils/scheduled/dailyModules.js'
+import '../utils/api/index.js'
 
 // eslint-disable-next-line no-unused-vars
 export class ReadyListener extends Listener {
@@ -27,6 +28,7 @@ setTimeout(async () => {
 		mark: `🕒`,
 	})
 	// # Start-Up Operation: Check for game channels to be scheduled on restart
+
 	await dbDailyOps()
 	logClr({
 		text: `[Startup]: On-Load Processes completed!`,
