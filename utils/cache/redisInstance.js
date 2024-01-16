@@ -5,9 +5,10 @@ import {
 	R_PASS,
 	R_DB,
 } from '@pluto-server-config'
-import { Log } from '@pluto-core-config'
 
-Log.Yellow(`Connecting to Redis: ${R_HOST}:${R_PORT}`)
+import { yellow, bold, green } from "colorette"
+
+console.log(yellow(`Connecting to Redis: ${R_HOST}:${R_PORT}`))
 
 const redisCache = new Redis({
 	host: R_HOST,
@@ -21,9 +22,9 @@ const redisCache = new Redis({
 })
 
 redisCache.on('connect', () => {
-	Log.Green(
+	console.log(bold(green(
 		`[REDIS] Connected to Redis server\nDB Selection: ${R_DB}`,
-	)
+	)))
 })
 
 redisCache.on('error', (err) => {
