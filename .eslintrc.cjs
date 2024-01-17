@@ -142,6 +142,7 @@ module.exports = {
 		{
 			files: ['**/*.test.js', '*.js', '*.mjs'],
 			rules: {
+				"no-console": "off",
 				'no-await-in-loop': 'off',
 				'import/extensions': 'off',
 				'import/no-unresolved': 'off',
