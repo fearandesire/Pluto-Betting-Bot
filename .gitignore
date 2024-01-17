@@ -190,3 +190,4 @@ ecosystem.config.mjs
 ecosystem.config.cjs
 
 *.drawio
+lib/imgs/nba-logo-wide.png
