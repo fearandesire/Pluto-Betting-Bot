@@ -8,6 +8,7 @@ import {
 	responseTime,
 } from './requests/middleware.js'
 import incomingChannelsRouter from './routes/channels/incoming.js'
+import ScheduleRouter from './routes/schedule/schedule.js'
 
 const app = new Koa()
 app.use(logger())
@@ -18,6 +19,10 @@ app.use(responseTime)
 
 app.use(incomingChannelsRouter.routes()).use(
 	incomingChannelsRouter.allowedMethods(),
+)
+
+app.use(ScheduleRouter.routes()).use(
+	ScheduleRouter.allowedMethods(),
 )
 
 const { apiPort, apiURL } = process.env
