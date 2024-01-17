@@ -8,8 +8,8 @@ import _ from 'lodash'
 import axios from 'axios'
 import teamResolver from 'resolve-team'
 import { pluto_api_url } from '../../../serverConfig.js'
-import { getCategories } from '../../utils/getCategories.js'
 import ChannelManager from '../../../db/gameSchedule/ChannelManager.js'
+import KhronosManager from '../../requests/KhronosManager.js'
 
 const incomingChannelsRouter = new Router()
 
@@ -59,23 +59,30 @@ incomingChannelsRouter.post(
  * @
  */
 async function processChannel(channel, bettingChanRows) {
+	const { sport } = channel // Use this sport information for processing
 	const { matchupOdds } = channel
 	const { favored } = matchupOdds
 	const favoredTeamInfo = await teamResolver(
-		channel.sport.toLowerCase(),
+		sport.toLowerCase(),
 		favored,
 		{ full: true },
 	)
 	validateFavoredTeamInfo(favoredTeamInfo)
-	const categoriesData = await getCategories()
+	const khronosManager = new KhronosManager()
+	const categoriesData =
+		await khronosManager.fetchGameCategoriesBySport(
+			sport,
+		)
 	if (!categoriesData)
 		throw new Error(`Could not get categories.`)
 
+	// Fetch via sport
 	/**
 	 * @const {Object} category
 	 *	guild_id
 	 *	setting_value
 	 *	setting_name
+		sport
 	 */
 	for (const category of categoriesData) {
 		await new ChannelManager(
