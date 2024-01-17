@@ -1,7 +1,6 @@
 import axios from 'axios'
 import { AttachmentBuilder, EmbedBuilder } from 'discord.js'
 import { pluto_api_url } from '../../../serverConfig.js'
-import { findEmoji } from '../../../bot_res/findEmoji.js'
 import embedColors from '../../../../lib/colorsConfig.js'
 import GuiltUtils from '../../utils/GuildUtils.js'
 
