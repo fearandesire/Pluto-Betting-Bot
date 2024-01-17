@@ -116,11 +116,11 @@ export class bet extends Command {
 					`Unable to locate odds for the team you specified.\nVerify available games via \`/odds\``,
 				)
 			}
-			interaction.editReply({
-				content: `An error occurred while processing your bet.`,
-				ephemeral: true,
-				components: [],
-			})
+			return QuickError(
+				interaction,
+				error?.message ||
+					`An error occurred while processing your bet.`,
+			)
 		}
 	}
 }
