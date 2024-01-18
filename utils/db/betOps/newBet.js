@@ -126,6 +126,12 @@ export async function newBet(
 			const match = await matchupMngr.getMatchViaTeam(
 				team,
 			)
+			if (!match) {
+				return QuickError(
+					interaction,
+					`Unable to locate a stored matchup for the specified team.\n- Review the available games to bet on via \`/odds\``,
+				)
+			}
 			matchInfo = match.matchInfo
 			oddsForTeam = match.oddsForTeam
 		}
