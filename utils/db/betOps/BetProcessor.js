@@ -291,7 +291,7 @@ export default class BetProcessor {
 				.setThumbnail(`attachment://${tier}.png`)
 				.setColor(`${embedColors.Gold}`)
 				.setFooter({
-					text: `XP Tiers have been fixed - You may have jumped a tier or two!`,
+					text: `dev. fenixforever`,
 				})
 			try {
 				await SapDiscClient.users.send(
