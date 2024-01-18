@@ -32,10 +32,7 @@ export class MatchupManager {
 			[team],
 		)
 		if (!this.matchInfo) {
-			throw new Error({
-				message: `Match not found for team ${team}`,
-				code: 'MATCH_NOT_FOUND',
-			})
+			return null
 		}
 		await this.getOddsForTeam(this.matchInfo)
 		return this
