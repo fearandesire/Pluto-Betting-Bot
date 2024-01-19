@@ -1,4 +1,4 @@
-import teamResolver from 'resolve-team'
+import resolveTeam from 'resolve-team'
 import { SPORT } from '@pluto-server-config'
 import {
 	QuickError,
@@ -68,7 +68,7 @@ export async function newBet(
 		return
 	}
 
-	const team = await teamResolver(SPORT, betOnTeam)
+	const team = await resolveTeam(SPORT, betOnTeam)
 	let matchInfo
 	const matchupMngr = new MatchupManager()
 	// Check if the user is betting on a team that has more than one game in the collected odds
