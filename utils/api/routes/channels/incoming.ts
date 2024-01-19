@@ -6,10 +6,12 @@
 import Router from 'koa-router'
 import _ from 'lodash'
 import axios from 'axios'
-import teamResolver from 'resolve-team'
+import resolveTeam from 'resolve-team'
 import { pluto_api_url } from '../../../serverConfig.js'
 import ChannelManager from '../../../db/gameSchedule/ChannelManager.js'
 import KhronosManager from '../../requests/KhronosManager.js'
+import { IChannelAggregatedAPI } from './createchannels.interface.js'
+import { IConfigRow } from 'lib/interfaces/api/ApiInterfaces.js'
 
 const incomingChannelsRouter = new Router()
 
@@ -18,63 +20,47 @@ const incomingChannelsRouter = new Router()
  * @async
  * @param {Object} ctx - Koa context for the incoming HTTP request.
  */
-incomingChannelsRouter.post(
-	`/channels/incoming`,
-	async (ctx) => {
-		try {
-			const channels = await validateAndParseChannels(
-				ctx,
-			)
-			const bettingChanRows =
-				await fetchBettingChannelIds()
+incomingChannelsRouter.post(`/channels/incoming`, async (ctx: any) => {
+	try {
+		const channels = await validateAndParseChannels(ctx.request.body)
+		const bettingChanRows = await fetchBettingChannelIds()
 
-			for (const channel of channels) {
-				await processChannel(
-					channel,
-					bettingChanRows,
-				)
-			}
-
-			ctx.body = {
-				message: 'Channels created.',
-				status: 200,
-			}
-			console.log(`Complete`)
-		} catch (error) {
-			ctx.status = error.status || 500
-			ctx.body = { error: error.message }
-			console.error(
-				`Error processing channels:`,
-				error,
-			)
+		for (const channel of channels) {
+			await processChannel(channel, bettingChanRows)
 		}
-	},
-)
+
+		ctx.body = {
+			message: 'Channels created.',
+			status: 200,
+		}
+		console.log(`Complete`)
+	} catch (error) {
+		ctx.body = error
+	}
+})
 
 /**
  * Processes each channel and handles creation and embed sending.
  * @async
  * @param {Object} channel - The channel data to process.
- * @param {Array} bettingChanRows - Array of betting channel data.
+ * @param {Array} betChanRows - Array of betting channel data.
  * @
  */
-async function processChannel(channel, bettingChanRows) {
+async function processChannel(
+	channel: IChannelAggregatedAPI,
+	betChanRows: IConfigRow[],
+) {
 	const { sport } = channel // Use this sport information for processing
 	const { matchupOdds } = channel
 	const { favored } = matchupOdds
-	const favoredTeamInfo = await teamResolver(
-		sport.toLowerCase(),
-		favored,
-		{ full: true },
-	)
+	const favoredTeamInfo = await resolveTeam(sport.toLowerCase(), favored, {
+		full: true,
+	})
 	validateFavoredTeamInfo(favoredTeamInfo)
 	const khronosManager = new KhronosManager()
-	const categoriesData =
-		await khronosManager.fetchGameCategoriesBySport(
-			sport,
-		)
-	if (!categoriesData)
-		throw new Error(`Could not get categories.`)
+	const gameCategories =
+		await khronosManager.fetchGameCategoriesBySport(sport)
+	if (!gameCategories) throw new Error(`Could not get categories.`)
 
 	// Fetch via sport
 	/**
@@ -84,13 +70,11 @@ async function processChannel(channel, bettingChanRows) {
 	 *	setting_name
 		sport
 	 */
-	for (const category of categoriesData) {
-		await new ChannelManager(
-			category.guild_id,
-		).createChannelAndSendEmbed(
+	for (const gameCatRow of gameCategories) {
+		await new ChannelManager(gameCatRow.guild_id).createChannelAndSendEmbed(
 			channel,
-			category,
-			bettingChanRows,
+			gameCatRow,
+			betChanRows,
 			favoredTeamInfo,
 		)
 	}
@@ -103,13 +87,11 @@ async function processChannel(channel, bettingChanRows) {
  * @returns {Array} Array of channel data objects.
  * @throws {Error} If no channels data is received.
  */
-async function validateAndParseChannels(ctx) {
-	const { channels } = ctx.request.body
-	if (_.isEmpty(channels)) {
-		ctx.status = 204
+async function validateAndParseChannels(body: any) {
+	if (_.isEmpty(body)) {
 		throw new Error('No channels were received.')
 	}
-	return channels
+	return body
 }
 
 /**
@@ -117,14 +99,9 @@ async function validateAndParseChannels(ctx) {
  * @param {Object} favoredTeamInfo - The resolved team data.
  * @throws {Error} If team colors or data are unavailable.
  */
-function validateFavoredTeamInfo(favoredTeamInfo) {
-	if (
-		!favoredTeamInfo ||
-		_.isEmpty(favoredTeamInfo.colors)
-	) {
-		throw new Error(
-			'Unable to resolve team colors or data',
-		)
+function validateFavoredTeamInfo(favoredTeamInfo: any) {
+	if (!favoredTeamInfo || _.isEmpty(favoredTeamInfo.colors)) {
+		throw new Error('Unable to resolve team colors or data')
 	}
 }
 
