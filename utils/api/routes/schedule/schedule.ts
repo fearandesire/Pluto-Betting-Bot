@@ -5,7 +5,7 @@ import GameSchedule from '../../requests/matchups/GameSchedule.js'
 import {
 	IConfigRow,
 	IMatchupAggregated,
-	sportsServing,
+	SportsServing,
 } from 'lib/interfaces/api/ApiInterfaces.js'
 
 const ScheduleRouter = new Router()
@@ -20,10 +20,9 @@ ScheduleRouter.post('/schedule/daily/all', async (ctx) => {
 			| any
 		const { aggregatedMatchups, dailyScheduleRows } =
 			await validateAndParseSchedule(requestBody)
-		const sports: sportsServing[] = ['NBA', 'NFL'] // Extendable to other sports
 		const gameSchedule = new GameSchedule()
 
-		for (const sport of sports) {
+		for (const sport of Object.values(SportsServing)) {
 			await Log.Yellow(`Processing Daily Schedule for ${sport}`)
 			const games = filterGames(aggregatedMatchups, sport)
 			const rows = filterRows(dailyScheduleRows, sport)
@@ -44,11 +43,11 @@ ScheduleRouter.post('/schedule/daily/all', async (ctx) => {
 	}
 })
 
-function filterGames(games: IMatchupAggregated[], sport: sportsServing) {
+function filterGames(games: IMatchupAggregated[], sport: SportsServing) {
 	return _.filter(games, (game) => game.sport_title === sport)
 }
 
-function filterRows(rows: IConfigRow[], sport: sportsServing) {
+function filterRows(rows: IConfigRow[], sport: SportsServing) {
 	return _.filter(
 		rows,
 		(row) => typeof row.sport === 'string' && row.sport === sport,
