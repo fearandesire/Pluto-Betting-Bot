@@ -6,7 +6,6 @@ import {
 } from 'lib/interfaces/api/ApiInterfaces.js'
 
 export default class KhronosManager {
-	private url: string
 	private epts: {
 		game_schedule: string
 		categories: {
@@ -15,7 +14,6 @@ export default class KhronosManager {
 		}
 	}
 	constructor() {
-		this.url = `${pluto_api_url}`
 		this.epts = {
 			game_schedule: 'discord/config/type',
 			categories: {
