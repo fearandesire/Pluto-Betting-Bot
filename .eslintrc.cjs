@@ -1,55 +1,30 @@
 module.exports = {
-	env: {
-		browser: true,
-		es2021: true,
-		node: true,
-		es6: true,
-	},
-	plugins: ['ava', 'import'],
-	extends: [
-		'airbnb-base',
-		'plugin:ava/recommended',
-		'prettier',
-		'plugin:import/recommended',
-		'plugin:import/errors',
-		'plugin:import/warnings',
-	],
+	parser: '@typescript-eslint/parser',
 	parserOptions: {
-		ecmaVersion: 'latest',
+		project: 'tsconfig.json',
+		tsconfigRootDir: __dirname,
 		sourceType: 'module',
 	},
+
+	plugins: ['@typescript-eslint/eslint-plugin'],
+	extends: [
+		'plugin:@typescript-eslint/recommended',
+		'plugin:prettier/recommended',
+	],
+	root: true,
+	env: {
+		node: true,
+		jest: true,
+	},
+	ignorePatterns: ['.eslintrc.cjs'],
 	rules: {
-		'import/no-extraneous-dependencies': 'off',
-		'consistent-return': 'off',
-		camelcase: 'off',
-		'ava/assertion-arguments': 'error',
-		'ava/hooks-order': 'error',
-		'ava/max-asserts': ['off', 5],
-		'no-misleading-character-class': 'error',
-		'ava/no-async-fn-without-await': 'error',
-		'ava/no-duplicate-modifiers': 'error',
-		'ava/no-identical-title': 'error',
-		'ava/no-ignored-test-files': 'error',
-		'ava/no-import-test-files': 'off', // due to placing mocks in the test folder
-		'ava/no-incorrect-deep-equal': 'error',
-		'ava/no-inline-assertions': 'error',
-		'ava/no-nested-tests': 'error',
-		'ava/no-only-test': 'error',
-		'ava/no-skip-assert': 'error',
-		'ava/no-skip-test': 'error',
-		'ava/no-todo-implementation': 'error',
-		'ava/no-todo-test': 'warn',
-		'ava/no-unknown-modifiers': 'error',
-		'ava/prefer-async-await': 'error',
-		'ava/prefer-power-assert': 'off',
-		'ava/prefer-t-regex': 'error',
-		'ava/test-title': 'error',
-		'ava/test-title-format': 'off',
-		'ava/use-t-well': 'error',
-		'ava/use-t': 'error',
-		'ava/use-t-throws-async-well': 'error',
-		'ava/use-test': 'error',
-		'ava/use-true-false': 'error',
+		'@typescript-eslint/interface-name-prefix': 'off',
+		'@typescript-eslint/explicit-function-return-type':
+			'off',
+		'@typescript-eslint/explicit-module-boundary-types':
+			'off',
+		'@typescript-eslint/no-explicit-any': 'off',
+		'object-curly-newline': 'off',
 	},
 	settings: {
 		'import/resolver': {
@@ -125,7 +100,7 @@ module.exports = {
 					],
 					['#dateUtil', './utils/date'],
 					['#cacheUtil', './utils/cache'],
-					['@pluto-core', './Pluto.mjs'],
+					['@pluto-core', './dist/Pluto.js'],
 					[
 						'#winstonLogger',
 						'./utils/logging.js',
@@ -142,7 +117,7 @@ module.exports = {
 		{
 			files: ['**/*.test.js', '*.js', '*.mjs'],
 			rules: {
-				"no-console": "off",
+				'no-console': 'off',
 				'no-await-in-loop': 'off',
 				'import/extensions': 'off',
 				'import/no-unresolved': 'off',
