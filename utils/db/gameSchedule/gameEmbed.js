@@ -1,5 +1,5 @@
 import discord from 'discord.js'
-import teamResolver from 'resolve-team'
+import resolveTeam from 'resolve-team'
 import { SPORT } from '@pluto-server-config'
 import { SapDiscClient } from '@pluto-core'
 import { findEmoji } from '../../bot_res/findEmoji.js'
@@ -8,7 +8,7 @@ import { bettingChan } from '../../serverConfig.js'
 
 const { EmbedBuilder } = discord
 export async function gameEmbedPlain(homeTeam, awayTeam) {
-	const hTeamObj = await teamResolver(SPORT, homeTeam, {
+	const hTeamObj = await resolveTeam(SPORT, homeTeam, {
 		full: true,
 	})
 
@@ -44,10 +44,10 @@ export async function gameEmbedPlain(homeTeam, awayTeam) {
  */
 
 export async function gameEmbedOdds(homeTeam, awayTeam) {
-	const hTeamObj = await teamResolver(SPORT, homeTeam, {
+	const hTeamObj = await resolveTeam(SPORT, homeTeam, {
 		full: true,
 	})
-	const aTeamObj = await teamResolver(SPORT, awayTeam, {
+	const aTeamObj = await resolveTeam(SPORT, awayTeam, {
 		full: true,
 	})
 	const hTeam = hTeamObj.name
