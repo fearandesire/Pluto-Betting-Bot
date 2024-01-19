@@ -1,4 +1,4 @@
-import discord from 'discord.js'
+import discord, { ColorResolvable, TextChannel } from 'discord.js'
 import { SapDiscClient } from '@pluto-core'
 import { logChan as logChanID } from './serverConfig.js'
 
@@ -18,10 +18,10 @@ export default class PlutoLogger {
 	 * @param {Object} embed
 	 * @static
 	 */
-	static async sendEmbed(embed) {
-		const logChan = await SapDiscClient.channels.fetch(
+	static async sendEmbed(embed: any) {
+		const logChan = (await SapDiscClient.channels.fetch(
 			logChanID,
-		)
+		)) as TextChannel
 		await logChan.send({
 			embeds: [embed],
 		})
@@ -36,14 +36,21 @@ export default class PlutoLogger {
 	 * @async
 	 *
 	 * @param {object} data - Object containing the data
-	 * @param {string | null} data.id - The ID of the log
+	 * @param {string | number} data.id - The ID of the log
 	 * @param {string} data.description - The description of the log
 	 * @param {string} data.footer - The footer of the embed
 	 */
-	static async log(data) {
-		const logChan = await SapDiscClient.channels.fetch(
+	static async log(data: {
+		id: string | number
+		title?: string
+		color?: string
+		description: string
+		content?: string
+		footer?: string
+	}) {
+		const logChan = (await SapDiscClient.channels.fetch(
 			logChanID,
-		)
+		)) as TextChannel
 		let color
 		let title
 		// # Pre-Built Embed for Log Channel
@@ -85,13 +92,12 @@ export default class PlutoLogger {
 				break
 		}
 		const desc = data.description || `N/A`
-		const footer = data?.footer || {
-			text: `Pluto | Dev. by fenixforever`,
-		}
-		logsEmbed.setColor(color)
+		const footer = data?.footer !== null ? data.footer : `N/A`
+		if (!footer) return
+		logsEmbed.setColor(color as ColorResolvable)
 		logsEmbed.setTitle(`${title} Logs`)
 		logsEmbed.setDescription(desc)
-		logsEmbed.setFooter(footer)
+		logsEmbed.setFooter({ text: footer })
 		// # Send embed to modChan
 		await logChan.send({
 			content: data?.content,
