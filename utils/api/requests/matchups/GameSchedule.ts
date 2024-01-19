@@ -36,6 +36,7 @@ export default class GameSchedule {
 		games: IMatchupAggregated[],
 		rows: IConfigRow[],
 	) {
+		console.log(sport)
 		// Fetch the schedule, format it
 		const gamesStr = await this.parseAndFormat(games)
 		const { scheduleEmbed } = await this.createScheduleEmbed(gamesStr)
