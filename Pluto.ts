@@ -5,14 +5,13 @@ import {
 } from '@sapphire/framework'
 import { RateLimitManager } from '@sapphire/ratelimits'
 import { GatewayIntentBits, Partials } from 'discord.js'
-import logClr from './utils/bot_res/ColorConsole.js'
 import '@pluto-server-config'
+import { blue, bold, green, red, yellow } from 'colorette'
 // import '@sapphire/plugin-api/register'
 
 const SapDiscClient = new SapphireClient({
 	defaultPrefix: process.env.PREFIX,
 	caseInsensitiveCommands: true,
-	ignoreBots: false,
 	shards: `auto`,
 	intents: [
 		GatewayIntentBits.DirectMessageReactions,
@@ -27,40 +26,25 @@ const SapDiscClient = new SapphireClient({
 		GatewayIntentBits.MessageContent,
 	],
 	partials: [Partials.Channel],
-	presence: {
-		status: 'Online!',
-	},
 	logger: {
-		level: LogLevel[`${process.env.logLevel}`],
+		level: LogLevel.Debug
 	},
 	typing: true,
 	loadMessageCommandListeners: true,
 })
 
-await logClr({
-	text: `[Startup]: Logging Pluto in to Discord\n`,
-	status: `processing`,
-	color: `yellow`,
-})
+console.log(bold(yellow(`[Startup]`)), `Launching Pluto`)
 const login = async () => {
 	try {
 		await SapDiscClient.login(process.env.TOKEN)
+		await console.log(bold(green(`[Startup]`)),`Pluto is up and running!`)
 	} catch (error) {
-		await logClr({
-			text: `[Startup]: Error logging in to Discord!`,
-			status: `error`,
-			color: `red`,
-		})
+		await console.log(bold(red(`[Startup]`)),`Failed to login`)
 		SapDiscClient.logger.fatal(error)
 		SapDiscClient.destroy()
 		process.exit(1)
-	} finally {
-		await logClr({
-			text: `[Startup]: Logged in to Discord!`,
-			status: `done`,
-			color: `green`,
-		})
 	}
+	await console.log(bold(blue(`[Startup]`)),`Index ops complete!`)
 }
 login()
 
