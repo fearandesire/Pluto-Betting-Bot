@@ -8,14 +8,12 @@ import { SapDiscClient } from '@pluto-core'
  * @param {boolean} combine - Whether to combine the emoji with the inputEmojiName.
  * @return {Promise<string>} A promise that resolves to the closest match emoji or a combined string.
  */
-export async function findEmoji(inputEmojiName, combine) {
+export async function findEmoji(inputEmojiName: string, combine?: boolean) {
 	// Take last word if there's spaces
 	let emojiSearchName
 
 	if (inputEmojiName.includes(' ')) {
-		emojiSearchName = await _.last(
-			_.split(inputEmojiName, ' '),
-		)
+		emojiSearchName = await _.last(_.split(inputEmojiName, ' '))
 	} else {
 		emojiSearchName = inputEmojiName
 	}
@@ -23,21 +21,18 @@ export async function findEmoji(inputEmojiName, combine) {
 	const lowerEmojiName = _.toLower(emojiSearchName)
 
 	// Find an emoji by name, retrieve the closest match
-	const emoji = SapDiscClient.emojis.cache.find(
-		(foundEmoji) => {
-			const lowerEmoji = _.toLower(foundEmoji.name)
-			return (
-				lowerEmoji.includes(lowerEmojiName) ||
-				lowerEmojiName.includes(lowerEmoji)
-			)
-		},
-	)
+	const emoji = SapDiscClient.emojis.cache.find((foundEmoji) => {
+		if (!foundEmoji || !foundEmoji.name) return
+		const lowerEmoji = _.toLower(foundEmoji.name)
+		return (
+			lowerEmoji.includes(lowerEmojiName) ||
+			lowerEmojiName.includes(lowerEmoji)
+		)
+	})
 
 	// Handle the combination or return the emoji
 	if (emoji) {
-		return combine
-			? `${emoji} ${emojiSearchName}`
-			: emoji
+		return combine ? `${emoji} ${emojiSearchName}` : emoji
 	}
 	return combine ? emojiSearchName : ''
 }

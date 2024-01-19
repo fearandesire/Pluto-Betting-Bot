@@ -1,14 +1,19 @@
 import axios from 'axios'
-import { AttachmentBuilder, EmbedBuilder } from 'discord.js'
+import { ColorResolvable, EmbedBuilder } from 'discord.js'
 import { pluto_api_url } from '../../../serverConfig.js'
 import embedColors from '../../../../lib/colorsConfig.js'
 import GuiltUtils from '../../utils/GuildUtils.js'
+import {
+	IConfigRow,
+	IMatchupAggregated,
+	SportsServing,
+} from 'lib/interfaces/api/ApiInterfaces.js'
 
 /**
  * Responsible for retrieving & displaying upcoming games / matchups
  */
 export default class GameSchedule {
-	async createScheduleEmbed(desc) {
+	async createScheduleEmbed(desc: string) {
 		// Make today's date string: `DD/MM/YYYY`
 		const date = new Date()
 		const today = date.toLocaleDateString('en-US', {
@@ -17,10 +22,8 @@ export default class GameSchedule {
 			year: 'numeric',
 		})
 		const scheduleEmbed = new EmbedBuilder()
-			.setDescription(
-				`## Daily Schedule | ${today}\n${desc}`,
-			)
-			.setColor(embedColors.PlutoRed)
+			.setDescription(`## Daily Schedule | ${today}\n${desc}`)
+			.setColor(embedColors.PlutoRed as ColorResolvable)
 			.setFooter({ text: `dev. fenixforever` })
 		return { scheduleEmbed }
 	}
@@ -28,21 +31,23 @@ export default class GameSchedule {
 	/**
 	 * Formats and sends the games for the current day
 	 */
-	async sendDailyGames(sport, games, rows) {
+	async sendDailyGames(
+		sport: SportsServing,
+		games: IMatchupAggregated[],
+		rows: IConfigRow[],
+	) {
 		// Fetch the schedule, format it
 		const gamesStr = await this.parseAndFormat(games)
-		const { scheduleEmbed } =
-			await this.createScheduleEmbed(gamesStr)
+		const { scheduleEmbed } = await this.createScheduleEmbed(gamesStr)
 		// Send the schedule to every daily_schedule channel
 		for (const row of rows) {
 			const chanId = row.setting_value
 			const guildId = row.guild_id
 			try {
-				const chan =
-					await new GuiltUtils().getChanViaGuild({
-						guildId,
-						chanId,
-					})
+				const chan = await new GuiltUtils().getChanViaGuild({
+					guildId,
+					chanId,
+				})
 				await chan.send({ embeds: [scheduleEmbed] })
 			} catch (err) {
 				console.error(err)
@@ -51,11 +56,10 @@ export default class GameSchedule {
 		}
 	}
 
-	async parseAndFormat(games) {
+	async parseAndFormat(games: IMatchupAggregated[]) {
 		let scheduleStr = ''
 		for (const game of games) {
-			const formattedGame =
-				await this.formatForSchedule(game)
+			const formattedGame = await this.formatForSchedule(game)
 			scheduleStr += `${formattedGame}\n` // Append each game's string
 
 			// Check Discord character limit
@@ -75,7 +79,7 @@ export default class GameSchedule {
 	 * Parse & Format into a conjoined string detailing the matchups schedule for today
 	 * @returns {string}
 	 */
-	async getFormattedSchedule(sport) {
+	async getFormattedSchedule(sport: SportsServing) {
 		let games
 		if (!sport) {
 			games = await this.reqAll() // Fetches schedule
@@ -85,8 +89,7 @@ export default class GameSchedule {
 		let scheduleStr = ''
 
 		for (const game of games) {
-			const formattedGame =
-				await this.formatForSchedule(game)
+			const formattedGame = await this.formatForSchedule(game)
 			scheduleStr += `${formattedGame}\n` // Append each game's string
 
 			// Check Discord character limit
@@ -100,14 +103,11 @@ export default class GameSchedule {
 		return scheduleStr
 	}
 
-	async fetchViaSport(sport) {
+	async fetchViaSport(sport: SportsServing) {
 		const gamesArr = await this.reqAll()
 
 		// Remove any that don't have the `sport` as their `sport_title`
-		const filteredGames = this.filterBySport(
-			gamesArr,
-			sport,
-		)
+		const filteredGames = this.filterBySport(gamesArr, sport)
 
 		return filteredGames
 	}
@@ -141,16 +141,15 @@ export default class GameSchedule {
 }
 	```
 	 */
-	async formatForSchedule(game) {
+	async formatForSchedule(game: IMatchupAggregated) {
 		const [homeTeamShort, awayTeamShort] = [
 			game.home_team,
 			game.away_team,
 		].map((name) => name.split(' ').pop())
-		const [homeTeamEmoji, awayTeamEmoji] =
-			await Promise.all([
-				GuiltUtils.findEmoji(game.home_team),
-				GuiltUtils.findEmoji(game.away_team),
-			])
+		const [homeTeamEmoji, awayTeamEmoji] = await Promise.all([
+			GuiltUtils.findEmoji(game.home_team),
+			GuiltUtils.findEmoji(game.away_team),
+		])
 
 		const unixTimestamp = Math.floor(
 			new Date(game.commence_time).getTime() / 1000,
@@ -170,11 +169,9 @@ export default class GameSchedule {
 		return reqGamesSched.data
 	}
 
-	async filterBySport(gamesArr, sport) {
+	async filterBySport(gamesArr: IMatchupAggregated[], sport: SportsServing) {
 		return gamesArr.filter(
-			(game) =>
-				game.sport_title.toLowerCase() ===
-				sport.toLowerCase(),
+			(game) => game.sport_title.toLowerCase() === sport.toLowerCase(),
 		)
 	}
 }

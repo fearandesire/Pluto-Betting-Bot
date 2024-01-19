@@ -1,7 +1,19 @@
 import axios from 'axios'
 import { pluto_api_url } from '../../serverConfig.js'
+import {
+	KH_ValidConfigType,
+	SportsServing,
+} from 'lib/interfaces/api/ApiInterfaces.js'
 
 export default class KhronosManager {
+	private url: string
+	private epts: {
+		game_schedule: string
+		categories: {
+			by_sport: string
+			all: string
+		}
+	}
 	constructor() {
 		this.url = `${pluto_api_url}`
 		this.epts = {
@@ -18,13 +30,11 @@ export default class KhronosManager {
 	 * @returns @ConfigType
 	 */
 	async fetchGameScheduleChannels() {
-		const channelsData = await this.fetchByType(
-			`DAILY_SCHEDULE_CHAN`,
-		)
+		const channelsData = await this.fetchByType(`DAILY_SCHEDULE_CHAN`)
 		return channelsData
 	}
 
-	async fetchByType(type) {
+	async fetchByType(type: KH_ValidConfigType) {
 		try {
 			const response = await axios.get(
 				`${pluto_api_url}/${this.epts.game_schedule}`,
@@ -48,7 +58,7 @@ export default class KhronosManager {
 	 * Fetch Categories Pluto is serving for a specific sport
 	 * @returns @ConfigType
 	 */
-	async fetchGameCategoriesBySport(sport) {
+	async fetchGameCategoriesBySport(sport: SportsServing) {
 		try {
 			const response = await axios.get(
 				`${pluto_api_url}/${this.epts.categories.by_sport}`,

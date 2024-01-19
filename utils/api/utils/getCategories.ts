@@ -4,7 +4,7 @@ import { pluto_api_url } from '../../serverConfig.js'
 export async function getCategories() {
 	try {
 		const response = await axios.get(
-			`${pluto_api_url}/discord/configs/games`,
+			`${pluto_api_url}/discord/configs/games/all`,
 			{
 				headers: {
 					'admin-token': `${process.env.PLUTO_API_TOKEN}`,
