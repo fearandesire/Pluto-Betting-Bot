@@ -1,0 +1,84 @@
+{
+	"compilerOptions": {
+		"allowJs": true,
+		"baseUrl": ".",
+		"esModuleInterop": true,
+		"experimentalDecorators": true,
+		"forceConsistentCasingInFileNames": true,
+		"module": "ESNext", // Use ESNext for ES module support
+		"moduleResolution": "Node",
+		"outDir": "dist",
+		"removeComments": true,
+		"rootDir": ".",
+		"skipLibCheck": true,
+		"strict": true,
+		"target": "ES6", // Set the JavaScript target version
+		"paths": {
+			"@pluto-server-config": ["utils/serverConfig"],
+			"@pluto-core-config": ["lib/PlutoConfig"],
+			"@pluto-check-balance": [
+				"utils/db/validation/checkbalance"
+			],
+			"@pluto-logger": ["utils/PlutoLogger"],
+			"@pluto-db": ["database/dbindex"],
+			"@pluto-redis": [
+				"utils/cache/RedisCacheManager"
+			],
+			"@pluto-internal-logger": [
+				"utils/bot_res/consoleLog"
+			],
+			"@pluto-internal-color-logger": [
+				"utils/bot_res/ColorConsole"
+			],
+			"@pluto-embed-reply": [
+				"utils/bot_res/embeds/embedReply"
+			],
+			"@pluto-db-utils": ["utils/db"],
+			"@pluto-matchupOps": ["utils/db/matchupOps"],
+			"@pluto-leaderboard": [
+				"utils/db/currency/leaderboard"
+			],
+			"@pluto-transfer": [
+				"utils/db/currency/transferBetween"
+			],
+			"@pluto-process-claim": [
+				"utils/db/betOps/processClaim"
+			],
+			"@pluto-betOps-modifyAmount": [
+				"utils/db/betOps/modifyAmount"
+			],
+			"@pluto-validate-checkbalance": [
+				"utils/db/validation/checkbalance"
+			],
+			"@pluto-validate-user": [
+				"utils/db/validation/validateExistingUser"
+			],
+			"@pluto-validate-betAuthor": [
+				"utils/db/validation/verifyBetAuthor"
+			],
+			"@pluto-newBet": ["utils/db/betOps/newBet"],
+			"@pluto-betOps": ["utils/db/betOps"],
+			"@pluto-list-user-bets": [
+				"utils/db/listMyBets"
+			],
+			"@pluto-validate": ["utils/db/validation"],
+			"@pluto-reply": ["utils/bot_res/reply"],
+			"@pluto-bettingStats": [
+				"utils/bot_res/getBettingStats"
+			],
+			"@pluto-stats-embed-builder": [
+				"utils/bot_res/statsEmbBuilder"
+			],
+			"@pluto-currency": ["utils/db/currency"],
+			"@pluto-general-utils": ["utils/bot_res"],
+			"@pluto-date-utils": ["utils/date"],
+			"@pluto-core": ["Pluto.ts"],
+			"@pluto-iso-manager": ["utils/time/IsoManager"],
+			"@pluto-api-routes": ["utils/api/routes"],
+			"koa-logger": ["node_modules/@types/koa-logger/index.d.ts"]
+			
+		}
+	},
+	"include": ["commands", "lib", "utils", "listeners", "database", "Pluto.ts"],
+	"exclude": ["node_modules/**/*", "node_modules"]
+}
