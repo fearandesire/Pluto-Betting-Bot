@@ -11,7 +11,6 @@ import discord, {
 	ColorResolvable,
 	EmbedBuilder,
 } from 'discord.js'
-import AuthManager from '../../api/auth/AuthManager.js'
 import { pluto_api_url } from '../../serverConfig.js'
 import { getCategories } from '../../api/utils/getCategories.js'
 import { findEmoji } from '../../bot_res/findEmoji.js'
@@ -36,7 +35,6 @@ export default class ChannelManager {
 	private ep: {
 		gchan: string
 	}
-	private authManager: AuthManager
 
 	constructor(guildId: string) {
 		this.serverId = guildId
@@ -44,7 +42,6 @@ export default class ChannelManager {
 		this.ep = {
 			gchan: `/channels`,
 		}
-		this.authManager = new AuthManager()
 	}
 
 	/**
