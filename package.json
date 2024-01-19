@@ -141,7 +141,7 @@
 		"puppeteer-extra": "^3.3.6",
 		"puppeteer-extra-plugin-recaptcha": "^3.6.8",
 		"puppeteer-extra-plugin-stealth": "^2.11.2",
-		"resolve-team": "^1.2.3",
+		"resolve-team": "^1.2.8",
 		"statcord.js": "^3.4.3",
 		"stringify-object": "^4.0.1",
 		"uuid": "^9.0.1",
