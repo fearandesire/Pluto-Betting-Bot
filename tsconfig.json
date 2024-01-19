@@ -7,20 +7,35 @@
 		"forceConsistentCasingInFileNames": true,
 		"module": "ESNext", // Use ESNext for ES module support
 		"moduleResolution": "Node",
+		"newLine": "lf",
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
 		"outDir": "dist",
+		"preserveConstEnums": true,
 		"removeComments": true,
+		"resolveJsonModule": true,
 		"rootDir": ".",
 		"skipLibCheck": true,
+		"sourceMap": true,
 		"strict": true,
-		"target": "ES6", // Set the JavaScript target version
+		"target": "ES6",
+		"useDefineForClassFields": true,
 		"paths": {
-			"@pluto-server-config": ["utils/serverConfig"],
-			"@pluto-core-config": ["lib/PlutoConfig"],
+			"@pluto-server-config": [
+				"utils/serverConfig"
+			],
+			"@pluto-core-config": [
+				"lib/PlutoConfig"
+			],
 			"@pluto-check-balance": [
 				"utils/db/validation/checkbalance"
 			],
-			"@pluto-logger": ["utils/PlutoLogger"],
-			"@pluto-db": ["database/dbindex"],
+			"@pluto-logger": [
+				"utils/PlutoLogger"
+			],
+			"@pluto-db": [
+				"database/dbindex"
+			],
 			"@pluto-redis": [
 				"utils/cache/RedisCacheManager"
 			],
@@ -33,8 +48,12 @@
 			"@pluto-embed-reply": [
 				"utils/bot_res/embeds/embedReply"
 			],
-			"@pluto-db-utils": ["utils/db"],
-			"@pluto-matchupOps": ["utils/db/matchupOps"],
+			"@pluto-db-utils": [
+				"utils/db"
+			],
+			"@pluto-matchupOps": [
+				"utils/db/matchupOps"
+			],
 			"@pluto-leaderboard": [
 				"utils/db/currency/leaderboard"
 			],
@@ -56,29 +75,60 @@
 			"@pluto-validate-betAuthor": [
 				"utils/db/validation/verifyBetAuthor"
 			],
-			"@pluto-newBet": ["utils/db/betOps/newBet"],
-			"@pluto-betOps": ["utils/db/betOps"],
+			"@pluto-newBet": [
+				"utils/db/betOps/newBet"
+			],
+			"@pluto-betOps": [
+				"utils/db/betOps"
+			],
 			"@pluto-list-user-bets": [
 				"utils/db/listMyBets"
 			],
-			"@pluto-validate": ["utils/db/validation"],
-			"@pluto-reply": ["utils/bot_res/reply"],
+			"@pluto-validate": [
+				"utils/db/validation"
+			],
+			"@pluto-reply": [
+				"utils/bot_res/reply"
+			],
 			"@pluto-bettingStats": [
 				"utils/bot_res/getBettingStats"
 			],
 			"@pluto-stats-embed-builder": [
 				"utils/bot_res/statsEmbBuilder"
 			],
-			"@pluto-currency": ["utils/db/currency"],
-			"@pluto-general-utils": ["utils/bot_res"],
-			"@pluto-date-utils": ["utils/date"],
-			"@pluto-core": ["Pluto.ts"],
-			"@pluto-iso-manager": ["utils/time/IsoManager"],
-			"@pluto-api-routes": ["utils/api/routes"],
-			"koa-logger": ["node_modules/@types/koa-logger/index.d.ts"]
-			
+			"@pluto-currency": [
+				"utils/db/currency"
+			],
+			"@pluto-general-utils": [
+				"utils/bot_res"
+			],
+			"@pluto-date-utils": [
+				"utils/date"
+			],
+			"@pluto-core": [
+				"Pluto.ts"
+			],
+			"@pluto-iso-manager": [
+				"utils/time/IsoManager"
+			],
+			"@pluto-api-routes": [
+				"utils/api/routes"
+			],
+			"koa-logger": [
+				"node_modules/@types/koa-logger/index.d.ts"
+			]
 		}
 	},
-	"include": ["commands", "lib", "utils", "listeners", "database", "Pluto.ts"],
-	"exclude": ["node_modules/**/*", "node_modules"]
+	"include": [
+		"commands",
+		"lib",
+		"utils",
+		"listeners",
+		"database",
+		"Pluto.ts"
+	],
+	"exclude": [
+		"node_modules/**/*",
+		"node_modules"
+	]
 }
