@@ -1,13 +1,18 @@
 {
+	"compileOnSave": true,
 	"compilerOptions": {
+		"alwaysStrict": true,
 		"allowJs": true,
 		"baseUrl": ".",
+		"declaration": true,
+		"declarationMap": true,
 		"esModuleInterop": true,
 		"experimentalDecorators": true,
 		"forceConsistentCasingInFileNames": true,
 		"module": "ESNext", // Use ESNext for ES module support
 		"moduleResolution": "Node",
 		"newLine": "lf",
+		"noEmitHelpers": false,
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
 		"outDir": "dist",
