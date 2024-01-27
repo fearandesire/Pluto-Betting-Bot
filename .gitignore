@@ -148,25 +148,15 @@ commands/slash/devEval2.js
 Dockerfile
 docker-compose.yml
 docker-compose.debug.yml
-test/createMatchupArr.js
-test/newfetch.js
-test/spacing.js
-matchups.json
-matchups3.json
 lib/matchupimages
 .env.dev.nflc
 ca-certificate.crt
 daily.drawio
-
 .VSCodeCounter/
-commands/devEval.js
-commands/devEval2.js
-commands/commands.js
 .gitignore
-test/createISODates.js
 utils/bot_res/betOps/MatchupsArr.test.js
 utils/vsImg/matchupImgs.js
-utils/vsImg/matchupImgs.js
+.matchupImgs.js
 launch.json
 test/devTesting.js
 

@@ -1,12 +1,10 @@
+import '@pluto-server-config'
 import '@sapphire/plugin-hmr/register'
-import {
-	LogLevel,
-	SapphireClient,
-} from '@sapphire/framework'
+import { LogLevel, SapphireClient } from '@sapphire/framework'
 import { RateLimitManager } from '@sapphire/ratelimits'
 import { GatewayIntentBits, Partials } from 'discord.js'
-import '@pluto-server-config'
 import { blue, bold, green, red, yellow } from 'colorette'
+import './utils/api/index.js'
 // import '@sapphire/plugin-api/register'
 
 const SapDiscClient = new SapphireClient({
@@ -27,7 +25,7 @@ const SapDiscClient = new SapphireClient({
 	],
 	partials: [Partials.Channel],
 	logger: {
-		level: LogLevel.Debug
+		level: LogLevel.Debug,
 	},
 	typing: true,
 	loadMessageCommandListeners: true,
@@ -37,14 +35,14 @@ console.log(bold(yellow(`[Startup]`)), `Launching Pluto`)
 const login = async () => {
 	try {
 		await SapDiscClient.login(process.env.TOKEN)
-		await console.log(bold(green(`[Startup]`)),`Pluto is up and running!`)
+		await console.log(bold(green(`[Startup]`)), `Pluto is up and running!`)
 	} catch (error) {
-		await console.log(bold(red(`[Startup]`)),`Failed to login`)
+		await console.log(bold(red(`[Startup]`)), `Failed to login`)
 		SapDiscClient.logger.fatal(error)
 		SapDiscClient.destroy()
 		process.exit(1)
 	}
-	await console.log(bold(blue(`[Startup]`)),`Index ops complete!`)
+	await console.log(bold(blue(`[Startup]`)), `Index ops complete!`)
 }
 login()
 

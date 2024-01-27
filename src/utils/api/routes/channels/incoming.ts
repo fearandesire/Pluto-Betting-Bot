@@ -6,7 +6,7 @@
 import Router from 'koa-router'
 import _ from 'lodash'
 import axios from 'axios'
-import resolveTeam from 'resolve-team'
+import {resolveTeam} from 'resolve-team'
 import { pluto_api_url } from '../../../serverConfig.js'
 import ChannelManager from '../../../db/gameSchedule/ChannelManager.js'
 import KhronosManager from '../../requests/KhronosManager.js'
@@ -22,26 +22,28 @@ const incomingChannelsRouter = new Router()
  */
 incomingChannelsRouter.post(`/channels/incoming`, async (ctx: any) => {
 	try {
-		const channels = await validateAndParseChannels(ctx.request.body)
-		const bettingChanRows = await fetchBettingChannelIds()
+		await validateAndParseChannels(ctx.request.body)
 
+		const { channels, bettingChanRows } = ctx.request.body
 		for (const channel of channels) {
 			await processChannel(channel, bettingChanRows)
 		}
-
 		ctx.body = {
 			message: 'Channels created.',
 			status: 200,
 		}
-		console.log(`Complete`)
 	} catch (error) {
-		ctx.body = error
+		await console.log(error)
+		ctx.body = {
+			message: `Unexpected error occured`,
+			statusCode: 500
+		}
 	}
 })
 
 /**
- * Processes each channel and handles creation and embed sending.
- * @async
+ * Channel Creation
+ * Embed creation & Sending on channel creation
  * @param {Object} channel - The channel data to process.
  * @param {Array} betChanRows - Array of betting channel data.
  * @
@@ -50,19 +52,20 @@ async function processChannel(
 	channel: IChannelAggregatedAPI,
 	betChanRows: IConfigRow[],
 ) {
-	const { sport } = channel // Use this sport information for processing
+	const { sport } = channel
 	const { matchupOdds } = channel
 	const { favored } = matchupOdds
-	const favoredTeamInfo = await resolveTeam(sport.toLowerCase(), favored, {
+	const favoredTeamInfo = await resolveTeam(favored, {
+		sport: sport.toLowerCase(),
 		full: true,
 	})
-	validateFavoredTeamInfo(favoredTeamInfo)
+	await validateFavoredTeamInfo(favoredTeamInfo)
 	const khronosManager = new KhronosManager()
+	// ? Collect all the categories (IDs) Pluto is serving.
 	const gameCategories =
 		await khronosManager.fetchGameCategoriesBySport(sport)
 	if (!gameCategories) throw new Error(`Could not get categories.`)
 
-	// Fetch via sport
 	/**
 	 * @const {Object} category
 	 *	guild_id
@@ -89,9 +92,13 @@ async function processChannel(
  */
 async function validateAndParseChannels(body: any) {
 	if (_.isEmpty(body)) {
-		throw new Error('No channels were received.')
+		throw new Error('No data was received.')
+	} else if (_.isEmpty(body.channels)) {
+		throw new Error('No channel data was received.')
 	}
-	return body
+	else if (_.isEmpty(body.bettingChanRows)) {
+		throw new Error('No betting channel data was received.')
+	}
 }
 
 /**

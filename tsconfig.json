@@ -1,30 +1,22 @@
 {
 	"compileOnSave": true,
 	"compilerOptions": {
-		"alwaysStrict": true,
 		"allowJs": true,
-		"baseUrl": ".",
+		"allowSyntheticDefaultImports": true,
+		"baseUrl": "src",
 		"declaration": true,
-		"declarationMap": true,
+		"emitDecoratorMetadata": true, // Choose module resolution strategy
 		"esModuleInterop": true,
 		"experimentalDecorators": true,
 		"forceConsistentCasingInFileNames": true,
 		"module": "ESNext", // Use ESNext for ES module support
 		"moduleResolution": "Node",
-		"newLine": "lf",
-		"noEmitHelpers": false,
-		"noUnusedLocals": true,
-		"noUnusedParameters": true,
 		"outDir": "dist",
-		"preserveConstEnums": true,
 		"removeComments": true,
-		"resolveJsonModule": true,
-		"rootDir": ".",
+		"rootDir": "src",
 		"skipLibCheck": true,
-		"sourceMap": true,
 		"strict": true,
 		"target": "ES6",
-		"useDefineForClassFields": true,
 		"paths": {
 			"@pluto-server-config": [
 				"utils/serverConfig"
@@ -111,7 +103,7 @@
 				"utils/date"
 			],
 			"@pluto-core": [
-				"Pluto.ts"
+				"Pluto"
 			],
 			"@pluto-iso-manager": [
 				"utils/time/IsoManager"
@@ -119,18 +111,11 @@
 			"@pluto-api-routes": [
 				"utils/api/routes"
 			],
-			"koa-logger": [
-				"node_modules/@types/koa-logger/index.d.ts"
-			]
 		}
 	},
 	"include": [
-		"commands",
-		"lib",
-		"utils",
-		"listeners",
-		"database",
-		"Pluto.ts"
+		"src",
+		"src/**/*.ts"
 	],
 	"exclude": [
 		"node_modules/**/*",

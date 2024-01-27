@@ -4,7 +4,7 @@ import PlutoLogger from '@pluto-logger'
 import { Log } from '@pluto-internal-logger'
 import { addMinutes, format } from 'date-fns'
 import cron from 'node-cron'
-import resolveTeam from 'resolve-team'
+import {resolveTeam} from 'resolve-team'
 import _ from 'lodash'
 import discord, {
 	CategoryChannelResolvable,
@@ -56,11 +56,10 @@ export default class ChannelManager {
 	) {
 		const { matchupOdds } = channel
 		const { favored } = matchupOdds
-		const favoredTeamInfo = await resolveTeam(
-			channel.sport.toLowerCase(),
-			favored,
-			{ full: true },
-		)
+		const favoredTeamInfo = await resolveTeam(favored, {
+			sport: channel.sport.toLowerCase(),
+			full: true,
+		})
 		this.validateFavoredTeamInfo(favoredTeamInfo)
 		const gameCategories = await getCategories()
 		if (!gameCategories) throw new Error(`Could not get categories.`)

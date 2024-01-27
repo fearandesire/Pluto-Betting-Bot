@@ -64,23 +64,17 @@ export class bet extends Command {
 
 		const userid = interaction.user.id
 		try {
-			const isRegistered = await validateUser(
-				interaction,
-				userid,
-				true,
-			)
+			const isRegistered = await validateUser(interaction, userid, true)
 			if (!isRegistered) return
 
-			const oddsExist =
-				await MatchupManager.getAllMatchups()
+			const oddsExist = await MatchupManager.getAllMatchups()
 			if (!oddsExist) {
 				return interaction.editReply({
 					content: `No odds are currently stored, you cannot place a bet.`,
 					ephemeral: true,
 				})
 			}
-			const hasPending =
-				await PendingBetHandler.checkPending(userid)
+			const hasPending = await PendingBetHandler.checkPending(userid)
 			if (hasPending) {
 				return interaction.editReply({
 					content: `You are already setting up another bet. Please finish that bet before placing another.`,
@@ -88,8 +82,7 @@ export class bet extends Command {
 				})
 			}
 
-			const teamName =
-				interaction.options.getString(`team`)
+			const teamName = interaction.options.getString(`team`)
 			// Use a regex to check if the team name is a number
 			if (teamName.match(/^[0-9]+$/)) {
 				return interaction.editReply({

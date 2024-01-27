@@ -3,10 +3,7 @@ import cors from '@koa/cors'
 import logger from 'koa-logger'
 import bodyParser from 'koa-bodyparser'
 import logClr from '@pluto-internal-color-logger'
-import {
-	pageNotFound,
-	responseTime,
-} from './requests/middleware.js'
+import { pageNotFound, responseTime } from './requests/middleware.js'
 import incomingChannelsRouter from './routes/channels/incoming.js'
 import ScheduleRouter from './routes/schedule/schedule.js'
 
@@ -21,9 +18,7 @@ app.use(incomingChannelsRouter.routes()).use(
 	incomingChannelsRouter.allowedMethods(),
 )
 
-app.use(ScheduleRouter.routes()).use(
-	ScheduleRouter.allowedMethods(),
-)
+app.use(ScheduleRouter.routes()).use(ScheduleRouter.allowedMethods())
 
 const { apiPort, apiURL } = process.env
 

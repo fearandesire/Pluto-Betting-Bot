@@ -101,7 +101,7 @@ const {
 	SEASON_TYPE,
 	admin_token,
 	pluto_api_url,
-pluto_api_username
+	pluto_api_username,
 } = serverEnv
 
 export {
@@ -134,7 +134,7 @@ export {
 	SEASON_TYPE,
 	admin_token,
 	pluto_api_url,
-	pluto_api_username
+	pluto_api_username,
 }
 
 export { configData as serverConf, serverEnv }

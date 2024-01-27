@@ -6,7 +6,7 @@ import {
 	IConfigRow,
 	IMatchupAggregated,
 	SportsServing,
-} from 'lib/interfaces/api/ApiInterfaces.js'
+} from '../../../../lib/interfaces/api/ApiInterfaces.js'
 
 const ScheduleRouter = new Router()
 interface ScheduleRequestBody {

@@ -1,5 +1,5 @@
 import discord from 'discord.js'
-import resolveTeam from 'resolve-team'
+import {resolveTeam} from 'resolve-team'
 import { SPORT } from '@pluto-server-config'
 import { SapDiscClient } from '@pluto-core'
 import { findEmoji } from '../../bot_res/findEmoji.js'
@@ -8,8 +8,9 @@ import { bettingChan } from '../../serverConfig.js'
 
 const { EmbedBuilder } = discord
 export async function gameEmbedPlain(homeTeam, awayTeam) {
-	const hTeamObj = await resolveTeam(SPORT, homeTeam, {
+	const hTeamObj = await resolveTeam( homeTeam, {
 		full: true,
+		sport: SPORT,
 	})
 
 	const mainColor = hTeamObj.colors[0]
@@ -22,9 +23,7 @@ export async function gameEmbedPlain(homeTeam, awayTeam) {
 	const embObj = new EmbedBuilder()
 		.setTitle(`${awayTeam} @ ${homeTeam}`)
 		.setColor(`${color}`)
-		.setDescription(
-			`Preseason Game - Good luck to both teams!`,
-		)
+		.setDescription(`Preseason Game - Good luck to both teams!`)
 		.setFooter({
 			text: `Pluto | Created by FENIX#7559`,
 		})
@@ -44,33 +43,24 @@ export async function gameEmbedPlain(homeTeam, awayTeam) {
  */
 
 export async function gameEmbedOdds(homeTeam, awayTeam) {
-	const hTeamObj = await resolveTeam(SPORT, homeTeam, {
+	const hTeamObj = await resolveTeam(homeTeam, {
+		sport: SPORT,
 		full: true,
 	})
-	const aTeamObj = await resolveTeam(SPORT, awayTeam, {
+	const aTeamObj = await resolveTeam(awayTeam, {
+		sport: SPORT,
 		full: true,
 	})
 	const hTeam = hTeamObj.name
 	const aTeam = aTeamObj.name
-	const home_team_odds = await resolveMatchup(
-		hTeam,
-		`odds`,
-	)
-	const away_team_odds = await resolveMatchup(
-		aTeam,
-		`odds`,
-	)
+	const home_team_odds = await resolveMatchup(hTeam, `odds`)
+	const away_team_odds = await resolveMatchup(aTeam, `odds`)
 	const hOdds = home_team_odds || `N/A`
 	const aOdds =
-		away_team_odds || `N/A`
-			? await resolveMatchup(aTeam, `odds`)
-			: `N/A`
-	const favoredTeam =
-		Number(hOdds) < Number(aOdds) ? hTeam : aTeam // If the home team has higher odds, they are favored, otherwise the away team is favored
+		away_team_odds || `N/A` ? await resolveMatchup(aTeam, `odds`) : `N/A`
+	const favoredTeam = Number(hOdds) < Number(aOdds) ? hTeam : aTeam // If the home team has higher odds, they are favored, otherwise the away team is favored
 	const color =
-		favoredTeam === hTeam
-			? hTeamObj.colors[0]
-			: aTeamObj.colors[0]
+		favoredTeam === hTeam ? hTeamObj.colors[0] : aTeamObj.colors[0]
 	// # collect team emoji
 	const teamEmoji = (await findEmoji(favoredTeam)) || ''
 	// collect server/guild icon url
