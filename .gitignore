@@ -135,13 +135,6 @@ commands/slash/devEval.js
 .prettierrc.json
 commands/slash/devEval2.js
 .vscode/launch.json
-.env.dev
-.env.dev
-.env.nbac
-.scannerwork/.sonar_lock
-.scannerwork/report-task.txt
-commands/slash/devEval2.js
-
 
 #vscode settings
 .vscode/
@@ -181,3 +174,7 @@ ecosystem.config.cjs
 
 *.drawio
 lib/imgs/nba-logo-wide.png
+
+# More IDE Settings
+.idea/
+.fleet/
