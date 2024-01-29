@@ -1,18 +1,13 @@
-import { Command, container } from '@sapphire/framework'
+import { Command } from '@sapphire/framework'
 import _ from 'lodash'
 import accounting from 'accounting'
 import { Spinner } from '@favware/colorette-spinner'
-import {
-	serverEnv,
-	SEASON_TYPE,
-} from '@pluto-server-config'
-import { QuickError, embedReply } from '@pluto-embed-reply'
+import { SEASON_TYPE, serverEnv } from '@pluto-server-config'
+import { embedReply, QuickError } from '@pluto-embed-reply'
 import { Log } from '@pluto-internal-logger'
 import { findEmoji } from '../utils/bot_res/findEmoji.js'
 
 const spinner = new Spinner()
-
-export { spinner }
 
 // ? Exporting Console Logging Colors for other files to use
 export {
@@ -26,18 +21,6 @@ export {
 	yellow,
 	yellowBright,
 } from 'colorette'
-
-// ? Common Imports for other files to use
-export {
-	container,
-	Command,
-	_,
-	Log,
-	QuickError,
-	embedReply,
-	accounting,
-	findEmoji,
-}
 
 export const formatCurrency = (
 	value,
@@ -54,22 +37,28 @@ export const formatCurrency = (
 		decimalSeparator,
 	)
 
-// ? A border to place between console log returns to maintain readability
-export const cborder = `    =========          =========          =========    `
-
-// ? Footer for embeds, since direct strings are depricated.
-export const embedfooter =
-	'Provided by Pluto | DM `fenixforever` for support'
-export const helpfooter = 'Pluto | Dev. by fenixforever'
-
-//  # Pre-season status
+//  # REVIEW: Pre-season status
 export const isPreSzn = () => {
-	if (SEASON_TYPE === 'preseason') {
-		return true
-	}
-	return false
+	return SEASON_TYPE === 'preseason'
 }
 
+// ? Embed usage
+const helpfooter = 'Pluto | Dev. by fenixforever'
+
+// ? General Config
+export {
+	helpfooter,
+	spinner,
+	Command,
+	_,
+	Log,
+	QuickError,
+	embedReply,
+	accounting,
+	findEmoji,
+}
+
+// # DB Configs
 const {
 	ODDS,
 	SCORE,
