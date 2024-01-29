@@ -1,9 +1,7 @@
 {
-	"compileOnSave": true,
 	"compilerOptions": {
 		"allowJs": true,
 		"allowSyntheticDefaultImports": true,
-		"baseUrl": "src",
 		"declaration": true,
 		"emitDecoratorMetadata": true, // Choose module resolution strategy
 		"esModuleInterop": true,
@@ -11,114 +9,62 @@
 		"forceConsistentCasingInFileNames": true,
 		"module": "ESNext", // Use ESNext for ES module support
 		"moduleResolution": "Node",
-		"outDir": "dist",
+		"outDir": "./dist",
 		"removeComments": true,
-		"rootDir": "src",
+		"rootDir": "./src",
 		"skipLibCheck": true,
 		"strict": true,
-		"target": "ES6",
+		"target": "ES2021",
 		"paths": {
-			"@pluto-server-config": [
-				"utils/serverConfig"
-			],
-			"@pluto-core-config": [
-				"lib/PlutoConfig"
-			],
-			"@pluto-check-balance": [
-				"utils/db/validation/checkbalance"
-			],
-			"@pluto-logger": [
-				"utils/PlutoLogger"
-			],
-			"@pluto-db": [
-				"database/dbindex"
-			],
-			"@pluto-redis": [
-				"utils/cache/RedisCacheManager"
-			],
-			"@pluto-internal-logger": [
-				"utils/bot_res/consoleLog"
-			],
+			"@pluto-server-config": ["./src/utils/serverConfig"],
+			"@pluto-core-config": ["./src/lib/PlutoConfig"],
+			"@pluto-check-balance": ["./src/utils/db/validation/checkbalance"],
+			"@pluto-logger": ["./src/utils/PlutoLogger"],
+			"@pluto-db": ["./src/database/dbindex"],
+			"@pluto-redis": ["./src/utils/cache/RedisCacheManager"],
+			"@pluto-internal-logger": ["./src/utils/bot_res/consoleLog"],
 			"@pluto-internal-color-logger": [
-				"utils/bot_res/ColorConsole"
+				"./src/utils/bot_res/ColorConsole",
 			],
-			"@pluto-embed-reply": [
-				"utils/bot_res/embeds/embedReply"
-			],
-			"@pluto-db-utils": [
-				"utils/db"
-			],
-			"@pluto-matchupOps": [
-				"utils/db/matchupOps"
-			],
-			"@pluto-leaderboard": [
-				"utils/db/currency/leaderboard"
-			],
-			"@pluto-transfer": [
-				"utils/db/currency/transferBetween"
-			],
-			"@pluto-process-claim": [
-				"utils/db/betOps/processClaim"
-			],
+			"@pluto-embed-reply": ["./src/utils/bot_res/embeds/embedReply"],
+			"@pluto-db-utils": ["./src/utils/db"],
+			"@pluto-matchupOps": ["./src/utils/db/matchupOps"],
+			"@pluto-leaderboard": ["./src/utils/db/currency/leaderboard"],
+			"@pluto-transfer": ["./src/utils/db/currency/transferBetween"],
+			"@pluto-process-claim": ["./src/utils/db/betOps/processClaim"],
 			"@pluto-betOps-modifyAmount": [
-				"utils/db/betOps/modifyAmount"
+				"./src/utils/db/betOps/modifyAmount",
 			],
 			"@pluto-validate-checkbalance": [
-				"utils/db/validation/checkbalance"
+				"./src/utils/db/validation/checkbalance",
 			],
 			"@pluto-validate-user": [
-				"utils/db/validation/validateExistingUser"
+				"./src/utils/db/validation/validateExistingUser",
 			],
 			"@pluto-validate-betAuthor": [
-				"utils/db/validation/verifyBetAuthor"
+				"./src/utils/db/validation/verifyBetAuthor",
 			],
-			"@pluto-newBet": [
-				"utils/db/betOps/newBet"
-			],
-			"@pluto-betOps": [
-				"utils/db/betOps"
-			],
-			"@pluto-list-user-bets": [
-				"utils/db/listMyBets"
-			],
-			"@pluto-validate": [
-				"utils/db/validation"
-			],
-			"@pluto-reply": [
-				"utils/bot_res/reply"
-			],
-			"@pluto-bettingStats": [
-				"utils/bot_res/getBettingStats"
-			],
+			"@pluto-newBet": ["./src/utils/db/betOps/newBet"],
+			"@pluto-betOps": ["./src/utils/db/betOps"],
+			"@pluto-list-user-bets": ["./src/utils/db/listMyBets"],
+			"@pluto-validate": ["./src/utils/db/validation"],
+			"@pluto-reply": ["./src/utils/bot_res/reply"],
+			"@pluto-bettingStats": ["./src/utils/bot_res/getBettingStats"],
 			"@pluto-stats-embed-builder": [
-				"utils/bot_res/statsEmbBuilder"
+				"./src/utils/bot_res/statsEmbBuilder",
 			],
-			"@pluto-currency": [
-				"utils/db/currency"
-			],
-			"@pluto-general-utils": [
-				"utils/bot_res"
-			],
-			"@pluto-date-utils": [
-				"utils/date"
-			],
-			"@pluto-core": [
-				"Pluto"
-			],
-			"@pluto-iso-manager": [
-				"utils/time/IsoManager"
-			],
-			"@pluto-api-routes": [
-				"utils/api/routes"
-			],
-		}
+			"@pluto-currency": ["./src/utils/db/currency"],
+			"@pluto-general-utils": ["./src/utils/bot_res"],
+			"@pluto-date-utils": ["./src/utils/date"],
+			"@pluto-core": ["./src/Pluto"],
+			"@pluto-iso-manager": ["./src/utils/time/IsoManager"],
+			"@pluto-api-routes": ["./src/utils/api/routes"],
+		},
 	},
-	"include": [
-		"src",
-		"src/**/*.ts"
-	],
 	"exclude": [
+		"ecosystem.config.js",
 		"node_modules/**/*",
-		"node_modules"
-	]
+		"node_modules",
+		"dist",
+	],
 }

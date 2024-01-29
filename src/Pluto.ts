@@ -1,9 +1,8 @@
-import '@pluto-server-config'
-import '@sapphire/plugin-hmr/register'
 import { LogLevel, SapphireClient } from '@sapphire/framework'
-import { RateLimitManager } from '@sapphire/ratelimits'
 import { GatewayIntentBits, Partials } from 'discord.js'
 import { blue, bold, green, red, yellow } from 'colorette'
+import '@sapphire/plugin-hmr/register'
+import '@pluto-server-config'
 import './utils/api/index.js'
 // import '@sapphire/plugin-api/register'
 
@@ -47,4 +46,3 @@ const login = async () => {
 login()
 
 export { SapDiscClient }
-export { RateLimitManager }

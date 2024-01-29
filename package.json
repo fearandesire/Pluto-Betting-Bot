@@ -18,7 +18,7 @@
 	"bin": "./dist/cli.js",
 	"prettier": "./.prettierrc.json",
 	"scripts": {
-		"build": "tsc --project ./tsconfig.json",
+		"build": "tsc",
 		"watch": "nodemon -L --watch ./ --exec npm run dev",
 		"start": "node ./dist/Pluto.js",
 		"format": "prettier --write \"src/**/*.js\"",
@@ -28,6 +28,7 @@
 		"nflc": "cross-env NODE_ENV=production SEASON_TYPE=REGULAR SERVERNAME=nfl SPORT=nfl EXP_PORT=4442 node --loader esm-module-alias/loader --no-warnings ./dist/Pluto.js -r dotenv/config dotenv_config_path=./.env.nflc",
 		"nbac": "cross-env NODE_ENV=production SEASONTYPE=REGULAR SERVERNAME=nba SPORT=nba EXP_PORT=4443  node --loader esm-module-alias/loader --no-warnings ./dist/Pluto.js -r dotenv/config dotenv/config dotenv_config_path=./.env.nbac ",
 		"dev": "cross-env SERVERNAME='nba-dev' SEASON_TYPE=REGULAR node --loader esm-module-alias/loader --no-warnings ./dist/Pluto.js -r dotenv/config ./Pluto.js dotenv_config_path=./.env.dev",
+		"ts-dev": "tsx ./src/Pluto.ts",
 		"vault-open": "npx dotenv-vault@latest open",
 		"vault-login": "npx dotenv-vault@latest login",
 		"vault-push": "npx dotenv-vault@latest push",
@@ -70,7 +71,6 @@
 		"@pluto-validate-user": "./dist/utils/db/validation/validateExistingUser.js"
 	},
 	"dependencies": {
-		"@faker-js/faker": "^8.1.0",
 		"@favware/colorette-spinner": "^1.0.1",
 		"@kaname-png/plugin-statcord": "^2.1.4",
 		"@koa/cors": "^4.0.0",
@@ -127,7 +127,6 @@
 		"fuse.js": "^6.6.2",
 		"heapdump": "^0.3.15",
 		"ioredis": "^5.3.2",
-		"jsdoc-to-markdown": "^7.1.1",
 		"jsonwebtoken": "^9.0.2",
 		"koa": "^2.14.2",
 		"koa-bodyparser": "^4.4.1",
@@ -165,6 +164,7 @@
 		"@sapphire/cli": "^1.9.1",
 		"@sapphire/prettier-config": "^2.0.0",
 		"@sapphire/ts-config": "^5.0.0",
+		"@types/color": "^3.0.6",
 		"@types/koa-bodyparser": "^4.3.12",
 		"@types/koa-router": "^7.4.8",
 		"@types/lodash": "^4.14.202",
@@ -173,9 +173,8 @@
 		"@types/ws": "^8.5.10",
 		"@typescript-eslint/eslint-plugin": "^6.19.0",
 		"@typescript-eslint/parser": "^6.19.0",
-		"ava": "^5.3.1",
 		"bluebird": "^3.7.2",
-		"eslint": "^8.7.0",
+		"eslint": "8.22.0",
 		"eslint-config-airbnb": "^19.0.4",
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-import-resolver-alias": "^1.1.2",
@@ -188,9 +187,6 @@
 		"pkgroll": "^2.0.1",
 		"prettier": "^3.2.4",
 		"prettier-eslint-cli": "^7.1.0",
-		"sonarqube-scanner": "^3.0.1",
-		"tsc-watch": "^6.0.4",
-		"tsconfig-paths": "^4.2.0",
-		"typescript": "^4.4.4"
+		"tsconfig-paths": "^4.2.0"
 	}
 }
