@@ -29,7 +29,7 @@ export class UserCommand extends Command {
 		const guildId = interaction.guild.id
 		const embedThumbnail = interaction.guild.iconURL({ extension: 'jpg' })
 		if (!embedThumbnail) return QuickError(interaction, `An error occurred`)
-		const matchupsForGuild = await new KhronosManager().fetchOddsBySport(
+		const matchupsForGuild = await new KhronosManager().fetchOddsForGuild(
 			guildId,
 		)
 		if (!matchupsForGuild)
