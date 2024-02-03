@@ -168,13 +168,14 @@ Notes.md
 # Dev
 utils/bot_res/betOps/vs/matchupImgs.js
 Docs.MD
-ecosystem.config.js
-ecosystem.config.mjs
-ecosystem.config.cjs
+ecosystem.KhronosStandardConfig.js
+ecosystem.KhronosStandardConfig.mjs
+ecosystem.KhronosStandardConfig.cjs
 
 *.drawio
 lib/imgs/nba-logo-wide.png
 
 # More IDE Settings
 .idea/
-.fleet/
+.fleet/!/.swm/channel-management.4macueny.sw.md
+n
