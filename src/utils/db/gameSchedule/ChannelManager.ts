@@ -1,23 +1,22 @@
-import axios from 'axios'
 import { SapDiscClient } from '@pluto-core'
 import PlutoLogger from '@pluto-logger'
-import { Log } from '@pluto-internal-logger'
 import { addMinutes, format } from 'date-fns'
 import cron from 'node-cron'
-import {resolveTeam} from 'resolve-team'
+import { resolveTeam } from 'resolve-team'
 import _ from 'lodash'
-import discord, {
+import {
 	CategoryChannelResolvable,
 	ColorResolvable,
 	EmbedBuilder,
+	Guild,
+	TextChannel,
+	ChannelType,
+	GuildBasedChannel,
 } from 'discord.js'
 import { pluto_api_url } from '../../serverConfig.js'
-import { getCategories } from '../../api/utils/getCategories.js'
 import { findEmoji } from '../../bot_res/findEmoji.js'
-import { IChannelAggregatedAPI } from 'utils/api/routes/channels/createchannels.interface.js'
-import { IConfigRow } from 'lib/interfaces/api/ApiInterfaces.js'
-
-const { ChannelType } = discord
+import { IChannelAggregated } from '../../api/routes/channels/createchannels.interface.js'
+import { ICategoryData, IConfigRow } from '../../api/interfaces/interfaces.js'
 
 interface IPrepareMatchEmbed {
 	favored: string
@@ -26,18 +25,17 @@ interface IPrepareMatchEmbed {
 	away_team: string
 	bettingChanId: string
 }
+
 /**
  * Handle interactions between Pluto API & Discord user interface/interactions
  */
 export default class ChannelManager {
-	private serverId: string
-	private API_URL: string
+	private readonly API_URL: string
 	private ep: {
 		gchan: string
 	}
 
-	constructor(guildId: string) {
-		this.serverId = guildId
+	constructor() {
 		this.API_URL = `${pluto_api_url}`
 		this.ep = {
 			gchan: `/channels`,
@@ -45,32 +43,51 @@ export default class ChannelManager {
 	}
 
 	/**
-	 * Processes each channel and handles creation and embed sending.
-	 * @async
+	 * Channel Creation
+	 * Embed creation & Sending on channel creation
 	 * @param {Object} channel - The channel data to process.
-	 * @param {Array} bettingChanRows - Array of betting channel data.
+	 * @param {Array} betChanRows - Array of betting channel data.
+	 * @param {Object} categoriesData - Category data.
+	 * @
 	 */
 	async processChannel(
-		channel: IChannelAggregatedAPI,
-		bettingChanRows: IConfigRow[],
+		channel: IChannelAggregated,
+		betChanRows: IConfigRow[],
+		categoriesData: ICategoryData,
 	) {
+		const { sport } = channel
 		const { matchupOdds } = channel
 		const { favored } = matchupOdds
 		const favoredTeamInfo = await resolveTeam(favored, {
-			sport: channel.sport.toLowerCase(),
+			sport: sport.toLowerCase(),
 			full: true,
 		})
-		this.validateFavoredTeamInfo(favoredTeamInfo)
-		const gameCategories = await getCategories()
+		await this.validateFavoredTeamInfo(favoredTeamInfo)
+		// ? Categories need to be filtered to match the sport for the channel
+		const gameCategories = categoriesData[sport]
 		if (!gameCategories) throw new Error(`Could not get categories.`)
-
-		for (const category of gameCategories) {
+		for (const gameCatRow of gameCategories) {
 			await this.createChannelAndSendEmbed(
 				channel,
-				category,
-				bettingChanRows,
+				gameCatRow,
+				betChanRows,
 				favoredTeamInfo,
 			)
+		}
+	}
+
+	/**
+	 * Validates and parses incoming channel data from the request.
+	 * @async
+	 * @returns {Array} Array of channel data objects.
+	 * @throws {Error} If no channels data is received.
+	 */
+	async validateAndParseChannels(body: {
+		channels: IChannelAggregated[]
+		bettingChanRows: IConfigRow[]
+	}) {
+		if (_.isEmpty(body.channels) || _.isEmpty(body.bettingChanRows)) {
+			return false
 		}
 	}
 
@@ -94,12 +111,14 @@ export default class ChannelManager {
 	 * @param {Object} favoredTeamInfo - Resolved team information.
 	 */
 	async createChannelAndSendEmbed(
-		channel: IChannelAggregatedAPI,
+		channel: IChannelAggregated,
 		configRow: IConfigRow,
 		bettingChanRows: IConfigRow[],
 		favoredTeamInfo: any,
 	) {
-		const guild = SapDiscClient.guilds.cache.get(configRow.guild_id)
+		const guild: Guild = SapDiscClient.guilds.cache.get(
+			configRow.guild_id,
+		) as Guild
 
 		if (!guild) return null
 
@@ -132,12 +151,17 @@ export default class ChannelManager {
 		const gameChan = await guild.channels.create({
 			name: `${channel.channelname}`,
 			type: ChannelType.GuildText,
-			topic: `Enjoy the Game!`,
+			topic: 'Enjoy the Game!',
 			parent: guildsCategory as CategoryChannelResolvable,
 		})
 
-		await gameChan.send({ embeds: [matchEmbed.embed] })
-		console.log(`Created channel: ${channel.channelname} `)
+		// Check if the created channel is a TextChannel before using TextChannel-specific methods
+		if (gameChan instanceof TextChannel) {
+			await gameChan.send({ embeds: [matchEmbed.embed] })
+			console.log(`Created channel: ${channel.channelname}`)
+		} else {
+			console.error('The created channel is not a TextChannel.')
+		}
 	}
 
 	async prepareMatchupEmbed(args: IPrepareMatchEmbed) {
@@ -161,50 +185,44 @@ export default class ChannelManager {
 		return { embed: matchEmbed }
 	}
 
-	async locateChannel(serverid: string, channelName: string) {
-		// Find channel in guild
-		const guild = await SapDiscClient.guilds.cache.get(`${serverid}`)
-
-		if (!guild) {
-			return false
-		}
-		const channel = await guild.channels.cache.find(
-			(GC) => GC.name.toLowerCase() === channelName.toLowerCase(),
-		)
-		if (!channel) {
-			return false
-		}
-		return channel
+	async locateChannel(channelName: string) {
+		const channelsToDelete: GuildBasedChannel[] = []
+		// Iterate over all guilds the client is in
+		SapDiscClient.guilds.cache.forEach((guild) => {
+			const channel = guild.channels.cache.find(
+				(GC) => GC.name.toLowerCase() === channelName.toLowerCase(),
+			)
+			// Target Text Channels
+			if (channel && channel.type !== ChannelType.GuildText) {
+				return
+			}
+			if (channel) {
+				channelsToDelete.push(channel)
+			}
+		})
+		return channelsToDelete
 	}
 
 	/**
-	 * @module deleteChan
 	 * Locate the game channel via the name and delete it
 	 * @param {string} channelName - The name of the channel to locate
-	 * @returns {object} - The channel object, or false if not found
 	 */
-
 	async deleteChan(channelName: string) {
-		// Replace spaces with -
-		const parsedChanName = channelName.replace(/\s/g, '-')
-		const gameChan = await this.locateChannel(this.serverId, channelName)
-		if (!gameChan) {
-			await Log.Red(
-				`Unable to locate channel \`${parsedChanName}\` to delete.`,
-			)
-			return false
+		const gameChans = await this.locateChannel(channelName)
+		if (gameChans.length === 0) {
+			return
 		}
-		await gameChan.delete()
-		return true
+		for (const gameChan of gameChans) {
+			await gameChan.delete()
+		}
 	}
 
 	/**
-	 * @module queueDeleteChannel
 	 * Create a Cron Job to delete a channel 30 minutes from the current time.
 	 * Removes game from the Pluto Channel API
 	 * @param {string} gameChanName The name of the channel to delete
 	 */
-	async queueDeleteChannel(gameChanName: string, id: string) {
+	async queueDeleteChannel(gameChanName: string) {
 		const rn = new Date()
 		const currMin = addMinutes(rn, 5) // format current time + x minutes
 		const newMinRaw = format(currMin, 's mm H d M i')
@@ -222,6 +240,7 @@ export default class ChannelManager {
 		cron.schedule(cronString, async () => {
 			try {
 				await this.deleteChan(gameChanName).then(async (res) => {
+					// @ts-ignore
 					if (res) {
 						await PlutoLogger.log({
 							id: 2,
@@ -241,18 +260,6 @@ export default class ChannelManager {
 					description: `Failed to delete game channel ${gameChanName}\nError: ${error.message}`,
 				})
 			}
-		})
-
-		// ? Remove from Khronos API
-		await this.deleteFromAPI(id)
-		await console.log(`Removed ${id} from Khronos API`)
-	}
-
-	async deleteFromAPI(id: string) {
-		return axios.delete(`${this.API_URL}/${this.ep.gchan}/${id}`, {
-			headers: {
-				'admin-token': `${process.env.PLUTO_API_TOKEN}`,
-			},
 		})
 	}
 }
