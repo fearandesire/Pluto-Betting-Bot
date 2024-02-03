@@ -1,50 +1,28 @@
-import axios from 'axios'
-import { pluto_api_url } from '../../serverConfig.js'
-import {
-	KH_ValidConfigType,
-	SportsServing,
-} from 'lib/interfaces/api/ApiInterfaces.js'
+import { KH_ValidConfigType, Matchup } from '../interfaces/interfaces.js'
+import { AxiosKhronosInstance } from '../common/axios-config.js'
+import { OutgoingEndpoints } from '../common/endpoints.js'
 
+/**
+ * Service for fetching configuration or specific aggregated data from our private Khronos API
+ */
 export default class KhronosManager {
-	private epts: {
-		game_schedule: string
-		categories: {
-			by_sport: string
-			all: string
-		}
-	}
+	private khronosPaths: typeof OutgoingEndpoints.paths
+	private readonly axiosKhronosInstance = AxiosKhronosInstance
 	constructor() {
-		this.epts = {
-			game_schedule: 'discord/config/type',
-			categories: {
-				by_sport: 'discord/configs/games',
-				all: 'discord/configs/games/all',
-			},
-		}
+		this.khronosPaths = OutgoingEndpoints.paths
+		this.axiosKhronosInstance = AxiosKhronosInstance
 	}
 
 	/**
 	 * Fetch all Game Schedule Channel IDs Pluto is serving
 	 * @returns @ConfigType
 	 */
-	async fetchGameScheduleChannels() {
-		const channelsData = await this.fetchByType(`DAILY_SCHEDULE_CHAN`)
-		return channelsData
-	}
-
-	async fetchByType(type: KH_ValidConfigType) {
+	async fetchConfigByType(type: KH_ValidConfigType) {
 		try {
-			const response = await axios.get(
-				`${pluto_api_url}/${this.epts.game_schedule}`,
-				{
-					params: {
-						type,
-					},
-					headers: {
-						'admin-token': `${process.env.PLUTO_API_TOKEN}`,
-					},
-				},
-			)
+			const response = await this.axiosKhronosInstance({
+				method: 'get',
+				url: `${this.khronosPaths.game_schedule}/${type}`,
+			})
 			return response.data
 		} catch (err) {
 			console.error(err)
@@ -53,44 +31,29 @@ export default class KhronosManager {
 	}
 
 	/**
-	 * Fetch Categories Pluto is serving for a specific sport
-	 * @returns @ConfigType
+	 * Retrieve odds from Khronos API
+	 * A guild is 1:1 with a sport, so when a user requests odds, we require which guild they are in.
+	 * @param guildId
 	 */
-	async fetchGameCategoriesBySport(sport: SportsServing) {
+	async fetchOddsForGuild(guildId: string): Promise<
+		| {
+				matches: Matchup[]
+		  }
+		| false
+	> {
 		try {
-			const response = await axios.get(
-				`${pluto_api_url}/${this.epts.categories.by_sport}`,
-				{
-					params: {
-						sport: `${sport.toUpperCase()}`,
-					},
-					headers: {
-						'admin-token': `${process.env.PLUTO_API_TOKEN}`,
-					},
+			const response = await this.axiosKhronosInstance({
+				method: 'post',
+				url: `${this.khronosPaths.odds.by_sport}`,
+				data: {
+					guild_id: guildId,
 				},
-			)
-			return response.data
-		} catch (err) {
-			console.error(err)
-			return false
-		}
-	}
-
-	/**
-	 * Fetch All Game Channel Category IDs Pluto is serving
-	 * @returns @ConfigType
-	 */
-	async fetchGameCategories() {
-		try {
-			const response = await axios.get(
-				`${pluto_api_url}/${this.epts.categories.all}`,
-				{
-					headers: {
-						'admin-token': `${process.env.PLUTO_API_TOKEN}`,
-					},
-				},
-			)
-			return response.data
+			})
+			const { matches } = response.data || null
+			if (!matches) return false
+			return {
+				matches,
+			}
 		} catch (err) {
 			console.error(err)
 			return false
