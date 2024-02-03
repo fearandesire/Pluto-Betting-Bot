@@ -1,4 +1,4 @@
-import { SportsServing } from 'lib/interfaces/api/ApiInterfaces'
+import { SportsServing } from '../../interfaces/interfaces'
 
 export interface IChannelAPI {
 	id: string
@@ -9,7 +9,7 @@ export interface IChannelAPI {
 	created: boolean
 }
 
-export interface IChannelAggregatedAPI {
+export interface IChannelAggregated {
 	id: string
 	sport: SportsServing
 	channelname: string
