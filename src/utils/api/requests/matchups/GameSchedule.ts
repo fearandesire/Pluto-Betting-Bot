@@ -1,18 +1,31 @@
-import axios from 'axios'
 import { ColorResolvable, EmbedBuilder } from 'discord.js'
-import { pluto_api_url } from '../../../serverConfig.js'
 import embedColors from '../../../../lib/colorsConfig.js'
 import GuiltUtils from '../../utils/GuildUtils.js'
 import {
 	IConfigRow,
 	IMatchupAggregated,
 	SportsServing,
-} from 'lib/interfaces/api/ApiInterfaces.js'
+} from '../../interfaces/interfaces.js'
+import { OutgoingEndpoints } from '../../common/endpoints.js'
+import { AxiosKhronosInstance } from '../../common/axios-config.js'
 
 /**
  * Responsible for retrieving & displaying upcoming games / matchups
  */
 export default class GameSchedule {
+	private readonly outRoutes = OutgoingEndpoints.paths
+	private readonly axiosKhronosInstance = AxiosKhronosInstance
+	constructor() {
+		this.outRoutes = OutgoingEndpoints.paths
+		this.axiosKhronosInstance = AxiosKhronosInstance
+	}
+
+	async fetchViaSport(sport: SportsServing) {
+		const gamesArr = await this.reqAll()
+		// Remove any that don't have the `sport` as their `sport_title`
+		return this.filterBySport(gamesArr, sport)
+	}
+
 	async createScheduleEmbed(desc: string) {
 		// Make today's date string: `DD/MM/YYYY`
 		const date = new Date()
@@ -29,10 +42,14 @@ export default class GameSchedule {
 	}
 
 	/**
-	 * Formats and sends the games for the current day
+	 * @summary Formats and sends the games for the current day
+	 *
+	 * Games are sent to every guild we have subscribed for scheduled game posts
+	 *
+	 * Sent directly to the specified `DAILY_CHANNEL` for the guild
 	 */
 	async sendDailyGames(
-		sport: SportsServing,
+		sport: string,
 		games: IMatchupAggregated[],
 		rows: IConfigRow[],
 	) {
@@ -52,7 +69,6 @@ export default class GameSchedule {
 				await chan.send({ embeds: [scheduleEmbed] })
 			} catch (err) {
 				console.error(err)
-				continue
 			}
 		}
 	}
@@ -76,9 +92,9 @@ export default class GameSchedule {
 
 	/**
 	 * Query Khronos API
-	 * Get games for today
-	 * Parse & Format into a conjoined string detailing the matchups schedule for today
-	 * @returns {string}
+	 * 1. Retrieve matches for today
+	 * 2. Parse and format
+	 * 3. Returns the formatted scheduled games
 	 */
 	async getFormattedSchedule(sport: SportsServing) {
 		let games
@@ -93,24 +109,15 @@ export default class GameSchedule {
 			const formattedGame = await this.formatForSchedule(game)
 			scheduleStr += `${formattedGame}\n` // Append each game's string
 
-			// Check Discord character limit
-			if (scheduleStr.length > 1950) {
-				// Keeping some buffer
-				scheduleStr += '... and more games'
+			// Validate Discord Embed limit
+			if (scheduleStr.length > 4096) {
+				// WIP | Need a solution for pages in this new system
+				scheduleStr += '... and more!'
 				break
 			}
 		}
 
 		return scheduleStr
-	}
-
-	async fetchViaSport(sport: SportsServing) {
-		const gamesArr = await this.reqAll()
-
-		// Remove any that don't have the `sport` as their `sport_title`
-		const filteredGames = this.filterBySport(gamesArr, sport)
-
-		return filteredGames
 	}
 
 	/**
@@ -119,28 +126,7 @@ export default class GameSchedule {
 	 * 	The goal formatted text is:
 	`Away Team (record) at Home Team (record) @ 8:00 PM (legibletime)
 	`
-	 * 
-	 * Each game appears as:
-	 ```ts
-	 export interface IMatchupAggregated {
-	id: string
-	sport_title: string
-	commence_time: string
-	home_team: string
-	away_team: string
-	last_update: string
-	home_team_odds: number
-	away_team_odds: number
-	winner: string | null
-	loser: string | null
-	dateofmatchup: string
-	legiblestart: string
-	cron_timer: string
-	closing_bets: boolean
-	broadcastInfo: string[]
-	teamRecords: string[]
-}
-	```
+	 *
 	 */
 	async formatForSchedule(game: IMatchupAggregated) {
 		const [homeTeamShort, awayTeamShort] = [
@@ -159,14 +145,10 @@ export default class GameSchedule {
 	}
 
 	async reqAll() {
-		const reqGamesSched = await axios.get(
-			`${pluto_api_url}/matchups/today`,
-			{
-				headers: {
-					'admin-token': `${process.env.PLUTO_API_TOKEN}`,
-				},
-			},
-		)
+		const reqGamesSched = await this.axiosKhronosInstance({
+			method: `get`,
+			url: `${this.outRoutes.matches.getAll}`,
+		})
 		return reqGamesSched.data
 	}
 
