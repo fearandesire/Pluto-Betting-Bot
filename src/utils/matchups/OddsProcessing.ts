@@ -1,7 +1,7 @@
 import _ from 'lodash'
 import parseScheduled from '../bot_res/parseScheduled.js'
 import { formatOdds } from '../bot_res/betOps/formatOdds.js'
-import { Matchup } from '../../lib/interfaces/api/ApiInterfaces.js'
+import { Matchup } from '../api/interfaces/interfaces.js'
 import { IOddsField } from './matchups.interface.js'
 
 export async function prepareAndFormat(matchups: Matchup[], thumbnail: string) {
