@@ -6,4 +6,8 @@ export class GuildManager {
 	async fetchChannelViaId(chanId) {
 		return this.guild.channels.fetch(chanId)
 	}
+
+	async guildImg() {
+		return this.guild.iconURL()
+	}
 }
