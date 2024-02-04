@@ -77,7 +77,7 @@ export default class ChannelManager {
 	}
 
 	/**
-	 * Validates and parses incoming channel data from the request.
+	 * Validates and parses incoming channel data from the request
 	 * @async
 	 * @returns {Array} Array of channel data objects.
 	 * @throws {Error} If no channels data is received.

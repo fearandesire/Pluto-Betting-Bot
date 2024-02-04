@@ -6,13 +6,19 @@ import {
 	IConfigRow,
 	IMatchupAggregated,
 	SportsServing,
-} from '../../../../lib/interfaces/api/ApiInterfaces.js'
+} from '../../interfaces/interfaces.js'
 
+/**
+ * Responsible for incoming requests to post the daily schedule
+ * @param {Object} aggregatedMatchups - Array of matches
+ * @param {Array} dailyScheduleRows - Array of channel IDs to send the schedule to // `subscribers`
+ */
 const ScheduleRouter = new Router()
 interface ScheduleRequestBody {
 	aggregatedMatchups: IMatchupAggregated[]
 	dailyScheduleRows: IConfigRow[]
 }
+
 ScheduleRouter.post('/schedule/daily/all', async (ctx) => {
 	try {
 		const requestBody: ScheduleRequestBody = ctx.request.body as
@@ -26,11 +32,16 @@ ScheduleRouter.post('/schedule/daily/all', async (ctx) => {
 			await Log.Yellow(`Processing Daily Schedule for ${sport}`)
 			const games = filterGames(aggregatedMatchups, sport)
 			const rows = filterRows(dailyScheduleRows, sport)
-
-			if (!_.isEmpty(games)) {
-				await gameSchedule.sendDailyGames(sport, games, rows)
-				await Log.Green(`Successfully sent daily schedule for ${sport}`)
+			if (games === null) {
+				await Log.Red(`No games found for ${sport}`)
+				return
 			}
+			if (!rows) {
+				await Log.Red(`No channels found for ${sport}`)
+				return
+			}
+			await gameSchedule.sendDailyGames(sport, games, rows)
+			await Log.Green(`Successfully sent daily schedule for ${sport}`)
 		}
 
 		ctx.body = {
@@ -43,15 +54,18 @@ ScheduleRouter.post('/schedule/daily/all', async (ctx) => {
 	}
 })
 
-function filterGames(games: IMatchupAggregated[], sport: SportsServing) {
+function filterGames(
+	games: IMatchupAggregated[],
+	sport: string,
+): IMatchupAggregated[] | null {
+	if (sport !== typeof SportsServing) {
+		return null
+	}
 	return _.filter(games, (game) => game.sport_title === sport)
 }
 
-function filterRows(rows: IConfigRow[], sport: SportsServing) {
-	return _.filter(
-		rows,
-		(row) => typeof row.sport === 'string' && row.sport === sport,
-	)
+function filterRows(rows: IConfigRow[], sport: string) {
+	return _.filter(rows, (row) => row.sport === sport)
 }
 
 async function validateAndParseSchedule(

@@ -10,6 +10,7 @@ export type KH_ValidConfigType =
 	| `SECURITY`
 	| 'DAILY_SCHEDULE_CHAN'
 
+// Standard structure of a match
 export interface Matchup {
 	id: string
 	sport_title: string
@@ -27,7 +28,8 @@ export interface Matchup {
 	closing_bets: boolean
 }
 
-// For: Daily Schedule
+// Match aggregation | Expected structure from Khronos
+// Used for daily schedule parsing and posting
 export interface IMatchupAggregated {
 	id: string
 	sport_title: string

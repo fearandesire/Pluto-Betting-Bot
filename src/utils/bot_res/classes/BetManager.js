@@ -1,12 +1,8 @@
 import { EmbedBuilder } from 'discord.js'
 import accounting from 'accounting'
 import db from '@pluto-db'
-import {
-	embedReply,
-	QuickError,
-	helpfooter,
-} from '@pluto-core-config'
-import { MatchupManager } from '@pluto-matchupOps/MatchupManager.js'
+import { embedReply, QuickError, helpfooter } from '@pluto-core-config'
+import { MatchupManager } from '../../db/matchupOps/MatchupManager.js'
 import { guildImgURL } from '@pluto-embed-reply'
 import BtnManager from './BtnManager.js'
 import AccountManager from './AccountManager.js'
@@ -30,8 +26,7 @@ export default class BetManager {
 	}
 
 	async assignUniqueBetId() {
-		const generateBetId = () =>
-			Math.floor(100000 + Math.random() * 900000)
+		const generateBetId = () => Math.floor(100000 + Math.random() * 900000)
 
 		// Fetch all existing bet IDs from the database
 		const existingBetIdsResult = await db.manyOrNone(
@@ -58,9 +53,7 @@ export default class BetManager {
 	}
 
 	async currentBets() {
-		const bets = await db.manyOrNone(
-			`SELECT * FROM "${this.LIVEBETS}"`,
-		)
+		const bets = await db.manyOrNone(`SELECT * FROM "${this.LIVEBETS}"`)
 		return bets
 	}
 
@@ -85,9 +78,7 @@ export default class BetManager {
 	  ```
 	 */
 	async allBets() {
-		const bets = await db.manyOrNone(
-			`SELECT * FROM "${this.BETSLIPS}"`,
-		)
+		const bets = await db.manyOrNone(`SELECT * FROM "${this.BETSLIPS}"`)
 		return bets
 	}
 
@@ -100,9 +91,7 @@ export default class BetManager {
 	}
 
 	async allBettingProfiles() {
-		const profiles = await db.manyOrNone(
-			`SELECT * FROM "${this.PROFILES}"`,
-		)
+		const profiles = await db.manyOrNone(`SELECT * FROM "${this.PROFILES}"`)
 		return profiles
 	}
 
@@ -144,8 +133,7 @@ export default class BetManager {
 			)
 			const { amount: betAmount, matchid } = betData
 			// Ensure game is not active
-			const isGameActive =
-				await MatchupManager.gameIsLive(matchid)
+			const isGameActive = await MatchupManager.gameIsLive(matchid)
 			if (isGameActive) {
 				await QuickError(
 					interaction,
@@ -159,8 +147,7 @@ export default class BetManager {
 				[userid],
 			)
 			// Restore user balance
-			const newBal =
-				Number(userBal.balance) + Number(betAmount)
+			const newBal = Number(userBal.balance) + Number(betAmount)
 			await t.batch([
 				await t.oneOrNone(
 					`UPDATE "${this.CURRENCY}" SET balance = $1 WHERE userid = $2`,
@@ -179,9 +166,7 @@ export default class BetManager {
 				title: `Bet Revoked`,
 				description: `Successfully cancelled bet #${betid}\nYour balance has been restored.`,
 				color: `#00ff00`,
-				thumbnail: `${guildImgURL(
-					interaction.client,
-				)}`,
+				thumbnail: `${guildImgURL(interaction.client)}`,
 				target: `reply`,
 			}
 			await embedReply(interaction, embObj)
@@ -199,12 +184,7 @@ export default class BetManager {
 	 * @prop {number} betDetails.matchid - The ID of the match
 	 * @returns {Promise<boolean>} - True if bet setup is successful, otherwise false
 	 */
-	async setupBet(
-		interaction,
-		userId,
-		userAvatar,
-		betDetails,
-	) {
+	async setupBet(interaction, userId, userAvatar, betDetails) {
 		try {
 			const {
 				teamName,
@@ -222,9 +202,7 @@ export default class BetManager {
 			).getBalance(userId)
 
 			if (userBalance < betAmount) {
-				await PendingBetHandler.deletePending(
-					userId,
-				)
+				await PendingBetHandler.deletePending(userId)
 				await embedReply(interaction, {
 					title: 'Insufficient Funds',
 					description: `You do not have enough money for this bet! Your current balance is **$${userBalance}**`,
@@ -302,11 +280,10 @@ export default class BetManager {
 			description: 'You have cancelled your bet.',
 		}
 
-		const confirmationResult =
-			await btnManager.waitForConfirmation(
-				successEmb,
-				cancelEmb,
-			)
+		const confirmationResult = await btnManager.waitForConfirmation(
+			successEmb,
+			cancelEmb,
+		)
 
 		if (confirmationResult) {
 			return true
@@ -360,9 +337,8 @@ export default class BetManager {
 	}
 
 	async deleteActiveBet(betId) {
-		return db.none(
-			`DELETE FROM "${this.BETSLIPS}" WHERE betid = $1`,
-			[betId],
-		)
+		return db.none(`DELETE FROM "${this.BETSLIPS}" WHERE betid = $1`, [
+			betId,
+		])
 	}
 }

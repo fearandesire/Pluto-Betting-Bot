@@ -16,6 +16,11 @@ export class Endpoints {
 
 export class OutgoingEndpoints {
 	static readonly paths = {
+		bets: {
+			create: 'betslips/create', // Initalize
+			pending: `betslips/pending`,
+			place: `betslips/place`, // Finalizes & stores - If there's only one matchup, this can be used.
+		},
 		game_schedule: 'discord/config/type',
 		categories: {
 			by_sport: 'discord/configs/categories',

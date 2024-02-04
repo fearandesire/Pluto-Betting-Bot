@@ -35,8 +35,7 @@ export async function getHeartbeat() {
 	// ? Filter games that are within today or the prior today
 	const filterGames = _.filter(completedGames, (game) => {
 		const gameDate = parseISO(game.date)
-		const criteria =
-			isToday(gameDate) || isYesterday(gameDate)
+		const criteria = isToday(gameDate) || isYesterday(gameDate)
 		if (criteria) {
 			return criteria
 		}
@@ -51,12 +50,8 @@ export async function getHeartbeat() {
 	const deletionTally = [0]
 	_.forEach(filterGames, async (game) => {
 		// # Queue game channel to be closed in 30 minutes
-		const hTeamShort = await getShortName(
-			game.home_team,
-		)
-		const aTeamShort = await getShortName(
-			game.away_team,
-		)
+		const hTeamShort = await getShortName(game.home_team)
+		const aTeamShort = await getShortName(game.away_team)
 
 		const chanName = `${aTeamShort}-vs-${hTeamShort}`
 
@@ -68,13 +63,8 @@ export async function getHeartbeat() {
 				color: `red`,
 			})
 		} else {
-			const chanManager = new ChannelManager(
-				server_ID,
-			)
-			await chanManager.queueDeleteChannel(
-				chanName,
-				game.id,
-			)
+			const chanManager = new ChannelManager()
+			await chanManager.queueDeleteChannel(chanName, game.id)
 			await logClr({
 				text: `Queued ${chanName} to be deleted`,
 				color: `blue`,
@@ -87,11 +77,7 @@ export async function getHeartbeat() {
 		// # This is done for two reasons: Limit API calls from The-Odds API as there can be a gap in time before the game is set to 'complete' for them
 		// # Secondly, we don't want to remove the game from the score table if there are outstanding bets - as currently,the score table is used to check for completes games, and no longer The-Odds-API
 		// # Another solution would be to remove completed checks from handleBetMatchups, or passing in the game ID and winner to handleBetMatchups directly
-		const betsExisting =
-			await MatchupManager.outstandingBets(
-				game.id,
-				db,
-			)
+		const betsExisting = await MatchupManager.outstandingBets(game.id, db)
 		if (!betsExisting) {
 			// ! Remove from Score Tbl
 			await MatchupManager.clearScoreTable(game.id)
