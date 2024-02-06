@@ -64,8 +64,6 @@ export default async function parseScheduled(
 		}),
 	)
 
-	console.log(`Embed Fields =>\n`, fields)
-
 	// Construct and return the embed
 	return new EmbedBuilder()
 		.setTitle(title)

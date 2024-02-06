@@ -4,11 +4,8 @@ import {
 } from '@sapphire/framework'
 import type { StringSelectMenuInteraction } from 'discord.js'
 import { SapDiscClient } from '@pluto-core'
-import { BetslipManager } from '../../utils/api/requests/BetslipsManager'
-import {
-	IPendingBetslip,
-	PendingBetslip,
-} from '../../lib/interfaces/api/bets/betslips.interfaces'
+import { BetslipManager } from '../../utils/api/requests/BetslipsManager.js'
+import { IPendingBetslip } from '../../lib/interfaces/api/bets/betslips.interfaces.js'
 export class MenuHandler extends InteractionHandler {
 	public constructor(
 		ctx: InteractionHandler.LoaderContext,
@@ -46,8 +43,13 @@ export class MenuHandler extends InteractionHandler {
 
 	public override async run(payload: any) {
 		if (payload.action.type !== 'select') return
-
 		const { interaction, data } = payload
 		const { amount, team } = data
+		const selectedMatchID = interaction.values[0]
+		return new BetslipManager(SapDiscClient).placeBet(interaction, {
+			team,
+			amount,
+			matchup_id: selectedMatchID,
+		})
 	}
 }

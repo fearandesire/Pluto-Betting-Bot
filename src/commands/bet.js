@@ -1,13 +1,9 @@
 import { Command } from '@sapphire/framework'
-import { newBet } from '@pluto-betOps/newBet.js'
-import { validateUser } from '@pluto-validate/validateExistingUser.js'
 import { isPreSzn } from '@pluto-core-config'
-import { MatchupManager } from '@pluto-matchupOps/MatchupManager.js'
-import { QuickError } from '@pluto-embed-reply'
-import PendingBetHandler from '../utils/db/validation/pendingBet.js'
 import isInGuild from '../utils/isInGuild.js'
+import { BetslipManager } from '../utils/api/requests/BetslipsManager.js'
 
-export class bet extends Command {
+export class Bet extends Command {
 	constructor(context, options) {
 		super(context, {
 			...options,
@@ -59,61 +55,20 @@ export class bet extends Command {
 		}
 
 		await interaction.deferReply({
-			content: `Submitting your bet, please wait.`,
+			content: `Submitting your bet, one moment!`,
 		})
 
 		const userid = interaction.user.id
 		try {
-			const isRegistered = await validateUser(interaction, userid, true)
-			if (!isRegistered) return
-
-			const oddsExist = await MatchupManager.getAllMatchups()
-			if (!oddsExist) {
-				return interaction.editReply({
-					content: `No odds are currently stored, you cannot place a bet.`,
-					ephemeral: true,
-				})
-			}
-			const hasPending = await PendingBetHandler.checkPending(userid)
-			if (hasPending) {
-				return interaction.editReply({
-					content: `You are already setting up another bet. Please finish that bet before placing another.`,
-					ephemeral: false,
-				})
-			}
-
-			const teamName = interaction.options.getString(`team`)
-			// Use a regex to check if the team name is a number
-			if (teamName.match(/^[0-9]+$/)) {
-				return interaction.editReply({
-					content: `**Please provide a valid team.**`,
-					ephemeral: true,
-				})
-			}
-
-			// If all checks pass, insert the pending bet
-			await PendingBetHandler.insertPending(userid)
-			// Call the newBet function only if all checks pass
-			await newBet(
+			return new BetslipManager(interaction.client).initialize(
 				interaction,
-				teamName,
+				userid,
+				interaction.options.getString('team'),
 				interaction.options.getInteger('amount'),
+				interaction.guildId,
 			)
-		} catch (error) {
-			await PendingBetHandler.deletePending(userid)
-			// Handle any errors that occur during the promise chain
-			console.error(error)
-			if (error?.code === `MATCH_NOT_FOUND`) {
-				return QuickError(
-					interaction,
-					`Unable to locate odds for the team you specified.\nVerify available games via \`/odds\``,
-				)
-			}
-			interaction.editReply({
-				content: `An error occurred while processing your bet.`,
-				ephemeral: true,
-				components: [],
-			})
+		} catch (err) {
+			console.log(err)
 		}
 	}
 }
