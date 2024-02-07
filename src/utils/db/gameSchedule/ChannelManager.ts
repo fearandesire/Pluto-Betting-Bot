@@ -47,13 +47,14 @@ export default class ChannelManager {
 	 * Embed creation & Sending on channel creation
 	 * @param {Object} channel - The channel data to process.
 	 * @param {Array} betChanRows - Array of betting channel data.
-	 * @param {Object} categoriesData - Category data.
-	 * @
+	 * @param {Object} categoriesServing - Arrays of categories separated by sport.
+	 * These are the categories that Pluto is serving,
+	 * and is where we will be creating the channels.
 	 */
 	async processChannel(
 		channel: IChannelAggregated,
 		betChanRows: IConfigRow[],
-		categoriesData: ICategoryData,
+		categoriesServing: ICategoryData,
 	) {
 		const { sport } = channel
 		const { matchupOdds } = channel
@@ -63,9 +64,12 @@ export default class ChannelManager {
 			full: true,
 		})
 		await this.validateFavoredTeamInfo(favoredTeamInfo)
+
 		// ? Categories need to be filtered to match the sport for the channel
-		const gameCategories = categoriesData[sport]
-		if (!gameCategories) throw new Error(`Could not get categories.`)
+		const gameCategories = categoriesServing[sport]
+		if (!gameCategories || _.isEmpty(gameCategories)) {
+			return
+		}
 		for (const gameCatRow of gameCategories) {
 			await this.createChannelAndSendEmbed(
 				channel,
@@ -121,6 +125,15 @@ export default class ChannelManager {
 		) as Guild
 
 		if (!guild) return null
+		// Prevent duplicate channels
+		if (
+			await guild.channels.cache.find(
+				(GC) =>
+					GC.name.toLowerCase() === channel.channelname.toLowerCase(),
+			)
+		) {
+			return
+		}
 
 		const guildsCategory = guild.channels.cache.get(
 			`${configRow.setting_value}`,

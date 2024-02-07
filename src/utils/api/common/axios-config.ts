@@ -6,7 +6,7 @@ import axios, { AxiosHeaders } from 'axios'
 
 const KhronosStandardConfig = {
 	baseURL: `${process.env.PLUTO_API_URL}`,
-	timeout: 1000,
+	timeout: 90000, // 90 Seconds in MS
 	headers: new AxiosHeaders({
 		'admin-token': `${process.env.PLUTO_API_TOKEN}`,
 	}),

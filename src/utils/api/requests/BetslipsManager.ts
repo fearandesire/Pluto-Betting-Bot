@@ -26,9 +26,10 @@ import {
 	IApiHttpError,
 } from '../../../lib/interfaces/api/api.interface.js'
 import axios from 'axios'
+import _ from 'lodash'
 
 export class BetslipManager {
-	private axiosKhronosInstance = AxiosKhronosInstance
+	private readonly axiosKhronosInstance = AxiosKhronosInstance
 	private client: SapphireClient
 
 	constructor(client: SapphireClient) {
@@ -93,10 +94,17 @@ export class BetslipManager {
 				return interaction.followUp({ embeds: [errEmb] })
 			}
 		} catch (error) {
-			console.error('Error initializing bet:', error)
+			console.error('Error initializing bet:', error) // Log err
 			if (axios.isAxiosError(error) && error.response) {
-				const apiError: IApiHttpError = error.response
-					.data as IApiHttpError
+				const apiError: IApiHttpError = error.response // Declare variable & type for error obj
+					?.data as IApiHttpError
+				// Ensure we have data for the error
+				if (_.isEmpty(apiError) || apiError === null) {
+					const errEmbed = ErrorEmbeds.internalErr(
+						'An unexpected error occurred. Please try again later.',
+					)
+					return interaction.followUp({ embeds: [errEmbed] })
+				}
 				return this.errorResponses(interaction, apiError)
 			} else {
 				// Handle non-API errors or when error structure is unknown
@@ -144,7 +152,7 @@ export class BetslipManager {
 			.setCustomId('select_matchup')
 			.setPlaceholder('Choose a matchup')
 			.addOptions(
-				matchups.map((match, index) => ({
+				matchups.map((match) => ({
 					label: `${match.away_team} vs ${match.home_team}`,
 					description: match.dateofmatchup,
 					value: match.id.toString(),
@@ -241,16 +249,17 @@ export class BetslipManager {
 
 		switch (errorType) {
 			case ApiHttpErrorTypes.TeamNotFound:
-				errorMessage = 'The team specified could not be found.'
+				errorMessage =
+					'The team specified could not be found.\nPlease verify the team you provided against the currently `/odds` available'
 				break
 			case ApiHttpErrorTypes.GameHasStarted:
-				errorMessage = 'The game has already started.'
+				errorMessage = 'This game has already started.'
 				break
 			case ApiHttpErrorTypes.NoGamesForTeam:
 				errorMessage = 'There are no games available for this team.'
 				break
 			case ApiHttpErrorTypes.DuplicateBetslip:
-				errorMessage = 'You have already placed a bet on this match.'
+				errorMessage = 'You have already placed a bet on this match!'
 				break
 			case ApiHttpErrorTypes.InsufficientBalance:
 				errorMessage = `Your balance is insufficient to place this bet.\nAvailable balance: \`$${apiError.error.balance}\``
