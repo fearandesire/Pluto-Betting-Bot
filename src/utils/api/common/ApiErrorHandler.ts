@@ -15,11 +15,11 @@ export class ApiErrorHandler {
 	) {
 		const errorType = apiError.error.errorName
 		let errorMessage
-		let apiErrorData = null
 
 		switch (errorType) {
 			case 'AccountNotFound':
 			case 'UnableToFindBalance':
+			case 'ClaimCooldown':
 				errorMessage = apiError.message
 				break
 			case ApiHttpErrorTypes.TeamNotFound:

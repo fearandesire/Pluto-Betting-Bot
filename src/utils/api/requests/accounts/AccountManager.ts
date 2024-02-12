@@ -20,7 +20,10 @@ export class AccountManager {
 			if (claimQuery.data.statusCode === 200) {
 				const successfulClaimEmbed = new EmbedBuilder()
 					.setTitle('Daily Claim')
-					.setDescription('Your daily claim has been processed!')
+					.setDescription(
+						`Your claim has been processed!\nUpdated balance: ${claimQuery.data.balance}`,
+					)
+					.setThumbnail(interaction.user.displayAvatarURL())
 					.setColor(embedColors.success)
 					.setFooter({
 						text: helpfooter,
@@ -28,11 +31,8 @@ export class AccountManager {
 				return interaction.editReply({
 					embeds: [successfulClaimEmbed],
 				})
-			} else {
-				throw new Error(`Unknown error`)
 			}
 		} catch (error) {
-			console.error(error)
 			return new ApiErrorHandler().handle(
 				interaction,
 				error,
