@@ -6,6 +6,7 @@ import logClr from '@pluto-internal-color-logger'
 import { pageNotFound, responseTime } from './requests/middleware.js'
 import incomingChannelsRouter from './routes/channels/incoming.js'
 import ScheduleRouter from './routes/schedule/schedule.js'
+import NotificationRouter from './routes/notifications/notifications.controller.js'
 
 const app = new Koa()
 app.use(logger())
@@ -17,6 +18,7 @@ app.use(responseTime)
 app.use(incomingChannelsRouter.routes()).use(
 	incomingChannelsRouter.allowedMethods(),
 )
+app.use(NotificationRouter.routes()).use(NotificationRouter.allowedMethods())
 
 app.use(ScheduleRouter.routes()).use(ScheduleRouter.allowedMethods())
 
