@@ -5,10 +5,9 @@ import {
 	GuildEmoji,
 	SelectMenuBuilder,
 } from 'discord.js'
-import { AxiosKhronosInstance } from '../common/axios-config.js'
-import { SapphireClient } from '@sapphire/framework'
-import { Matchup } from '../interfaces/interfaces.js'
-import { OutgoingEndpoints } from '../common/endpoints.js'
+import { AxiosKhronosInstance } from '../../common/axios-config.js'
+import { Matchup } from '../../interfaces/interfaces.js'
+import { OutgoingEndpoints } from '../../common/endpoints.js'
 import {
 	IAPIBetslipPayload,
 	IAPIProcessedBetslip,
@@ -16,25 +15,19 @@ import {
 	IPendingBetslip,
 	IPendingBetslipFull,
 	IValidatedBetslipData,
-} from '../../../lib/interfaces/api/bets/betslips.interfaces.js'
-import embedColors from '../../../lib/colorsConfig.js'
-import { findEmoji } from '../../bot_res/findEmoji.js'
+} from '../../../../lib/interfaces/api/bets/betslips.interfaces.js'
+import embedColors from '../../../../lib/colorsConfig.js'
+import { findEmoji } from '../../../bot_res/findEmoji.js'
 import { helpfooter } from '@pluto-core-config'
-import { ErrorEmbeds } from '../../errors/global.js'
-import {
-	ApiHttpErrorTypes,
-	IApiHttpError,
-} from '../../../lib/interfaces/api/api.interface.js'
-import axios from 'axios'
-import _ from 'lodash'
+import { ErrorEmbeds } from '../../../errors/global.js'
+import { ApiModules } from '../../../../lib/interfaces/api/api.interface.js'
+import { ApiErrorHandler } from '../../common/ApiErrorHandler.js'
 
 export class BetslipManager {
 	private readonly axiosKhronosInstance = AxiosKhronosInstance
-	private client: SapphireClient
 
-	constructor(client: SapphireClient) {
+	constructor() {
 		this.axiosKhronosInstance = AxiosKhronosInstance
-		this.client = client // Use the passed-in client
 	}
 
 	async initialize(
@@ -76,7 +69,7 @@ export class BetslipManager {
 					teamEmoji,
 					betslip,
 				)
-			} else if (response.status === 202) {
+			} else if (response.data.statusCode === 202) {
 				const data: IValidatedBetslipData = response.data
 				await this.presentMatchChoices(
 					interaction,
@@ -95,24 +88,11 @@ export class BetslipManager {
 			}
 		} catch (error) {
 			console.error('Error initializing bet:', error) // Log err
-			if (axios.isAxiosError(error) && error.response) {
-				const apiError: IApiHttpError = error.response // Declare variable & type for error obj
-					?.data as IApiHttpError
-				// Ensure we have data for the error
-				if (_.isEmpty(apiError) || apiError === null) {
-					const errEmbed = ErrorEmbeds.internalErr(
-						'An unexpected error occurred. Please try again later.',
-					)
-					return interaction.followUp({ embeds: [errEmbed] })
-				}
-				return this.errorResponses(interaction, apiError)
-			} else {
-				// Handle non-API errors or when error structure is unknown
-				const errEmbed = ErrorEmbeds.internalErr(
-					'An unexpected error occurred. Please try again later.',
-				)
-				return interaction.followUp({ embeds: [errEmbed] })
-			}
+			return new ApiErrorHandler().handle(
+				interaction,
+				error,
+				ApiModules.betting,
+			)
 		}
 	}
 
@@ -146,7 +126,10 @@ export class BetslipManager {
 		const embed = new EmbedBuilder()
 			.setTitle('Select a Matchup')
 			.setDescription('Choose which game you want to bet on:')
-			.setColor(0xfee75c) // Yellow color, adjust as needed
+			.setColor(embedColors.yellow)
+			.setFooter({
+				text: helpfooter,
+			})
 
 		const selectMenu = new SelectMenuBuilder()
 			.setCustomId('select_matchup')
@@ -186,7 +169,7 @@ export class BetslipManager {
 				OutgoingEndpoints.paths.bets.place,
 				betDetails,
 			)
-			if (response.status === 200) {
+			if (response.data.statusCode === 200) {
 				const data: IAPIProcessedBetslip = response.data
 				const teamEmoji = (await findEmoji(data.betslip.team)) || ''
 				// Handle successful bet placement
@@ -239,35 +222,54 @@ export class BetslipManager {
 		})
 	}
 
-	async errorResponses(
+	async cancelBet(
 		interaction: CommandInteraction,
-		apiError: IApiHttpError,
+		userid: string,
+		betId: number,
 	) {
-		const errorType = apiError.error.errorName
-		let errorMessage =
-			'An unknown internal error has occurred 😔! Please try again later.'
-
-		switch (errorType) {
-			case ApiHttpErrorTypes.TeamNotFound:
-				errorMessage =
-					'The team specified could not be found.\nPlease verify the team you provided against the currently `/odds` available'
-				break
-			case ApiHttpErrorTypes.GameHasStarted:
-				errorMessage = 'This game has already started.'
-				break
-			case ApiHttpErrorTypes.NoGamesForTeam:
-				errorMessage = 'There are no games available for this team.'
-				break
-			case ApiHttpErrorTypes.DuplicateBetslip:
-				errorMessage = 'You have already placed a bet on this match!'
-				break
-			case ApiHttpErrorTypes.InsufficientBalance:
-				errorMessage = `Your balance is insufficient to place this bet.\nAvailable balance: \`$${apiError.error.balance}\``
-				break
+		try {
+			// Make the API request to cancel the bet
+			const response = await this.axiosKhronosInstance.post(
+				OutgoingEndpoints.paths.bets.cancel,
+				{
+					userid,
+					betid: betId,
+				},
+			)
+			if (response.data.status === 200) {
+				const cancelledEmbed = new EmbedBuilder()
+					.setTitle(`Bet cancelled! :ticket:`)
+					.setColor(embedColors.success)
+					.setThumbnail(interaction.user.displayAvatarURL())
+					.setFooter({
+						text: helpfooter,
+					})
+				return interaction.followUp({
+					embeds: [cancelledEmbed],
+				})
+			}
+			// Bet cant be found
+			if (response.data.status === 404) {
+				const cantCancelEmb = ErrorEmbeds.invalidRequest(
+					`This bet cannot be cancelled as it does not exist.`,
+				)
+				return interaction.followUp({ embeds: [cantCancelEmb] })
+			}
+			// Case where API says they cannot cancel their bet
+			if (response.data.status === 400) {
+				const cantCancelEmb = ErrorEmbeds.invalidRequest(
+					`This bet cannot be cancelled as the game has already started, or the match has already finished.`,
+				)
+				return interaction.followUp({ embeds: [cantCancelEmb] })
+			}
+		} catch (error) {
+			console.error('Error cancelling bet:', error)
+			// Handle error scenario, e.g., API not reachable or internal server error
+			return new ApiErrorHandler().handle(
+				interaction,
+				error,
+				ApiModules.betting,
+			)
 		}
-		const errEmbed = ErrorEmbeds.betErr(errorMessage)
-		return interaction.followUp({
-			embeds: [errEmbed],
-		})
 	}
 }
