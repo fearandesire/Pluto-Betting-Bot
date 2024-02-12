@@ -3,9 +3,8 @@ import {
 	InteractionHandlerTypes,
 } from '@sapphire/framework'
 import type { StringSelectMenuInteraction } from 'discord.js'
-import { SapDiscClient } from '@pluto-core'
-import { BetslipManager } from '../../utils/api/requests/BetslipsManager.js'
-import { IPendingBetslip } from '../../lib/interfaces/api/bets/betslips.interfaces.js'
+import { BetslipManager } from '../utils/api/requests/bets/BetslipsManager.js'
+import { IPendingBetslip } from '../lib/interfaces/api/bets/betslips.interfaces.js'
 export class MenuHandler extends InteractionHandler {
 	public constructor(
 		ctx: InteractionHandler.LoaderContext,
@@ -21,9 +20,7 @@ export class MenuHandler extends InteractionHandler {
 		if (interaction.customId !== 'select_matchup') return this.none()
 		// Perform an asynchronous operation to fetch pending bet details
 		const pendingBetDetails: IPendingBetslip | null =
-			await new BetslipManager(SapDiscClient).fetchPendingBet(
-				interaction.user.id,
-			)
+			await new BetslipManager().fetchPendingBet(interaction.user.id)
 		if (pendingBetDetails === null) {
 			interaction.reply({
 				content:
@@ -46,7 +43,7 @@ export class MenuHandler extends InteractionHandler {
 		const { interaction, data } = payload
 		const { amount, team } = data
 		const selectedMatchID = interaction.values[0]
-		return new BetslipManager(SapDiscClient).placeBet(interaction, {
+		return new BetslipManager().placeBet(interaction, {
 			team,
 			amount,
 			matchup_id: selectedMatchID,
