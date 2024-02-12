@@ -1,7 +1,7 @@
 import { Command } from '@sapphire/framework'
 import { isPreSzn } from '@pluto-core-config'
 import isInGuild from '../utils/isInGuild.js'
-import { BetslipManager } from '../utils/api/requests/BetslipsManager.js'
+import { BetslipManager } from '../utils/api/requests/bets/BetslipsManager.js'
 
 export class Bet extends Command {
 	constructor(context, options) {
