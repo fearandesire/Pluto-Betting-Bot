@@ -2,6 +2,7 @@ import { Matchup } from '../../../../utils/api/interfaces/interfaces'
 import { IApiResponse } from '../api.interface'
 
 export interface IPendingBetslip {
+	userid: string
 	amount: number
 	team: string
 }

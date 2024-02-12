@@ -5,9 +5,7 @@ import {
 	GuildEmoji,
 	SelectMenuBuilder,
 } from 'discord.js'
-import { AxiosKhronosInstance } from '../../common/axios-config.js'
 import { Matchup } from '../../interfaces/interfaces.js'
-import { OutgoingEndpoints } from '../../common/endpoints.js'
 import {
 	IAPIBetslipPayload,
 	IAPIProcessedBetslip,
@@ -22,13 +20,10 @@ import { helpfooter } from '@pluto-core-config'
 import { ErrorEmbeds } from '../../../errors/global.js'
 import { ApiModules } from '../../../../lib/interfaces/api/api.interface.js'
 import { ApiErrorHandler } from '../../common/ApiErrorHandler.js'
+import KhronosReqHandler from '../../common/KhronosReqHandler'
 
 export class BetslipManager {
-	private readonly axiosKhronosInstance = AxiosKhronosInstance
-
-	constructor() {
-		this.axiosKhronosInstance = AxiosKhronosInstance
-	}
+	constructor(private khronosReqHandler: KhronosReqHandler) {}
 
 	async initialize(
 		interaction: CommandInteraction,
@@ -46,10 +41,7 @@ export class BetslipManager {
 				guild_id,
 			}
 			// Call the API to initialize the bet
-			const response = await this.axiosKhronosInstance.post(
-				OutgoingEndpoints.paths.bets.create, // Ensure this endpoint is for initializing a bet
-				payload,
-			)
+			const response = await this.khronosReqHandler.initBetslip(payload)
 			await console.debug('\u2500'.repeat(30))
 			await console.debug(`API Response (.data) ==>\n`, response.data)
 			if (!response || !response.data) {
@@ -98,18 +90,14 @@ export class BetslipManager {
 
 	async fetchPendingBet(userId: string): Promise<IPendingBetslip | null> {
 		try {
-			const pendingBet = await this.axiosKhronosInstance({
-				method: `get`,
-				url: `${OutgoingEndpoints.paths.bets.pending}`,
-				params: {
-					userid: userId,
-				},
-			})
+			const pendingBet =
+				await this.khronosReqHandler.fetchPendingBet(userId)
 			const { data } = pendingBet || null
 			if (!data) {
 				return null
 			}
 			return {
+				userid: data.userid,
 				amount: data.amount,
 				team: data.team,
 			}
@@ -165,10 +153,8 @@ export class BetslipManager {
 	) {
 		try {
 			// Make the API request to place the bet
-			const response = await this.axiosKhronosInstance.post(
-				OutgoingEndpoints.paths.bets.place,
-				betDetails,
-			)
+			const response =
+				await this.khronosReqHandler.finalizeBetslip(betDetails)
 			if (response.data.statusCode === 200) {
 				const data: IAPIProcessedBetslip = response.data
 				const teamEmoji = (await findEmoji(data.betslip.team)) || ''
@@ -228,13 +214,9 @@ export class BetslipManager {
 		betId: number,
 	) {
 		try {
-			// Make the API request to cancel the bet
-			const response = await this.axiosKhronosInstance.post(
-				OutgoingEndpoints.paths.bets.cancel,
-				{
-					userid,
-					betid: betId,
-				},
+			const response = await this.khronosReqHandler.cancelBet(
+				userid,
+				betId,
 			)
 			if (response.data.status === 200) {
 				const cancelledEmbed = new EmbedBuilder()

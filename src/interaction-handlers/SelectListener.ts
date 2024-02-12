@@ -5,6 +5,7 @@ import {
 import type { StringSelectMenuInteraction } from 'discord.js'
 import { BetslipManager } from '../utils/api/requests/bets/BetslipsManager.js'
 import { IPendingBetslip } from '../lib/interfaces/api/bets/betslips.interfaces.js'
+import KhronosReqHandler from '../utils/api/common/KhronosReqHandler'
 export class MenuHandler extends InteractionHandler {
 	public constructor(
 		ctx: InteractionHandler.LoaderContext,
@@ -18,9 +19,10 @@ export class MenuHandler extends InteractionHandler {
 
 	public override async parse(interaction: StringSelectMenuInteraction) {
 		if (interaction.customId !== 'select_matchup') return this.none()
-		// Perform an asynchronous operation to fetch pending bet details
 		const pendingBetDetails: IPendingBetslip | null =
-			await new BetslipManager().fetchPendingBet(interaction.user.id)
+			await new BetslipManager(new KhronosReqHandler()).fetchPendingBet(
+				interaction.user.id,
+			)
 		if (pendingBetDetails === null) {
 			interaction.reply({
 				content:
@@ -43,10 +45,14 @@ export class MenuHandler extends InteractionHandler {
 		const { interaction, data } = payload
 		const { amount, team } = data
 		const selectedMatchID = interaction.values[0]
-		return new BetslipManager().placeBet(interaction, {
-			team,
-			amount,
-			matchup_id: selectedMatchID,
-		})
+		return new BetslipManager(new KhronosReqHandler()).placeBet(
+			interaction,
+			{
+				userid: interaction.user.id,
+				team,
+				amount,
+				matchup_id: selectedMatchID,
+			},
+		)
 	}
 }
