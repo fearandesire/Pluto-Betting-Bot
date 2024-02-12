@@ -43,7 +43,7 @@ export const isPreSzn = () => {
 }
 
 // ? Embed usage
-const helpfooter = 'Pluto | Dev. by fenixforever'
+const helpfooter = 'dev. by fenixforever'
 
 // ? General Config
 export {
