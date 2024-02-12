@@ -1,4 +1,3 @@
-import { AxiosKhronosInstance } from '../../common/axios-config.js'
 import { CommandInteraction, EmbedBuilder } from 'discord.js'
 import { ApiModules } from '../../../../lib/interfaces/api/api.interface.js'
 import { ApiErrorHandler } from '../../common/ApiErrorHandler.js'
@@ -8,8 +7,6 @@ import { IProfileArgs } from './account-interface'
 import KhronosReqHandler from '../../common/KhronosReqHandler'
 
 export class AccountManager {
-	private readonly axiosKhronosInstance = AxiosKhronosInstance
-
 	constructor(private khronosReqHandler: KhronosReqHandler) {}
 
 	async processClaim(interaction: CommandInteraction) {
