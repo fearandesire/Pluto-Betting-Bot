@@ -27,6 +27,8 @@ export interface ICreateBetslipFull {
 	payout: number
 	betresult: string
 	dateofbet: string
+	opponent?: string
+	dateofmatchup?: string
 }
 
 export interface INewBalance {

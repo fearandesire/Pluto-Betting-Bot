@@ -2,6 +2,9 @@ import { Command } from '@sapphire/framework'
 import { isPreSzn } from '@pluto-core-config'
 import isInGuild from '../utils/isInGuild.js'
 import { BetslipManager } from '../utils/api/requests/bets/BetslipsManager.js'
+import KhronosReqHandler from '../utils/api/common/KhronosReqHandler.js'
+import { BetsCacheService } from '../utils/api/common/bets/BetsCacheService.js'
+import { CacheManager } from '@pluto-redis'
 
 export class Bet extends Command {
 	constructor(context, options) {
@@ -60,7 +63,10 @@ export class Bet extends Command {
 
 		const userid = interaction.user.id
 		try {
-			return new BetslipManager(interaction.client).initialize(
+			return new BetslipManager(
+				new KhronosReqHandler(),
+				new BetsCacheService(new CacheManager()),
+			).initialize(
 				interaction,
 				userid,
 				interaction.options.getString('team'),

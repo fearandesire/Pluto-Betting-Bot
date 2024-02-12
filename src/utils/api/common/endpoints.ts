@@ -38,6 +38,7 @@ export class OutgoingEndpoints {
 		},
 		matches: {
 			getAll: 'matches/all',
+			info: 'matches/info',
 		},
 	}
 }

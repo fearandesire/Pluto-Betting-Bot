@@ -1,5 +1,8 @@
 import {
 	ActionRowBuilder,
+	ButtonBuilder,
+	ButtonInteraction,
+	ButtonStyle,
 	CommandInteraction,
 	EmbedBuilder,
 	GuildEmoji,
@@ -20,10 +23,14 @@ import { helpfooter } from '@pluto-core-config'
 import { ErrorEmbeds } from '../../../errors/global.js'
 import { ApiModules } from '../../../../lib/interfaces/api/api.interface.js'
 import { ApiErrorHandler } from '../../common/ApiErrorHandler.js'
-import KhronosReqHandler from '../../common/KhronosReqHandler'
+import KhronosReqHandler from '../../common/KhronosReqHandler.js'
+import { BetsCacheService } from '../../common/bets/BetsCacheService.js'
 
 export class BetslipManager {
-	constructor(private khronosReqHandler: KhronosReqHandler) {}
+	constructor(
+		private khronosReqHandler: KhronosReqHandler,
+		private betCacheService: BetsCacheService,
+	) {}
 
 	async initialize(
 		interaction: CommandInteraction,
@@ -48,19 +55,23 @@ export class BetslipManager {
 				const errEmb = ErrorEmbeds.internalErr(
 					`Unable to contact the server, please try again later.`,
 				)
-				return interaction.followUp({ embeds: [errEmb] })
+				return interaction.editReply({ embeds: [errEmb] })
 			}
 			if (response.data.statusCode === 200) {
 				const data: IAPIProcessedBetslip = response.data
 				const { betslip } = data
-				const teamEmoji = (await findEmoji(team)) || ''
-				const userAvatar = interaction.user.displayAvatarURL()
-				return this.successfulBetEmbed(
-					interaction,
-					userAvatar,
-					teamEmoji,
+				if (!betslip.dateofmatchup || !betslip.opponent) {
+					const errEmb = ErrorEmbeds.internalErr(
+						`Unable to process bet due to missing required data, please try again later.`,
+					)
+					return interaction.editReply({ embeds: [errEmb] })
+				}
+				await this.betCacheService.cacheUserBet(userId, betslip)
+				return this.presentBetWithPay(interaction, {
 					betslip,
-				)
+					dateofmatchup: betslip.dateofmatchup,
+					opponent: betslip.opponent,
+				})
 			} else if (response.data.statusCode === 202) {
 				const data: IValidatedBetslipData = response.data
 				await this.presentMatchChoices(
@@ -148,7 +159,7 @@ export class BetslipManager {
 	 * @param betDetails
 	 */
 	async placeBet(
-		interaction: CommandInteraction,
+		interaction: CommandInteraction | ButtonInteraction,
 		betDetails: IPendingBetslipFull,
 	) {
 		try {
@@ -187,7 +198,7 @@ export class BetslipManager {
 	}
 
 	async successfulBetEmbed(
-		interaction: CommandInteraction,
+		interaction: CommandInteraction | ButtonInteraction,
 		embedImg: string,
 		teamEmoji: string | GuildEmoji,
 		betslip: IFinalizedBetslip,
@@ -253,5 +264,58 @@ export class BetslipManager {
 				ApiModules.betting,
 			)
 		}
+	}
+
+	/**
+	 * @summary Display embed to the user with a button to confirm or cancel the bet
+	 *
+	 * This method is used when a user has selected a match // or team that has only one match available
+	 * This method will display the bet information along with the potential payout and profit for the user to process it.
+	 * @param interaction
+	 * @param betData
+	 */
+	async presentBetWithPay(
+		interaction: CommandInteraction | ButtonInteraction,
+		betData: {
+			betslip: IFinalizedBetslip
+			dateofmatchup: string
+			opponent: string
+		},
+	) {
+		console.debug({
+			method: this.presentBetWithPay.name,
+			data: {
+				betData,
+			},
+		})
+		const { betslip, dateofmatchup, opponent } = betData
+		const teamEmoji = (await findEmoji(betslip.team)) || ''
+		const usersTeam = `${betslip.team} ${teamEmoji}`
+		const oppTeamEmoji = (await findEmoji(opponent)) || ''
+		const oppTeam = `${opponent} ${oppTeamEmoji}`
+		const embed = new EmbedBuilder()
+			.setTitle('Pending Betslip')
+			.setDescription(
+				`${usersTeam} *vs.* ${oppTeam} | ${dateofmatchup}\n**Team:** ${betslip.team}\n**Bet:** ${betslip.amount}\n**Payout:** **\`$${betslip.payout}\`**\n**Profit:** **\`$${betslip.profit}\`**
+				Confirm your bet via the buttons below`,
+			)
+			.setColor(embedColors.PlutoYellow)
+			.setFooter({
+				text: helpfooter,
+			})
+		const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+			new ButtonBuilder()
+				.setCustomId('matchup_btn_confirm')
+				.setLabel('Confirm Bet')
+				.setStyle(ButtonStyle.Success),
+			new ButtonBuilder()
+				.setCustomId('matchup_btn_cancel')
+				.setLabel('Cancel Bet')
+				.setStyle(ButtonStyle.Danger),
+		)
+		await interaction.editReply({
+			embeds: [embed],
+			components: [actionRow],
+		})
 	}
 }

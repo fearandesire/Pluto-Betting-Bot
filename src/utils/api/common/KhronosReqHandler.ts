@@ -53,4 +53,11 @@ export default class KhronosReqHandler {
 			url: `${OutgoingEndpoints.paths.accounts.getProfile}/${userId}`,
 		})
 	}
+
+	async getMatchInfo(matchId: string) {
+		return this.khronosAxios({
+			method: 'get',
+			url: `${OutgoingEndpoints.paths.matches.info}/${matchId}`,
+		})
+	}
 }

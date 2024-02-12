@@ -1,21 +1,18 @@
 import { format } from 'date-fns'
 import PlutoLogger from '@pluto-logger'
 import redisCache from './redisInstance.js'
+import Redis from 'ioredis'
 
 export class CacheManager {
-	/**
-	 * Creates a new `CacheManager` instance.
-	 * @param {string} item - The cache key for the item to be cached.
-	 */
+	cache: Redis
+
 	constructor() {
 		this.cache = redisCache
 	}
 
-	async set(key, data, TTL) {
+	async set(key: string, data: unknown, TTL?: number) {
 		if (!key) {
-			throw new Error(
-				'No key was provided to save into cache',
-			)
+			throw new Error('No key was provided to save into cache')
 		}
 		const MAX_EXPIRATION = 1800 // Default: 30 Minutes
 		await this.cache.set(
@@ -27,11 +24,9 @@ export class CacheManager {
 		return true
 	}
 
-	async get(key) {
+	async get(key: string) {
 		if (!key) {
-			throw new Error(
-				'No key was provided to save into cache',
-			)
+			throw new Error('No key was provided to save into cache')
 		}
 		const item = await this.cache.get(key)
 		if (!item) {
@@ -42,13 +37,8 @@ export class CacheManager {
 
 	async getTodaysGames() {
 		const currentDate = new Date()
-		const formattedDate = format(
-			currentDate,
-			'yyyy-MM-dd',
-		)
-		const todaysGames = await this.cache.get(
-			formattedDate,
-		)
+		const formattedDate = format(currentDate, 'yyyy-MM-dd')
+		const todaysGames = await this.cache.get(formattedDate)
 		if (!todaysGames) {
 			return false
 		}
@@ -61,7 +51,7 @@ export class CacheManager {
 	 * @param {string} key
 	 *
 	 */
-	async remove(key) {
+	async remove(key: string) {
 		await this.cache.del(key, async (err) => {
 			if (err) {
 				await PlutoLogger.log({
@@ -78,7 +68,7 @@ export class CacheManager {
 	 * Clears all cached data.
 	 */
 	async clear() {
-		await this.cache.flushAll()
+		await this.cache.flushall()
 		return true
 	}
 }
