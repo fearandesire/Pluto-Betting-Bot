@@ -16,10 +16,16 @@ export class Endpoints {
 
 export class OutgoingEndpoints {
 	static readonly paths = {
+		accounts: {
+			getBalance: 'accounts/balance',
+			getProfile: 'accounts/profile',
+			dailyClaim: 'accounts/dailyclaim/claim',
+		},
 		bets: {
 			create: 'betslips/create', // Initalize
 			pending: `betslips/pending`,
 			place: `betslips/place`, // Finalizes & stores - If there's only one matchup, this can be used.
+			cancel: `betslips/cancel`,
 		},
 		game_schedule: 'discord/config/type',
 		categories: {
