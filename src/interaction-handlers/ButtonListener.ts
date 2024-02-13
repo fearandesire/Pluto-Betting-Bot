@@ -9,7 +9,11 @@ import { btnIds } from '../lib/interfaces/interaction-handlers/interaction-handl
 import { BetsCacheService } from '../utils/api/common/bets/BetsCacheService.js'
 import { CacheManager } from '@pluto-redis'
 import MatchCacheService from '../utils/api/routes/cache/MatchCacheService.js'
+import { isFinalizedBetslip } from '../lib/interfaces/api/bets/betslips.interfaces.js'
 
+/**
+ * @module ButtonListener
+ */
 export class ButtonHandler extends InteractionHandler {
 	public constructor(
 		ctx: InteractionHandler.LoaderContext,
@@ -48,7 +52,7 @@ export class ButtonHandler extends InteractionHandler {
 				new CacheManager(),
 			).getUserBet(interaction.user.id)
 
-			if (!cachedBet) {
+			if (!cachedBet || !isFinalizedBetslip(cachedBet)) {
 				console.error({
 					method: this.constructor.name,
 					message: 'Cached bet not found',
@@ -102,7 +106,10 @@ export class ButtonHandler extends InteractionHandler {
 			return new BetslipManager(
 				new KhronosReqHandler(),
 				new BetsCacheService(new CacheManager()),
-			).placeBet(interaction, betData.betslip)
+			).placeBet(interaction, betData.betslip, {
+				dateofmatchup,
+				opponent,
+			})
 		} else {
 			return
 		}

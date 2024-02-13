@@ -1,5 +1,8 @@
 import { CacheManager } from '@pluto-redis'
-import { IFinalizedBetslip } from '../../../../lib/interfaces/api/bets/betslips.interfaces' // Assuming a generic CacheManager interface
+import {
+	IFinalizedBetslip,
+	IPendingBetslip,
+} from '../../../../lib/interfaces/api/bets/betslips.interfaces' // Assuming a generic CacheManager interface
 
 export class BetsCacheService {
 	private cachePrefix = 'bets:'
@@ -12,7 +15,9 @@ export class BetsCacheService {
 		console.log(`Cached bet for user ${userId}`)
 	}
 
-	async getUserBet(userId: string): Promise<IFinalizedBetslip | null> {
+	async getUserBet(
+		userId: string,
+	): Promise<IFinalizedBetslip | IPendingBetslip | null> {
 		const cacheKey = this.cachePrefix + userId
 		const betData = await this.cache.get(cacheKey)
 		return betData || null

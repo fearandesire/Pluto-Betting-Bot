@@ -8,7 +8,7 @@ import {
 	GuildEmoji,
 	SelectMenuBuilder,
 } from 'discord.js'
-import { Matchup } from '../../interfaces/interfaces.js'
+import { ApiMatchInfo, Matchup } from '../../interfaces/interfaces.js'
 import {
 	IAPIBetslipPayload,
 	IAPIProcessedBetslip,
@@ -25,7 +25,16 @@ import { ApiModules } from '../../../../lib/interfaces/api/api.interface.js'
 import { ApiErrorHandler } from '../../common/ApiErrorHandler.js'
 import KhronosReqHandler from '../../common/KhronosReqHandler.js'
 import { BetsCacheService } from '../../common/bets/BetsCacheService.js'
+import { selectMenuIds } from '../../../../lib/interfaces/interaction-handlers/interaction-handlers.interface.js'
+import MoneyFormatter from '../../common/money-formatting/money-format'
 
+/**
+ * Manages betslips / betting process
+ *
+ * Some info to know:
+ * - `dateofmatchup` and `opponenet` are provided if there's only one match available - directly in the `betslip` object from Khronos API
+ *
+ */
 export class BetslipManager {
 	constructor(
 		private khronosReqHandler: KhronosReqHandler,
@@ -69,20 +78,22 @@ export class BetslipManager {
 				await this.betCacheService.cacheUserBet(userId, betslip)
 				return this.presentBetWithPay(interaction, {
 					betslip,
-					dateofmatchup: betslip.dateofmatchup,
-					opponent: betslip.opponent,
+					payData: {
+						payout: betslip.payout,
+						profit: betslip.profit,
+					},
+					apiInfo: {
+						opponent: betslip.opponent,
+						dateofmatchup: betslip.dateofmatchup,
+					},
 				})
 			} else if (response.data.statusCode === 202) {
 				const data: IValidatedBetslipData = response.data
+				await this.betCacheService.cacheUserBet(userId, data.betslip)
 				await this.presentMatchChoices(
 					interaction,
 					data.matchupsForTeam,
 				)
-				await interaction.followUp({
-					content:
-						'Your bet is being processed. Please wait for confirmation.',
-					ephemeral: true,
-				})
 			} else {
 				const errEmb = ErrorEmbeds.internalErr(
 					`An unknown error occured, please try again later.`,
@@ -125,19 +136,19 @@ export class BetslipManager {
 		const embed = new EmbedBuilder()
 			.setTitle('Select a Matchup')
 			.setDescription('Choose which game you want to bet on:')
-			.setColor(embedColors.yellow)
+			.setColor(embedColors.PlutoYellow)
 			.setFooter({
 				text: helpfooter,
 			})
 
 		const selectMenu = new SelectMenuBuilder()
-			.setCustomId('select_matchup')
+			.setCustomId(selectMenuIds.matchup_select_team)
 			.setPlaceholder('Choose a matchup')
 			.addOptions(
 				matchups.map((match) => ({
 					label: `${match.away_team} vs ${match.home_team}`,
 					description: match.dateofmatchup,
-					value: match.id.toString(),
+					value: match.id,
 				})),
 			)
 
@@ -154,13 +165,15 @@ export class BetslipManager {
 	/**
 	 * Placees a bet on a match
 	 * Used for 'finalizing' a bet - not to initialize one.
-	 * Called via `SelectListener`.
-	 * @param interaction
-	 * @param betDetails
+	 * Called after user confirmation from ButtonListener event
+	 * @param interaction - Interaction to respond to
+	 * @param betDetails - Details of the bet
+	 * @param apiInfo - Optional -- Data about the match, or additional data to include
 	 */
 	async placeBet(
 		interaction: CommandInteraction | ButtonInteraction,
 		betDetails: IPendingBetslipFull,
+		apiInfo: ApiMatchInfo,
 	) {
 		try {
 			// Make the API request to place the bet
@@ -169,12 +182,17 @@ export class BetslipManager {
 			if (response.data.statusCode === 200) {
 				const data: IAPIProcessedBetslip = response.data
 				const teamEmoji = (await findEmoji(data.betslip.team)) || ''
+				const oppEmoji = (await findEmoji(apiInfo.opponent)) || ''
 				// Handle successful bet placement
 				await this.successfulBetEmbed(
 					interaction,
 					interaction.user.displayAvatarURL(),
-					teamEmoji,
+					{
+						betOnTeam: teamEmoji,
+						opponent: oppEmoji,
+					},
 					data.betslip,
+					apiInfo,
 				)
 			} else {
 				// Handle unexpected API response
@@ -200,14 +218,26 @@ export class BetslipManager {
 	async successfulBetEmbed(
 		interaction: CommandInteraction | ButtonInteraction,
 		embedImg: string,
-		teamEmoji: string | GuildEmoji,
+		teamEmojis: {
+			betOnTeam: string | GuildEmoji
+			opponent: string | GuildEmoji
+		},
 		betslip: IFinalizedBetslip,
+		apiInfo: ApiMatchInfo,
 	) {
+		const betTeamFull = `${betslip.team} ${teamEmojis.betOnTeam}`
+		const oppTeamFull = `${apiInfo.opponent} ${teamEmojis.opponent}`
+
+		const { bet, profit, payout } = await this.formatAmounts({
+			bet: betslip.amount,
+			profit: betslip.profit,
+			payout: betslip.payout,
+		})
 		// Bet is placed, just need to inform the user
 		const successEmbed = new EmbedBuilder()
 			.setTitle(`Bet confirmed! :ticket:`)
 			.setDescription(
-				`## **__Betslip__**\n**${betslip.team}** ${teamEmoji}\n**Bet:** **\`$${betslip.amount}\`**\n**Profit:** **\`$${betslip.profit}\`** ➞ **Payout:** **\`$${betslip.payout}\`**\n\n*View more commands via \`/commands\`*\n*Betslip ID: \`${betslip.betid}\`*`,
+				`## Match\n**${betTeamFull}** *vs* **${oppTeamFull}\n**Date:** ${apiInfo.dateofmatchup}\n**## **__Betslip__**\n**${betTeamFull}\n**Bet:** **\`${bet}\`**\n**Profit:** **\`${profit}\`**\n**Payout:** **\`${payout}\`**\n\n*View more commands via \`/commands\`*\n*Betslip ID: \`${betslip.betid}\`*`,
 			)
 			.setColor(embedColors.success)
 			.setThumbnail(embedImg)
@@ -277,9 +307,9 @@ export class BetslipManager {
 	async presentBetWithPay(
 		interaction: CommandInteraction | ButtonInteraction,
 		betData: {
-			betslip: IFinalizedBetslip
-			dateofmatchup: string
-			opponent: string
+			betslip: IFinalizedBetslip | IPendingBetslip
+			payData: { payout: number; profit: number }
+			apiInfo: ApiMatchInfo
 		},
 	) {
 		console.debug({
@@ -288,15 +318,22 @@ export class BetslipManager {
 				betData,
 			},
 		})
-		const { betslip, dateofmatchup, opponent } = betData
+		const { betslip } = betData
+		const { opponent, dateofmatchup } = betData.apiInfo
 		const teamEmoji = (await findEmoji(betslip.team)) || ''
 		const usersTeam = `${betslip.team} ${teamEmoji}`
 		const oppTeamEmoji = (await findEmoji(opponent)) || ''
 		const oppTeam = `${opponent} ${oppTeamEmoji}`
+		const { bet, profit, payout } = await this.formatAmounts({
+			bet: betslip.amount,
+			profit: betData.payData.profit,
+			payout: betData.payData.payout,
+		})
+
 		const embed = new EmbedBuilder()
 			.setTitle('Pending Betslip')
 			.setDescription(
-				`${usersTeam} *vs.* ${oppTeam} | ${dateofmatchup}\n**Team:** ${betslip.team}\n**Bet:** ${betslip.amount}\n**Payout:** **\`$${betslip.payout}\`**\n**Profit:** **\`$${betslip.profit}\`**
+				`## __Match__\n${usersTeam} *vs.* ${oppTeam}\n**Date:** ${dateofmatchup}\n**Team:** ${betslip.team}\n## __Betslip__\n**Bet:** ${bet}\n**Payout:** **\`${payout}\`**\n**Profit:** **\`${profit}\`**
 				Confirm your bet via the buttons below`,
 			)
 			.setColor(embedColors.PlutoYellow)
@@ -317,5 +354,17 @@ export class BetslipManager {
 			embeds: [embed],
 			components: [actionRow],
 		})
+	}
+
+	async formatAmounts(bettingNumbers: { [key: string]: number }) {
+		const bet = MoneyFormatter.toUSD(bettingNumbers.amount)
+		const payout = MoneyFormatter.toUSD(bettingNumbers.payout)
+		const profit = MoneyFormatter.toUSD(bettingNumbers.profit)
+
+		return {
+			bet,
+			payout,
+			profit,
+		}
 	}
 }

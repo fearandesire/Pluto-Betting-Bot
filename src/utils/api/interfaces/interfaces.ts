@@ -1,3 +1,11 @@
+/**
+ * Supply additional information such as match opponent, date of matchup
+ */
+export interface ApiMatchInfo {
+	opponent: string
+	dateofmatchup: string
+}
+
 export enum SportsServing {
 	nba = 'nba',
 	nfl = 'nfl',

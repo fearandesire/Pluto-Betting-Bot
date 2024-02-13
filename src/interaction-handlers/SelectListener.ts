@@ -3,9 +3,16 @@ import {
 	InteractionHandlerTypes,
 } from '@sapphire/framework'
 import type { StringSelectMenuInteraction } from 'discord.js'
+import { CacheManager } from '@pluto-redis'
+import { ErrorEmbeds } from '../utils/errors/global.js'
+import BetUtils from '../utils/api/common/bets/BetUtils.js'
+import { BetsCacheService } from '../utils/api/common/bets/BetsCacheService.js'
+import { isPendingBetslip } from '../lib/interfaces/api/bets/betslips-identify.js'
+import { ButtonInteraction } from 'discord.js'
+import KhronosReqHandler from '../utils/api/common/KhronosReqHandler.js'
 import { BetslipManager } from '../utils/api/requests/bets/BetslipsManager.js'
-import { IPendingBetslip } from '../lib/interfaces/api/bets/betslips.interfaces.js'
-import KhronosReqHandler from '../utils/api/common/KhronosReqHandler'
+import { selectMenuIds } from '../lib/interfaces/interaction-handlers/interaction-handlers.interface.js'
+import MatchCacheService from '../utils/api/routes/cache/MatchCacheService.js'
 export class MenuHandler extends InteractionHandler {
 	public constructor(
 		ctx: InteractionHandler.LoaderContext,
@@ -17,42 +24,98 @@ export class MenuHandler extends InteractionHandler {
 		})
 	}
 
+	/**
+	 * For when there is more than one match, we will use a select menu for the user.
+	 * After selection, we collect necessary information to place the bet
+	 * This includes:
+	 * - Profit & Payout
+	 * - Match Details: Date, Opponent, ID
+	 *
+	 * The users bet is saved into cache again with the updated information
+	 * This is required for the next interaction in the betting process
+	 * Where the user will be asked to confirm, or cancel the bet --
+	 * @see [ButtonListener]{@link ./ButtonListener.ts}
+	 * @param interaction
+	 */
+
 	public override async parse(interaction: StringSelectMenuInteraction) {
-		if (interaction.customId !== 'select_matchup') return this.none()
-		const pendingBetDetails: IPendingBetslip | null =
-			await new BetslipManager(new KhronosReqHandler()).fetchPendingBet(
-				interaction.user.id,
-			)
-		if (pendingBetDetails === null) {
-			interaction.reply({
-				content:
-					'An error occurred when collecting your initial betslip details.',
+		const allSelectMenuIds = Object.values(selectMenuIds)
+		if (!allSelectMenuIds.includes(interaction.customId as selectMenuIds)) {
+			return this.none()
+		}
+		await interaction.deferReply()
+		const selectedMatchId = interaction.values[0]
+		// Get match details
+		const matchDetails = await new MatchCacheService(
+			new CacheManager(),
+		).getMatch(selectedMatchId)
+
+		if (!matchDetails) {
+			await interaction.editReply({
+				embeds: [
+					ErrorEmbeds.internalErr(
+						`Due to an internal error, the match data selected is not available. Please try again later.`,
+					),
+				],
 			})
 			return this.none()
 		}
+		const betsCacheService = new BetsCacheService(new CacheManager())
+		// Get cached bet
+		const cachedBet = await betsCacheService.getUserBet(interaction.user.id)
+		if (!cachedBet || !isPendingBetslip(cachedBet)) {
+			await interaction.editReply({
+				embeds: [
+					ErrorEmbeds.internalErr(
+						`Due to an internal error, your initial bet data was not found. Please try again later.`,
+					),
+				],
+			})
+			return this.none()
+		}
+		// Collect odds for the selected team
+		const { selectedOdds } = await BetUtils.getOddsForTeam(
+			cachedBet.team,
+			matchDetails,
+		)
+		// Calculate Odds for the match based on the team
+		const { profit, payout } = BetUtils.calculateProfitAndPayout(
+			cachedBet.amount,
+			selectedOdds,
+		)
+		await betsCacheService.cacheUserBet(interaction.user.id, {
+			...cachedBet,
+			matchup_id: selectedMatchId,
+			profit,
+			payout,
+		})
+		const opponent = await BetUtils.identifyOpponent(
+			matchDetails,
+			cachedBet.team,
+		)
 		return this.some({
-			interaction,
-			action: {
-				type: `select`,
-				id: `select_matchup`,
-			},
-			data: pendingBetDetails,
+			betslip: cachedBet,
+			payData: { payout, profit },
+			dateofmatchup: matchDetails.dateofmatchup,
+			opponent,
 		})
 	}
 
-	public override async run(payload: any) {
-		if (payload.action.type !== 'select') return
-		const { interaction, data } = payload
-		const { amount, team } = data
-		const selectedMatchID = interaction.values[0]
-		return new BetslipManager(new KhronosReqHandler()).placeBet(
-			interaction,
-			{
-				userid: interaction.user.id,
-				team,
-				amount,
-				matchup_id: selectedMatchID,
+	public async run(interaction: ButtonInteraction, payload: any) {
+		if (interaction.customId !== selectMenuIds.matchup_select_team) {
+			return
+		}
+		const { betslip, dateofmatchup, opponent, payData } = payload
+		return new BetslipManager(
+			new KhronosReqHandler(),
+			new BetsCacheService(new CacheManager()),
+		).presentBetWithPay(interaction, {
+			betslip,
+			payData,
+			apiInfo: {
+				dateofmatchup,
+				opponent,
 			},
-		)
+		})
 	}
 }

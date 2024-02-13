@@ -57,6 +57,7 @@ export interface IAPIProcessedBetslip extends IApiResponse {
 export interface IValidatedBetslipData extends IApiResponse {
 	chosenTeam: string
 	matchupsForTeam: Matchup[]
+	betslip: IPendingBetslip
 }
 
 export function isFinalizedBetslip(payload: any): payload is IFinalizedBetslip {
