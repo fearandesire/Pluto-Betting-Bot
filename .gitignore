@@ -178,4 +178,4 @@ lib/imgs/nba-logo-wide.png
 # More IDE Settings
 .idea/
 .fleet/!/.swm/channel-management.4macueny.sw.md
-n!/ecosystem.config.js
+ecosystem.config.js
