@@ -3,22 +3,19 @@ import _ from 'lodash'
 
 export default class GuiltUtils {
 	static async findEmoji(name) {
-		const searchFor = await parseNameForEmoji(
-			name.toLowerCase(),
-		)
-		const emojis = await SapDiscClient.emojis.cache
+		const searchFor = await parseNameForEmoji(name.toLowerCase())
+		const emojiCache = await SapDiscClient.emojis.cache
 
 		// First, try to find an exact match
-		const exactMatch = await emojis.find(
-			(emoji) =>
-				emoji.name.toLowerCase() === searchFor,
+		const exactMatch = await emojiCache.find(
+			(emoji) => emoji.name.toLowerCase() === searchFor,
 		)
 		if (exactMatch) {
 			return exactMatch
 		}
 
 		// If no exact match, find the first partial match
-		const partialMatch = await emojis.find((emoji) =>
+		const partialMatch = await emojiCache.find((emoji) =>
 			emoji.name.toLowerCase().includes(searchFor),
 		)
 		return partialMatch || null
@@ -35,9 +32,7 @@ export default class GuiltUtils {
 	async getChanViaGuild(args) {
 		const { guildId, guild, chanId } = args || null
 		if (guildId) {
-			const fetchedGuild = await this.getGuild(
-				guildId,
-			)
+			const fetchedGuild = await this.getGuild(guildId)
 			if (!fetchedGuild) {
 				throw new Error('Guild not found')
 			}

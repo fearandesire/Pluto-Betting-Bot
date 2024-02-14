@@ -53,7 +53,6 @@ export default class GameSchedule {
 		games: IMatchupAggregated[],
 		rows: IConfigRow[],
 	) {
-		console.log(sport)
 		// Fetch the schedule, format it
 		const gamesStr = await this.parseAndFormat(games)
 		const { scheduleEmbed } = await this.createScheduleEmbed(gamesStr)
@@ -86,7 +85,6 @@ export default class GameSchedule {
 				break
 			}
 		}
-
 		return scheduleStr
 	}
 
@@ -122,20 +120,26 @@ export default class GameSchedule {
 
 	/**
 	 * @summary Formats the string for a matchup
-	 * 
+	 *
 	 * 	The goal formatted text is:
 	`Away Team (record) at Home Team (record) @ 8:00 PM (legibletime)
 	`
 	 *
 	 */
 	async formatForSchedule(game: IMatchupAggregated) {
+		const sportEmojis: { [key: string]: string } = {
+			nba: '🏀',
+			nfl: '🏈',
+		}
 		const [homeTeamShort, awayTeamShort] = [
 			game.home_team,
 			game.away_team,
 		].map((name) => name.split(' ').pop())
 		const [homeTeamEmoji, awayTeamEmoji] = await Promise.all([
-			GuiltUtils.findEmoji(game.home_team),
-			GuiltUtils.findEmoji(game.away_team),
+			GuiltUtils.findEmoji(game.home_team) ||
+				sportEmojis[game.sport_title.toLowerCase()],
+			GuiltUtils.findEmoji(game.away_team) ||
+				sportEmojis[game.sport_title.toLowerCase()],
 		])
 
 		const unixTimestamp = Math.floor(
