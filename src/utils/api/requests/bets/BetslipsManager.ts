@@ -30,10 +30,8 @@ import MoneyFormatter from '../../common/money-formatting/money-format'
 
 /**
  * Manages betslips / betting process
- *
  * Some info to know:
  * - `dateofmatchup` and `opponenet` are provided if there's only one match available - directly in the `betslip` object from Khronos API
- *
  */
 export class BetslipManager {
 	constructor(

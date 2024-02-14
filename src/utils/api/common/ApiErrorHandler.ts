@@ -17,10 +17,13 @@ export class ApiErrorHandler {
 		let errorMessage
 
 		switch (errorType) {
-			case 'AccountNotFound':
-			case 'UnableToFindBalance':
-			case 'ClaimCooldown':
+			case ApiHttpErrorTypes.AccountNotFound:
+			case ApiHttpErrorTypes.UnableToFindBalance:
+			case ApiHttpErrorTypes.ClaimCooldown:
 				errorMessage = apiError.message
+				break
+			case ApiHttpErrorTypes.HasPendingBet:
+				errorMessage = `You have another bet you haven't finished confirming yet.\nPlease finish it before trying to place a new bet.`
 				break
 			case ApiHttpErrorTypes.TeamNotFound:
 				errorMessage =
