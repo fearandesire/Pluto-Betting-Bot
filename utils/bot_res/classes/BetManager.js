@@ -114,7 +114,7 @@ export default class BetManager {
 		return profiles
 	}
 
-	async matchupIdViaBetId(betid) {
+	async matchViaBetId(betid) {
 		const matchup = await db.oneOrNone(
 			`SELECT matchid FROM "${this.BETSLIPS}" WHERE betid = $1`,
 			[betid],
@@ -123,6 +123,13 @@ export default class BetManager {
 	}
 
 	async cancelBet(interaction, userid, betid) {
+		// Collect match Id
+		const match = await this.matchViaBetId(betid)
+		// Ensure game is not live / completed
+		const gameIsLive = await MatchupManager.gameIsLive(match.id)
+		if (gameIsLive === true){
+			return QuickError(interaction, `This game is already in progress, or has already ended.`)
+		}
 		return db.tx('Cancel Bet', async (t) => {
 			const getBetCount = await t.manyOrNone(
 				`SELECT count(*) FROM "${this.BETSLIPS}" WHERE userid = $1`,
