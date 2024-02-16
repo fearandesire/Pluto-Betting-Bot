@@ -138,6 +138,7 @@ export async function newBet(
 	} catch (err) {
 		// eslint-disable-next-line no-console
 		console.error(err)
+		await PendingBetHandler.deletePending(userId)
 		throw err
 	}
 	const activeCheck = await MatchupManager.gameIsLive(
