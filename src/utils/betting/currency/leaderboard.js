@@ -13,9 +13,7 @@ const memberCache = new Map()
 
 export async function leaderboard(interaction) {
 	const lb = await reqLeaderboard()
-	const server = SapDiscClient.guilds.cache.get(
-		`${process.env.server_ID}`,
-	)
+	const server = SapDiscClient.guilds.cache.get(`${process.env.server_ID}`)
 	const interactionUserId = interaction?.user?.id
 
 	const lbArray = []
@@ -37,13 +35,11 @@ export async function leaderboard(interaction) {
 
 		const member = lbMembers.get(lbUserId)
 		if (member) {
-			await memberCache.set(lbUserId, member)
+			memberCache.set(lbUserId, member)
 		}
 
-		const mappedUserCache =
-			(await memberCache.get(lbUserId)) || null
-		const formatId =
-			mappedUserCache?.user?.tag || `<@${lbUserId}>`
+		const mappedUserCache = (await memberCache.get(lbUserId)) || null
+		const formatId = mappedUserCache?.user?.tag || `<@${lbUserId}>`
 
 		const humanIndex = lb.indexOf(lbEntry) + 1
 		const formattedEntry = `**${humanIndex}.** ${formatId}: **\`$${lbUserBal}\`**`
@@ -70,9 +66,7 @@ export async function leaderboard(interaction) {
 	function generateLeaderboardPage(page) {
 		const startIndex = (page - 1) * usersPerPage
 		const endIndex = startIndex + usersPerPage
-		return lbArray
-			.slice(startIndex, endIndex)
-			.join('\n')
+		return lbArray.slice(startIndex, endIndex).join('\n')
 	}
 
 	const embColor = 16760832 // #ffc000
@@ -99,37 +93,27 @@ export async function leaderboard(interaction) {
 	const emojis = ['⬅️', '➡️']
 
 	// Add reactions to the message
-	await Promise.all(
-		emojis.map((emoji) => msg.react(emoji)),
-	)
+	await Promise.all(emojis.map((emoji) => msg.react(emoji)))
 
 	// Create a filter to listen for reactions
 	const filter = (reaction, user) =>
-		emojis.includes(reaction.emoji.name) &&
-		user.id === interactionUserId
+		emojis.includes(reaction.emoji.name) && user.id === interactionUserId
 
 	// Create a collector for reactions
 	const collector = msg.createReactionCollector(filter)
 
 	collector.on('collect', async (reaction) => {
-		if (
-			reaction.emoji.name === '⬅️' &&
-			currentPage > 1
-		) {
+		if (reaction.emoji.name === '⬅️' && currentPage > 1) {
 			// Move to the previous page
 			currentPage -= 1
-		} else if (
-			reaction.emoji.name === '➡️' &&
-			currentPage < pages
-		) {
+		} else if (reaction.emoji.name === '➡️' && currentPage < pages) {
 			// Move to the next page
 			currentPage += 1
 		}
 
 		// Update the embed with the new page
 		embObj.title = `🏆 Betting Leaderboard | Page ${currentPage}`
-		embObj.description =
-			generateLeaderboardPage(currentPage)
+		embObj.description = generateLeaderboardPage(currentPage)
 		embObj.footer = {
 			text: `You are currently position #${usersIndex} on the Leaderboard! | Page ${currentPage}`,
 		}
