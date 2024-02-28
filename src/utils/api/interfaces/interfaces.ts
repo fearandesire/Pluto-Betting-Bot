@@ -1,7 +1,7 @@
 /**
  * Supply additional information such as match opponent, date of matchup
  */
-export interface ApiMatchInfo {
+export interface IMatchInfoArgs {
 	opponent: string
 	dateofmatchup: string
 }
