@@ -1,35 +1,47 @@
 import { SapDiscClient } from '@pluto-core'
 import _ from 'lodash'
+import { Guild } from 'discord.js'
 
-export default class GuiltUtils {
-	static async findEmoji(name) {
+export default class GuildUtils {
+	static async findEmoji(name: string) {
 		const searchFor = await parseNameForEmoji(name.toLowerCase())
-		const emojiCache = await SapDiscClient.emojis.cache
+		const emojiCache = SapDiscClient.emojis.cache
 
 		// First, try to find an exact match
 		const exactMatch = await emojiCache.find(
-			(emoji) => emoji.name.toLowerCase() === searchFor,
+			(emoji) => emoji.name && emoji.name.toLowerCase() === searchFor,
 		)
 		if (exactMatch) {
 			return exactMatch
 		}
 
 		// If no exact match, find the first partial match
-		const partialMatch = await emojiCache.find((emoji) =>
-			emoji.name.toLowerCase().includes(searchFor),
+		const partialMatch = await emojiCache.find(
+			(emoji) =>
+				emoji.name &&
+				searchFor &&
+				emoji.name.toLowerCase().includes(searchFor),
 		)
-		return partialMatch || null
+		return partialMatch ?? null
 	}
 
-	async getGuild(guildId) {
+	async getGuild(guildId: string) {
 		return SapDiscClient.guilds.cache.get(guildId)
 	}
 
-	async getChan(guild, chanId) {
+	async getChan(guild: Guild, chanId: string) {
 		return guild.channels.cache.get(chanId)
 	}
 
-	async getChanViaGuild(args) {
+	async getUser(guild: Guild, userId: string) {
+		return guild.members.cache.get(userId)
+	}
+
+	async getChanViaGuild(args: {
+		guildId?: string
+		guild?: Guild
+		chanId: string
+	}) {
 		const { guildId, guild, chanId } = args || null
 		if (guildId) {
 			const fetchedGuild = await this.getGuild(guildId)
@@ -44,7 +56,7 @@ export default class GuiltUtils {
 	}
 }
 
-async function parseNameForEmoji(name) {
+async function parseNameForEmoji(name: string) {
 	if (name.includes(' ')) {
 		return _.last(_.split(name, ' '))
 	}
