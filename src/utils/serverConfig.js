@@ -68,16 +68,8 @@ const serverEnv = {
 
 const {
 	// DB Tables
-	ODDS,
-	SCORE,
-	RANGES,
-	PENDING,
 	BETSLIPS,
 	CURRENCY,
-	PROFILES,
-	LIVEMATCHUPS,
-	SCORETABLE,
-	LIVEBETS,
 	// IDs
 	server_ID,
 	gameCat_ID,
@@ -97,27 +89,13 @@ const {
 } = serverEnv
 
 export {
-	ODDS,
-	SCORE,
-	RANGES,
-	PENDING,
 	BETSLIPS,
 	CURRENCY,
-	PROFILES,
-	LIVEMATCHUPS,
-	SCORETABLE,
-	LIVEBETS,
-	EXPERIENCE,
 	server_ID,
 	gameCat_ID,
-	sportsLogo,
 	bettingChan,
 	logChan,
-	statcordKey,
 	gameHeartbeat,
-	scheduledGames,
-	getRanges,
-	getOdds,
 	SPORT,
 	R_HOST,
 	R_PORT,

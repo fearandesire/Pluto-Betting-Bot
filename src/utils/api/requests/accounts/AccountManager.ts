@@ -8,7 +8,7 @@ import {
 	KH_API_CONFIG,
 } from '../../Khronos/KhronosInstances.js'
 import _ from 'lodash'
-import GuildUtils from '../../utils/GuildUtils.js'
+import GuildUtils from '../../../guilds/GuildUtils.js'
 import EmbedsSuccess from '../../../embeds/template/success-template.js'
 import MoneyFormatter from '../../common/money-formatting/money-format.js'
 

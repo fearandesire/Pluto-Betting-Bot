@@ -1,6 +1,6 @@
 import { ColorResolvable, EmbedBuilder, TextChannel } from 'discord.js'
 import embedColors from '../../../../lib/colorsConfig.js'
-import GuildUtils from '../../utils/GuildUtils.js'
+import GuildUtils from '../../../guilds/GuildUtils.js'
 import {
 	IConfigRow,
 	IMatchupAggregated,

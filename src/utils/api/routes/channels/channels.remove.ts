@@ -1,6 +1,6 @@
 import Router from 'koa-router'
 import _ from 'lodash'
-import ChannelManager from '../../../channels/ChannelManager'
+import ChannelManager from '../../../guilds/channels/ChannelManager'
 import PlutoLogger from '@pluto-logger'
 
 const removeChannelsRouter: Router = new Router()

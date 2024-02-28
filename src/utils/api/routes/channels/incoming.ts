@@ -4,7 +4,7 @@
  */
 
 import Router from 'koa-router'
-import ChannelManager from '../../../channels/ChannelManager.js'
+import ChannelManager from '../../../guilds/channels/ChannelManager.js'
 import PlutoLogger from '@pluto-logger'
 
 const incomingChannelsRouter = new Router()

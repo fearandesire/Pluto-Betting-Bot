@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { pluto_api_url } from '../../serverConfig.js'
+import { pluto_api_url } from '@pluto-server-config'
 
 export async function getCategories() {
 	try {

@@ -6,7 +6,7 @@ export class Endpoints {
 		},
 		channels: {
 			incoming: '/channels/incoming',
-			remove: '/channels/remove',
+			remove: '/channels/delete',
 		},
 		schedule: {
 			daily: `/schedule/daily/all`,
