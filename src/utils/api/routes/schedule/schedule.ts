@@ -6,7 +6,7 @@ import {
 	IConfigRow,
 	IMatchupAggregated,
 	SportsServing,
-} from '../../interfaces/interfaces.js'
+} from '../../common/interfaces/interfaces.js'
 
 /**
  * Responsible for incoming requests to post the daily schedule
@@ -21,27 +21,26 @@ interface ScheduleRequestBody {
 
 ScheduleRouter.post('/schedule/daily/all', async (ctx) => {
 	try {
-		const requestBody: ScheduleRequestBody = ctx.request.body as
-			| ScheduleRequestBody
-			| any
+		const requestBody: ScheduleRequestBody = ctx.request
+			.body as ScheduleRequestBody
 		const { aggregatedMatchups, dailyScheduleRows } =
 			await validateAndParseSchedule(requestBody)
 		const gameSchedule = new GameSchedule()
 
 		for (const sport of Object.values(SportsServing)) {
-			await Log.Yellow(`Processing Daily Schedule for ${sport}`)
+			Log.Yellow(`Processing Daily Schedule for ${sport}`)
 			const games = filterGames(aggregatedMatchups, sport)
 			const rows = filterRows(dailyScheduleRows, sport)
 			if (games === null) {
-				await Log.Red(`No games found for ${sport}`)
+				Log.Red(`No games found for ${sport}`)
 				return
 			}
 			if (!rows) {
-				await Log.Red(`No channels found for ${sport}`)
+				Log.Red(`No channels found for ${sport}`)
 				return
 			}
 			await gameSchedule.sendDailyGames(sport, games, rows)
-			await Log.Green(`Successfully sent daily schedule for ${sport}`)
+			Log.Green(`Successfully sent daily schedule for ${sport}`)
 		}
 
 		ctx.body = {
@@ -72,7 +71,7 @@ async function validateAndParseSchedule(
 	body: ScheduleRequestBody,
 ): Promise<ScheduleRequestBody> {
 	const { aggregatedMatchups, dailyScheduleRows } = body
-	await console.log(
+	console.log(
 		`aggregatedMatchups`,
 		aggregatedMatchups,
 		`\n`,

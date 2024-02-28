@@ -1,4 +1,4 @@
-import { Matchup } from '../../interfaces/interfaces.js'
+import { Matchup } from '../interfaces/interfaces.js'
 
 export default class BetUtils {
 	static calculateProfitAndPayout(

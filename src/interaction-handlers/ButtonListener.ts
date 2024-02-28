@@ -11,7 +11,7 @@ import MatchCacheService from '../utils/api/routes/cache/MatchCacheService.js'
 import BetslipWrapper from '../utils/api/Khronos/bets/betslip-wrapper.js'
 import MatchApiWrapper from '../utils/api/Khronos/matches/matchApiWrapper.js'
 import { Match } from '@khronos-index'
-import { ErrorEmbeds } from '../utils/errors/global.js'
+import { ErrorEmbeds } from '../utils/common/errors/global.js'
 
 /**
  * @module ButtonListener

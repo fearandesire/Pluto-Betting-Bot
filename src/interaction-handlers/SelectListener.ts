@@ -5,7 +5,7 @@ import {
 import type { StringSelectMenuInteraction } from 'discord.js'
 import { ButtonInteraction } from 'discord.js'
 import { CacheManager } from '@pluto-redis'
-import { ErrorEmbeds } from '../utils/errors/global.js'
+import { ErrorEmbeds } from '../utils/common/errors/global.js'
 import BetUtils from '../utils/api/common/bets/BetUtils.js'
 import { BetsCacheService } from '../utils/api/common/bets/BetsCacheService.js'
 import { isPendingBetslip } from '../lib/interfaces/api/bets/betslips-identify.js'

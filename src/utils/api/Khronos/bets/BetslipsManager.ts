@@ -7,12 +7,12 @@ import {
 	EmbedBuilder,
 	GuildEmoji,
 } from 'discord.js'
-import { IMatchInfoArgs } from '../../interfaces/interfaces.js'
+import { IMatchInfoArgs } from '../../common/interfaces/interfaces.js'
 import { IAPIBetslipPayload } from '../../../../lib/interfaces/api/bets/betslips.interfaces.js'
 import embedColors from '../../../../lib/colorsConfig.js'
 import { findEmoji } from '../../../bot_res/findEmoji.js'
 import { helpfooter } from '@pluto-core-config'
-import { ErrorEmbeds } from '../../../errors/global.js'
+import { ErrorEmbeds } from '../../../common/errors/global.js'
 import { ApiModules } from '../../../../lib/interfaces/api/api.interface.js'
 import { ApiErrorHandler } from '../error-handling/ApiErrorHandler.js'
 import { BetsCacheService } from '../../common/bets/BetsCacheService.js'
@@ -26,6 +26,7 @@ import {
 	PlacedBetslip,
 } from '@khronos-index'
 
+// TODO Move non-betting methods to their own class
 /**
  * Manages betslips / betting process
  * Some info to know:

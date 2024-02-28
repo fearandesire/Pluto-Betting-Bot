@@ -2,7 +2,7 @@ import {
 	ApiHttpErrorTypes,
 	ApiModules,
 } from '../../../../lib/interfaces/api/api.interface.js'
-import { ErrorEmbeds } from '../../../errors/global.js'
+import { ErrorEmbeds } from '../../../common/errors/global.js'
 import { CommandInteraction } from 'discord.js'
 import { IKhronosErr } from './interface.js'
 

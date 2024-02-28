@@ -1,5 +1,5 @@
 import Router from 'koa-router'
-import { NotifyBetUsers } from '../../interfaces/notifications.js'
+import { NotifyBetUsers } from '../../common/interfaces/notifications.js'
 import NotificationService from './notifications.service.js'
 import { SapDiscClient } from '@pluto-core'
 

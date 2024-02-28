@@ -1,5 +1,5 @@
 import { EmbedBuilder } from 'discord.js'
-import embedColors from '../../lib/colorsConfig.js'
+import embedColors from '../../../lib/colorsConfig.js'
 import { helpfooter } from '@pluto-core-config'
 
 /**

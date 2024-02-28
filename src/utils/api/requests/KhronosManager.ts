@@ -1,4 +1,4 @@
-import { KH_ValidConfigType, Matchup } from '../interfaces/interfaces.js'
+import { KH_ValidConfigType, Matchup } from '../common/interfaces/interfaces.js'
 import { AxiosKhronosInstance } from '../common/axios-config.js'
 import { OutgoingEndpoints } from '../common/endpoints.js'
 

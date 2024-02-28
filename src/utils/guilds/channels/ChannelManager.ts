@@ -13,7 +13,10 @@ import {
 import { pluto_api_url } from '@pluto-server-config'
 import { findEmoji } from '../../bot_res/findEmoji.js'
 import { IChannelAggregated } from '../../api/routes/channels/createchannels.interface.js'
-import { ICategoryData, IConfigRow } from '../../api/interfaces/interfaces.js'
+import {
+	ICategoryData,
+	IConfigRow,
+} from '../../api/common/interfaces/interfaces.js'
 
 interface IPrepareMatchEmbed {
 	favored: string

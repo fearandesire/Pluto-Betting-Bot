@@ -1,8 +1,8 @@
 // Import interfaces and potentially the Discord client type
 import {
-	NotifyBetUsers,
 	BetNotification,
-} from '../../interfaces/notifications.js'
+	NotifyBetUsers,
+} from '../../common/interfaces/notifications.js'
 import { SapphireClient } from '@sapphire/framework'
 
 export default class NotificationService {
