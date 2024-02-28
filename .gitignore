@@ -179,5 +179,9 @@ lib/imgs/nba-logo-wide.png
 .idea/
 .fleet/!/.swm/channel-management.4macueny.sw.md
 ecosystem.config.js
-!/openapi.config.json
-!/ecosystem.config.js
+
+# OpenAPI Config, Spec, etc.
+openapi.config.json
+openapitools.json
+Khronos-Swagger-Spec-v1.json
+src/openapi/**/*

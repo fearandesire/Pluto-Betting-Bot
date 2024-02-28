@@ -1,9 +1,9 @@
 import { ApplyOptions } from '@sapphire/decorators'
 import { Command } from '@sapphire/framework'
-import { BetslipManager } from '../../utils/api/requests/bets/BetslipsManager.js'
-import KhronosReqHandler from '../../utils/api/common/KhronosReqHandler.js'
+import { BetslipManager } from '../../utils/api/Khronos/bets/BetslipsManager.js'
 import { BetsCacheService } from '../../utils/api/common/bets/BetsCacheService.js'
 import { CacheManager } from '@pluto-redis'
+import BetslipWrapper from '../../utils/api/Khronos/bets/betslip-wrapper.js'
 
 @ApplyOptions<Command.Options>({
 	description:
@@ -34,7 +34,7 @@ export class UserCommand extends Command {
 		const userid = interaction.user.id
 		const betId = interaction.options.getInteger('betid')!
 		return new BetslipManager(
-			new KhronosReqHandler(),
+			new BetslipWrapper(),
 			new BetsCacheService(new CacheManager()),
 		).cancelBet(interaction, userid, betId)
 	}

@@ -1,7 +1,10 @@
 import { ApplyOptions } from '@sapphire/decorators'
 import { Command } from '@sapphire/framework'
-import { AccountManager } from '../../utils/api/requests/accounts/AccountManager.js'
-import KhronosReqHandler from '../../utils/api/common/KhronosReqHandler.js'
+import {
+	AccountManager,
+	AccountsWrapper,
+} from '../../utils/api/requests/accounts/AccountManager.js'
+
 @ApplyOptions<Command.Options>({
 	description: '🏦 View the balance of a user',
 })
@@ -30,14 +33,11 @@ export class UserCommand extends Command {
 	) {
 		await interaction.deferReply()
 		const targetUser =
-			interaction.options.getUser('user') || interaction.user
+			interaction.options.getUser('user') ?? interaction.user
 		const targetId = targetUser.id
-		return new AccountManager(new KhronosReqHandler()).fetchProfile(
+		return new AccountManager(new AccountsWrapper()).getBalance(
 			interaction,
-			{
-				targetUserId: targetId,
-				targetUsername: targetUser.username,
-			},
+			targetId,
 		)
 	}
 }
