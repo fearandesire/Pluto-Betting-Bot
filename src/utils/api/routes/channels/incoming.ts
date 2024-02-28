@@ -4,7 +4,7 @@
  */
 
 import Router from 'koa-router'
-import ChannelManager from '../../../db/gameSchedule/ChannelManager.js'
+import ChannelManager from '../../../channels/ChannelManager.js'
 import PlutoLogger from '@pluto-logger'
 
 const incomingChannelsRouter = new Router()
@@ -39,7 +39,7 @@ incomingChannelsRouter.post(`/channels/incoming`, async (ctx: any) => {
 			status: 200,
 		}
 	} catch (error) {
-		await console.log(error)
+		console.log(error)
 		await PlutoLogger.log({
 			id: `api`,
 			description: `Unable to create game channels:\nUnexpected Error`,

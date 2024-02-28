@@ -1,6 +1,6 @@
 import Router from 'koa-router'
 import _ from 'lodash'
-import ChannelManager from '../../../db/gameSchedule/ChannelManager'
+import ChannelManager from '../../../channels/ChannelManager'
 import PlutoLogger from '@pluto-logger'
 
 const removeChannelsRouter: Router = new Router()
@@ -10,7 +10,7 @@ const removeChannelsRouter: Router = new Router()
  * Expecting the incoming data to be an array of strings that are the channel names to search & remove
  * @param {Object} ctx - Context for the incoming HTTP request.
  */
-removeChannelsRouter.post(`/channels/remove`, async (ctx: any) => {
+removeChannelsRouter.post(`/channels/delete`, async (ctx: any) => {
 	try {
 		const { channelNames }: { channelNames: string[] } = ctx.request.body
 		if (channelNames === null) {

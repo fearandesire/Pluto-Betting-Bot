@@ -1,6 +1,6 @@
 import { ApplyOptions } from '@sapphire/decorators'
 import { Command } from '@sapphire/framework'
-import { prepareAndFormat } from '../../utils/matchups/OddsProcessing.js'
+import { prepareAndFormat } from '../../utils/matches/OddsProcessing.js'
 import { QuickError } from '@pluto-embed-reply'
 import GuildWrapper from '../../utils/api/Khronos/guild/guild-wrapper.js'
 import MatchApiWrapper from '../../utils/api/Khronos/matches/matchApiWrapper.js'

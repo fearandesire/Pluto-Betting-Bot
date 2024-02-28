@@ -1,6 +1,6 @@
-import { ColorResolvable, EmbedBuilder } from 'discord.js'
+import { ColorResolvable, EmbedBuilder, TextChannel } from 'discord.js'
 import embedColors from '../../../../lib/colorsConfig.js'
-import GuiltUtils from '../../utils/GuildUtils.js'
+import GuildUtils from '../../utils/GuildUtils.js'
 import {
 	IConfigRow,
 	IMatchupAggregated,
@@ -61,11 +61,16 @@ export default class GameSchedule {
 			const chanId = row.setting_value
 			const guildId = row.guild_id
 			try {
-				const chan = await new GuiltUtils().getChanViaGuild({
+				const chan = await new GuildUtils().getChanViaGuild({
 					guildId,
 					chanId,
 				})
-				await chan.send({ embeds: [scheduleEmbed] })
+				if (!chan) {
+					throw new Error(`Failed to locate channel`)
+				}
+				if (chan instanceof TextChannel) {
+					await chan.send({ embeds: [scheduleEmbed] })
+				}
 			} catch (err) {
 				console.error(err)
 			}
@@ -127,24 +132,37 @@ export default class GameSchedule {
 	 *
 	 */
 	async formatForSchedule(game: IMatchupAggregated) {
+		// Define a mapping of sports to their corresponding emojis
 		const sportEmojis: { [key: string]: string } = {
 			nba: '🏀',
 			nfl: '🏈',
 		}
+
+		// Extract the short names of the home and away teams
 		const [homeTeamShort, awayTeamShort] = [
 			game.home_team,
 			game.away_team,
 		].map((name) => name.split(' ').pop())
-		const [homeTeamEmoji, awayTeamEmoji] = await Promise.all([
-			GuiltUtils.findEmoji(game.home_team) ||
-				sportEmojis[game.sport_title.toLowerCase()],
-			GuiltUtils.findEmoji(game.away_team) ||
-				sportEmojis[game.sport_title.toLowerCase()],
+
+		const homeTeamEmojiPromise = await GuildUtils.findEmoji(game.home_team)
+		const awayTeamEmojiPromise = await GuildUtils.findEmoji(game.away_team)
+
+		const [homeTeamEmojiResult, awayTeamEmojiResult] = await Promise.all([
+			homeTeamEmojiPromise,
+			awayTeamEmojiPromise,
 		])
 
+		// Use the results of the promises, falling back to the sport emoji if necessary
+		const homeTeamEmoji =
+			homeTeamEmojiResult ?? sportEmojis[game.sport_title.toLowerCase()]
+		const awayTeamEmoji =
+			awayTeamEmojiResult ?? sportEmojis[game.sport_title.toLowerCase()]
+
+		// Convert the game's commence time to a Unix timestamp
 		const unixTimestamp = Math.floor(
 			new Date(game.commence_time).getTime() / 1000,
 		)
+		// Build and return the formatted string
 		return `**${awayTeamEmoji} ${awayTeamShort} *(${game.teamRecords[1]})*** *\`at\`* **${homeTeamEmoji} ${homeTeamShort} *(${game.teamRecords[0]})*** @ *<t:${unixTimestamp}:t>*`
 	}
 

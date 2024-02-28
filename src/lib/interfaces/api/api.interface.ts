@@ -4,27 +4,17 @@ export interface IApiResponse {
 	message?: string
 }
 
-export interface IApiHttpError extends IApiResponse {
-	path: string
-	timestamp: string
-	message: string
-	error: {
-		errorName: ApiHttpErrorTypes // Use the enum type here
-		[key: string]: any // Custom properties Khronos sends back, (E.g, `balance`)
-	}
-}
-
 export enum ApiHttpErrorTypes {
-	TeamNotFound = 'TeamNotFound',
-	GameHasStarted = 'GameHasStarted',
-	NoGamesForTeam = 'NoGamesForTeam',
-	DuplicateBetslip = 'DuplicateBetslip',
-	InsufficientBalance = 'InsufficientBalance',
-	InternalError = 'InternalError',
-	AccountNotFound = 'AccountNotFound',
-	UnableToFindBalance = 'UnableToFindBalance',
-	ClaimCooldown = 'ClaimCooldown',
-	HasPendingBet = 'HasPendingBet',
+	TeamNotFound = 'TeamNotFoundException',
+	GameHasStarted = 'GameHasStartedException',
+	NoGamesForTeam = 'NoGamesForTeamException',
+	DuplicateBetslip = 'DuplicateBetslipException',
+	InsufficientBalance = 'InsufficientBalanceException',
+	InternalError = 'InternalErrorException',
+	AccountNotFound = 'AccountNotFoundException',
+	UnableToFindBalance = 'UnableToFindBalanceException',
+	ClaimCooldown = 'ClaimCooldownException',
+	HasPendingBet = 'HasPendingBetException',
 }
 
 export enum ApiModules {

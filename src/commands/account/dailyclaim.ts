@@ -1,7 +1,9 @@
 import { ApplyOptions } from '@sapphire/decorators'
 import { Command } from '@sapphire/framework'
-import { AccountManager } from '../../utils/api/requests/accounts/AccountManager.js'
-import KhronosReqHandler from '../../utils/api/common/KhronosReqHandler.js'
+import {
+	AccountManager,
+	AccountsWrapper,
+} from '../../utils/api/requests/accounts/AccountManager.js'
 
 @ApplyOptions<Command.Options>({
 	description: '💲 Claim $20 dollars every 24 hours.',
@@ -19,8 +21,6 @@ export class UserCommand extends Command {
 		interaction: Command.ChatInputCommandInteraction,
 	) {
 		await interaction.deferReply()
-		return new AccountManager(new KhronosReqHandler()).processClaim(
-			interaction,
-		)
+		return new AccountManager(new AccountsWrapper()).claim(interaction)
 	}
 }

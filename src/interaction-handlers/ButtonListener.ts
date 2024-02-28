@@ -3,13 +3,15 @@ import {
 	InteractionHandlerTypes,
 } from '@sapphire/framework'
 import type { ButtonInteraction } from 'discord.js'
-import { BetslipManager } from '../utils/api/requests/bets/BetslipsManager.js'
-import KhronosReqHandler from '../utils/api/common/KhronosReqHandler.js'
+import { BetslipManager } from '../utils/api/Khronos/bets/BetslipsManager.js'
 import { btnIds } from '../lib/interfaces/interaction-handlers/interaction-handlers.interface.js'
 import { BetsCacheService } from '../utils/api/common/bets/BetsCacheService.js'
 import { CacheManager } from '@pluto-redis'
 import MatchCacheService from '../utils/api/routes/cache/MatchCacheService.js'
-import { isFinalizedBetslip } from '../lib/interfaces/api/bets/betslips.interfaces.js'
+import BetslipWrapper from '../utils/api/Khronos/bets/betslip-wrapper.js'
+import MatchApiWrapper from '../utils/api/Khronos/matches/matchApiWrapper.js'
+import { Match } from '@khronos-index'
+import { ErrorEmbeds } from '../utils/errors/global.js'
 
 /**
  * @module ButtonListener
@@ -52,7 +54,7 @@ export class ButtonHandler extends InteractionHandler {
 				new CacheManager(),
 			).getUserBet(interaction.user.id)
 
-			if (!cachedBet || !isFinalizedBetslip(cachedBet)) {
+			if (!cachedBet) {
 				console.error({
 					method: this.constructor.name,
 					message: 'Cached bet not found',
@@ -62,17 +64,39 @@ export class ButtonHandler extends InteractionHandler {
 				})
 				return this.none()
 			}
-
-			const matchDetails = await new MatchCacheService(
-				new CacheManager(),
-			).getMatch(cachedBet.matchup_id)
+			const matchId = cachedBet.match.id
+			let matchDetails: Match | null | undefined =
+				await new MatchCacheService(new CacheManager()).getMatch(
+					matchId,
+				)
 
 			if (!matchDetails) {
+				// Fallback: Query for matches, find the match via ID in the array
+				const matchesApi = new MatchApiWrapper()
+				const { matches } = await matchesApi.getAllMatches()
+				matchDetails = matches.find((match) => match.id === matchId)
+				if (!matchDetails) {
+					console.error({
+						method: this.constructor.name,
+						message: 'Match not found',
+						data: {
+							matchup_id: matchId,
+						},
+					})
+					await interaction.reply({
+						embeds: [
+							ErrorEmbeds.internalErr(
+								`Unable to locate the match data.`,
+							),
+						],
+					})
+					return this.none()
+				}
 				console.error({
 					method: this.constructor.name,
 					message: 'Match not found',
 					data: {
-						matchId: cachedBet.matchup_id,
+						matchup_id: matchId,
 					},
 				})
 				return this.none()
@@ -97,18 +121,18 @@ export class ButtonHandler extends InteractionHandler {
 				},
 			})
 			const { betslip, matchData } = payload
-			const { dateofmatchup, opponent } = matchData
-			const betData = {
-				betslip,
-				dateofmatchup,
-				opponent,
-			}
+			const matchOpponent = betslip.opponent
+
+			const { dateofmatchup } = matchData
+			const sanitizedBetslip = await new BetsCacheService(
+				new CacheManager(),
+			).sanitize(betslip)
 			return new BetslipManager(
-				new KhronosReqHandler(),
+				new BetslipWrapper(),
 				new BetsCacheService(new CacheManager()),
-			).placeBet(interaction, betData.betslip, {
+			).placeBet(interaction, sanitizedBetslip, {
 				dateofmatchup,
-				opponent,
+				opponent: matchOpponent,
 			})
 		} else {
 			return

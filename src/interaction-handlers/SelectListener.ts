@@ -3,16 +3,17 @@ import {
 	InteractionHandlerTypes,
 } from '@sapphire/framework'
 import type { StringSelectMenuInteraction } from 'discord.js'
+import { ButtonInteraction } from 'discord.js'
 import { CacheManager } from '@pluto-redis'
 import { ErrorEmbeds } from '../utils/errors/global.js'
 import BetUtils from '../utils/api/common/bets/BetUtils.js'
 import { BetsCacheService } from '../utils/api/common/bets/BetsCacheService.js'
 import { isPendingBetslip } from '../lib/interfaces/api/bets/betslips-identify.js'
-import { ButtonInteraction } from 'discord.js'
-import KhronosReqHandler from '../utils/api/common/KhronosReqHandler.js'
-import { BetslipManager } from '../utils/api/requests/bets/BetslipsManager.js'
+import { BetslipManager } from '../utils/api/Khronos/bets/BetslipsManager.js'
 import { selectMenuIds } from '../lib/interfaces/interaction-handlers/interaction-handlers.interface.js'
 import MatchCacheService from '../utils/api/routes/cache/MatchCacheService.js'
+import BetslipWrapper from '../utils/api/Khronos/bets/betslip-wrapper.js'
+
 export class MenuHandler extends InteractionHandler {
 	public constructor(
 		ctx: InteractionHandler.LoaderContext,
@@ -61,7 +62,7 @@ export class MenuHandler extends InteractionHandler {
 			return this.none()
 		}
 		const betsCacheService = new BetsCacheService(new CacheManager())
-		// Get cached bet
+		// Retrieve user's cached bet
 		const cachedBet = await betsCacheService.getUserBet(interaction.user.id)
 		if (!cachedBet || !isPendingBetslip(cachedBet)) {
 			await interaction.editReply({
@@ -85,7 +86,6 @@ export class MenuHandler extends InteractionHandler {
 		)
 		await betsCacheService.cacheUserBet(interaction.user.id, {
 			...cachedBet,
-			matchup_id: selectedMatchId,
 			profit,
 			payout,
 		})
@@ -107,12 +107,12 @@ export class MenuHandler extends InteractionHandler {
 		}
 		const { betslip, dateofmatchup, opponent, payData } = payload
 		return new BetslipManager(
-			new KhronosReqHandler(),
+			new BetslipWrapper(),
 			new BetsCacheService(new CacheManager()),
 		).presentBetWithPay(interaction, {
 			betslip,
 			payData,
-			apiInfo: {
+			matchInfo: {
 				dateofmatchup,
 				opponent,
 			},

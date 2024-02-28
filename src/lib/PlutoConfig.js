@@ -1,13 +1,10 @@
 import { Command } from '@sapphire/framework'
 import _ from 'lodash'
 import accounting from 'accounting'
-import { Spinner } from '@favware/colorette-spinner'
 import { SEASON_TYPE, serverEnv } from '@pluto-server-config'
 import { embedReply, QuickError } from '@pluto-embed-reply'
 import { Log } from '@pluto-internal-logger'
 import { findEmoji } from '../utils/bot_res/findEmoji.js'
-
-const spinner = new Spinner()
 
 // ? Exporting Console Logging Colors for other files to use
 export {
@@ -48,7 +45,6 @@ const helpfooter = 'dev. by fenixforever'
 // ? General Config
 export {
 	helpfooter,
-	spinner,
 	Command,
 	_,
 	Log,

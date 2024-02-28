@@ -66,8 +66,6 @@ const serverEnv = {
 	pluto_api_username: configData.pluto_api_username,
 }
 
-// console.log(`serverEnv =>\n`, serverEnv)
-
 const {
 	// DB Tables
 	ODDS,
@@ -80,19 +78,13 @@ const {
 	LIVEMATCHUPS,
 	SCORETABLE,
 	LIVEBETS,
-	EXPERIENCE,
 	// IDs
 	server_ID,
 	gameCat_ID,
-	sportsLogo,
 	bettingChan,
 	logChan,
-	statcordKey,
 	// Settings
 	gameHeartbeat,
-	scheduledGames,
-	getRanges,
-	getOdds,
 	SPORT,
 	R_HOST,
 	R_PORT,

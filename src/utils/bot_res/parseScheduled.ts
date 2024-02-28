@@ -2,7 +2,7 @@ import { format } from 'date-fns'
 import discord from 'discord.js'
 import { _, helpfooter } from '@pluto-core-config'
 import embedColors from '../../lib/colorsConfig.js'
-import { IMatchupsGrouped, IOddsField } from '../matchups/matchups.interface.js'
+import { IMatchupsGrouped, IOddsField } from '../matches/matchups.interface.js'
 
 const { EmbedBuilder } = discord
 
@@ -50,7 +50,9 @@ export default async function parseScheduled(
 		groupedGames[date].push(match)
 	})
 
-	const sortedDates = Object.keys(groupedGames).sort()
+	const sortedDates = Object.keys(groupedGames).sort(
+		(a, b) => new Date(a).getTime() - new Date(b).getTime(),
+	)
 
 	const fields = await Promise.all(
 		sortedDates.map(async (date) => {

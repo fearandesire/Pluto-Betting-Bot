@@ -26,7 +26,7 @@ export interface ICreateBetslipFull {
 	profit: number
 	payout: number
 	betresult: string
-	dateofbet: string
+	dateofbet: Date | string
 	opponent?: string
 	dateofmatchup?: string
 }
@@ -61,7 +61,7 @@ export interface IValidatedBetslipData extends IApiResponse {
 }
 
 export function isFinalizedBetslip(payload: any): payload is IFinalizedBetslip {
-	return 'matchup_id' in payload
+	return 'amount' in payload
 }
 
 export function isValidatedBetslipData(
