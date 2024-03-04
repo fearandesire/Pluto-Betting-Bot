@@ -1,4 +1,4 @@
-import { Matchup } from '../../../../utils/api/common/interfaces/interfaces'
+import { Matchup } from '../../../../utils/api/common/interfaces/common-interfaces'
 import { IApiResponse } from '../api.interface'
 
 export interface IPendingBetslip {

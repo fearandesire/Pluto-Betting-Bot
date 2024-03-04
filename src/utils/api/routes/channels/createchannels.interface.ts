@@ -1,4 +1,4 @@
-import { SportsServing } from '../../common/interfaces/interfaces'
+import { SportsServing } from '../../common/interfaces/common-interfaces'
 
 export interface IChannelAPI {
 	id: string

@@ -58,7 +58,7 @@
 		"@pluto-leaderboard": "./dist/utils/db/currency/leaderboard.js",
 		"@pluto-list-user-bets": "./dist/utils/db/listMyBets.js",
 		"@pluto-logger": "./dist/utils/PlutoLogger.js",
-		"@pluto-matchupOps": "./dist/utils/db/matchupOps",
+		"@pluto-matchupOps": "./dist/utils/db/matchupOps.js",
 		"@pluto-newBet": "./dist/utils/db/betOps/newBet.js",
 		"@pluto-process-claim": "./dist/utils/db/betOps/processClaim.js",
 		"@pluto-redis": "./dist/utils/cache/RedisCacheManager.js",

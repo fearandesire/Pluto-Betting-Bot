@@ -19,17 +19,16 @@ app.use(responseTime)
 app.use(incomingChannelsRouter.routes()).use(
 	incomingChannelsRouter.allowedMethods(),
 )
+app.use(NotificationRouter.routes()).use(NotificationRouter.allowedMethods())
 
 app.use(matchCache.routes()).use(matchCache.allowedMethods())
-
-app.use(NotificationRouter.routes()).use(NotificationRouter.allowedMethods())
 
 app.use(ScheduleRouter.routes()).use(ScheduleRouter.allowedMethods())
 
 const { apiPort, apiURL } = process.env
 
 app.listen(apiPort, async () => {
-	await logClr({
+	logClr({
 		text: `API running at ${apiURL}:${apiPort}/`,
 		status: `done`,
 		color: `green`,

@@ -16,7 +16,7 @@ import { IChannelAggregated } from '../../api/routes/channels/createchannels.int
 import {
 	ICategoryData,
 	IConfigRow,
-} from '../../api/common/interfaces/interfaces.js'
+} from '../../api/common/interfaces/common-interfaces.js'
 
 interface IPrepareMatchEmbed {
 	favored: string

@@ -5,7 +5,7 @@ import {
 	IConfigRow,
 	IMatchupAggregated,
 	SportsServing,
-} from '../../common/interfaces/interfaces.js'
+} from '../../common/interfaces/common-interfaces.js'
 import { OutgoingEndpoints } from '../../common/endpoints.js'
 import { AxiosKhronosInstance } from '../../common/axios-config.js'
 

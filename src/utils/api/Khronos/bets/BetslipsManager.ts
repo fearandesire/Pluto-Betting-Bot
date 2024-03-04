@@ -7,7 +7,7 @@ import {
 	EmbedBuilder,
 	GuildEmoji,
 } from 'discord.js'
-import { IMatchInfoArgs } from '../../common/interfaces/interfaces.js'
+import { IMatchInfoArgs } from '../../common/interfaces/common-interfaces.js'
 import { IAPIBetslipPayload } from '../../../../lib/interfaces/api/bets/betslips.interfaces.js'
 import embedColors from '../../../../lib/colorsConfig.js'
 import { findEmoji } from '../../../bot_res/findEmoji.js'
@@ -16,7 +16,6 @@ import { ErrorEmbeds } from '../../../common/errors/global.js'
 import { ApiModules } from '../../../../lib/interfaces/api/api.interface.js'
 import { ApiErrorHandler } from '../error-handling/ApiErrorHandler.js'
 import { BetsCacheService } from '../../common/bets/BetsCacheService.js'
-import MoneyFormatter from '../../common/money-formatting/money-format.js'
 import BetslipWrapper from './betslip-wrapper.js'
 import GuildWrapper from '../guild/guild-wrapper.js'
 import {
@@ -25,8 +24,8 @@ import {
 	PlaceBetDto,
 	PlacedBetslip,
 } from '@khronos-index'
+import MoneyFormatter from '../../common/money-formatting/money-format.js'
 
-// TODO Move non-betting methods to their own class
 /**
  * Manages betslips / betting process
  * Some info to know:
@@ -107,7 +106,7 @@ export class BetslipManager {
 	}
 
 	/**
-	 * Placees a bet on a match
+	 * Places a bet on a match
 	 * Used for 'finalizing' a bet - not to initialize one.
 	 * Called after user confirmation from ButtonListener event
 	 * @param interaction - Interaction to respond to
@@ -181,11 +180,12 @@ export class BetslipManager {
 		const betTeamFull = `${teamNamings.betOnTeam}`
 		const oppTeamFull = `${teamNamings.opponent}`
 
-		const { betAmount, profit, payout } = await this.formatAmounts({
-			amount: betslip.amount,
-			profit: betslip.profit!,
-			payout: betslip.payout!,
-		})
+		const { betAmount, profit, payout } =
+			await MoneyFormatter.formatAmounts({
+				amount: betslip.amount,
+				profit: betslip.profit!,
+				payout: betslip.payout!,
+			})
 		// Bet is placed, just need to inform the user
 		const successEmbed = new EmbedBuilder()
 			.setTitle(`Bet confirmed! :ticket:`)
@@ -264,11 +264,12 @@ export class BetslipManager {
 		const chosenTeamStr = (await findEmoji(betslip.team)) ?? usersTeam
 		const oppTeamStr = (await findEmoji(opponent)) ?? opponent
 
-		const { betAmount, profit, payout } = await this.formatAmounts({
-			amount: betslip.amount,
-			profit: betData.payData.profit,
-			payout: betData.payData.payout,
-		})
+		const { betAmount, profit, payout } =
+			await MoneyFormatter.formatAmounts({
+				amount: betslip.amount,
+				profit: betData.payData.profit,
+				payout: betData.payData.payout,
+			})
 
 		const embed = new EmbedBuilder()
 			.setTitle('Pending Betslip')
@@ -294,22 +295,5 @@ export class BetslipManager {
 			embeds: [embed],
 			components: [actionRow],
 		})
-	}
-
-	/**
-	 * @summary Format betting values to USD
-	 * @description Converts the betslip amount, payout and profit to USD
-	 * @param bettingNumbers - Data to format to usd
-	 */
-	async formatAmounts(bettingNumbers: { [key: string]: number }) {
-		const betAmount = MoneyFormatter.toUSD(bettingNumbers.amount)
-		const payout = MoneyFormatter.toUSD(bettingNumbers.payout)
-		const profit = MoneyFormatter.toUSD(bettingNumbers.profit)
-
-		return {
-			betAmount,
-			payout,
-			profit,
-		}
 	}
 }
