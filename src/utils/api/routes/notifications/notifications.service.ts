@@ -19,7 +19,7 @@ export default class NotificationService {
 			!data ||
 			(data?.winners?.length === 0 && data?.losers?.length === 0)
 		) {
-			console.debug(`No notifications to process`)
+			console.info(`No notifications to process`)
 			return
 		}
 
@@ -77,7 +77,7 @@ export default class NotificationService {
 			msg = `### Congrats, you won your bet! 🎊\n# __Details__\n\n**\`${amount}\`** on the **${team}**\n**Profit:** **\`${profit}\`**\n**Payout:** **\`${payout}\`**\n**Balance**: *\`${oldBalance}\`* → **\`${newBalance}\` 💰**`
 			color = embedColors.PlutoBrightGreen
 		} else if (betresult === `lost`) {
-			msg = `### Bad news...you lost a bet\n# __Details__\n\n${amount} bet on the **${team}**.\nBetter luck next time!`
+			msg = `### Bad news...you lost a bet\n# __Details__\n\n${amount} bet on the **${team}**\nBetter luck next time!`
 			color = embedColors.PlutoRed
 		}
 		msg += `\n\n${extraInfo}*Issue? please contact: <@208016830491525120> | Bet ID: \`${betid}\`*`

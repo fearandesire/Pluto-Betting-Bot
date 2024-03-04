@@ -17,9 +17,6 @@ NotificationRouter.post(`/notifications/bets/results`, async (ctx) => {
 		}
 		return // Make sure to exit the function here
 	}
-
-	console.debug('Validated Data:', NotificationData)
-
 	// Proceed with processing as the data is valid
 	await new NotificationService(SapDiscClient).processBetResults(
 		NotificationData,
