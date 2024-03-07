@@ -1,5 +1,3 @@
-/* eslint-disable no-undef */
-
 import 'dotenv/config'
 
 import monitor from 'pg-monitor'
