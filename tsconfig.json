@@ -30,7 +30,7 @@
 			"@pluto-embed-reply": ["./src/utils/bot_res/embeds/embedReply"],
 			"@pluto-db-utils": ["./src/utils/db"],
 			"@pluto-matchupOps": ["./src/utils/db/matchupOps"],
-			"@pluto-leaderboard": ["./src/utils/db/currency/leaderboard"],
+			"@pluto-leaderboard": ["./src/utils/betting/currency/leaderboard"],
 			"@pluto-transfer": ["./src/utils/db/currency/transferBetween"],
 			"@pluto-process-claim": ["./src/utils/db/betOps/processClaim"],
 			"@pluto-betOps-modifyAmount": [

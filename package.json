@@ -55,7 +55,7 @@
 		"@pluto-internal-color-logger": "./dist/utils/bot_res/ColorConsole.js",
 		"@pluto-internal-logger": "./dist/utils/bot_res/consoleLog.js",
 		"@pluto-iso-manager": "./dist/utils/time/IsoManager.js",
-		"@pluto-leaderboard": "./dist/utils/db/currency/leaderboard.js",
+		"@pluto-leaderboard": "./dist/utils/betting/currency/leaderboard.js",
 		"@pluto-list-user-bets": "./dist/utils/db/listMyBets.js",
 		"@pluto-logger": "./dist/utils/PlutoLogger.js",
 		"@pluto-matchupOps": "./dist/utils/db/matchupOps.js",
