@@ -1,6 +1,7 @@
 import {
 	BetslipsApi,
 	CancelBetslipRequest,
+	GetActiveBetslipsRequest,
 	InitBetslipRequest,
 	PlaceBetslipRequest,
 	PlacedBetslip,
@@ -28,7 +29,9 @@ export default class BetslipWrapper {
 		return await this.betslipApi.cancelBetslip(payload)
 	}
 
-	async activeBetsForUser(userId: string): Promise<PlacedBetslip[]> {
+	async activeBetsForUser(
+		userId: GetActiveBetslipsRequest,
+	): Promise<PlacedBetslip[]> {
 		return await this.betslipApi.getActiveBetslips(userId)
 	}
 }
