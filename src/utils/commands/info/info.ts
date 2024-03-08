@@ -60,7 +60,7 @@ Pluto uses virtual currency with real match odds from various bookmakers to simu
 		// Construct the embed description with formatted commands and maintenance note
 		const cmdDescription =
 			formatCommands(cmdList) +
-			`*Currently, the following commands are under maintenance:\n- \`bethistory\`\n- \`stats\`\n- \`leaderboard\`*`
+			`*Currently, the following commands are under maintenance:\n- \`bethistory\`\n- \`stats\`*`
 
 		return {
 			title: 'Pluto Commands',
