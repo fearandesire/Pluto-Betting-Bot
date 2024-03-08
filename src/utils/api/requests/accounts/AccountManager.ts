@@ -2,7 +2,12 @@ import { CommandInteraction, GuildMember } from 'discord.js'
 import { ApiModules } from '../../../../lib/interfaces/api/api.interface.js'
 import { ApiErrorHandler } from '../../Khronos/error-handling/ApiErrorHandler.js'
 // noinspection ES6PreferShortImport
-import { AccountsApi, GetBalanceDto, GetProfileDto } from '@khronos-index'
+import {
+	AccountsApi,
+	GetBalanceDto,
+	GetLeaderboardDto,
+	GetProfileDto,
+} from '@khronos-index'
 import {
 	IKH_API_CONFIG,
 	KH_API_CONFIG,
@@ -11,6 +16,8 @@ import _ from 'lodash'
 import GuildUtils from '../../../guilds/GuildUtils.js'
 import EmbedsSuccess from '../../../embeds/template/success-template.js'
 import MoneyFormatter from '../../common/money-formatting/money-format.js'
+import { SapDiscClient } from '@pluto-core'
+import PaginationUtilities from '../../../embeds/pagination-utilities.js'
 
 export class AccountsWrapper {
 	private accountsApi: AccountsApi
@@ -68,9 +75,20 @@ export class AccountsWrapper {
 			throw error // Re-throw the error after logging or handling it
 		}
 	}
+
+	async getLeaderboard(): Promise<GetLeaderboardDto[]> {
+		try {
+			const res = await this.accountsApi.getLeaderboard()
+			return res
+		} catch (error) {
+			console.error('Error retrieving leaderboard:', error)
+			throw error // Re-throw the error after logging or handling it
+		}
+	}
 }
 
 export class AccountManager {
+	private paginationUtilities = new PaginationUtilities()
 	constructor(private accountsWrapper: AccountsWrapper) {}
 
 	/**
@@ -132,6 +150,49 @@ export class AccountManager {
 				)
 				return interaction.editReply({ embeds: [embed] })
 			}
+		} catch (error) {
+			return new ApiErrorHandler().handle(
+				interaction,
+				error,
+				ApiModules.account,
+			)
+		}
+	}
+
+	async getLeaderboardData(interaction: CommandInteraction) {
+		try {
+			const res = await this.accountsWrapper.getLeaderboard()
+			const currentGuild = interaction.guild
+			if (!currentGuild) {
+				throw new Error('Guild not identified from interaction.')
+			}
+			const guild = await SapDiscClient.guilds.fetch(interaction.guild.id)
+			// Resolve current dsicord usernames
+			const lbData = res.map((user: any) => ({
+				userid: user.userid,
+				balance: user.monies.balance,
+			}))
+			// Pre-fetch all members
+			const lbUserIds = lbData.map((entry: any) => entry.userid)
+			const lbMembers = await guild.members.fetch({
+				user: lbUserIds,
+			})
+
+			// Map lbData to include Discord member details
+			const formattedLbData = lbData.map((entry: any) => {
+				const member: GuildMember | undefined = lbMembers.get(
+					entry.userid,
+				)
+				return {
+					...entry,
+					memberTag: member?.user.tag ?? `<@${entry.userid}>`,
+				}
+			})
+			return this.paginationUtilities.displayLeaderboardPage(
+				interaction,
+				formattedLbData,
+				1,
+			)
 		} catch (error) {
 			return new ApiErrorHandler().handle(
 				interaction,
