@@ -3,6 +3,7 @@ import {
 	CancelBetslipRequest,
 	InitBetslipRequest,
 	PlaceBetslipRequest,
+	PlacedBetslip,
 } from '@khronos-index'
 import { IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js'
 import { blue } from 'colorette'
@@ -25,5 +26,9 @@ export default class BetslipWrapper {
 
 	async cancel(payload: CancelBetslipRequest) {
 		return await this.betslipApi.cancelBetslip(payload)
+	}
+
+	async activeBetsForUser(userId: string): Promise<PlacedBetslip[]> {
+		return await this.betslipApi.getActiveBetslips(userId)
 	}
 }
