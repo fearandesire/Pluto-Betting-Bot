@@ -24,16 +24,15 @@ export class AccountsWrapper {
 	private readonly khConfig: IKH_API_CONFIG = KH_API_CONFIG
 
 	constructor() {
-		this.accountsApi = new AccountsApi(KH_API_CONFIG)
+		this.accountsApi = new AccountsApi(this.khConfig)
 	}
 
 	async createAccount(userid: string): Promise<any> {
 		try {
-			const result = await this.accountsApi.createAccount({
+			// Assuming createAccount method returns the created account details
+			return await this.accountsApi.createAccount({
 				userid: userid,
 			})
-			// Assuming createAccount method returns the created account details
-			return result
 		} catch (error) {
 			console.error('Error creating account:', error)
 			throw error // Re-throw the error after logging or handling it
@@ -54,10 +53,9 @@ export class AccountsWrapper {
 
 	async getProfile(userid: string): Promise<GetProfileDto> {
 		try {
-			const res = await this.accountsApi.userProfile({
+			return await this.accountsApi.userProfile({
 				userid: userid,
 			})
-			return res
 		} catch (error) {
 			console.error('Error retrieving account profile:', error)
 			throw error // Re-throw the error after logging or handling it
@@ -66,10 +64,9 @@ export class AccountsWrapper {
 
 	async processClaim(userid: string) {
 		try {
-			const res = await this.accountsApi.dailyClaim({
+			return await this.accountsApi.dailyClaim({
 				userid: userid,
 			})
-			return res
 		} catch (error) {
 			console.error('Error processing claim:', error)
 			throw error // Re-throw the error after logging or handling it
@@ -78,8 +75,7 @@ export class AccountsWrapper {
 
 	async getLeaderboard(): Promise<GetLeaderboardDto[]> {
 		try {
-			const res = await this.accountsApi.getLeaderboard()
-			return res
+			return await this.accountsApi.getLeaderboard()
 		} catch (error) {
 			console.error('Error retrieving leaderboard:', error)
 			throw error // Re-throw the error after logging or handling it
@@ -107,7 +103,7 @@ export class AccountManager {
 			const res = await this.accountsWrapper.processClaim(userId)
 			const { balance } = res
 			if (!balance) {
-				throw new Error(`No balance was resolved for user ${userId}`)
+				throw new Error(`Failed to resolve your balance.`)
 			}
 			const formattedBalance = MoneyFormatter.toUSD(balance)
 			const embed = await new EmbedsSuccess(interaction).sv1(
