@@ -28,7 +28,7 @@
 		"gen-api": "openapi-generator-cli generate -i ./Khronos-Swagger-Spec-v1.json -g typescript-fetch -o ./src/openapi/khronos -c openapi.config.json",
 		"post-api-fix": "node ./src/utils/scripts/addJsExtension.js",
 		"ci-gen-api": "yarn gen-api && yarn post-api-fix",
-		"sap-cmd": "sapphire -g slashcommand",
+		"sap-cmd": "sapphire generate slashcommand",
 		"vault-open": "npx dotenv-vault@latest open",
 		"vault-login": "npx dotenv-vault@latest login",
 		"vault-push": "npx dotenv-vault@latest push",
