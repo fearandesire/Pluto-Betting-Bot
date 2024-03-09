@@ -36,11 +36,11 @@ export class ButtonHandler extends InteractionHandler {
 	 * @param interaction
 	 */
 	public override async parse(interaction: ButtonInteraction) {
+		await interaction.deferReply()
 		const allBtnIds = Object.values(btnIds)
 		if (!allBtnIds.includes(interaction.customId as btnIds)) {
 			return this.none()
 		}
-
 		if (interaction.customId === `matchup_btn_confirm`) {
 			console.info({
 				method: this.constructor.name,
@@ -49,7 +49,6 @@ export class ButtonHandler extends InteractionHandler {
 					userId: interaction.user.id,
 				},
 			})
-			await interaction.deferReply()
 			const cachedBet = await new BetsCacheService(
 				new CacheManager(),
 			).getUserBet(interaction.user.id)
@@ -65,25 +64,36 @@ export class ButtonHandler extends InteractionHandler {
 				return this.none()
 			}
 			const matchId = cachedBet.match.id
-			let matchDetails: Match | null | undefined =
-				await new MatchCacheService(new CacheManager()).getMatch(
-					matchId,
-				)
 
-			if (!matchDetails) {
-				// Fallback: Query for matches, find the match via ID in the array
+			let locatedMatch: Match | null = await new MatchCacheService(
+				new CacheManager(),
+			).getMatch(matchId)
+
+			// If the match is not found in cache, attempt to locate it via API
+			if (!locatedMatch) {
+				console.debug({
+					trace: this.constructor.name,
+					message:
+						'Failed to locate match in cache, attempting fetch via API',
+					data: {
+						searchedFor: matchId,
+					},
+				})
+
 				const matchesApi = new MatchApiWrapper()
 				const { matches } = await matchesApi.getAllMatches()
-				matchDetails = matches.find((match) => match.id === matchId)
-				if (!matchDetails) {
+				locatedMatch =
+					matches.find((match) => match.id === matchId) ?? null
+
+				if (!locatedMatch) {
 					console.error({
 						method: this.constructor.name,
-						message: 'Match not found',
+						message: 'Match not found after API fetch',
 						data: {
 							matchup_id: matchId,
 						},
 					})
-					await interaction.reply({
+					await interaction.editReply({
 						embeds: [
 							ErrorEmbeds.internalErr(
 								`Unable to locate the match data.`,
@@ -92,21 +102,25 @@ export class ButtonHandler extends InteractionHandler {
 					})
 					return this.none()
 				}
-				console.error({
-					method: this.constructor.name,
-					message: 'Match not found',
-					data: {
-						matchup_id: matchId,
-					},
-				})
-				return this.none()
 			}
 
+			// At this point, a match has been found either in cache or via API
+			console.info({
+				trace: this.constructor.name,
+				message: 'Match found',
+				data: {
+					matchDetails: locatedMatch,
+				},
+			})
+
+			// Continue processing with the found match
+			const matchDetails = locatedMatch
 			return this.some({
 				betslip: cachedBet,
 				matchData: matchDetails,
 			})
 		}
+
 		return this.none()
 	}
 
