@@ -3,7 +3,7 @@ import _ from 'lodash'
 import { Guild } from 'discord.js'
 
 export default class GuildUtils {
-	static async findEmoji(name: string) {
+	async findEmoji(name: string) {
 		const searchFor = await parseNameForEmoji(name.toLowerCase())
 		const emojiCache = SapDiscClient.emojis.cache
 
@@ -23,6 +23,10 @@ export default class GuildUtils {
 				emoji.name.toLowerCase().includes(searchFor),
 		)
 		return partialMatch ?? null
+	}
+	async constructTeamString(teamName: string) {
+		const emoji = await this.findEmoji(teamName)
+		return emoji ? `${emoji} ${teamName}` : teamName
 	}
 
 	async getGuild(guildId: string) {
