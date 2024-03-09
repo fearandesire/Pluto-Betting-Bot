@@ -18,16 +18,16 @@
 	"bin": "./dist/cli.js",
 	"prettier": "./.prettierrc.json",
 	"scripts": {
-		"build": "tsc",
+		"build": "rimraf ./dist && tsc",
 		"watch": "nodemon -L --watch ./ --exec npm run dev",
 		"start": "node ./dist/Pluto.js",
 		"nflc": "cross-env NODE_ENV=production SEASON_TYPE=REGULAR SERVERNAME=nfl SPORT=nfl EXP_PORT=4442 node --loader esm-module-alias/loader --no-warnings ./dist/Pluto.js -r dotenv/config dotenv_config_path=./.env.nflc",
 		"nbac": "cross-env NODE_ENV=production SEASONTYPE=REGULAR SERVERNAME=nba SPORT=nba EXP_PORT=4443  node --loader esm-module-alias/loader --no-warnings ./dist/Pluto.js -r dotenv/config dotenv/config dotenv_config_path=./.env.nbac ",
-		"dev": "cross-env SERVERNAME='nba-dev' SEASON_TYPE=REGULAR node --loader esm-module-alias/loader --no-warnings ./dist/Pluto.js -r dotenv/config ./Pluto.js dotenv_config_path=./.env.dev",
+		"dev": "yarn build && cross-env SERVERNAME='nba-dev' SEASON_TYPE=REGULAR node --loader esm-module-alias/loader --no-warnings ./dist/Pluto.js -r dotenv/config ./Pluto.js dotenv_config_path=./.env.dev",
 		"ts-dev": "tsx ./src/Pluto.ts",
 		"gen-api": "openapi-generator-cli generate -i ./Khronos-Swagger-Spec-v1.json -g typescript-fetch -o ./src/openapi/khronos -c openapi.config.json",
 		"post-api-fix": "node ./src/utils/scripts/addJsExtension.js",
-		"ci-gen-api": "yarn gen-api && yarn post-api-fix",
+		"ci-gen-api": "rimraf ./src/openapi && yarn gen-api && yarn post-api-fix",
 		"sap-cmd": "sapphire generate slashcommand",
 		"vault-open": "npx dotenv-vault@latest open",
 		"vault-login": "npx dotenv-vault@latest login",
@@ -191,6 +191,7 @@
 		"pkgroll": "^2.0.1",
 		"prettier": "^3.2.4",
 		"prettier-eslint-cli": "^7.1.0",
+		"rimraf": "^5.0.5",
 		"tsconfig-paths": "^4.2.0"
 	}
 }
