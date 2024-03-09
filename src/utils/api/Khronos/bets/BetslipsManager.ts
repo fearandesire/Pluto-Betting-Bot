@@ -25,6 +25,8 @@ import {
 	PlacedBetslip,
 } from '@khronos-index'
 import MoneyFormatter from '../../common/money-formatting/money-format.js'
+import GuildUtils from '../../../guilds/GuildUtils.js'
+import StringUtils from '../../../common/string-utils.js'
 
 /**
  * Manages betslips / betting process
@@ -133,17 +135,32 @@ export class BetslipManager {
 			})
 			if (response.statusCode <= 400 && response.statusCode >= 200) {
 				const { betslip } = response
+
+				const guildUtils = new GuildUtils()
+				const chosenTeamEmoji =
+					(await guildUtils.findEmoji(betslip.team)) ?? ''
+				const oppTeamEmoji =
+					(await guildUtils.findEmoji(matchInfo.opponent)) ?? ''
+				const chosenTeamShort = new StringUtils().getShortName(
+					betslip.team,
+				)!
+				const oppTeamShort = new StringUtils().getShortName(
+					matchInfo.opponent,
+				)!
 				const chosenTeamStr =
-					(await findEmoji(betslip.team)) ?? betslip.team
-				const oppTeamStr =
-					(await findEmoji(matchInfo.opponent)) ?? matchInfo.opponent
+					`${chosenTeamEmoji} ${chosenTeamShort}`.trimStart()
+				const oppTeamStr = `${oppTeamEmoji} ${oppTeamShort}`.trimStart()
 				// Handle successful bet placement
 				await this.successfulBetEmbed(
 					interaction,
 					interaction.user.displayAvatarURL(),
 					{
 						betOnTeam: chosenTeamStr,
+						betOnTeamEmoji: chosenTeamEmoji ?? '',
 						opponent: oppTeamStr,
+						opponentEmoji: oppTeamEmoji ?? '',
+						chosenTeamShort,
+						oppTeamShort,
 					},
 					betslip,
 					matchInfo,
@@ -170,15 +187,19 @@ export class BetslipManager {
 	async successfulBetEmbed(
 		interaction: CommandInteraction | ButtonInteraction,
 		embedImg: string,
-		teamNamings: {
-			betOnTeam: string | GuildEmoji
-			opponent: string | GuildEmoji
+		teamDetails: {
+			betOnTeam: string
+			betOnTeamEmoji: GuildEmoji | ''
+			opponent: string
+			opponentEmoji: GuildEmoji | ''
+			chosenTeamShort: string
+			oppTeamShort: string
 		},
 		betslip: PlacedBetslip,
 		apiInfo: IMatchInfoArgs,
 	) {
-		const betTeamFull = `${teamNamings.betOnTeam}`
-		const oppTeamFull = `${teamNamings.opponent}`
+		const betTeamFull = `${teamDetails.betOnTeam}`
+		const oppTeamFull = `${teamDetails.opponent}`
 
 		const { betAmount, profit, payout } =
 			await MoneyFormatter.formatAmounts({
@@ -190,7 +211,7 @@ export class BetslipManager {
 		const successEmbed = new EmbedBuilder()
 			.setTitle(`Bet confirmed! :ticket:`)
 			.setDescription(
-				`## __Match__\n**${betTeamFull}** *vs* **${oppTeamFull}**\n**Date:** ${apiInfo.dateofmatchup}\n## **__Betslip__**\n**${betTeamFull}\n**Bet: \`${betAmount}\`**\n**Profit: **\`${profit}\`**\n**Payout: **\`${payout}\`**\n\n*Betslip ID: \`${betslip.betid}\`*\n*View more commands via \`/commands\`*`,
+				`## __Match__\n**${betTeamFull}** *vs* **${oppTeamFull}**\n**Date:** ${apiInfo.dateofmatchup}\n## __Betslip__\n**${betTeamFull}**\n**Bet: \`${betAmount}\`**\n**Profit: \`${profit}\`**\n**Payout: \`${payout}\`**\n\n*Betslip ID: \`${betslip.betid}\`*\n*View more commands via \`/commands\`*`,
 			)
 			.setColor(embedColors.success)
 			.setThumbnail(embedImg)

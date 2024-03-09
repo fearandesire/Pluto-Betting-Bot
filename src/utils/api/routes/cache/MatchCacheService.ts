@@ -19,6 +19,13 @@ export default class MatchCacheService {
 
 	async getMatch(matchid: string): Promise<Match | null> {
 		const allMatches = await this.getMatches()
-		return allMatches.find((match: Match) => match.id === matchid) || null
+		if (!allMatches) {
+			return null
+		}
+		const match = allMatches.find((match: Match) => match.id === matchid)
+		if (!match) {
+			return null
+		}
+		return match
 	}
 }

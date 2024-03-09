@@ -144,8 +144,12 @@ export default class GameSchedule {
 			game.away_team,
 		].map((name) => name.split(' ').pop())
 
-		const homeTeamEmojiPromise = await GuildUtils.findEmoji(game.home_team)
-		const awayTeamEmojiPromise = await GuildUtils.findEmoji(game.away_team)
+		const homeTeamEmojiPromise = await new GuildUtils().findEmoji(
+			game.home_team,
+		)
+		const awayTeamEmojiPromise = await new GuildUtils().findEmoji(
+			game.away_team,
+		)
 
 		const [homeTeamEmojiResult, awayTeamEmojiResult] = await Promise.all([
 			homeTeamEmojiPromise,
