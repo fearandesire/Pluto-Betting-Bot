@@ -34,4 +34,10 @@ export default class BetslipWrapper {
 	): Promise<PlacedBetslip[]> {
 		return await this.betslipApi.getActiveBetslips(userId)
 	}
+
+	async clearPending(userId: string) {
+		return await this.betslipApi.clearPendingBets({
+			userid: userId,
+		})
+	}
 }

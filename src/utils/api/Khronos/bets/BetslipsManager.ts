@@ -295,7 +295,7 @@ export class BetslipManager {
 		const embed = new EmbedBuilder()
 			.setTitle('Pending Betslip')
 			.setDescription(
-				`## __Match__\n${chosenTeamStr} *vs.* ${oppTeamStr}\n**Date:** ${dateofmatchup}\n**Team:** ${betslip.team}\n## __Betslip__\n**Bet:** **\`${betAmount}\`**\n**Payout:** **\`${payout}\`**\n**Profit:** **\`${profit}\`**
+				`## __Match__\n${chosenTeamStr} *vs.* ${oppTeamStr}\n**Date:** ${dateofmatchup}\n## __Betslip__\n**Team:** ${chosenTeamStr} ${betslip.team}\n**Bet:** **\`${betAmount}\`**\n**Payout:** **\`${payout}\`**\n**Profit:** **\`${profit}\`**
 				\nConfirm your bet via the buttons below`,
 			)
 			.setColor(embedColors.PlutoYellow)
