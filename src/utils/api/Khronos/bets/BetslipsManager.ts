@@ -236,7 +236,7 @@ export class BetslipManager {
 				const cancelledEmbed = new EmbedBuilder()
 					.setTitle(`Bet Cancellation :ticket:`)
 					.setDescription(
-						`Successfully cancelled bet \`${betId}\` & restored the funds into your account.`,
+						`Successfully cancelled bet \`${betId}\`\nYour funds have been restored.`,
 					)
 					.setColor(embedColors.success)
 					.setThumbnail(interaction.user.displayAvatarURL())
