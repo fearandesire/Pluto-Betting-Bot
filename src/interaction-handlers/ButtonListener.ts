@@ -134,7 +134,7 @@ export class ButtonHandler extends InteractionHandler {
 	}
 
 	public async run(interaction: ButtonInteraction, payload: any) {
-		if (payload.hasFailed) {
+		if (payload?.hasFailed) {
 			const errMsg = payload.errMsg
 			await interaction.editReply({
 				embeds: [ErrorEmbeds.internalErr(errMsg)],
@@ -143,11 +143,10 @@ export class ButtonHandler extends InteractionHandler {
 		if (interaction.customId === btnIds.matchup_btn_cancel) {
 			const betslipWrapper = new BetslipWrapper()
 			await betslipWrapper.clearPending(interaction.user.id)
-			// Send cancel bet embed
 			const cancelEmbed = new EmbedBuilder()
 				.setTitle('Bet Canceled')
 				.setDescription(`Your bet has been successfully cancelled.`)
-				.setColor(embedColors.red)
+				.setColor(embedColors.PlutoRed)
 				.setThumbnail(interaction.user.displayAvatarURL())
 				.setFooter({
 					text: helpfooter,
