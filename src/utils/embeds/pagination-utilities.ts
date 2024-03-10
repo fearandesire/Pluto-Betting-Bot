@@ -12,9 +12,6 @@ export default class PaginationUtilities {
 		formattedLbData: any[],
 		currentPage: number,
 	): Promise<void> {
-		console.debug({
-			formattedLbData,
-		})
 		const usersPerPage = 10 // Customize this value as needed
 		const paginationUtilities = new PaginationUtilities()
 		const pagesTotal = Math.ceil(formattedLbData.length / usersPerPage)

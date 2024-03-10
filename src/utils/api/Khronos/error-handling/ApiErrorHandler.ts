@@ -72,7 +72,6 @@ export class ApiErrorHandler {
 		errModule: ApiModules,
 	) {
 		let apiError: IKhronosErr
-		console.debug(`Err =>>\n`, error)
 		if (error?.response) {
 			const { statusCode, message, exception } =
 				await error.response.json()

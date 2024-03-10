@@ -63,8 +63,6 @@ export class BetslipManager {
 				sport,
 				initBetslipDTO: payload,
 			})
-			console.debug('\u2500'.repeat(30))
-			console.debug(`API Response ==>\n`, response)
 			if (!response) {
 				const errEmb = ErrorEmbeds.internalErr(
 					`Unable to contact the server, please try again later.`,
@@ -84,7 +82,6 @@ export class BetslipManager {
 					return interaction.editReply({ embeds: [errEmb] })
 				}
 				await this.betCacheService.cacheUserBet(userId, cacheBetData)
-				console.debug(`Cached bet:`, cacheBetData)
 				return this.presentBetWithPay(interaction, {
 					betslip,
 					payData: {
@@ -121,14 +118,6 @@ export class BetslipManager {
 		matchInfo: IMatchInfoArgs,
 	) {
 		try {
-			console.debug({
-				method: this.placeBet.name,
-				status: `Querying Khronos`,
-				data: {
-					betDetails,
-					apiInfo: matchInfo,
-				},
-			})
 			// Make the API request to place the bet
 			const response = await this.betslipInstance.finalize({
 				placeBetDto: betDetails,
@@ -273,12 +262,6 @@ export class BetslipManager {
 			matchInfo: IMatchInfoArgs
 		},
 	) {
-		console.debug({
-			method: this.presentBetWithPay.name,
-			data: {
-				betData,
-			},
-		})
 		const { betslip } = betData
 		const { opponent, dateofmatchup } = betData.matchInfo
 		const usersTeam = betslip.team

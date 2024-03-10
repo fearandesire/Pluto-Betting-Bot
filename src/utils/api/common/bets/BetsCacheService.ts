@@ -9,7 +9,6 @@ export class BetsCacheService {
 	async cacheUserBet(userId: string, betData: BetslipWithAggregationDTO) {
 		const cacheKey = this.cachePrefix + userId
 		await this.cache.set(cacheKey, betData, 86400) // Cache for 1 day, adjust TTL as needed
-		console.log(`Cached bet for user ${userId}\nKey: ${cacheKey}`)
 	}
 
 	async getUserBet(
@@ -21,14 +20,7 @@ export class BetsCacheService {
 	}
 
 	async sanitize(betData: any): Promise<PlaceBetDto> {
-		console.debug({
-			method: this.sanitize.name,
-			status: `Pre-parsed`,
-			data: {
-				betData,
-			},
-		})
-		// Organize props to fit expected structure for Khronos
+		// Organize props to fit the expected structure for Khronos
 		betData.matchup_id = betData.match.id
 		// Remove unnecessary data so the bet can be placed
 		delete betData?.match
@@ -36,19 +28,11 @@ export class BetsCacheService {
 		delete betData?.opponent
 		delete betData?.profit
 		delete betData?.payout
-		console.debug({
-			method: this.sanitize.name,
-			status: `Sanitized`,
-			data: {
-				betData,
-			},
-		})
 		return betData
 	}
 
 	async clearUserBet(userId: string) {
 		const cacheKey = this.cachePrefix + userId
 		await this.cache.remove(cacheKey)
-		console.log(`Cleared cached bet for user ${userId}`)
 	}
 }

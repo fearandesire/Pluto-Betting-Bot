@@ -48,13 +48,6 @@ export class ButtonHandler extends InteractionHandler {
 			return this.some()
 		}
 		if (interaction.customId === `matchup_btn_confirm`) {
-			console.info({
-				method: this.constructor.name,
-				message: 'Collecting bet data',
-				data: {
-					userId: interaction.user.id,
-				},
-			})
 			try {
 				const cachedBet = await new BetsCacheService(
 					new CacheManager(),
@@ -80,15 +73,6 @@ export class ButtonHandler extends InteractionHandler {
 
 				// If the match is not found in cache, attempt to locate it via API
 				if (!locatedMatch) {
-					console.debug({
-						trace: this.constructor.name,
-						message:
-							'Failed to locate match in cache, attempting fetch via API',
-						data: {
-							searchedFor: matchId,
-						},
-					})
-
 					const matchesApi = new MatchApiWrapper()
 					const { matches } = await matchesApi.getAllMatches()
 					locatedMatch =
@@ -153,14 +137,6 @@ export class ButtonHandler extends InteractionHandler {
 				})
 			await interaction.editReply({ embeds: [cancelEmbed] })
 		} else if (interaction.customId === btnIds.matchup_btn_confirm) {
-			console.info({
-				method: this.constructor.name,
-				message: 'Placing bet',
-				data: {
-					betslip: payload.betslip,
-					matchData: payload.matchData,
-				},
-			})
 			const { betslip, matchData } = payload
 			const matchOpponent = betslip.opponent
 

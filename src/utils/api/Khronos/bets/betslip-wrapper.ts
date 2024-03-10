@@ -7,7 +7,6 @@ import {
 	PlacedBetslip,
 } from '@khronos-index'
 import { IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js'
-import { blue } from 'colorette'
 
 export default class BetslipWrapper {
 	private betslipApi: BetslipsApi
@@ -21,7 +20,6 @@ export default class BetslipWrapper {
 	}
 
 	async finalize(payload: PlaceBetslipRequest) {
-		console.log(blue(`Betting Query => Place`), payload)
 		return await this.betslipApi.placeBetslip(payload)
 	}
 
