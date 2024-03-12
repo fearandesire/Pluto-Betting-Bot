@@ -4,10 +4,10 @@ import logger from 'koa-logger'
 import bodyParser from 'koa-bodyparser'
 import logClr from '@pluto-internal-color-logger'
 import { pageNotFound, responseTime } from './requests/middleware.js'
-import incomingChannelsRouter from './routes/channels/channels.incoming.js'
 import ScheduleRouter from './routes/schedule/schedule.js'
 import NotificationRouter from './routes/notifications/notifications.controller.js'
 import { matchCache } from './routes/cache/match-cache.js'
+import ChannelsRoutes from './routes/channels/channels-router.js'
 
 const app = new Koa()
 app.use(logger())
@@ -16,13 +16,9 @@ app.use(bodyParser())
 app.use(pageNotFound)
 app.use(responseTime)
 
-app.use(incomingChannelsRouter.routes()).use(
-	incomingChannelsRouter.allowedMethods(),
-)
+app.use(ChannelsRoutes.routes()).use(ChannelsRoutes.allowedMethods())
 app.use(NotificationRouter.routes()).use(NotificationRouter.allowedMethods())
-
 app.use(matchCache.routes()).use(matchCache.allowedMethods())
-
 app.use(ScheduleRouter.routes()).use(ScheduleRouter.allowedMethods())
 
 const { apiPort, apiURL } = process.env

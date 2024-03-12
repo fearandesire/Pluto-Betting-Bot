@@ -2,12 +2,14 @@ import { SapDiscClient } from '@pluto-core'
 import { resolveTeam } from 'resolve-team'
 import _ from 'lodash'
 import {
+	AttachmentBuilder,
 	CategoryChannelResolvable,
 	ChannelType,
 	ColorResolvable,
 	EmbedBuilder,
 	Guild,
 	GuildBasedChannel,
+	MessageCreateOptions,
 	TextChannel,
 } from 'discord.js'
 import { pluto_api_url } from '@pluto-server-config'
@@ -17,6 +19,9 @@ import {
 	ICategoryData,
 	IConfigRow,
 } from '../../api/common/interfaces/common-interfaces.js'
+import path from 'path'
+import { fileURLToPath } from 'node:url'
+import fs from 'fs/promises'
 
 interface IPrepareMatchEmbed {
 	favored: string
@@ -56,8 +61,7 @@ export default class ChannelManager {
 		betChanRows: IConfigRow[],
 		categoriesServing: ICategoryData,
 	) {
-		const { sport } = channel
-		const { matchupOdds } = channel
+		const { sport, matchupOdds } = channel
 		const { favored } = matchupOdds
 		const favoredTeamInfo = await resolveTeam(favored, {
 			sport: sport.toLowerCase(),
@@ -65,17 +69,20 @@ export default class ChannelManager {
 		})
 		this.validateFavoredTeamInfo(favoredTeamInfo)
 
-		// ? Categories need to be filtered to match the sport for the channel
+		// ? Create channels by sport
 		const gameCategories = categoriesServing[sport]
 		if (!gameCategories || _.isEmpty(gameCategories)) {
 			return
 		}
+		const matchImgStr = `${channel.away_team}_${channel.home_team}`
+		const matchImg = await this.fetchVsImg(matchImgStr, sport)
 		for (const gameCatRow of gameCategories) {
 			await this.createChannelAndSendEmbed(
 				channel,
 				gameCatRow,
 				betChanRows,
 				favoredTeamInfo,
+				matchImg,
 			)
 		}
 	}
@@ -113,19 +120,22 @@ export default class ChannelManager {
 	 * @param {Object} configRow - Category data.
 	 * @param {Array} bettingChanRows - Array of betting channel data.
 	 * @param {Object} favoredTeamInfo - Resolved team information.
+	 * @param {Buffer} matchImg - The image for the match
 	 */
 	async createChannelAndSendEmbed(
 		channel: IChannelAggregated,
 		configRow: IConfigRow,
 		bettingChanRows: IConfigRow[],
 		favoredTeamInfo: any,
+		matchImg: Buffer | null,
 	) {
 		const guild: Guild = SapDiscClient.guilds.cache.get(
 			configRow.guild_id,
 		) as Guild
 
 		if (!guild) return null
-		// Prevent duplicate channels
+
+		// Prevent creating duplicate channels
 		if (
 			await guild.channels.cache.find(
 				(GC) =>
@@ -138,6 +148,11 @@ export default class ChannelManager {
 		const guildsCategory = guild.channels.cache.get(
 			`${configRow.setting_value}`,
 		)
+		if (!guildsCategory) {
+			return
+		}
+
+		// Locate the betting channel for the guild
 		const sortedBetChan = bettingChanRows.find(
 			(row) => row.guild_id === guild.id,
 		)
@@ -159,7 +174,14 @@ export default class ChannelManager {
 			away_team,
 			bettingChanId,
 		}
+
 		const matchEmbed = await this.prepareMatchupEmbed(args)
+		// Correctly create an AttachmentBuilder instance with the matchImg buffer
+		let attachment = null
+		if (matchImg) {
+			attachment = new AttachmentBuilder(matchImg, { name: 'match.png' })
+			matchEmbed.embed.setImage('attachment://match.png')
+		}
 
 		const gameChan = await guild.channels.create({
 			name: `${channel.channelname}`,
@@ -170,7 +192,15 @@ export default class ChannelManager {
 
 		// Check if the created channel is a TextChannel before using TextChannel-specific methods
 		if (gameChan instanceof TextChannel) {
-			await gameChan.send({ embeds: [matchEmbed.embed] })
+			const messageOptions: MessageCreateOptions = {
+				embeds: [matchEmbed.embed],
+			}
+			// Only include 'files' property if attachment is not null
+			if (attachment) {
+				messageOptions['files'] = [attachment]
+			}
+
+			await gameChan.send(messageOptions)
 			console.log(`Created channel: ${channel.channelname}`)
 		} else {
 			console.error('The created channel is not a TextChannel.')
@@ -194,7 +224,6 @@ export default class ChannelManager {
 			.setFooter({
 				text: `Pluto | Created by fenixforever`,
 			})
-
 		return { embed: matchEmbed }
 	}
 
@@ -227,6 +256,35 @@ export default class ChannelManager {
 		}
 		for (const gameChan of gameChans) {
 			await gameChan.delete()
+		}
+	}
+
+	private async fetchVsImg(matchup: string, sport: string) {
+		// Replace spaces with underscores in the matchup string
+		const matchupFileName = `${matchup.replace(/\s/g, '_')}.jpg`
+
+		// Get the directory path of the current module
+		const moduleDir = path.dirname(fileURLToPath(import.meta.url))
+
+		try {
+			// Construct the path to the matchup image file
+			const imagePath = path.join(
+				moduleDir,
+				'../../',
+				'lib',
+				'matchupimages',
+				`${sport}`,
+				matchupFileName,
+			)
+			// Read the image file as a binary buffer
+			const img = await fs.readFile(imagePath)
+			if (!img) {
+				return null
+			}
+			return img
+		} catch (error) {
+			console.error(error)
+			return null
 		}
 	}
 }
