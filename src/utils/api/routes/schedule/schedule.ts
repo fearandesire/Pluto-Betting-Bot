@@ -31,7 +31,7 @@ ScheduleRouter.post('/schedule/daily/all', async (ctx) => {
 			Log.Yellow(`Processing Daily Schedule for ${sport}`)
 			const games = filterGames(aggregatedMatchups, sport)
 			const rows = filterRows(dailyScheduleRows, sport)
-			if (games === null) {
+			if (games === null || games.length === 0) {
 				Log.Red(`No games found for ${sport}`)
 				return
 			}
@@ -55,9 +55,10 @@ ScheduleRouter.post('/schedule/daily/all', async (ctx) => {
 
 function filterGames(
 	games: IMatchupAggregated[],
-	sport: string,
+	sport: any,
 ): IMatchupAggregated[] | null {
-	if (sport !== typeof SportsServing) {
+	// Check if the sport exists within the SportsServing object keys
+	if (!Object.values(SportsServing).includes(sport)) {
 		return null
 	}
 	return _.filter(games, (game) => game.sport_title === sport)
