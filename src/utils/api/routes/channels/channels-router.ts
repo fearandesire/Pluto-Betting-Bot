@@ -5,7 +5,6 @@
 
 import Router from 'koa-router'
 import ChannelManager from '../../../guilds/channels/ChannelManager.js'
-import PlutoLogger from '@pluto-logger'
 import _ from 'lodash'
 
 const ChannelsRoutes = new Router()
@@ -21,10 +20,17 @@ ChannelsRoutes.post(`/channels/incoming`, async (ctx: any) => {
 			ctx.request.body,
 		)
 		if (!validated) {
-			await PlutoLogger.log({
-				id: `api`,
-				description: `Unable to create game channels:\nNo channels were received.`,
+			console.error({
+				route: '/channels/incoming',
+				message:
+					'Unable to create game channels; Invalid data received',
 			})
+			ctx.body = {
+				message:
+					'Unable to create game channels; Invalid data received',
+				statusCode: 500,
+			}
+			return
 		}
 		const { channels, bettingChannelRows, categoriesBySport } =
 			ctx.request.body
@@ -40,10 +46,9 @@ ChannelsRoutes.post(`/channels/incoming`, async (ctx: any) => {
 			status: 200,
 		}
 	} catch (error) {
-		console.log(error)
-		await PlutoLogger.log({
-			id: `api`,
-			description: `Unable to create game channels:\nUnexpected Error`,
+		console.error({
+			route: '/channels/incoming',
+			error: error,
 		})
 		ctx.body = {
 			message: `Unexpected error occurred`,
@@ -62,10 +67,9 @@ ChannelsRoutes.delete(`/channels/delete`, async (ctx: any) => {
 		const { channelNames }: { channelNames: string[] } = ctx.request.body
 
 		if (channelNames === null) {
-			await PlutoLogger.log({
-				id: `api`,
-				description:
-					'Unable to delete active game channels:\nNo channel names were received.',
+			console.error({
+				route: '/channels/delete',
+				message: 'No channel names were received.',
 			})
 			ctx.body = {
 				message: 'No channel names were received.',
@@ -74,23 +78,25 @@ ChannelsRoutes.delete(`/channels/delete`, async (ctx: any) => {
 			return
 		}
 		if (!_.isArray(channelNames)) {
-			await PlutoLogger.log({
-				id: `api`,
-				description:
-					'Unable to delete active game channels:\nInternal server error.',
+			console.error({
+				route: '/channels/delete',
+				message:
+					'Unable to process channels to delete; Invalid data received.',
 			})
 			ctx.body = {
-				message: 'No channel names were received.',
+				message:
+					'Unable to process channels to delete; Invalid data received.',
 				statusCode: 500,
 			}
+			return
 		}
 		for (const channelName of channelNames) {
 			const channelManager = new ChannelManager()
 			await channelManager.deleteChan(channelName)
 		}
-		await PlutoLogger.log({
-			id: `2`,
-			description: `Removed completed game channels.`,
+		console.log({
+			route: '/channels/delete',
+			message: 'Completed channel deletion.',
 		})
 		ctx.body = {
 			message: 'Channels deleted.',
