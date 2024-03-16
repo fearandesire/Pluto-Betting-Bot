@@ -185,3 +185,5 @@ openapi.config.json
 openapitools.json
 Khronos-Swagger-Spec-v1.json
 src/openapi/**/*
+assets/**/*
+Writerside/**/*
