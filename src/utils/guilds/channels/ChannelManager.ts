@@ -19,9 +19,9 @@ import {
 	ICategoryData,
 	IConfigRow,
 } from '../../api/common/interfaces/common-interfaces.js'
-import path from 'path'
-import { fileURLToPath } from 'node:url'
+import path, { dirname } from 'path'
 import fs from 'fs/promises'
+import { fileURLToPath } from 'url'
 
 interface IPrepareMatchEmbed {
 	favored: string
@@ -74,8 +74,7 @@ export default class ChannelManager {
 		if (!gameCategories || _.isEmpty(gameCategories)) {
 			return
 		}
-		const matchImgStr = `${channel.away_team}_${channel.home_team}`
-		const matchImg = await this.fetchVsImg(matchImgStr, sport)
+		const matchImg = await this.fetchVsImg(channel.channelname, sport)
 		for (const gameCatRow of gameCategories) {
 			await this.createChannelAndSendEmbed(
 				channel,
@@ -95,11 +94,22 @@ export default class ChannelManager {
 	 */
 	async validateAndParseChannels(body: {
 		channels: IChannelAggregated[]
-		bettingChanRows: IConfigRow[]
+		bettingChannelRows: IConfigRow[]
 	}) {
-		if (_.isEmpty(body.channels) || _.isEmpty(body.bettingChanRows)) {
+		// Directly checking for non-empty arrays
+		if (
+			!Array.isArray(body.channels) ||
+			body.channels.length === 0 ||
+			!Array.isArray(body.bettingChannelRows) ||
+			body.bettingChannelRows.length === 0
+		) {
+			console.log(
+				`Validation failed. Channels: ${JSON.stringify(body.channels)}, BettingChannelRows: ${JSON.stringify(body.bettingChannelRows)}`,
+			)
 			return false
 		}
+		// Assuming additional validation or parsing logic here
+		return true // Assuming validation passed
 	}
 
 	/**
@@ -260,22 +270,32 @@ export default class ChannelManager {
 	}
 
 	private async fetchVsImg(matchup: string, sport: string) {
-		// Replace spaces with underscores in the matchup string
-		const matchupFileName = `${matchup.replace(/\s/g, '_')}.jpg`
+		const matchupFileName =
+			matchup
+				.replace('at', 'vs') // Ensure "at" is replaced with "vs" first
+				.replace(/-/g, '_') // Replace ALL instances of "-" with "_"
+				.split('_')
+				.map(
+					(part) => _.startCase(_.toLower(part)), // Convert each part to Start Case and then back to lower case
+				)
+				.join('_') + '.jpg'
 
-		// Get the directory path of the current module
-		const moduleDir = path.dirname(fileURLToPath(import.meta.url))
+		// Ensure "vs" is always lowercase
+		const finalMatchupFileName = _.replace(matchupFileName, 'Vs', 'vs')
 
+		const __filename = fileURLToPath(import.meta.url)
+		const __dirname = dirname(__filename)
 		try {
-			// Construct the path to the matchup image file
+			// Assuming the base directory is one level up from where your script is located
+			const baseDir = path.resolve(__dirname, '../../../../') // Adjust this path based on your actual project structure
 			const imagePath = path.join(
-				moduleDir,
-				'../../',
-				'lib',
+				baseDir,
+				'assets',
 				'matchupimages',
-				`${sport}`,
-				matchupFileName,
+				sport,
+				finalMatchupFileName,
 			)
+
 			// Read the image file as a binary buffer
 			const img = await fs.readFile(imagePath)
 			if (!img) {
