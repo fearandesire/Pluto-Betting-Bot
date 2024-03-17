@@ -48,11 +48,11 @@ export default class NotificationService {
 				winner.newBalance = MoneyFormatter.toUSD(winner.newBalance)
 				await this.notifyUser(winner)
 			}
-			if (data.losers.length > 0) {
-				// Process losers
-				for (const loser of data.losers) {
-					await this.notifyUser(loser)
-				}
+		}
+		if (data.losers.length > 0) {
+			// Process losers
+			for (const loser of data.losers) {
+				await this.notifyUser(loser)
 			}
 		}
 	}
