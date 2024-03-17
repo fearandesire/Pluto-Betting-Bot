@@ -30,8 +30,6 @@ NotificationRouter.post(`/notifications/bets/results`, async (ctx) => {
 	await new NotificationService(SapDiscClient).processBetResults(
 		NotificationData,
 	)
-	// You might want to send a success response here
-
 	ctx.body = {
 		success: true,
 	}
