@@ -8,7 +8,7 @@ import { ApiErrorHandler } from '../../utils/api/Khronos/error-handling/ApiError
 import { ApiModules } from '../../lib/interfaces/api/api.interface.js'
 
 @ApplyOptions<Command.Options>({
-	description: '🔎 View current matchups & odds',
+	description: '🔎 View current matches & odds',
 })
 export class UserCommand extends Command {
 	public override registerApplicationCommands(registry: Command.Registry) {
