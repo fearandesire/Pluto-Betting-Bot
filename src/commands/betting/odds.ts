@@ -4,6 +4,8 @@ import { prepareAndFormat } from '../../utils/matches/OddsProcessing.js'
 import { QuickError } from '@pluto-embed-reply'
 import GuildWrapper from '../../utils/api/Khronos/guild/guild-wrapper.js'
 import MatchApiWrapper from '../../utils/api/Khronos/matches/matchApiWrapper.js'
+import { ApiErrorHandler } from '../../utils/api/Khronos/error-handling/ApiErrorHandler.js'
+import { ApiModules } from '../../lib/interfaces/api/api.interface.js'
 
 @ApplyOptions<Command.Options>({
 	description: '🔎 View current matchups & odds',
@@ -30,20 +32,29 @@ export class UserCommand extends Command {
 		const guildId = interaction.guild.id
 		const embedThumbnail = interaction.guild.iconURL({ extension: 'jpg' })
 		if (!embedThumbnail) return QuickError(interaction, `An error occurred`)
-		const guildConfig = await new GuildWrapper().getGuild(guildId)
-		const sport = guildConfig.sport
-		const matchupsForGuild = await new MatchApiWrapper().matchesForSport({
-			sport: sport.toLowerCase(),
-		})
-		const { matches } = matchupsForGuild
-		const oddsEmbed = await prepareAndFormat(matches, embedThumbnail)
-		if (!oddsEmbed)
-			return QuickError(
+		try {
+			const guildConfig = await new GuildWrapper().getGuild(guildId)
+			const sport = guildConfig.sport
+			const matchupsForGuild =
+				await new MatchApiWrapper().matchesForSport({
+					sport: sport.toLowerCase(),
+				})
+			const { matches } = matchupsForGuild
+			const oddsEmbed = await prepareAndFormat(matches, embedThumbnail)
+			if (!oddsEmbed)
+				return QuickError(
+					interaction,
+					`An error occurred when presenting odds.`,
+				)
+			return interaction.followUp({
+				embeds: [oddsEmbed],
+			})
+		} catch (error) {
+			await new ApiErrorHandler().handle(
 				interaction,
-				`An error occurred when presenting odds.`,
+				error,
+				ApiModules.unknown,
 			)
-		return interaction.followUp({
-			embeds: [oddsEmbed],
-		})
+		}
 	}
 }
