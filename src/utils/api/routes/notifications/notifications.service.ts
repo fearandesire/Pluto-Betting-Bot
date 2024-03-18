@@ -3,9 +3,15 @@ import { SapphireClient } from '@sapphire/framework'
 import { ColorResolvable, EmbedBuilder } from 'discord.js'
 import embedColors from '../../../../lib/colorsConfig.js'
 import logClr from '@pluto-internal-color-logger'
-import { IBetResult } from '../../Khronos/bets/bets-interfaces.js'
-import { NotifyBetUsers } from '../../common/interfaces/common-interfaces.js'
 import MoneyFormatter from '../../common/money-formatting/money-format.js'
+import {
+	DisplayBetNotification,
+	DisplayBetNotificationLost,
+	DisplayBetNotificationWon,
+	DisplayResultLost,
+	DisplayResultWon,
+	NotifyBetUsers,
+} from './notifications.interface.js'
 
 export default class NotificationService {
 	private client: SapphireClient
@@ -15,72 +21,108 @@ export default class NotificationService {
 	}
 
 	async processBetResults(data: NotifyBetUsers): Promise<void> {
-		if (
-			!data ||
-			(data?.winners?.length === 0 && data?.losers?.length === 0)
-		) {
+		if (!data || (data.winners.length === 0 && data.losers.length === 0)) {
 			console.info(`No notifications to process`)
 			return
 		}
 
 		if (data.winners.length > 0) {
-			// Process winners
 			for (const winner of data.winners) {
-				if (!winner.oldBalance || !winner.newBalance) {
+				if (!winner.result.oldBalance || !winner.result.newBalance) {
 					console.error({
 						method: this.processBetResults.name,
-						message: `Missing balance data for user ${winner.userid}`,
+						message: `Missing balance data for user ${winner.userId}`,
 					})
 					continue
 				}
 
-				// Format currency to $USD
-				const { betAmount, payout, profit } =
-					await MoneyFormatter.formatAmounts({
-						amount: winner.amount,
-						payout: winner.payout,
-						profit: winner.profit,
-					})
-				winner.amount = betAmount
-				winner.payout = payout
-				winner.profit = profit
-				winner.oldBalance = MoneyFormatter.toUSD(winner.oldBalance)
-				winner.newBalance = MoneyFormatter.toUSD(winner.newBalance)
-				await this.notifyUser(winner)
+				const formattedAmounts = await MoneyFormatter.formatAmounts({
+					amount: winner.result.betAmount,
+					payout: winner.result.payout,
+					profit: winner.result.profit,
+				})
+				const {
+					betAmount: displayBetAmount,
+					payout: displayPayout,
+					profit: displayProfit,
+				} = formattedAmounts
+				// Now, instead of overwriting the original numeric properties,
+				// we add them to a new displayResult object
+				const displayResult: DisplayResultWon = {
+					...winner.result,
+					displayBetAmount,
+					displayPayout,
+					displayProfit,
+					displayNewBalance: MoneyFormatter.toUSD(
+						winner.result.newBalance,
+					),
+					displayOldBalance: MoneyFormatter.toUSD(
+						winner.result.oldBalance,
+					),
+				}
+				const displayWinner: DisplayBetNotificationWon = {
+					...winner,
+					displayResult,
+				}
+
+				// Use displayWinner for user notifications
+				await this.notifyUser(displayWinner) // Make sure notifyUser can handle DisplayBetNotificationWon
 			}
 		}
+
 		if (data.losers.length > 0) {
-			// Process losers
 			for (const loser of data.losers) {
-				await this.notifyUser(loser)
+				const displayResult: DisplayResultLost = {
+					...loser.result,
+					displayBetAmount: MoneyFormatter.toUSD(
+						loser.result.betAmount,
+					),
+				}
+
+				const displayLoser: DisplayBetNotificationLost = {
+					...loser,
+					displayResult,
+				}
+
+				// Use displayLoser for user notifications
+				await this.notifyUser(displayLoser) // Make sure notifyUser can handle DisplayBetNotificationLost
 			}
 		}
 	}
 
-	private async notifyUser(betData: IBetResult) {
-		const {
-			userid,
-			betid,
-			team,
-			amount,
-			payout,
-			profit,
-			newBalance,
-			oldBalance,
-			betresult,
-		} = betData || null
+	private async notifyUser(betData: DisplayBetNotification) {
+		const { userId, betId, result, displayResult } = betData
 
+		// Basic message setup
 		let msg: string = ''
-		let color: ColorResolvable = embedColors.PlutoBrightGreen
-		const extraInfo = ''
-		if (betresult === `won` && newBalance && oldBalance) {
-			msg = `### Congrats, you won your bet! 🎊\n# __Details__\n\n**\`${amount}\`** on the **${team}**\n**Profit:** **\`${profit}\`**\n**Payout:** **\`${payout}\`**\n**Balance**: *\`${oldBalance}\`* → **\`${newBalance}\` 💰**`
+		let color: ColorResolvable = embedColors.PlutoBrightGreen // Assuming this is defined elsewhere
+
+		// Check if the bet result is a win
+		if ('profit' in result && 'displayProfit' in displayResult) {
+			// It's safe to access properties specific to DisplayResultWon
+			const {
+				team,
+				displayBetAmount,
+				displayPayout,
+				displayProfit,
+				displayNewBalance,
+				displayOldBalance,
+			} = {
+				...displayResult,
+			}
+
+			msg = `### Congrats, you won your bet! 🎊\n# __Details__\n\n**\`${displayBetAmount}\`** on the **${team}**\n**Profit:** **\`${displayProfit}\`**\n**Payout:** **\`${displayPayout}\`**\n**Balance**: *\`${displayOldBalance}\`* → **\`${displayNewBalance}\` 💰**`
 			color = embedColors.PlutoBrightGreen
-		} else if (betresult === `lost`) {
-			msg = `### Bad news...you lost a bet\n# __Details__\n\n${amount} bet on the **${team}**\nBetter luck next time!`
+		} else if ('betAmount' in result) {
+			// Assuming losers always have a betAmount, adjust as necessary
+			const { team, displayBetAmount } = {
+				team: result.team,
+				displayBetAmount: displayResult.displayBetAmount,
+			}
+
+			msg = `### Bad news...you lost a bet\n# __Details__\n\n${displayBetAmount} bet on the **${team}**\nBetter luck next time!`
 			color = embedColors.PlutoRed
 		}
-		msg += `\n\n${extraInfo}*Issue? please contact: <@208016830491525120> | Bet ID: \`${betid}\`*`
 
 		const embed = new EmbedBuilder()
 			.setTitle(`Bet Result`)
@@ -91,13 +133,13 @@ export default class NotificationService {
 			})
 
 		try {
-			await this.client.users.send(userid, {
+			await this.client.users.send(userId, {
 				embeds: [embed],
 			})
 		} catch (err) {
-			// User is no longer in the server, or has the bot blocked
+			// Log the error with assumed logClr function, ensuring it matches the provided error handling style
 			logClr({
-				text: `Failed to DM ${userid} | Bet ID: ${betid}\nAccount Privacy issue, Bot blocked, or no longer in the server.`,
+				text: `Failed to DM ${userId} | Bet ID: ${betId}\nAccount Privacy issue, Bot blocked, or no longer in the server.`,
 				color: `red`,
 				status: `error`,
 			})

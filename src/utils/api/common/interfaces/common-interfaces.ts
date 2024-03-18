@@ -1,5 +1,3 @@
-import { IBetResult } from '../../Khronos/bets/bets-interfaces.js'
-
 /**
  * Supply additional information such as match opponent, date of matchup
  */
@@ -69,9 +67,4 @@ export interface IConfigRow {
 
 export interface ICategoryData {
 	[key: string]: IConfigRow[]
-}
-
-export interface NotifyBetUsers {
-	winners: IBetResult[]
-	losers: IBetResult[]
 }
