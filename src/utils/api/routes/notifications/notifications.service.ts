@@ -1,7 +1,6 @@
 // Import interfaces and potentially the Discord client type
 import { SapphireClient } from '@sapphire/framework'
 import { ColorResolvable, EmbedBuilder } from 'discord.js'
-import embedColors from '../../../../lib/colorsConfig.js'
 import logClr from '@pluto-internal-color-logger'
 import MoneyFormatter from '../../common/money-formatting/money-format.js'
 import {
@@ -14,13 +13,10 @@ import {
 } from './notifications.interface.js'
 
 export default class NotificationService {
-	private client: SapphireClient
-
-	constructor(client: SapphireClient) {
-		this.client = client // Use the passed-in client
-	}
-
-	async processBetResults(data: NotifyBetUsers): Promise<void> {
+	async processBetResults(
+		data: NotifyBetUsers,
+		client: SapphireClient,
+	): Promise<void> {
 		if (!data || (data.winners.length === 0 && data.losers.length === 0)) {
 			console.info(`No notifications to process`)
 			return
@@ -66,7 +62,7 @@ export default class NotificationService {
 				}
 
 				// Use displayWinner for user notifications
-				await this.notifyUser(displayWinner) // Make sure notifyUser can handle DisplayBetNotificationWon
+				await this.notifyUser(displayWinner, client) // Make sure notifyUser can handle DisplayBetNotificationWon
 			}
 		}
 
@@ -85,17 +81,17 @@ export default class NotificationService {
 				}
 
 				// Use displayLoser for user notifications
-				await this.notifyUser(displayLoser) // Make sure notifyUser can handle DisplayBetNotificationLost
+				await this.notifyUser(displayLoser, client) // Make sure notifyUser can handle DisplayBetNotificationLost
 			}
 		}
 	}
 
-	private async notifyUser(betData: DisplayBetNotification) {
+	async notifyUser(betData: DisplayBetNotification, client: SapphireClient) {
 		const { userId, betId, result, displayResult } = betData
 
 		// Basic message setup
 		let msg: string = ''
-		let color: ColorResolvable = embedColors.PlutoBrightGreen // Assuming this is defined elsewhere
+		let color: ColorResolvable = `#57f287` // Assuming this is defined elsewhere
 
 		// Check if the bet result is a win
 		if ('profit' in result && 'displayProfit' in displayResult) {
@@ -112,7 +108,7 @@ export default class NotificationService {
 			}
 
 			msg = `### Congrats, you won your bet! 🎊\n# __Details__\n\n**\`${displayBetAmount}\`** on the **${team}**\n**Profit:** **\`${displayProfit}\`**\n**Payout:** **\`${displayPayout}\`**\n**Balance**: *\`${displayOldBalance}\`* → **\`${displayNewBalance}\` 💰**`
-			color = embedColors.PlutoBrightGreen
+			color = `#57f287`
 		} else if ('betAmount' in result) {
 			// Assuming losers always have a betAmount, adjust as necessary
 			const { team, displayBetAmount } = {
@@ -121,7 +117,7 @@ export default class NotificationService {
 			}
 
 			msg = `### Bad news...you lost a bet\n# __Details__\n\n${displayBetAmount} bet on the **${team}**\nBetter luck next time!`
-			color = embedColors.PlutoRed
+			color = `#ff6961`
 		}
 
 		const embed = new EmbedBuilder()
@@ -133,7 +129,7 @@ export default class NotificationService {
 			})
 
 		try {
-			await this.client.users.send(userId, {
+			await client.users.send(userId, {
 				embeds: [embed],
 			})
 		} catch (err) {

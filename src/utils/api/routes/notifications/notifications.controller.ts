@@ -27,8 +27,9 @@ NotificationRouter.post(`/notifications/bets/results`, async (ctx) => {
 		return // Make sure to exit the function here
 	}
 	// Proceed with processing as the data is valid
-	await new NotificationService(SapDiscClient).processBetResults(
+	await new NotificationService().processBetResults(
 		NotificationData,
+		SapDiscClient,
 	)
 	ctx.body = {
 		success: true,
