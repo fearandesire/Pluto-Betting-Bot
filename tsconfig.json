@@ -11,6 +11,7 @@
 		"moduleResolution": "Node",
 		"outDir": "./dist",
 		"removeComments": true,
+		"resolveJsonModule": true,
 		"rootDir": "./src",
 		"skipLibCheck": true,
 		"sourceMap": true,
@@ -68,6 +69,6 @@
 		"node_modules/**/*",
 		"node_modules",
 		"dist",
-		"node_modules/discord.js/**/*"
+		"node_modules/discord.js/**/*",
 	],
 }
