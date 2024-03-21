@@ -14,7 +14,7 @@ const SapDiscClient = new SapphireClient({
 	defaultPrefix: process.env.PREFIX,
 	caseInsensitiveCommands: true,
 	ignoreBots: false,
-	shards: `auto`,
+	shards: false,
 	intents: [
 		GatewayIntentBits.DirectMessageReactions,
 		GatewayIntentBits.DirectMessages,
