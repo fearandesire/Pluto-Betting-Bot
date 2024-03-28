@@ -213,7 +213,7 @@ export default class ChannelManager {
 			await gameChan.send(messageOptions)
 			console.log(`Created channel: ${channel.channelname}`)
 		} else {
-			console.error('The created channel is not a TextChannel.')
+			console.error('The created channel is not a TextChannel.', gameChan)
 		}
 	}
 
