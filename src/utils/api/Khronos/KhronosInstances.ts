@@ -11,7 +11,7 @@ import {
 
 export const KH_API_CONFIG = new Configuration({
 	headers: {
-		'admin-token': `${process.env.PLUTO_API_TOKEN}`,
+		'admin-token': `${process.env.KH_API_TOKEN}`,
 	},
 })
 

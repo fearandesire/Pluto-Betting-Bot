@@ -35,7 +35,7 @@ ChannelsRoutes.post(`/channels/incoming`, async (ctx: any) => {
 		const { channels, bettingChannelRows, categoriesBySport } =
 			ctx.request.body
 		for (const channel of channels) {
-			await channelManager.processChannel(
+			await channelManager.processChannels(
 				channel,
 				bettingChannelRows,
 				categoriesBySport,

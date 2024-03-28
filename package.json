@@ -1,6 +1,6 @@
 {
 	"name": "bettingbot",
-	"version": "2.7.3",
+	"version": "2.7.4",
 	"description": "Pluto Betting App",
 	"main": "./dist/Pluto.js",
 	"module": "./dist/Pluto.js",
@@ -27,11 +27,7 @@
 		"post-api-fix": "node ./src/utils/scripts/addJsExtension.js",
 		"ci-gen-api": "rimraf ./src/openapi && yarn gen-api && yarn post-api-fix",
 		"sap-cmd": "sapphire generate slashcommand",
-		"dvault": "npx dotenv-vault@latest",
-		"vault-open": "npx dotenv-vault@latest open",
-		"vault-login": "npx dotenv-vault@latest login",
-		"vault-push": "npx dotenv-vault@latest push",
-		"vault-pull": "npx dotenv-vault@latest pull"
+		"dvault": "npx dotenv-vault@latest"
 	},
 	"type": "module",
 	"author": "fearandesire",

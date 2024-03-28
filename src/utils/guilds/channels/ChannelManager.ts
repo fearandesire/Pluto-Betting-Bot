@@ -55,7 +55,7 @@ export default class ChannelManager {
 	 * These are the categories that Pluto is serving,
 	 * and is where we will be creating the channels.
 	 */
-	async processChannel(
+	async processChannels(
 		channel: IChannelAggregated,
 		betChanRows: IConfigRow[],
 		categoriesServing: ICategoryData,
@@ -274,13 +274,16 @@ export default class ChannelManager {
 				.replace('at', 'vs') // Ensure "at" is replaced with "vs" first
 				.replace(/-/g, '_') // Replace ALL instances of "-" with "_"
 				.split('_')
-				.map(
-					(part) => _.startCase(_.toLower(part)), // Convert each part to Start Case and then back to lower case
+				.map((part) =>
+					// Convert each part to Start Case without lodash
+					part
+						.toLowerCase()
+						.replace(/\b[a-z]/g, (char) => char.toUpperCase()),
 				)
 				.join('_') + '.jpg'
 
 		// Ensure "vs" is always lowercase
-		const finalMatchupFileName = _.replace(matchupFileName, 'Vs', 'vs')
+		const finalMatchupFileName = matchupFileName.replace('Vs', 'vs')
 
 		const __filename = fileURLToPath(import.meta.url)
 		const __dirname = dirname(__filename)
