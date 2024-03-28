@@ -16,7 +16,7 @@ export class UserCommand extends Command {
 			builder //
 				.setName(this.name)
 				.setDescription(this.description)
-				.setDMPermission(true),
+				.setDMPermission(false),
 		)
 	}
 
@@ -24,16 +24,10 @@ export class UserCommand extends Command {
 		interaction: Command.ChatInputCommandInteraction,
 	) {
 		await interaction.deferReply()
-		if (!interaction.guild) {
-			const errEmb = ErrorEmbeds.invalidRequest(
-				`This command can only be used in a server.`,
-			)
-			return interaction.editReply({ embeds: [errEmb] })
-		}
-		const guildId = interaction.guild.id
-		const embedThumbnail = interaction.guild.iconURL({ extension: 'jpg' })
+		const guildId = interaction.guild!.id
+		const embedThumbnail = interaction.guild!.iconURL({ extension: 'jpg' })
 		if (!embedThumbnail)
-			return interaction.editReply({
+			return interaction.followUp({
 				embeds: [
 					ErrorEmbeds.internalErr(`Unable to resolve Guild Icon.`),
 				],
@@ -51,10 +45,13 @@ export class UserCommand extends Command {
 				const errEmb = ErrorEmbeds.invalidRequest(
 					`No Odds are currently posted.`,
 				)
-				return interaction.editReply({
+				return interaction.followUp({
 					embeds: [errEmb],
 				})
 			}
+			return interaction.followUp({
+				embeds: [oddsEmbed],
+			})
 		} catch (error) {
 			await new ApiErrorHandler().handle(
 				interaction,

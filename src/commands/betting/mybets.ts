@@ -2,8 +2,7 @@ import { ApplyOptions } from '@sapphire/decorators'
 import { Command } from '@sapphire/framework'
 import BetslipDataManager from '../../utils/api/Khronos/bets/BetslipDataManager.js'
 import BetslipWrapper from '../../utils/api/Khronos/bets/betslip-wrapper.js'
-import { ApiErrorHandler } from '../../utils/api/Khronos/error-handling/ApiErrorHandler.js'
-import { ApiModules } from '../../lib/interfaces/api/api.interface.js'
+import { ErrorEmbeds } from '../../utils/common/errors/global'
 
 @ApplyOptions<Command.Options>({
 	description: '🪙 View your currently active bets',
@@ -27,11 +26,10 @@ export class UserCommand extends Command {
 			).getActiveBets(interaction, interaction.user.id)
 			return interaction.followUp({ embeds: [activeBetsEmbed] })
 		} catch (error) {
-			return new ApiErrorHandler().handle(
-				interaction,
-				error,
-				ApiModules.account,
+			const errEmb = ErrorEmbeds.accountErr(
+				`You currently have no active bets.`,
 			)
+			return interaction.followUp({ embeds: [errEmb] })
 		}
 	}
 }

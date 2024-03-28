@@ -16,10 +16,12 @@ export enum ApiHttpErrorTypes {
 	ClaimCooldown = 'ClaimCooldownException',
 	HasPendingBet = 'HasPendingBetException',
 	AccountExists = 'AccountExistsException',
+	NoActiveBets = 'NoActiveBetsFoundException',
 }
 
 export enum ApiModules {
 	betting = 'betting',
 	account = 'account',
 	unknown = 'unknown',
+	odds = 'odds',
 }

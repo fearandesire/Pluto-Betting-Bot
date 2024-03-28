@@ -46,6 +46,9 @@ export class ApiErrorHandler {
 			case ApiHttpErrorTypes.AccountExists:
 				errorMessage = `You already have an account with Pluto.`
 				break
+			case ApiHttpErrorTypes.NoActiveBets:
+				errorMessage = `You have no active bets.`
+				break
 			default:
 				errorMessage =
 					'An unexpected server-side error has occurred. Please try again later.'
