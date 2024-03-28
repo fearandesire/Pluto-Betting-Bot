@@ -1,6 +1,4 @@
 import discord, { ColorResolvable, TextChannel } from 'discord.js'
-import { SapDiscClient } from '@pluto-core'
-import { logChan as logChanID } from './serverConfig.js'
 
 const { EmbedBuilder } = discord
 /**
@@ -16,12 +14,10 @@ export default class PlutoLogger {
 	 * @function sendEmbed
 	 * @memberof PlutoLogger
 	 * @param {Object} embed
+	 * @param {TextChannel} Discord Channel to send embed
 	 * @static
 	 */
-	static async sendEmbed(embed: any) {
-		const logChan = (await SapDiscClient.channels.fetch(
-			logChanID,
-		)) as TextChannel
+	static async sendEmbed(embed: any, logChan: TextChannel) {
 		await logChan.send({
 			embeds: [embed],
 		})
@@ -34,23 +30,23 @@ export default class PlutoLogger {
 	 * @memberof PlutoLogger
 	 * @static
 	 * @async
-	 *
+	 * @param {TextChannel} logChan - The log channel to send the embed to
 	 * @param {object} data - Object containing the data
 	 * @param {string | number} data.id - The ID of the log
 	 * @param {string} data.description - The description of the log
 	 * @param {string} data.footer - The footer of the embed
 	 */
-	static async log(data: {
-		id: string | number
-		title?: string
-		color?: string
-		description: string
-		content?: string
-		footer?: string
-	}) {
-		const logChan = (await SapDiscClient.channels.fetch(
-			logChanID,
-		)) as TextChannel
+	static async log(
+		logChan: TextChannel,
+		data: {
+			id: string | number
+			title?: string
+			color?: string
+			description: string
+			content?: string
+			footer?: string
+		},
+	) {
 		let color
 		let title
 		// # Pre-Built Embed for Log Channel

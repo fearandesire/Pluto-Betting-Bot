@@ -1,6 +1,5 @@
 import { Command } from '@sapphire/framework'
 import _ from 'lodash'
-import { serverEnv } from '@pluto-server-config'
 import { embedReply, QuickError } from '@pluto-embed-reply'
 import { Log } from '@pluto-internal-logger'
 import { findEmoji } from '../utils/bot_res/findEmoji.js'
@@ -23,8 +22,3 @@ const helpfooter = 'dev. by fenixforever'
 
 // ? General Config
 export { helpfooter, Command, _, Log, QuickError, embedReply, findEmoji }
-
-// # DB Configs
-const { logChan } = serverEnv
-
-export { logChan }

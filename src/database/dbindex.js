@@ -1,17 +1,6 @@
 import monitor from 'pg-monitor'
 import pgPromise from 'pg-promise'
 import { packageDirectory } from 'pkg-dir'
-import * as dotenv from 'dotenv'
-
-let envSelection
-if (process.env.NODE_ENV === `production`) {
-	envSelection = `.env.production`
-} else {
-	envSelection = `.env`
-}
-dotenv.config({
-	path: envSelection,
-})
 
 const rootDir = await packageDirectory()
 const initOptions = {

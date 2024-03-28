@@ -12,7 +12,6 @@ import {
 	MessageCreateOptions,
 	TextChannel,
 } from 'discord.js'
-import { pluto_api_url } from '@pluto-server-config'
 import { findEmoji } from '../../bot_res/findEmoji.js'
 import { IChannelAggregated } from '../../api/routes/channels/createchannels.interface.js'
 import {
@@ -41,7 +40,7 @@ export default class ChannelManager {
 	}
 
 	constructor() {
-		this.API_URL = `${pluto_api_url}`
+		this.API_URL = `${process.env.KH_API_URL}`
 		this.ep = {
 			gchan: `/channels`,
 		}
