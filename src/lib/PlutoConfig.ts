@@ -1,6 +1,5 @@
 import { Command } from '@sapphire/framework'
 import _ from 'lodash'
-import { embedReply, QuickError } from '@pluto-embed-reply'
 import { Log } from '@pluto-internal-logger'
 import { findEmoji } from '../utils/bot_res/findEmoji.js'
 
@@ -21,4 +20,4 @@ export {
 const helpfooter = 'dev. by fenixforever'
 
 // ? General Config
-export { helpfooter, Command, _, Log, QuickError, embedReply, findEmoji }
+export { helpfooter, Command, _, Log, findEmoji }
