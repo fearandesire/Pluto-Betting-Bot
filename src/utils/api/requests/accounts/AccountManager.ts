@@ -1,7 +1,6 @@
 import { CommandInteraction, GuildMember } from 'discord.js'
 import { ApiModules } from '../../../../lib/interfaces/api/api.interface.js'
 import { ApiErrorHandler } from '../../Khronos/error-handling/ApiErrorHandler.js'
-// noinspection ES6PreferShortImport
 import {
 	AccountsApi,
 	GetBalanceDto,
