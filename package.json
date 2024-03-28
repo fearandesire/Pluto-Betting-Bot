@@ -1,5 +1,5 @@
 {
-	"name": "bettingbot",
+	"name": "pluto-betting",
 	"version": "2.7.4",
 	"description": "Pluto Betting App",
 	"main": "./dist/Pluto.js",
