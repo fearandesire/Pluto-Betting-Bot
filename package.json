@@ -1,6 +1,6 @@
 {
 	"name": "bettingbot",
-	"version": "2.7.1",
+	"version": "2.7.2",
 	"description": "Pluto Betting App",
 	"main": "./dist/Pluto.js",
 	"module": "./dist/Pluto.js",
