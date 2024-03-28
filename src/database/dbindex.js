@@ -1,8 +1,17 @@
-import 'dotenv/config'
-
 import monitor from 'pg-monitor'
 import pgPromise from 'pg-promise'
 import { packageDirectory } from 'pkg-dir'
+import * as dotenv from 'dotenv'
+
+let envSelection
+if (process.env.NODE_ENV === `production`) {
+	envSelection = `.env.production`
+} else {
+	envSelection = `.env`
+}
+dotenv.config({
+	path: envSelection,
+})
 
 const rootDir = await packageDirectory()
 const initOptions = {
@@ -17,13 +26,9 @@ const initOptions = {
 
 const pgp = pgPromise(initOptions) // initialises options
 
-//* Logging pg-promise events with pg-monitor */
-
 monitor.attach(initOptions) // monitor to log
 
 const { SQLStr } = process.env
-
-//* PG PROMISE SETUP »»»»» */
 
 const sslrootcert = `${rootDir}/ca-certificate.crt`
 

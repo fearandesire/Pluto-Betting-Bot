@@ -15,6 +15,7 @@ export enum ApiHttpErrorTypes {
 	UnableToFindBalance = 'UnableToFindBalanceException',
 	ClaimCooldown = 'ClaimCooldownException',
 	HasPendingBet = 'HasPendingBetException',
+	AccountExists = 'AccountExistsException',
 }
 
 export enum ApiModules {

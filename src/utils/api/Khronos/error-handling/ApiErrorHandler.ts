@@ -43,6 +43,9 @@ export class ApiErrorHandler {
 			case ApiHttpErrorTypes.InternalError:
 				errorMessage = `An internal error has occurred. Please try again later.`
 				break
+			case ApiHttpErrorTypes.AccountExists:
+				errorMessage = `You already have an account with Pluto.`
+				break
 			default:
 				errorMessage =
 					'An unexpected server-side error has occurred. Please try again later.'

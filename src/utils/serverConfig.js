@@ -1,26 +1,4 @@
-import * as dotenv from 'dotenv'
 import db from '@pluto-db'
-
-const envPath = (() => {
-	switch (process.env.SERVERNAME) {
-		case 'nfl':
-			return './.env.nflc'
-		case 'nba':
-			return './.env.nbac'
-		case 'nba-dev':
-			return './.env.dev'
-		case 'nfl-dev':
-			return './.env.dev.nflc'
-		default:
-			return './.env.dev'
-	}
-})()
-
-dotenv.config({
-	path: envPath,
-	override: true,
-})
-
 // # Retrieve server configuration on startup
 const configResp = await db.oneOrNone(
 	`SELECT config FROM serverconfigs WHERE serverid=$1`,
