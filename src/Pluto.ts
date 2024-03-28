@@ -2,7 +2,7 @@ import { LogLevel, SapphireClient } from '@sapphire/framework'
 import { GatewayIntentBits, Partials } from 'discord.js'
 import { blue, bold, green, red, yellow } from 'colorette'
 import '@sapphire/plugin-hmr/register'
-// import './utils/api/index.js'
+import './utils/api/index.js'
 import * as dotenv from 'dotenv'
 
 let envSelection
