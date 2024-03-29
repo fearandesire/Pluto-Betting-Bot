@@ -21,8 +21,8 @@
 		"build": "tsc",
 		"clear-dist": "rimraf ./dist",
 		"watch": "nodemon -L --watch ./ --exec npm run dev",
-		"start": "cross-env NODE_ENV=production node --loader esm-module-alias/loader --no-warnings ./dist/Pluto.js",
-		"dev": "cross-env NODE_ENV=development node --loader esm-module-alias/loader --no-warnings ./dist/Pluto.js",
+		"start": "node --loader esm-module-alias/loader --no-warnings ./dist/Pluto.js",
+		"dev": "node --loader esm-module-alias/loader --no-warnings ./dist/Pluto.js",
 		"ts-dev": "tsx ./src/Pluto.ts",
 		"gen-api": "openapi-generator-cli generate -i ./Khronos-Swagger-Spec-v1.json -g typescript-fetch -o ./src/openapi/khronos -c openapi.config.json",
 		"post-api-fix": "node ./src/utils/scripts/addJsExtension.js",
@@ -96,6 +96,7 @@
 		"colorette": "^2.0.20",
 		"cross-env": "^7.0.3",
 		"date-fns": "^2.29.3",
+		"discord-api-types": "^0.37.77",
 		"discord.js": "^14.14.1",
 		"dotenv": "16.4.5",
 		"dotenv-vault": "1.26.1",
@@ -118,6 +119,7 @@
 		"puppeteer-extra-plugin-recaptcha": "^3.6.8",
 		"puppeteer-extra-plugin-stealth": "^2.11.2",
 		"resolve-team": "^1.6.0",
+		"typescript": "^5.4.3",
 		"winston": "^3.8.2",
 		"winston-daily-rotate-file": "^4.7.1"
 	},
@@ -154,8 +156,7 @@
 		"prettier-eslint-cli": "^7.1.0",
 		"rimraf": "^5.0.5",
 		"ts-jest": "^29.1.2",
-		"tsconfig-paths": "^4.2.0",
-		"typescript": "^5.4.2"
+		"tsconfig-paths": "^4.2.0"
 	},
 	"jest": {
 		"moduleNameMapper": {
@@ -176,5 +177,14 @@
 		],
 		"coverageDirectory": "../coverage",
 		"testEnvironment": "node"
+	},
+	"packageManager": "yarn@4.1.1",
+	"packageExtensions": {
+		"esm-module-alias": {
+			"dependencies": {
+				"esm-module-alias": "2.1.0"
+			}
+		}
+
 	}
 }

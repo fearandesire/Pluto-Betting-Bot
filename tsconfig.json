@@ -3,11 +3,11 @@
 		"allowJs": true,
 		"allowSyntheticDefaultImports": true,
 		"declaration": true,
-		"emitDecoratorMetadata": true, // Choose module resolution strategy
+		"emitDecoratorMetadata": true,
 		"esModuleInterop": true,
 		"experimentalDecorators": true,
 		"forceConsistentCasingInFileNames": true,
-		"module": "ESNext", // Use ESNext for ES module support
+		"module": "ESNext",
 		"moduleResolution": "Node",
 		"outDir": "./dist",
 		"removeComments": true,

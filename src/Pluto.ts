@@ -3,17 +3,6 @@ import { GatewayIntentBits, Partials } from 'discord.js'
 import { blue, bold, green, red, yellow } from 'colorette'
 import '@sapphire/plugin-hmr/register'
 import './utils/api/index.js'
-import * as dotenv from 'dotenv'
-
-let envSelection
-if (process.env.NODE_ENV === `production`) {
-	envSelection = `.env.production`
-} else {
-	envSelection = `.env`
-}
-dotenv.config({
-	path: envSelection,
-})
 
 const SapDiscClient = new SapphireClient({
 	defaultPrefix: process.env.PREFIX,

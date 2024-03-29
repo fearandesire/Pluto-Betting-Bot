@@ -179,7 +179,6 @@ lib/imgs/nba-logo-wide.png
 .idea/
 .fleet/!/.swm/channel-management.4macueny.sw.md
 ecosystem.config.js
-
 # OpenAPI Config, Spec, etc.
 openapi.config.json
 openapitools.json
@@ -187,3 +186,11 @@ Khronos-Swagger-Spec-v1.json
 src/openapi/**/*
 assets/**/*
 Writerside/**/*
+# Yarn v4
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+!.yarn/cache

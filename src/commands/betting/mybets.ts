@@ -2,7 +2,7 @@ import { ApplyOptions } from '@sapphire/decorators'
 import { Command } from '@sapphire/framework'
 import BetslipDataManager from '../../utils/api/Khronos/bets/BetslipDataManager.js'
 import BetslipWrapper from '../../utils/api/Khronos/bets/betslip-wrapper.js'
-import { ErrorEmbeds } from '../../utils/common/errors/global'
+import { ErrorEmbeds } from '../../utils/common/errors/global.js'
 
 @ApplyOptions<Command.Options>({
 	description: '🪙 View your currently active bets',
