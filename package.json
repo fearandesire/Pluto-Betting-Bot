@@ -101,7 +101,6 @@
 		"dotenv": "16.4.5",
 		"dotenv-vault": "1.26.1",
 		"esm-module-alias": "^2.1.0",
-		"fuse.js": "^6.6.2",
 		"ioredis": "^5.3.2",
 		"koa": "^2.14.2",
 		"koa-bodyparser": "^4.4.1",
@@ -111,17 +110,17 @@
 		"module-alias": "^2.2.3",
 		"numeral": "^2.0.6",
 		"pg": "^8.7.3",
-		"pg-monitor": "^1.4.1",
+		"pg-monitor": "^2.0.0",
 		"pg-promise": "^10.11.1",
 		"pkg-dir": "^7.0.0",
-		"puppeteer": "^19.8.0",
+		"puppeteer": "^22.6.1",
 		"puppeteer-extra": "^3.3.6",
 		"puppeteer-extra-plugin-recaptcha": "^3.6.8",
 		"puppeteer-extra-plugin-stealth": "^2.11.2",
 		"resolve-team": "^1.6.0",
 		"typescript": "^5.4.3",
 		"winston": "^3.8.2",
-		"winston-daily-rotate-file": "^4.7.1"
+		"winston-daily-rotate-file": "^5.0.0"
 	},
 	"devDependencies": {
 		"@sapphire/cli": "^1.9.1",
@@ -185,6 +184,5 @@
 				"esm-module-alias": "2.1.0"
 			}
 		}
-
 	}
 }
