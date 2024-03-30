@@ -1,6 +1,6 @@
 {
 	"name": "pluto-betting",
-	"version": "2.7.4",
+	"version": "2.7.5",
 	"description": "Pluto Betting App",
 	"main": "./dist/Pluto.js",
 	"module": "./dist/Pluto.js",
