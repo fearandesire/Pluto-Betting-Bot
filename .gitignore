@@ -135,38 +135,21 @@ commands/slash/devEval.js
 .prettierrc.json
 commands/slash/devEval2.js
 .vscode/launch.json
-.env.dev
-.env.dev
-.env.nbac
-.scannerwork/.sonar_lock
-.scannerwork/report-task.txt
-commands/slash/devEval2.js
-
 
 #vscode settings
 .vscode/
 Dockerfile
 docker-compose.yml
 docker-compose.debug.yml
-test/createMatchupArr.js
-test/newfetch.js
-test/spacing.js
-matchups.json
-matchups3.json
 lib/matchupimages
 .env.dev.nflc
 ca-certificate.crt
 daily.drawio
-
 .VSCodeCounter/
-commands/devEval.js
-commands/devEval2.js
-commands/commands.js
 .gitignore
-test/createISODates.js
 utils/bot_res/betOps/MatchupsArr.test.js
 utils/vsImg/matchupImgs.js
-utils/vsImg/matchupImgs.js
+.matchupImgs.js
 launch.json
 test/devTesting.js
 
@@ -185,8 +168,29 @@ Notes.md
 # Dev
 utils/bot_res/betOps/vs/matchupImgs.js
 Docs.MD
-ecosystem.config.js
-ecosystem.config.mjs
-ecosystem.config.cjs
+ecosystem.KhronosStandardConfig.js
+ecosystem.KhronosStandardConfig.mjs
+ecosystem.KhronosStandardConfig.cjs
 
 *.drawio
+lib/imgs/nba-logo-wide.png
+
+# More IDE Settings
+.idea/
+.fleet/!/.swm/channel-management.4macueny.sw.md
+ecosystem.config.js
+# OpenAPI Config, Spec, etc.
+openapi.config.json
+openapitools.json
+Khronos-Swagger-Spec-v1.json
+src/openapi/**/*
+assets/**/*
+Writerside/**/*
+# Yarn v4
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+!.yarn/cache
