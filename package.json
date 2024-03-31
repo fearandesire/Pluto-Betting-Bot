@@ -32,7 +32,7 @@
 	},
 	"type": "module",
 	"author": "fearandesire",
-	"license": "ISC",
+	"license": "MIT",
 	"aliases": {
 		"@khronos-index": "./dist/openapi/khronos/index.js",
 		"@pluto-api-routes": "./dist/utils/api/routes",
