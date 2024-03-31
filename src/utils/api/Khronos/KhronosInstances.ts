@@ -10,6 +10,7 @@ import {
 } from '@khronos-index'
 
 export const KH_API_CONFIG = new Configuration({
+	basePath: `${process.env.KH_API_URL}`,
 	headers: {
 		'admin-token': `${process.env.KH_API_TOKEN}`,
 	},
