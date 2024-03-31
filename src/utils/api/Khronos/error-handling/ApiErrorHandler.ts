@@ -89,6 +89,7 @@ export class ApiErrorHandler {
 			return this.errorResponses(interaction, apiError, errModule)
 		}
 		// Fallback error handling for non-API or malformed API errors
+		console.error(error)
 		const errEmbed = ErrorEmbeds.internalErr(
 			'Sorry, an unexpected error occurred. Please try again later.',
 		)
