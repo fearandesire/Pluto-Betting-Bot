@@ -28,7 +28,7 @@ const RAW_RUNTIME_STATE =
         "packageDependencies": [\
           ["@favware/colorette-spinner", "npm:1.0.1"],\
           ["@kaname-png/plugin-statcord", "npm:2.3.2"],\
-          ["@koa/cors", "npm:4.0.0"],\
+          ["@koa/cors", "npm:5.0.0"],\
           ["@openapitools/openapi-generator-cli", "npm:2.13.1"],\
           ["@sapphire/cli", "npm:1.9.3"],\
           ["@sapphire/decorators", "npm:6.1.0"],\
@@ -1812,10 +1812,10 @@ const RAW_RUNTIME_STATE =
       }]\
     ]],\
     ["@koa/cors", [\
-      ["npm:4.0.0", {\
-        "packageLocation": "./.yarn/cache/@koa-cors-npm-4.0.0-e1649c9262-53caa512e7.zip/node_modules/@koa/cors/",\
+      ["npm:5.0.0", {\
+        "packageLocation": "./.yarn/cache/@koa-cors-npm-5.0.0-693911adf6-49e5f3b861.zip/node_modules/@koa/cors/",\
         "packageDependencies": [\
-          ["@koa/cors", "npm:4.0.0"],\
+          ["@koa/cors", "npm:5.0.0"],\
           ["vary", "npm:1.1.2"]\
         ],\
         "linkType": "HARD"\
@@ -11053,7 +11053,7 @@ const RAW_RUNTIME_STATE =
           ["pluto-betting", "workspace:."],\
           ["@favware/colorette-spinner", "npm:1.0.1"],\
           ["@kaname-png/plugin-statcord", "npm:2.3.2"],\
-          ["@koa/cors", "npm:4.0.0"],\
+          ["@koa/cors", "npm:5.0.0"],\
           ["@openapitools/openapi-generator-cli", "npm:2.13.1"],\
           ["@sapphire/cli", "npm:1.9.3"],\
           ["@sapphire/decorators", "npm:6.1.0"],\
