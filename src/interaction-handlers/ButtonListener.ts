@@ -39,15 +39,28 @@ export class ButtonHandler extends InteractionHandler {
 	 * @param interaction
 	 */
 	public override async parse(interaction: ButtonInteraction) {
-		await interaction.deferReply()
 		const allBtnIds = Object.values(btnIds)
 		if (!allBtnIds.includes(interaction.customId as btnIds)) {
+			await interaction.update({
+				components: [],
+			})
 			return this.none()
 		}
 		if (interaction.customId === `matchup_btn_cancel`) {
+			await interaction.update({
+				components: [],
+			})
+
 			return this.some()
 		}
 		if (interaction.customId === `matchup_btn_confirm`) {
+			await interaction.deferUpdate()
+			await interaction.editReply({
+				components: [],
+			})
+			await interaction.followUp({
+				content: `Processing your bet..`,
+			})
 			try {
 				const cachedBet = await new BetsCacheService(
 					new CacheManager(),
@@ -122,6 +135,7 @@ export class ButtonHandler extends InteractionHandler {
 			const errMsg = payload.errMsg
 			await interaction.editReply({
 				embeds: [ErrorEmbeds.internalErr(errMsg)],
+				components: [],
 			})
 		}
 		if (interaction.customId === btnIds.matchup_btn_cancel) {
@@ -135,7 +149,10 @@ export class ButtonHandler extends InteractionHandler {
 				.setFooter({
 					text: helpfooter,
 				})
-			await interaction.editReply({ embeds: [cancelEmbed] })
+			await interaction.editReply({
+				embeds: [cancelEmbed],
+				components: [],
+			})
 		} else if (interaction.customId === btnIds.matchup_btn_confirm) {
 			const { betslip, matchData } = payload
 			const matchOpponent = betslip.opponent
