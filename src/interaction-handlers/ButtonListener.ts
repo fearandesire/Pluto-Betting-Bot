@@ -58,9 +58,6 @@ export class ButtonHandler extends InteractionHandler {
 			await interaction.editReply({
 				components: [],
 			})
-			await interaction.followUp({
-				content: `Processing your bet..`,
-			})
 			try {
 				const cachedBet = await new BetsCacheService(
 					new CacheManager(),
