@@ -16,10 +16,10 @@ Pluto uses virtual currency with real match odds from various bookmakers to simu
 **For usage, please refer to the /help command!**
 :heart: **Enjoy using Pluto? [Support development & server cost](https://ko-fi.com/fenix7559)**
 :nerd: [GitHub](https://github.com/fearandesire/Pluto-Betting-Bot)
-:question: For questions/concerns, contact me: **<@${process.env.botDevID}>**`,
+:question: For questions/concerns, contact me: **<@${process.env.APP_DEV_ID}>**`,
 			thumbnail: `https://i.imgur.com/RWjfjyv.png`,
 			color: embedColors.PlutoBlue,
-			footer: `© fenixforever 2024 | Version: ${process.env.projVersion}`,
+			footer: `© fenixforever 2024 | Version: ${process.env.PROJECT_VERSION}`,
 			target: `reply`,
 		}
 	}
