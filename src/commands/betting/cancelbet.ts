@@ -28,9 +28,7 @@ export class UserCommand extends Command {
 	public override async chatInputRun(
 		interaction: Command.ChatInputCommandInteraction,
 	) {
-		await interaction.deferReply({
-			ephemeral: true,
-		})
+		await interaction.deferReply()
 		const userid = interaction.user.id
 		const betId = interaction.options.getInteger('betid')!
 		return new BetslipManager(
