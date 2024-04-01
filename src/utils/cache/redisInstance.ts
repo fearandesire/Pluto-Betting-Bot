@@ -2,14 +2,8 @@ import Redis from 'ioredis'
 import { bold, green, yellow } from 'colorette'
 import * as dotenv from 'dotenv'
 
-let envSelection
-if (process.env.NODE_ENV === `production`) {
-	envSelection = `.env.production`
-} else {
-	envSelection = `.env`
-}
 dotenv.config({
-	path: envSelection,
+	path: '.env',
 	override: true,
 })
 
