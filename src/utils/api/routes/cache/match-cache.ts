@@ -6,7 +6,7 @@ export const matchCache = new Router()
 
 matchCache.post(`/cache/matches`, async (ctx: any) => {
 	try {
-		if (!ctx.request.body || !ctx.request.body.matches) {
+		if (!ctx.request?.body?.matches) {
 			ctx.body = {
 				success: false,
 				error: 'No matches were received.',
