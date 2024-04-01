@@ -218,24 +218,22 @@ export class BetslipManager {
 		betId: number,
 	) {
 		try {
-			const response = await this.betslipInstance.cancel({
+			await this.betslipInstance.cancel({
 				betid: betId,
 			})
-			if (response?.status === 200 || response?.statusCode === 200) {
-				const cancelledEmbed = new EmbedBuilder()
-					.setTitle(`Bet Cancellation :ticket:`)
-					.setDescription(
-						`Successfully cancelled bet \`${betId}\`\nYour funds have been restored.`,
-					)
-					.setColor(embedColors.success)
-					.setThumbnail(interaction.user.displayAvatarURL())
-					.setFooter({
-						text: helpfooter,
-					})
-				return interaction.followUp({
-					embeds: [cancelledEmbed],
+			const cancelledEmbed = new EmbedBuilder()
+				.setTitle(`Bet Cancellation :ticket:`)
+				.setDescription(
+					`Successfully cancelled bet \`${betId}\`\nYour funds have been restored.`,
+				)
+				.setColor(embedColors.success)
+				.setThumbnail(interaction.user.displayAvatarURL())
+				.setFooter({
+					text: helpfooter,
 				})
-			}
+			return interaction.followUp({
+				embeds: [cancelledEmbed],
+			})
 		} catch (error) {
 			console.error('Error cancelling bet:', error)
 			return new ApiErrorHandler().handle(
