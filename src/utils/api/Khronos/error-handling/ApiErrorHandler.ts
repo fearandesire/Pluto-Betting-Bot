@@ -16,6 +16,7 @@ export class ApiErrorHandler {
 		let errorMessage
 
 		switch (errorType) {
+			// ? These error types will by default use the message that they arrived with
 			case ApiHttpErrorTypes.AccountNotFound:
 			case ApiHttpErrorTypes.UnableToFindBalance:
 			case ApiHttpErrorTypes.ClaimCooldown:
@@ -72,6 +73,14 @@ export class ApiErrorHandler {
 		})
 	}
 
+	/**
+	 * Handles the error that occurs during the execution of a command interaction.
+	 *
+	 * @param {CommandInteraction} interaction - The command interaction that triggered the error.
+	 * @param {any} error - The error that occurred.
+	 * @param {ApiModules} errModule - The API module related to the error.
+	 * @return {Promise<void>} - A promise that resolves when the error handling is complete.
+	 */
 	async handle(
 		interaction: CommandInteraction,
 		error: any,
