@@ -164,8 +164,8 @@ export class AccountManager {
 			const guild = await SapDiscClient.guilds.fetch(interaction.guild.id)
 			// Resolve current dsicord usernames
 			const lbData = res.map((user: any) => ({
-				userid: user.userid,
-				balance: user.monies.balance,
+				userid: user.id,
+				balance: user.balance,
 			}))
 			// Pre-fetch all members
 			const lbUserIds = lbData.map((entry: any) => entry.userid)
