@@ -19,8 +19,10 @@ export class ApiErrorHandler {
 			// ? These error types will by default use the message that they arrived with
 			case ApiHttpErrorTypes.AccountNotFound:
 			case ApiHttpErrorTypes.UnableToFindBalance:
-			case ApiHttpErrorTypes.ClaimCooldown:
 				errorMessage = apiError.message
+				break
+			case ApiHttpErrorTypes.ClaimCooldown:
+				errorMessage = `You can only claim once every 24 hours!`
 				break
 			case ApiHttpErrorTypes.HasPendingBet:
 				errorMessage = `You have another bet you haven't finished confirming yet.\nPlease finish it before trying to place a new bet.`
