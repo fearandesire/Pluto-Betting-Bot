@@ -62,5 +62,4 @@ jobs:
           script: |
             cd /usr/apps/Pluto-Betting-Bot/
             docker-compose up -d
-            docker ps
             echo "Started Pluto API"
