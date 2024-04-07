@@ -57,6 +57,7 @@ export class ApiErrorHandler {
 					'An unexpected server-side error has occurred. Please try again later.'
 		}
 		let errEmbed
+		// ? Currently just changes the `title` of the embed, but more functionality may be added
 		switch (errModule) {
 			case ApiModules.betting:
 				errEmbed = ErrorEmbeds.betErr(errorMessage)
