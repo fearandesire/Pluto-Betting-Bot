@@ -1,0 +1,66 @@
+name: "Docker CI"
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+
+jobs:
+  pull-repo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Pull Repo
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USERNAME }}
+          key: ${{ secrets.KEYFILE }}
+          script: |
+            cd /usr/apps/Pluto-Betting-Bot/
+            git pull --force
+  build-image:
+    needs: pull-repo
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build Image
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USERNAME }}
+          key: ${{ secrets.KEYFILE }}
+          script_stop: true
+          script: |
+            cd /usr/apps/Pluto-Betting-Bot/
+            docker-compose build
+  stop-existing-container:
+              needs: build-image
+              runs-on: ubuntu-latest
+              steps:
+                - uses: appleboy/ssh-action@v1.0.3
+                  with:
+                    host: ${{ secrets.DO_HOST }}
+                    username: ${{ secrets.DO_USERNAME }}
+                    key: ${{ secrets.KEYFILE }}
+                    script_stop: true
+                    script: |
+                      cd /usr/apps/Pluto-Betting-Bot/
+                      docker-compose down
+  deploy:
+    needs: [stop-existing-container, build-image]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to DigitalOcean
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USERNAME }}
+          key: ${{ secrets.KEYFILE }}
+          script_stop: true
+          timeout: 5m
+          script: |
+            cd /usr/apps/Pluto-Betting-Bot/
+            docker-compose up -d
+            docker ps
+            echo "Started Pluto API"
