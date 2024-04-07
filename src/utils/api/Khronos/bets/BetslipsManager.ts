@@ -187,9 +187,6 @@ export class BetslipManager {
 		betslip: PlacedBetslip,
 		apiInfo: IMatchInfoArgs,
 	) {
-		const betTeamFull = `${teamDetails.betOnTeam}`
-		const oppTeamFull = `${teamDetails.opponent}`
-
 		const { betAmount, profit, payout } =
 			await MoneyFormatter.formatAmounts({
 				amount: betslip.amount,
@@ -198,14 +195,17 @@ export class BetslipManager {
 			})
 		// Bet is placed, just need to inform the user
 		const successEmbed = new EmbedBuilder()
-			.setTitle(`Bet confirmed! :ticket:`)
+			.setTitle(
+				`Bet confirmed:\n${teamDetails.betOnTeamEmoji} vs ${teamDetails.opponentEmoji}`,
+			)
 			.setDescription(
-				`## __Match__\n**${betTeamFull}** *vs* **${oppTeamFull}**\n**Date:** ${apiInfo.dateofmatchup}\n## __Betslip__\n**${betTeamFull}**\n**Bet: \`${betAmount}\`**\n**Profit: \`${profit}\`**\n**Payout: \`${payout}\`**\n\n*Betslip ID: \`${betslip.betid}\`*\n*View more commands via \`/commands\`*`,
+				`**${teamDetails.chosenTeamShort}** | **${apiInfo.dateofmatchup}**
+			**Bet:** **\`${betAmount}\`** | **Payout:** **\`${payout}\`** | **Profit:** **\`${profit}\`**`,
 			)
 			.setColor(embedColors.success)
 			.setThumbnail(embedImg)
 			.setFooter({
-				text: helpfooter,
+				text: `View more commands via /commands`,
 			})
 		await interaction.followUp({
 			embeds: [successEmbed],
@@ -274,10 +274,15 @@ export class BetslipManager {
 			})
 
 		const embed = new EmbedBuilder()
-			.setTitle('Pending Betslip')
+			.setTitle(
+				`Pending Betslip
+${chosenTeamStr} *vs.* ${oppTeamStr}`,
+			)
 			.setDescription(
-				`## __Match__\n${chosenTeamStr} *vs.* ${oppTeamStr}\n**Date:** ${dateofmatchup}\n## __Betslip__\n**Team:** ${chosenTeamStr} ${betslip.team}\n**Bet:** **\`${betAmount}\`**\n**Payout:** **\`${payout}\`**\n**Profit:** **\`${profit}\`**
-				\nConfirm your bet via the buttons below`,
+				`**${usersTeam}** | **${dateofmatchup}**
+			**Bet:** **\`${betAmount}\`** | **Payout:** **\`${payout}\`** | **Profit:** **\`${profit}\`**
+			
+			*Confirm your bet via the buttons below*`,
 			)
 			.setColor(embedColors.PlutoYellow)
 			.setFooter({
