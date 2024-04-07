@@ -205,7 +205,7 @@ export class BetslipManager {
 			.setColor(embedColors.success)
 			.setThumbnail(embedImg)
 			.setFooter({
-				text: `View more commands via /commands`,
+				text: `View more commands via /commands | Bet ID: ${betslip.betid}`,
 			})
 		await interaction.followUp({
 			embeds: [successEmbed],
