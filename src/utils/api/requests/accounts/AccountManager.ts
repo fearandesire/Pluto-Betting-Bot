@@ -140,14 +140,9 @@ export class AccountManager {
 				const Tier = _.upperFirst(tier)
 				let descStr = ''
 				if (isNewUser) {
-					descStr += `Welcome to Pluto! You can view games to bet on using \`/odds\`, and place bets using \`/bet\`. Find out what other things you can do via \`commands\`
-					💰 **Balance:** \`${formattedBalance}\
-					🛡️ **Level:** \`${level}\
-					💫 **Tier:** \`${Tier}\``
+					descStr += `Welcome to Pluto!\n👁️ View games to bet on using \`/odds\`\n✅ Place bets using \`/bet\`\nFind out what other things you can do via \`commands\`\n💰 **Balance:** \`${formattedBalance}\`\n🛡️ **Level:** \`${level}\`\n💫 **Tier:** \`${Tier}\``
 				} else {
-					descStr = `💰 **Balance:** \`${formattedBalance}\`
-					🛡️ **Level:** \`${level}\`
-					💫 **Tier:** \`${Tier}\``
+					descStr = `💰 **Balance:** \`${formattedBalance}\`\n🛡️ **Level:** \`${level}\`\n💫 **Tier:** \`${Tier}\``
 				}
 				const embed = await new EmbedsSuccess(interaction).sv1(
 					`${user?.displayName}'s Profile`,
