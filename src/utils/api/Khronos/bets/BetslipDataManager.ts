@@ -21,40 +21,28 @@ export default class BetslipDataManager {
 	async displayUsersBets(guild: Guild, bets: PlacedBetslip[]) {
 		const embed = new EmbedBuilder()
 			.setTitle('🎲 Active Bets')
-			.setColor(embedColors.PlutoYellow) // Set a color for the embed
+			.setColor(embedColors.PlutoYellow) // Default embed color
 			.setFooter({ text: helpfooter })
 
 		if (bets.length === 0) {
-			embed.setDescription('No active bets found.')
-			embed.setColor(embedColors.PlutoRed)
+			embed
+				.setDescription('No active bets found.')
+				.setColor(embedColors.PlutoRed)
 			return embed
 		}
 
-		// For each bet, add a field to the embed
 		bets.forEach((bet) => {
-			const teamEmoji = guild.emojis.cache.find(
-				(emoji) => emoji.name === bet.team,
-			)
-			// Extract the short name of the team
+			const teamEmoji =
+				guild.emojis.cache.find((emoji) => emoji.name === bet.team) ||
+				''
 			const teamShortName = bet.team.split(' ').pop() ?? bet.team
-			const chosenTeamStr = teamEmoji
-				? `${teamEmoji} ${teamShortName}`
-				: teamShortName
+			const chosenTeamStr = `${teamEmoji} ${teamShortName}`
 
-			// Construct the bet description
-			const description = [
-				`**Match Date:** ${bet.dateofmatchup}`,
-				`**Team:** ${chosenTeamStr}`,
-				`**Amount:** $${bet.amount}`,
-				`**Potential Profit:** ${bet.profit}`,
-				`**Potential Payout:** ${bet.payout}`,
-			].join('\n')
-
-			// Add the description as a field in the embed, using bet id as a title for uniqueness
+			const description = `**${chosenTeamStr}** | **Amount:** $${bet.amount} | **Profit/Payout:** $${bet.profit}/$${bet.payout} | *${bet.dateofmatchup}* `
 			embed.addFields({
 				name: `Bet ID: ${bet.betid}`,
 				value: description,
-				inline: false,
+				inline: true,
 			})
 		})
 
