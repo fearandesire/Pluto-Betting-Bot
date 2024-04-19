@@ -16,6 +16,7 @@ export interface IAPIBetslipPayload {
 	team: string
 	amount: number
 	guild_id: string
+	matchup_id?: string
 }
 
 export interface ICreateBetslipFull {

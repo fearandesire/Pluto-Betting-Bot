@@ -17,8 +17,7 @@ export {
 } from 'colorette'
 
 // ? Embed usage
-const helpfooter =
-	'💙 Support Pluto via my Patreon | Use `/patreon` for more info'
+const helpfooter = '💙 Support Pluto via Patreon | Use `/patreon` for more info'
 
 // ? General Config
 export { helpfooter, Command, _, Log, findEmoji }

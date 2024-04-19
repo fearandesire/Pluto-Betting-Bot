@@ -8,6 +8,12 @@ import {
 	GuildsApi,
 	MatchesApi,
 } from '@khronos-index'
+import * as dotenv from 'dotenv'
+
+dotenv.config({
+	path: '.env',
+	override: true,
+})
 
 export const KH_API_CONFIG = new Configuration({
 	basePath: `${process.env.KH_API_URL}`,

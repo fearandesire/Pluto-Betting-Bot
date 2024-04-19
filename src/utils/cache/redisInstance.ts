@@ -1,11 +1,5 @@
 import Redis from 'ioredis'
 import { bold, green, yellow } from 'colorette'
-import * as dotenv from 'dotenv'
-
-dotenv.config({
-	path: '.env',
-	override: true,
-})
 
 const { R_HOST, R_PORT, R_PASS, R_DB } = process.env
 

@@ -1,3 +1,5 @@
+import './utils/api/Khronos/KhronosInstances.js'
+import './lib/startup/cache.js'
 import { LogLevel, SapphireClient } from '@sapphire/framework'
 import { GatewayIntentBits, Partials } from 'discord.js'
 import { blue, bold, green, red, yellow } from 'colorette'

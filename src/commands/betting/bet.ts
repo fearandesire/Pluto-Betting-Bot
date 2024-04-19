@@ -28,6 +28,13 @@ export class UserCommand extends Command {
 						.setName('amount')
 						.setDescription('The amount you want to bet')
 						.setRequired(true),
+				)
+				.addStringOption((option) =>
+					option
+						.setName('match')
+						.setDescription('The match you want to bet on')
+						.setRequired(false)
+						.setAutocomplete(true),
 				),
 		)
 	}
@@ -36,14 +43,16 @@ export class UserCommand extends Command {
 		interaction: Command.ChatInputCommandInteraction,
 	) {
 		await interaction.deferReply()
-		const team = interaction.options.getString('team')!
-		const amount = interaction.options.getInteger('amount')!
+		const team = interaction.options.getString('team', true)
+		const amount = interaction.options.getInteger('amount', true)
 		const validator = new BettingValidation()
 		const amountValid = validator.validateAmount(amount)
 		if (!amountValid) {
 			const errEmbed = ErrorEmbeds.betErr(`You must bet at least $1!.`)
 			return interaction.editReply({ embeds: [errEmbed] })
 		}
+		const matchSelection = interaction.options.getString('match')
+
 		return new BetslipManager(
 			new BetslipWrapper(),
 			new BetsCacheService(new CacheManager()),
@@ -53,6 +62,7 @@ export class UserCommand extends Command {
 			team,
 			amount,
 			interaction.guildId!,
+			matchSelection,
 		)
 	}
 }

@@ -17,6 +17,9 @@ export enum ApiHttpErrorTypes {
 	HasPendingBet = 'HasPendingBetException',
 	AccountExists = 'AccountExistsException',
 	NoActiveBets = 'NoActiveBetsFoundException',
+	InvalidTeamForMatch = 'InvalidTeamForMatchException',
+	MultipleGamesForTeam = 'MultipleGamesForTeamException',
+	MatchNotFound = 'MatchNotFoundException',
 }
 
 export enum ApiModules {

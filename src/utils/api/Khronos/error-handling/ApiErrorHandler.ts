@@ -17,10 +17,22 @@ export class ApiErrorHandler {
 
 		switch (errorType) {
 			// ? These error types will by default use the message that they arrived with
-			case ApiHttpErrorTypes.AccountNotFound:
 			case ApiHttpErrorTypes.UnableToFindBalance:
 				errorMessage = apiError.message
 				break
+			case ApiHttpErrorTypes.MatchNotFound:
+				errorMessage = 'The match specified could not be found.'
+				break
+			case ApiHttpErrorTypes.MultipleGamesForTeam:
+				errorMessage = `There\'s more than one game available for this team.\nPlease place your bet again and specify a match.`
+				break
+			case ApiHttpErrorTypes.InvalidTeamForMatch:
+				errorMessage = `The team specified was not valid for the match you selected.\nPlease place your bet again and select the correct match.`
+				break
+			case ApiHttpErrorTypes.AccountNotFound:
+				errorMessage = `You don't have an account yet.\nUse \`/register\` to instantly create one!`
+				break
+
 			case ApiHttpErrorTypes.ClaimCooldown:
 				errorMessage = `You can only claim once every 24 hours!`
 				break

@@ -3,6 +3,7 @@ import discord from 'discord.js'
 import { _, helpfooter } from '@pluto-core-config'
 import embedColors from '../../lib/colorsConfig.js'
 import { IMatchupsGrouped, IOddsField } from '../matches/matchups.interface.js'
+import { patreonFooter } from '../api/patreon/interfaces.js'
 
 const { EmbedBuilder } = discord
 
@@ -18,7 +19,11 @@ const { EmbedBuilder } = discord
  */
 export default async function parseScheduled(
 	scheduledArr: IOddsField[],
-	options: { includeOdds: boolean; thumbnail: string; footer: string },
+	options: {
+		includeOdds: boolean
+		thumbnail: string
+		footer: { text: string; iconURL?: string }
+	},
 ) {
 	const { includeOdds, thumbnail, footer } = options
 
@@ -36,7 +41,7 @@ export default async function parseScheduled(
 			.setTitle(title)
 			.setColor(embedColors.PlutoRed)
 			.setDescription(description)
-			.setFooter({ text: footer || helpfooter })
+			.setFooter(patreonFooter || { text: helpfooter })
 			.setThumbnail(thumbnail)
 	}
 
@@ -70,7 +75,7 @@ export default async function parseScheduled(
 	return new EmbedBuilder()
 		.setTitle(title)
 		.setColor(embColor)
-		.setFooter({ text: footer || helpfooter })
+		.setFooter({ ...(patreonFooter || { text: helpfooter }) })
 		.setThumbnail(thumbnail)
 		.addFields(fields)
 }
