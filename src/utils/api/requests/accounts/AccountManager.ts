@@ -17,6 +17,8 @@ import EmbedsSuccess from '../../../embeds/template/success-template.js'
 import MoneyFormatter from '../../common/money-formatting/money-format.js'
 import { SapDiscClient } from '@pluto-core'
 import PaginationUtilities from '../../../embeds/pagination-utilities.js'
+import { plutoWelcomeMsg } from '../../common/interfaces/common-interfaces.js'
+import { ErrorEmbeds } from '../../../common/errors/global.js'
 
 export class AccountsWrapper {
 	private accountsApi: AccountsApi
@@ -100,14 +102,25 @@ export class AccountManager {
 		const userId = interaction.user.id
 		try {
 			const res = await this.accountsWrapper.processClaim(userId)
-			const { balance } = res
+			const { balance, isNew } = res
 			if (!balance) {
-				throw new Error(`Failed to resolve your balance.`)
+				const errEmbed = ErrorEmbeds.accountErr(
+					`Unable to locate your account's balance.\nPlease reach out for support.`,
+				)
+				return interaction.editReply({ embeds: [errEmbed] })
 			}
 			const formattedBalance = MoneyFormatter.toUSD(balance)
+			let descStr
+			if (isNew) {
+				descStr =
+					plutoWelcomeMsg +
+					`\nYour new balance is **\`${formattedBalance}\`**`
+			} else {
+				descStr = `Your balance is **\`${formattedBalance}\`**`
+			}
 			const embed = await new EmbedsSuccess(interaction).sv1(
-				`Processed Daily Claim`,
-				`Successfully processed your daily claim.\nYour new balance is **\`${formattedBalance}\`**`,
+				`💰 Processed Daily Claim`,
+				descStr,
 			)
 			return interaction.editReply({ embeds: [embed] })
 		} catch (error) {
@@ -140,7 +153,7 @@ export class AccountManager {
 				const Tier = _.upperFirst(tier)
 				let descStr = ''
 				if (isNewUser) {
-					descStr += `Welcome to Pluto!\n👁️ View games to bet on using \`/odds\`\n✅ Place bets using \`/bet\`\nFind out what other things you can do via \`commands\`\n💰 **Balance:** \`${formattedBalance}\`\n🛡️ **Level:** \`${level}\`\n💫 **Tier:** \`${Tier}\``
+					descStr += `${plutoWelcomeMsg}\n\n💰 **Balance:** \`${formattedBalance}\`\n🛡️ **Level:** \`${level}\`\n💫 **Tier:** \`${Tier}\``
 				} else {
 					descStr = `💰 **Balance:** \`${formattedBalance}\`\n🛡️ **Level:** \`${level}\`\n💫 **Tier:** \`${Tier}\``
 				}
