@@ -49,9 +49,7 @@ Developed by [FENIX](https://github.com/fearandesire)
 
 ## 🔗 Links
 
-[Support development & server costs of Pluto by clicking here](https://ko-fi.com/U7U3CYOB7)
-
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/U7U3CYOB7)
+### [**Patreon**](https://www.patreon.com/fenix_/posts) | Support development, gain access to exclusive features
 
 
 <br/>
