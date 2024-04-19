@@ -27,6 +27,7 @@ import {
 import MoneyFormatter from '../../common/money-formatting/money-format.js'
 import GuildUtils from '../../../guilds/GuildUtils.js'
 import StringUtils from '../../../common/string-utils.js'
+import { patreonFooterMsg } from '../../patreon/interfaces.js'
 
 /**
  * Manages betslips / betting process
@@ -47,6 +48,7 @@ export class BetslipManager {
 		team: string,
 		amount: number,
 		guild_id: string,
+		matchid?: string | null,
 	) {
 		try {
 			const guild = await new GuildWrapper().getGuild(guild_id)
@@ -57,6 +59,9 @@ export class BetslipManager {
 				team,
 				amount,
 				guild_id,
+			}
+			if (matchid) {
+				payload.matchup_id = matchid
 			}
 			// Call the API to initialize the bet
 			const response = await this.betslipInstance.init({
@@ -205,7 +210,7 @@ export class BetslipManager {
 			.setColor(embedColors.success)
 			.setThumbnail(embedImg)
 			.setFooter({
-				text: `View more commands via /commands | Bet ID: ${betslip.betid}`,
+				text: `${patreonFooterMsg} | Bet ID: ${betslip.betid}`,
 			})
 		await interaction.followUp({
 			embeds: [successEmbed],

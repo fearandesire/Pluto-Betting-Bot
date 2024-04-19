@@ -3,6 +3,10 @@ import parseScheduled from '../bot_res/parseScheduled.js'
 import { formatOdds } from './formatOdds.js'
 import { Matchup } from '../api/common/interfaces/common-interfaces.js'
 import { IOddsField } from './matchups.interface.js'
+import {
+	patreonFooterMsg,
+	patreonFooterUrl,
+} from '../api/patreon/interfaces.js'
 
 export async function prepareAndFormat(matchups: Matchup[], thumbnail: string) {
 	const oddsFields: IOddsField[] = []
@@ -38,7 +42,10 @@ export async function prepareAndFormat(matchups: Matchup[], thumbnail: string) {
 	const count = sortedOddsFields.length
 	const options = {
 		includeOdds: true,
-		footer: `Odds are subject to change | ${count} games available to bet on.`,
+		footer: {
+			text: `${count} upcoming matches | ${patreonFooterMsg}`,
+			iconURL: patreonFooterUrl,
+		},
 		thumbnail,
 	}
 

@@ -3,6 +3,7 @@ import { PlacedBetslip } from '@khronos-index'
 import { CommandInteraction, EmbedBuilder, Guild } from 'discord.js'
 import embedColors from '../../../../lib/colorsConfig.js'
 import { helpfooter } from '@pluto-core-config'
+import { patreonFooter } from '../../patreon/interfaces.js'
 
 export default class BetslipDataManager {
 	constructor(private betslipWrapper: BetslipWrapper) {}
@@ -22,7 +23,7 @@ export default class BetslipDataManager {
 		const embed = new EmbedBuilder()
 			.setTitle('🎲 Active Bets')
 			.setColor(embedColors.PlutoYellow) // Default embed color
-			.setFooter({ text: helpfooter })
+			.setFooter(patreonFooter || { text: helpfooter })
 
 		if (bets.length === 0) {
 			embed

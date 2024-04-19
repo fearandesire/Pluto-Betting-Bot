@@ -14,7 +14,7 @@ import MatchApiWrapper from '../utils/api/Khronos/matches/matchApiWrapper.js'
 import { Match } from '@khronos-index'
 import { ErrorEmbeds } from '../utils/common/errors/global.js'
 import embedColors from '../lib/colorsConfig.js'
-import { helpfooter } from '@pluto-core-config'
+import { patreonFooter } from '../utils/api/patreon/interfaces.js'
 
 /**
  * @module ButtonListener
@@ -143,9 +143,7 @@ export class ButtonHandler extends InteractionHandler {
 				.setDescription(`Your bet has been successfully cancelled.`)
 				.setColor(embedColors.PlutoRed)
 				.setThumbnail(interaction.user.displayAvatarURL())
-				.setFooter({
-					text: helpfooter,
-				})
+				.setFooter(patreonFooter)
 			await interaction.editReply({
 				embeds: [cancelEmbed],
 				components: [],
