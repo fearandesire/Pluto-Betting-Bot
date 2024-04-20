@@ -23,7 +23,7 @@ export default class BetslipDataManager {
 		const embed = new EmbedBuilder()
 			.setTitle('🎲 Active Bets')
 			.setColor(embedColors.PlutoYellow) // Default embed color
-			.setFooter(patreonFooter || { text: helpfooter })
+			.setFooter(patreonFooter || { text: helpfooter() })
 
 		if (bets.length === 0) {
 			embed

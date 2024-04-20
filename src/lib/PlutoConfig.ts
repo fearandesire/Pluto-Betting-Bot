@@ -17,7 +17,14 @@ export {
 } from 'colorette'
 
 // ? Embed usage
-const helpfooter = '💙 Support Pluto via Patreon | Use `/patreon` for more info'
+const footers = [
+	'💙 Support Pluto via Patreon | Use `/patreon` for more info',
+	'dev. by fenixforever',
+]
 
+function helpfooter() {
+	const randomIndex = Math.floor(Math.random() * footers.length)
+	return footers[randomIndex]
+}
 // ? General Config
 export { helpfooter, Command, _, Log, findEmoji }

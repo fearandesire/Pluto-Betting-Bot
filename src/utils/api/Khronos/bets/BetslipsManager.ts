@@ -205,7 +205,7 @@ export class BetslipManager {
 			)
 			.setDescription(
 				`**${teamDetails.chosenTeamShort}** | **${apiInfo.dateofmatchup}**
-			**Bet:** **\`${betAmount}\`** | **Payout:** **\`${payout}\`** | **Profit:** **\`${profit}\`**`,
+			**Bet:** **\`${betAmount}\`** | **Payout:** **\`${payout}\`**\n**Profit:** **\`${profit}\`**`,
 			)
 			.setColor(embedColors.success)
 			.setThumbnail(embedImg)
@@ -234,7 +234,7 @@ export class BetslipManager {
 				.setColor(embedColors.success)
 				.setThumbnail(interaction.user.displayAvatarURL())
 				.setFooter({
-					text: helpfooter,
+					text: helpfooter(),
 				})
 			return interaction.followUp({
 				embeds: [cancelledEmbed],
@@ -285,13 +285,13 @@ ${chosenTeamStr} *vs.* ${oppTeamStr}`,
 			)
 			.setDescription(
 				`**${usersTeam}** | **${dateofmatchup}**
-			**Bet:** **\`${betAmount}\`** | **Payout:** **\`${payout}\`** | **Profit:** **\`${profit}\`**
+			**Bet:** **\`${betAmount}\`** | **Payout:** **\`${payout}\`**\n**Profit:** **\`${profit}\`**
 			
 			*Confirm your bet via the buttons below*`,
 			)
 			.setColor(embedColors.PlutoYellow)
 			.setFooter({
-				text: helpfooter,
+				text: helpfooter(),
 			})
 		const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
 			new ButtonBuilder()

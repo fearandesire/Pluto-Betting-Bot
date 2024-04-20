@@ -67,7 +67,7 @@ Pluto uses virtual currency with real match odds from various bookmakers to simu
 			description: cmdDescription,
 			thumbnail: 'https://i.imgur.com/RWjfjyv.png',
 			color: embedColors.PlutoBlue, // Placeholder color, replace with actual one from your configuration
-			footer: helpfooter,
+			footer: helpfooter(),
 		}
 	}
 
@@ -77,7 +77,7 @@ Pluto uses virtual currency with real match odds from various bookmakers to simu
 			description: `Pluto provides the fun of placing wagers on sports games, featuring leaderboards and statistics to compete against others.\n# Getting Started\nTo get started, first run the slash command \`/odds\` and view the current odds available. You can immediately start placing bets with the \`/bet\` command. You'll start with a balance of $50 to bet with.\nUse the command \`/dailyclaim\` every 24 hours to receive free money into your account - this is useful if you ran out of money. Don't give up!\n# Process\nOnce a game ends, the bets placed on it will be processed.\nYou'll receive a DM from Pluto with your winnings and relevant bet result information.\nUse /commands to view all commands available\n***💜 Want to support the development of Pluto? Use the /about command***`,
 			thumbnail: `https://i.imgur.com/RWjfjyv.png`,
 			color: embedColors.PlutoBlue,
-			footer: helpfooter,
+			footer: helpfooter(),
 		}
 	}
 
@@ -87,7 +87,7 @@ Pluto uses virtual currency with real match odds from various bookmakers to simu
 			description: `# **__Leveling__**\nExperience *(XP)* is distributed when bets are closed.\n- A winning bet is worth 50 XP\n- A losing bet is 20.\nLevels are incorporated into the system to establish a structured progression system that goes beyond mere financial gains.\nThis system not only provides a clear measure of who the top performers are but also facilitates rewarding *(prizes, giveaway entries, etc)* the top betters at the end of each season.\nEveryone starts at level 0, and the max level is 100.\n## **__Tiers__**\nTiers are ranks that you receive as you level up.\nHere is the list of tiers and their level ranges:\nBronze: 0-15\nSilver: 15-30\nGold: 30-50\nEmerald: 50-75\nDiamond: 75-100\n# **__Parlays__**\n*TBD*\n💙 [Support the continued development of Pluto by making a donation](https://ko-fi.com/fenix7559)`,
 			color: embedColors.PlutoBlue,
 			thumbnail: `https://i.imgur.com/RWjfjyv.png`,
-			footer: helpfooter,
+			footer: helpfooter(),
 		}
 	}
 }

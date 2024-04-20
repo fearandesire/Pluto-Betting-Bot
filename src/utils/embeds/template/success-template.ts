@@ -19,7 +19,7 @@ export default class EmbedsSuccess {
 			.setTitle(title)
 			.setDescription(description)
 			.setColor(this.embedColors.success)
-			.setFooter({ text: helpfooter })
+			.setFooter({ text: helpfooter() })
 			.setThumbnail(this.interaction.user.displayAvatarURL())
 	}
 }

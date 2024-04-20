@@ -20,8 +20,8 @@ export class ErrorEmbeds {
 			.setColor(embedColors.error)
 			.setFooter({
 				text: extraData
-					? extraData.footerData + ' | ' + helpfooter
-					: helpfooter,
+					? extraData.footerData + ' | ' + helpfooter()
+					: helpfooter(),
 			})
 	}
 

@@ -25,7 +25,7 @@ export default async function parseScheduled(
 		footer: { text: string; iconURL?: string }
 	},
 ) {
-	const { includeOdds, thumbnail, footer } = options
+	const { includeOdds, thumbnail } = options
 
 	// Set initial title and color based on whether odds are included
 	const title = includeOdds ? ':mega: H2H Odds' : 'Scheduled Games'
@@ -41,7 +41,7 @@ export default async function parseScheduled(
 			.setTitle(title)
 			.setColor(embedColors.PlutoRed)
 			.setDescription(description)
-			.setFooter(patreonFooter || { text: helpfooter })
+			.setFooter(patreonFooter || { text: helpfooter() })
 			.setThumbnail(thumbnail)
 	}
 
@@ -75,7 +75,7 @@ export default async function parseScheduled(
 	return new EmbedBuilder()
 		.setTitle(title)
 		.setColor(embColor)
-		.setFooter({ ...(patreonFooter || { text: helpfooter }) })
+		.setFooter({ text: helpfooter() })
 		.setThumbnail(thumbnail)
 		.addFields(fields)
 }
