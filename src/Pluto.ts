@@ -7,7 +7,6 @@ import '@sapphire/plugin-hmr/register'
 import './utils/api/index.js'
 
 const SapDiscClient = new SapphireClient({
-	defaultPrefix: process.env.PREFIX,
 	caseInsensitiveCommands: true,
 	shards: `auto`,
 	intents: [
@@ -23,7 +22,7 @@ const SapDiscClient = new SapphireClient({
 	],
 	partials: [Partials.Channel],
 	logger: {
-		level: LogLevel.Info,
+		level: LogLevel.Debug,
 	},
 	typing: true,
 	loadMessageCommandListeners: true,
