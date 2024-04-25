@@ -20,6 +20,7 @@ import BetslipWrapper from './betslip-wrapper.js'
 import GuildWrapper from '../guild/guild-wrapper.js'
 import {
 	BetslipWithAggregationDTO,
+	DoubleDownDto,
 	InitBetslipRespDTO,
 	PlaceBetDto,
 	PlacedBetslip,
@@ -205,8 +206,7 @@ export class BetslipManager {
 				`Bet confirmed:\n${teamDetails.betOnTeamEmoji} vs ${teamDetails.opponentEmoji}`,
 			)
 			.setDescription(
-				`**${teamDetails.chosenTeamShort}** | **${apiInfo.dateofmatchup}**
-			**Bet:** **\`${betAmount}\`** | **Payout:** **\`${payout}\`**\n**Profit:** **\`${profit}\`**`,
+				`## **${teamDetails.chosenTeamShort}** | **${apiInfo.dateofmatchup}**\n**Bet:** **\`${betAmount}\`** | **Payout:** **\`${payout}\`**\n**Profit:** **\`${profit}\`**`,
 			)
 			.setColor(embedColors.success)
 			.setThumbnail(embedImg)
@@ -224,7 +224,7 @@ export class BetslipManager {
 		betId: number,
 	) {
 		try {
-			const patreonOverride = await PatreonFacade.isSponsorMember(userid)
+			const patreonOverride = await PatreonFacade.isSponsorTier(userid)
 			await this.betslipInstance.cancel({
 				betId: betId,
 				patreonDataDto: {
@@ -312,5 +312,9 @@ ${chosenTeamStr} *vs.* ${oppTeamStr}`,
 			embeds: [embed],
 			components: [actionRow],
 		})
+	}
+
+	async doubleDown(userId: string, betId: number): Promise<DoubleDownDto> {
+		return this.betslipInstance.doubleDown({ userId, betId })
 	}
 }

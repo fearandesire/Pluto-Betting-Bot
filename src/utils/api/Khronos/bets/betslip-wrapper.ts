@@ -1,6 +1,8 @@
 import {
 	BetslipsApi,
 	CancelBetslipRequest,
+	DoubleDownBetRequest,
+	DoubleDownDto,
 	GetActiveBetslipsRequest,
 	InitBetslipRequest,
 	PlaceBetslipRequest,
@@ -37,5 +39,9 @@ export default class BetslipWrapper {
 		return await this.betslipApi.clearPendingBets({
 			userid: userId,
 		})
+	}
+
+	async doubleDown(data: DoubleDownBetRequest): Promise<DoubleDownDto> {
+		return await this.betslipApi.doubleDownBet(data)
 	}
 }
