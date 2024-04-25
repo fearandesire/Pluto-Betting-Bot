@@ -36,10 +36,13 @@ export default class PatreonFacade {
 
 	static async isSupporterTier(userId: string): Promise<boolean> {
 		const memberDetails = await this.memberDetails(userId)
-		return (
-			memberDetails &&
-			memberDetails.tier.toLowerCase() ===
-				PatreonTiers.SUPPORTER.toLowerCase()
-		)
+		if (memberDetails) {
+			const tier = memberDetails.tier.toLowerCase()
+			return (
+				tier === PatreonTiers.SUPPORTER.toLowerCase() ||
+				tier === PatreonTiers.SPONSOR.toLowerCase()
+			)
+		}
+		return false
 	}
 }
