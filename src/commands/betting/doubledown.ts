@@ -1,16 +1,18 @@
 import { ApplyOptions } from '@sapphire/decorators'
 import { Command } from '@sapphire/framework'
-import { BetslipManager } from '../../utils/api/Khronos/bets/BetslipsManager'
-import BetslipWrapper from '../../utils/api/Khronos/bets/betslip-wrapper'
-import { BetsCacheService } from '../../utils/api/common/bets/BetsCacheService'
+import { BetslipManager } from '../../utils/api/Khronos/bets/BetslipsManager.js'
+import BetslipWrapper from '../../utils/api/Khronos/bets/betslip-wrapper.js'
+import { BetsCacheService } from '../../utils/api/common/bets/BetsCacheService.js'
 import { CacheManager } from '@pluto-redis'
-import { ApiErrorHandler } from '../../utils/api/Khronos/error-handling/ApiErrorHandler'
-import { ApiModules } from '../../lib/interfaces/api/api.interface'
+import { ApiErrorHandler } from '../../utils/api/Khronos/error-handling/ApiErrorHandler.js'
+import { ApiModules } from '../../lib/interfaces/api/api.interface.js'
 import { EmbedBuilder } from 'discord.js'
-import embedColors from '../../lib/colorsConfig'
+import embedColors from '../../lib/colorsConfig.js'
+import PatreonFacade from '../../utils/api/patreon/Patreon-Facade.js'
+import { ErrorEmbeds } from '../../utils/common/errors/global.js'
 
 @ApplyOptions<Command.Options>({
-	description: 'A basic slash command',
+	description: 'Double down an existing bet',
 })
 export class UserCommand extends Command {
 	public override registerApplicationCommands(registry: Command.Registry) {
@@ -31,6 +33,14 @@ export class UserCommand extends Command {
 	public override async chatInputRun(
 		interaction: Command.ChatInputCommandInteraction,
 	) {
+		// Ensure user is Patreon member
+		const isMember = await PatreonFacade.memberDetails(interaction.user.id)
+		if (!isMember) {
+			await interaction.reply({
+				embeds: [ErrorEmbeds.patreonMembersOnly()],
+			})
+			return
+		}
 		const betId = interaction.options.getInteger(`betid`, true)
 		try {
 			const betslipManager = new BetslipManager(
