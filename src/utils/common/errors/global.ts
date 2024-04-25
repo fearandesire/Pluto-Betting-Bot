@@ -1,6 +1,7 @@
 import { EmbedBuilder } from 'discord.js'
 import embedColors from '../../../lib/colorsConfig.js'
 import { helpfooter } from '@pluto-core-config'
+import { nonPatreonMemberMsg } from '../../api/patreon/interfaces.js'
 
 /**
  * @summary Generates Error Embeds
@@ -26,6 +27,9 @@ export class ErrorEmbeds {
 	}
 
 	// Specific error methods just call the generalized method with predefined titles
+	static patreonMembersOnly() {
+		return this.createErrorEmbed('Access Denied', nonPatreonMemberMsg)
+	}
 	static internalErr(description: string) {
 		return this.createErrorEmbed('Internal Error', description)
 	}
