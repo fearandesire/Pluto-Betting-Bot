@@ -28,6 +28,7 @@ import MoneyFormatter from '../../common/money-formatting/money-format.js'
 import GuildUtils from '../../../guilds/GuildUtils.js'
 import StringUtils from '../../../common/string-utils.js'
 import { patreonFooterMsg } from '../../patreon/interfaces.js'
+import PatreonFacade from '../../patreon/Patreon-Facade.js'
 
 /**
  * Manages betslips / betting process
@@ -223,8 +224,12 @@ export class BetslipManager {
 		betId: number,
 	) {
 		try {
+			const patreonOverride = await PatreonFacade.isSponsorMember(userid)
 			await this.betslipInstance.cancel({
-				betid: betId,
+				betId: betId,
+				patreonDataDto: {
+					patreonOverride,
+				},
 			})
 			const cancelledEmbed = new EmbedBuilder()
 				.setTitle(`Bet Cancellation :ticket:`)
