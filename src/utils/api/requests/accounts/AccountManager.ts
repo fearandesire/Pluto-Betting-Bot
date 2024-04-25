@@ -19,7 +19,7 @@ import { SapDiscClient } from '@pluto-core'
 import PaginationUtilities from '../../../embeds/pagination-utilities.js'
 import { plutoWelcomeMsg } from '../../common/interfaces/common-interfaces.js'
 import { ErrorEmbeds } from '../../../common/errors/global.js'
-import PatreonFacade from '../../patreon/Patreon-Facade'
+import PatreonFacade from '../../patreon/Patreon-Facade.js'
 
 export class AccountsWrapper {
 	private accountsApi: AccountsApi
@@ -106,7 +106,7 @@ export class AccountManager {
 	async claim(interaction: CommandInteraction) {
 		const userId = interaction.user.id
 		try {
-			const patreonOverride = await PatreonFacade.isSponsorMember(userId)
+			const patreonOverride = await PatreonFacade.isSupporterTier(userId)
 			const res = await this.accountsWrapper.processClaim(
 				userId,
 				patreonOverride,
