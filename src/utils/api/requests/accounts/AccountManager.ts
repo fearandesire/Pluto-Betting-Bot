@@ -19,6 +19,7 @@ import { SapDiscClient } from '@pluto-core'
 import PaginationUtilities from '../../../embeds/pagination-utilities.js'
 import { plutoWelcomeMsg } from '../../common/interfaces/common-interfaces.js'
 import { ErrorEmbeds } from '../../../common/errors/global.js'
+import PatreonFacade from '../../patreon/Patreon-Facade'
 
 export class AccountsWrapper {
 	private accountsApi: AccountsApi
@@ -63,11 +64,15 @@ export class AccountsWrapper {
 		}
 	}
 
-	async processClaim(userid: string) {
+	async processClaim(userid: string, patreonOverride: boolean) {
 		try {
-			return await this.accountsApi.dailyClaim({
+			const data = {
 				userid: userid,
-			})
+				dailyClaimBodyDto: {
+					patreonOverride: patreonOverride,
+				},
+			}
+			return await this.accountsApi.dailyClaim(data)
 		} catch (error) {
 			console.error('Error processing claim:', error)
 			throw error // Re-throw the error after logging or handling it
@@ -101,7 +106,11 @@ export class AccountManager {
 	async claim(interaction: CommandInteraction) {
 		const userId = interaction.user.id
 		try {
-			const res = await this.accountsWrapper.processClaim(userId)
+			const patreonOverride = await PatreonFacade.isSponsorMember(userId)
+			const res = await this.accountsWrapper.processClaim(
+				userId,
+				patreonOverride,
+			)
 			const { balance, isNew } = res
 			if (!balance) {
 				const errEmbed = ErrorEmbeds.accountErr(

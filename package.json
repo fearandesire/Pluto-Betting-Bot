@@ -1,6 +1,6 @@
 {
 	"name": "pluto-betting",
-	"version": "3.1.0",
+	"version": "3.1.1",
 	"description": "Pluto Betting App - Discord Interface",
 	"main": "./dist/Pluto.js",
 	"module": "./dist/Pluto.js",
@@ -22,7 +22,7 @@
 		"clear-dist": "rimraf ./dist",
 		"watch": "nodemon -L --watch ./ --exec npm run dev",
 		"start": "node --loader esm-module-alias/loader --no-warnings ./dist/Pluto.js",
-		"dev": "node --loader esm-module-alias/loader --no-warnings ./dist/Pluto.js",
+		"dev": "yarn build && node --loader esm-module-alias/loader --no-warnings ./dist/Pluto.js",
 		"ts-dev": "tsx ./src/Pluto.ts",
 		"gen-api": "openapi-generator-cli generate -i ./Khronos-Swagger-Spec-v1.json -g typescript-fetch -o ./src/openapi/khronos -c openapi.config.json",
 		"post-api-fix": "node ./src/utils/scripts/addJsExtension.js",
