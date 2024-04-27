@@ -282,12 +282,9 @@ export class BetslipManager {
 			})
 
 		const embed = new EmbedBuilder()
-			.setTitle(
-				`Pending Betslip
-${chosenTeamStr} *vs.* ${oppTeamStr}`,
-			)
+			.setTitle(`Pending Betslip`)
 			.setDescription(
-				`**${usersTeam}** | **${dateofmatchup}**
+				`${chosenTeamStr} *vs.* ${oppTeamStr}\n**${usersTeam}** | **${dateofmatchup}**
 			**Bet:** **\`${betAmount}\`** | **Payout:** **\`${payout}\`**\n**Profit:** **\`${profit}\`**
 			
 			*Confirm your bet via the buttons below*`,
