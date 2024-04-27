@@ -204,7 +204,7 @@ export class BetslipManager {
 		const successEmbed = new EmbedBuilder()
 			.setTitle(`Bet confirmed!`)
 			.setDescription(
-				`### ${teamDetails.betOnTeamEmoji} vs ${teamDetails.opponentEmoji}**${teamDetails.chosenTeamShort}** | **${apiInfo.dateofmatchup}**\n**Bet:** **\`${betAmount}\`** | **Payout:** **\`${payout}\`**\n**Profit:** **\`${profit}\`**`,
+				`### ${teamDetails.betOnTeamEmoji} vs ${teamDetails.opponentEmoji}\n**${teamDetails.chosenTeamShort}** | **${apiInfo.dateofmatchup}**\n**Bet:** **\`${betAmount}\`** | **Payout:** **\`${payout}\`**\n**Profit:** **\`${profit}\`**`,
 			)
 			.setColor(embedColors.success)
 			.setThumbnail(embedImg)
