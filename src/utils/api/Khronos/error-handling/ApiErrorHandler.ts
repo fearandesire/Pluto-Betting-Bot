@@ -14,7 +14,7 @@ export class ApiErrorHandler {
 	) {
 		const errorType = apiError.exception
 		let errorMessage
-
+		let timeLeft
 		switch (errorType) {
 			// ? These error types will by default use the message that they arrived with
 			case ApiHttpErrorTypes.UnableToFindBalance:
@@ -32,9 +32,17 @@ export class ApiErrorHandler {
 			case ApiHttpErrorTypes.AccountNotFound:
 				errorMessage = `You don't have an account yet.\nUse \`/register\` to instantly create one!`
 				break
-
 			case ApiHttpErrorTypes.ClaimCooldown:
-				errorMessage = `You can only claim once every 24 hours!`
+				if (
+					apiError.details &&
+					typeof apiError.details === 'object' &&
+					apiError.details.timeLeft
+				) {
+					timeLeft = apiError.details.timeLeft
+					errorMessage = `You are on cooldown for another ${timeLeft}.`
+				} else {
+					errorMessage = `You can only claim once every 24 hours!`
+				}
 				break
 			case ApiHttpErrorTypes.HasPendingBet:
 				errorMessage = `You have another bet you haven't finished confirming yet.\nPlease finish it before trying to place a new bet.`
@@ -101,16 +109,10 @@ export class ApiErrorHandler {
 		error: any,
 		errModule: ApiModules,
 	) {
-		let apiError: IKhronosErr
 		if (error?.response) {
-			const { statusCode, message, exception } =
-				await error.response.json()
-			apiError = {
-				statusCode,
-				message,
-				exception,
-			}
-			return this.errorResponses(interaction, apiError, errModule)
+			const errorData = await error.response.json()
+
+			return this.errorResponses(interaction, errorData, errModule)
 		}
 		// Fallback error handling for non-API or malformed API errors
 		console.error(error)
