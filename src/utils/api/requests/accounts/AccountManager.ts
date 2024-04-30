@@ -36,7 +36,6 @@ export class AccountsWrapper {
 				userid: userid,
 			})
 		} catch (error) {
-			console.error('Error creating account:', error)
 			throw error // Re-throw the error after logging or handling it
 		}
 	}
@@ -48,7 +47,6 @@ export class AccountsWrapper {
 			})
 			return { balance: res.balance, userid: userid }
 		} catch (error) {
-			console.error('Error retrieving account balance:', error)
 			throw error // Re-throw the error after logging or handling it
 		}
 	}
@@ -59,7 +57,6 @@ export class AccountsWrapper {
 				userid: userid,
 			})
 		} catch (error) {
-			console.error('Error retrieving account profile:', error)
 			throw error // Re-throw the error after logging or handling it
 		}
 	}
@@ -74,7 +71,6 @@ export class AccountsWrapper {
 			}
 			return await this.accountsApi.dailyClaim(data)
 		} catch (error) {
-			console.error('Error processing claim:', error)
 			throw error // Re-throw the error after logging or handling it
 		}
 	}
@@ -83,7 +79,6 @@ export class AccountsWrapper {
 		try {
 			return await this.accountsApi.getLeaderboard()
 		} catch (error) {
-			console.error('Error retrieving leaderboard:', error)
 			throw error // Re-throw the error after logging or handling it
 		}
 	}
