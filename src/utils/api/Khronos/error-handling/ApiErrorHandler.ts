@@ -5,6 +5,7 @@ import {
 import { ErrorEmbeds } from '../../../common/errors/global.js'
 import { CommandInteraction } from 'discord.js'
 import { IKhronosErr } from './interface.js'
+import MoneyFormatter from '../../common/money-formatting/money-format.js'
 
 export class ApiErrorHandler {
 	async errorResponses(
@@ -24,7 +25,7 @@ export class ApiErrorHandler {
 				errorMessage = 'The match specified could not be found.'
 				break
 			case ApiHttpErrorTypes.MultipleGamesForTeam:
-				errorMessage = `There\'s more than one game available for this team.\nPlease place your bet again and specify a match.`
+				errorMessage = `There's more than one game available for this team.\nPlease place your bet again and specify a match.`
 				break
 			case ApiHttpErrorTypes.InvalidTeamForMatch:
 				errorMessage = `The team specified was not valid for the match you selected.\nPlease place your bet again and select the correct match.`
@@ -61,7 +62,15 @@ export class ApiErrorHandler {
 				errorMessage = 'You have already placed a bet on this match!'
 				break
 			case ApiHttpErrorTypes.InsufficientBalance:
-				errorMessage = `Your balance is insufficient to place this bet.`
+				if (
+					apiError.details &&
+					typeof apiError.details === 'object' &&
+					apiError.details.balance
+				) {
+					errorMessage = `You only have **\`${MoneyFormatter.toUSD(apiError.details.balance)}\`** available to place bets with.`
+				} else {
+					errorMessage = `Your balance is insufficient to place this bet.`
+				}
 				break
 			case ApiHttpErrorTypes.InternalError:
 				errorMessage = `An internal error has occurred. Please try again later.`
