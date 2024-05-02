@@ -28,7 +28,7 @@ const RAW_RUNTIME_STATE =
         "packageDependencies": [\
           ["@favware/colorette-spinner", "npm:1.0.1"],\
           ["@kaname-png/plugin-statcord", "npm:2.3.2"],\
-          ["@koa/cors", "npm:4.0.0"],\
+          ["@koa/cors", "npm:5.0.0"],\
           ["@openapitools/openapi-generator-cli", "npm:2.13.1"],\
           ["@sapphire/cli", "npm:1.9.3"],\
           ["@sapphire/decorators", "npm:6.1.0"],\
@@ -1812,10 +1812,10 @@ const RAW_RUNTIME_STATE =
       }]\
     ]],\
     ["@koa/cors", [\
-      ["npm:4.0.0", {\
-        "packageLocation": "./.yarn/cache/@koa-cors-npm-4.0.0-e1649c9262-53caa512e7.zip/node_modules/@koa/cors/",\
+      ["npm:5.0.0", {\
+        "packageLocation": "./.yarn/cache/@koa-cors-npm-5.0.0-693911adf6-49e5f3b861.zip/node_modules/@koa/cors/",\
         "packageDependencies": [\
-          ["@koa/cors", "npm:4.0.0"],\
+          ["@koa/cors", "npm:5.0.0"],\
           ["vary", "npm:1.1.2"]\
         ],\
         "linkType": "HARD"\
@@ -2083,7 +2083,7 @@ const RAW_RUNTIME_STATE =
           ["clean-stack", "npm:3.0.1"],\
           ["cli-progress", "npm:3.12.0"],\
           ["debug", "virtual:6e8f4423c361394be3e9336ba4a24189a86d0bbbc6dda562b63ed30e4e925665545cfcbc6a7434bb34f60cb12ad56d72f17a64fb4963c277d980b2c897dcd6d7#npm:4.3.4"],\
-          ["ejs", "npm:3.1.9"],\
+          ["ejs", "npm:3.1.10"],\
           ["fs-extra", "npm:9.1.0"],\
           ["get-package-type", "npm:0.1.0"],\
           ["globby", "npm:11.1.0"],\
@@ -2117,7 +2117,7 @@ const RAW_RUNTIME_STATE =
           ["clean-stack", "npm:3.0.1"],\
           ["cli-progress", "npm:3.12.0"],\
           ["debug", "virtual:6e8f4423c361394be3e9336ba4a24189a86d0bbbc6dda562b63ed30e4e925665545cfcbc6a7434bb34f60cb12ad56d72f17a64fb4963c277d980b2c897dcd6d7#npm:4.3.4"],\
-          ["ejs", "npm:3.1.9"],\
+          ["ejs", "npm:3.1.10"],\
           ["get-package-type", "npm:0.1.0"],\
           ["globby", "npm:11.1.0"],\
           ["hyperlinker", "npm:1.0.0"],\
@@ -5977,10 +5977,10 @@ const RAW_RUNTIME_STATE =
       }]\
     ]],\
     ["ejs", [\
-      ["npm:3.1.9", {\
-        "packageLocation": "./.yarn/cache/ejs-npm-3.1.9-e201b2088c-f0e249c791.zip/node_modules/ejs/",\
+      ["npm:3.1.10", {\
+        "packageLocation": "./.yarn/cache/ejs-npm-3.1.10-4e8cf4bdc1-52eade9e68.zip/node_modules/ejs/",\
         "packageDependencies": [\
-          ["ejs", "npm:3.1.9"],\
+          ["ejs", "npm:3.1.10"],\
           ["jake", "npm:10.8.7"]\
         ],\
         "linkType": "HARD"\
@@ -11053,7 +11053,7 @@ const RAW_RUNTIME_STATE =
           ["pluto-betting", "workspace:."],\
           ["@favware/colorette-spinner", "npm:1.0.1"],\
           ["@kaname-png/plugin-statcord", "npm:2.3.2"],\
-          ["@koa/cors", "npm:4.0.0"],\
+          ["@koa/cors", "npm:5.0.0"],\
           ["@openapitools/openapi-generator-cli", "npm:2.13.1"],\
           ["@sapphire/cli", "npm:1.9.3"],\
           ["@sapphire/decorators", "npm:6.1.0"],\

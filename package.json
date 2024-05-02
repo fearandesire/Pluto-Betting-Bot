@@ -70,7 +70,7 @@
 	"dependencies": {
 		"@favware/colorette-spinner": "^1.0.1",
 		"@kaname-png/plugin-statcord": "^2.1.4",
-		"@koa/cors": "^4.0.0",
+		"@koa/cors": "^5.0.0",
 		"@openapitools/openapi-generator-cli": "^2.9.0",
 		"@sapphire/decorators": "^6.0.3",
 		"@sapphire/discord-utilities": "^3.2.1",
