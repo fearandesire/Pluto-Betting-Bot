@@ -102,7 +102,6 @@ export class BetslipManager {
 				})
 			}
 		} catch (error) {
-			console.error('Error initializing bet:', error) // Log err
 			return new ApiErrorHandler().handle(
 				interaction,
 				error,
@@ -170,7 +169,6 @@ export class BetslipManager {
 				})
 			}
 		} catch (error) {
-			console.error('Error placing bet:', error)
 			const errEmbed = ErrorEmbeds.internalErr(
 				'Failed to place your bet due to an internal error. Please try again later.',
 			)
@@ -243,7 +241,6 @@ export class BetslipManager {
 				embeds: [cancelledEmbed],
 			})
 		} catch (error) {
-			console.error('Error cancelling bet:', error)
 			return new ApiErrorHandler().handle(
 				interaction,
 				error,
