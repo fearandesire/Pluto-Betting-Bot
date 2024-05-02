@@ -1,6 +1,6 @@
 {
 	"name": "pluto-betting",
-	"version": "3.1.2",
+	"version": "3.1.3",
 	"description": "Pluto Betting App - Discord Interface",
 	"main": "./dist/Pluto.js",
 	"module": "./dist/Pluto.js",
