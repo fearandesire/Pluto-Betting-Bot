@@ -3,10 +3,8 @@ import parseScheduled from '../bot_res/parseScheduled.js'
 import { formatOdds } from './formatOdds.js'
 import { Matchup } from '../api/common/interfaces/common-interfaces.js'
 import { IOddsField } from './matchups.interface.js'
-import {
-	patreonFooterMsg,
-	patreonFooterUrl,
-} from '../api/patreon/interfaces.js'
+import { patreonFooterUrl } from '../api/patreon/interfaces.js'
+import { helpfooter } from '@pluto-core-config'
 
 export async function prepareAndFormat(matchups: Matchup[], thumbnail: string) {
 	const oddsFields: IOddsField[] = []
@@ -43,7 +41,7 @@ export async function prepareAndFormat(matchups: Matchup[], thumbnail: string) {
 	const options = {
 		includeOdds: true,
 		footer: {
-			text: `${count} upcoming matches | ${patreonFooterMsg}`,
+			text: `${count} upcoming matches | ${helpfooter()}`,
 			iconURL: patreonFooterUrl,
 		},
 		thumbnail,

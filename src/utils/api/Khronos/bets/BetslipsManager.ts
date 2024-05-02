@@ -28,7 +28,6 @@ import {
 import MoneyFormatter from '../../common/money-formatting/money-format.js'
 import GuildUtils from '../../../guilds/GuildUtils.js'
 import StringUtils from '../../../common/string-utils.js'
-import { patreonFooterMsg } from '../../patreon/interfaces.js'
 import PatreonFacade from '../../patreon/Patreon-Facade.js'
 
 /**
@@ -207,7 +206,7 @@ export class BetslipManager {
 			.setColor(embedColors.success)
 			.setThumbnail(embedImg)
 			.setFooter({
-				text: `${patreonFooterMsg} | Bet ID: ${betslip.betid}`,
+				text: `${helpfooter()} | Bet ID: ${betslip.betid}`,
 			})
 		await interaction.followUp({
 			embeds: [successEmbed],
