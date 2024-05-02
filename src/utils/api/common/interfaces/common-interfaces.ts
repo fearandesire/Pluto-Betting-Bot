@@ -69,4 +69,4 @@ export interface ICategoryData {
 	[key: string]: IConfigRow[]
 }
 
-export const plutoWelcomeMsg = `Welcome to Pluto!\n👁️ View games to bet on using \`/odds\`\n✅ Place bets using \`/bet\`\nFind out more via \`commands\``
+export const plutoWelcomeMsg = `**Welcome to Pluto!**\n\`👁️\` - View games to bet on using \`/odds\`\n\`✅\` - Place bets using \`/bet\`\n\nFind out more via \`commands\``
