@@ -18,7 +18,9 @@ export {
 
 // ? Embed usage
 const footers = [
-	'💙 Support Pluto via Patreon | Use `/patreon` for more info',
+	'❓ View more commands via /commands',
+	'❓ Learn more about Pluto via /about',
+	'💙 Support Pluto via /patreon',
 	'dev. by fenixforever',
 ]
 
