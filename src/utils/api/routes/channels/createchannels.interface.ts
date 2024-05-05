@@ -16,11 +16,19 @@ export interface IChannelAggregated {
 	crontime: string
 	gametime: string
 	created: boolean
-	matchupOdds: {
+	matchOdds: {
 		favored: string
 		home_team_odds: number
 		away_team_odds: number
 	}
 	home_team: string
 	away_team: string
+	matchData: {
+		headline: string
+	}
+}
+
+export enum SportEmojis {
+	nba = '🏀',
+	nfl = '🏈',
 }

@@ -13,21 +13,30 @@ import {
 	TextChannel,
 } from 'discord.js'
 import { findEmoji } from '../../bot_res/findEmoji.js'
-import { IChannelAggregated } from '../../api/routes/channels/createchannels.interface.js'
+import {
+	IChannelAggregated,
+	SportEmojis,
+} from '../../api/routes/channels/createchannels.interface.js'
 import {
 	ICategoryData,
 	IConfigRow,
+	SportsServing,
 } from '../../api/common/interfaces/common-interfaces.js'
 import path, { dirname } from 'path'
 import fs from 'fs/promises'
 import { fileURLToPath } from 'url'
+import StringUtils from '../../common/string-utils'
 
 interface IPrepareMatchEmbed {
 	favored: string
 	favoredTeamClr: ColorResolvable
 	home_team: string
+	homeTeamShortName: string
 	away_team: string
+	awayTeamShortName: string
 	bettingChanId: string
+	header: string
+	sport: SportsServing
 }
 
 /**
@@ -60,8 +69,8 @@ export default class ChannelManager {
 		betChanRows: IConfigRow[],
 		categoriesServing: ICategoryData,
 	) {
-		const { sport, matchupOdds } = channel
-		const { favored } = matchupOdds
+		const { sport, matchOdds } = channel
+		const { favored } = matchOdds
 		const favoredTeamInfo = await resolveTeam(favored, {
 			sport: sport.toLowerCase(),
 			full: true,
@@ -87,6 +96,7 @@ export default class ChannelManager {
 
 	/**
 	 * Validates and parses incoming channel data from the request
+	 * @summary Verifies via `channels` length and `bettingChannelRows` length
 	 * @async
 	 * @returns {Array} Array of channel data objects.
 	 * @throws {Error} If no channels data is received.
@@ -102,8 +112,8 @@ export default class ChannelManager {
 			!Array.isArray(body.bettingChannelRows) ||
 			body.bettingChannelRows.length === 0
 		) {
-			console.log(
-				`Validation failed. Channels: ${JSON.stringify(body.channels)}, BettingChannelRows: ${JSON.stringify(body.bettingChannelRows)}`,
+			console.error(
+				`[validateAndParseChannels] Validation failed. Channels: ${JSON.stringify(body.channels)}, BettingChannelRows: ${JSON.stringify(body.bettingChannelRows)}`,
 			)
 			return false
 		}
@@ -175,16 +185,21 @@ export default class ChannelManager {
 			throw new Error(`Missing betting channel id in channel data.`)
 		}
 
-		const { matchupOdds } = channel
+		const { matchOdds } = channel
+		const strUtils = new StringUtils()
 		const args = {
-			favored: matchupOdds.favored,
+			favored: matchOdds.favored,
 			favoredTeamClr: favoredTeamInfo.colors[0],
 			home_team,
+			homeTeamShortName: strUtils.getShortName(home_team),
+			awayTeamShortName: strUtils.getShortName(away_team),
 			away_team,
 			bettingChanId,
+			header: channel.matchData.headline,
+			sport: channel.sport,
 		}
 
-		const matchEmbed = await this.prepareMatchupEmbed(args)
+		const matchEmbed = await this.prepMatchEmbed(args)
 		// Correctly create an AttachmentBuilder instance with the matchImg buffer
 		let attachment = null
 		if (matchImg) {
@@ -192,7 +207,7 @@ export default class ChannelManager {
 			matchEmbed.embed.setImage('attachment://match.png')
 		}
 
-		const gameChan = await guild.channels.create({
+		const gameChan: TextChannel = await guild.channels.create({
 			name: `${channel.channelname}`,
 			type: ChannelType.GuildText,
 			topic: 'Enjoy the Game!',
@@ -200,35 +215,28 @@ export default class ChannelManager {
 		})
 
 		// Check if the created channel is a TextChannel before using TextChannel-specific methods
-		if (gameChan instanceof TextChannel) {
-			const messageOptions: MessageCreateOptions = {
-				embeds: [matchEmbed.embed],
-			}
-			// Only include 'files' property if attachment is not null
-			if (attachment) {
-				messageOptions['files'] = [attachment]
-			}
-
-			await gameChan.send(messageOptions)
-			console.log(`Created channel: ${channel.channelname}`)
-		} else {
-			console.error('The created channel is not a TextChannel.', gameChan)
+		const messageOptions: MessageCreateOptions = {
+			embeds: [matchEmbed.embed],
 		}
+		// Only include 'files' property if attachment is found
+		if (attachment) {
+			messageOptions['files'] = [attachment]
+		}
+
+		await gameChan.send(messageOptions)
 	}
 
-	async prepareMatchupEmbed(args: IPrepareMatchEmbed) {
+	async prepMatchEmbed(args: IPrepareMatchEmbed) {
 		const embedClr = args.favoredTeamClr
 		const teamEmoji = (await findEmoji(args.favored)) ?? ''
-		const title = `${args.away_team} @ ${args.home_team}`
-
+		const matchVersus = `${args.awayTeamShortName} @ ${args.homeTeamShortName}`
+		const parseHeaderEmoji = SportEmojis[args.sport]
+		const sanitizedHeader = args.header.replace(/-/, '|')
 		const matchEmbed = new EmbedBuilder()
 			.setColor(embedClr)
-			.setTitle(title)
+			// Inserting for the playoffs, but will need to be reviewed for regular season
 			.setDescription(
-				`
-**The ${teamEmoji} ${args.favored} are favored to win this game!**
-
-*Type \`/commands\` in the <#${args.bettingChanId}> channel to place bets with Pluto*`,
+				`### ${parseHeaderEmoji} ${sanitizedHeader}\n##${matchVersus}\n\n🔵 **Game Details**\nThe ${teamEmoji} **${args.favored}** are favored to win this game!\n\n🔵 **Info**\nType \`/commands\` in the <#${args.bettingChanId}> channel to place bets with Pluto*`,
 			)
 			.setFooter({
 				text: `Pluto | Created by fenixforever`,
