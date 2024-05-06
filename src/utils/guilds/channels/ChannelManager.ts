@@ -25,7 +25,7 @@ import {
 import path, { dirname } from 'path'
 import fs from 'fs/promises'
 import { fileURLToPath } from 'url'
-import StringUtils from '../../common/string-utils'
+import StringUtils from '../../common/string-utils.js'
 
 interface IPrepareMatchEmbed {
 	favored: string
