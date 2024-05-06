@@ -197,11 +197,13 @@ export class BetslipManager {
 				profit: betslip.profit!,
 				payout: betslip.payout!,
 			})
+
+		const formattedBetData = this.formatBetStr(betAmount, payout, profit)
 		// Bet is placed, just need to inform the user
 		const successEmbed = new EmbedBuilder()
 			.setTitle(`Bet confirmed!`)
 			.setDescription(
-				`### ${teamDetails.betOnTeamEmoji} vs ${teamDetails.opponentEmoji}\n**${teamDetails.chosenTeamShort}** | **${apiInfo.dateofmatchup}**\n**Bet:** **\`${betAmount}\`** | **Payout:** **\`${payout}\`**\n**Profit:** **\`${profit}\`**`,
+				`## ${teamDetails.betOnTeamEmoji} *vs.* ${teamDetails.opponentEmoji}\n**${teamDetails.chosenTeamShort}** | **${apiInfo.dateofmatchup}**\n${formattedBetData}`,
 			)
 			.setColor(embedColors.success)
 			.setThumbnail(embedImg)
@@ -211,6 +213,12 @@ export class BetslipManager {
 		await interaction.followUp({
 			embeds: [successEmbed],
 		})
+	}
+
+	private formatBetStr(betAmount: string, payout: string, profit: string) {
+		const b = `**`
+		const formattedBetData = `${b}${betAmount}${b} -> ${b}${payout}${b}\n${b}Profit:${b} ${b}${profit}${b}`
+		return formattedBetData
 	}
 
 	async cancelBet(
@@ -276,14 +284,11 @@ export class BetslipManager {
 				profit: betData.payData.profit,
 				payout: betData.payData.payout,
 			})
-
+		const formattedBetData = this.formatBetStr(betAmount, payout, profit)
 		const embed = new EmbedBuilder()
 			.setTitle(`Pending Betslip`)
 			.setDescription(
-				`### ${chosenTeamStr} *vs.* ${oppTeamStr}\n**${usersTeam}** | **${dateofmatchup}**
-			**Bet:** **\`${betAmount}\`** | **Payout:** **\`${payout}\`**\n**Profit:** **\`${profit}\`**
-			
-			*Confirm your bet via the buttons below*`,
+				`## ${chosenTeamStr} *vs.* ${oppTeamStr}\n**${usersTeam}** | **${dateofmatchup}**\n${formattedBetData}\n*Confirm your bet via the buttons below*`,
 			)
 			.setColor(embedColors.PlutoYellow)
 			.setFooter({
