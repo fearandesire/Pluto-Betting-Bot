@@ -1,7 +1,7 @@
 import numeral from 'numeral'
 
 export default class MoneyFormatter {
-	static toUSD(amount: number | string) {
+	static toUSD(amount: number) {
 		return numeral(amount).format('$0,0.00')
 	}
 	/**
@@ -12,9 +12,9 @@ export default class MoneyFormatter {
 	static async formatAmounts(bettingNumbers: {
 		[key: string]: number | string
 	}) {
-		const betAmount = MoneyFormatter.toUSD(bettingNumbers.amount)
-		const payout = MoneyFormatter.toUSD(bettingNumbers.payout)
-		const profit = MoneyFormatter.toUSD(bettingNumbers.profit)
+		const betAmount = MoneyFormatter.toUSD(Number(bettingNumbers.amount))
+		const payout = MoneyFormatter.toUSD(Number(bettingNumbers.payout))
+		const profit = MoneyFormatter.toUSD(Number(bettingNumbers.profit))
 
 		return {
 			betAmount,

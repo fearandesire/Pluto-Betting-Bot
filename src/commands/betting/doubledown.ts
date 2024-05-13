@@ -10,6 +10,7 @@ import { EmbedBuilder } from 'discord.js'
 import embedColors from '../../lib/colorsConfig.js'
 import PatreonFacade from '../../utils/api/patreon/Patreon-Facade.js'
 import { ErrorEmbeds } from '../../utils/common/errors/global.js'
+import MoneyFormatter from '../../utils/api/common/money-formatting/money-format.js'
 
 @ApplyOptions<Command.Options>({
 	description: 'Double down an existing bet',
@@ -53,9 +54,14 @@ export class UserCommand extends Command {
 			)
 			const { newBetAmount, newProfit, newPayout, newBalance } =
 				newBetDetails.betslip
+			// Format the money
+			const formattedAmount = MoneyFormatter.toUSD(newBetAmount)
+			const formattedPayout = MoneyFormatter.toUSD(newPayout)
+			const formattedProfit = MoneyFormatter.toUSD(newProfit)
+			const formattedBalance = MoneyFormatter.toUSD(newBalance)
 			const modifiedBetEmbed = new EmbedBuilder()
 				.setDescription(
-					`## Double Down\n\n**Bet:** ${newBetAmount} | **Payout:** ${newPayout}\n**Profit:** ${newProfit}\n**Balance:** ${newBalance}`,
+					`## Double Down\n\n**Bet:** ${formattedAmount} | **Payout:** ${formattedPayout}\n**Profit:** ${formattedProfit}\n**Balance:** ${formattedBalance}`,
 				)
 				.setColor(embedColors.success)
 				.setThumbnail(interaction.user.displayAvatarURL())
