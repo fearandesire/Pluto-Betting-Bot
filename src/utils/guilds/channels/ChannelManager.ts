@@ -231,7 +231,7 @@ export default class ChannelManager {
 		const teamEmoji = (await findEmoji(args.favored)) ?? ''
 		const matchVersus = `${args.awayTeamShortName} @ ${args.homeTeamShortName}`
 		const parseHeaderEmoji = SportEmojis[args.sport]
-		const sanitizedHeader = args.header.replace(/-/, '|')
+		const sanitizedHeader = args?.header.replace(/-/, '|') || ''
 		const matchEmbed = new EmbedBuilder()
 			.setColor(embedClr)
 			// Inserting for the playoffs, but will need to be reviewed for regular season
