@@ -236,7 +236,7 @@ export default class ChannelManager {
 			.setColor(embedClr)
 			// Inserting for the playoffs, but will need to be reviewed for regular season
 			.setDescription(
-				`### ${parseHeaderEmoji} ${sanitizedHeader}\n## ${matchVersus}\n\n🔵 **Game Details**\nThe ${teamEmoji} **${args.favored}** are favored to win this game!\n\n🔵 **Info**\nType \`/commands\` in the <#${args.bettingChanId}> channel to place bets with Pluto*`,
+				`### ${parseHeaderEmoji} ${sanitizedHeader}\n## ${matchVersus}\n\n🔵 **Game Details**\nThe ${teamEmoji} **${args.favored}** are favored to win this match!\n\n🔵 **Info**\n*Use \`/commands\` in the <#${args.bettingChanId}> channel to place bets with Pluto*`,
 			)
 			.setFooter({
 				text: `Pluto | Created by fenixforever`,
