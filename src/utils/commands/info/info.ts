@@ -9,6 +9,8 @@ export default class PlutoInfo {
 				bet: 'Place a bet on a match',
 				cancelbet: "Cancel a pending bet you've placed",
 				balance: 'View your current balance',
+				dailyclaim:
+					'Claim $50 every day, or twice a day for Patreon members.',
 			},
 			info: {
 				stats: 'View your betting stats',
