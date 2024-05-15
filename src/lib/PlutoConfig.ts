@@ -18,10 +18,8 @@ export {
 
 // ? Embed usage
 const footers = [
-	'❓ View more commands via /commands',
-	'❓ Learn more about Pluto via /about',
+	'❓ Learn more about Pluto via /help',
 	'💙 Support Pluto via /patreon',
-	'dev. by fenixforever',
 ]
 
 function helpfooter() {
