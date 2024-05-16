@@ -12,7 +12,7 @@ Engage in the sports betting scene directly from your favorite platform
 
 ---
 
-## 🎯 Overview
+## 🎯 What is Pluto?
 
 **Pluto** is a full-featured betting app designed to bring the thrill of sports betting to Discord. It's built with a focus on simplicity and user engagement. Experience the excitement of the betting world using virtual currency, all within your Discord server!
 
@@ -24,16 +24,7 @@ Engage in the sports betting scene directly from your favorite platform
 - **Progression System**: Earn `Tiers` as you bet, from Bronze to Diamond.
 - **Leaderboard**: Compete with others and climb the leaderboard.
 
-## 🚀 Technologies
-
-Pluto is crafted using a variety of robust technologies:
-
-- [Sapphire Framework](https://github.com/sapphiredev/framework) 
-- [Node.js](https://nodejs.org/en/)
-- [Discord.js](https://discord.js.org/)
-- [The-Odds-Api](the-odds-api.com/)
-
-As of version v3, core functionality has been transferred to an external, private API.
+For more information, visit [documentation here.](https://pluto.fearandesire.com)
 
 ## 📝 License
 
@@ -48,8 +39,9 @@ Developed by [FENIX](https://github.com/fearandesire)
 - Contributions by [Faysal](https://github.com/Faysal19999)
 
 ## 🔗 Links
-
-### [**Patreon**](https://www.patreon.com/fenix_/posts) | Support development, gain access to exclusive features
+### 📒 [Documentation](https://docs.pluto.fearandesire.com)
+### 💙 [**Patreon**](https://www.patreon.com/fenix_/posts) 
+Support the development of Pluto, and my goals to make it the undisputable, best betting application on Discord!
 
 
 <br/>

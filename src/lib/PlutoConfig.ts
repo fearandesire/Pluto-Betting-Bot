@@ -19,7 +19,7 @@ export {
 // ? Embed usage
 const footers = [
 	'❓ Learn more about Pluto via /help',
-	'💙 Support Pluto via /patreon',
+	// '💙 Support Pluto via /patreon',
 ]
 
 function helpfooter() {

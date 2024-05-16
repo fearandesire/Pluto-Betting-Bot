@@ -2,6 +2,7 @@ import { ApplyOptions } from '@sapphire/decorators'
 import { Command } from '@sapphire/framework'
 import { EmbedBuilder } from 'discord.js'
 import PlutoInfo from '../../utils/commands/info/info.js'
+import { plutoDocsUrl } from '../../lib/configs/constants.js'
 
 @ApplyOptions<Command.Options>({
 	description: '❓ View all commands available to use',
@@ -27,6 +28,7 @@ export class UserCommand extends Command {
 			.setFooter({
 				text: commandsInfo.footer,
 			})
+			.setURL(`${plutoDocsUrl}`)
 
 		return interaction.reply({
 			embeds: [embed],

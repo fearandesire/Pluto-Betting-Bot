@@ -1,5 +1,6 @@
 import embedColors from '../../../lib/colorsConfig.js'
 import { helpfooter } from '@pluto-core-config'
+import { plutoDocsUrl } from '../../../lib/configs/constants.js'
 
 export default class PlutoInfo {
 	static commandsInfo() {
@@ -11,6 +12,8 @@ export default class PlutoInfo {
 				balance: 'View your current balance',
 				dailyclaim:
 					'Claim $50 every day, or twice a day for Patreon members.',
+				mybets: `View your active placed bets`,
+				doubledown: `Double an existing bet, use it on a confident bet!`,
 			},
 			info: {
 				stats: 'View your betting stats',
@@ -32,6 +35,8 @@ export default class PlutoInfo {
 				}
 				formattedCommands += '\n'
 			}
+			// Add link to the website
+			formattedCommands += `**📒 Docs: ${plutoDocsUrl}**`
 			return formattedCommands
 		}
 
@@ -52,7 +57,7 @@ export default class PlutoInfo {
 	static helpInfo() {
 		return {
 			title: `Pluto Documentation`,
-			description: `Pluto is a full-fledged betting app that creates a competitive sports betting environment.\n# Getting Started\n1. Run the \`/odds\` command to view current betting odds.\n2. Use the \`/bet\` command to place bets, starting with a balance of $50.\n3. Use the \`/dailyclaim\` command every 24 hours to get free money if you run out of funds.\n\n**💜 [Support Pluto](https://www.patreon.com/fenix_)**\n**🌐 [Documentation](https://docs.pluto.fearandesire.com)**`,
+			description: `Pluto is a full-fledged betting app that creates a competitive sports betting environment.\n# Getting Started\n1. Run the \`/odds\` command to view current betting odds.\n2. Use the \`/bet\` command to place bets, starting with a balance of $50.\n3. Use the \`/dailyclaim\` command every 24 hours to get free money if you run out of funds.\n\n**💜 [Support Pluto](https://www.patreon.com/fenix_)**\n**📒 [Documentation](${plutoDocsUrl})**`,
 			thumbnail: `https://i.imgur.com/RWjfjyv.png`,
 			color: embedColors.PlutoBlue,
 			footer: helpfooter(),
