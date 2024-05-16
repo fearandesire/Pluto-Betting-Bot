@@ -36,7 +36,7 @@ export default class PlutoInfo {
 				formattedCommands += '\n'
 			}
 			// Add link to the website
-			formattedCommands += `**📒 [Docs:](${plutoDocsUrl})**`
+			formattedCommands += `**📒 [Docs](${plutoDocsUrl})**\n`
 			return formattedCommands
 		}
 
