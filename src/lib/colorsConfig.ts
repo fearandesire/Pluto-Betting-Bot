@@ -2,15 +2,15 @@ import { ColorResolvable } from 'discord.js'
 
 const embedColors: Record<string, ColorResolvable> = {
 	// Pluto
-	success: '#00FF00',
-	error: '#FF0000',
+	success: '#57f287',
+	error: '#aa2d2d',
 	warning: '#f29831',
 	info: '#3498db',
-	PlutoYellow: '#f1c40f',
+	PlutoYellow: '#d8b21a',
 	PlutoBlue: '#c8eefb',
 	PlutoGreen: '#57f287',
 	PlutoBrightGreen: '#00FF00',
-	PlutoRed: '#ed4245',
+	PlutoRed: '#aa2d2d',
 	PlutoPurple: '#9b59b6',
 	PlutoGray: '#95a5a6',
 
