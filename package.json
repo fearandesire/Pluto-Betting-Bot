@@ -38,7 +38,8 @@
 		"post-api-fix": "node ./src/utils/scripts/addJsExtension.js",
 		"ci-gen-api": "rimraf ./src/openapi && yarn gen-api && yarn post-api-fix",
 		"sap-cmd": "sapphire generate slashcommand",
-		"dvault": "npx dotenv-vault@latest"
+		"dvault": "npx dotenv-vault@latest",
+		"release": "release-it"
 	},
 	"aliases": {
 		"@khronos-index": "./dist/openapi/khronos/index.js",
