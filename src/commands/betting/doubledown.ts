@@ -34,6 +34,7 @@ export class UserCommand extends Command {
 	public override async chatInputRun(
 		interaction: Command.ChatInputCommandInteraction,
 	) {
+		await interaction.deferReply()
 		// Ensure user is Patreon member
 		const isMember = await PatreonFacade.memberDetails(interaction.user.id)
 		if (!isMember) {
@@ -61,11 +62,11 @@ export class UserCommand extends Command {
 			const formattedBalance = MoneyFormatter.toUSD(newBalance)
 			const modifiedBetEmbed = new EmbedBuilder()
 				.setDescription(
-					`## Double Down\n\n**Bet:** ${formattedAmount} | **Payout:** ${formattedPayout}\n**Profit:** ${formattedProfit}\n**Balance:** ${formattedBalance}`,
+					`## Double Down\n\n**Bet:** \`${formattedAmount}\` | **Payout:** \`${formattedPayout}\`\n**Profit:** \`${formattedProfit}\`\n**Balance:** \`${formattedBalance}\``,
 				)
 				.setColor(embedColors.success)
 				.setThumbnail(interaction.user.displayAvatarURL())
-			return interaction.reply({ embeds: [modifiedBetEmbed] })
+			return interaction.editReply({ embeds: [modifiedBetEmbed] })
 		} catch (err) {
 			await new ApiErrorHandler().handle(
 				interaction,
