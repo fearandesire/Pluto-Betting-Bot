@@ -1,6 +1,19 @@
 # Changelog
 
 
+## v3.1.11
+
+[compare changes](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v3.1.10...v3.1.11)
+
+### 🏡 Chore
+
+- Update changelog ([1610bb8](https://github.com/fearandesire/Pluto-Betting-Bot/commit/1610bb8))
+- Pkg Script for CI ([ab55d32](https://github.com/fearandesire/Pluto-Betting-Bot/commit/ab55d32))
+
+### ❤️ Contributors
+
+- Fearandesire ([@fearandesire](http://github.com/fearandesire))
+
 ## v3.1.10
 
 [compare changes](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v.3.1.7...v3.1.10)
