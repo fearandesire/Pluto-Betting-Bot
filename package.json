@@ -1,6 +1,6 @@
 {
 	"name": "pluto-betting",
-	"version": "3.1.8",
+	"version": "3.1.9",
 	"description": "Pluto Betting App - Discord Interface",
 	"main": "./dist/Pluto.js",
 	"module": "./dist/Pluto.js",
@@ -153,6 +153,8 @@
 		"pkgroll": "^2.0.1",
 		"prettier": "^3.2.4",
 		"prettier-eslint-cli": "^7.1.0",
+		"release-it": "^17.3.0",
+		"release-it-changelogen": "^0.1.0",
 		"rimraf": "^5.0.5",
 		"ts-jest": "^29.1.2",
 		"tsconfig-paths": "^4.2.0"
