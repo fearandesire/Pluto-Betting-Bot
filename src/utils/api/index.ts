@@ -1,3 +1,9 @@
+/**
+ * @module ApiIndex
+ * @description This module is the main entry & setup point for the Pluto API. This REST API is used for receiving data to trigger interactions with the application
+ *
+ */
+
 import Koa from 'koa'
 import cors from '@koa/cors'
 import logger from 'koa-logger'
