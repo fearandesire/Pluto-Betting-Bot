@@ -1,5 +1,10 @@
-// noinspection ES6PreferShortImport
-
+/**
+ * @module KhronosApi
+ * @readonly
+ * @category KhronosApi
+ * @description This module is used to establish access to the external API system, Khronos.
+ * Khronos is the main API used for Pluto and handles most of it's features
+ */
 import {
 	AccountsApi,
 	BetslipsApi,
@@ -18,7 +23,7 @@ dotenv.config({
 export const KH_API_CONFIG = new Configuration({
 	basePath: `${process.env.KH_API_URL}`,
 	headers: {
-		'admin-token': `${process.env.KH_API_TOKEN}`,
+		'x-api-key': `${process.env.KH_PLUTO_CLIENT_KEY}`,
 	},
 })
 
