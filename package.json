@@ -129,6 +129,8 @@
 		"winston-daily-rotate-file": "^5.0.0"
 	},
 	"devDependencies": {
+		"@biomejs/biome": "1.8.3",
+		"@biomejs/cli-win32-x64": "^1.8.3",
 		"@sapphire/cli": "^1.9.1",
 		"@sapphire/prettier-config": "^2.0.0",
 		"@sapphire/ts-config": "^5.0.0",
@@ -185,13 +187,5 @@
 		],
 		"coverageDirectory": "../coverage",
 		"testEnvironment": "node"
-	},
-	"packageManager": "yarn@4.1.1",
-	"packageExtensions": {
-		"esm-module-alias": {
-			"dependencies": {
-				"esm-module-alias": "2.1.0"
-			}
-		}
 	}
 }

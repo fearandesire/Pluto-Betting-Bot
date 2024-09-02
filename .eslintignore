@@ -1,6 +1,0 @@
-node_modules/**/*
-dist/**/*
-node_modules/
-dist/
-Dockerfile
-docker-compose.yml
