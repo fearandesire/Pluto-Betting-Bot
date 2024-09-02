@@ -167,7 +167,7 @@ export class BetslipManager {
 					embeds: [errEmbed],
 				})
 			}
-		} catch (error) {
+		} catch () {
 			const errEmbed = ErrorEmbeds.internalErr(
 				'Failed to place your bet due to an internal error. Please try again later.',
 			)
