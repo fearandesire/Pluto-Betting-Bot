@@ -1,5 +1,4 @@
 import type { Match } from '@khronos-index'
-import { Matchup } from '../../../../utils/api/common/interfaces/common-interfaces'
 import { IApiResponse } from '../api.interface'
 
 export interface IPendingBetslip {
