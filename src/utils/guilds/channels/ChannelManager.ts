@@ -117,8 +117,7 @@ export default class ChannelManager {
 			)
 			return false
 		}
-		// Assuming additional validation or parsing logic here
-		return true // Assuming validation passed
+		return true
 	}
 
 	/**
