@@ -1,5 +1,5 @@
-import { AccountsApi } from '@khronos-index'
-import { IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js'
+import { AccountsApi, Account } from "@khronos-index";
+import { IKH_API_CONFIG, KH_API_CONFIG } from "../KhronosInstances.js";
 
 export default class AccountsWrapper {
 	private accountsApi: AccountsApi
@@ -9,7 +9,7 @@ export default class AccountsWrapper {
 		this.accountsApi = new AccountsApi(this.khConfig)
 	}
 
-	async createAccount(userId: string) {
+	async createAccount(userId: string): Promise<Account> {
 		return this.accountsApi.createAccount({ userid: userId })
 	}
 }

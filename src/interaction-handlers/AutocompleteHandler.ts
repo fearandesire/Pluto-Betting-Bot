@@ -29,7 +29,6 @@ export class AutocompleteHandler extends InteractionHandler {
 		if (interaction.commandName !== `bet`) return this.none()
 		// Get the focussed (current) option
 		const focusedOption = interaction.options.getFocused(true)
-		// Ensure that the option name is one that can be autocompleted, or return none if not.
 		switch (focusedOption.name) {
 			case 'match': {
 				const matchCacheService = new MatchCacheService(
@@ -52,7 +51,7 @@ export class AutocompleteHandler extends InteractionHandler {
 				return this.some(
 					searchResult.map((match: Match) => ({
 						name: `${match.away_team} at ${match.home_team} | ${match.dateofmatchup}`,
-						value: match.id,
+						value: match.event_id,
 					})),
 				)
 			}

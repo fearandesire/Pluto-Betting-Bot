@@ -33,7 +33,7 @@ export class UserCommand extends Command {
 					option
 						.setName('match')
 						.setDescription('The match you want to bet on')
-						.setRequired(false)
+						.setRequired(true)
 						.setAutocomplete(true),
 				),
 		)
@@ -51,18 +51,18 @@ export class UserCommand extends Command {
 			const errEmbed = ErrorEmbeds.betErr(`You must bet at least $1!.`)
 			return interaction.editReply({ embeds: [errEmbed] })
 		}
-		const matchSelection = interaction.options.getString('match')
-
+		const matchSelection = interaction.options.getString('match', true)
+		// console.log({ matchSelection })
+		const betslipData = {
+			team,
+			amount,
+			guild_id: interaction.guildId!,
+			event_id: matchSelection,
+			market_key: '12345',
+		}
 		return new BetslipManager(
 			new BetslipWrapper(),
 			new BetsCacheService(new CacheManager()),
-		).initialize(
-			interaction,
-			interaction.user.id,
-			team,
-			amount,
-			interaction.guildId!,
-			matchSelection,
-		)
+		).initialize(interaction, interaction.user.id, betslipData)
 	}
 }
