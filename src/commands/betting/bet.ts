@@ -1,11 +1,11 @@
-import { ApplyOptions } from '@sapphire/decorators'
-import { Command } from '@sapphire/framework'
-import { BetslipManager } from '../../utils/api/Khronos/bets/BetslipsManager.js'
-import BetslipWrapper from '../../utils/api/Khronos/bets/betslip-wrapper.js'
-import { BetsCacheService } from '../../utils/api/common/bets/BetsCacheService.js'
-import { CacheManager } from '@pluto-redis'
-import BettingValidation from '../../utils/betting/betting-validation.js'
-import { ErrorEmbeds } from '../../utils/common/errors/global.js'
+import { ApplyOptions } from "@sapphire/decorators";
+import { Command } from "@sapphire/framework";
+import { BetslipManager } from "../../utils/api/Khronos/bets/BetslipsManager.js";
+import BetslipWrapper from "../../utils/api/Khronos/bets/betslip-wrapper.js";
+import { BetsCacheService } from "../../utils/api/common/bets/BetsCacheService.js";
+import { CacheManager } from "@pluto-redis";
+import BettingValidation from "../../utils/betting/betting-validation.js";
+import { ErrorEmbeds } from "../../utils/common/errors/global.js";
 
 @ApplyOptions<Command.Options>({
 	description: '🎲 Place a bet on a match',
@@ -59,7 +59,7 @@ export class UserCommand extends Command {
 			amount,
 			guild_id: interaction.guildId!,
 			event_id: matchSelection,
-			market_key: '12345',
+			market_key: 'h2h',
 		}
 		return new BetslipManager(
 			new BetslipWrapper(),
