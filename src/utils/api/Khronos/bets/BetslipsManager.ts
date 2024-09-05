@@ -56,7 +56,7 @@ export class BetslipManager {
 		userId: string,
 		params: InitializeParams,
 	) {
-		const { team, amount, guild_id, event_id, market_key } = params // Destructure the params
+		const { team, amount, guild_id, event_id, market_key } = params
 		try {
 			const guild = await new GuildWrapper().getGuild(guild_id)
 			const sport = guild.sport
@@ -280,8 +280,11 @@ export class BetslipManager {
 		const { betslip } = betData
 		const { opponent, dateofmatchup } = betData.matchInfo
 		const usersTeam = betslip.team
-		const chosenTeamStr = (await findEmoji(betslip.team)) ?? usersTeam
-		const oppTeamStr = (await findEmoji(opponent)) ?? opponent
+		let chosenTeamStr = await findEmoji(betslip.team)
+		let oppTeamStr = await findEmoji(opponent)
+
+		if (!chosenTeamStr || chosenTeamStr === '') chosenTeamStr = usersTeam
+		if (!oppTeamStr || oppTeamStr === '') oppTeamStr = opponent
 
 		const { betAmount, profit, payout } =
 			await MoneyFormatter.formatAmounts({
