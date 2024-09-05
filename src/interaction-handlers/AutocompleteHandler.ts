@@ -6,6 +6,7 @@ import type { AutocompleteInteraction } from 'discord.js'
 import MatchCacheService from '../utils/api/routes/cache/MatchCacheService.js'
 import { CacheManager } from '@pluto-redis'
 import { Match } from '@khronos-index'
+import StringUtils from '../utils/common/string-utils.js' // Import StringUtils
 
 export class AutocompleteHandler extends InteractionHandler {
 	public constructor(
@@ -48,9 +49,10 @@ export class AutocompleteHandler extends InteractionHandler {
 					)
 				})
 				// Map the search results to the structure required for Autocomplete
+				const stringUtils = new StringUtils() // Create an instance of StringUtils
 				return this.some(
 					searchResult.map((match: Match) => ({
-						name: `${match.away_team} at ${match.home_team} | ${match.dateofmatchup}`,
+						name: `${stringUtils.getShortName(match.away_team)} @ ${stringUtils.getShortName(match.home_team)} | ${match.dateofmatchup}`, // Use getShortName
 						value: match.event_id,
 					})),
 				)
