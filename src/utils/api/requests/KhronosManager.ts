@@ -1,9 +1,7 @@
-import {
-	KH_ValidConfigType,
-	Matchup,
-} from '../common/interfaces/common-interfaces.js'
+import { KH_ValidConfigType } from '../common/interfaces/common-interfaces.js'
 import { AxiosKhronosInstance } from '../common/axios-config.js'
 import { OutgoingEndpoints } from '../common/endpoints.js'
+import type { Match } from '@khronos-index'
 
 /**
  * Service for fetching configuration or specific aggregated data from our private Khronos API
@@ -40,7 +38,7 @@ export default class KhronosManager {
 	 */
 	async fetchOddsForGuild(guildId: string): Promise<
 		| {
-				matches: Matchup[]
+				matches: Match[]
 		  }
 		| false
 	> {

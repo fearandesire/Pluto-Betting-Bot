@@ -46,6 +46,7 @@ export class ButtonHandler extends InteractionHandler {
 			})
 			return this.none()
 		}
+
 		if (interaction.customId === `matchup_btn_cancel`) {
 			await interaction.update({
 				components: [],
@@ -53,6 +54,7 @@ export class ButtonHandler extends InteractionHandler {
 
 			return this.some()
 		}
+
 		if (interaction.customId === `matchup_btn_confirm`) {
 			await interaction.deferUpdate()
 			await interaction.editReply({

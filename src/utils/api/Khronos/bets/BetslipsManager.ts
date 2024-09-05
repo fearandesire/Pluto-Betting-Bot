@@ -30,6 +30,14 @@ import GuildUtils from '../../../guilds/GuildUtils.js'
 import StringUtils from '../../../common/string-utils.js'
 import PatreonFacade from '../../patreon/Patreon-Facade.js'
 
+interface InitializeParams {
+	team: string
+	amount: number
+	guild_id: string
+	event_id: string
+	market_key: string
+}
+
 /**
  * Manages betslips / betting process
  * Some info to know:
@@ -46,23 +54,19 @@ export class BetslipManager {
 	async initialize(
 		interaction: CommandInteraction,
 		userId: string,
-		team: string,
-		amount: number,
-		guild_id: string,
-		matchid?: string | null,
+		params: InitializeParams,
 	) {
+		const { team, amount, guild_id, event_id, market_key } = params
 		try {
 			const guild = await new GuildWrapper().getGuild(guild_id)
 			const sport = guild.sport
-			// Construct the payload for initializing the bet
 			const payload: IAPIBetslipPayload = {
 				userid: userId,
 				team,
 				amount,
 				guild_id,
-			}
-			if (matchid) {
-				payload.matchup_id = matchid
+				event_id,
+				market_key,
 			}
 			// Call the API to initialize the bet
 			const response = await this.betslipInstance.init({
@@ -171,6 +175,7 @@ export class BetslipManager {
 			const errEmbed = ErrorEmbeds.internalErr(
 				'Failed to place your bet due to an internal error. Please try again later.',
 			)
+			console.error(error)
 			return interaction.followUp({
 				embeds: [errEmbed],
 			})
@@ -275,8 +280,11 @@ export class BetslipManager {
 		const { betslip } = betData
 		const { opponent, dateofmatchup } = betData.matchInfo
 		const usersTeam = betslip.team
-		const chosenTeamStr = (await findEmoji(betslip.team)) ?? usersTeam
-		const oppTeamStr = (await findEmoji(opponent)) ?? opponent
+		let chosenTeamStr = await findEmoji(betslip.team)
+		let oppTeamStr = await findEmoji(opponent)
+
+		if (!chosenTeamStr || chosenTeamStr === '') chosenTeamStr = usersTeam
+		if (!oppTeamStr || oppTeamStr === '') oppTeamStr = opponent
 
 		const { betAmount, profit, payout } =
 			await MoneyFormatter.formatAmounts({

@@ -1,4 +1,4 @@
-import { Matchup } from '../interfaces/common-interfaces.js'
+import type { Match } from '@khronos-index'
 
 export default class BetUtils {
 	static calculateProfitAndPayout(
@@ -23,7 +23,7 @@ export default class BetUtils {
 
 	static async getOddsForTeam(
 		team: string,
-		match: Matchup,
+		match: Match,
 	): Promise<{ selectedTeam: string; selectedOdds: number }> {
 		const { home_team, away_team, home_team_odds, away_team_odds } = match
 		return team === home_team
@@ -31,7 +31,7 @@ export default class BetUtils {
 			: { selectedTeam: away_team, selectedOdds: Number(away_team_odds) }
 	}
 
-	static async identifyOpponent(match: Matchup, selectedTeam: string) {
+	static async identifyOpponent(match: Match, selectedTeam: string) {
 		if (match.home_team === selectedTeam) {
 			return match.away_team
 		}

@@ -6,8 +6,12 @@ import type { AutocompleteInteraction } from 'discord.js'
 import MatchCacheService from '../utils/api/routes/cache/MatchCacheService.js'
 import { CacheManager } from '@pluto-redis'
 import { Match } from '@khronos-index'
+import StringUtils from '../utils/common/string-utils.js' // Import StringUtils
 
 export class AutocompleteHandler extends InteractionHandler {
+	private matchCacheService: MatchCacheService // Moved to class property
+	private stringUtils: StringUtils // Moved to class property
+
 	public constructor(
 		ctx: InteractionHandler.LoaderContext,
 		options: InteractionHandler.Options,
@@ -16,6 +20,8 @@ export class AutocompleteHandler extends InteractionHandler {
 			...options,
 			interactionHandlerType: InteractionHandlerTypes.Autocomplete,
 		})
+		this.matchCacheService = new MatchCacheService(new CacheManager()) // Instantiate once
+		this.stringUtils = new StringUtils() // Instantiate once
 	}
 
 	public override async run(
@@ -27,34 +33,49 @@ export class AutocompleteHandler extends InteractionHandler {
 
 	public override async parse(interaction: AutocompleteInteraction) {
 		if (interaction.commandName !== `bet`) return this.none()
-		// Get the focussed (current) option
 		const focusedOption = interaction.options.getFocused(true)
-		// Ensure that the option name is one that can be autocompleted, or return none if not.
+		const matches = await this.matchCacheService.getMatches() // Fetch matches once
+
 		switch (focusedOption.name) {
 			case 'match': {
-				const matchCacheService = new MatchCacheService(
-					new CacheManager(),
-				)
 				const currentInput = focusedOption.value as string
-				const matches = await matchCacheService.getMatches()
-				// Search for matches that contain the current input
 				const searchResult = matches.filter((match: Match) => {
+					const homeTeam = match.home_team.toLowerCase()
+					const awayTeam = match.away_team.toLowerCase()
 					return (
-						match.home_team
-							.toLowerCase()
-							.includes(currentInput.toLowerCase()) ||
-						match.away_team
-							.toLowerCase()
-							.includes(currentInput.toLowerCase())
+						homeTeam.includes(currentInput.toLowerCase()) ||
+						awayTeam.includes(currentInput.toLowerCase())
 					)
 				})
-				// Map the search results to the structure required for Autocomplete
 				return this.some(
 					searchResult.map((match: Match) => ({
-						name: `${match.away_team} at ${match.home_team} | ${match.dateofmatchup}`,
-						value: match.id,
+						name: `${this.stringUtils.getShortName(match.away_team)} @ ${this.stringUtils.getShortName(match.home_team)} | ${match.dateofmatchup}`,
+						value: match.event_id,
 					})),
 				)
+			}
+			case 'team': {
+				const matchSelection = interaction.options.getString(
+					'match',
+					true,
+				)
+				const selectedMatch = matches.find(
+					(match: Match) => match.event_id === matchSelection,
+				)
+
+				if (selectedMatch) {
+					const teams = [
+						selectedMatch.home_team,
+						selectedMatch.away_team,
+					]
+					return this.some(
+						teams.map((team) => ({
+							name: team,
+							value: team,
+						})),
+					)
+				}
+				return this.none()
 			}
 			default:
 				return this.none()

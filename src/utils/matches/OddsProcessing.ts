@@ -1,12 +1,12 @@
 import _ from 'lodash'
 import parseScheduled from '../bot_res/parseScheduled.js'
 import { formatOdds } from './formatOdds.js'
-import { Matchup } from '../api/common/interfaces/common-interfaces.js'
 import { IOddsField } from './matchups.interface.js'
 import { patreonFooterUrl } from '../api/patreon/interfaces.js'
 import { helpfooter } from '@pluto-core-config'
+import type { Match } from '@khronos-index'
 
-export async function prepareAndFormat(matchups: Matchup[], thumbnail: string) {
+export async function prepareAndFormat(matchups: Match[], thumbnail: string) {
 	const oddsFields: IOddsField[] = []
 	for await (const match of Object.values(matchups)) {
 		const hTeam = `${match.home_team}`

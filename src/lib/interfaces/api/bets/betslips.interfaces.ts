@@ -1,4 +1,4 @@
-import { Matchup } from '../../../../utils/api/common/interfaces/common-interfaces'
+import type { Match } from '@khronos-index'
 import { IApiResponse } from '../api.interface'
 
 export interface IPendingBetslip {
@@ -16,7 +16,8 @@ export interface IAPIBetslipPayload {
 	team: string
 	amount: number
 	guild_id: string
-	matchup_id?: string
+	event_id: string
+	market_key: string
 }
 
 export interface ICreateBetslipFull {
@@ -47,7 +48,7 @@ export interface IFinalizedBetslip
 
 export interface ValidatedBetslipData {
 	chosenTeam: string
-	matchupsForTeam: Matchup[]
+	matchupsForTeam: Match[]
 }
 // Extend the base interface for a response that includes a 'betslip'
 export interface IAPIProcessedBetslip extends IApiResponse {
@@ -57,7 +58,7 @@ export interface IAPIProcessedBetslip extends IApiResponse {
 // Extend the base interface for a response that includes 'chosenTeam' and 'matchupsForTeam'
 export interface IValidatedBetslipData extends IApiResponse {
 	chosenTeam: string
-	matchupsForTeam: Matchup[]
+	matchupsForTeam: Match[]
 	betslip: IPendingBetslip
 }
 

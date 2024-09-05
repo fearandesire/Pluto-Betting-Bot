@@ -30,13 +30,13 @@
 	"scripts": {
 		"build": "tsc",
 		"clear-dist": "rimraf ./dist",
-		"watch": "nodemon -L --watch ./ --exec npm run dev",
+		"watch": "nodemon -L --watch ./ --exec pnpm dev",
 		"start": "node --loader esm-module-alias/loader --no-warnings ./dist/Pluto.js",
-		"dev": "yarn build && node --loader esm-module-alias/loader --no-warnings ./dist/Pluto.js",
+		"dev": "pnpm build && node --loader esm-module-alias/loader --no-warnings ./dist/Pluto.js",
 		"ts-dev": "tsx ./src/Pluto.ts",
 		"gen-api": "openapi-generator-cli generate -i ./Khronos-Swagger-Spec-v1.json -g typescript-fetch -o ./src/openapi/khronos -c openapi.config.json",
 		"post-api-fix": "node ./src/utils/scripts/addJsExtension.js",
-		"ci-gen-api": "rimraf ./src/openapi && yarn gen-api && yarn post-api-fix",
+		"ci-gen-api": "rimraf ./src/openapi && pnpm gen-api && pnpm post-api-fix",
 		"sap-cmd": "sapphire generate slashcommand",
 		"dvault": "npx dotenv-vault@latest",
 		"release": "release-it"
@@ -126,9 +126,12 @@
 		"puppeteer-extra-plugin-stealth": "^2.11.2",
 		"resolve-team": "^1.6.0",
 		"winston": "^3.8.2",
-		"winston-daily-rotate-file": "^5.0.0"
+		"winston-daily-rotate-file": "^5.0.0",
+		"zod": "^3.23.8"
 	},
 	"devDependencies": {
+		"@biomejs/biome": "1.8.3",
+		"@biomejs/cli-win32-x64": "^1.8.3",
 		"@sapphire/cli": "^1.9.1",
 		"@sapphire/prettier-config": "^2.0.0",
 		"@sapphire/ts-config": "^5.0.0",
@@ -185,13 +188,5 @@
 		],
 		"coverageDirectory": "../coverage",
 		"testEnvironment": "node"
-	},
-	"packageManager": "yarn@4.1.1",
-	"packageExtensions": {
-		"esm-module-alias": {
-			"dependencies": {
-				"esm-module-alias": "2.1.0"
-			}
-		}
 	}
 }

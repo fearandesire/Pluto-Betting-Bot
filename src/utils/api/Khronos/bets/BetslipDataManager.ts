@@ -39,7 +39,7 @@ export default class BetslipDataManager {
 			const teamShortName = bet.team.split(' ').pop() ?? bet.team
 			const chosenTeamStr = `${teamEmoji} ${teamShortName}`
 
-			const description = `**${chosenTeamStr}** -> **\`$${bet.amount}\`** | **Profit/Payout:** $\`${bet.profit}/$${bet.payout}\`\n*${bet.dateofmatchup}*`
+			const description = `**${chosenTeamStr}** -> **\`$${bet.amount}\`** | **Profit/Payout:** $\`${bet.profit}/$${bet.payout}\``
 			embed.addFields({
 				name: `Bet ID: ${bet.betid}`,
 				value: description,
