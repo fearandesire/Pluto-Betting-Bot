@@ -1,6 +1,6 @@
-import { SapDiscClient } from '@pluto-core'
-import { resolveTeam } from 'resolve-team'
-import _ from 'lodash'
+import { SapDiscClient } from "@pluto-core";
+import { resolveTeam } from "resolve-team";
+import _ from "lodash";
 import {
 	AttachmentBuilder,
 	CategoryChannelResolvable,
@@ -10,22 +10,15 @@ import {
 	Guild,
 	GuildBasedChannel,
 	MessageCreateOptions,
-	TextChannel,
-} from 'discord.js'
-import { findEmoji } from '../../bot_res/findEmoji.js'
-import {
-	IChannelAggregated,
-	SportEmojis,
-} from '../../api/routes/channels/createchannels.interface.js'
-import {
-	ICategoryData,
-	IConfigRow,
-	SportsServing,
-} from '../../api/common/interfaces/common-interfaces.js'
-import path, { dirname } from 'path'
-import fs from 'fs/promises'
-import { fileURLToPath } from 'url'
-import StringUtils from '../../common/string-utils.js'
+	TextChannel
+} from "discord.js";
+import { findEmoji } from "../../bot_res/findEmoji.js";
+import { IChannelAggregated } from "../../api/routes/channels/createchannels.interface.js";
+import { ICategoryData, IConfigRow, SportsServing } from "../../api/common/interfaces/common-interfaces.js";
+import path, { dirname } from "path";
+import fs from "fs/promises";
+import { fileURLToPath } from "url";
+import StringUtils from "../../common/string-utils.js";
 
 interface IPrepareMatchEmbed {
 	favored: string
@@ -69,10 +62,13 @@ export default class ChannelManager {
 		betChanRows: IConfigRow[],
 		categoriesServing: ICategoryData,
 	) {
+
+		const parsedSport = await StringUtils.sportKeyTransform(channel.sport).toLowerCase()
+		channel.sport = parsedSport as SportsServing
 		const { sport, matchOdds } = channel
 		const { favored } = matchOdds
 		const favoredTeamInfo = await resolveTeam(favored, {
-			sport: sport.toLowerCase(),
+			sport: sport,
 			full: true,
 		})
 		this.validateFavoredTeamInfo(favoredTeamInfo)
@@ -229,14 +225,14 @@ export default class ChannelManager {
 		const embedClr = args.favoredTeamClr
 		const teamEmoji = (await findEmoji(args.favored)) ?? ''
 		const matchVersus = `${args.awayTeamShortName} @ ${args.homeTeamShortName}`
-		const parseHeaderEmoji = SportEmojis[args.sport]
-		const sanitizedHeader =
-			args?.header ?? args?.header?.replace(/-/, '|') ?? ''
+		// const parseHeaderEmoji = SportEmojis[args.sport]
+		// const sanitizedHeader =
+		// 	args?.header ?? args?.header?.replace(/-/, '|') ?? ''
 		const matchEmbed = new EmbedBuilder()
 			.setColor(embedClr)
 			// Inserting for the playoffs, but will need to be reviewed for regular season
 			.setDescription(
-				`### ${parseHeaderEmoji} ${sanitizedHeader}\n## ${matchVersus}\n\n🔵 **Game Details**\nThe ${teamEmoji} **${args.favored}** are favored to win this match!\n\n🔵 **Info**\n*Use \`/commands\` in the <#${args.bettingChanId}> channel to place bets with Pluto*`,
+				`## ${matchVersus}\n\n🔵 **Game Details**\nThe ${teamEmoji} **${args.favored}** are favored to win this match!\n\n🔵 **Info**\n*Use \`/commands\` in the <#${args.bettingChanId}> channel to place bets with Pluto*`,
 			)
 			.setFooter({
 				text: `Pluto | Created by fenixforever`,

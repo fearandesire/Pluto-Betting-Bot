@@ -8,4 +8,12 @@ export default class StringUtils {
 			return name
 		}
 	}
+
+	static sportKeyTransform(sport: string): string {
+		// Convert americanfootball_nfl to nfl, baseball_mlb to mlb, etc.
+		if (sport.includes('_')) {
+			return sport.split('_')[1]
+		}
+		return sport
+	}
 }
