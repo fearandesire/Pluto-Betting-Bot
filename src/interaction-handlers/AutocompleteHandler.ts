@@ -9,6 +9,9 @@ import { Match } from '@khronos-index'
 import StringUtils from '../utils/common/string-utils.js' // Import StringUtils
 
 export class AutocompleteHandler extends InteractionHandler {
+	private matchCacheService: MatchCacheService // Moved to class property
+	private stringUtils: StringUtils // Moved to class property
+
 	public constructor(
 		ctx: InteractionHandler.LoaderContext,
 		options: InteractionHandler.Options,
@@ -17,6 +20,8 @@ export class AutocompleteHandler extends InteractionHandler {
 			...options,
 			interactionHandlerType: InteractionHandlerTypes.Autocomplete,
 		})
+		this.matchCacheService = new MatchCacheService(new CacheManager()) // Instantiate once
+		this.stringUtils = new StringUtils() // Instantiate once
 	}
 
 	public override async run(
@@ -29,29 +34,22 @@ export class AutocompleteHandler extends InteractionHandler {
 	public override async parse(interaction: AutocompleteInteraction) {
 		if (interaction.commandName !== `bet`) return this.none()
 		const focusedOption = interaction.options.getFocused(true)
+		const matches = await this.matchCacheService.getMatches() // Fetch matches once
+
 		switch (focusedOption.name) {
 			case 'match': {
-				const matchCacheService = new MatchCacheService(
-					new CacheManager(),
-				)
 				const currentInput = focusedOption.value as string
-				const matches = await matchCacheService.getMatches()
-				// Search for matches that contain the current input
 				const searchResult = matches.filter((match: Match) => {
+					const homeTeam = match.home_team.toLowerCase()
+					const awayTeam = match.away_team.toLowerCase()
 					return (
-						match.home_team
-							.toLowerCase()
-							.includes(currentInput.toLowerCase()) ||
-						match.away_team
-							.toLowerCase()
-							.includes(currentInput.toLowerCase())
+						homeTeam.includes(currentInput.toLowerCase()) ||
+						awayTeam.includes(currentInput.toLowerCase())
 					)
 				})
-				// Map the search results to the structure required for Autocomplete
-				const stringUtils = new StringUtils() // Create an instance of StringUtils
 				return this.some(
 					searchResult.map((match: Match) => ({
-						name: `${stringUtils.getShortName(match.away_team)} @ ${stringUtils.getShortName(match.home_team)} | ${match.dateofmatchup}`, // Use getShortName
+						name: `${this.stringUtils.getShortName(match.away_team)} @ ${this.stringUtils.getShortName(match.home_team)} | ${match.dateofmatchup}`,
 						value: match.event_id,
 					})),
 				)
@@ -61,10 +59,6 @@ export class AutocompleteHandler extends InteractionHandler {
 					'match',
 					true,
 				)
-				const matchCacheService = new MatchCacheService(
-					new CacheManager(),
-				)
-				const matches = await matchCacheService.getMatches()
 				const selectedMatch = matches.find(
 					(match: Match) => match.event_id === matchSelection,
 				)
