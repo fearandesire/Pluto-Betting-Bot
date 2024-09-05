@@ -19,22 +19,23 @@ export class UserCommand extends Command {
 				.setDMPermission(false)
 				.addStringOption((option) =>
 					option
+						.setName('match')
+						.setDescription('The match you want to bet on')
+						.setRequired(true)
+						.setAutocomplete(true),
+				)
+				.addStringOption((option) =>
+					option
 						.setName('team')
 						.setDescription('The team you want to bet on')
-						.setRequired(true),
+						.setRequired(true)
+						.setAutocomplete(true),
 				)
 				.addIntegerOption((option) =>
 					option
 						.setName('amount')
 						.setDescription('The amount you want to bet')
 						.setRequired(true),
-				)
-				.addStringOption((option) =>
-					option
-						.setName('match')
-						.setDescription('The match you want to bet on')
-						.setRequired(true)
-						.setAutocomplete(true),
 				),
 		)
 	}

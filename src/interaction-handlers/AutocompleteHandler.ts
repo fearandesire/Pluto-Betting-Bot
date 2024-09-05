@@ -28,7 +28,6 @@ export class AutocompleteHandler extends InteractionHandler {
 
 	public override async parse(interaction: AutocompleteInteraction) {
 		if (interaction.commandName !== `bet`) return this.none()
-		// Get the focussed (current) option
 		const focusedOption = interaction.options.getFocused(true)
 		switch (focusedOption.name) {
 			case 'match': {
@@ -56,6 +55,33 @@ export class AutocompleteHandler extends InteractionHandler {
 						value: match.event_id,
 					})),
 				)
+			}
+			case 'team': {
+				const matchSelection = interaction.options.getString(
+					'match',
+					true,
+				)
+				const matchCacheService = new MatchCacheService(
+					new CacheManager(),
+				)
+				const matches = await matchCacheService.getMatches()
+				const selectedMatch = matches.find(
+					(match: Match) => match.event_id === matchSelection,
+				)
+
+				if (selectedMatch) {
+					const teams = [
+						selectedMatch.home_team,
+						selectedMatch.away_team,
+					]
+					return this.some(
+						teams.map((team) => ({
+							name: team,
+							value: team,
+						})),
+					)
+				}
+				return this.none()
 			}
 			default:
 				return this.none()
