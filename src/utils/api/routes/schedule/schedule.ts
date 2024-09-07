@@ -6,7 +6,7 @@ import {
 	IConfigRow,
 	IMatchupAggregated,
 	SportsServing,
-} from '../../common/interfaces/common-interfaces.js'
+} from '../../common/interfaces/kh-pluto/kh-pluto.interface.js'
 
 /**
  * Responsible for incoming requests to post the daily schedule

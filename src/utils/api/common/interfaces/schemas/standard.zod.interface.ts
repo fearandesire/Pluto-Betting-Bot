@@ -8,7 +8,7 @@ import {
 	NFLPlayerPropMarketSchema,
 	SportKeysSchema,
 	SupportedSportsSchema,
-} from './betting-market.schema'
+} from './betting-market.schema.js'
 
 /**
  * @description Schema for the betting markets we support. There are others, but these are the only ones we have implemented.

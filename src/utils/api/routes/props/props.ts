@@ -1,10 +1,7 @@
-import Router from 'koa-router'
-import {
-	GuildChannelArraySchema,
-	type PropRaw,
-} from './props-route.interface.js'
-import PropEmbedManager from '../../../../utils/guilds/prop-embeds/PropEmbedManager.js'
-import { PropArraySchema } from '../../common/interfaces/index.js'
+import Router from "koa-router";
+import { GuildChannelArraySchema, type PropRaw } from "./props-route.interface.js";
+import PropEmbedManager from "../../../../utils/guilds/prop-embeds/PropEmbedManager.js";
+import { PropArraySchema } from "@pluto-api-interfaces";
 
 const PropsRouter = new Router()
 
@@ -14,12 +11,12 @@ interface RequestBody {
 }
 
 /**
- * @route GET /props
- * @description Receive an array of Props and channel IDs
+ * @route POST /props/daily
+ * @description Receives an array of Props and channel IDs on a daily schedule
  * @param {Prop[]} props - Array of Prop objects
  * @param {Object[]} guildChannels - Array of guild and channel objects
  */
-PropsRouter.get('/props', async (ctx) => {
+PropsRouter.post('/props/daily', async (ctx) => {
 	const { props, guildChannels } = ctx.request.body as RequestBody
 
 	// Validate the received props using Zod

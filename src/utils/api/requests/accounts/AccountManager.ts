@@ -17,7 +17,7 @@ import EmbedsSuccess from '../../../embeds/template/success-template.js'
 import MoneyFormatter from '../../common/money-formatting/money-format.js'
 import { SapDiscClient } from '@pluto-core'
 import PaginationUtilities from '../../../embeds/pagination-utilities.js'
-import { plutoWelcomeMsg } from '../../common/interfaces/common-interfaces.js'
+import { plutoWelcomeMsg } from '../../common/interfaces/kh-pluto/kh-pluto.interface.js'
 import { ErrorEmbeds } from '../../../common/errors/global.js'
 import PatreonFacade from '../../patreon/Patreon-Facade.js'
 

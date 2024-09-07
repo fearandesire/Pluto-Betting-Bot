@@ -1,4 +1,4 @@
-import { SportsServing } from '../../common/interfaces/common-interfaces'
+import { SportsServing } from '../../common/interfaces/kh-pluto/kh-pluto.interface'
 
 export interface IChannelAPI {
 	id: string

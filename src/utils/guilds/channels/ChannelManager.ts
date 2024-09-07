@@ -1,6 +1,6 @@
-import { SapDiscClient } from "@pluto-core";
-import { resolveTeam } from "resolve-team";
-import _ from "lodash";
+import { SapDiscClient } from '@pluto-core'
+import { resolveTeam } from 'resolve-team'
+import _ from 'lodash'
 import {
 	AttachmentBuilder,
 	CategoryChannelResolvable,
@@ -10,15 +10,19 @@ import {
 	Guild,
 	GuildBasedChannel,
 	MessageCreateOptions,
-	TextChannel
-} from "discord.js";
-import { findEmoji } from "../../bot_res/findEmoji.js";
-import { IChannelAggregated } from "../../api/routes/channels/createchannels.interface.js";
-import { ICategoryData, IConfigRow, SportsServing } from "../../api/common/interfaces/common-interfaces.js";
-import path, { dirname } from "path";
-import fs from "fs/promises";
-import { fileURLToPath } from "url";
-import StringUtils from "../../common/string-utils.js";
+	TextChannel,
+} from 'discord.js'
+import { findEmoji } from '../../bot_res/findEmoji.js'
+import { IChannelAggregated } from '../../api/routes/channels/createchannels.interface.js'
+import {
+	ICategoryData,
+	IConfigRow,
+	SportsServing,
+} from '../../api/common/interfaces/kh-pluto/kh-pluto.interface.js'
+import path, { dirname } from 'path'
+import fs from 'fs/promises'
+import { fileURLToPath } from 'url'
+import StringUtils from '../../common/string-utils.js'
 
 interface IPrepareMatchEmbed {
 	favored: string
@@ -62,8 +66,9 @@ export default class ChannelManager {
 		betChanRows: IConfigRow[],
 		categoriesServing: ICategoryData,
 	) {
-
-		const parsedSport = await StringUtils.sportKeyTransform(channel.sport).toLowerCase()
+		const parsedSport = await StringUtils.sportKeyTransform(
+			channel.sport,
+		).toLowerCase()
 		channel.sport = parsedSport as SportsServing
 		const { sport, matchOdds } = channel
 		const { favored } = matchOdds

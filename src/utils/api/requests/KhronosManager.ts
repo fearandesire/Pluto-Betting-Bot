@@ -1,4 +1,4 @@
-import { KH_ValidConfigType } from '../common/interfaces/common-interfaces.js'
+import { KH_ValidConfigType } from '../common/interfaces/kh-pluto/kh-pluto.interface.js'
 import { AxiosKhronosInstance } from '../common/axios-config.js'
 import { OutgoingEndpoints } from '../common/endpoints.js'
 import type { Match } from '@khronos-index'

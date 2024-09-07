@@ -27,7 +27,7 @@
 			"@pluto-redis": ["./src/utils/cache/RedisCacheManager"],
 			"@pluto-internal-logger": ["./src/utils/bot_res/consoleLog"],
 			"@pluto-internal-color-logger": [
-				"./src/utils/bot_res/ColorConsole",
+				"./src/utils/bot_res/ColorConsole"
 			],
 			"@pluto-embed-reply": ["./src/utils/bot_res/embeds/embedReply"],
 			"@pluto-db-utils": ["./src/utils/db"],
@@ -36,16 +36,16 @@
 			"@pluto-transfer": ["./src/utils/db/currency/transferBetween"],
 			"@pluto-process-claim": ["./src/utils/db/betOps/processClaim"],
 			"@pluto-betOps-modifyAmount": [
-				"./src/utils/db/betOps/modifyAmount",
+				"./src/utils/db/betOps/modifyAmount"
 			],
 			"@pluto-validate-checkbalance": [
-				"./src/utils/db/validation/checkbalance",
+				"./src/utils/db/validation/checkbalance"
 			],
 			"@pluto-validate-user": [
-				"./src/utils/db/validation/validateExistingUser",
+				"./src/utils/db/validation/validateExistingUser"
 			],
 			"@pluto-validate-betAuthor": [
-				"./src/utils/db/validation/verifyBetAuthor",
+				"./src/utils/db/validation/verifyBetAuthor"
 			],
 			"@pluto-newBet": ["./src/utils/db/betOps/newBet"],
 			"@pluto-betOps": ["./src/utils/db/betOps"],
@@ -54,7 +54,7 @@
 			"@pluto-reply": ["./src/utils/bot_res/reply"],
 			"@pluto-bettingStats": ["./src/utils/bot_res/getBettingStats"],
 			"@pluto-stats-embed-builder": [
-				"./src/utils/bot_res/statsEmbBuilder",
+				"./src/utils/bot_res/statsEmbBuilder"
 			],
 			"@pluto-currency": ["./src/utils/db/currency"],
 			"@pluto-general-utils": ["./src/utils/bot_res"],
@@ -62,13 +62,14 @@
 			"@pluto-core": ["./src/Pluto"],
 			"@pluto-iso-manager": ["./src/utils/time/IsoManager"],
 			"@pluto-api-routes": ["./src/utils/api/routes"],
-		},
+			"@pluto-api-interfaces": ["./src/utils/api/common/interfaces"]
+		}
 	},
 	"exclude": [
 		"ecosystem.config.js",
 		"node_modules/**/*",
 		"node_modules",
 		"dist",
-		"node_modules/discord.js/**/*",
-	],
+		"node_modules/discord.js/**/*"
+	]
 }

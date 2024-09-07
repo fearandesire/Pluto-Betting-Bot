@@ -7,7 +7,7 @@ import {
 	EmbedBuilder,
 	GuildEmoji,
 } from 'discord.js'
-import { IMatchInfoArgs } from '../../common/interfaces/common-interfaces.js'
+import { IMatchInfoArgs } from '../../common/interfaces/kh-pluto/kh-pluto.interface.js'
 import { IAPIBetslipPayload } from '../../../../lib/interfaces/api/bets/betslips.interfaces.js'
 import embedColors from '../../../../lib/colorsConfig.js'
 import { findEmoji } from '../../../bot_res/findEmoji.js'
