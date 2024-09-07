@@ -1,4 +1,4 @@
-import { addDays, isBefore, parseISO } from 'date-fns'
+import { addDays, isBefore, isAfter, parseISO } from 'date-fns'
 
 /**
  * A utility class for managing date-related operations, particularly for filtering items based on a date range.
@@ -27,8 +27,7 @@ export class DateManager<T extends { commence_time: string }> {
 		return items.filter((item) => {
 			const itemDate = parseISO(item.commence_time)
 			return (
-				isBefore(itemDate, futureDate) &&
-				isBefore(currentDate, itemDate)
+				isAfter(itemDate, currentDate) && isBefore(itemDate, futureDate)
 			)
 		})
 	}
@@ -43,6 +42,6 @@ export class DateManager<T extends { commence_time: string }> {
 		const futureDate = addDays(currentDate, this.daysAhead)
 		const itemDate = parseISO(date)
 
-		return isBefore(itemDate, futureDate) && isBefore(currentDate, itemDate)
+		return isAfter(itemDate, currentDate) && isBefore(itemDate, futureDate)
 	}
 }
