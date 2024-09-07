@@ -1,4 +1,4 @@
-import { addDays, isBefore, isAfter, parseISO } from 'date-fns'
+import { addDays, endOfDay, isAfter, isBefore, parseISO, startOfDay } from "date-fns";
 
 /**
  * A utility class for managing date-related operations, particularly for filtering items based on a date range.
@@ -21,13 +21,13 @@ export class DateManager<T extends { commence_time: string }> {
 	 * @returns {T[]} An array of items that fall within the specified date range.
 	 */
 	filterByDateRange(items: T[]): T[] {
-		const currentDate = new Date()
-		const futureDate = addDays(currentDate, this.daysAhead)
+		const currentDate = startOfDay(new Date())
+		const futureDate = endOfDay(addDays(currentDate, this.daysAhead))
 
 		return items.filter((item) => {
 			const itemDate = parseISO(item.commence_time)
 			return (
-				isAfter(itemDate, currentDate) && isBefore(itemDate, futureDate)
+			isAfter(itemDate, currentDate) && isBefore(itemDate, futureDate)
 			)
 		})
 	}
@@ -38,8 +38,8 @@ export class DateManager<T extends { commence_time: string }> {
 	 * @returns {boolean} True if the date is within the range, false otherwise.
 	 */
 	isWithinRange(date: string): boolean {
-		const currentDate = new Date()
-		const futureDate = addDays(currentDate, this.daysAhead)
+		const currentDate = startOfDay(new Date())
+		const futureDate = endOfDay(addDays(currentDate, this.daysAhead))
 		const itemDate = parseISO(date)
 
 		return isAfter(itemDate, currentDate) && isBefore(itemDate, futureDate)
