@@ -1,17 +1,14 @@
-import Router from 'koa-router'
-import {
-	GuildChannelArraySchema,
-	type PropRaw,
-} from './props-route.interface.js'
-import PropEmbedManager from '../../../../utils/guilds/prop-embeds/PropEmbedManager.js'
-import { PropArraySchema, type PropZod } from '@pluto-api-interfaces'
-import { DateManager } from '../../../../utils/common/DateManager.js'
+import Router from "koa-router";
+import { GuildChannelArraySchema } from "./props-route.interface.js";
+import PropEmbedManager from "../../../../utils/guilds/prop-embeds/PropEmbedManager.js";
+import { PropArraySchema, type PropZod } from "@pluto-api-interfaces";
+import { DateManager } from "../../../common/DateManager.js";
 
 const PropsRouter = new Router()
 
 interface RequestBody {
 	props: PropZod[]
-	guildChannels: { guild_id: string; prop_channel_id: string }[]
+	guildChannels: { guild_id: string; channel_id: string }[]
 }
 
 /**
