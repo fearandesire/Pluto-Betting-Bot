@@ -28,7 +28,7 @@
 	"bin": "./dist/cli.js",
 	"prettier": "./.prettierrc.json",
 	"scripts": {
-		"build": "tsc",
+		"build": "pnpm tsc",
 		"clear-dist": "rimraf ./dist",
 		"watch": "nodemon -L --watch ./ --exec pnpm dev",
 		"start": "node --loader esm-module-alias/loader --no-warnings ./dist/Pluto.js",
@@ -167,7 +167,7 @@
 		"rimraf": "^5.0.5",
 		"ts-jest": "^29.1.2",
 		"tsconfig-paths": "^4.2.0",
-		"typescript": "^5.4.5"
+		"typescript": "^5.5.4"
 	},
 	"jest": {
 		"moduleNameMapper": {
