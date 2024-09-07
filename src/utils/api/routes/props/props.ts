@@ -1,13 +1,15 @@
-import Router from "koa-router";
-import { GuildChannelArraySchema } from "./props-route.interface.js";
-import PropEmbedManager from "../../../../utils/guilds/prop-embeds/PropEmbedManager.js";
-import type { Prop } from "@khronos-index";
-import { PropArraySchema } from "../../common/interfaces";
+import Router from 'koa-router'
+import {
+	GuildChannelArraySchema,
+	type PropRaw,
+} from './props-route.interface.js'
+import PropEmbedManager from '../../../../utils/guilds/prop-embeds/PropEmbedManager.js'
+import { PropArraySchema } from '../../common/interfaces/index.js'
 
-const router = new Router()
+const PropsRouter = new Router()
 
 interface RequestBody {
-	props: Prop[]
+	props: PropRaw[]
 	guildChannels: { guild_id: string; prop_channel_id: string }[]
 }
 
@@ -17,7 +19,7 @@ interface RequestBody {
  * @param {Prop[]} props - Array of Prop objects
  * @param {Object[]} guildChannels - Array of guild and channel objects
  */
-router.get('/props', async (ctx) => {
+PropsRouter.get('/props', async (ctx) => {
 	const { props, guildChannels } = ctx.request.body as RequestBody
 
 	// Validate the received props using Zod
@@ -44,10 +46,10 @@ router.get('/props', async (ctx) => {
 
 	// Pass props and guildChannels to PropEmbedManager
 	const embedManager = new PropEmbedManager()
-	await embedManager.createEmbeds(result.data, guildChannelsResult.data)
+	await embedManager.createEmbeds(props, guildChannels)
 
 	ctx.status = 200
 	ctx.body = { message: 'Props received successfully', props: result.data }
 })
 
-export default router
+export default PropsRouter

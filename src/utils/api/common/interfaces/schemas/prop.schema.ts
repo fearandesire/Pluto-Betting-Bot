@@ -19,7 +19,8 @@ export const PropSchema = z.object({
 	created_at: z.date(),
 	updated_at: z.date(),
 	result: z.string().nullable(),
-	description: z.string(),
+	description: z.string().nullable(),
+	name: z.string(),
 })
 
 export const PropArraySchema = z.array(PropSchema)

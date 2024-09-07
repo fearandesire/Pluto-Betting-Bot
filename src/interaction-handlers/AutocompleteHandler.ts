@@ -50,7 +50,7 @@ export class AutocompleteHandler extends InteractionHandler {
 				return this.some(
 					searchResult.map((match: Match) => ({
 						name: `${this.stringUtils.getShortName(match.away_team)} @ ${this.stringUtils.getShortName(match.home_team)} | ${match.dateofmatchup}`,
-						value: match.event_id,
+						value: match.id,
 					})),
 				)
 			}
@@ -60,7 +60,7 @@ export class AutocompleteHandler extends InteractionHandler {
 					true,
 				)
 				const selectedMatch = matches.find(
-					(match: Match) => match.event_id === matchSelection,
+					(match: Match) => match.id === matchSelection,
 				)
 
 				if (selectedMatch) {

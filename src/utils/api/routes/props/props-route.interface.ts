@@ -1,3 +1,4 @@
+import type { Prop } from '@khronos-index'
 import { z } from 'zod'
 
 export const GuildChannelSchema = z.object({
@@ -6,3 +7,5 @@ export const GuildChannelSchema = z.object({
 })
 
 export const GuildChannelArraySchema = z.array(GuildChannelSchema)
+
+export type PropRaw = Omit<Prop, 'event' | 'predictions'>

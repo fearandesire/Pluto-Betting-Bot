@@ -6,12 +6,13 @@ import {
 	EmbedBuilder,
 } from 'discord.js'
 import GuildUtils from '../GuildUtils.js'
-import { MarketKeyTranslations } from '../../api/common/interfaces'
+import { MarketKeyTranslations } from '../../api/common/interfaces/index.js'
 import { formatDiscordTimestamp } from '../../timestampUtils.js'
+import type { PropRaw } from '../../api/routes/props/props-route.interface.js'
 
 export default class PropEmbedManager {
 	async createEmbeds(
-		props: Prop[],
+		props: PropRaw[],
 		guildChannels: { guild_id: string; prop_channel_id: string }[],
 	) {
 		for (const { guild_id, prop_channel_id } of guildChannels) {
@@ -22,10 +23,10 @@ export default class PropEmbedManager {
 
 			// Create an embed for each prop
 			const embeds = props.map((prop) => {
-				const marketKey = prop.market_key // Assuming prop has a market_key property
+				const marketKey = prop.market_key
 				const marketDescription =
-					// @ts-ignore - Not supporting every market. Will need to narrow this down.
-					MarketKeyTranslations[marketKey] || marketKey // Use the enum for translation
+					// @ts-ignore - Not supporting every market. TODO: Will need to narrow this down.
+					MarketKeyTranslations[marketKey] || marketKey
 				const descriptionStr = `Will ${prop?.description} get over/under ${prop.point} ${marketDescription}?`
 
 				const embedDetails = {
