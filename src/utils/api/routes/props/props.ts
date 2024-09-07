@@ -1,12 +1,16 @@
-import Router from "koa-router";
-import { GuildChannelArraySchema, type PropRaw } from "./props-route.interface.js";
-import PropEmbedManager from "../../../../utils/guilds/prop-embeds/PropEmbedManager.js";
-import { PropArraySchema } from "@pluto-api-interfaces";
+import Router from 'koa-router'
+import {
+	GuildChannelArraySchema,
+	type PropRaw,
+} from './props-route.interface.js'
+import PropEmbedManager from '../../../../utils/guilds/prop-embeds/PropEmbedManager.js'
+import { PropArraySchema, type PropZod } from '@pluto-api-interfaces'
+import { DateManager } from '../../../../utils/common/DateManager.js'
 
 const PropsRouter = new Router()
 
 interface RequestBody {
-	props: PropRaw[]
+	props: PropZod[]
 	guildChannels: { guild_id: string; prop_channel_id: string }[]
 }
 
@@ -41,12 +45,19 @@ PropsRouter.post('/props/daily', async (ctx) => {
 		return
 	}
 
-	// Pass props and guildChannels to PropEmbedManager
+	// Filter props within the next 2 days
+	const dateManager = new DateManager<PropZod>(2)
+	const filteredProps = dateManager.filterByDateRange(result.data)
+
+	// Pass filtered props and guildChannels to PropEmbedManager
 	const embedManager = new PropEmbedManager()
-	await embedManager.createEmbeds(props, guildChannels)
+	await embedManager.createEmbeds(filteredProps, guildChannels)
 
 	ctx.status = 200
-	ctx.body = { message: 'Props received successfully', props: result.data }
+	ctx.body = {
+		message: 'Props received and filtered successfully',
+		props: filteredProps,
+	}
 })
 
 export default PropsRouter

@@ -1,5 +1,5 @@
-import { z } from "zod";
-import { BettingMarketSchema } from "./betting-market.schema.js";
+import { z } from 'zod'
+import { BettingMarketSchema } from './betting-market.schema.js'
 
 export const PropStatusEnum = z.enum(['pending', 'completed', 'error'])
 
@@ -23,9 +23,12 @@ export const PropSchema = z.object({
 	result: z.string().nullable(),
 	description: z.string().nullable(),
 	name: z.string(),
+	// TODO: type for eager loads
+	predictions: z.null().optional(),
+	event: z.null().optional(),
 })
 
 export const PropArraySchema = z.array(PropSchema)
 
-export type Prop = z.infer<typeof PropSchema>
+export type PropZod = z.infer<typeof PropSchema>
 export type PropArray = z.infer<typeof PropArraySchema>

@@ -6,13 +6,15 @@ import {
 	EmbedBuilder,
 } from 'discord.js'
 import GuildUtils from '../GuildUtils.js'
-import { MarketKeyTranslations } from '../../api/common/interfaces/index.js'
+import {
+	MarketKeyTranslations,
+	type PropZod,
+} from '../../api/common/interfaces/index.js'
 import { formatDiscordTimestamp } from '../../timestampUtils.js'
-import type { PropRaw } from '../../api/routes/props/props-route.interface.js'
 
 export default class PropEmbedManager {
 	async createEmbeds(
-		props: PropRaw[],
+		props: PropZod[],
 		guildChannels: { guild_id: string; prop_channel_id: string }[],
 	) {
 		for (const { guild_id, prop_channel_id } of guildChannels) {
