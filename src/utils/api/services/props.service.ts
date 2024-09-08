@@ -1,13 +1,17 @@
-import { PropOptions, PropOptionsSchema, PropZod } from "@pluto-api-interfaces";
-import { DateManager } from "../../common/DateManager.js";
-import PropEmbedManager from "../../guilds/prop-embeds/PropEmbedManager.js";
+import { PropOptions, PropOptionsSchema, PropZod } from '@pluto-api-interfaces'
+import { DateManager } from '../../common/DateManager.js'
+import PropEmbedManager from '../../guilds/prop-embeds/PropEmbedManager.js'
 
 /**
  * Service for processing and managing props.
  */
 export class PropsService {
 	private embedManager: PropEmbedManager
+	private defaultFilteredMarketKey: string = 'totals'
 
+	/**
+	 * Initializes a new instance of the PropsService class.
+	 */
 	constructor() {
 		this.embedManager = new PropEmbedManager()
 	}
@@ -16,7 +20,7 @@ export class PropsService {
 	 * Processes props and creates embeds for the specified guild channels.
 	 * @param {PropZod[]} props - Array of props to process.
 	 * @param {Object[]} guildChannels - Array of guild and channel objects.
-	 * @param {number} daysAhead - Number of days ahead to filter props.
+	 * @param {PropOptions} options - Options for processing props.
 	 * @returns {Promise<void>}
 	 */
 	public async processAndCreateEmbeds(
@@ -27,47 +31,51 @@ export class PropsService {
 		// Validate options
 		const validatedOptions = PropOptionsSchema.parse(options)
 
-		const daysAhead = validatedOptions.daysAhead ?? 2 // Default to 2 if not provided
+		const daysAhead = validatedOptions.daysAhead ?? 2
 
 		const dateManager = new DateManager<PropZod>(daysAhead)
-		const filteredProps = dateManager.filterByDateRange(props)
-		const uniqueProps = this.filterUniqueProps(filteredProps)
+		const propsWithinDateRange = dateManager.filterByDateRange(props)
+		const propsMarketFiltered = this.filterPropsByMarketKey(
+			propsWithinDateRange,
+			this.defaultFilteredMarketKey,
+		)
+		const uniqueProps = this.selectRandomPropPerEvent(propsMarketFiltered)
 		await this.embedManager.createEmbeds(uniqueProps, guildChannels)
 	}
 
 	/**
-	 * Filters props to ensure only one prop per event is included.
-	 * @param {PropZod[]} props - Array of props to filter.
-	 * @returns {PropZod[]} Array of unique props.
+	 * Selects a random prop per event from the given props.
+	 * @param {PropZod[]} props - Array of props to select from.
+	 * @returns {PropZod[]} Array of unique props, one per event.
 	 */
-	private filterUniqueProps(props: PropZod[]): PropZod[] {
-		const eventMap = new Map<string, PropZod>()
+	private selectRandomPropPerEvent(props: PropZod[]): PropZod[] {
+		const eventMap = new Map<string, PropZod[]>()
 
+		// Group props by event_id
 		for (const prop of props) {
-			if (
-				!eventMap.has(prop.event_id) ||
-				this.shouldReplaceProp(eventMap.get(prop.event_id)!, prop)
-			) {
-				eventMap.set(prop.event_id, prop)
+			if (!eventMap.has(prop.event_id)) {
+				eventMap.set(prop.event_id, [])
 			}
+			eventMap.get(prop.event_id)!.push(prop)
 		}
 
-		return Array.from(eventMap.values())
+		// Randomly select one prop per event
+		return Array.from(eventMap.values()).map(
+			(eventProps) =>
+				eventProps[Math.floor(Math.random() * eventProps.length)],
+		)
 	}
 
 	/**
-	 * Determines if a new prop should replace an existing prop.
-	 * @param {PropZod} existingProp - The existing prop for the event.
-	 * @param {PropZod} newProp - The new prop being considered.
-	 * @returns {boolean} True if the new prop should replace the existing one.
+	 * Filters out props with a specific market key.
+	 * @param {PropZod[]} props - Array of props to filter.
+	 * @param {string} marketKeyToFilter - Market key to filter out.
+	 * @returns {PropZod[]} Array of props without the specified market key.
 	 */
-	private shouldReplaceProp(
-		existingProp: PropZod,
-		newProp: PropZod,
-	): boolean {
-		// If both have prices, prioritize the more recent update
-		return (
-			new Date(newProp.last_update) > new Date(existingProp.last_update)
-		)
+	private filterPropsByMarketKey(
+		props: PropZod[],
+		marketKeyToFilter: string = this.defaultFilteredMarketKey,
+	): PropZod[] {
+		return props.filter((prop) => prop.market_key !== marketKeyToFilter)
 	}
 }
