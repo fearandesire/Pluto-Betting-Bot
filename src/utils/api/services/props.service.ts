@@ -1,20 +1,18 @@
 import { PropOptions, PropOptionsSchema, PropZod } from '@pluto-api-interfaces'
 import { DateManager } from '../../common/DateManager.js'
 import PropEmbedManager from '../../guilds/prop-embeds/PropEmbedManager.js'
+import { SapDiscClient } from '@pluto-core'
 
 /**
  * Service for processing and managing props.
  */
 export class PropsService {
-	private embedManager: PropEmbedManager
 	private defaultFilteredMarketKey: string = 'totals'
 
 	/**
 	 * Initializes a new instance of the PropsService class.
 	 */
-	constructor() {
-		this.embedManager = new PropEmbedManager()
-	}
+	constructor() {}
 
 	/**
 	 * Processes props and creates embeds for the specified guild channels.
@@ -40,7 +38,8 @@ export class PropsService {
 			this.defaultFilteredMarketKey,
 		)
 		const uniqueProps = this.selectRandomPropPerEvent(propsMarketFiltered)
-		await this.embedManager.createEmbeds(uniqueProps, guildChannels)
+		const embedManager = new PropEmbedManager(SapDiscClient)
+		await embedManager.createEmbeds(uniqueProps, guildChannels)
 	}
 
 	/**
