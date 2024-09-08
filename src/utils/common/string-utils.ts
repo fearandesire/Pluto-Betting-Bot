@@ -20,7 +20,10 @@ export default class StringUtils {
 	static standardizeString(input: string): string {
 		return input
 			.toLowerCase()
-			.replace(/\s+/g, '_')
-			.replace(/[^a-z0-9_]/g, '')
+			.replace(/\s+/g, ' ')
+			.trim()
+			.split(' ')
+			.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+			.join(' ')
 	}
 }
