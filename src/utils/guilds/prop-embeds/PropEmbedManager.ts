@@ -36,6 +36,16 @@ export default class PropEmbedManager {
 					.setDescription(embedDetails.desc)
 					.addFields(
 						{
+							name: `Over/Under ${standardizedMarketDescription}`,
+							value: `**\`${prop.point}\`**`,
+							inline: true,
+						},
+						{
+							name: 'Player',
+							value: `**${prop.description}**`,
+							inline: true,
+						},
+						{
 							name: 'Match',
 							value: `${prop.home_team} vs ${prop.away_team}`,
 							inline: true,
@@ -43,11 +53,6 @@ export default class PropEmbedManager {
 						{
 							name: 'Date',
 							value: formatDiscordTimestamp(prop.commence_time),
-							inline: true,
-						},
-						{
-							name: standardizedMarketDescription,
-							value: `**${prop.point}**`,
 							inline: true,
 						},
 					)
