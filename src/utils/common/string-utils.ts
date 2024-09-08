@@ -16,4 +16,11 @@ export default class StringUtils {
 		}
 		return sport
 	}
+
+	static standardizeString(input: string): string {
+		return input
+			.toLowerCase()
+			.replace(/\s+/g, '_')
+			.replace(/[^a-z0-9_]/g, '')
+	}
 }
