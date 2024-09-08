@@ -32,9 +32,9 @@ export class AutocompleteHandler extends InteractionHandler {
 	}
 
 	public override async parse(interaction: AutocompleteInteraction) {
-		if (interaction.commandName !== `bet`) return this.none()
+		if (interaction?.commandName !== `bet`) return this.none()
 		const focusedOption = interaction.options.getFocused(true)
-		const matches = await this.matchCacheService.getMatches() // Fetch matches once
+		const matches = await this.matchCacheService.getMatches()
 
 		switch (focusedOption.name) {
 			case 'match': {
