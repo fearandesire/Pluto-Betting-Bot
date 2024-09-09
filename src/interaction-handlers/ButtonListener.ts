@@ -15,6 +15,9 @@ import { Match } from '@khronos-index'
 import { ErrorEmbeds } from '../utils/common/errors/global.js'
 import embedColors from '../lib/colorsConfig.js'
 import { patreonFooter } from '../utils/api/patreon/interfaces.js'
+import PredictionApiWrapper from '../utils/api/Khronos/prediction/predictionApiWrapper.js'
+import PropsApiWrapper from '../utils/api/Khronos/props/propsApiWrapper.js'
+import { PropButtons } from '../lib/interfaces/props/prop-buttons.interface.js'
 
 /**
  * @module ButtonListener
@@ -39,8 +42,12 @@ export class ButtonHandler extends InteractionHandler {
 	 * @param interaction
 	 */
 	public override async parse(interaction: ButtonInteraction) {
-		const allBtnIds = Object.values(btnIds)
-		if (!allBtnIds.includes(interaction.customId as btnIds)) {
+		const allBtnIds = [
+			...Object.values(btnIds),
+			PropButtons.OVER,
+			PropButtons.UNDER,
+		]
+		if (!allBtnIds.some((id) => interaction.customId.startsWith(id))) {
 			await interaction.update({
 				components: [],
 			})
@@ -126,6 +133,16 @@ export class ButtonHandler extends InteractionHandler {
 				})
 			}
 		}
+
+		if (
+			interaction.customId.startsWith(PropButtons.OVER) ||
+			interaction.customId.startsWith(PropButtons.UNDER)
+		) {
+			await interaction.deferReply({ ephemeral: true })
+			const [action, propId] = interaction.customId.split('_')
+			return this.some({ action, propId })
+		}
+
 		return this.none()
 	}
 
@@ -165,6 +182,53 @@ export class ButtonHandler extends InteractionHandler {
 				dateofmatchup,
 				opponent: matchOpponent,
 			})
+		} else if (
+			payload.action === PropButtons.OVER ||
+			payload.action === PropButtons.UNDER
+		) {
+			const predictionApi = new PredictionApiWrapper()
+			const propsApi = new PropsApiWrapper()
+
+			try {
+				const prop = await propsApi.getPropById(payload.propId)
+				if (!prop) {
+					throw new Error('Prop not found')
+				}
+
+				await predictionApi.createPrediction({
+					user_id: interaction.user.id,
+					prop_id: payload.propId,
+					choice:
+						payload.action === PropButtons.OVER ? 'over' : 'under',
+					status: 'pending',
+					guild_id: interaction.guildId!,
+					market_key: prop.market_key,
+				})
+
+				const successEmbed = new EmbedBuilder()
+					.setTitle('Prediction Stored')
+					.setDescription(
+						`Your prediction for ${prop.description} has been successfully recorded.`,
+					)
+					.setColor(embedColors.PlutoGreen)
+					.setFooter(patreonFooter)
+
+				await interaction.editReply({ embeds: [successEmbed] })
+
+				// Delete the ephemeral message after 5 seconds
+				setTimeout(() => {
+					interaction.deleteReply().catch(console.error)
+				}, 5000)
+			} catch (error) {
+				console.error('Error storing prediction:', error)
+				await interaction.editReply({
+					embeds: [
+						ErrorEmbeds.internalErr(
+							'Failed to store your prediction. Please try again later.',
+						),
+					],
+				})
+			}
 		} else {
 			return
 		}
