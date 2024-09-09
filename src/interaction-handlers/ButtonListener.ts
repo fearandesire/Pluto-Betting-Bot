@@ -14,7 +14,7 @@ import embedColors from "../lib/colorsConfig.js";
 import { patreonFooter } from "../utils/api/patreon/interfaces.js";
 import PredictionApiWrapper from "../utils/api/Khronos/prediction/predictionApiWrapper.js";
 import PropsApiWrapper from "../utils/api/Khronos/props/propsApiWrapper.js";
-import { PropButtons } from "../lib/interfaces/props/prop-buttons.interface.js";
+import { parsePropButtonId, PropButtons } from "../lib/interfaces/props/prop-buttons.interface.js";
 
 /**
  * @module ButtonListener
@@ -39,7 +39,6 @@ export class ButtonHandler extends InteractionHandler {
 	 * @param interaction
 	 */
 	public override async parse(interaction: ButtonInteraction) {
-		console.log(`Button press event`)
 		const allBtnIds = [
 			...Object.values(btnIds),
 			PropButtons.OVER,
@@ -132,13 +131,10 @@ export class ButtonHandler extends InteractionHandler {
 			}
 		}
 
-		if (
-			interaction.customId.startsWith(PropButtons.OVER) ||
-			interaction.customId.startsWith(PropButtons.UNDER)
-		) {
-			await interaction.deferReply({ ephemeral: true })
-			const [action, propId] = interaction.customId.split('_')
-			return this.some({ action, propId })
+		const parsedPropButton = parsePropButtonId(interaction.customId);
+		if (parsedPropButton) {
+			await interaction.deferReply({ ephemeral: true });
+			return this.some(parsedPropButton);
 		}
 
 		return this.none()
@@ -181,8 +177,8 @@ export class ButtonHandler extends InteractionHandler {
 				opponent: matchOpponent,
 			})
 		} else if (
-			payload.action === PropButtons.OVER ||
-			payload.action === PropButtons.UNDER
+			payload.action === 'over' ||
+			payload.action === 'under'
 		) {
 			const predictionApi = new PredictionApiWrapper()
 			const propsApi = new PropsApiWrapper()
@@ -203,15 +199,7 @@ export class ButtonHandler extends InteractionHandler {
 					market_key: prop.market_key,
 				})
 
-				const successEmbed = new EmbedBuilder()
-					.setTitle('Prediction Stored')
-					.setDescription(
-						`Your prediction for ${prop.description} has been successfully recorded.`,
-					)
-					.setColor(embedColors.PlutoGreen)
-					.setFooter(patreonFooter)
-
-				await interaction.editReply({ embeds: [successEmbed] })
+				await interaction.editReply({ content: `Your prediction has been stored (${payload.action}` })
 
 				// Delete the ephemeral message after 5 seconds
 				setTimeout(() => {
@@ -220,11 +208,7 @@ export class ButtonHandler extends InteractionHandler {
 			} catch (error) {
 				console.error('Error storing prediction:', error)
 				await interaction.editReply({
-					embeds: [
-						ErrorEmbeds.internalErr(
-							'Failed to store your prediction. Please try again later.',
-						),
-					],
+	content: `There was an error storing your prediction.`,
 				})
 			}
 		} else {

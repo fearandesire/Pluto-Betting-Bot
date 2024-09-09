@@ -1,5 +1,5 @@
-import { PropsApi } from '@khronos-index'
-import { KH_API_CONFIG } from '../KhronosInstances'
+import { PropsApi } from "@khronos-index";
+import { KH_API_CONFIG } from "../KhronosInstances.js";
 
 /**
  * Wrapper for the Props Controller in Khronos
@@ -12,7 +12,6 @@ export default class PropsApiWrapper {
 	}
 
 	async getPropById(id: string) {
-		const response = await this.propsApi.propsControllerFindOne({ id })
-		return response
+		return await this.propsApi.propsControllerFindOne({ id })
 	}
 }
