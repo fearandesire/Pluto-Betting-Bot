@@ -1,23 +1,20 @@
-import {
-	InteractionHandler,
-	InteractionHandlerTypes,
-} from '@sapphire/framework'
-import type { ButtonInteraction } from 'discord.js'
-import { EmbedBuilder } from 'discord.js'
-import { BetslipManager } from '../utils/api/Khronos/bets/BetslipsManager.js'
-import { btnIds } from '../lib/interfaces/interaction-handlers/interaction-handlers.interface.js'
-import { BetsCacheService } from '../utils/api/common/bets/BetsCacheService.js'
-import { CacheManager } from '@pluto-redis'
-import MatchCacheService from '../utils/api/routes/cache/MatchCacheService.js'
-import BetslipWrapper from '../utils/api/Khronos/bets/betslip-wrapper.js'
-import MatchApiWrapper from '../utils/api/Khronos/matches/matchApiWrapper.js'
-import { Match } from '@khronos-index'
-import { ErrorEmbeds } from '../utils/common/errors/global.js'
-import embedColors from '../lib/colorsConfig.js'
-import { patreonFooter } from '../utils/api/patreon/interfaces.js'
-import PredictionApiWrapper from '../utils/api/Khronos/prediction/predictionApiWrapper.js'
-import PropsApiWrapper from '../utils/api/Khronos/props/propsApiWrapper.js'
-import { PropButtons } from '../lib/interfaces/props/prop-buttons.interface.js'
+import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
+import type { ButtonInteraction } from "discord.js";
+import { EmbedBuilder } from "discord.js";
+import { BetslipManager } from "../utils/api/Khronos/bets/BetslipsManager.js";
+import { btnIds } from "../lib/interfaces/interaction-handlers/interaction-handlers.interface.js";
+import { BetsCacheService } from "../utils/api/common/bets/BetsCacheService.js";
+import { CacheManager } from "@pluto-redis";
+import MatchCacheService from "../utils/api/routes/cache/MatchCacheService.js";
+import BetslipWrapper from "../utils/api/Khronos/bets/betslip-wrapper.js";
+import MatchApiWrapper from "../utils/api/Khronos/matches/matchApiWrapper.js";
+import { Match } from "@khronos-index";
+import { ErrorEmbeds } from "../utils/common/errors/global.js";
+import embedColors from "../lib/colorsConfig.js";
+import { patreonFooter } from "../utils/api/patreon/interfaces.js";
+import PredictionApiWrapper from "../utils/api/Khronos/prediction/predictionApiWrapper.js";
+import PropsApiWrapper from "../utils/api/Khronos/props/propsApiWrapper.js";
+import { PropButtons } from "../lib/interfaces/props/prop-buttons.interface.js";
 
 /**
  * @module ButtonListener
@@ -42,6 +39,7 @@ export class ButtonHandler extends InteractionHandler {
 	 * @param interaction
 	 */
 	public override async parse(interaction: ButtonInteraction) {
+		console.log(`Button press event`)
 		const allBtnIds = [
 			...Object.values(btnIds),
 			PropButtons.OVER,
