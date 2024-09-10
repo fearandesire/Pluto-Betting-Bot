@@ -9,9 +9,18 @@ export default class PredictionApiWrapper {
 	}
 
 	async createPrediction(createPredictionDto: CreatePredictionDto) {
-		await this.predictionApi.predictionControllerCreate({
-			createPredictionDto,
-		})
+		try {
+			const response = await this.predictionApi.predictionControllerCreate({
+				createPredictionDto,
+			});
+			return response;
+		} catch (error: any) {
+			if (error?.response && error?.response?.status === 409) {
+				throw new Error("You've already made a prediction for this prop!");
+			}
+			// Handle unknown errors
+			throw error;
+		}
 	}
 
 	async getAllPredictions() {

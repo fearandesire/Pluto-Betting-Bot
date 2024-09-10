@@ -39,6 +39,7 @@ export class ButtonHandler extends InteractionHandler {
 	 * @param interaction
 	 */
 	public override async parse(interaction: ButtonInteraction) {
+		// Blanket Clearing Action Components
 		const allBtnIds = [
 			...Object.values(btnIds),
 			PropButtons.OVER,
@@ -205,10 +206,10 @@ export class ButtonHandler extends InteractionHandler {
 				setTimeout(() => {
 					interaction.deleteReply().catch(console.error)
 				}, 5000)
-			} catch (error) {
+			} catch (error: any) {
 				console.error('Error storing prediction:', error)
 				await interaction.editReply({
-	content: `There was an error storing your prediction.`,
+					content: `${error?.message || 'There was an error storing your prediction.'}`,
 				})
 			}
 		} else {

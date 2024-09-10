@@ -28,8 +28,10 @@ export class PropsService {
 	): Promise<void> {
 		// Validate options
 		const validatedOptions = PropOptionsSchema.parse(options)
-
-		const daysAhead = validatedOptions.daysAhead ?? 2
+		const defaultOptions = {
+			daysAhead: 3,
+		}
+		const daysAhead = validatedOptions.daysAhead ?? defaultOptions.daysAhead
 
 		const dateManager = new DateManager<PropZod>(daysAhead)
 		const propsWithinDateRange = dateManager.filterByDateRange(props)
