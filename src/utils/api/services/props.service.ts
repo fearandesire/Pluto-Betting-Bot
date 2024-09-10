@@ -29,7 +29,7 @@ export class PropsService {
 		// Validate options
 		const validatedOptions = PropOptionsSchema.parse(options)
 		const defaultOptions = {
-			daysAhead: 3,
+			daysAhead: 7,
 		}
 		const daysAhead = validatedOptions.daysAhead ?? defaultOptions.daysAhead
 
