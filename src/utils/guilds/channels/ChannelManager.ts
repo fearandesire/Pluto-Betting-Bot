@@ -201,7 +201,7 @@ export default class ChannelManager {
 
 		const matchEmbed = await this.prepMatchEmbed(args)
 		// Correctly create an AttachmentBuilder instance with the matchImg buffer
-		let attachment = null
+		let attachment: AttachmentBuilder | null = null
 		if (matchImg) {
 			attachment = new AttachmentBuilder(matchImg, { name: 'match.jpg' })
 			matchEmbed.embed.setImage('attachment://match.jpg')
