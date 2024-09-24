@@ -8,7 +8,7 @@ import './utils/api/index.js'
 
 const SapDiscClient = new SapphireClient({
 	caseInsensitiveCommands: true,
-	shards: `auto`,
+	shards: 'auto',
 	intents: [
 		GatewayIntentBits.DirectMessageReactions,
 		GatewayIntentBits.DirectMessages,
@@ -28,18 +28,18 @@ const SapDiscClient = new SapphireClient({
 	loadMessageCommandListeners: true,
 })
 
-console.log(bold(yellow(`[Startup]`)), `Launching Pluto`)
+console.log(bold(yellow('[Startup]')), 'Launching Pluto')
 const login = async () => {
 	try {
 		await SapDiscClient.login(process.env.TOKEN)
-		console.log(bold(green(`[Startup]`)), `Pluto is up and running!`)
+		console.log(bold(green('[Startup]')), 'Pluto is up and running!')
 	} catch (error) {
-		console.log(bold(red(`[Startup]`)), `Failed to login`)
+		console.log(bold(red('[Startup]')), 'Failed to login')
 		SapDiscClient.logger.fatal(error)
 		SapDiscClient.destroy()
 		process.exit(1)
 	}
-	console.log(bold(blue(`[Startup]`)), `Index ops complete!`)
+	console.log(bold(blue('[Startup]')), 'Index ops complete!')
 }
 login()
 

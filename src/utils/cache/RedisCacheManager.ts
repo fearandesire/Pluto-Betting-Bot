@@ -1,74 +1,65 @@
-import { format } from 'date-fns'
-import redisCache from './redisInstance.js'
-import Redis from 'ioredis'
+import { format } from "date-fns";
+import redisCache from "./redisInstance.js";
+import type { Redis } from 'ioredis';
 
 export class CacheManager {
-	cache: Redis
+	cache: Redis;
 
 	constructor() {
-		this.cache = redisCache
+		this.cache = redisCache;
 	}
 
 	async set(key: string, data: unknown, TTL?: number) {
 		if (!key) {
-			throw new Error('No key was provided to save into cache')
+			throw new Error("No key was provided to save into cache");
 		}
-		const MAX_EXPIRATION = 1800 // Default: 30 Minutes
+		const MAX_EXPIRATION = 1800; // Default: 30 Minutes
 		await this.cache.set(
 			key,
 			JSON.stringify(data),
-			'EX',
+			"EX",
 			TTL || MAX_EXPIRATION,
-		)
-		return true
+		);
+		return true;
 	}
 
 	async get(key: string) {
 		if (!key) {
-			throw new Error('No key was provided to save into cache')
+			throw new Error("No key was provided to save into cache");
 		}
-		const item = await this.cache.get(key)
+		const item = await this.cache.get(key);
 		if (!item) {
-			return false
+			return false;
 		}
-		return JSON.parse(item)
+		return JSON.parse(item);
 	}
 
 	async getTodaysGames() {
-		const currentDate = new Date()
-		const formattedDate = format(currentDate, 'yyyy-MM-dd')
-		const todaysGames = await this.cache.get(formattedDate)
+		const currentDate = new Date();
+		const formattedDate = format(currentDate, "yyyy-MM-dd");
+		const todaysGames = await this.cache.get(formattedDate);
 		if (!todaysGames) {
-			return false
+			return false;
 		}
-		return todaysGames
+		return todaysGames;
 	}
 
-	/**
-	 * @method remove
-	 * Remove a key from cache
-	 * @param {string} key
-	 *
-	 */
 	async remove(key: string) {
-		await this.cache.del(key, async (err) => {
-			if (err) {
-				console.error(`Error removing ${key} from cache`, err)
-				return false
-			}
-			return true
-		})
+		try {
+			await this.cache.del(key);
+			return true;
+		} catch (err) {
+			console.error(`Error removing ${key} from cache`, err);
+			return false;
+		}
 	}
 
-	/**
-	 * Clears all cached data.
-	 */
 	async clear() {
-		await this.cache.flushall()
-		return true
+		await this.cache.flushall();
+		return true;
 	}
 }
 
 export function Cache() {
-	return new CacheManager()
+	return new CacheManager();
 }

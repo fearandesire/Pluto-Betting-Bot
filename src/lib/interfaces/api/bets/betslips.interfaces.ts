@@ -1,44 +1,44 @@
-import type { Match } from '@kh-openapi/index.js'
-import { IApiResponse } from '../api.interface'
+import type { Match } from "@kh-openapi/index.js";
+import type { IApiResponse } from "../api.interface.js";
 
 export interface IPendingBetslip {
-	userid: string
-	amount: number
-	team: string
+	userid: string;
+	amount: number;
+	team: string;
 }
 
 export interface IPendingBetslipFull extends IPendingBetslip {
-	matchup_id: string
+	matchup_id: string;
 }
 
 export interface IAPIBetslipPayload {
-	userid: string
-	team: string
-	amount: number
-	guild_id: string
-	event_id: string
-	market_key: string
+	userid: string;
+	team: string;
+	amount: number;
+	guild_id: string;
+	event_id: string;
+	market_key: string;
 }
 
 export interface ICreateBetslipFull {
-	userid: string
-	matchup_id: string
-	team: string
-	amount: number
-	profit: number
-	payout: number
-	betresult: string
-	dateofbet: Date | string
-	opponent?: string
-	dateofmatchup?: string
+	userid: string;
+	matchup_id: string;
+	team: string;
+	amount: number;
+	profit: number;
+	payout: number;
+	betresult: string;
+	dateofbet: Date | string;
+	opponent?: string;
+	dateofmatchup?: string;
 }
 
 export interface INewBalance {
-	newBalance: number
+	newBalance: number;
 }
 
 export interface IBetId {
-	betid: number
+	betid: number;
 }
 
 export interface IFinalizedBetslip
@@ -47,27 +47,27 @@ export interface IFinalizedBetslip
 		IBetId {}
 
 export interface ValidatedBetslipData {
-	chosenTeam: string
-	matchupsForTeam: Match[]
+	chosenTeam: string;
+	matchupsForTeam: Match[];
 }
 // Extend the base interface for a response that includes a 'betslip'
 export interface IAPIProcessedBetslip extends IApiResponse {
-	betslip: IFinalizedBetslip
+	betslip: IFinalizedBetslip;
 }
 
 // Extend the base interface for a response that includes 'chosenTeam' and 'matchupsForTeam'
 export interface IValidatedBetslipData extends IApiResponse {
-	chosenTeam: string
-	matchupsForTeam: Match[]
-	betslip: IPendingBetslip
+	chosenTeam: string;
+	matchupsForTeam: Match[];
+	betslip: IPendingBetslip;
 }
 
 export function isFinalizedBetslip(payload: any): payload is IFinalizedBetslip {
-	return 'amount' in payload
+	return "amount" in payload;
 }
 
 export function isValidatedBetslipData(
 	payload: any,
 ): payload is ValidatedBetslipData {
-	return 'chosenTeam' in payload && 'matchupsForTeam' in payload
+	return "chosenTeam" in payload && "matchupsForTeam" in payload;
 }

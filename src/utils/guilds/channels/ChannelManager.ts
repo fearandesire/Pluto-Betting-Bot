@@ -1,6 +1,6 @@
-import { SapDiscClient } from '../../../Pluto.js'
-import { resolveTeam } from 'resolve-team'
-import _ from 'lodash'
+import { SapDiscClient } from "../../../Pluto.js";
+import { resolveTeam } from "resolve-team";
+import _ from "lodash";
 import {
 	AttachmentBuilder,
 	CategoryChannelResolvable,
@@ -11,45 +11,45 @@ import {
 	GuildBasedChannel,
 	MessageCreateOptions,
 	TextChannel,
-} from 'discord.js'
-import { findEmoji } from '../../bot_res/findEmoji.js'
-import { IChannelAggregated } from '../../api/routes/channels/createchannels.interface.js'
+} from "discord.js";
+import { findEmoji } from "../../bot_res/findEmoji.js";
+import { IChannelAggregated } from "../../api/routes/channels/createchannels.interface.js";
 import {
 	ICategoryData,
 	IConfigRow,
 	SportsServing,
-} from '../../api/common/interfaces/kh-pluto/kh-pluto.interface.js'
-import path, { dirname } from 'path'
-import fs from 'fs/promises'
-import { fileURLToPath } from 'url'
-import StringUtils from '../../common/string-utils.js'
+} from "../../api/common/interfaces/kh-pluto/kh-pluto.interface.js";
+import path, { dirname } from "path";
+import fs from "fs/promises";
+import { fileURLToPath } from "url";
+import StringUtils from "../../common/string-utils.js";
 
 interface IPrepareMatchEmbed {
-	favored: string
-	favoredTeamClr: ColorResolvable
-	home_team: string
-	homeTeamShortName: string
-	away_team: string
-	awayTeamShortName: string
-	bettingChanId: string
-	header: string
-	sport: SportsServing
+	favored: string;
+	favoredTeamClr: ColorResolvable;
+	home_team: string;
+	homeTeamShortName: string;
+	away_team: string;
+	awayTeamShortName: string;
+	bettingChanId: string;
+	header: string;
+	sport: SportsServing;
 }
 
 /**
  * Handle interactions between Pluto API & Discord user interface/interactions
  */
 export default class ChannelManager {
-	private readonly API_URL: string
+	private readonly API_URL: string;
 	private ep: {
-		gchan: string
-	}
+		gchan: string;
+	};
 
 	constructor() {
-		this.API_URL = `${process.env.KH_API_URL}`
+		this.API_URL = `${process.env.KH_API_URL}`;
 		this.ep = {
 			gchan: `/channels`,
-		}
+		};
 	}
 
 	/**
@@ -68,22 +68,22 @@ export default class ChannelManager {
 	) {
 		const parsedSport = await StringUtils.sportKeyTransform(
 			channel.sport,
-		).toLowerCase()
-		channel.sport = parsedSport as SportsServing
-		const { sport, matchOdds } = channel
-		const { favored } = matchOdds
+		).toLowerCase();
+		channel.sport = parsedSport as SportsServing;
+		const { sport, matchOdds } = channel;
+		const { favored } = matchOdds;
 		const favoredTeamInfo = await resolveTeam(favored, {
 			sport: sport,
 			full: true,
-		})
-		this.validateFavoredTeamInfo(favoredTeamInfo)
+		});
+		this.validateFavoredTeamInfo(favoredTeamInfo);
 
 		// ? Create channels by sport
-		const gameCategories = categoriesServing[sport]
+		const gameCategories = categoriesServing[sport];
 		if (!gameCategories || _.isEmpty(gameCategories)) {
-			return
+			return;
 		}
-		const matchImg = await this.fetchVsImg(channel.channelname, sport)
+		const matchImg = await this.fetchVsImg(channel.channelname, sport);
 		for (const gameCatRow of gameCategories) {
 			await this.createChannelAndSendEmbed(
 				channel,
@@ -91,7 +91,7 @@ export default class ChannelManager {
 				betChanRows,
 				favoredTeamInfo,
 				matchImg,
-			)
+			);
 		}
 	}
 
@@ -103,8 +103,8 @@ export default class ChannelManager {
 	 * @throws {Error} If no channels data is received.
 	 */
 	async validateAndParseChannels(body: {
-		channels: IChannelAggregated[]
-		bettingChannelRows: IConfigRow[]
+		channels: IChannelAggregated[];
+		bettingChannelRows: IConfigRow[];
 	}) {
 		// Directly checking for non-empty arrays
 		if (
@@ -115,10 +115,10 @@ export default class ChannelManager {
 		) {
 			console.error(
 				`[validateAndParseChannels] Validation failed. Channels: ${JSON.stringify(body.channels)}, BettingChannelRows: ${JSON.stringify(body.bettingChannelRows)}`,
-			)
-			return false
+			);
+			return false;
 		}
-		return true
+		return true;
 	}
 
 	/**
@@ -128,7 +128,7 @@ export default class ChannelManager {
 	 */
 	validateFavoredTeamInfo(favoredTeamInfo: any) {
 		if (!favoredTeamInfo || _.isEmpty(favoredTeamInfo.colors)) {
-			throw new Error('Unable to resolve team colors or data')
+			throw new Error("Unable to resolve team colors or data");
 		}
 	}
 
@@ -150,43 +150,42 @@ export default class ChannelManager {
 	) {
 		const guild: Guild = SapDiscClient.guilds.cache.get(
 			configRow.guild_id,
-		) as Guild
+		) as Guild;
 
-		if (!guild) return null
+		if (!guild) return null;
 
 		// Prevent creating duplicate channels
 		if (
 			await guild.channels.cache.find(
-				(GC) =>
-					GC.name.toLowerCase() === channel.channelname.toLowerCase(),
+				(GC) => GC.name.toLowerCase() === channel.channelname.toLowerCase(),
 			)
 		) {
-			return
+			return;
 		}
 
 		const guildsCategory = guild.channels.cache.get(
 			`${configRow.setting_value}`,
-		)
+		);
 		if (!guildsCategory) {
-			return
+			return;
 		}
 
 		// Locate the betting channel for the guild
 		const sortedBetChan = bettingChanRows.find(
 			(row) => row.guild_id === guild.id,
-		)
+		);
 
-		const bettingChanId = sortedBetChan?.setting_value
-		const { home_team, away_team } = channel
+		const bettingChanId = sortedBetChan?.setting_value;
+		const { home_team, away_team } = channel;
 		if (_.isEmpty(home_team) || _.isEmpty(away_team)) {
-			throw new Error(`Missing home and away teams in channel data.`)
+			throw new Error(`Missing home and away teams in channel data.`);
 		}
 		if (!bettingChanId) {
-			throw new Error(`Missing betting channel id in channel data.`)
+			throw new Error(`Missing betting channel id in channel data.`);
 		}
 
-		const { matchOdds } = channel
-		const strUtils = new StringUtils()
+		const { matchOdds } = channel;
+		const strUtils = new StringUtils();
 		const args = {
 			favored: matchOdds.favored,
 			favoredTeamClr: favoredTeamInfo.colors[0],
@@ -197,39 +196,39 @@ export default class ChannelManager {
 			bettingChanId,
 			header: channel.matchData.headline,
 			sport: channel.sport,
-		}
+		};
 
-		const matchEmbed = await this.prepMatchEmbed(args)
+		const matchEmbed = await this.prepMatchEmbed(args);
 		// Correctly create an AttachmentBuilder instance with the matchImg buffer
-		let attachment: AttachmentBuilder | null = null
+		let attachment: AttachmentBuilder | null = null;
 		if (matchImg) {
-			attachment = new AttachmentBuilder(matchImg, { name: 'match.jpg' })
-			matchEmbed.embed.setImage('attachment://match.jpg')
+			attachment = new AttachmentBuilder(matchImg, { name: "match.jpg" });
+			matchEmbed.embed.setImage("attachment://match.jpg");
 		}
 
 		const gameChan: TextChannel = await guild.channels.create({
 			name: `${channel.channelname}`,
 			type: ChannelType.GuildText,
-			topic: 'Enjoy the Game!',
+			topic: "Enjoy the Game!",
 			parent: guildsCategory as CategoryChannelResolvable,
-		})
+		});
 
 		// Check if the created channel is a TextChannel before using TextChannel-specific methods
 		const messageOptions: MessageCreateOptions = {
 			embeds: [matchEmbed.embed],
-		}
+		};
 		// Only include 'files' property if attachment is found
 		if (attachment) {
-			messageOptions['files'] = [attachment]
+			messageOptions["files"] = [attachment];
 		}
 
-		await gameChan.send(messageOptions)
+		await gameChan.send(messageOptions);
 	}
 
 	async prepMatchEmbed(args: IPrepareMatchEmbed) {
-		const embedClr = args.favoredTeamClr
-		const teamEmoji = (await findEmoji(args.favored)) ?? ''
-		const matchVersus = `${args.awayTeamShortName} @ ${args.homeTeamShortName}`
+		const embedClr = args.favoredTeamClr;
+		const teamEmoji = (await findEmoji(args.favored)) ?? "";
+		const matchVersus = `${args.awayTeamShortName} @ ${args.homeTeamShortName}`;
 		// const parseHeaderEmoji = SportEmojis[args.sport]
 		// const sanitizedHeader =
 		// 	args?.header ?? args?.header?.replace(/-/, '|') ?? ''
@@ -240,27 +239,27 @@ export default class ChannelManager {
 				`## ${matchVersus}\n\n🔵 **Game Details**\nThe ${teamEmoji} **${args.favored}** are favored to win this match!\n\n🔵 **Info**\n*Use \`/commands\` in <#${args.bettingChanId}> channel to place bets with Pluto*`,
 			)
 			.setFooter({
-				text: `Pluto | Created by fenixforever`,
-			})
-		return { embed: matchEmbed }
+				text: "Pluto | Created by fenixforever",
+			});
+		return { embed: matchEmbed };
 	}
 
 	async locateChannel(channelName: string) {
-		const channelsToDelete: GuildBasedChannel[] = []
+		const channelsToDelete: GuildBasedChannel[] = [];
 		// Iterate over all guilds the client is in
 		SapDiscClient.guilds.cache.forEach((guild: Guild) => {
 			const channel = guild.channels.cache.find(
 				(GC) => GC.name.toLowerCase() === channelName.toLowerCase(),
-			)
+			);
 			// Target Text Channels
 			if (channel && channel.type !== ChannelType.GuildText) {
-				return
+				return;
 			}
 			if (channel) {
-				channelsToDelete.push(channel)
+				channelsToDelete.push(channel);
 			}
-		})
-		return channelsToDelete
+		});
+		return channelsToDelete;
 	}
 
 	/**
@@ -268,54 +267,54 @@ export default class ChannelManager {
 	 * @param {string} channelName - The name of the channel to locate
 	 */
 	async deleteChan(channelName: string) {
-		const gameChans = await this.locateChannel(channelName)
+		const gameChans = await this.locateChannel(channelName);
 		if (gameChans.length === 0) {
-			return
+			return;
 		}
 		for (const gameChan of gameChans) {
-			await gameChan.delete()
+			await gameChan.delete();
 		}
 	}
 
 	private async fetchVsImg(matchup: string, sport: string) {
 		const matchupFileName =
 			matchup
-				.replace('at', 'vs') // Ensure "at" is replaced with "vs" first
-				.replace(/-/g, '_') // Replace ALL instances of "-" with "_"
-				.split('_')
+				.replace("at", "vs") // Ensure "at" is replaced with "vs" first
+				.replace(/-/g, "_") // Replace ALL instances of "-" with "_"
+				.split("_")
 				.map((part) =>
 					// Convert each part to Start Case without lodash
 					part
 						.toLowerCase()
 						.replace(/\b[a-z]/g, (char) => char.toUpperCase()),
 				)
-				.join('_') + '.jpg'
+				.join("_") + ".jpg";
 
 		// Ensure "vs" is always lowercase
-		const finalMatchupFileName = matchupFileName.replace('Vs', 'vs')
+		const finalMatchupFileName = matchupFileName.replace("Vs", "vs");
 
-		const __filename = fileURLToPath(import.meta.url)
-		const __dirname = dirname(__filename)
+		const __filename = fileURLToPath(import.meta.url);
+		const __dirname = dirname(__filename);
 		try {
 			// Assuming the base directory is one level up from where your script is located
-			const baseDir = path.resolve(__dirname, '../../../../') // Adjust this path based on your actual project structure
+			const baseDir = path.resolve(__dirname, "../../../../"); // Adjust this path based on your actual project structure
 			const imagePath = path.join(
 				baseDir,
-				'assets',
-				'matchupimages',
+				"assets",
+				"matchupimages",
 				sport,
 				finalMatchupFileName,
-			)
+			);
 
 			// Read the image file as a binary buffer
-			const img = await fs.readFile(imagePath)
+			const img = await fs.readFile(imagePath);
 			if (!img) {
-				return null
+				return null;
 			}
-			return img
+			return img;
 		} catch (error) {
-			console.error(error)
-			return null
+			console.error(error);
+			return null;
 		}
 	}
 }

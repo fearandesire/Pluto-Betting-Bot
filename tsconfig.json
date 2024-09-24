@@ -5,15 +5,11 @@
 		"@sapphire/ts-config/decorators"
 	],
 	"compilerOptions": {
-		"target": "es2022",
 		"strict": true,
 		"skipLibCheck": true,
 		"resolveJsonModule": true,
-		"noEmit": true,
 		"noUnusedParameters": false,
 		"noUnusedLocals": false,
-		"moduleResolution": "node",
-		"module": "ESNext",
 		"isolatedModules": true,
 		"forceConsistentCasingInFileNames": true,
 		"esModuleInterop": true,
@@ -22,7 +18,6 @@
 		"strictNullChecks": false,
 		"allowSyntheticDefaultImports": true,
 		"allowJs": true,
-		"allowImportingTsExtensions": true,
 		"baseUrl": ".",
 		"paths": {
 			"@utils/*": ["src/utils/*"],

@@ -22,6 +22,9 @@
 			"recommended": true,
 			"security": {
 				"noGlobalEval": "off"
+			},
+			"complexity": {
+				"noStaticOnlyClass": "off"
 			}
 		}
 	},

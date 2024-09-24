@@ -4,7 +4,7 @@ import { addDays, endOfDay, isAfter, isBefore, parseISO, startOfDay } from "date
  * A utility class for managing date-related operations, particularly for filtering items based on a date range.
  * @template T - The type of items to be filtered, must include a 'commence_time' property of type string.
  */
-export class DateManager<T extends { commence_time: string }> {
+export class DateManager<T extends { commence_time?: string }> {
 	private readonly daysAhead: number
 
 	/**
@@ -25,6 +25,7 @@ export class DateManager<T extends { commence_time: string }> {
 		const futureDate = endOfDay(addDays(currentDate, this.daysAhead))
 
 		return items.filter((item) => {
+			if (!item.commence_time) return false;
 			const itemDate = parseISO(item.commence_time)
 			return (
 			isAfter(itemDate, currentDate) && isBefore(itemDate, futureDate)
