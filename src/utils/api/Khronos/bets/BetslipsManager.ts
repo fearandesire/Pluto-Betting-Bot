@@ -29,6 +29,7 @@ import MoneyFormatter from '../../common/money-formatting/money-format.js'
 import GuildUtils from '../../../guilds/GuildUtils.js'
 import StringUtils from '../../../common/string-utils.js'
 import PatreonFacade from '../../patreon/Patreon-Facade.js'
+import { isApiError } from '~/lib/interfaces/errors/api-errors';
 
 interface InitializeParams {
 	team: string
@@ -233,6 +234,12 @@ export class BetslipManager {
 	) {
 		try {
 			const patreonOverride = await PatreonFacade.isSponsorTier(userid)
+			if (isApiError(patreonOverride)) {
+				const errEmbed = ErrorEmbeds.accountErr(
+					`Unable to cancel bet due to an error.\nPlease reach out for support.`,
+				)
+				return interaction.followUp({ embeds: [errEmbed] })
+			}
 			await this.betslipInstance.cancel({
 				betId: betId,
 				patreonDataDto: {

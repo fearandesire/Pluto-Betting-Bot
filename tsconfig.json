@@ -18,6 +18,7 @@
 		"strict": true,
 		"target": "ES2021",
 		"paths": {
+			"~/*": ["./src/*"],
 			"@khronos-index": ["./src/openapi/khronos/index"],
 			"@pluto-server-config": ["./src/utils/serverConfig"],
 			"@pluto-core-config": ["./src/lib/PlutoConfig"],

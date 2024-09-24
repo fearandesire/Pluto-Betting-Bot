@@ -1,9 +1,9 @@
 import { ApplyOptions } from '@sapphire/decorators'
 import { Command } from '@sapphire/framework'
-import { AccountManager, AccountsWrapper } from '../../utils/api/requests/accounts/AccountManager.js'
+import PropsApiWrapper from '~/utils/api/Khronos/props/propsApiWrapper'
 
 @ApplyOptions<Command.Options>({
-	description: '💲 Claim $20 dollars every 24 hours.',
+	description: 'A basic slash command',
 })
 export class UserCommand extends Command {
 	public override registerApplicationCommands(registry: Command.Registry) {
@@ -17,8 +17,9 @@ export class UserCommand extends Command {
 	public override async chatInputRun(
 		interaction: Command.ChatInputCommandInteraction,
 	) {
-		await interaction.deferReply()
-		const accountManager = new AccountManager(new AccountsWrapper())
-		return accountManager.claim(interaction)
+		await new PropsApiWrapper().generateAllPropEmbeds()
+		return interaction.reply({
+			content: 'Prop Embeds populated successfully',
+		})
 	}
 }

@@ -42,6 +42,7 @@
 		"release": "release-it"
 	},
 	"aliases": {
+		"~/*": "./src/*",
 		"@pluto-api-interfaces": "./dist/utils/api/common/interfaces/index.js",
 		"@khronos-index": "./dist/openapi/khronos/index.js",
 		"@pluto-api-routes": "./dist/utils/api/routes",

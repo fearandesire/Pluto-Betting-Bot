@@ -106,7 +106,7 @@ export class AccountManager {
 				userId,
 				patreonOverride,
 			)
-			const { balance, isNew } = res
+			const { balance } = res
 			if (!balance) {
 				const errEmbed = ErrorEmbeds.accountErr(
 					`Unable to locate your account's balance.\nPlease reach out for support.`,
@@ -114,14 +114,7 @@ export class AccountManager {
 				return interaction.editReply({ embeds: [errEmbed] })
 			}
 			const formattedBalance = MoneyFormatter.toUSD(balance)
-			let descStr
-			if (isNew) {
-				descStr =
-					plutoWelcomeMsg +
-					`\nYour new balance is **\`${formattedBalance}\`**`
-			} else {
-				descStr = `Your balance is **\`${formattedBalance}\`**`
-			}
+			const descStr = `Your balance is **\`${formattedBalance}\`**`
 			const embed = await new EmbedsSuccess(interaction).sv1(
 				`💰 Processed Daily Claim`,
 				descStr,
