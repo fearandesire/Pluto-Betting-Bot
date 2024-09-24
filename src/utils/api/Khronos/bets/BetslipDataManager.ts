@@ -1,8 +1,8 @@
 import BetslipWrapper from './betslip-wrapper.js'
-import { PlacedBetslip } from '@khronos-index'
+import { PlacedBetslip } from '@kh-openapi/index.js'
 import { CommandInteraction, EmbedBuilder, Guild } from 'discord.js'
 import embedColors from '../../../../lib/colorsConfig.js'
-import { helpfooter } from '@pluto-core-config'
+import { helpfooter } from '@lib/PlutoConfig.js'
 import { patreonFooter } from '../../patreon/interfaces.js'
 
 export default class BetslipDataManager {

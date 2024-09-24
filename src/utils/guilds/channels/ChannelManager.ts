@@ -1,4 +1,4 @@
-import { SapDiscClient } from '@pluto-core'
+import { SapDiscClient } from '../../../Pluto.js'
 import { resolveTeam } from 'resolve-team'
 import _ from 'lodash'
 import {
@@ -203,8 +203,8 @@ export default class ChannelManager {
 		// Correctly create an AttachmentBuilder instance with the matchImg buffer
 		let attachment = null
 		if (matchImg) {
-			attachment = new AttachmentBuilder(matchImg, { name: 'match.png' })
-			matchEmbed.embed.setImage('attachment://match.png')
+			attachment = new AttachmentBuilder(matchImg, { name: 'match.jpg' })
+			matchEmbed.embed.setImage('attachment://match.jpg')
 		}
 
 		const gameChan: TextChannel = await guild.channels.create({
@@ -248,7 +248,7 @@ export default class ChannelManager {
 	async locateChannel(channelName: string) {
 		const channelsToDelete: GuildBasedChannel[] = []
 		// Iterate over all guilds the client is in
-		SapDiscClient.guilds.cache.forEach((guild) => {
+		SapDiscClient.guilds.cache.forEach((guild: Guild) => {
 			const channel = guild.channels.cache.find(
 				(GC) => GC.name.toLowerCase() === channelName.toLowerCase(),
 			)

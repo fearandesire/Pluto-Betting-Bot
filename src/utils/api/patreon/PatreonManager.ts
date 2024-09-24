@@ -1,6 +1,6 @@
 import { IPatreonReadUser, nonPatreonMemberMsg } from './interfaces.js'
 import { patreonApiInstance } from './PatreonInstance.js'
-import { IApiError } from '~/lib/interfaces/errors/api-errors.js'
+import { IApiError } from '@lib/interfaces/errors/api-errors.js'
 export default class PatreonManager {
 	readonly nonMemberMsg = nonPatreonMemberMsg
 	patreonApi = patreonApiInstance

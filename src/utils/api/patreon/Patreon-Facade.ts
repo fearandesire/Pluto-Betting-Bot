@@ -1,6 +1,6 @@
 import PatreonManager from './PatreonManager.js'
 import { IPatreonReadUser, PatreonTiers } from './interfaces.js'
-import { IApiError } from '~/lib/interfaces/errors/api-errors.js'
+import { IApiError } from '@lib/interfaces/errors/api-errors.js'
 export default class PatreonFacade {
 	static readonly patreonManager = new PatreonManager()
 

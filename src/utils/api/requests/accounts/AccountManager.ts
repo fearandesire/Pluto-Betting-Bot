@@ -6,7 +6,7 @@ import {
 	GetBalanceDto,
 	GetLeaderboardDto,
 	GetProfileDto,
-} from '@khronos-index'
+} from '@kh-openapi/index.js'
 import {
 	IKH_API_CONFIG,
 	KH_API_CONFIG,
@@ -15,7 +15,7 @@ import _ from 'lodash'
 import GuildUtils from '../../../guilds/GuildUtils.js'
 import EmbedsSuccess from '../../../embeds/template/success-template.js'
 import MoneyFormatter from '../../common/money-formatting/money-format.js'
-import { SapDiscClient } from '@pluto-core'
+import { SapDiscClient } from '../../../../Pluto.js'
 import PaginationUtilities from '../../../embeds/pagination-utilities.js'
 import { plutoWelcomeMsg } from '../../common/interfaces/kh-pluto/kh-pluto.interface.js'
 import { ErrorEmbeds } from '../../../common/errors/global.js'

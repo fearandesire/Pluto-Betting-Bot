@@ -1,20 +1,26 @@
-import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
-import type { ButtonInteraction } from "discord.js";
-import { EmbedBuilder } from "discord.js";
-import { BetslipManager } from "../utils/api/Khronos/bets/BetslipsManager.js";
-import { btnIds } from "../lib/interfaces/interaction-handlers/interaction-handlers.interface.js";
-import { BetsCacheService } from "../utils/api/common/bets/BetsCacheService.js";
-import { CacheManager } from "@pluto-redis";
-import MatchCacheService from "../utils/api/routes/cache/MatchCacheService.js";
-import BetslipWrapper from "../utils/api/Khronos/bets/betslip-wrapper.js";
-import MatchApiWrapper from "../utils/api/Khronos/matches/matchApiWrapper.js";
-import { Match } from "@khronos-index";
-import { ErrorEmbeds } from "../utils/common/errors/global.js";
-import embedColors from "../lib/colorsConfig.js";
-import { patreonFooter } from "../utils/api/patreon/interfaces.js";
-import PredictionApiWrapper from "../utils/api/Khronos/prediction/predictionApiWrapper.js";
-import PropsApiWrapper from "../utils/api/Khronos/props/propsApiWrapper.js";
-import { parsePropButtonId, PropButtons } from "../lib/interfaces/props/prop-buttons.interface.js";
+import {
+	InteractionHandler,
+	InteractionHandlerTypes,
+} from '@sapphire/framework'
+import type { ButtonInteraction } from 'discord.js'
+import { EmbedBuilder } from 'discord.js'
+import { BetslipManager } from '../utils/api/Khronos/bets/BetslipsManager.js'
+import { btnIds } from '../lib/interfaces/interaction-handlers/interaction-handlers.interface.js'
+import { BetsCacheService } from '../utils/api/common/bets/BetsCacheService.js'
+import { CacheManager } from '../utils/cache/RedisCacheManager.js'
+import MatchCacheService from '../utils/api/routes/cache/MatchCacheService.js'
+import BetslipWrapper from '../utils/api/Khronos/bets/betslip-wrapper.js'
+import MatchApiWrapper from '../utils/api/Khronos/matches/matchApiWrapper.js'
+import { Match } from '@kh-openapi/index.js'
+import { ErrorEmbeds } from '../utils/common/errors/global.js'
+import embedColors from '../lib/colorsConfig.js'
+import { patreonFooter } from '../utils/api/patreon/interfaces.js'
+import PredictionApiWrapper from '../utils/api/Khronos/prediction/predictionApiWrapper.js'
+import PropsApiWrapper from '../utils/api/Khronos/props/propsApiWrapper.js'
+import {
+	parsePropButtonId,
+	PropButtons,
+} from '../lib/interfaces/props/prop-buttons.interface.js'
 
 /**
  * @module ButtonListener
@@ -132,10 +138,10 @@ export class ButtonHandler extends InteractionHandler {
 			}
 		}
 
-		const parsedPropButton = parsePropButtonId(interaction.customId);
+		const parsedPropButton = parsePropButtonId(interaction.customId)
 		if (parsedPropButton) {
-			await interaction.deferReply({ ephemeral: true });
-			return this.some(parsedPropButton);
+			await interaction.deferReply({ ephemeral: true })
+			return this.some(parsedPropButton)
 		}
 
 		return this.none()
@@ -177,10 +183,7 @@ export class ButtonHandler extends InteractionHandler {
 				dateofmatchup,
 				opponent: matchOpponent,
 			})
-		} else if (
-			payload.action === 'over' ||
-			payload.action === 'under'
-		) {
+		} else if (payload.action === 'over' || payload.action === 'under') {
 			const predictionApi = new PredictionApiWrapper()
 			const propsApi = new PropsApiWrapper()
 
@@ -200,7 +203,9 @@ export class ButtonHandler extends InteractionHandler {
 					market_key: prop.market_key,
 				})
 
-				await interaction.editReply({ content: `Your prediction has been stored (${payload.action}` })
+				await interaction.editReply({
+					content: `Your prediction has been stored (${payload.action}`,
+				})
 
 				// Delete the ephemeral message after 5 seconds
 				setTimeout(() => {

@@ -1,4 +1,4 @@
-import type { Match } from '@khronos-index'
+import type { Match } from '@kh-openapi/index.js'
 
 export default class BetUtils {
 	static calculateProfitAndPayout(

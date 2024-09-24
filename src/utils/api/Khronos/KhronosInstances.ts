@@ -12,7 +12,7 @@ import {
 	DiscordConfigApi,
 	GuildsApi,
 	MatchesApi,
-} from '@khronos-index'
+} from '@kh-openapi/index.js'
 import * as dotenv from 'dotenv'
 
 dotenv.config({

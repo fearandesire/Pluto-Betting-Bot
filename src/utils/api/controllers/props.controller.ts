@@ -1,4 +1,4 @@
-import { PropArraySchema, PropOptionsSchema } from '@pluto-api-interfaces'
+import { PropArraySchema, PropOptionsSchema } from '@utils/api/common/interfaces/index.js'
 import {
 	GuildChannelArraySchema,
 	RequestBody,

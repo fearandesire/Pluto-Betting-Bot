@@ -11,7 +11,7 @@ import { IMatchInfoArgs } from '../../common/interfaces/kh-pluto/kh-pluto.interf
 import { IAPIBetslipPayload } from '../../../../lib/interfaces/api/bets/betslips.interfaces.js'
 import embedColors from '../../../../lib/colorsConfig.js'
 import { findEmoji } from '../../../bot_res/findEmoji.js'
-import { helpfooter } from '@pluto-core-config'
+import { helpfooter } from '@lib/PlutoConfig.js'
 import { ErrorEmbeds } from '../../../common/errors/global.js'
 import { ApiModules } from '../../../../lib/interfaces/api/api.interface.js'
 import { ApiErrorHandler } from '../error-handling/ApiErrorHandler.js'
@@ -24,12 +24,12 @@ import {
 	InitBetslipRespDTO,
 	PlaceBetDto,
 	PlacedBetslip,
-} from '@khronos-index'
+} from '@kh-openapi/index.js'
 import MoneyFormatter from '../../common/money-formatting/money-format.js'
 import GuildUtils from '../../../guilds/GuildUtils.js'
 import StringUtils from '../../../common/string-utils.js'
 import PatreonFacade from '../../patreon/Patreon-Facade.js'
-import { isApiError } from '~/lib/interfaces/errors/api-errors.js'
+import { isApiError } from '@lib/interfaces/errors/api-errors.js'
 
 interface InitializeParams {
 	team: string

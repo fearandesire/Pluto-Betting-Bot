@@ -1,5 +1,5 @@
-import { AccountsApi, Account } from "@khronos-index";
-import { IKH_API_CONFIG, KH_API_CONFIG } from "../KhronosInstances.js";
+import { AccountsApi, Account } from '@kh-openapi/index.js'
+import { IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js'
 
 export default class AccountsWrapper {
 	private accountsApi: AccountsApi

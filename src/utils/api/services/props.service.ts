@@ -1,7 +1,11 @@
-import { PropOptions, PropOptionsSchema, PropZod } from '@pluto-api-interfaces'
+import {
+	PropOptions,
+	PropOptionsSchema,
+	PropZod,
+} from '@utils/api/common/interfaces/index.js'
 import { DateManager } from '../../common/DateManager.js'
 import PropEmbedManager from '../../guilds/prop-embeds/PropEmbedManager.js'
-import { SapDiscClient } from '@pluto-core'
+import { SapDiscClient } from '../../../Pluto.js'
 
 /**
  * Service for processing and managing props.

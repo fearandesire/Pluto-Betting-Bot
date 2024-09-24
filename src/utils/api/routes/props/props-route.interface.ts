@@ -1,6 +1,6 @@
-import type { Prop } from "@khronos-index";
-import { z } from "zod";
-import { PropOptions, PropZod } from "@pluto-api-interfaces";
+import type { Prop } from '@kh-openapi/index.js'
+import { z } from 'zod'
+import { PropOptions, PropZod } from '@utils/api/common/interfaces/index.js'
 
 export const GuildChannelSchema = z.object({
 	guild_id: z.string(),
@@ -12,12 +12,12 @@ export const GuildChannelArraySchema = z.array(GuildChannelSchema)
 export type PropRaw = Omit<Prop, 'event' | 'predictions'>
 
 export interface RequestBody {
-	props: PropZod[];
-	guildChannels: { guild_id: string; channel_id: string }[];
+	props: PropZod[]
+	guildChannels: { guild_id: string; channel_id: string }[]
 }
 
 export interface ValidatedData {
-	props: PropZod[];
-	guildChannels: { guild_id: string; channel_id: string }[];
-	options: PropOptions;
+	props: PropZod[]
+	guildChannels: { guild_id: string; channel_id: string }[]
+	options: PropOptions
 }

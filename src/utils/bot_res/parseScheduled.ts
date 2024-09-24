@@ -1,6 +1,6 @@
 import { format } from 'date-fns'
 import discord from 'discord.js'
-import { _, helpfooter } from '@pluto-core-config'
+import { _, helpfooter } from '@lib/PlutoConfig.js'
 import embedColors from '../../lib/colorsConfig.js'
 import { IMatchupsGrouped, IOddsField } from '../matches/matchups.interface.js'
 import { patreonFooter } from '../api/patreon/interfaces.js'

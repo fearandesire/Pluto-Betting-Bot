@@ -1,6 +1,6 @@
 import { Command } from '@sapphire/framework'
 import _ from 'lodash'
-import { Log } from '@pluto-internal-logger'
+import { Log } from '@utils/bot_res/consoleLog.js'
 import { findEmoji } from '../utils/bot_res/findEmoji.js'
 
 // ? Exporting Console Logging Colors for other files to use

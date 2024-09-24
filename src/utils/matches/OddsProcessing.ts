@@ -3,8 +3,8 @@ import parseScheduled from '../bot_res/parseScheduled.js'
 import { formatOdds } from './formatOdds.js'
 import { IOddsField } from './matchups.interface.js'
 import { patreonFooterUrl } from '../api/patreon/interfaces.js'
-import { helpfooter } from '@pluto-core-config'
-import type { Match } from '@khronos-index'
+import { helpfooter } from '@lib/PlutoConfig.js'
+import type { Match } from '@kh-openapi/index.js'
 
 export async function prepareAndFormat(matchups: Match[], thumbnail: string) {
 	const oddsFields: IOddsField[] = []

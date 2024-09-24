@@ -6,7 +6,10 @@ import {
 	Client,
 } from 'discord.js'
 import GuildUtils from '../GuildUtils.js'
-import { MarketKeyTranslations, type PropZod } from '@pluto-api-interfaces'
+import {
+	MarketKeyTranslations,
+	type PropZod,
+} from '@utils/api/common/interfaces/index.js'
 import { formatDiscordTimestamp } from '../../timestampUtils.js'
 import StringUtils from '../../common/string-utils.js'
 import { resolveTeam } from 'resolve-team'

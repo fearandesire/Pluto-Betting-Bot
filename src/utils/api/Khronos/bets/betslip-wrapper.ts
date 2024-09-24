@@ -7,7 +7,7 @@ import {
 	InitBetslipRequest,
 	PlaceBetslipRequest,
 	PlacedBetslip,
-} from '@khronos-index'
+} from '@kh-openapi/index.js'
 import { IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js'
 
 export default class BetslipWrapper {

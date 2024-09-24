@@ -1,4 +1,4 @@
-import { PropsApi } from '@khronos-index'
+import { PropsApi } from '@kh-openapi/index.js'
 import { KH_API_CONFIG } from '../KhronosInstances.js'
 
 /**

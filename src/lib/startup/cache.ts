@@ -1,5 +1,5 @@
 import MatchCacheService from '../../utils/api/routes/cache/MatchCacheService.js'
-import { CacheManager } from '@pluto-redis'
+import { CacheManager } from '../../utils/cache/RedisCacheManager.js'
 
 /**
  * Store matches in cache on startup

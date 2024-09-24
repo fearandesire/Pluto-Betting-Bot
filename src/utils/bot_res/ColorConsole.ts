@@ -1,3 +1,4 @@
+// @ts-nocheck
 import * as clret from 'colorette'
 import { bold } from 'colorette'
 

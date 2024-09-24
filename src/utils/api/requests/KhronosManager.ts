@@ -1,7 +1,7 @@
 import { KH_ValidConfigType } from '../common/interfaces/kh-pluto/kh-pluto.interface.js'
 import { AxiosKhronosInstance } from '../common/axios-config.js'
 import { OutgoingEndpoints } from '../common/endpoints.js'
-import type { Match } from '@khronos-index'
+import type { Match } from '@kh-openapi/index.js'
 
 /**
  * Service for fetching configuration or specific aggregated data from our private Khronos API

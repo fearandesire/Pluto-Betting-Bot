@@ -1,5 +1,9 @@
-import { CreatePredictionDto, PredictionApi, UpdatePredictionDto } from "@khronos-index";
-import { type IKH_API_CONFIG, KH_API_CONFIG } from "../KhronosInstances.js";
+import {
+	CreatePredictionDto,
+	PredictionApi,
+	UpdatePredictionDto,
+} from '@kh-openapi/index.js'
+import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js'
 
 export default class PredictionApiWrapper {
 	private predictionApi: PredictionApi
@@ -10,16 +14,19 @@ export default class PredictionApiWrapper {
 
 	async createPrediction(createPredictionDto: CreatePredictionDto) {
 		try {
-			const response = await this.predictionApi.predictionControllerCreate({
-				createPredictionDto,
-			});
-			return response;
+			const response =
+				await this.predictionApi.predictionControllerCreate({
+					createPredictionDto,
+				})
+			return response
 		} catch (error: any) {
 			if (error?.response && error?.response?.status === 409) {
-				throw new Error("You've already made a prediction for this prop!");
+				throw new Error(
+					"You've already made a prediction for this prop!",
+				)
 			}
 			// Handle unknown errors
-			throw error;
+			throw error
 		}
 	}
 

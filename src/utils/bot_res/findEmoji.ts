@@ -1,5 +1,5 @@
 import _ from 'lodash'
-import { SapDiscClient } from '@pluto-core'
+import { SapDiscClient } from '../../Pluto.js'
 
 /**
  * Find an emoji by name and retrieve the closest match.

@@ -1,6 +1,6 @@
 import Router from 'koa-router'
 import MatchCacheService from './MatchCacheService.js'
-import { CacheManager } from '@pluto-redis'
+import { CacheManager } from '../../../cache/RedisCacheManager.js'
 
 export const matchCache = new Router()
 

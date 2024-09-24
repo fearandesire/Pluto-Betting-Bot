@@ -1,5 +1,5 @@
-import { CacheManager } from '@pluto-redis'
-import { BetslipWithAggregationDTO, PlaceBetDto } from '@khronos-index'
+import { CacheManager } from '../../../cache/RedisCacheManager.js'
+import { BetslipWithAggregationDTO, PlaceBetDto } from '@kh-openapi/index.js'
 
 export class BetsCacheService {
 	private cachePrefix = 'bets:'

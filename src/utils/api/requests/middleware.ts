@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+// @ts-nocheck
 export async function responseTime(ctx, next) {
 	const started = Date.now()
 	await next()
@@ -6,9 +6,7 @@ export async function responseTime(ctx, next) {
 	const ellapsed = `${Date.now() - started}ms`
 	// Timestamp HH:MM:SS
 	const timestamp = `[${new Date().toLocaleTimeString()}]`
-	console.log(
-		`${timestamp} API Response time is: ${ellapsed}`,
-	)
+	console.log(`${timestamp} API Response time is: ${ellapsed}`)
 	ctx.set('X-ResponseTime', ellapsed)
 }
 

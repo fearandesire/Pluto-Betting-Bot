@@ -1,5 +1,5 @@
-import { CacheManager } from '@pluto-redis'
-import { Match } from '@khronos-index'
+import { CacheManager } from '../../../cache/RedisCacheManager.js'
+import { Match } from '@kh-openapi/index.js'
 import MatchApiWrapper from '../../Khronos/matches/matchApiWrapper.js'
 import { resolveTeam } from 'resolve-team'
 

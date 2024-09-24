@@ -1,7 +1,7 @@
 // Import interfaces and potentially the Discord client type
 import { SapphireClient } from '@sapphire/framework'
 import { ColorResolvable, EmbedBuilder } from 'discord.js'
-import logClr from '@pluto-internal-color-logger'
+import logClr from '@utils/bot_res/ColorConsole.js'
 import MoneyFormatter from '../../common/money-formatting/money-format.js'
 import {
 	DisplayBetNotification,

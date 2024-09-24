@@ -1,6 +1,6 @@
 import { ApplyOptions } from '@sapphire/decorators'
 import { Command } from '@sapphire/framework'
-import PropsApiWrapper from '~/utils/api/Khronos/props/propsApiWrapper.js'
+import PropsApiWrapper from '@utils/api/Khronos/props/propsApiWrapper.js'
 
 @ApplyOptions<Command.Options>({
 	description: 'A basic slash command',

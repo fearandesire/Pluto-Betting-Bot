@@ -1,5 +1,5 @@
 import embedColors from '../../../lib/colorsConfig.js'
-import { helpfooter } from '@pluto-core-config'
+import { helpfooter } from '@lib/PlutoConfig.js'
 import { plutoDocsUrl } from '../../../lib/configs/constants.js'
 
 export default class PlutoInfo {

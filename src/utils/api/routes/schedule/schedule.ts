@@ -1,6 +1,6 @@
 import Router from 'koa-router'
 import _ from 'lodash'
-import { Log } from '@pluto-core-config'
+import { Log } from '@lib/PlutoConfig.js'
 import GameSchedule from '../../requests/matchups/GameSchedule.js'
 import {
 	IConfigRow,

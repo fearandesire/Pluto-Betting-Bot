@@ -4,8 +4,8 @@ import {
 } from '@sapphire/framework'
 import type { AutocompleteInteraction } from 'discord.js'
 import MatchCacheService from '../utils/api/routes/cache/MatchCacheService.js'
-import { CacheManager } from '@pluto-redis'
-import { Match } from '@khronos-index'
+import { CacheManager } from '../utils/cache/RedisCacheManager.js'
+import { Match } from '@kh-openapi/index.js'
 import StringUtils from '../utils/common/string-utils.js' // Import StringUtils
 
 export class AutocompleteHandler extends InteractionHandler {

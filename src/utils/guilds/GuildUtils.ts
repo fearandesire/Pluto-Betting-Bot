@@ -1,4 +1,4 @@
-import { SapDiscClient } from '@pluto-core'
+import { SapDiscClient } from '../../Pluto.js'
 import _ from 'lodash'
 import { Guild } from 'discord.js'
 

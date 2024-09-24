@@ -4,7 +4,7 @@ import {
 } from '@sapphire/framework'
 import type { StringSelectMenuInteraction } from 'discord.js'
 import { ButtonInteraction } from 'discord.js'
-import { CacheManager } from '@pluto-redis'
+import { CacheManager } from '../utils/cache/RedisCacheManager.js'
 import { ErrorEmbeds } from '../utils/common/errors/global.js'
 import BetUtils from '../utils/api/common/bets/BetUtils.js'
 import { BetsCacheService } from '../utils/api/common/bets/BetsCacheService.js'
