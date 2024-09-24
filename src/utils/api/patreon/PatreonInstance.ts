@@ -5,7 +5,6 @@ export class AxiosConfigurator {
 	private readonly baseURL: string
 	private readonly timeout: number
 	private readonly headers: Record<string, string>
-	private readonly apiKey: string = PATREON_API_KEY!
 
 	constructor(
 		baseURL: string,
@@ -25,7 +24,6 @@ export class AxiosConfigurator {
 			timeout: this.timeout,
 			headers: new AxiosHeaders({
 				...this.headers,
-				'X-API-Key': this.apiKey,
 			}),
 		}
 		return axios.create({
