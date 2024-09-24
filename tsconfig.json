@@ -1,16 +1,25 @@
 {
+	"extends": [
+		"@sapphire/ts-config",
+		"@sapphire/ts-config/extra-strict",
+		"@sapphire/ts-config/decorators"
+	],
 	"compilerOptions": {
 		"target": "es2022",
 		"strict": true,
 		"skipLibCheck": true,
 		"resolveJsonModule": true,
 		"noEmit": true,
+		"noUnusedParameters": false,
+		"noUnusedLocals": false,
 		"moduleResolution": "node",
 		"module": "ESNext",
 		"isolatedModules": true,
 		"forceConsistentCasingInFileNames": true,
 		"esModuleInterop": true,
 		"noImplicitAny": false,
+		"noImplicitReturns": false,
+		"strictNullChecks": false,
 		"allowSyntheticDefaultImports": true,
 		"allowJs": true,
 		"allowImportingTsExtensions": true,
@@ -22,7 +31,9 @@
 			"@/*": ["src/*"]
 		},
 		"outDir": "./dist",
-		"rootDir": "./src"
+		"rootDir": "./src",
+		"noFallthroughCasesInSwitch": false,
+		"lib": ["ES2021", "DOM"]
 	},
 	"include": ["src"],
 	"exclude": ["ecosystem.config.js", "node_modules", "dist"]

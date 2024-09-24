@@ -82,8 +82,8 @@
 		"zod": "^3.23.8"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "1.8.3",
-		"@biomejs/cli-win32-x64": "^1.8.3",
+		"@biomejs/biome": "1.9.2",
+		"@biomejs/cli-win32-x64": "^1.9.2",
 		"@sapphire/cli": "^1.9.1",
 		"@sapphire/prettier-config": "^2.0.0",
 		"@sapphire/ts-config": "^5.0.0",
@@ -95,7 +95,7 @@
 		"@types/koa-router": "^7.4.8",
 		"@types/koa__cors": "^5.0.0",
 		"@types/lodash": "^4.14.202",
-		"@types/node": "^20.11.5",
+		"@types/node": "^20.16.3",
 		"@types/node-cron": "^3.0.11",
 		"@types/numeral": "^2.0.5",
 		"@types/ws": "^8.5.10",
@@ -119,7 +119,7 @@
 		"rimraf": "^5.0.5",
 		"ts-jest": "^29.1.2",
 		"tsconfig-paths": "^4.2.0",
-		"typescript": "^5.5.4",
+		"typescript": "^5.6.2",
 		"vite": "^5.4.7",
 		"vite-tsconfig-paths": "^5.0.1"
 	},
@@ -128,13 +128,18 @@
 			"^@/(.*)$": "<rootDir>/src/$1",
 			"^lib/(.*)$": "<rootDir>/lib/$1"
 		},
-		"moduleFileExtensions": ["ts", "js"],
+		"moduleFileExtensions": [
+			"ts",
+			"js"
+		],
 		"rootDir": "src",
 		"testRegex": ".*\\.spec\\.ts$",
 		"transform": {
 			"^.+\\.(t|j)s$": "ts-jest"
 		},
-		"collectCoverageFrom": ["**/*.(t|j)s"],
+		"collectCoverageFrom": [
+			"**/*.(t|j)s"
+		],
 		"coverageDirectory": "../coverage",
 		"testEnvironment": "node"
 	}
