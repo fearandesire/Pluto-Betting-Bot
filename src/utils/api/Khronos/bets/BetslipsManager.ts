@@ -29,7 +29,7 @@ import MoneyFormatter from '../../common/money-formatting/money-format.js'
 import GuildUtils from '../../../guilds/GuildUtils.js'
 import StringUtils from '../../../common/string-utils.js'
 import PatreonFacade from '../../patreon/Patreon-Facade.js'
-import { isApiError } from '~/lib/interfaces/errors/api-errors';
+import { isApiError } from '~/lib/interfaces/errors/api-errors.js'
 
 interface InitializeParams {
 	team: string
