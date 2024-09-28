@@ -21,7 +21,8 @@ import {
 	parsePropButtonId,
 	PropButtons,
 } from '../lib/interfaces/props/prop-buttons.interface.js';
-
+// pnpm issue with @sapphire framework
+import { Result, None, Option } from '@sapphire/framework';
 /**
  * @module ButtonListener
  */
@@ -59,7 +60,7 @@ export class ButtonHandler extends InteractionHandler {
 			return this.none();
 		}
 
-		if (interaction.customId === `matchup_btn_cancel`) {
+		if (interaction.customId === 'matchup_btn_cancel') {
 			await interaction.update({
 				components: [],
 			});
@@ -67,7 +68,7 @@ export class ButtonHandler extends InteractionHandler {
 			return this.some();
 		}
 
-		if (interaction.customId === `matchup_btn_confirm`) {
+		if (interaction.customId === 'matchup_btn_confirm') {
 			await interaction.deferUpdate();
 			await interaction.editReply({
 				components: [],
@@ -84,7 +85,7 @@ export class ButtonHandler extends InteractionHandler {
 							userId: interaction.user.id,
 						},
 					});
-					const errMsg = `Unable to locate your bet data.`;
+					const errMsg = 'Unable to locate your bet data.';
 					return this.some({
 						hasFailed: true,
 						errMsg: errMsg,
@@ -112,7 +113,7 @@ export class ButtonHandler extends InteractionHandler {
 						});
 						return this.some({
 							hasFailed: true,
-							errMsg: `Unable to locate match data.`,
+							errMsg: 'Unable to locate match data.',
 						});
 					}
 				}
@@ -123,7 +124,8 @@ export class ButtonHandler extends InteractionHandler {
 					matchData: matchDetails,
 				});
 			} catch (error) {
-				const errMsg = `An error occurred when collecting betslip or match data.`;
+				const errMsg =
+					'An error occurred when collecting betslip or match data.';
 				console.error({
 					trace: this.constructor.name,
 					message: errMsg,
