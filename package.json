@@ -17,7 +17,7 @@
 		"build": "rimraf ./dist && tsc",
 		"clear-dist": "rimraf ./dist",
 		"watch": "nodemon -L --watch ./ --exec pnpm dev",
-		"start": "node ./dist/Pluto.js",
+		"start": "node --loader esm-module-alias/loader --no-warnings ./dist/Pluto.js",
 		"dev": "pnpm build && node --loader esm-module-alias/loader --no-warnings ./dist/Pluto.js",
 		"ts-dev": "tsx ./src/Pluto.ts",
 		"gen-api": "openapi-generator-cli generate -i ./Khronos-Swagger-Spec-v1.json -g typescript-fetch -o ./src/openapi/khronos -c openapi.config.json",
