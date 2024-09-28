@@ -25,7 +25,8 @@
 		"ci-gen-api": "rimraf ./src/openapi && pnpm gen-api && pnpm post-api-fix",
 		"sap-cmd": "sapphire generate slashcommand",
 		"dvault": "npx dotenv-vault@latest",
-		"release": "release-it"
+		"release": "release-it",
+		"docker:push": "docker-compose build -t ghcr.io/fearandesire/pluto-betting-bot:latest && docker push ghcr.io/fearandesire/pluto-betting-bot:latest"
 	},
 	"aliases": {
 		"@pluto-api-interfaces": "./dist/utils/api/common/interfaces/index.js",
