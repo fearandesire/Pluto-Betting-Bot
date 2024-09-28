@@ -6,49 +6,43 @@ on:
     pull_request:
         branches: [main]
 
+env:
+    REGISTRY: ghcr.io
+    IMAGE_NAME: pluto-betting-bot
+
 jobs:
-  pull-repo:
+  build-and-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
     steps:
-      - uses: actions/checkout@v2
-      - name: Pull Repo
-        uses: appleboy/ssh-action@v1.0.3
+      - uses: actions/checkout@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
         with:
-          host: ${{ secrets.DO_HOST }}
-          username: ${{ secrets.DO_USERNAME }}
-          key: ${{ secrets.KEYFILE }}
-          script: |
-            cd /usr/apps/Pluto-Betting-Bot/
-            git pull --force
-  build-image:
-    needs: pull-repo
-    runs-on: ubuntu-latest
-    steps:
-      - name: Build Image
-        uses: appleboy/ssh-action@v1.0.3
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
-          host: ${{ secrets.DO_HOST }}
-          username: ${{ secrets.DO_USERNAME }}
-          key: ${{ secrets.KEYFILE }}
-          script_stop: true
-          script: |
-            cd /usr/apps/Pluto-Betting-Bot/
-            docker-compose build
-  stop-existing-container:
-              needs: build-image
-              runs-on: ubuntu-latest
-              steps:
-                - uses: appleboy/ssh-action@v1.0.3
-                  with:
-                    host: ${{ secrets.DO_HOST }}
-                    username: ${{ secrets.DO_USERNAME }}
-                    key: ${{ secrets.KEYFILE }}
-                    script_stop: true
-                    script: |
-                      cd /usr/apps/Pluto-Betting-Bot/
-                      docker-compose down
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
   deploy:
-    needs: [stop-existing-container, build-image]
+    needs: build-and-push
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to DigitalOcean
@@ -61,5 +55,7 @@ jobs:
           timeout: 5m
           script: |
             cd /usr/apps/Pluto-Betting-Bot/
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker-compose pull
             docker-compose up -d
             echo "Started Pluto API"
