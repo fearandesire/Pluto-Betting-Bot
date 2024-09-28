@@ -1,57 +1,56 @@
-import embedColors from '../../../lib/colorsConfig.js'
-import { helpfooter } from '@lib/PlutoConfig.js'
-import { plutoDocsUrl } from '../../../lib/configs/constants.js'
+import embedColors from "../../../lib/colorsConfig.js";
+import { helpfooter } from "@pluto-config";
+import { plutoDocsUrl } from "../../../lib/configs/constants.js";
 
 export default class PlutoInfo {
 	static commandsInfo() {
 		const cmdList = {
 			betting: {
 				odds: "View the odds for this week's matches",
-				bet: 'Place a bet on a match',
+				bet: "Place a bet on a match",
 				cancelbet: "Cancel a pending bet you've placed",
-				balance: 'View your current balance',
-				dailyclaim:
-					'Claim $50 every day, or twice a day for Patreon members.',
+				balance: "View your current balance",
+				dailyclaim: "Claim $50 every day, or twice a day for Patreon members.",
 				mybets: `View your active placed bets`,
 				doubledown: `Double an existing bet, use it on a confident bet!`,
 			},
 			info: {
-				stats: 'View your betting stats',
+				stats: "View your betting stats",
 				leaderboard:
 					"View the betting leaderboard, see who's on top and where you stand!",
-				help: 'View information on how to use the bot',
-				commands: 'View all commands',
-				bethistory: 'View the track record of your bets',
+				help: "View information on how to use the bot",
+				commands: "View all commands",
+				bethistory: "View the track record of your bets",
 			},
-		}
+		};
 		const formatCommands = (cmds: {
-			[key: string]: { [key: string]: string }
+			[key: string]: { [key: string]: string };
 		}) => {
-			let formattedCommands = ''
+			let formattedCommands = "";
 			for (const [category, commands] of Object.entries(cmds)) {
-				formattedCommands += `⭐ **__${category.charAt(0).toUpperCase() + category.slice(1)}__**\n` // Capitalize the first letter of each category name
+				formattedCommands += `⭐ **__${category.charAt(0).toUpperCase() + category.slice(1)}__**\n`; // Capitalize the first letter of each category name
 				for (const [command, description] of Object.entries(commands)) {
-					formattedCommands += `**\`/${command}\`** - ${description}\n`
+					formattedCommands += `**\`/${command}\`** - ${description}\n`;
 				}
-				formattedCommands += '\n'
+				formattedCommands += "\n";
 			}
 			// Add link to the website
-			formattedCommands += `**📒 [Docs](${plutoDocsUrl})**\n`
-			return formattedCommands
-		}
+			formattedCommands += `**📒 [Docs](${plutoDocsUrl})**\n`;
+			return formattedCommands;
+		};
 
 		// Construct the embed description with formatted commands and maintenance note
 		const cmdDescription =
 			formatCommands(cmdList) +
-			`*Currently, the following commands are under maintenance:\n- \`bethistory\`\n- \`stats\`*`
+			`*Currently, the following commands are under maintenance:\n- \`bethistory\`\n- \`stats\`*`;
 
 		return {
-			title: 'Pluto Commands',
+			title: "Pluto Commands",
 			description: cmdDescription,
-			thumbnail: 'https://i.imgur.com/RWjfjyv.png',
+			thumbnail: "https://i.imgur.com/RWjfjyv.png",
 			color: embedColors.PlutoBlue, // Placeholder color, replace with actual one from your configuration
 			footer: helpfooter(),
-		}
+		};
 	}
 
 	static helpInfo() {
@@ -61,7 +60,7 @@ export default class PlutoInfo {
 			thumbnail: `https://i.imgur.com/RWjfjyv.png`,
 			color: embedColors.PlutoBlue,
 			footer: helpfooter(),
-		}
+		};
 	}
 
 	static faqInfo() {
@@ -71,6 +70,6 @@ export default class PlutoInfo {
 			color: embedColors.PlutoBlue,
 			thumbnail: `https://i.imgur.com/RWjfjyv.png`,
 			footer: helpfooter(),
-		}
+		};
 	}
 }

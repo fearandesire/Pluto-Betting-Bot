@@ -13,7 +13,11 @@ import { BetslipManager } from "../utils/api/Khronos/bets/BetslipsManager.js";
 import { selectMenuIds } from "../lib/interfaces/interaction-handlers/interaction-handlers.interface.js";
 import MatchCacheService from "../utils/api/routes/cache/MatchCacheService.js";
 import BetslipWrapper from "../utils/api/Khronos/bets/betslip-wrapper.js";
-
+import { ApplyOptions } from "@sapphire/decorators";
+import { Result, None, Option } from "@sapphire/framework";
+@ApplyOptions<InteractionHandler.Options>({
+	interactionHandlerType: InteractionHandlerTypes.SelectMenu,
+})
 export class MenuHandler extends InteractionHandler {
 	public constructor(
 		ctx: InteractionHandler.LoaderContext,
@@ -38,7 +42,6 @@ export class MenuHandler extends InteractionHandler {
 	 * @see [ButtonListener]{@link ./ButtonListener.ts}
 	 * @param interaction
 	 */
-	// @ts-ignore - Weird TS Error
 	public override async parse(interaction: StringSelectMenuInteraction) {
 		const allSelectMenuIds = Object.values(selectMenuIds);
 		if (!allSelectMenuIds.includes(interaction.customId as selectMenuIds)) {

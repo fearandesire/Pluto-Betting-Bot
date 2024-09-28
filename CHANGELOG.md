@@ -1,6 +1,5 @@
 # Changelog
 
-
 ## v3.1.11
 
 [compare changes](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v3.1.10...v3.1.11)

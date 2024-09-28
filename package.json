@@ -18,7 +18,7 @@
 		"clear-dist": "rimraf ./dist",
 		"watch": "nodemon -L --watch ./ --exec pnpm dev",
 		"start": "node ./dist/Pluto.js",
-		"dev": "pnpm build && node ./dist/Pluto.js",
+		"dev": "pnpm build && node --loader esm-module-alias/loader --no-warnings ./dist/Pluto.js",
 		"ts-dev": "tsx ./src/Pluto.ts",
 		"gen-api": "openapi-generator-cli generate -i ./Khronos-Swagger-Spec-v1.json -g typescript-fetch -o ./src/openapi/khronos -c openapi.config.json",
 		"post-api-fix": "node ./src/utils/scripts/addJsExtension.js",
@@ -26,6 +26,44 @@
 		"sap-cmd": "sapphire generate slashcommand",
 		"dvault": "npx dotenv-vault@latest",
 		"release": "release-it"
+	},
+	"aliases": {
+		"@pluto-api-interfaces": "./dist/utils/api/common/interfaces/index.js",
+		"@khronos-index": "./dist/openapi/khronos/index.js",
+		"@pluto-api-routes": "./dist/utils/api/routes",
+		"@pluto-betOps": "./dist/utils/db/betOps",
+		"@pluto-betOps-modifyAmount": "./dist/utils/db/betOps/modifyAmount.js",
+		"@pluto-bettingStats": "./dist/utils/bot_res/getBettingStats.js",
+		"@pluto-check-balance": "./dist/utils/db/validation/checkbalance.js",
+		"@pluto-core": "./dist/Pluto.js",
+		"@pluto-core-config": "./dist/lib/PlutoConfig.js",
+		"@pluto-currency": "./dist/utils/db/currency",
+		"@pluto-date-utils": "./dist/utils/date",
+		"@pluto-db": "./dist/database/dbindex.js",
+		"@pluto-db-utils": "./dist/utils/db",
+		"@pluto-embed-reply": "./dist/utils/bot_res/embeds/embedReply.js",
+		"@pluto-general-utils": "./dist/utils/bot_res",
+		"@pluto-internal-color-logger": "./dist/utils/bot_res/ColorConsole.js",
+		"@pluto-internal-logger": "./dist/utils/bot_res/consoleLog.js",
+		"@pluto-iso-manager": "./dist/utils/time/IsoManager.js",
+		"@pluto-leaderboard": "./dist/utils/betting/currency/leaderboard.js",
+		"@pluto-list-user-bets": "./dist/utils/db/listMyBets.js",
+		"@pluto-logger": "./dist/utils/PlutoLogger.js",
+		"@pluto-matchupOps": "./dist/utils/db/matchupOps.js",
+		"@pluto-newBet": "./dist/utils/db/betOps/newBet.js",
+		"@pluto-process-claim": "./dist/utils/db/betOps/processClaim.js",
+		"@pluto-redis": "./dist/utils/cache/RedisCacheManager.js",
+		"@pluto-reply": "./dist/utils/bot_res/reply.js",
+		"@pluto-server-config": "./dist/utils/serverConfig.js",
+		"@pluto-stats-embed-builder": "./dist/utils/bot_res/statsEmbBuilder.js",
+		"@pluto-transfer": "./dist/utils/db/currency/transferBetween.js",
+		"@pluto-validate": "./dist/utils/db/validation",
+		"@pluto-validate-betAuthor": "./dist/utils/db/validation/verifyBetAuthor.js",
+		"@pluto-validate-checkbalance": "./dist/utils/db/validation/checkbalance.js",
+		"@pluto-validate-user": "./dist/utils/db/validation/validateExistingUser.js",
+		"@kh-openapi": "./dist/openapi/khronos/index.js",
+		"@utils/*": "./dist/utils/*",
+		"@pluto-config": "./dist/lib/PlutoConfig.js"
 	},
 	"dependencies": {
 		"@favware/colorette-spinner": "^1.0.1",
@@ -128,18 +166,13 @@
 			"^@/(.*)$": "<rootDir>/src/$1",
 			"^lib/(.*)$": "<rootDir>/lib/$1"
 		},
-		"moduleFileExtensions": [
-			"ts",
-			"js"
-		],
+		"moduleFileExtensions": ["ts", "js"],
 		"rootDir": "src",
 		"testRegex": ".*\\.spec\\.ts$",
 		"transform": {
 			"^.+\\.(t|j)s$": "ts-jest"
 		},
-		"collectCoverageFrom": [
-			"**/*.(t|j)s"
-		],
+		"collectCoverageFrom": ["**/*.(t|j)s"],
 		"coverageDirectory": "../coverage",
 		"testEnvironment": "node"
 	}

@@ -20,6 +20,9 @@
 		"enabled": true,
 		"rules": {
 			"recommended": true,
+			"style": {
+				"noNonNullAssertion": "off"
+			},
 			"security": {
 				"noGlobalEval": "off"
 			},

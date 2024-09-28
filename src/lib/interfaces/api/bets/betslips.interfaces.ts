@@ -1,4 +1,4 @@
-import type { Match } from "@kh-openapi/index.js";
+import type { Match } from "@kh-openapi";
 import type { IApiResponse } from "../api.interface.js";
 
 export interface IPendingBetslip {

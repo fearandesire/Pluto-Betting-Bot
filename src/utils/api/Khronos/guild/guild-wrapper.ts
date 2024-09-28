@@ -1,15 +1,15 @@
-import { GuildsApi } from '@kh-openapi/index.js'
-import { IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js'
+import { GuildsApi } from "@kh-openapi";
+import { IKH_API_CONFIG, KH_API_CONFIG } from "../KhronosInstances.js";
 
 export default class GuildWrapper {
-	private guildsApi: GuildsApi
-	private readonly khConfig: IKH_API_CONFIG = KH_API_CONFIG
+	private guildsApi: GuildsApi;
+	private readonly khConfig: IKH_API_CONFIG = KH_API_CONFIG;
 	constructor() {
-		this.guildsApi = new GuildsApi(this.khConfig)
+		this.guildsApi = new GuildsApi(this.khConfig);
 	}
 	async getGuild(guildId: string): Promise<any> {
 		return await this.guildsApi.getGuildById({
 			id: guildId,
-		})
+		});
 	}
 }

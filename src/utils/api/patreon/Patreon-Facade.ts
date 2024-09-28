@@ -1,8 +1,8 @@
-import PatreonManager from './PatreonManager.js'
-import { IPatreonReadUser, PatreonTiers } from './interfaces.js'
-import { IApiError } from '@lib/interfaces/errors/api-errors.js'
+import PatreonManager from "./PatreonManager.js";
+import { type IPatreonReadUser, PatreonTiers } from "./interfaces.js";
+import type { IApiError } from "../../../lib/interfaces/errors/api-errors.js";
 export default class PatreonFacade {
-	static readonly patreonManager = new PatreonManager()
+	static readonly patreonManager = new PatreonManager();
 
 	/**
 	 * Retrieves Patreon member data to directly return response if the user is a Patreon member
@@ -12,11 +12,11 @@ export default class PatreonFacade {
 	static async memberDetails(
 		userId: string,
 	): Promise<IPatreonReadUser | IApiError | false> {
-		const result = await this.patreonManager.reqPatreonUserData(userId)
-		if ('message' in result) {
-			return result // This is a PatreonError
+		const result = await this.patreonManager.reqPatreonUserData(userId);
+		if ("message" in result) {
+			return result; // This is a PatreonError
 		}
-		return result || false
+		return result || false;
 	}
 
 	/**
@@ -24,33 +24,32 @@ export default class PatreonFacade {
 	 * @param userId - The ID of the user
 	 * @returns {Promise<boolean | PatreonError>} - true if the user is a sponsor-tier Patreon member, PatreonError if there was an error, otherwise false
 	 */
-	static async isSponsorTier(
-		userId: string,
-	): Promise<boolean | IApiError> {
-		const memberDetails = await this.memberDetails(userId)
+	static async isSponsorTier(userId: string): Promise<boolean | IApiError> {
+		const memberDetails = await this.memberDetails(userId);
 		if (memberDetails === false) {
-			return false
+			return false;
 		}
-		if ('message' in memberDetails) {
-			return memberDetails
+		if ("message" in memberDetails) {
+			return memberDetails;
 		}
 		return (
-			memberDetails.tier.toLowerCase() ===
-			PatreonTiers.SPONSOR.toLowerCase()
-		)
+			memberDetails.tier.toLowerCase() === PatreonTiers.SPONSOR.toLowerCase()
+		);
 	}
 
 	static async isSupporterTier(userId: string): Promise<boolean> {
 		try {
 			const memberDetails = await this.memberDetails(userId);
-			if (!memberDetails || 'message' in memberDetails) {
+			if (!memberDetails || "message" in memberDetails) {
 				return false;
 			}
 			const tier = memberDetails.tier.toLowerCase();
-			return tier === PatreonTiers.SUPPORTER.toLowerCase() || 
-				   tier === PatreonTiers.SPONSOR.toLowerCase();
+			return (
+				tier === PatreonTiers.SUPPORTER.toLowerCase() ||
+				tier === PatreonTiers.SPONSOR.toLowerCase()
+			);
 		} catch (error) {
-			console.error('Error checking supporter tier:', error);
+			console.error("Error checking supporter tier:", error);
 			return false;
 		}
 	}

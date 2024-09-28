@@ -5,7 +5,7 @@ import {
 import type { AutocompleteInteraction } from "discord.js";
 import MatchCacheService from "../utils/api/routes/cache/MatchCacheService.js";
 import { CacheManager } from "../utils/cache/RedisCacheManager.js";
-import type { Match } from "@kh-openapi/index.js";
+import type { Match } from "@kh-openapi";
 import StringUtils from "../utils/common/string-utils.js"; // Import StringUtils
 
 export class AutocompleteHandler extends InteractionHandler {

@@ -11,7 +11,7 @@ import { CacheManager } from "../utils/cache/RedisCacheManager.js";
 import MatchCacheService from "../utils/api/routes/cache/MatchCacheService.js";
 import BetslipWrapper from "../utils/api/Khronos/bets/betslip-wrapper.js";
 import MatchApiWrapper from "../utils/api/Khronos/matches/matchApiWrapper.js";
-import { Match } from "@kh-openapi/index.js";
+import { Match } from "@kh-openapi";
 import { ErrorEmbeds } from "../utils/common/errors/global.js";
 import embedColors from "../lib/colorsConfig.js";
 import { patreonFooter } from "../utils/api/patreon/interfaces.js";
@@ -160,7 +160,7 @@ export class ButtonHandler extends InteractionHandler {
 			await betslipWrapper.clearPending(interaction.user.id);
 			const cancelEmbed = new EmbedBuilder()
 				.setTitle("Bet Canceled")
-				.setDescription(`Your bet has been successfully cancelled.`)
+				.setDescription("Your bet has been successfully cancelled.")
 				.setColor(embedColors.PlutoRed)
 				.setThumbnail(interaction.user.displayAvatarURL())
 				.setFooter(patreonFooter);

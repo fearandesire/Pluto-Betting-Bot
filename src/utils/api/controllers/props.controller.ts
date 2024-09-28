@@ -1,7 +1,7 @@
 import {
 	PropArraySchema,
 	PropOptionsSchema,
-} from "@utils/api/common/interfaces/index.js";
+} from "../common/interfaces/index.js";
 import {
 	GuildChannelArraySchema,
 	type RequestBody,

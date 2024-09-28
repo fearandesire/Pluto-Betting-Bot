@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { EmbedBuilder } from "discord.js";
-import { _, helpfooter } from "@lib/PlutoConfig.js";
+import { _, helpfooter } from "@pluto-config";
 import embedColors from "../../lib/colorsConfig.js";
 import type {
 	IMatchupsGrouped,

@@ -1,17 +1,17 @@
-import { KH_ValidConfigType } from '../common/interfaces/kh-pluto/kh-pluto.interface.js'
-import { AxiosKhronosInstance } from '../common/axios-config.js'
-import { OutgoingEndpoints } from '../common/endpoints.js'
-import type { Match } from '@kh-openapi/index.js'
+import { KH_ValidConfigType } from "../common/interfaces/kh-pluto/kh-pluto.interface.js";
+import { AxiosKhronosInstance } from "../common/axios-config.js";
+import { OutgoingEndpoints } from "../common/endpoints.js";
+import type { Match } from "@kh-openapi";
 
 /**
  * Service for fetching configuration or specific aggregated data from our private Khronos API
  */
 export default class KhronosManager {
-	private khronosPaths: typeof OutgoingEndpoints.paths
-	private readonly axiosKhronosInstance = AxiosKhronosInstance
+	private khronosPaths: typeof OutgoingEndpoints.paths;
+	private readonly axiosKhronosInstance = AxiosKhronosInstance;
 	constructor() {
-		this.khronosPaths = OutgoingEndpoints.paths
-		this.axiosKhronosInstance = AxiosKhronosInstance
+		this.khronosPaths = OutgoingEndpoints.paths;
+		this.axiosKhronosInstance = AxiosKhronosInstance;
 	}
 
 	/**
@@ -21,13 +21,13 @@ export default class KhronosManager {
 	async fetchConfigByType(type: KH_ValidConfigType) {
 		try {
 			const response = await this.axiosKhronosInstance({
-				method: 'get',
+				method: "get",
 				url: `${this.khronosPaths.game_schedule}/${type}`,
-			})
-			return response.data
+			});
+			return response.data;
 		} catch (err) {
-			console.error(err)
-			return false
+			console.error(err);
+			return false;
 		}
 	}
 
@@ -38,26 +38,26 @@ export default class KhronosManager {
 	 */
 	async fetchOddsForGuild(guildId: string): Promise<
 		| {
-				matches: Match[]
+				matches: Match[];
 		  }
 		| false
 	> {
 		try {
 			const response = await this.axiosKhronosInstance({
-				method: 'post',
+				method: "post",
 				url: `${this.khronosPaths.odds.by_sport}`,
 				data: {
 					guild_id: guildId,
 				},
-			})
-			const { matches } = response.data || null
-			if (!matches) return false
+			});
+			const { matches } = response.data || null;
+			if (!matches) return false;
 			return {
 				matches,
-			}
+			};
 		} catch (err) {
-			console.error(err)
-			return false
+			console.error(err);
+			return false;
 		}
 	}
 }

@@ -1,8 +1,8 @@
-import  {
+import {
 	type PropOptions,
 	PropOptionsSchema,
 	type PropZod,
-} from "@utils/api/common/interfaces/index.js";
+} from "../common/interfaces/index.js";
 import { DateManager } from "../../common/DateManager.js";
 import PropEmbedManager from "../../guilds/prop-embeds/PropEmbedManager.js";
 import { SapDiscClient } from "../../../Pluto.js";
