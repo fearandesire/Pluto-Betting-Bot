@@ -1,6 +1,6 @@
-import { SapDiscClient } from "../../../Pluto.js";
-import { resolveTeam } from "resolve-team";
-import _ from "lodash";
+import { SapDiscClient } from '../../../Pluto.js';
+import { resolveTeam } from 'resolve-team';
+import _ from 'lodash';
 import {
 	AttachmentBuilder,
 	CategoryChannelResolvable,
@@ -11,18 +11,18 @@ import {
 	GuildBasedChannel,
 	MessageCreateOptions,
 	TextChannel,
-} from "discord.js";
-import { findEmoji } from "../../bot_res/findEmoji.js";
-import { IChannelAggregated } from "../../api/routes/channels/createchannels.interface.js";
+} from 'discord.js';
+import { findEmoji } from '../../bot_res/findEmoji.js';
+import { IChannelAggregated } from '../../api/routes/channels/createchannels.interface.js';
 import {
 	ICategoryData,
 	IConfigRow,
 	SportsServing,
-} from "../../api/common/interfaces/kh-pluto/kh-pluto.interface.js";
-import path, { dirname } from "path";
-import fs from "fs/promises";
-import { fileURLToPath } from "url";
-import StringUtils from "../../common/string-utils.js";
+} from '../../api/common/interfaces/kh-pluto/kh-pluto.interface.js';
+import path, { dirname } from 'path';
+import fs from 'fs/promises';
+import { fileURLToPath } from 'url';
+import StringUtils from '../../common/string-utils.js';
 
 interface IPrepareMatchEmbed {
 	favored: string;
@@ -128,7 +128,7 @@ export default class ChannelManager {
 	 */
 	validateFavoredTeamInfo(favoredTeamInfo: any) {
 		if (!favoredTeamInfo || _.isEmpty(favoredTeamInfo.colors)) {
-			throw new Error("Unable to resolve team colors or data");
+			throw new Error('Unable to resolve team colors or data');
 		}
 	}
 
@@ -202,14 +202,14 @@ export default class ChannelManager {
 		// Correctly create an AttachmentBuilder instance with the matchImg buffer
 		let attachment: AttachmentBuilder | null = null;
 		if (matchImg) {
-			attachment = new AttachmentBuilder(matchImg, { name: "match.jpg" });
-			matchEmbed.embed.setImage("attachment://match.jpg");
+			attachment = new AttachmentBuilder(matchImg, { name: 'match.jpg' });
+			matchEmbed.embed.setImage('attachment://match.jpg');
 		}
 
 		const gameChan: TextChannel = await guild.channels.create({
 			name: `${channel.channelname}`,
 			type: ChannelType.GuildText,
-			topic: "Enjoy the Game!",
+			topic: 'Enjoy the Game!',
 			parent: guildsCategory as CategoryChannelResolvable,
 		});
 
@@ -219,7 +219,7 @@ export default class ChannelManager {
 		};
 		// Only include 'files' property if attachment is found
 		if (attachment) {
-			messageOptions["files"] = [attachment];
+			messageOptions['files'] = [attachment];
 		}
 
 		await gameChan.send(messageOptions);
@@ -227,7 +227,7 @@ export default class ChannelManager {
 
 	async prepMatchEmbed(args: IPrepareMatchEmbed) {
 		const embedClr = args.favoredTeamClr;
-		const teamEmoji = (await findEmoji(args.favored)) ?? "";
+		const teamEmoji = (await findEmoji(args.favored)) ?? '';
 		const matchVersus = `${args.awayTeamShortName} @ ${args.homeTeamShortName}`;
 		// const parseHeaderEmoji = SportEmojis[args.sport]
 		// const sanitizedHeader =
@@ -239,7 +239,7 @@ export default class ChannelManager {
 				`## ${matchVersus}\n\n🔵 **Game Details**\nThe ${teamEmoji} **${args.favored}** are favored to win this match!\n\n🔵 **Info**\n*Use \`/commands\` in <#${args.bettingChanId}> channel to place bets with Pluto*`,
 			)
 			.setFooter({
-				text: "Pluto | Created by fenixforever",
+				text: 'Pluto | Created by fenixforever',
 			});
 		return { embed: matchEmbed };
 	}
@@ -279,29 +279,29 @@ export default class ChannelManager {
 	private async fetchVsImg(matchup: string, sport: string) {
 		const matchupFileName =
 			matchup
-				.replace("at", "vs") // Ensure "at" is replaced with "vs" first
-				.replace(/-/g, "_") // Replace ALL instances of "-" with "_"
-				.split("_")
+				.replace('at', 'vs') // Ensure "at" is replaced with "vs" first
+				.replace(/-/g, '_') // Replace ALL instances of "-" with "_"
+				.split('_')
 				.map((part) =>
 					// Convert each part to Start Case without lodash
 					part
 						.toLowerCase()
 						.replace(/\b[a-z]/g, (char) => char.toUpperCase()),
 				)
-				.join("_") + ".jpg";
+				.join('_') + '.jpg';
 
 		// Ensure "vs" is always lowercase
-		const finalMatchupFileName = matchupFileName.replace("Vs", "vs");
+		const finalMatchupFileName = matchupFileName.replace('Vs', 'vs');
 
 		const __filename = fileURLToPath(import.meta.url);
 		const __dirname = dirname(__filename);
 		try {
 			// Assuming the base directory is one level up from where your script is located
-			const baseDir = path.resolve(__dirname, "../../../../"); // Adjust this path based on your actual project structure
+			const baseDir = path.resolve(__dirname, '../../../../'); // Adjust this path based on your actual project structure
 			const imagePath = path.join(
 				baseDir,
-				"assets",
-				"matchupimages",
+				'assets',
+				'matchupimages',
 				sport,
 				finalMatchupFileName,
 			);

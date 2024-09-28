@@ -1,6 +1,6 @@
-import type { IApiError } from "../../../lib/interfaces/errors/api-errors.js";
-import { type IPatreonReadUser, nonPatreonMemberMsg } from "./interfaces.js";
-import { patreonApiInstance } from "./PatreonInstance.js";
+import type { IApiError } from '../../../lib/interfaces/errors/api-errors.js';
+import { type IPatreonReadUser, nonPatreonMemberMsg } from './interfaces.js';
+import { patreonApiInstance } from './PatreonInstance.js';
 export default class PatreonManager {
 	readonly nonMemberMsg = nonPatreonMemberMsg;
 	patreonApi = patreonApiInstance;
@@ -16,7 +16,7 @@ export default class PatreonManager {
 			return res.data as IPatreonReadUser;
 		} catch (error) {
 			return {
-				message: "Failed to fetch Patreon user data",
+				message: 'Failed to fetch Patreon user data',
 				metadata: {
 					userId: userid,
 					error: error instanceof Error ? error.message : String(error),

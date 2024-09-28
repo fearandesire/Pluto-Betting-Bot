@@ -1,7 +1,7 @@
-import { KH_ValidConfigType } from "../common/interfaces/kh-pluto/kh-pluto.interface.js";
-import { AxiosKhronosInstance } from "../common/axios-config.js";
-import { OutgoingEndpoints } from "../common/endpoints.js";
-import type { Match } from "@kh-openapi";
+import { KH_ValidConfigType } from '../common/interfaces/kh-pluto/kh-pluto.interface.js';
+import { AxiosKhronosInstance } from '../common/axios-config.js';
+import { OutgoingEndpoints } from '../common/endpoints.js';
+import type { Match } from '@kh-openapi';
 
 /**
  * Service for fetching configuration or specific aggregated data from our private Khronos API
@@ -21,7 +21,7 @@ export default class KhronosManager {
 	async fetchConfigByType(type: KH_ValidConfigType) {
 		try {
 			const response = await this.axiosKhronosInstance({
-				method: "get",
+				method: 'get',
 				url: `${this.khronosPaths.game_schedule}/${type}`,
 			});
 			return response.data;
@@ -44,7 +44,7 @@ export default class KhronosManager {
 	> {
 		try {
 			const response = await this.axiosKhronosInstance({
-				method: "post",
+				method: 'post',
 				url: `${this.khronosPaths.odds.by_sport}`,
 				data: {
 					guild_id: guildId,

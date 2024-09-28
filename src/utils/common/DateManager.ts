@@ -1,18 +1,25 @@
-import { addDays, endOfDay, isAfter, isBefore, parseISO, startOfDay } from "date-fns";
+import {
+	addDays,
+	endOfDay,
+	isAfter,
+	isBefore,
+	parseISO,
+	startOfDay,
+} from 'date-fns';
 
 /**
  * A utility class for managing date-related operations, particularly for filtering items based on a date range.
  * @template T - The type of items to be filtered, must include a 'commence_time' property of type string.
  */
 export class DateManager<T extends { commence_time?: string }> {
-	private readonly daysAhead: number
+	private readonly daysAhead: number;
 
 	/**
 	 * Creates a new DateManager instance.
 	 * @param {number} daysAhead - The number of days ahead to consider in the date range.
 	 */
 	constructor(daysAhead: number) {
-		this.daysAhead = daysAhead
+		this.daysAhead = daysAhead;
 	}
 
 	/**
@@ -21,16 +28,14 @@ export class DateManager<T extends { commence_time?: string }> {
 	 * @returns {T[]} An array of items that fall within the specified date range.
 	 */
 	filterByDateRange(items: T[]): T[] {
-		const currentDate = startOfDay(new Date())
-		const futureDate = endOfDay(addDays(currentDate, this.daysAhead))
+		const currentDate = startOfDay(new Date());
+		const futureDate = endOfDay(addDays(currentDate, this.daysAhead));
 
 		return items.filter((item) => {
 			if (!item.commence_time) return false;
-			const itemDate = parseISO(item.commence_time)
-			return (
-			isAfter(itemDate, currentDate) && isBefore(itemDate, futureDate)
-			)
-		})
+			const itemDate = parseISO(item.commence_time);
+			return isAfter(itemDate, currentDate) && isBefore(itemDate, futureDate);
+		});
 	}
 
 	/**
@@ -39,10 +44,10 @@ export class DateManager<T extends { commence_time?: string }> {
 	 * @returns {boolean} True if the date is within the range, false otherwise.
 	 */
 	isWithinRange(date: string): boolean {
-		const currentDate = startOfDay(new Date())
-		const futureDate = endOfDay(addDays(currentDate, this.daysAhead))
-		const itemDate = parseISO(date)
+		const currentDate = startOfDay(new Date());
+		const futureDate = endOfDay(addDays(currentDate, this.daysAhead));
+		const itemDate = parseISO(date);
 
-		return isAfter(itemDate, currentDate) && isBefore(itemDate, futureDate)
+		return isAfter(itemDate, currentDate) && isBefore(itemDate, futureDate);
 	}
 }

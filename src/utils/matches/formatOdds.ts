@@ -1,6 +1,6 @@
 interface IFormattedOdds {
-	homeOdds: string
-	awayOdds: string
+	homeOdds: string;
+	awayOdds: string;
 }
 
 /**
@@ -14,22 +14,22 @@ export async function formatOdds(
 	homeOdds: string | number,
 	awayOdds: string | number,
 ): Promise<IFormattedOdds> {
-	let hOdds = homeOdds.toString()
-	let aOdds = awayOdds.toString()
-	const favorHome = hOdds.includes(`-`)
-	const favorAway = aOdds.includes(`-`)
+	let hOdds = homeOdds.toString();
+	let aOdds = awayOdds.toString();
+	const favorHome = hOdds.includes(`-`);
+	const favorAway = aOdds.includes(`-`);
 	if (favorHome && favorAway) {
-		hOdds = `${hOdds}`
-		aOdds = `${aOdds}`
+		hOdds = `${hOdds}`;
+		aOdds = `${aOdds}`;
 	} else if (favorHome && !favorAway) {
-		aOdds = `+${aOdds}` // away team underdog
+		aOdds = `+${aOdds}`; // away team underdog
 	} else if (favorAway && !favorHome) {
-		hOdds = `+${hOdds}` // home team underdog
+		hOdds = `+${hOdds}`; // home team underdog
 	} else {
-		throw new Error(`Invalid odds provided to be formatted.`)
+		throw new Error(`Invalid odds provided to be formatted.`);
 	}
 	return {
 		homeOdds: hOdds,
 		awayOdds: aOdds,
-	}
+	};
 }

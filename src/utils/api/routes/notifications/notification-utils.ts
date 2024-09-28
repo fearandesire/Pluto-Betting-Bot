@@ -1,5 +1,5 @@
-import { NotifyBetUsers } from './notifications.interface.js'
+import { NotifyBetUsers } from './notifications.interface.js';
 
 export function isNotifyBetUsers(payload: any): payload is NotifyBetUsers {
-	return 'winners' in payload && 'losers' in payload
+	return 'winners' in payload && 'losers' in payload;
 }

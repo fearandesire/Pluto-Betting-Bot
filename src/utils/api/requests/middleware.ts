@@ -1,13 +1,13 @@
 // @ts-nocheck
 export async function responseTime(ctx, next) {
-	const started = Date.now()
-	await next()
+	const started = Date.now();
+	await next();
 	// once all middleware below completes, this continues
-	const ellapsed = `${Date.now() - started}ms`
+	const ellapsed = `${Date.now() - started}ms`;
 	// Timestamp HH:MM:SS
-	const timestamp = `[${new Date().toLocaleTimeString()}]`
-	console.log(`${timestamp} API Response time is: ${ellapsed}`)
-	ctx.set('X-ResponseTime', ellapsed)
+	const timestamp = `[${new Date().toLocaleTimeString()}]`;
+	console.log(`${timestamp} API Response time is: ${ellapsed}`);
+	ctx.set('X-ResponseTime', ellapsed);
 }
 
 /* Boilerplate: http://localhost:5010/api/123456695 */
@@ -76,10 +76,8 @@ export async function pageNotFound(ctx, next) {
             </body>
             
             </html>
-        `
-			console.error(
-				`404 - Page Not Found - Endpoint => ${ctx.request.url}`,
-			)
+        `;
+			console.error(`404 - Page Not Found - Endpoint => ${ctx.request.url}`);
 		}
-	})
+	});
 }

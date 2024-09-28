@@ -1,6 +1,6 @@
-import type { Prop } from "@kh-openapi";
-import { z } from "zod";
-import type { PropOptions, PropZod } from "../../common/interfaces/index.js";
+import type { Prop } from '@kh-openapi';
+import { z } from 'zod';
+import type { PropOptions, PropZod } from '../../common/interfaces/index.js';
 
 export const GuildChannelSchema = z.object({
 	guild_id: z.string(),
@@ -9,7 +9,7 @@ export const GuildChannelSchema = z.object({
 
 export const GuildChannelArraySchema = z.array(GuildChannelSchema);
 
-export type PropRaw = Omit<Prop, "event" | "predictions">;
+export type PropRaw = Omit<Prop, 'event' | 'predictions'>;
 
 export interface RequestBody {
 	props: PropZod[];

@@ -1,5 +1,5 @@
-import type { Match } from "@kh-openapi";
-import type { IApiResponse } from "../api.interface.js";
+import type { Match } from '@kh-openapi';
+import type { IApiResponse } from '../api.interface.js';
 
 export interface IPendingBetslip {
 	userid: string;
@@ -63,11 +63,11 @@ export interface IValidatedBetslipData extends IApiResponse {
 }
 
 export function isFinalizedBetslip(payload: any): payload is IFinalizedBetslip {
-	return "amount" in payload;
+	return 'amount' in payload;
 }
 
 export function isValidatedBetslipData(
 	payload: any,
 ): payload is ValidatedBetslipData {
-	return "chosenTeam" in payload && "matchupsForTeam" in payload;
+	return 'chosenTeam' in payload && 'matchupsForTeam' in payload;
 }

@@ -1,6 +1,6 @@
-import embedColors from "../../../lib/colorsConfig.js";
-import { CommandInteraction, EmbedBuilder } from "discord.js";
-import { helpfooter } from "@pluto-config";
+import embedColors from '../../../lib/colorsConfig.js';
+import { CommandInteraction, EmbedBuilder } from 'discord.js';
+import { helpfooter } from '@pluto-config';
 
 export default class EmbedsSuccess {
 	private readonly embedColors = embedColors;

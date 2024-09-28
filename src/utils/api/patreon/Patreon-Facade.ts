@@ -1,6 +1,6 @@
-import PatreonManager from "./PatreonManager.js";
-import { type IPatreonReadUser, PatreonTiers } from "./interfaces.js";
-import type { IApiError } from "../../../lib/interfaces/errors/api-errors.js";
+import PatreonManager from './PatreonManager.js';
+import { type IPatreonReadUser, PatreonTiers } from './interfaces.js';
+import type { IApiError } from '../../../lib/interfaces/errors/api-errors.js';
 export default class PatreonFacade {
 	static readonly patreonManager = new PatreonManager();
 
@@ -13,7 +13,7 @@ export default class PatreonFacade {
 		userId: string,
 	): Promise<IPatreonReadUser | IApiError | false> {
 		const result = await this.patreonManager.reqPatreonUserData(userId);
-		if ("message" in result) {
+		if ('message' in result) {
 			return result; // This is a PatreonError
 		}
 		return result || false;
@@ -29,7 +29,7 @@ export default class PatreonFacade {
 		if (memberDetails === false) {
 			return false;
 		}
-		if ("message" in memberDetails) {
+		if ('message' in memberDetails) {
 			return memberDetails;
 		}
 		return (
@@ -40,7 +40,7 @@ export default class PatreonFacade {
 	static async isSupporterTier(userId: string): Promise<boolean> {
 		try {
 			const memberDetails = await this.memberDetails(userId);
-			if (!memberDetails || "message" in memberDetails) {
+			if (!memberDetails || 'message' in memberDetails) {
 				return false;
 			}
 			const tier = memberDetails.tier.toLowerCase();
@@ -49,7 +49,7 @@ export default class PatreonFacade {
 				tier === PatreonTiers.SPONSOR.toLowerCase()
 			);
 		} catch (error) {
-			console.error("Error checking supporter tier:", error);
+			console.error('Error checking supporter tier:', error);
 			return false;
 		}
 	}

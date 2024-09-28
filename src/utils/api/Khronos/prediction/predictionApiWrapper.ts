@@ -1,9 +1,9 @@
 import {
-	CreatePredictionDto,
+	type CreatePredictionDto,
 	PredictionApi,
-	UpdatePredictionDto,
-} from "@kh-openapi";
-import { type IKH_API_CONFIG, KH_API_CONFIG } from "../KhronosInstances.js";
+	type UpdatePredictionDto,
+} from '../../../../openapi/khronos/index.js';
+import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js';
 
 export default class PredictionApiWrapper {
 	private predictionApi: PredictionApi;

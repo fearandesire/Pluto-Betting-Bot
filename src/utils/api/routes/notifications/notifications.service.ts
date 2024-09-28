@@ -1,8 +1,8 @@
-import logClr from "../../../bot_res/ColorConsole.js";
+import logClr from '../../../bot_res/ColorConsole.js';
 // Import interfaces and potentially the Discord client type
-import type { SapphireClient } from "@sapphire/framework";
-import { type ColorResolvable, EmbedBuilder } from "discord.js";
-import MoneyFormatter from "../../common/money-formatting/money-format.js";
+import type { SapphireClient } from '@sapphire/framework';
+import { type ColorResolvable, EmbedBuilder } from 'discord.js';
+import MoneyFormatter from '../../common/money-formatting/money-format.js';
 import type {
 	DisplayBetNotification,
 	DisplayBetNotificationLost,
@@ -10,7 +10,7 @@ import type {
 	DisplayResultLost,
 	DisplayResultWon,
 	NotifyBetUsers,
-} from "./notifications.interface.js";
+} from './notifications.interface.js';
 
 export default class NotificationService {
 	async processBetResults(
@@ -18,7 +18,7 @@ export default class NotificationService {
 		client: SapphireClient,
 	): Promise<void> {
 		if (!data || (data.winners.length === 0 && data.losers.length === 0)) {
-			console.info(`No notifications to process`);
+			console.info('No notifications to process');
 			return;
 		}
 
@@ -84,11 +84,11 @@ export default class NotificationService {
 		const { userId, betId, result, displayResult } = betData;
 
 		// Basic message setup
-		let msg: string = "";
-		let color: ColorResolvable = `#57f287`; // Assuming this is defined elsewhere
+		let msg = '';
+		let color: ColorResolvable = '#57f287'; // Assuming this is defined elsewhere
 
 		// Check if the bet result is a win
-		if ("profit" in result && "displayProfit" in displayResult) {
+		if ('profit' in result && 'displayProfit' in displayResult) {
 			// It's safe to access properties specific to DisplayResultWon
 			const {
 				team,
@@ -102,8 +102,8 @@ export default class NotificationService {
 			};
 
 			msg = `### Congrats, you won your bet! 🎊\n# __Details__\n\n**\`${displayBetAmount}\`** on the **${team}**\n**Profit:** **\`${displayProfit}\`**\n**Payout:** **\`${displayPayout}\`**\n**Balance**: *\`${displayOldBalance}\`* → **\`${displayNewBalance}\` 💰**`;
-			color = `#57f287`;
-		} else if ("betAmount" in result) {
+			color = '#57f287';
+		} else if ('betAmount' in result) {
 			// Assuming losers always have a betAmount, adjust as necessary
 			const { team, displayBetAmount } = {
 				team: result.team,
@@ -111,15 +111,15 @@ export default class NotificationService {
 			};
 
 			msg = `### Bad news...you lost a bet\n# __Details__\n\n${displayBetAmount} bet on the **${team}**\nBetter luck next time!`;
-			color = `#ff6961`;
+			color = '#ff6961';
 		}
 
 		const embed = new EmbedBuilder()
-			.setTitle(`Bet Result`)
+			.setTitle('Bet Result')
 			.setDescription(msg)
 			.setColor(color)
 			.setFooter({
-				text: `Pluto | Dev. fenixforever`,
+				text: 'Pluto | Dev. fenixforever',
 			});
 
 		try {
@@ -130,8 +130,8 @@ export default class NotificationService {
 			// Log the error with assumed logClr function, ensuring it matches the provided error handling style
 			logClr({
 				text: `Failed to DM ${userId} | Bet ID: ${betId}\nAccount Privacy issue, Bot blocked, or no longer in the server.`,
-				color: `red`,
-				status: `error`,
+				color: 'red',
+				status: 'error',
 			});
 		}
 	}

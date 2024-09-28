@@ -1,9 +1,9 @@
-import BetslipWrapper from "./betslip-wrapper.js";
-import { PlacedBetslip } from "@kh-openapi";
-import { CommandInteraction, EmbedBuilder, Guild } from "discord.js";
-import embedColors from "../../../../lib/colorsConfig.js";
-import { helpfooter } from "@pluto-config";
-import { patreonFooter } from "../../patreon/interfaces.js";
+import BetslipWrapper from './betslip-wrapper.js';
+import { PlacedBetslip } from '@kh-openapi';
+import { CommandInteraction, EmbedBuilder, Guild } from 'discord.js';
+import embedColors from '../../../../lib/colorsConfig.js';
+import { helpfooter } from '@pluto-config';
+import { patreonFooter } from '../../patreon/interfaces.js';
 
 export default class BetslipDataManager {
 	constructor(private betslipWrapper: BetslipWrapper) {}
@@ -21,21 +21,21 @@ export default class BetslipDataManager {
 
 	async displayUsersBets(guild: Guild, bets: PlacedBetslip[]) {
 		const embed = new EmbedBuilder()
-			.setTitle("🎲 Active Bets")
+			.setTitle('🎲 Active Bets')
 			.setColor(embedColors.PlutoYellow) // Default embed color
 			.setFooter(patreonFooter || { text: helpfooter() });
 
 		if (bets.length === 0) {
 			embed
-				.setDescription("No active bets found.")
+				.setDescription('No active bets found.')
 				.setColor(embedColors.PlutoRed);
 			return embed;
 		}
 
 		bets.forEach((bet) => {
 			const teamEmoji =
-				guild.emojis.cache.find((emoji) => emoji.name === bet.team) || "";
-			const teamShortName = bet.team.split(" ").pop() ?? bet.team;
+				guild.emojis.cache.find((emoji) => emoji.name === bet.team) || '';
+			const teamShortName = bet.team.split(' ').pop() ?? bet.team;
 			const chosenTeamStr = `${teamEmoji} ${teamShortName}`;
 
 			const description = `**${chosenTeamStr}** -> **\`$${bet.amount}\`** | **Profit/Payout:** $\`${bet.profit}/$${bet.payout}\``;

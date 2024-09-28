@@ -1,6 +1,6 @@
-import { SapDiscClient } from "../../Pluto.js";
-import _ from "lodash";
-import type { Guild } from "discord.js";
+import { SapDiscClient } from '../../Pluto.js';
+import _ from 'lodash';
+import type { Guild } from 'discord.js';
 
 export default class GuildUtils {
 	async findEmoji(name: string) {
@@ -48,7 +48,7 @@ export default class GuildUtils {
 		if (guildId) {
 			const fetchedGuild = await this.getGuild(guildId);
 			if (!fetchedGuild) {
-				throw new Error("Guild not found");
+				throw new Error('Guild not found');
 			}
 			return this.getChan(fetchedGuild, chanId);
 		}
@@ -59,8 +59,8 @@ export default class GuildUtils {
 }
 
 async function parseNameForEmoji(name: string) {
-	if (name.includes(" ")) {
-		return _.last(_.split(name, " "));
+	if (name.includes(' ')) {
+		return _.last(_.split(name, ' '));
 	}
 	return name;
 }

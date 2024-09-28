@@ -11,7 +11,7 @@ export class Endpoints {
 		schedule: {
 			daily: `/schedule/daily/all`,
 		},
-	}
+	};
 }
 
 export class OutgoingEndpoints {
@@ -40,5 +40,5 @@ export class OutgoingEndpoints {
 			getAll: 'matches/all',
 			info: 'matches/info',
 		},
-	}
+	};
 }

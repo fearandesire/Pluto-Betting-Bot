@@ -1,7 +1,7 @@
-import { ApplyOptions } from '@sapphire/decorators'
-import { Command } from '@sapphire/framework'
-import { EmbedBuilder } from 'discord.js'
-import PlutoInfo from '../../utils/commands/info/info.js'
+import { ApplyOptions } from '@sapphire/decorators';
+import { Command } from '@sapphire/framework';
+import { EmbedBuilder } from 'discord.js';
+import PlutoInfo from '../../utils/commands/info/info.js';
 
 @ApplyOptions<Command.Options>({
 	description: '❓ Frequently Asked Questions & XP System',
@@ -12,13 +12,13 @@ export class UserCommand extends Command {
 			builder //
 				.setName(this.name)
 				.setDescription(this.description),
-		)
+		);
 	}
 
 	public override async chatInputRun(
 		interaction: Command.ChatInputCommandInteraction,
 	) {
-		const faqInfo = PlutoInfo.faqInfo()
+		const faqInfo = PlutoInfo.faqInfo();
 		const embed = new EmbedBuilder()
 			.setTitle(faqInfo.title)
 			.setDescription(faqInfo.description)
@@ -26,8 +26,8 @@ export class UserCommand extends Command {
 			.setThumbnail(faqInfo.thumbnail)
 			.setFooter({
 				text: faqInfo.footer,
-			})
+			});
 
-		return interaction.reply({ embeds: [embed], ephemeral: true })
+		return interaction.reply({ embeds: [embed], ephemeral: true });
 	}
 }

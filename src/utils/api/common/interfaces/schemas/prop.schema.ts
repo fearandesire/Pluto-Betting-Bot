@@ -1,10 +1,10 @@
-import { z } from 'zod'
-import { BettingMarketSchema } from './betting-market.schema.js'
+import { z } from 'zod';
+import { BettingMarketSchema } from './betting-market.schema.js';
 
 /**
  * Enum representing the possible statuses of a prop.
  */
-export const PropStatusEnum = z.enum(['pending', 'completed', 'error'])
+export const PropStatusEnum = z.enum(['pending', 'completed', 'error']);
 
 /**
  * Schema for a prop object.
@@ -52,22 +52,22 @@ export const PropSchema = z.object({
 	predictions: z.null().optional(),
 	/** Associated event object (for eager loading) */
 	event: z.null().optional(),
-})
+});
 
 /**
  * Schema for an array of prop objects.
  */
-export const PropArraySchema = z.array(PropSchema)
+export const PropArraySchema = z.array(PropSchema);
 
 /**
  * Type definition for a prop object based on the PropSchema.
  */
-export type PropZod = z.infer<typeof PropSchema>
+export type PropZod = z.infer<typeof PropSchema>;
 
 /**
  * Type definition for an array of prop objects.
  */
-export type PropArray = z.infer<typeof PropArraySchema>
+export type PropArray = z.infer<typeof PropArraySchema>;
 
 /**
  * Schema for prop options.
@@ -75,9 +75,9 @@ export type PropArray = z.infer<typeof PropArraySchema>
 export const PropOptionsSchema = z.object({
 	/** Number of days ahead to consider for props */
 	daysAhead: z.number().optional(),
-})
+});
 
 /**
  * Type definition for prop options.
  */
-export type PropOptions = z.infer<typeof PropOptionsSchema>
+export type PropOptions = z.infer<typeof PropOptionsSchema>;

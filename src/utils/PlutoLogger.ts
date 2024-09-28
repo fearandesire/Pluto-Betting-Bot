@@ -1,4 +1,8 @@
-import { EmbedBuilder, type ColorResolvable, type TextChannel } from "discord.js";
+import {
+	EmbedBuilder,
+	type ColorResolvable,
+	type TextChannel,
+} from 'discord.js';
 
 /**
  * PlutoLogger
@@ -52,33 +56,33 @@ export default class PlutoLogger {
 		const logsEmbed = new EmbedBuilder();
 		switch (data?.id) {
 			case 0:
-				color = "#c4f3fd"; // Off-White Sky Blue for General Logs
-				title = "General";
+				color = '#c4f3fd'; // Off-White Sky Blue for General Logs
+				title = 'General';
 				break;
 			case 1:
-				color = "#0000ff"; // Blue for Database Logs
-				title = "Database";
+				color = '#0000ff'; // Blue for Database Logs
+				title = 'Database';
 				break;
 			case 2:
-				color = "#ff8000"; // Orange for Game Scheduling Logs
-				title = "Game Handling";
+				color = '#ff8000'; // Orange for Game Scheduling Logs
+				title = 'Game Handling';
 				break;
 			case 3:
-				color = "#ff00ff"; // Magenta for Betting Logs
-				title = "Betting";
+				color = '#ff00ff'; // Magenta for Betting Logs
+				title = 'Betting';
 				break;
 			case 4:
-				color = "#ff0000"; // Red for Error Logs
-				title = "Error";
+				color = '#ff0000'; // Red for Error Logs
+				title = 'Error';
 				break;
 
 			case 5:
-				color = "#ffff00"; // Yellow for Warning Logs
-				title = "Warning";
+				color = '#ffff00'; // Yellow for Warning Logs
+				title = 'Warning';
 				break;
-			case "api":
-				color = "#9db08d"; // Yellow for Warning Logs
-				title = "API";
+			case 'api':
+				color = '#9db08d'; // Yellow for Warning Logs
+				title = 'API';
 				break;
 			default:
 				// Default to General Logs

@@ -1,12 +1,12 @@
 import {
 	InteractionHandler,
 	InteractionHandlerTypes,
-} from "@sapphire/framework";
-import type { AutocompleteInteraction } from "discord.js";
-import MatchCacheService from "../utils/api/routes/cache/MatchCacheService.js";
-import { CacheManager } from "../utils/cache/RedisCacheManager.js";
-import type { Match } from "@kh-openapi";
-import StringUtils from "../utils/common/string-utils.js"; // Import StringUtils
+} from '@sapphire/framework';
+import type { AutocompleteInteraction } from 'discord.js';
+import MatchCacheService from '../utils/api/routes/cache/MatchCacheService.js';
+import { CacheManager } from '../utils/cache/RedisCacheManager.js';
+import type { Match } from '@kh-openapi';
+import StringUtils from '../utils/common/string-utils.js'; // Import StringUtils
 
 export class AutocompleteHandler extends InteractionHandler {
 	private matchCacheService: MatchCacheService; // Moved to class property
@@ -33,12 +33,12 @@ export class AutocompleteHandler extends InteractionHandler {
 
 	// @ts-ignore - Weird TS Error
 	public override async parse(interaction: AutocompleteInteraction) {
-		if (interaction?.commandName !== "bet") return this.none();
+		if (interaction?.commandName !== 'bet') return this.none();
 		const focusedOption = interaction.options.getFocused(true);
 		const matches = await this.matchCacheService.getMatches();
 
 		switch (focusedOption.name) {
-			case "match": {
+			case 'match': {
 				const currentInput = focusedOption.value as string;
 				const searchResult = matches.filter((match: Match) => {
 					const homeTeam = match.home_team.toLowerCase();
@@ -55,8 +55,8 @@ export class AutocompleteHandler extends InteractionHandler {
 					})),
 				);
 			}
-			case "team": {
-				const matchSelection = interaction.options.getString("match", true);
+			case 'team': {
+				const matchSelection = interaction.options.getString('match', true);
 				const selectedMatch = matches.find(
 					(match: Match) => match.id === matchSelection,
 				);

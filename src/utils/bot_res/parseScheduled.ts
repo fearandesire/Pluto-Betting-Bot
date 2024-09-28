@@ -1,12 +1,12 @@
-import { format } from "date-fns";
-import { EmbedBuilder } from "discord.js";
-import { _, helpfooter } from "@pluto-config";
-import embedColors from "../../lib/colorsConfig.js";
+import { format } from 'date-fns';
+import { EmbedBuilder } from 'discord.js';
+import { _, helpfooter } from '@pluto-config';
+import embedColors from '../../lib/colorsConfig.js';
 import type {
 	IMatchupsGrouped,
 	IOddsField,
-} from "../matches/matchups.interface.js";
-import { patreonFooter } from "../api/patreon/interfaces.js";
+} from '../matches/matchups.interface.js';
+import { patreonFooter } from '../api/patreon/interfaces.js';
 
 /**
  * Parses data of games to be displayed in a schedule.
@@ -29,15 +29,15 @@ export default async function parseScheduled(
 	const { includeOdds, thumbnail } = options;
 
 	// Set initial title and color based on whether odds are included
-	const title = includeOdds ? ":mega: H2H Odds" : "Scheduled Games";
+	const title = includeOdds ? ':mega: H2H Odds' : 'Scheduled Games';
 	const embColor = includeOdds
 		? embedColors.PlutoBlue
 		: embedColors.PlutoYellow;
 
 	if (_.isEmpty(scheduledArr)) {
 		const description = includeOdds
-			? "There are no odds currently stored right now."
-			: "No games are scheduled for the day.";
+			? 'There are no odds currently stored right now.'
+			: 'No games are scheduled for the day.';
 		return new EmbedBuilder()
 			.setTitle(title)
 			.setColor(embedColors.PlutoRed)
@@ -66,8 +66,8 @@ export default async function parseScheduled(
 				groupedGames[date].map(await createMatchStr(includeOdds)),
 			);
 			return {
-				name: format(new Date(date), "PP"), // Format date as 'MM/DD/YYYY'
-				value: gamesList.join("\n"),
+				name: format(new Date(date), 'PP'), // Format date as 'MM/DD/YYYY'
+				value: gamesList.join('\n'),
 			};
 		}),
 	);
@@ -108,6 +108,6 @@ async function createMatchStr(
  * @returns {string} - Short name of the team.
  */
 function shortNameParse(name: string): string {
-	const nameParts = name.split(" ");
-	return nameParts.length > 0 ? nameParts[nameParts.length - 1] : "";
+	const nameParts = name.split(' ');
+	return nameParts.length > 0 ? nameParts[nameParts.length - 1] : '';
 }

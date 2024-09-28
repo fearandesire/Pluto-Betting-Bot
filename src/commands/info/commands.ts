@@ -1,8 +1,8 @@
-import { ApplyOptions } from '@sapphire/decorators'
-import { Command } from '@sapphire/framework'
-import { EmbedBuilder } from 'discord.js'
-import PlutoInfo from '../../utils/commands/info/info.js'
-import { plutoDocsUrl } from '../../lib/configs/constants.js'
+import { ApplyOptions } from '@sapphire/decorators';
+import { Command } from '@sapphire/framework';
+import { EmbedBuilder } from 'discord.js';
+import PlutoInfo from '../../utils/commands/info/info.js';
+import { plutoDocsUrl } from '../../lib/configs/constants.js';
 
 @ApplyOptions<Command.Options>({
 	description: '❓ View all commands available to use',
@@ -13,13 +13,13 @@ export class UserCommand extends Command {
 			builder //
 				.setName(this.name)
 				.setDescription(this.description),
-		)
+		);
 	}
 
 	public override async chatInputRun(
 		interaction: Command.ChatInputCommandInteraction,
 	) {
-		const commandsInfo = PlutoInfo.commandsInfo()
+		const commandsInfo = PlutoInfo.commandsInfo();
 		const embed = new EmbedBuilder()
 			.setTitle(commandsInfo.title)
 			.setDescription(commandsInfo.description)
@@ -28,11 +28,11 @@ export class UserCommand extends Command {
 			.setFooter({
 				text: commandsInfo.footer,
 			})
-			.setURL(`${plutoDocsUrl}`)
+			.setURL(`${plutoDocsUrl}`);
 
 		return interaction.reply({
 			embeds: [embed],
 			ephemeral: true,
-		})
+		});
 	}
 }

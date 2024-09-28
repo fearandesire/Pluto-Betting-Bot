@@ -4,17 +4,17 @@ import {
 	ButtonStyle,
 	EmbedBuilder,
 	type Client,
-} from "discord.js";
-import GuildUtils from "../GuildUtils.js";
+} from 'discord.js';
+import GuildUtils from '../GuildUtils.js';
 import {
 	MarketKeyTranslations,
 	type PropZod,
-} from "../../api/common/interfaces/index.js";
-import { formatDiscordTimestamp } from "../../timestampUtils.js";
-import StringUtils from "../../common/string-utils.js";
-import { resolveTeam } from "resolve-team";
-import TeamInfo from "../../common/TeamInfo.js";
-import { PropButtons } from "../../../lib/interfaces/props/prop-buttons.interface.js";
+} from '../../api/common/interfaces/index.js';
+import { formatDiscordTimestamp } from '../../timestampUtils.js';
+import StringUtils from '../../common/string-utils.js';
+import { resolveTeam } from 'resolve-team';
+import TeamInfo from '../../common/TeamInfo.js';
+import { PropButtons } from '../../../lib/interfaces/props/prop-buttons.interface.js';
 
 export default class PropEmbedManager {
 	private client: Client;
@@ -49,7 +49,7 @@ export default class PropEmbedManager {
 					const descriptionStr = `Will **${prop?.description}** get over/under **\`${prop.point}\` ${marketDescription}?**`;
 
 					const embedDetails = {
-						title: `Accuracy Challenge`,
+						title: 'Accuracy Challenge',
 						desc: descriptionStr,
 					};
 
@@ -66,22 +66,22 @@ export default class PropEmbedManager {
 						.setDescription(embedDetails.desc)
 						.addFields(
 							{
-								name: "Player",
+								name: 'Player',
 								value: `**${prop.description}**`,
 								inline: true,
 							},
 							{
-								name: "Over/Under",
+								name: 'Over/Under',
 								value: `**\`${prop.point}\`** ${standardizedMarketDescription}`,
 								inline: true,
 							},
 							{
-								name: "Match",
+								name: 'Match',
 								value: `${homeTeamWithEmoji} vs ${awayTeamWithEmoji}`,
 								inline: true,
 							},
 							{
-								name: "Date",
+								name: 'Date',
 								value: formatDiscordTimestamp(prop.commence_time),
 								inline: true,
 							},
@@ -92,11 +92,11 @@ export default class PropEmbedManager {
 					const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
 						new ButtonBuilder()
 							.setCustomId(`${PropButtons.OVER}_${prop.id}`)
-							.setLabel(`Over ⬆️`)
+							.setLabel('Over ⬆️')
 							.setStyle(ButtonStyle.Primary),
 						new ButtonBuilder()
 							.setCustomId(`${PropButtons.UNDER}_${prop.id}`)
-							.setLabel(`Under ⬇️`)
+							.setLabel('Under ⬇️')
 							.setStyle(ButtonStyle.Primary),
 					);
 					return { embed, row };
@@ -109,7 +109,7 @@ export default class PropEmbedManager {
 				continue;
 			}
 			const channel = await guild.channels.fetch(channel_id);
-			if (channel && channel.isTextBased()) {
+			if (channel?.isTextBased()) {
 				for (const { embed, row } of embeds) {
 					await channel.send({ embeds: [embed], components: [row] });
 				}

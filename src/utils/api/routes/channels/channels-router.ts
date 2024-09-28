@@ -3,11 +3,11 @@
  * @module incomingChannelsRouter
  */
 
-import Router from 'koa-router'
-import ChannelManager from '../../../guilds/channels/ChannelManager.js'
-import _ from 'lodash'
+import Router from 'koa-router';
+import ChannelManager from '../../../guilds/channels/ChannelManager.js';
+import _ from 'lodash';
 
-const ChannelsRoutes = new Router()
+const ChannelsRoutes = new Router();
 
 /**
  * Handles POST requests to create channels based on incoming data.
@@ -15,47 +15,45 @@ const ChannelsRoutes = new Router()
  */
 ChannelsRoutes.post(`/channels/incoming`, async (ctx: any) => {
 	try {
-		const channelManager = new ChannelManager()
+		const channelManager = new ChannelManager();
 		const validated = await channelManager.validateAndParseChannels(
 			ctx.request.body,
-		)
+		);
 		if (!validated) {
 			console.error({
 				route: '/channels/incoming',
-				message:
-					'Unable to create game channels; Invalid data received',
-			})
+				message: 'Unable to create game channels; Invalid data received',
+			});
 			ctx.body = {
-				message:
-					'Unable to create game channels; Invalid data received',
+				message: 'Unable to create game channels; Invalid data received',
 				statusCode: 500,
-			}
-			return
+			};
+			return;
 		}
 		const { channels, bettingChannelRows, categoriesBySport } =
-			ctx.request.body
+			ctx.request.body;
 		for (const channel of channels) {
 			await channelManager.processChannels(
 				channel,
 				bettingChannelRows,
 				categoriesBySport,
-			)
+			);
 		}
 		ctx.body = {
 			message: 'Channels created.',
 			status: 200,
-		}
+		};
 	} catch (error) {
 		console.error({
 			route: '/channels/incoming',
 			error: error,
-		})
+		});
 		ctx.body = {
 			message: `Unexpected error occurred`,
 			statusCode: 500,
-		}
+		};
 	}
-})
+});
 
 /**
  * Handles DELETE requests to remove channels based on incoming data.
@@ -64,47 +62,45 @@ ChannelsRoutes.post(`/channels/incoming`, async (ctx: any) => {
  */
 ChannelsRoutes.delete(`/channels/delete`, async (ctx: any) => {
 	try {
-		const { channelNames }: { channelNames: string[] } = ctx.request.body
+		const { channelNames }: { channelNames: string[] } = ctx.request.body;
 
 		if (channelNames === null) {
 			console.error({
 				route: '/channels/delete',
 				message: 'No channel names were received.',
-			})
+			});
 			ctx.body = {
 				message: 'No channel names were received.',
 				statusCode: 500,
-			}
-			return
+			};
+			return;
 		}
 		if (!_.isArray(channelNames)) {
 			console.error({
 				route: '/channels/delete',
-				message:
-					'Unable to process channels to delete; Invalid data received.',
-			})
+				message: 'Unable to process channels to delete; Invalid data received.',
+			});
 			ctx.body = {
-				message:
-					'Unable to process channels to delete; Invalid data received.',
+				message: 'Unable to process channels to delete; Invalid data received.',
 				statusCode: 500,
-			}
-			return
+			};
+			return;
 		}
 		for (const channelName of channelNames) {
-			const channelManager = new ChannelManager()
-			await channelManager.deleteChan(channelName)
+			const channelManager = new ChannelManager();
+			await channelManager.deleteChan(channelName);
 		}
 		console.log({
 			route: '/channels/delete',
 			message: 'Completed channel deletion.',
-		})
+		});
 		ctx.body = {
 			message: 'Channels deleted.',
 			statusCode: 200,
-		}
+		};
 	} catch (e) {
-		console.log(e)
+		console.log(e);
 	}
-})
+});
 
-export default ChannelsRoutes
+export default ChannelsRoutes;

@@ -1,4 +1,4 @@
-import { isApiError } from "../../../../lib/interfaces/errors/api-errors.js";
+import { isApiError } from '../../../../lib/interfaces/errors/api-errors.js';
 import {
 	ActionRowBuilder,
 	ButtonBuilder,
@@ -7,29 +7,29 @@ import {
 	type CommandInteraction,
 	EmbedBuilder,
 	type GuildEmoji,
-} from "discord.js";
-import type { IMatchInfoArgs } from "../../common/interfaces/kh-pluto/kh-pluto.interface.js";
-import type { IAPIBetslipPayload } from "../../../../lib/interfaces/api/bets/betslips.interfaces.js";
-import embedColors from "../../../../lib/colorsConfig.js";
-import { findEmoji } from "../../../bot_res/findEmoji.js";
-import { helpfooter } from "@pluto-config";
-import { ErrorEmbeds } from "../../../common/errors/global.js";
-import { ApiModules } from "../../../../lib/interfaces/api/api.interface.js";
-import { ApiErrorHandler } from "../error-handling/ApiErrorHandler.js";
-import type { BetsCacheService } from "../../common/bets/BetsCacheService.js";
-import BetslipWrapper from "./betslip-wrapper.js";
-import GuildWrapper from "../guild/guild-wrapper.js";
+} from 'discord.js';
+import type { IMatchInfoArgs } from '../../common/interfaces/kh-pluto/kh-pluto.interface.js';
+import type { IAPIBetslipPayload } from '../../../../lib/interfaces/api/bets/betslips.interfaces.js';
+import embedColors from '../../../../lib/colorsConfig.js';
+import { findEmoji } from '../../../bot_res/findEmoji.js';
+import { helpfooter } from '@pluto-config';
+import { ErrorEmbeds } from '../../../common/errors/global.js';
+import { ApiModules } from '../../../../lib/interfaces/api/api.interface.js';
+import { ApiErrorHandler } from '../error-handling/ApiErrorHandler.js';
+import type { BetsCacheService } from '../../common/bets/BetsCacheService.js';
+import BetslipWrapper from './betslip-wrapper.js';
+import GuildWrapper from '../guild/guild-wrapper.js';
 import type {
 	BetslipWithAggregationDTO,
 	DoubleDownDto,
 	InitBetslipRespDTO,
 	PlaceBetDto,
 	PlacedBetslip,
-} from "@kh-openapi";
-import MoneyFormatter from "../../common/money-formatting/money-format.js";
-import GuildUtils from "../../../guilds/GuildUtils.js";
-import StringUtils from "../../../common/string-utils.js";
-import PatreonFacade from "../../patreon/Patreon-Facade.js";
+} from '@kh-openapi';
+import MoneyFormatter from '../../common/money-formatting/money-format.js';
+import GuildUtils from '../../../guilds/GuildUtils.js';
+import StringUtils from '../../../common/string-utils.js';
+import PatreonFacade from '../../patreon/Patreon-Facade.js';
 
 interface InitializeParams {
 	team: string;
@@ -76,7 +76,7 @@ export class BetslipManager {
 			});
 			if (!response) {
 				const errEmb = ErrorEmbeds.internalErr(
-					"Unable to contact the server, please try again later.",
+					'Unable to contact the server, please try again later.',
 				);
 				return interaction.editReply({ embeds: [errEmb] });
 			}
@@ -88,7 +88,7 @@ export class BetslipManager {
 				};
 				if (!betslip.dateofmatchup || !betslip.opponent) {
 					const errEmb = ErrorEmbeds.internalErr(
-						"Unable to process bet due to missing required data, please try again later.",
+						'Unable to process bet due to missing required data, please try again later.',
 					);
 					return interaction.editReply({ embeds: [errEmb] });
 				}
@@ -137,9 +137,9 @@ export class BetslipManager {
 
 				const guildUtils = new GuildUtils();
 				const chosenTeamEmoji =
-					(await guildUtils.findEmoji(betslip.team)) ?? "";
+					(await guildUtils.findEmoji(betslip.team)) ?? '';
 				const oppTeamEmoji =
-					(await guildUtils.findEmoji(matchInfo.opponent)) ?? "";
+					(await guildUtils.findEmoji(matchInfo.opponent)) ?? '';
 				const chosenTeamShort = new StringUtils().getShortName(betslip.team)!;
 				const oppTeamShort = new StringUtils().getShortName(
 					matchInfo.opponent,
@@ -153,9 +153,9 @@ export class BetslipManager {
 					interaction.user.displayAvatarURL(),
 					{
 						betOnTeam: chosenTeamStr,
-						betOnTeamEmoji: chosenTeamEmoji ?? "",
+						betOnTeamEmoji: chosenTeamEmoji ?? '',
 						opponent: oppTeamStr,
-						opponentEmoji: oppTeamEmoji ?? "",
+						opponentEmoji: oppTeamEmoji ?? '',
 						chosenTeamShort,
 						oppTeamShort,
 					},
@@ -164,7 +164,7 @@ export class BetslipManager {
 				);
 			} else {
 				const errEmbed = ErrorEmbeds.internalErr(
-					"Failed to place your bet due to an unexpected response from the API. Please try again later.",
+					'Failed to place your bet due to an unexpected response from the API. Please try again later.',
 				);
 				return interaction.followUp({
 					embeds: [errEmbed],
@@ -172,7 +172,7 @@ export class BetslipManager {
 			}
 		} catch (error) {
 			const errEmbed = ErrorEmbeds.internalErr(
-				"Failed to place your bet due to an internal error. Please try again later.",
+				'Failed to place your bet due to an internal error. Please try again later.',
 			);
 			console.error(error);
 			return interaction.followUp({
@@ -186,9 +186,9 @@ export class BetslipManager {
 		embedImg: string,
 		teamDetails: {
 			betOnTeam: string;
-			betOnTeamEmoji: GuildEmoji | "";
+			betOnTeamEmoji: GuildEmoji | '';
 			opponent: string;
-			opponentEmoji: GuildEmoji | "";
+			opponentEmoji: GuildEmoji | '';
 			chosenTeamShort: string;
 			oppTeamShort: string;
 		},
@@ -204,7 +204,7 @@ export class BetslipManager {
 		const formattedBetData = this.formatBetStr(betAmount, payout, profit);
 		// Bet is placed, just need to inform the user
 		const successEmbed = new EmbedBuilder()
-			.setTitle("Bet confirmed!")
+			.setTitle('Bet confirmed!')
 			.setDescription(
 				`## ${teamDetails.betOnTeamEmoji} *vs.* ${teamDetails.opponentEmoji}\n**${teamDetails.chosenTeamShort}** | **${apiInfo.dateofmatchup}**\n${formattedBetData}`,
 			)
@@ -219,7 +219,7 @@ export class BetslipManager {
 	}
 
 	private formatBetStr(betAmount: string, payout: string, profit: string) {
-		const b = "**";
+		const b = '**';
 		const formattedBetData = `${b}${betAmount}${b} -> ${b}${payout}${b}\n${b}Profit:${b} ${b}${profit}${b}`;
 		return formattedBetData;
 	}
@@ -233,7 +233,7 @@ export class BetslipManager {
 			const patreonOverride = await PatreonFacade.isSponsorTier(userid);
 			if (isApiError(patreonOverride)) {
 				const errEmbed = ErrorEmbeds.accountErr(
-					"Unable to cancel bet due to an error.\nPlease reach out for support.",
+					'Unable to cancel bet due to an error.\nPlease reach out for support.',
 				);
 				return interaction.followUp({ embeds: [errEmbed] });
 			}
@@ -244,7 +244,7 @@ export class BetslipManager {
 				},
 			});
 			const cancelledEmbed = new EmbedBuilder()
-				.setTitle("Bet Cancellation :ticket:")
+				.setTitle('Bet Cancellation :ticket:')
 				.setDescription(
 					`Successfully cancelled bet \`${betId}\`\nYour funds have been restored.`,
 				)
@@ -287,8 +287,8 @@ export class BetslipManager {
 		let chosenTeamStr = await findEmoji(betslip.team);
 		let oppTeamStr = await findEmoji(opponent);
 
-		if (!chosenTeamStr || chosenTeamStr === "") chosenTeamStr = usersTeam;
-		if (!oppTeamStr || oppTeamStr === "") oppTeamStr = opponent;
+		if (!chosenTeamStr || chosenTeamStr === '') chosenTeamStr = usersTeam;
+		if (!oppTeamStr || oppTeamStr === '') oppTeamStr = opponent;
 
 		const { betAmount, profit, payout } = await MoneyFormatter.formatAmounts({
 			amount: betslip.amount,
@@ -297,7 +297,7 @@ export class BetslipManager {
 		});
 		const formattedBetData = this.formatBetStr(betAmount, payout, profit);
 		const embed = new EmbedBuilder()
-			.setTitle("Pending Betslip")
+			.setTitle('Pending Betslip')
 			.setDescription(
 				`## ${chosenTeamStr} *vs.* ${oppTeamStr}\n**${usersTeam}** | **${dateofmatchup}**\n${formattedBetData}\n*Confirm your bet via the buttons below*`,
 			)
@@ -307,12 +307,12 @@ export class BetslipManager {
 			});
 		const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
 			new ButtonBuilder()
-				.setCustomId("matchup_btn_confirm")
-				.setLabel("Confirm Bet")
+				.setCustomId('matchup_btn_confirm')
+				.setLabel('Confirm Bet')
 				.setStyle(ButtonStyle.Success),
 			new ButtonBuilder()
-				.setCustomId("matchup_btn_cancel")
-				.setLabel("Cancel Bet")
+				.setCustomId('matchup_btn_cancel')
+				.setLabel('Cancel Bet')
 				.setStyle(ButtonStyle.Danger),
 		);
 		await interaction.editReply({

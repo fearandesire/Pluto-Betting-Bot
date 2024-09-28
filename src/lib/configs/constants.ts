@@ -1,1 +1,1 @@
-export const plutoDocsUrl = `https://docs.pluto.fearandesire.com`
+export const plutoDocsUrl = `https://docs.pluto.fearandesire.com`;

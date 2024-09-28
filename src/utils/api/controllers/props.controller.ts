@@ -1,13 +1,13 @@
 import {
 	PropArraySchema,
 	PropOptionsSchema,
-} from "../common/interfaces/index.js";
+} from '../common/interfaces/index.js';
 import {
 	GuildChannelArraySchema,
 	type RequestBody,
 	type ValidatedData,
-} from "../routes/props/props-route.interface.js";
-import { PropsService } from "../services/props.service.js";
+} from '../routes/props/props-route.interface.js';
+import { PropsService } from '../services/props.service.js';
 
 export class PropsController {
 	private propsService: PropsService;
@@ -46,7 +46,7 @@ export class PropsController {
 		const validatedData = this.validateRequestBody(body);
 
 		if (!validatedData) {
-			return { success: false, message: "Invalid request body" };
+			return { success: false, message: 'Invalid request body' };
 		}
 
 		await this.propsService.processAndCreateEmbeds(
@@ -57,7 +57,7 @@ export class PropsController {
 
 		return {
 			success: true,
-			message: "Props processed and embeds created successfully",
+			message: 'Props processed and embeds created successfully',
 		};
 	}
 }

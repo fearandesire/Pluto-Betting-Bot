@@ -1,5 +1,5 @@
-import { format } from "date-fns";
-import redisCache from "./redisInstance.js";
+import { format } from 'date-fns';
+import redisCache from './redisInstance.js';
 import type { Redis } from 'ioredis';
 
 export class CacheManager {
@@ -11,13 +11,13 @@ export class CacheManager {
 
 	async set(key: string, data: unknown, TTL?: number) {
 		if (!key) {
-			throw new Error("No key was provided to save into cache");
+			throw new Error('No key was provided to save into cache');
 		}
 		const MAX_EXPIRATION = 1800; // Default: 30 Minutes
 		await this.cache.set(
 			key,
 			JSON.stringify(data),
-			"EX",
+			'EX',
 			TTL || MAX_EXPIRATION,
 		);
 		return true;
@@ -25,7 +25,7 @@ export class CacheManager {
 
 	async get(key: string) {
 		if (!key) {
-			throw new Error("No key was provided to save into cache");
+			throw new Error('No key was provided to save into cache');
 		}
 		const item = await this.cache.get(key);
 		if (!item) {
@@ -36,7 +36,7 @@ export class CacheManager {
 
 	async getTodaysGames() {
 		const currentDate = new Date();
-		const formattedDate = format(currentDate, "yyyy-MM-dd");
+		const formattedDate = format(currentDate, 'yyyy-MM-dd');
 		const todaysGames = await this.cache.get(formattedDate);
 		if (!todaysGames) {
 			return false;

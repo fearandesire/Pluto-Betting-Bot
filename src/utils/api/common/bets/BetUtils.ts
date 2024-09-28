@@ -1,4 +1,4 @@
-import type { Match } from "@kh-openapi";
+import type { Match } from '@kh-openapi';
 
 export default class BetUtils {
 	static calculateProfitAndPayout(
@@ -6,10 +6,10 @@ export default class BetUtils {
 		odds: number,
 	): { profit: number; payout: number } {
 		if (betAmount <= 0) {
-			throw new Error("Invalid bet amount");
+			throw new Error('Invalid bet amount');
 		}
 		if (odds === 0) {
-			throw new Error("Odds cannot be zero");
+			throw new Error('Odds cannot be zero');
 		}
 
 		// Convert American odds to decimal odds

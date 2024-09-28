@@ -1,8 +1,8 @@
-import Router from 'koa-router'
-import MatchCacheService from './MatchCacheService.js'
-import { CacheManager } from '../../../cache/RedisCacheManager.js'
+import Router from 'koa-router';
+import MatchCacheService from './MatchCacheService.js';
+import { CacheManager } from '../../../cache/RedisCacheManager.js';
 
-export const matchCache = new Router()
+export const matchCache = new Router();
 
 matchCache.post(`/cache/matches`, async (ctx: any) => {
 	try {
@@ -10,18 +10,18 @@ matchCache.post(`/cache/matches`, async (ctx: any) => {
 			ctx.body = {
 				success: false,
 				error: 'No matches were received.',
-			}
+			};
 		}
-		const { matches } = ctx.request.body
-		await new MatchCacheService(new CacheManager()).cacheMatches(matches)
+		const { matches } = ctx.request.body;
+		await new MatchCacheService(new CacheManager()).cacheMatches(matches);
 		ctx.body = {
 			success: true,
-		}
+		};
 	} catch (error) {
-		console.error(error)
+		console.error(error);
 		ctx.body = {
 			success: false,
 			error,
-		}
+		};
 	}
-})
+});

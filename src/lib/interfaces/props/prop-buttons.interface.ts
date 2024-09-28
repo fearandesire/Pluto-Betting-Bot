@@ -10,11 +10,11 @@ export interface ParsedPropButton {
 
 /**
  * Parses a custom ID string from a prop button interaction.
- * 
+ *
  * @param customId - The custom ID string from the button interaction.
  * @returns An object containing the action ('over' or 'under') and the prop ID,
  *          or null if the custom ID doesn't match the expected format.
- * 
+ *
  */
 export function parsePropButtonId(customId: string): ParsedPropButton | null {
 	for (const [key, value] of Object.entries(PropButtons)) {

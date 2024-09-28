@@ -1,5 +1,5 @@
-import { GuildsApi } from "@kh-openapi";
-import { IKH_API_CONFIG, KH_API_CONFIG } from "../KhronosInstances.js";
+import { GuildsApi } from '@kh-openapi';
+import { IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js';
 
 export default class GuildWrapper {
 	private guildsApi: GuildsApi;

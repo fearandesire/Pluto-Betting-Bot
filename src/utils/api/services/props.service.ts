@@ -2,16 +2,16 @@ import {
 	type PropOptions,
 	PropOptionsSchema,
 	type PropZod,
-} from "../common/interfaces/index.js";
-import { DateManager } from "../../common/DateManager.js";
-import PropEmbedManager from "../../guilds/prop-embeds/PropEmbedManager.js";
-import { SapDiscClient } from "../../../Pluto.js";
+} from '../common/interfaces/index.js';
+import { DateManager } from '../../common/DateManager.js';
+import PropEmbedManager from '../../guilds/prop-embeds/PropEmbedManager.js';
+import { SapDiscClient } from '../../../Pluto.js';
 
 /**
  * Service for processing and managing props.
  */
 export class PropsService {
-	private defaultFilteredMarketKey = "totals";
+	private defaultFilteredMarketKey = 'totals';
 
 	/**
 	 * Initializes a new instance of the PropsService class.

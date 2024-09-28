@@ -1,9 +1,9 @@
-import { ApplyOptions } from '@sapphire/decorators'
-import { Command } from '@sapphire/framework'
-import { BetslipManager } from '../../utils/api/Khronos/bets/BetslipsManager.js'
-import { BetsCacheService } from '../../utils/api/common/bets/BetsCacheService.js'
-import { CacheManager } from '../../utils/cache/RedisCacheManager.js'
-import BetslipWrapper from '../../utils/api/Khronos/bets/betslip-wrapper.js'
+import { ApplyOptions } from '@sapphire/decorators';
+import { Command } from '@sapphire/framework';
+import { BetslipManager } from '../../utils/api/Khronos/bets/BetslipsManager.js';
+import { BetsCacheService } from '../../utils/api/common/bets/BetsCacheService.js';
+import { CacheManager } from '../../utils/cache/RedisCacheManager.js';
+import BetslipWrapper from '../../utils/api/Khronos/bets/betslip-wrapper.js';
 
 @ApplyOptions<Command.Options>({
 	description:
@@ -22,18 +22,18 @@ export class UserCommand extends Command {
 						.setDescription('The bet you are wanting to cancel')
 						.setRequired(true),
 				),
-		)
+		);
 	}
 
 	public override async chatInputRun(
 		interaction: Command.ChatInputCommandInteraction,
 	) {
-		await interaction.deferReply()
-		const userid = interaction.user.id
-		const betId = interaction.options.getInteger('betid')!
+		await interaction.deferReply();
+		const userid = interaction.user.id;
+		const betId = interaction.options.getInteger('betid')!;
 		return new BetslipManager(
 			new BetslipWrapper(),
 			new BetsCacheService(new CacheManager()),
-		).cancelBet(interaction, userid, betId)
+		).cancelBet(interaction, userid, betId);
 	}
 }

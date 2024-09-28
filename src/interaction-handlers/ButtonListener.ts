@@ -1,26 +1,26 @@
 import {
 	InteractionHandler,
 	InteractionHandlerTypes,
-} from "@sapphire/framework";
-import type { ButtonInteraction } from "discord.js";
-import { EmbedBuilder } from "discord.js";
-import { BetslipManager } from "../utils/api/Khronos/bets/BetslipsManager.js";
-import { btnIds } from "../lib/interfaces/interaction-handlers/interaction-handlers.interface.js";
-import { BetsCacheService } from "../utils/api/common/bets/BetsCacheService.js";
-import { CacheManager } from "../utils/cache/RedisCacheManager.js";
-import MatchCacheService from "../utils/api/routes/cache/MatchCacheService.js";
-import BetslipWrapper from "../utils/api/Khronos/bets/betslip-wrapper.js";
-import MatchApiWrapper from "../utils/api/Khronos/matches/matchApiWrapper.js";
-import { Match } from "@kh-openapi";
-import { ErrorEmbeds } from "../utils/common/errors/global.js";
-import embedColors from "../lib/colorsConfig.js";
-import { patreonFooter } from "../utils/api/patreon/interfaces.js";
-import PredictionApiWrapper from "../utils/api/Khronos/prediction/predictionApiWrapper.js";
-import PropsApiWrapper from "../utils/api/Khronos/props/propsApiWrapper.js";
+} from '@sapphire/framework';
+import type { ButtonInteraction } from 'discord.js';
+import { EmbedBuilder } from 'discord.js';
+import { BetslipManager } from '../utils/api/Khronos/bets/BetslipsManager.js';
+import { btnIds } from '../lib/interfaces/interaction-handlers/interaction-handlers.interface.js';
+import { BetsCacheService } from '../utils/api/common/bets/BetsCacheService.js';
+import { CacheManager } from '../utils/cache/RedisCacheManager.js';
+import MatchCacheService from '../utils/api/routes/cache/MatchCacheService.js';
+import BetslipWrapper from '../utils/api/Khronos/bets/betslip-wrapper.js';
+import MatchApiWrapper from '../utils/api/Khronos/matches/matchApiWrapper.js';
+import type { Match } from '../openapi/khronos/models/Match.js';
+import { ErrorEmbeds } from '../utils/common/errors/global.js';
+import embedColors from '../lib/colorsConfig.js';
+import { patreonFooter } from '../utils/api/patreon/interfaces.js';
+import PredictionApiWrapper from '../utils/api/Khronos/prediction/predictionApiWrapper.js';
+import PropsApiWrapper from '../utils/api/Khronos/props/propsApiWrapper.js';
 import {
 	parsePropButtonId,
 	PropButtons,
-} from "../lib/interfaces/props/prop-buttons.interface.js";
+} from '../lib/interfaces/props/prop-buttons.interface.js';
 
 /**
  * @module ButtonListener
@@ -79,7 +79,7 @@ export class ButtonHandler extends InteractionHandler {
 				if (!cachedBet) {
 					console.error({
 						method: this.constructor.name,
-						message: "Cached bet not found",
+						message: 'Cached bet not found',
 						data: {
 							userId: interaction.user.id,
 						},
@@ -105,7 +105,7 @@ export class ButtonHandler extends InteractionHandler {
 					if (!locatedMatch) {
 						console.error({
 							method: this.constructor.name,
-							message: "Match not found after API fetch",
+							message: 'Match not found after API fetch',
 							data: {
 								matchup_id: matchId,
 							},
@@ -159,8 +159,8 @@ export class ButtonHandler extends InteractionHandler {
 			const betslipWrapper = new BetslipWrapper();
 			await betslipWrapper.clearPending(interaction.user.id);
 			const cancelEmbed = new EmbedBuilder()
-				.setTitle("Bet Canceled")
-				.setDescription("Your bet has been successfully cancelled.")
+				.setTitle('Bet Canceled')
+				.setDescription('Your bet has been successfully cancelled.')
 				.setColor(embedColors.PlutoRed)
 				.setThumbnail(interaction.user.displayAvatarURL())
 				.setFooter(patreonFooter);
@@ -183,21 +183,21 @@ export class ButtonHandler extends InteractionHandler {
 				dateofmatchup,
 				opponent: matchOpponent,
 			});
-		} else if (payload.action === "over" || payload.action === "under") {
+		} else if (payload.action === 'over' || payload.action === 'under') {
 			const predictionApi = new PredictionApiWrapper();
 			const propsApi = new PropsApiWrapper();
 
 			try {
 				const prop = await propsApi.getPropById(payload.propId);
 				if (!prop) {
-					throw new Error("Prop not found");
+					throw new Error('Prop not found');
 				}
 
 				await predictionApi.createPrediction({
 					user_id: interaction.user.id,
 					prop_id: payload.propId,
-					choice: payload.action === PropButtons.OVER ? "over" : "under",
-					status: "pending",
+					choice: payload.action === PropButtons.OVER ? 'over' : 'under',
+					status: 'pending',
 					guild_id: interaction.guildId!,
 					market_key: prop.market_key,
 				});
@@ -211,9 +211,9 @@ export class ButtonHandler extends InteractionHandler {
 					interaction.deleteReply().catch(console.error);
 				}, 5000);
 			} catch (error: any) {
-				console.error("Error storing prediction:", error);
+				console.error('Error storing prediction:', error);
 				await interaction.editReply({
-					content: `${error?.message || "There was an error storing your prediction."}`,
+					content: `${error?.message || 'There was an error storing your prediction.'}`,
 				});
 			}
 		} else {

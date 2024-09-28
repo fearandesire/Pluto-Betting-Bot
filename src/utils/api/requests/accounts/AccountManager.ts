@@ -1,25 +1,25 @@
-import { CommandInteraction, GuildMember } from "discord.js";
-import { ApiModules } from "../../../../lib/interfaces/api/api.interface.js";
-import { ApiErrorHandler } from "../../Khronos/error-handling/ApiErrorHandler.js";
+import { CommandInteraction, GuildMember } from 'discord.js';
+import { ApiModules } from '../../../../lib/interfaces/api/api.interface.js';
+import { ApiErrorHandler } from '../../Khronos/error-handling/ApiErrorHandler.js';
 import {
 	AccountsApi,
 	GetBalanceDto,
 	GetLeaderboardDto,
 	GetProfileDto,
-} from "@kh-openapi";
+} from '@kh-openapi';
 import {
 	IKH_API_CONFIG,
 	KH_API_CONFIG,
-} from "../../Khronos/KhronosInstances.js";
-import _ from "lodash";
-import GuildUtils from "../../../guilds/GuildUtils.js";
-import EmbedsSuccess from "../../../embeds/template/success-template.js";
-import MoneyFormatter from "../../common/money-formatting/money-format.js";
-import { SapDiscClient } from "../../../../Pluto.js";
-import PaginationUtilities from "../../../embeds/pagination-utilities.js";
-import { plutoWelcomeMsg } from "../../common/interfaces/kh-pluto/kh-pluto.interface.js";
-import { ErrorEmbeds } from "../../../common/errors/global.js";
-import PatreonFacade from "../../patreon/Patreon-Facade.js";
+} from '../../Khronos/KhronosInstances.js';
+import _ from 'lodash';
+import GuildUtils from '../../../guilds/GuildUtils.js';
+import EmbedsSuccess from '../../../embeds/template/success-template.js';
+import MoneyFormatter from '../../common/money-formatting/money-format.js';
+import { SapDiscClient } from '../../../../Pluto.js';
+import PaginationUtilities from '../../../embeds/pagination-utilities.js';
+import { plutoWelcomeMsg } from '../../common/interfaces/kh-pluto/kh-pluto.interface.js';
+import { ErrorEmbeds } from '../../../common/errors/global.js';
+import PatreonFacade from '../../patreon/Patreon-Facade.js';
 
 export class AccountsWrapper {
 	private accountsApi: AccountsApi;
@@ -136,7 +136,7 @@ export class AccountManager {
 				const guildUtils = new GuildUtils();
 				const guild = await guildUtils.getGuild(interaction.guild.id);
 				if (!guild) {
-					throw new Error("Guild not identified from interaction.");
+					throw new Error('Guild not identified from interaction.');
 				}
 				const user: GuildMember | undefined = await guildUtils.getUser(
 					guild,
@@ -144,11 +144,11 @@ export class AccountManager {
 				);
 				const userAvatar = user?.displayAvatarURL();
 				if (!userAvatar) {
-					throw new Error("User avatar not found.");
+					throw new Error('User avatar not found.');
 				}
 				const formattedBalance = MoneyFormatter.toUSD(balance);
 				const Tier = _.upperFirst(tier);
-				let descStr = "";
+				let descStr = '';
 				if (isNewUser) {
 					descStr += `${plutoWelcomeMsg}\n\n💰 **Balance:** \`${formattedBalance}\`\n🛡️ **Level:** \`${level}\`\n💫 **Tier:** \`${Tier}\``;
 				} else {
@@ -174,7 +174,7 @@ export class AccountManager {
 			const res = await this.accountsWrapper.getLeaderboard();
 			const currentGuild = interaction.guild;
 			if (!currentGuild) {
-				throw new Error("Guild not identified from interaction.");
+				throw new Error('Guild not identified from interaction.');
 			}
 			const guild = await SapDiscClient.guilds.fetch(interaction.guild.id);
 			// Resolve current dsicord usernames

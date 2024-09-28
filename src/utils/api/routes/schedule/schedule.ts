@@ -1,12 +1,12 @@
-import Router from "koa-router";
-import _ from "lodash";
-import { Log } from "@pluto-config";
-import GameSchedule from "../../requests/matchups/GameSchedule.js";
+import Router from 'koa-router';
+import _ from 'lodash';
+import { Log } from '@pluto-config';
+import GameSchedule from '../../requests/matchups/GameSchedule.js';
 import {
 	type IConfigRow,
 	type IMatchupAggregated,
 	SportsServing,
-} from "../../common/interfaces/kh-pluto/kh-pluto.interface.js";
+} from '../../common/interfaces/kh-pluto/kh-pluto.interface.js';
 
 /**
  * Responsible for incoming requests to post the daily schedule
@@ -19,7 +19,7 @@ interface ScheduleRequestBody {
 	dailyScheduleRows: IConfigRow[];
 }
 
-ScheduleRouter.post("/schedule/daily/all", async (ctx) => {
+ScheduleRouter.post('/schedule/daily/all', async (ctx) => {
 	try {
 		const requestBody: ScheduleRequestBody = ctx.request
 			.body as ScheduleRequestBody;
@@ -44,7 +44,7 @@ ScheduleRouter.post("/schedule/daily/all", async (ctx) => {
 		}
 
 		ctx.body = {
-			message: "Daily schedule successfully sent!",
+			message: 'Daily schedule successfully sent!',
 		};
 		ctx.status = 200;
 	} catch (err) {
@@ -81,7 +81,7 @@ async function validateAndParseSchedule(
 		dailyScheduleRows,
 	);
 	if (_.isEmpty(aggregatedMatchups) || _.isEmpty(dailyScheduleRows)) {
-		throw new Error("Invalid or missing schedule data");
+		throw new Error('Invalid or missing schedule data');
 	}
 
 	return { aggregatedMatchups, dailyScheduleRows };

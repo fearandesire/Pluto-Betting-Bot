@@ -1,5 +1,5 @@
-import { default as Redis } from "ioredis"; // Issue from https://github.com/redis/ioredis/issues/1624
-import { bold, green, yellow } from "colorette";
+import { default as Redis } from 'ioredis'; // Issue from https://github.com/redis/ioredis/issues/1624
+import { bold, green, yellow } from 'colorette';
 
 const { R_HOST, R_PORT, R_PASS, R_DB } = process.env;
 
@@ -14,20 +14,20 @@ const redisCache = new Redis({
 	connectTimeout: 10000,
 	retryStrategy: (times) => {
 		if (times >= MAX_RETRY_ATTEMPTS) {
-			throw new Error("Max retry attempts reached");
+			throw new Error('Max retry attempts reached');
 		}
 		return Math.min(2 ** times * 1000, 60000);
 	},
 	db: Number(R_DB),
 });
 
-redisCache.on("connect", () => {
+redisCache.on('connect', () => {
 	console.log(
 		bold(green(`[REDIS] Connected to Redis server\nDB Selection: ${R_DB}`)),
 	);
 });
 
-redisCache.on("error", (err) => {
+redisCache.on('error', (err) => {
 	console.error(err);
 	process.exit(1);
 });

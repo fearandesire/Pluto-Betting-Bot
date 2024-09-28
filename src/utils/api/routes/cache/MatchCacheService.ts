@@ -1,7 +1,7 @@
-import { CacheManager } from "../../../cache/RedisCacheManager.js";
-import { Match } from "@kh-openapi";
-import MatchApiWrapper from "../../Khronos/matches/matchApiWrapper.js";
-import { resolveTeam } from "resolve-team";
+import { CacheManager } from '../../../cache/RedisCacheManager.js';
+import { Match } from '@kh-openapi';
+import MatchApiWrapper from '../../Khronos/matches/matchApiWrapper.js';
+import { resolveTeam } from 'resolve-team';
 
 export default class MatchCacheService {
 	constructor(private cache: CacheManager) {}
@@ -12,15 +12,15 @@ export default class MatchCacheService {
 	}
 
 	async cacheMatches(matches: Match[]) {
-		await this.cache.set("matches", matches, 86400);
+		await this.cache.set('matches', matches, 86400);
 		console.log({
 			method: this.cacheMatches.name,
-			message: "Match Cache updated successfully.",
+			message: 'Match Cache updated successfully.',
 		});
 	}
 
 	async getMatches() {
-		return await this.cache.get("matches");
+		return await this.cache.get('matches');
 	}
 
 	async getMatch(matchid: string): Promise<Match | null> {

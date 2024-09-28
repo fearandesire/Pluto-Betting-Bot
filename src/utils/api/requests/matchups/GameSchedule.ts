@@ -1,44 +1,44 @@
-import { ColorResolvable, EmbedBuilder, TextChannel } from 'discord.js'
-import embedColors from '../../../../lib/colorsConfig.js'
-import GuildUtils from '../../../guilds/GuildUtils.js'
+import { ColorResolvable, EmbedBuilder, TextChannel } from 'discord.js';
+import embedColors from '../../../../lib/colorsConfig.js';
+import GuildUtils from '../../../guilds/GuildUtils.js';
 import {
 	IConfigRow,
 	IMatchupAggregated,
 	SportsServing,
-} from '../../common/interfaces/kh-pluto/kh-pluto.interface.js'
-import { OutgoingEndpoints } from '../../common/endpoints.js'
-import { AxiosKhronosInstance } from '../../common/axios-config.js'
+} from '../../common/interfaces/kh-pluto/kh-pluto.interface.js';
+import { OutgoingEndpoints } from '../../common/endpoints.js';
+import { AxiosKhronosInstance } from '../../common/axios-config.js';
 
 /**
  * Responsible for retrieving & displaying upcoming games / matchups
  */
 export default class GameSchedule {
-	private readonly outRoutes = OutgoingEndpoints.paths
-	private readonly axiosKhronosInstance = AxiosKhronosInstance
+	private readonly outRoutes = OutgoingEndpoints.paths;
+	private readonly axiosKhronosInstance = AxiosKhronosInstance;
 	constructor() {
-		this.outRoutes = OutgoingEndpoints.paths
-		this.axiosKhronosInstance = AxiosKhronosInstance
+		this.outRoutes = OutgoingEndpoints.paths;
+		this.axiosKhronosInstance = AxiosKhronosInstance;
 	}
 
 	async fetchViaSport(sport: SportsServing) {
-		const gamesArr = await this.reqAll()
+		const gamesArr = await this.reqAll();
 		// Remove any that don't have the `sport` as their `sport_title`
-		return this.filterBySport(gamesArr, sport)
+		return this.filterBySport(gamesArr, sport);
 	}
 
 	async createScheduleEmbed(desc: string) {
 		// Make today's date string: `DD/MM/YYYY`
-		const date = new Date()
+		const date = new Date();
 		const today = date.toLocaleDateString('en-US', {
 			month: '2-digit',
 			day: '2-digit',
 			year: 'numeric',
-		})
+		});
 		const scheduleEmbed = new EmbedBuilder()
 			.setDescription(`## Daily Schedule | ${today}\n${desc}`)
 			.setColor(embedColors.PlutoRed as ColorResolvable)
-			.setFooter({ text: `dev. fenixforever` })
-		return { scheduleEmbed }
+			.setFooter({ text: `dev. fenixforever` });
+		return { scheduleEmbed };
 	}
 
 	/**
@@ -54,43 +54,43 @@ export default class GameSchedule {
 		rows: IConfigRow[],
 	) {
 		// Fetch the schedule, format it
-		const gamesStr = await this.parseAndFormat(games)
-		const { scheduleEmbed } = await this.createScheduleEmbed(gamesStr)
+		const gamesStr = await this.parseAndFormat(games);
+		const { scheduleEmbed } = await this.createScheduleEmbed(gamesStr);
 		// Send the schedule to every daily_schedule channel
 		for (const row of rows) {
-			const chanId = row.setting_value
-			const guildId = row.guild_id
+			const chanId = row.setting_value;
+			const guildId = row.guild_id;
 			try {
 				const chan = await new GuildUtils().getChanViaGuild({
 					guildId,
 					chanId,
-				})
+				});
 				if (!chan) {
-					throw new Error(`Failed to locate channel`)
+					throw new Error(`Failed to locate channel`);
 				}
 				if (chan instanceof TextChannel) {
-					await chan.send({ embeds: [scheduleEmbed] })
+					await chan.send({ embeds: [scheduleEmbed] });
 				}
 			} catch (err) {
-				console.error(err)
+				console.error(err);
 			}
 		}
 	}
 
 	async parseAndFormat(games: IMatchupAggregated[]) {
-		let scheduleStr = ''
+		let scheduleStr = '';
 		for (const game of games) {
-			const formattedGame = await this.formatForSchedule(game)
-			scheduleStr += `${formattedGame}\n` // Append each game's string
+			const formattedGame = await this.formatForSchedule(game);
+			scheduleStr += `${formattedGame}\n`; // Append each game's string
 
 			// Check Discord character limit
 			if (scheduleStr.length > 1950) {
 				// Keeping some buffer
-				scheduleStr += '... and more games'
-				break
+				scheduleStr += '... and more games';
+				break;
 			}
 		}
-		return scheduleStr
+		return scheduleStr;
 	}
 
 	/**
@@ -100,27 +100,27 @@ export default class GameSchedule {
 	 * 3. Returns the formatted scheduled games
 	 */
 	async getFormattedSchedule(sport: SportsServing) {
-		let games
+		let games;
 		if (!sport) {
-			games = await this.reqAll() // Fetches schedule
+			games = await this.reqAll(); // Fetches schedule
 		} else {
-			games = await this.fetchViaSport(sport)
+			games = await this.fetchViaSport(sport);
 		}
-		let scheduleStr = ''
+		let scheduleStr = '';
 
 		for (const game of games) {
-			const formattedGame = await this.formatForSchedule(game)
-			scheduleStr += `${formattedGame}\n` // Append each game's string
+			const formattedGame = await this.formatForSchedule(game);
+			scheduleStr += `${formattedGame}\n`; // Append each game's string
 
 			// Validate Discord Embed limit
 			if (scheduleStr.length > 4096) {
 				// WIP | Need a solution for pages in this new system
-				scheduleStr += '... and more!'
-				break
+				scheduleStr += '... and more!';
+				break;
 			}
 		}
 
-		return scheduleStr
+		return scheduleStr;
 	}
 
 	/**
@@ -136,51 +136,50 @@ export default class GameSchedule {
 		const sportEmojis: { [key: string]: string } = {
 			nba: '🏀',
 			nfl: '🏈',
-		}
+		};
 
 		// Extract the short names of the home and away teams
-		const [homeTeamShort, awayTeamShort] = [
-			game.home_team,
-			game.away_team,
-		].map((name) => name.split(' ').pop())
+		const [homeTeamShort, awayTeamShort] = [game.home_team, game.away_team].map(
+			(name) => name.split(' ').pop(),
+		);
 
 		const homeTeamEmojiPromise = await new GuildUtils().findEmoji(
 			game.home_team,
-		)
+		);
 		const awayTeamEmojiPromise = await new GuildUtils().findEmoji(
 			game.away_team,
-		)
+		);
 
 		const [homeTeamEmojiResult, awayTeamEmojiResult] = await Promise.all([
 			homeTeamEmojiPromise,
 			awayTeamEmojiPromise,
-		])
+		]);
 
 		// Use the results of the promises, falling back to the sport emoji if necessary
 		const homeTeamEmoji =
-			homeTeamEmojiResult ?? sportEmojis[game.sport_title.toLowerCase()]
+			homeTeamEmojiResult ?? sportEmojis[game.sport_title.toLowerCase()];
 		const awayTeamEmoji =
-			awayTeamEmojiResult ?? sportEmojis[game.sport_title.toLowerCase()]
+			awayTeamEmojiResult ?? sportEmojis[game.sport_title.toLowerCase()];
 
 		// Convert the game's commence time to a Unix timestamp
 		const unixTimestamp = Math.floor(
 			new Date(game.commence_time).getTime() / 1000,
-		)
+		);
 		// Build and return the formatted string
-		return `**${awayTeamEmoji} ${awayTeamShort} *(${game.teamRecords[1]})*** *\`at\`* **${homeTeamEmoji} ${homeTeamShort} *(${game.teamRecords[0]})*** @ *<t:${unixTimestamp}:t>*`
+		return `**${awayTeamEmoji} ${awayTeamShort} *(${game.teamRecords[1]})*** *\`at\`* **${homeTeamEmoji} ${homeTeamShort} *(${game.teamRecords[0]})*** @ *<t:${unixTimestamp}:t>*`;
 	}
 
 	async reqAll() {
 		const reqGamesSched = await this.axiosKhronosInstance({
 			method: `get`,
 			url: `${this.outRoutes.matches.getAll}`,
-		})
-		return reqGamesSched.data
+		});
+		return reqGamesSched.data;
 	}
 
 	async filterBySport(gamesArr: IMatchupAggregated[], sport: SportsServing) {
 		return gamesArr.filter(
 			(game) => game.sport_title.toLowerCase() === sport.toLowerCase(),
-		)
+		);
 	}
 }
