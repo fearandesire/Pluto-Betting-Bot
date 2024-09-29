@@ -141,6 +141,7 @@ export class ButtonHandler extends InteractionHandler {
 		}
 
 		const parsedPropButton = parsePropButtonId(interaction.customId);
+
 		if (parsedPropButton) {
 			await interaction.deferReply({ ephemeral: true });
 			return this.some(parsedPropButton);
@@ -198,7 +199,7 @@ export class ButtonHandler extends InteractionHandler {
 				await predictionApi.createPrediction({
 					user_id: interaction.user.id,
 					prop_id: payload.propId,
-					choice: payload.action === PropButtons.OVER ? 'over' : 'under',
+					choice: payload.action,
 					status: 'pending',
 					guild_id: interaction.guildId!,
 					market_key: prop.market_key,
