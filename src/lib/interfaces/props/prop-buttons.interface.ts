@@ -9,7 +9,7 @@ export interface ParsedPropButton {
 }
 
 /**
- * Parses a custom ID string from a prop button interaction.
+ * Identify the event / prop ID from the label of the button, additionally identifies the choice the user made
  *
  * @param customId - The custom ID string from the button interaction.
  * @returns An object containing the action ('over' or 'under') and the prop ID,
