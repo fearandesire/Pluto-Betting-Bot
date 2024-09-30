@@ -23,6 +23,7 @@ export default class PredictionApiWrapper {
 				throw new Error("You've already made a prediction for this prop!");
 			}
 			// Handle unknown errors
+			console.error('Unknown error creating prediction', error);
 			throw error;
 		}
 	}
