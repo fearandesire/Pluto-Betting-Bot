@@ -5,6 +5,7 @@ import {
 	isBefore,
 	parseISO,
 	startOfDay,
+	format,
 } from 'date-fns';
 
 /**
@@ -18,8 +19,8 @@ export class DateManager<T extends { commence_time?: string }> {
 	 * Creates a new DateManager instance.
 	 * @param {number} daysAhead - The number of days ahead to consider in the date range.
 	 */
-	constructor(daysAhead: number) {
-		this.daysAhead = daysAhead;
+	constructor(daysAhead?: number | null) {
+		this.daysAhead = daysAhead || null;
 	}
 
 	/**
@@ -49,5 +50,18 @@ export class DateManager<T extends { commence_time?: string }> {
 		const itemDate = parseISO(date);
 
 		return isAfter(itemDate, currentDate) && isBefore(itemDate, futureDate);
+	}
+
+	/**
+	 * Creates a simple human-readable date string from an ISO 8601 timestamp.
+	 * @param {string} isoTimestamp - The ISO 8601 timestamp to format.
+	 * @returns {string} A formatted string in the format 'day of the week, time (12 hour format)'.
+	 * @example
+	 * // returns 'Mon, 2:00 PM'
+	 * createSimpleHumanReadableDate('2023-04-10T14:00:00Z')
+	 */
+	humanReadable(isoTimestamp: string): string {
+		const date = parseISO(isoTimestamp);
+		return format(date, 'EEE, h:mm a');
 	}
 }
