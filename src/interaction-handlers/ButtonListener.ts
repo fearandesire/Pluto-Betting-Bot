@@ -214,7 +214,6 @@ export class ButtonHandler extends InteractionHandler {
 					interaction.deleteReply().catch(console.error);
 				}, 5000);
 			} catch (error: any) {
-				console.error('Error storing prediction:', error);
 				await interaction.editReply({
 					content: `${error?.message || 'There was an error storing your prediction.'}`,
 				});
