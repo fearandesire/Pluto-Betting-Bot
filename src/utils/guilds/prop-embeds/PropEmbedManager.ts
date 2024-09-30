@@ -164,8 +164,7 @@ export default class PropEmbedManager {
 						.setTitle(title)
 						.setDescription(desc)
 						.addFields(fields)
-						.setColor(teamColor)
-						.setTimestamp();
+						.setColor(teamColor);
 
 					// Create buttons
 					const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
