@@ -28,7 +28,97 @@ export default class PropEmbedManager {
 		const emoji = this.client.emojis.cache.find(
 			(emoji) => emoji.name?.toLowerCase() === shortName.toLowerCase(),
 		);
-		return emoji ? `${emoji} ${teamName}` : teamName;
+		return emoji ? `${emoji}` : teamName;
+	}
+
+	private getEmbedDetails(prop: PropZod): {
+		title: string;
+		desc: string;
+		fields: { name: string; value: string; inline: boolean }[];
+		buttons: ButtonBuilder[];
+	} {
+		const marketKey = prop.market_key;
+		const marketDescription = MarketKeyTranslations[marketKey] || marketKey;
+		const standardizedMarketDescription =
+			StringUtils.standardizeString(marketDescription);
+
+		const title = 'Accuracy Challenge';
+		let desc = '';
+		let fields: { name: string; value: string; inline: boolean }[] = [];
+		let buttons: ButtonBuilder[] = [];
+
+		if (prop.description) {
+			// Player-based prop
+			desc = `Will **${prop.description}** get over/under **\`${prop.point}\` ${marketDescription}**?`;
+			fields = [
+				{ name: 'Player', value: `**${prop.description}**`, inline: true },
+				{
+					name: 'Over/Under',
+					value: `**\`${prop.point}\`** ${standardizedMarketDescription}`,
+					inline: true,
+				},
+			];
+			buttons = [
+				new ButtonBuilder()
+					.setCustomId(`${PropButtons.OVER}_${prop.id}`)
+					.setLabel('Over ⬆️')
+					.setStyle(ButtonStyle.Primary),
+				new ButtonBuilder()
+					.setCustomId(`${PropButtons.UNDER}_${prop.id}`)
+					.setLabel('Under ⬇️')
+					.setStyle(ButtonStyle.Primary),
+			];
+		} else if (marketKey === 'h2h') {
+			// Team-based prop (who will win)
+			desc = `Who will win the match between **${prop.home_team}** and **${prop.away_team}**?`;
+			fields = [
+				{
+					name: 'Match',
+					value: `${prop.home_team} vs ${prop.away_team}`,
+					inline: true,
+				},
+			];
+			buttons = [
+				new ButtonBuilder()
+					.setCustomId(`${prop.home_team}_${prop.id}`)
+					.setLabel(`${prop.home_team} 🏠`)
+					.setStyle(ButtonStyle.Primary),
+				new ButtonBuilder()
+					.setCustomId(`${prop.away_team}_${prop.id}`)
+					.setLabel(`${prop.away_team} 🛫`)
+					.setStyle(ButtonStyle.Primary),
+			];
+		} else if (marketKey === 'totals' && !prop.description) {
+			// Total score of the match (over/under)
+			desc = `Will the total score of the match between **${prop.home_team}** and **${prop.away_team}** be over/under **\`${prop.point}\`**?`;
+			fields = [
+				{
+					name: 'Match',
+					value: `${prop.home_team} vs ${prop.away_team}`,
+					inline: true,
+				},
+				{
+					name: 'Total Score',
+					value: `Over/Under **\`${prop.point}\`**`,
+					inline: true,
+				},
+			];
+			buttons = [
+				new ButtonBuilder()
+					.setCustomId(`${PropButtons.OVER}_${prop.id}`)
+					.setLabel('Over ⬆️')
+					.setStyle(ButtonStyle.Primary),
+				new ButtonBuilder()
+					.setCustomId(`${PropButtons.UNDER}_${prop.id}`)
+					.setLabel('Under ⬇️')
+					.setStyle(ButtonStyle.Primary),
+			];
+		} else {
+			// Unsupported markets
+			return;
+		}
+
+		return { title, desc, fields, buttons };
 	}
 
 	async createEmbeds(
@@ -39,20 +129,7 @@ export default class PropEmbedManager {
 			// Create an embed for each prop
 			const embeds = await Promise.all(
 				props.map(async (prop) => {
-					const marketKey = prop.market_key;
-					const marketDescription =
-						// @ts-ignore - Not supporting every market. TODO: Will need to narrow this down.
-						MarketKeyTranslations[marketKey] || marketKey;
-
-					const standardizedMarketDescription =
-						StringUtils.standardizeString(marketDescription);
-					const descriptionStr = `Will **${prop?.description}** get over/under **\`${prop.point}\` ${marketDescription}?**`;
-
-					const embedDetails = {
-						title: 'Accuracy Challenge',
-						desc: descriptionStr,
-					};
-
+					const { title, desc, fields, buttons } = this.getEmbedDetails(prop);
 					const homeTeamWithEmoji = await this.transformTeamName(
 						prop.home_team,
 					);
@@ -62,43 +139,29 @@ export default class PropEmbedManager {
 					const teamColor = TeamInfo.getTeamColor(prop.home_team);
 
 					const embed = new EmbedBuilder()
-						.setTitle(embedDetails.title)
-						.setDescription(embedDetails.desc)
-						.addFields(
-							{
-								name: 'Player',
-								value: `**${prop.description}**`,
-								inline: true,
-							},
-							{
-								name: 'Over/Under',
-								value: `**\`${prop.point}\`** ${standardizedMarketDescription}`,
-								inline: true,
-							},
-							{
-								name: 'Match',
-								value: `${homeTeamWithEmoji} vs ${awayTeamWithEmoji}`,
-								inline: true,
-							},
-							{
-								name: 'Date',
-								value: formatDiscordTimestamp(prop.commence_time),
-								inline: true,
-							},
-						)
+						.setTitle(title)
+						.setDescription(desc)
+						.addFields(fields)
 						.setColor(teamColor)
 						.setTimestamp();
+
+					// Update the 'Match' field with emoji-enhanced team names
+					const matchFieldIndex = fields.findIndex(
+						(field) => field.name === 'Match',
+					);
+					if (matchFieldIndex !== -1) {
+						embed.spliceFields(matchFieldIndex, 1, {
+							name: 'Match',
+							value: `${homeTeamWithEmoji} vs ${awayTeamWithEmoji}`,
+							inline: true,
+						});
+					}
+
 					// Create buttons
 					const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-						new ButtonBuilder()
-							.setCustomId(`${PropButtons.OVER}_${prop.id}`)
-							.setLabel('Over ⬆️')
-							.setStyle(ButtonStyle.Primary),
-						new ButtonBuilder()
-							.setCustomId(`${PropButtons.UNDER}_${prop.id}`)
-							.setLabel('Under ⬇️')
-							.setStyle(ButtonStyle.Primary),
+						buttons,
 					);
+
 					return { embed, row };
 				}),
 			);
