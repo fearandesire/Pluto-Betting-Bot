@@ -167,18 +167,6 @@ export default class PropEmbedManager {
 						.setColor(teamColor)
 						.setTimestamp();
 
-					// Update the 'Match' field with emoji-enhanced team names
-					const matchFieldIndex = fields.findIndex(
-						(field) => field.name === 'Match',
-					);
-					if (matchFieldIndex !== -1) {
-						embed.spliceFields(matchFieldIndex, 1, {
-							name: 'Match',
-							value: `${HTEAM_TRANSFORMED} vs ${AWTEAM_TRANSFORMED}`,
-							inline: true,
-						});
-					}
-
 					// Create buttons
 					const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
 						buttons,
