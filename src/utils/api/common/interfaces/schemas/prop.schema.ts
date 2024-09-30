@@ -35,7 +35,7 @@ export const PropSchema = z.object({
 	/** Price of the prop */
 	price: z.string(),
 	/** Point value for the prop */
-	point: z.string(),
+	point: z.string().nullable(),
 	/** Current status of the prop */
 	status: PropStatusEnum,
 	/** Timestamp of when the prop was created */
@@ -46,12 +46,6 @@ export const PropSchema = z.object({
 	result: z.string().nullable(),
 	/** Description of the prop */
 	description: z.string().nullable(),
-	/** Name of the prop */
-	name: z.string(),
-	/** Array of predictions associated with the prop (for eager loading) */
-	predictions: z.null().optional(),
-	/** Associated event object (for eager loading) */
-	event: z.null().optional(),
 });
 
 /**
