@@ -63,7 +63,6 @@
 		"@pluto-validate-checkbalance": "./dist/utils/db/validation/checkbalance.js",
 		"@pluto-validate-user": "./dist/utils/db/validation/validateExistingUser.js",
 		"@kh-openapi": "./dist/openapi/khronos/index.js",
-		"@utils/*": "./dist/utils/*",
 		"@pluto-config": "./dist/lib/PlutoConfig.js"
 	},
 	"dependencies": {

@@ -60,7 +60,6 @@
 				"./src/utils/db/validation/validateExistingUser.ts"
 			],
 			"@kh-openapi": ["./src/openapi/khronos/index.ts"],
-			"@utils/*": ["./src/utils/*"],
 			"@pluto-config": ["./src/lib/PlutoConfig.ts"]
 		},
 		"outDir": "./dist",
