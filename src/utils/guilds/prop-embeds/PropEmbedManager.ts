@@ -15,6 +15,12 @@ import StringUtils from '../../common/string-utils.js';
 import { resolveTeam } from 'resolve-team';
 import TeamInfo from '../../common/TeamInfo.js';
 import { PropButtons } from '../../../lib/interfaces/props/prop-buttons.interface.js';
+import { DateManager } from '../../common/DateManager.js';
+
+interface AggregateDetailsParams {
+	HTEAM_TRANSFORMED: string;
+	AWTEAM_TRANSFORMED: string;
+}
 
 export default class PropEmbedManager {
 	private client: Client;
@@ -28,10 +34,13 @@ export default class PropEmbedManager {
 		const emoji = this.client.emojis.cache.find(
 			(emoji) => emoji.name?.toLowerCase() === shortName.toLowerCase(),
 		);
-		return emoji ? `${emoji}` : teamName;
+		return emoji ? `${emoji}` : shortName;
 	}
 
-	private getEmbedDetails(prop: PropZod): {
+	private aggregateDetails(
+		prop: PropZod,
+		{ HTEAM_TRANSFORMED, AWTEAM_TRANSFORMED }: AggregateDetailsParams,
+	): {
 		title: string;
 		desc: string;
 		fields: { name: string; value: string; inline: boolean }[];
@@ -41,7 +50,12 @@ export default class PropEmbedManager {
 		const marketDescription = MarketKeyTranslations[marketKey] || marketKey;
 		const standardizedMarketDescription =
 			StringUtils.standardizeString(marketDescription);
-
+		const humanReadableDate = new DateManager().humanReadable(
+			prop.commence_time,
+		);
+		const matchString = `${HTEAM_TRANSFORMED} vs ${AWTEAM_TRANSFORMED} | @ ${humanReadableDate}`;
+		const ovrUnderStr = (amount: string) => `Over/Under **\`${amount}\`**`;
+		const { point } = prop;
 		const title = 'Accuracy Challenge';
 		let desc = '';
 		let fields: { name: string; value: string; inline: boolean }[] = [];
@@ -51,10 +65,15 @@ export default class PropEmbedManager {
 			// Player-based prop
 			desc = `Will **${prop.description}** get over/under **\`${prop.point}\` ${marketDescription}**?`;
 			fields = [
+				{
+					name: 'Match',
+					value: matchString,
+					inline: true,
+				},
 				{ name: 'Player', value: `**${prop.description}**`, inline: true },
 				{
 					name: 'Over/Under',
-					value: `**\`${prop.point}\`** ${standardizedMarketDescription}`,
+					value: `**\`${point}\`** ${standardizedMarketDescription}`,
 					inline: true,
 				},
 			];
@@ -70,36 +89,36 @@ export default class PropEmbedManager {
 			];
 		} else if (marketKey === 'h2h') {
 			// Team-based prop (who will win)
-			desc = `Who will win the match between **${prop.home_team}** and **${prop.away_team}**?`;
+			desc = `Who will win the match between **${HTEAM_TRANSFORMED}** and **${AWTEAM_TRANSFORMED}**?`;
 			fields = [
 				{
 					name: 'Match',
-					value: `${prop.home_team} vs ${prop.away_team}`,
+					value: matchString,
 					inline: true,
 				},
 			];
 			buttons = [
 				new ButtonBuilder()
 					.setCustomId(`${prop.home_team}_${prop.id}`)
-					.setLabel(`${prop.home_team} 🏠`)
+					.setLabel(`${HTEAM_TRANSFORMED}`)
 					.setStyle(ButtonStyle.Primary),
 				new ButtonBuilder()
 					.setCustomId(`${prop.away_team}_${prop.id}`)
-					.setLabel(`${prop.away_team} 🛫`)
+					.setLabel(`${AWTEAM_TRANSFORMED}`)
 					.setStyle(ButtonStyle.Primary),
 			];
 		} else if (marketKey === 'totals' && !prop.description) {
 			// Total score of the match (over/under)
-			desc = `Will the total score of the match between **${prop.home_team}** and **${prop.away_team}** be over/under **\`${prop.point}\`**?`;
+			desc = `Will the total score of the match between **${HTEAM_TRANSFORMED}** and **${AWTEAM_TRANSFORMED}** be over/under **\`${prop.point}\`**?`;
 			fields = [
 				{
 					name: 'Match',
-					value: `${prop.home_team} vs ${prop.away_team}`,
+					value: matchString,
 					inline: true,
 				},
 				{
 					name: 'Total Score',
-					value: `Over/Under **\`${prop.point}\`**`,
+					value: ovrUnderStr(prop.point),
 					inline: true,
 				},
 			];
@@ -126,16 +145,19 @@ export default class PropEmbedManager {
 		guildChannels: { guild_id: string; channel_id: string }[],
 	) {
 		for (const { guild_id, channel_id } of guildChannels) {
-			// Create an embed for each prop
 			const embeds = await Promise.all(
 				props.map(async (prop) => {
-					const { title, desc, fields, buttons } = this.getEmbedDetails(prop);
-					const homeTeamWithEmoji = await this.transformTeamName(
+					const HTEAM_TRANSFORMED = await this.transformTeamName(
 						prop.home_team,
 					);
-					const awayTeamWithEmoji = await this.transformTeamName(
+					const AWTEAM_TRANSFORMED = await this.transformTeamName(
 						prop.away_team,
 					);
+					const { title, desc, fields, buttons } = this.aggregateDetails(prop, {
+						HTEAM_TRANSFORMED,
+						AWTEAM_TRANSFORMED,
+					});
+
 					const teamColor = TeamInfo.getTeamColor(prop.home_team);
 
 					const embed = new EmbedBuilder()
@@ -152,7 +174,7 @@ export default class PropEmbedManager {
 					if (matchFieldIndex !== -1) {
 						embed.spliceFields(matchFieldIndex, 1, {
 							name: 'Match',
-							value: `${homeTeamWithEmoji} vs ${awayTeamWithEmoji}`,
+							value: `${HTEAM_TRANSFORMED} vs ${AWTEAM_TRANSFORMED}`,
 							inline: true,
 						});
 					}
