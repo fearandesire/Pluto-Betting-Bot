@@ -12,6 +12,9 @@ import { SapDiscClient } from '../../../Pluto.js';
  */
 export class PropsService {
 	private defaultFilteredMarketKey = 'totals';
+	private defaultOptions = {
+		daysAhead: 7,
+	};
 
 	/**
 	 * Initializes a new instance of the PropsService class.
@@ -31,18 +34,14 @@ export class PropsService {
 	): Promise<void> {
 		// Validate options
 		const validatedOptions = PropOptionsSchema.parse(options);
-		const defaultOptions = {
-			daysAhead: 7,
-		};
-		const daysAhead = validatedOptions.daysAhead ?? defaultOptions.daysAhead;
+		const daysAhead =
+			validatedOptions.daysAhead ?? this.defaultOptions.daysAhead;
 
 		const dateManager = new DateManager<PropZod>(daysAhead);
 		const propsWithinDateRange = dateManager.filterByDateRange(props);
-		const propsMarketFiltered = this.filterPropsByMarketKey(
-			propsWithinDateRange,
-			this.defaultFilteredMarketKey,
-		);
-		const uniqueProps = this.selectRandomPropPerEvent(propsMarketFiltered);
+
+		const uniqueProps = this.selectRandomPropPerEvent(propsWithinDateRange);
+
 		const embedManager = new PropEmbedManager(SapDiscClient);
 		await embedManager.createEmbeds(uniqueProps, guildChannels);
 	}
@@ -71,15 +70,23 @@ export class PropsService {
 	}
 
 	/**
-	 * Filters out props with a specific market key.
+	 * Filters out props via multiple market keys.
 	 * @param {PropZod[]} props - Array of props to filter.
-	 * @param {string} marketKeyToFilter - Market key to filter out.
-	 * @returns {PropZod[]} Array of props without the specified market key.
+	 * @param {string[]} marketKeysToFilter - Array of market keys to filter out.
+	 * @returns {PropZod[]} Array of props without the specified market keys.
 	 */
-	private filterPropsByMarketKey(
+	private filterPropsByMarketKeys(
 		props: PropZod[],
-		marketKeyToFilter: string = this.defaultFilteredMarketKey,
+		marketKeysToFilter: string[] = [this.defaultFilteredMarketKey],
 	): PropZod[] {
-		return props.filter((prop) => prop.market_key !== marketKeyToFilter);
+		const filteredProps = props.filter(
+			(prop) => !marketKeysToFilter.includes(prop.market_key),
+		);
+
+		if (filteredProps.length === 0) {
+			return [];
+		}
+
+		return filteredProps;
 	}
 }
