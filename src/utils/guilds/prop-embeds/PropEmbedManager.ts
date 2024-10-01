@@ -10,9 +10,7 @@ import {
 	MarketKeyTranslations,
 	type PropZod,
 } from '../../api/common/interfaces/index.js';
-import { formatDiscordTimestamp } from '../../timestampUtils.js';
 import StringUtils from '../../common/string-utils.js';
-import { resolveTeam } from 'resolve-team';
 import TeamInfo from '../../common/TeamInfo.js';
 import { PropButtons } from '../../../lib/interfaces/props/prop-buttons.interface.js';
 import { DateManager } from '../../common/DateManager.js';
@@ -161,7 +159,7 @@ export default class PropEmbedManager {
 						AWTEAM_TRANSFORMED,
 					});
 
-					const teamColor = TeamInfo.getTeamColor(prop.home_team);
+					const teamColor = await TeamInfo.getTeamColor(prop.home_team);
 
 					const embed = new EmbedBuilder()
 						.setTitle(title)
