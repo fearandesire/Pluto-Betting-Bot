@@ -15,7 +15,7 @@ import _ from 'lodash';
 import GuildUtils from '../../../guilds/GuildUtils.js';
 import EmbedsSuccess from '../../../embeds/template/success-template.js';
 import MoneyFormatter from '../../common/money-formatting/money-format.js';
-import { SapDiscClient } from '../../../../Pluto.js';
+import { SapDiscClient } from '../../../../index.js';
 import PaginationUtilities from '../../../embeds/pagination-utilities.js';
 import { plutoWelcomeMsg } from '../../common/interfaces/kh-pluto/kh-pluto.interface.js';
 import { ErrorEmbeds } from '../../../common/errors/global.js';

@@ -1,4 +1,4 @@
-import { SapDiscClient } from '../../../Pluto.js';
+import { SapDiscClient } from '../../../index.js';
 import { resolveTeam } from 'resolve-team';
 import _ from 'lodash';
 import {

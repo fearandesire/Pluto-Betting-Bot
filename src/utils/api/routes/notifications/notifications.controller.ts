@@ -1,6 +1,6 @@
 import Router from 'koa-router';
 import NotificationService from './notifications.service.js';
-import { SapDiscClient } from '../../../../Pluto.js';
+import { SapDiscClient } from '../../../../index.js';
 import _ from 'lodash';
 import { isNotifyBetUsers } from './notification-utils.js';
 
