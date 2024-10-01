@@ -27,7 +27,7 @@
 			"@pluto-betOps-modifyAmount": ["./src/utils/db/betOps/modifyAmount.ts"],
 			"@pluto-bettingStats": ["./src/utils/bot_res/getBettingStats.ts"],
 			"@pluto-check-balance": ["./src/utils/db/validation/checkbalance.ts"],
-			"@pluto-core": ["./src/Pluto.ts"],
+			"@pluto-core": ["src/index.ts"],
 			"@pluto-core-config": ["./src/lib/PlutoConfig.ts"],
 			"@pluto-currency": ["./src/utils/db/currency"],
 			"@pluto-date-utils": ["./src/utils/date"],
