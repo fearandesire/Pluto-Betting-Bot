@@ -53,7 +53,7 @@ export default class PropEmbedManager {
 		const humanReadableDate = new DateManager().humanReadable(
 			prop.commence_time,
 		);
-		const matchString = `${HTEAM_TRANSFORMED} vs ${AWTEAM_TRANSFORMED} | @ ${humanReadableDate}`;
+		const matchString = `${HTEAM_TRANSFORMED} vs ${AWTEAM_TRANSFORMED}`;
 		const ovrUnderStr = (amount: string) => `Over/Under **\`${amount}\`**`;
 		const { point } = prop;
 		const title = 'Accuracy Challenge';
@@ -70,6 +70,7 @@ export default class PropEmbedManager {
 					value: matchString,
 					inline: true,
 				},
+				{ name: 'Date', value: humanReadableDate, inline: true },
 				{ name: 'Player', value: `**${prop.description}**`, inline: true },
 				{
 					name: 'Over/Under',
@@ -96,6 +97,7 @@ export default class PropEmbedManager {
 					value: matchString,
 					inline: true,
 				},
+				{ name: 'Date', value: humanReadableDate, inline: true },
 			];
 			buttons = [
 				new ButtonBuilder()
@@ -116,6 +118,7 @@ export default class PropEmbedManager {
 					value: matchString,
 					inline: true,
 				},
+				{ name: 'Date', value: humanReadableDate, inline: true },
 				{
 					name: 'Total Score',
 					value: ovrUnderStr(prop.point),
