@@ -138,7 +138,6 @@ commands/slash/devEval2.js
 
 #vscode settings
 .vscode/
-Dockerfile
 docker-compose.yml
 docker-compose.debug.yml
 lib/matchupimages
