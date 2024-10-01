@@ -4,7 +4,7 @@ import { PermissionFlagsBits } from 'discord.js';
 import PropsApiWrapper from '../../utils/api/Khronos/props/propsApiWrapper.js';
 
 @ApplyOptions<Command.Options>({
-	description: 'Generate all prop embeds (Admin/Mod only)',
+	description: 'Generate all prop embeds',
 })
 export class UserCommand extends Command {
 	public override registerApplicationCommands(registry: Command.Registry) {
