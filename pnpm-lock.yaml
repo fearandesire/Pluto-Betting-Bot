@@ -150,8 +150,8 @@ dependencies:
     specifier: ^2.11.2
     version: 2.11.2(puppeteer-extra@3.3.6)
   resolve-team:
-    specifier: ^1.6.0
-    version: 1.8.4
+    specifier: ^1.8.6
+    version: 1.8.6
   winston:
     specifier: ^3.8.2
     version: 3.14.2
@@ -5564,7 +5564,7 @@ packages:
       consola: 3.2.3
       defu: 6.1.4
       node-fetch-native: 1.6.4
-      nypm: 0.3.11
+      nypm: 0.3.12
       ohash: 1.1.4
       pathe: 1.1.2
       tar: 6.2.1
@@ -7590,8 +7590,8 @@ packages:
     resolution: {integrity: sha512-qaKRmtYPZ5qdw4jWJD6bxEf1FJEqllJrwxCLIm0sQU/A7v2/czigzOb+C2uSiFsa9lBUzeH7M1oK+Q+OLxL3kA==}
     dev: false
 
-  /nypm@0.3.11:
-    resolution: {integrity: sha512-E5GqaAYSnbb6n1qZyik2wjPDZON43FqOJO59+3OkWrnmQtjggrMOVnsyzfjxp/tS6nlYJBA4zRA5jSM2YaadMg==}
+  /nypm@0.3.12:
+    resolution: {integrity: sha512-D3pzNDWIvgA+7IORhD/IuWzEk4uXv6GsgOxiid4UU3h9oq5IqV1KtPDi63n4sZJ/xcWlr88c0QM2RgN5VbOhFA==}
     engines: {node: ^14.16.0 || >=16.10.0}
     hasBin: true
     dependencies:
@@ -8767,8 +8767,8 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /resolve-team@1.8.4:
-    resolution: {integrity: sha512-NZd1sZcucjumzmClwSyBQFS2vTuGGtRhw33W8/b5CKMKx4xuZdtwezjY7FY0dFTfL83K+MQGnJmjrDuGpaPWaw==}
+  /resolve-team@1.8.6:
+    resolution: {integrity: sha512-4wqYPDrcQS+Y+oPZIjPdAuoerUUR05M+nckLwpk3RgkGpE+WOttCNjczVv02nmlhxVdY4deE4rJWQzKbm0ZXOw==}
     dependencies:
       fuse.js: 7.0.0
     dev: false
