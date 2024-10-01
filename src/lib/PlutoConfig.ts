@@ -3,6 +3,8 @@ import _ from 'lodash';
 import { Log } from '../utils/bot_res/consoleLog.js';
 import { findEmoji } from '../utils/bot_res/findEmoji.js';
 
+const appOwner = process.env.APP_OWNER_ID;
+
 // ? Exporting Console Logging Colors for other files to use
 export {
 	bgYellowBright,
@@ -27,4 +29,4 @@ function helpfooter() {
 	return footers[randomIndex];
 }
 // ? General Config
-export { helpfooter, Command, _, Log, findEmoji };
+export { helpfooter, Command, _, Log, findEmoji, appOwner };
