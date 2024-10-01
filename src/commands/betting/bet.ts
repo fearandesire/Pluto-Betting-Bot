@@ -6,6 +6,8 @@ import { BetsCacheService } from '../../utils/api/common/bets/BetsCacheService.j
 import { CacheManager } from '../../utils/cache/RedisCacheManager.js';
 import BettingValidation from '../../utils/betting/betting-validation.js';
 import { ErrorEmbeds } from '../../utils/common/errors/global.js';
+import { resolveTeam } from 'resolve-team';
+import { match } from 'assert';
 
 @ApplyOptions<Command.Options>({
 	description: '🎲 Place a bet on a match',
@@ -21,7 +23,7 @@ export class UserCommand extends Command {
 					option
 						.setName('match')
 						.setDescription('The match you want to bet on')
-						.setRequired(true)
+						.setRequired(false)
 						.setAutocomplete(true),
 				)
 				.addStringOption((option) =>
@@ -44,16 +46,19 @@ export class UserCommand extends Command {
 		interaction: Command.ChatInputCommandInteraction,
 	) {
 		await interaction.deferReply();
-		const team = interaction.options.getString('team', true);
+		let team = interaction.options.getString('team', true);
 		const amount = interaction.options.getInteger('amount', true);
 		const validator = new BettingValidation();
 		const amountValid = validator.validateAmount(amount);
 		if (!amountValid) {
-			const errEmbed = ErrorEmbeds.betErr(`You must bet at least $1!.`);
+			const errEmbed = ErrorEmbeds.betErr('You must bet at least $1!');
 			return interaction.editReply({ embeds: [errEmbed] });
 		}
-		const matchSelection = interaction.options.getString('match', true);
-		// console.log({ matchSelection })
+		const matchSelection = interaction.options.getString('match', false);
+
+		if (!matchSelection) {
+			team = await this.identifyTeam(team);
+		}
 		const betslipData = {
 			team,
 			amount,
@@ -65,5 +70,10 @@ export class UserCommand extends Command {
 			new BetslipWrapper(),
 			new BetsCacheService(new CacheManager()),
 		).initialize(interaction, interaction.user.id, betslipData);
+	}
+
+	private async identifyTeam(team: string) {
+		const teamInfo = await resolveTeam(team);
+		return teamInfo;
 	}
 }
