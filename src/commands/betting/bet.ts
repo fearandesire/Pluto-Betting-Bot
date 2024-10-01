@@ -13,31 +13,35 @@ import { resolveTeam } from 'resolve-team';
 })
 export class UserCommand extends Command {
 	public override registerApplicationCommands(registry: Command.Registry) {
-		registry.registerChatInputCommand((builder) =>
-			builder //
-				.setName(this.name)
-				.setDescription(this.description)
-				.setDMPermission(false)
-				.addStringOption((option) =>
-					option
-						.setName('team')
-						.setDescription('The team you want to bet on')
-						.setRequired(true)
-						.setAutocomplete(true),
-				)
-				.addIntegerOption((option) =>
-					option
-						.setName('amount')
-						.setDescription('The amount you want to bet')
-						.setRequired(true),
-				)
-				.addStringOption((option) =>
-					option
-						.setName('match')
-						.setDescription('The match you want to bet on')
-						.setRequired(false)
-						.setAutocomplete(true),
-				),
+		registry.registerChatInputCommand(
+			(builder) =>
+				builder //
+					.setName(this.name)
+					.setDescription(this.description)
+					.setDMPermission(false)
+					.addStringOption((option) =>
+						option
+							.setName('team')
+							.setDescription('The team you want to bet on')
+							.setRequired(true)
+							.setAutocomplete(true),
+					)
+					.addIntegerOption((option) =>
+						option
+							.setName('amount')
+							.setDescription('The amount you want to bet')
+							.setRequired(true),
+					)
+					.addStringOption((option) =>
+						option
+							.setName('match')
+							.setDescription('The match you want to bet on')
+							.setRequired(false)
+							.setAutocomplete(true),
+					),
+			{
+				idHints: ['1022572274546651337'],
+			},
 		);
 	}
 
