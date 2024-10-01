@@ -1,7 +1,7 @@
-import logClr from '../../../bot_res/ColorConsole.js';
 // Import interfaces and potentially the Discord client type
 import type { SapphireClient } from '@sapphire/framework';
 import { type ColorResolvable, EmbedBuilder } from 'discord.js';
+import logClr from '../../../bot_res/ColorConsole.js';
 import MoneyFormatter from '../../common/money-formatting/money-format.js';
 import type {
 	DisplayBetNotification,

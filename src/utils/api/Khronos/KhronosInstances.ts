@@ -1,3 +1,4 @@
+import * as dotenv from 'dotenv';
 /**
  * @module KhronosApi
  * @readonly
@@ -13,7 +14,6 @@ import {
 	GuildsApi,
 	MatchesApi,
 } from '../../../openapi/khronos/index.js';
-import * as dotenv from 'dotenv';
 
 dotenv.config({
 	path: '.env',

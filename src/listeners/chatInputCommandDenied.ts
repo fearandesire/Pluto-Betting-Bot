@@ -1,7 +1,7 @@
 import {
+	type ChatInputCommandDeniedPayload,
 	type Events,
 	Listener,
-	type ChatInputCommandDeniedPayload,
 	type UserError,
 } from '@sapphire/framework';
 

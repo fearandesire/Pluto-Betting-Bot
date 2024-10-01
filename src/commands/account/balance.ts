@@ -22,7 +22,7 @@ export class UserCommand extends Command {
 							.setDescription('Optional | User to view balance of')
 							.setRequired(false),
 					),
-			{ idHints: [`1022954913489223690`] },
+			{ idHints: ['1022954913489223690'] },
 		);
 	}
 

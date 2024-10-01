@@ -1,20 +1,20 @@
+import { ApplyOptions } from '@sapphire/decorators';
 import {
 	InteractionHandler,
 	InteractionHandlerTypes,
 } from '@sapphire/framework';
+import { None, Option, Result } from '@sapphire/framework';
 import type { StringSelectMenuInteraction } from 'discord.js';
 import type { ButtonInteraction } from 'discord.js';
-import { CacheManager } from '../utils/cache/RedisCacheManager.js';
-import { ErrorEmbeds } from '../utils/common/errors/global.js';
+import { isPendingBetslip } from '../lib/interfaces/api/bets/betslips-identify.js';
+import { selectMenuIds } from '../lib/interfaces/interaction-handlers/interaction-handlers.interface.js';
+import { BetslipManager } from '../utils/api/Khronos/bets/BetslipsManager.js';
+import BetslipWrapper from '../utils/api/Khronos/bets/betslip-wrapper.js';
 import BetUtils from '../utils/api/common/bets/BetUtils.js';
 import { BetsCacheService } from '../utils/api/common/bets/BetsCacheService.js';
-import { isPendingBetslip } from '../lib/interfaces/api/bets/betslips-identify.js';
-import { BetslipManager } from '../utils/api/Khronos/bets/BetslipsManager.js';
-import { selectMenuIds } from '../lib/interfaces/interaction-handlers/interaction-handlers.interface.js';
 import MatchCacheService from '../utils/api/routes/cache/MatchCacheService.js';
-import BetslipWrapper from '../utils/api/Khronos/bets/betslip-wrapper.js';
-import { ApplyOptions } from '@sapphire/decorators';
-import { Result, None, Option } from '@sapphire/framework';
+import { CacheManager } from '../utils/cache/RedisCacheManager.js';
+import { ErrorEmbeds } from '../utils/common/errors/global.js';
 @ApplyOptions<InteractionHandler.Options>({
 	interactionHandlerType: InteractionHandlerTypes.SelectMenu,
 })
@@ -58,7 +58,7 @@ export class MenuHandler extends InteractionHandler {
 			await interaction.editReply({
 				embeds: [
 					ErrorEmbeds.internalErr(
-						`Due to an internal error, the match data selected is not available. Please try again later.`,
+						'Due to an internal error, the match data selected is not available. Please try again later.',
 					),
 				],
 			});
@@ -71,7 +71,7 @@ export class MenuHandler extends InteractionHandler {
 			await interaction.editReply({
 				embeds: [
 					ErrorEmbeds.internalErr(
-						`Due to an internal error, your initial bet data was not found. Please try again later.`,
+						'Due to an internal error, your initial bet data was not found. Please try again later.',
 					),
 				],
 			});

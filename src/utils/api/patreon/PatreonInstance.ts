@@ -1,4 +1,4 @@
-import axios, { AxiosHeaders, AxiosInstance } from 'axios';
+import axios, { AxiosHeaders, type AxiosInstance } from 'axios';
 import { PATREON_API_KEY, PATREON_API_URL } from './config.js';
 
 export class AxiosConfigurator {
@@ -8,7 +8,7 @@ export class AxiosConfigurator {
 
 	constructor(
 		baseURL: string,
-		timeout: number = 90000, // 90 Seconds in MS
+		timeout = 90000, // 90 Seconds in MS
 		headers: Record<string, string> = {},
 	) {
 		this.baseURL = baseURL;

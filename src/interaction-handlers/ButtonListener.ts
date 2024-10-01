@@ -2,27 +2,27 @@ import {
 	InteractionHandler,
 	InteractionHandlerTypes,
 } from '@sapphire/framework';
+// pnpm issue with @sapphire framework
+import { None, Option, Result } from '@sapphire/framework';
 import type { ButtonInteraction } from 'discord.js';
 import { EmbedBuilder } from 'discord.js';
-import { BetslipManager } from '../utils/api/Khronos/bets/BetslipsManager.js';
+import embedColors from '../lib/colorsConfig.js';
 import { btnIds } from '../lib/interfaces/interaction-handlers/interaction-handlers.interface.js';
-import { BetsCacheService } from '../utils/api/common/bets/BetsCacheService.js';
-import { CacheManager } from '../utils/cache/RedisCacheManager.js';
-import MatchCacheService from '../utils/api/routes/cache/MatchCacheService.js';
+import {
+	PropButtons,
+	parsePropButtonId,
+} from '../lib/interfaces/props/prop-buttons.interface.js';
+import type { Match } from '../openapi/khronos/models/Match.js';
+import { BetslipManager } from '../utils/api/Khronos/bets/BetslipsManager.js';
 import BetslipWrapper from '../utils/api/Khronos/bets/betslip-wrapper.js';
 import MatchApiWrapper from '../utils/api/Khronos/matches/matchApiWrapper.js';
-import type { Match } from '../openapi/khronos/models/Match.js';
-import { ErrorEmbeds } from '../utils/common/errors/global.js';
-import embedColors from '../lib/colorsConfig.js';
-import { patreonFooter } from '../utils/api/patreon/interfaces.js';
 import PredictionApiWrapper from '../utils/api/Khronos/prediction/predictionApiWrapper.js';
 import PropsApiWrapper from '../utils/api/Khronos/props/propsApiWrapper.js';
-import {
-	parsePropButtonId,
-	PropButtons,
-} from '../lib/interfaces/props/prop-buttons.interface.js';
-// pnpm issue with @sapphire framework
-import { Result, None, Option } from '@sapphire/framework';
+import { BetsCacheService } from '../utils/api/common/bets/BetsCacheService.js';
+import { patreonFooter } from '../utils/api/patreon/interfaces.js';
+import MatchCacheService from '../utils/api/routes/cache/MatchCacheService.js';
+import { CacheManager } from '../utils/cache/RedisCacheManager.js';
+import { ErrorEmbeds } from '../utils/common/errors/global.js';
 /**
  * @module ButtonListener
  */

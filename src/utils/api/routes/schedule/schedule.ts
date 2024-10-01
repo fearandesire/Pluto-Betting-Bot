@@ -1,12 +1,12 @@
+import { Log } from '@pluto-config';
 import Router from 'koa-router';
 import _ from 'lodash';
-import { Log } from '@pluto-config';
-import GameSchedule from '../../requests/matchups/GameSchedule.js';
 import {
 	type IConfigRow,
 	type IMatchupAggregated,
 	SportsServing,
 } from '../../common/interfaces/kh-pluto/kh-pluto.interface.js';
+import GameSchedule from '../../requests/matchups/GameSchedule.js';
 
 /**
  * Responsible for incoming requests to post the daily schedule
@@ -73,11 +73,11 @@ async function validateAndParseSchedule(
 ): Promise<ScheduleRequestBody> {
 	const { aggregatedMatchups, dailyScheduleRows } = body;
 	console.log(
-		`aggregatedMatchups`,
+		'aggregatedMatchups',
 		aggregatedMatchups,
-		`\n`,
-		`dailyScheduleRows`,
-		`\n`,
+		'\n',
+		'dailyScheduleRows',
+		'\n',
 		dailyScheduleRows,
 	);
 	if (_.isEmpty(aggregatedMatchups) || _.isEmpty(dailyScheduleRows)) {

@@ -1,5 +1,5 @@
-import { CacheManager } from '../../../cache/RedisCacheManager.js';
-import { BetslipWithAggregationDTO, PlaceBetDto } from '@kh-openapi';
+import type { BetslipWithAggregationDTO, PlaceBetDto } from '@kh-openapi';
+import type { CacheManager } from '../../../cache/RedisCacheManager.js';
 
 export class BetsCacheService {
 	private cachePrefix = 'bets:';

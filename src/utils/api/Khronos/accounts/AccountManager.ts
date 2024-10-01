@@ -1,8 +1,8 @@
-import AccountsWrapper from './accounts-wrapper.js';
-import { CommandInteraction, EmbedBuilder } from 'discord.js';
+import { type CommandInteraction, EmbedBuilder } from 'discord.js';
 import embedColors from '../../../../lib/colorsConfig.js';
-import { ApiErrorHandler } from '../error-handling/ApiErrorHandler.js';
 import { ApiModules } from '../../../../lib/interfaces/api/api.interface.js';
+import { ApiErrorHandler } from '../error-handling/ApiErrorHandler.js';
+import type AccountsWrapper from './accounts-wrapper.js';
 
 export default class AccountManager {
 	public constructor(private accountWrapper: AccountsWrapper) {}

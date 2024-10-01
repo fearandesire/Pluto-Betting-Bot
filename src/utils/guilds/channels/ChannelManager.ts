@@ -1,27 +1,27 @@
-import { SapDiscClient } from '../../../index.js';
-import { resolveTeam } from 'resolve-team';
-import _ from 'lodash';
+import fs from 'node:fs/promises';
+import path, { dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
 	AttachmentBuilder,
-	CategoryChannelResolvable,
+	type CategoryChannelResolvable,
 	ChannelType,
-	ColorResolvable,
+	type ColorResolvable,
 	EmbedBuilder,
-	Guild,
-	GuildBasedChannel,
-	MessageCreateOptions,
-	TextChannel,
+	type Guild,
+	type GuildBasedChannel,
+	type MessageCreateOptions,
+	type TextChannel,
 } from 'discord.js';
-import { findEmoji } from '../../bot_res/findEmoji.js';
-import { IChannelAggregated } from '../../api/routes/channels/createchannels.interface.js';
-import {
+import _ from 'lodash';
+import { resolveTeam } from 'resolve-team';
+import { SapDiscClient } from '../../../index.js';
+import type {
 	ICategoryData,
 	IConfigRow,
 	SportsServing,
 } from '../../api/common/interfaces/kh-pluto/kh-pluto.interface.js';
-import path, { dirname } from 'path';
-import fs from 'fs/promises';
-import { fileURLToPath } from 'url';
+import type { IChannelAggregated } from '../../api/routes/channels/createchannels.interface.js';
+import { findEmoji } from '../../bot_res/findEmoji.js';
 import StringUtils from '../../common/string-utils.js';
 
 interface IPrepareMatchEmbed {
@@ -48,7 +48,7 @@ export default class ChannelManager {
 	constructor() {
 		this.API_URL = `${process.env.KH_API_URL}`;
 		this.ep = {
-			gchan: `/channels`,
+			gchan: '/channels',
 		};
 	}
 
@@ -178,10 +178,10 @@ export default class ChannelManager {
 		const bettingChanId = sortedBetChan?.setting_value;
 		const { home_team, away_team } = channel;
 		if (_.isEmpty(home_team) || _.isEmpty(away_team)) {
-			throw new Error(`Missing home and away teams in channel data.`);
+			throw new Error('Missing home and away teams in channel data.');
 		}
 		if (!bettingChanId) {
-			throw new Error(`Missing betting channel id in channel data.`);
+			throw new Error('Missing betting channel id in channel data.');
 		}
 
 		const { matchOdds } = channel;
@@ -219,7 +219,7 @@ export default class ChannelManager {
 		};
 		// Only include 'files' property if attachment is found
 		if (attachment) {
-			messageOptions['files'] = [attachment];
+			messageOptions.files = [attachment];
 		}
 
 		await gameChan.send(messageOptions);
@@ -277,18 +277,17 @@ export default class ChannelManager {
 	}
 
 	private async fetchVsImg(matchup: string, sport: string) {
-		const matchupFileName =
-			matchup
-				.replace('at', 'vs') // Ensure "at" is replaced with "vs" first
-				.replace(/-/g, '_') // Replace ALL instances of "-" with "_"
-				.split('_')
-				.map((part) =>
-					// Convert each part to Start Case without lodash
-					part
-						.toLowerCase()
-						.replace(/\b[a-z]/g, (char) => char.toUpperCase()),
-				)
-				.join('_') + '.jpg';
+		const matchupFileName = `${matchup
+			.replace('at', 'vs') // Ensure "at" is replaced with "vs" first
+			.replace(/-/g, '_') // Replace ALL instances of "-" with "_"
+			.split('_')
+			.map((part) =>
+				// Convert each part to Start Case without lodash
+				part
+					.toLowerCase()
+					.replace(/\b[a-z]/g, (char) => char.toUpperCase()),
+			)
+			.join('_')}.jpg`;
 
 		// Ensure "vs" is always lowercase
 		const finalMatchupFileName = matchupFileName.replace('Vs', 'vs');

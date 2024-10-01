@@ -1,9 +1,9 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
 import { BetslipManager } from '../../utils/api/Khronos/bets/BetslipsManager.js';
+import BetslipWrapper from '../../utils/api/Khronos/bets/betslip-wrapper.js';
 import { BetsCacheService } from '../../utils/api/common/bets/BetsCacheService.js';
 import { CacheManager } from '../../utils/cache/RedisCacheManager.js';
-import BetslipWrapper from '../../utils/api/Khronos/bets/betslip-wrapper.js';
 
 @ApplyOptions<Command.Options>({
 	description:

@@ -26,7 +26,9 @@
 		"sap-cmd": "sapphire generate slashcommand",
 		"dvault": "npx dotenv-vault@latest",
 		"release": "release-it",
-		"docker:push": "docker-compose build && docker push ghcr.io/fearandesire/pluto-betting-bot:latest"
+		"docker:push": "docker-compose build && docker push ghcr.io/fearandesire/pluto-betting-bot:latest",
+		"biome:lint": "biome check --write .",
+		"biome:fix": "biome check --write --unsafe  ."
 	},
 	"aliases": {
 		"@pluto-api-interfaces": "./dist/utils/api/common/interfaces/index.js",
@@ -166,18 +168,13 @@
 			"^@/(.*)$": "<rootDir>/src/$1",
 			"^lib/(.*)$": "<rootDir>/lib/$1"
 		},
-		"moduleFileExtensions": [
-			"ts",
-			"js"
-		],
+		"moduleFileExtensions": ["ts", "js"],
 		"rootDir": "src",
 		"testRegex": ".*\\.spec\\.ts$",
 		"transform": {
 			"^.+\\.(t|j)s$": "ts-jest"
 		},
-		"collectCoverageFrom": [
-			"**/*.(t|j)s"
-		],
+		"collectCoverageFrom": ["**/*.(t|j)s"],
 		"coverageDirectory": "../coverage",
 		"testEnvironment": "node"
 	}

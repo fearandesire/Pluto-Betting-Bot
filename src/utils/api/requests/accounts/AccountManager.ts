@@ -1,24 +1,24 @@
-import { CommandInteraction, GuildMember } from 'discord.js';
-import { ApiModules } from '../../../../lib/interfaces/api/api.interface.js';
-import { ApiErrorHandler } from '../../Khronos/error-handling/ApiErrorHandler.js';
 import {
 	AccountsApi,
-	GetBalanceDto,
-	GetLeaderboardDto,
-	GetProfileDto,
+	type GetBalanceDto,
+	type GetLeaderboardDto,
+	type GetProfileDto,
 } from '@kh-openapi';
+import type { CommandInteraction, GuildMember } from 'discord.js';
+import _ from 'lodash';
+import { SapDiscClient } from '../../../../index.js';
+import { ApiModules } from '../../../../lib/interfaces/api/api.interface.js';
+import { ErrorEmbeds } from '../../../common/errors/global.js';
+import PaginationUtilities from '../../../embeds/pagination-utilities.js';
+import EmbedsSuccess from '../../../embeds/template/success-template.js';
+import GuildUtils from '../../../guilds/GuildUtils.js';
 import {
-	IKH_API_CONFIG,
+	type IKH_API_CONFIG,
 	KH_API_CONFIG,
 } from '../../Khronos/KhronosInstances.js';
-import _ from 'lodash';
-import GuildUtils from '../../../guilds/GuildUtils.js';
-import EmbedsSuccess from '../../../embeds/template/success-template.js';
-import MoneyFormatter from '../../common/money-formatting/money-format.js';
-import { SapDiscClient } from '../../../../index.js';
-import PaginationUtilities from '../../../embeds/pagination-utilities.js';
+import { ApiErrorHandler } from '../../Khronos/error-handling/ApiErrorHandler.js';
 import { plutoWelcomeMsg } from '../../common/interfaces/kh-pluto/kh-pluto.interface.js';
-import { ErrorEmbeds } from '../../../common/errors/global.js';
+import MoneyFormatter from '../../common/money-formatting/money-format.js';
 import PatreonFacade from '../../patreon/Patreon-Facade.js';
 
 export class AccountsWrapper {
@@ -30,57 +30,37 @@ export class AccountsWrapper {
 	}
 
 	async createAccount(userid: string): Promise<any> {
-		try {
-			// Assuming createAccount method returns the created account details
-			return await this.accountsApi.createAccount({
-				userid: userid,
-			});
-		} catch (error) {
-			throw error; // Re-throw the error after logging or handling it
-		}
+		// Assuming createAccount method returns the created account details
+		return await this.accountsApi.createAccount({
+			userid: userid,
+		});
 	}
 
 	async getAccountBalance(userid: string): Promise<Partial<GetBalanceDto>> {
-		try {
-			const res = await this.accountsApi.getBalance({
-				userid: userid,
-			});
-			return { balance: res.balance, userid: userid };
-		} catch (error) {
-			throw error; // Re-throw the error after logging or handling it
-		}
+		const res = await this.accountsApi.getBalance({
+			userid: userid,
+		});
+		return { balance: res.balance, userid: userid };
 	}
 
 	async getProfile(userid: string): Promise<GetProfileDto> {
-		try {
-			return await this.accountsApi.userProfile({
-				userid: userid,
-			});
-		} catch (error) {
-			throw error; // Re-throw the error after logging or handling it
-		}
+		return await this.accountsApi.userProfile({
+			userid: userid,
+		});
 	}
 
 	async processClaim(userid: string, patreonOverride: boolean) {
-		try {
-			const data = {
-				userid: userid,
-				dailyClaimBodyDto: {
-					patreonOverride: patreonOverride,
-				},
-			};
-			return await this.accountsApi.dailyClaim(data);
-		} catch (error) {
-			throw error; // Re-throw the error after logging or handling it
-		}
+		const data = {
+			userid: userid,
+			dailyClaimBodyDto: {
+				patreonOverride: patreonOverride,
+			},
+		};
+		return await this.accountsApi.dailyClaim(data);
 	}
 
 	async getLeaderboard(): Promise<GetLeaderboardDto[]> {
-		try {
-			return await this.accountsApi.getLeaderboard();
-		} catch (error) {
-			throw error; // Re-throw the error after logging or handling it
-		}
+		return await this.accountsApi.getLeaderboard();
 	}
 }
 
@@ -116,7 +96,7 @@ export class AccountManager {
 			const formattedBalance = MoneyFormatter.toUSD(balance);
 			const descStr = `Your balance is **\`${formattedBalance}\`**`;
 			const embed = await new EmbedsSuccess(interaction).sv1(
-				`💰 Processed Daily Claim`,
+				'💰 Processed Daily Claim',
 				descStr,
 			);
 			return interaction.editReply({ embeds: [embed] });

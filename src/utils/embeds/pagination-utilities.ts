@@ -1,4 +1,4 @@
-import { CommandInteraction, EmbedBuilder, User } from 'discord.js';
+import { type CommandInteraction, EmbedBuilder, type User } from 'discord.js';
 
 export default class PaginationUtilities {
 	paginateArray<T>(array: T[], page: number, pageSize: number): T[] {

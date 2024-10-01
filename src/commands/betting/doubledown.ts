@@ -1,16 +1,16 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
-import { BetslipManager } from '../../utils/api/Khronos/bets/BetslipsManager.js';
-import BetslipWrapper from '../../utils/api/Khronos/bets/betslip-wrapper.js';
-import { BetsCacheService } from '../../utils/api/common/bets/BetsCacheService.js';
-import { CacheManager } from '../../utils/cache/RedisCacheManager.js';
-import { ApiErrorHandler } from '../../utils/api/Khronos/error-handling/ApiErrorHandler.js';
-import { ApiModules } from '../../lib/interfaces/api/api.interface.js';
 import { EmbedBuilder } from 'discord.js';
 import embedColors from '../../lib/colorsConfig.js';
-import PatreonFacade from '../../utils/api/patreon/Patreon-Facade.js';
-import { ErrorEmbeds } from '../../utils/common/errors/global.js';
+import { ApiModules } from '../../lib/interfaces/api/api.interface.js';
+import { BetslipManager } from '../../utils/api/Khronos/bets/BetslipsManager.js';
+import BetslipWrapper from '../../utils/api/Khronos/bets/betslip-wrapper.js';
+import { ApiErrorHandler } from '../../utils/api/Khronos/error-handling/ApiErrorHandler.js';
+import { BetsCacheService } from '../../utils/api/common/bets/BetsCacheService.js';
 import MoneyFormatter from '../../utils/api/common/money-formatting/money-format.js';
+import PatreonFacade from '../../utils/api/patreon/Patreon-Facade.js';
+import { CacheManager } from '../../utils/cache/RedisCacheManager.js';
+import { ErrorEmbeds } from '../../utils/common/errors/global.js';
 
 @ApplyOptions<Command.Options>({
 	description: 'Double down an existing bet',
@@ -24,8 +24,8 @@ export class UserCommand extends Command {
 				.setDMPermission(false)
 				.addIntegerOption((option) =>
 					option
-						.setName(`betid`)
-						.setDescription(`The ID of the bet to double down`)
+						.setName('betid')
+						.setDescription('The ID of the bet to double down')
 						.setRequired(true),
 				),
 		);
@@ -43,7 +43,7 @@ export class UserCommand extends Command {
 			});
 			return;
 		}
-		const betId = interaction.options.getInteger(`betid`, true);
+		const betId = interaction.options.getInteger('betid', true);
 		try {
 			const betslipManager = new BetslipManager(
 				new BetslipWrapper(),

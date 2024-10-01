@@ -1,10 +1,10 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
-import AccountsWrapper from '../../utils/api/Khronos/accounts/accounts-wrapper.js';
 import AccountManager from '../../utils/api/Khronos/accounts/AccountManager.js';
+import AccountsWrapper from '../../utils/api/Khronos/accounts/accounts-wrapper.js';
 
 @ApplyOptions<Command.Options>({
-	description: `Instantly register your account with Pluto!`,
+	description: 'Instantly register your account with Pluto!',
 })
 export class UserCommand extends Command {
 	public override registerApplicationCommands(registry: Command.Registry) {

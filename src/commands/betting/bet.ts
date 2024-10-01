@@ -1,12 +1,12 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
+import { resolveTeam } from 'resolve-team';
 import { BetslipManager } from '../../utils/api/Khronos/bets/BetslipsManager.js';
 import BetslipWrapper from '../../utils/api/Khronos/bets/betslip-wrapper.js';
 import { BetsCacheService } from '../../utils/api/common/bets/BetsCacheService.js';
-import { CacheManager } from '../../utils/cache/RedisCacheManager.js';
 import BettingValidation from '../../utils/betting/betting-validation.js';
+import { CacheManager } from '../../utils/cache/RedisCacheManager.js';
 import { ErrorEmbeds } from '../../utils/common/errors/global.js';
-import { resolveTeam } from 'resolve-team';
 
 @ApplyOptions<Command.Options>({
 	description: '🎲 Place a bet on a match',

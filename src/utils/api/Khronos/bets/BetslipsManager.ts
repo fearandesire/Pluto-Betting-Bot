@@ -1,4 +1,11 @@
-import { isApiError } from '../../../../lib/interfaces/errors/api-errors.js';
+import type {
+	BetslipWithAggregationDTO,
+	DoubleDownDto,
+	InitBetslipRespDTO,
+	PlaceBetDto,
+	PlacedBetslip,
+} from '@kh-openapi';
+import { helpfooter } from '@pluto-config';
 import {
 	ActionRowBuilder,
 	ButtonBuilder,
@@ -8,28 +15,21 @@ import {
 	EmbedBuilder,
 	type GuildEmoji,
 } from 'discord.js';
-import type { IMatchInfoArgs } from '../../common/interfaces/kh-pluto/kh-pluto.interface.js';
-import type { IAPIBetslipPayload } from '../../../../lib/interfaces/api/bets/betslips.interfaces.js';
 import embedColors from '../../../../lib/colorsConfig.js';
-import { findEmoji } from '../../../bot_res/findEmoji.js';
-import { helpfooter } from '@pluto-config';
-import { ErrorEmbeds } from '../../../common/errors/global.js';
 import { ApiModules } from '../../../../lib/interfaces/api/api.interface.js';
-import { ApiErrorHandler } from '../error-handling/ApiErrorHandler.js';
-import type { BetsCacheService } from '../../common/bets/BetsCacheService.js';
-import BetslipWrapper from './betslip-wrapper.js';
-import GuildWrapper from '../guild/guild-wrapper.js';
-import type {
-	BetslipWithAggregationDTO,
-	DoubleDownDto,
-	InitBetslipRespDTO,
-	PlaceBetDto,
-	PlacedBetslip,
-} from '@kh-openapi';
-import MoneyFormatter from '../../common/money-formatting/money-format.js';
-import GuildUtils from '../../../guilds/GuildUtils.js';
+import type { IAPIBetslipPayload } from '../../../../lib/interfaces/api/bets/betslips.interfaces.js';
+import { isApiError } from '../../../../lib/interfaces/errors/api-errors.js';
+import { findEmoji } from '../../../bot_res/findEmoji.js';
+import { ErrorEmbeds } from '../../../common/errors/global.js';
 import StringUtils from '../../../common/string-utils.js';
+import GuildUtils from '../../../guilds/GuildUtils.js';
+import type { BetsCacheService } from '../../common/bets/BetsCacheService.js';
+import type { IMatchInfoArgs } from '../../common/interfaces/kh-pluto/kh-pluto.interface.js';
+import MoneyFormatter from '../../common/money-formatting/money-format.js';
 import PatreonFacade from '../../patreon/Patreon-Facade.js';
+import { ApiErrorHandler } from '../error-handling/ApiErrorHandler.js';
+import GuildWrapper from '../guild/guild-wrapper.js';
+import BetslipWrapper from './betslip-wrapper.js';
 
 interface InitializeParams {
 	team: string;

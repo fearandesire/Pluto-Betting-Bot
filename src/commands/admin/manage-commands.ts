@@ -1,5 +1,5 @@
 import { ApplyOptions } from '@sapphire/decorators';
-import { Command, type ApplicationCommandRegistry } from '@sapphire/framework';
+import { type ApplicationCommandRegistry, Command } from '@sapphire/framework';
 import { PermissionFlagsBits } from 'discord.js';
 
 @ApplyOptions<Command.Options>({

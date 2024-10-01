@@ -16,8 +16,8 @@ export async function formatOdds(
 ): Promise<IFormattedOdds> {
 	let hOdds = homeOdds.toString();
 	let aOdds = awayOdds.toString();
-	const favorHome = hOdds.includes(`-`);
-	const favorAway = aOdds.includes(`-`);
+	const favorHome = hOdds.includes('-');
+	const favorAway = aOdds.includes('-');
 	if (favorHome && favorAway) {
 		hOdds = `${hOdds}`;
 		aOdds = `${aOdds}`;
@@ -26,7 +26,7 @@ export async function formatOdds(
 	} else if (favorAway && !favorHome) {
 		hOdds = `+${hOdds}`; // home team underdog
 	} else {
-		throw new Error(`Invalid odds provided to be formatted.`);
+		throw new Error('Invalid odds provided to be formatted.');
 	}
 	return {
 		homeOdds: hOdds,

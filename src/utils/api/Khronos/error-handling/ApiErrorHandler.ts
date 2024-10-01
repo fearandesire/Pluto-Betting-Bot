@@ -1,11 +1,11 @@
+import type { CommandInteraction } from 'discord.js';
 import {
 	ApiHttpErrorTypes,
 	ApiModules,
 } from '../../../../lib/interfaces/api/api.interface.js';
 import { ErrorEmbeds } from '../../../common/errors/global.js';
-import { CommandInteraction } from 'discord.js';
-import { IKhronosErr } from './interface.js';
 import MoneyFormatter from '../../common/money-formatting/money-format.js';
+import type { IKhronosErr } from './interface.js';
 
 export class ApiErrorHandler {
 	async errorResponses(
@@ -14,8 +14,8 @@ export class ApiErrorHandler {
 		errModule: ApiModules,
 	) {
 		const errorType = apiError.exception;
-		let errorMessage;
-		let timeLeft;
+		let errorMessage: string;
+		let timeLeft: string;
 		switch (errorType) {
 			// ? These error types will by default use the message that they arrived with
 			case ApiHttpErrorTypes.UnableToFindBalance:
@@ -28,7 +28,8 @@ export class ApiErrorHandler {
 				errorMessage = `There's more than one game available for this team.\nPlease place your bet again and specify a match.`;
 				break;
 			case ApiHttpErrorTypes.InvalidTeamForMatch:
-				errorMessage = `The team specified was not valid for the match you selected.\nPlease place your bet again and select the correct match.`;
+				errorMessage =
+					'The team specified was not valid for the match you selected.\nPlease place your bet again and select the correct match';
 				break;
 			case ApiHttpErrorTypes.AccountNotFound:
 				errorMessage = `You don't have an account yet.\nUse \`/register\` to instantly create one!`;
@@ -42,7 +43,7 @@ export class ApiErrorHandler {
 					timeLeft = apiError.details.timeLeft;
 					errorMessage = `You are on cooldown for another ${timeLeft}.`;
 				} else {
-					errorMessage = `You can only claim once every 24 hours!`;
+					errorMessage = 'You can only claim once every 24 hours!';
 				}
 				break;
 			case ApiHttpErrorTypes.HasPendingBet:
@@ -69,17 +70,18 @@ export class ApiErrorHandler {
 				) {
 					errorMessage = `You only have **\`${MoneyFormatter.toUSD(apiError.details.balance)}\`** available to place bets with.`;
 				} else {
-					errorMessage = `Your balance is insufficient to place this bet.`;
+					errorMessage = 'Your balance is insufficient to place this bet.';
 				}
 				break;
 			case ApiHttpErrorTypes.InternalError:
-				errorMessage = `An internal error has occurred. Please try again later.`;
+				errorMessage =
+					'An internal error has occurred. Please try again later.';
 				break;
 			case ApiHttpErrorTypes.AccountExists:
-				errorMessage = `You already have an account with Pluto.`;
+				errorMessage = 'You already have an account with Pluto.';
 				break;
 			case ApiHttpErrorTypes.NoActiveBets:
-				errorMessage = `You have no active bets.`;
+				errorMessage = 'You have no active bets.';
 				break;
 			default:
 				errorMessage =

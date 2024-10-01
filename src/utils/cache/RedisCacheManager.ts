@@ -1,6 +1,6 @@
 import { format } from 'date-fns';
-import redisCache from './redisInstance.js';
 import type { Redis } from 'ioredis';
+import redisCache from './redisInstance.js';
 
 export class CacheManager {
 	cache: Redis;

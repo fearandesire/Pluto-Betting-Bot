@@ -1,6 +1,6 @@
 import Router from 'koa-router';
-import type { RequestBody } from './props-route.interface.js';
 import { PropsController } from '../../controllers/props.controller.js';
+import type { RequestBody } from './props-route.interface.js';
 
 const PropsRouter = new Router();
 const propsController = new PropsController();

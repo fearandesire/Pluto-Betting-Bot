@@ -21,14 +21,14 @@ export class UserCommand extends Command {
 	) {
 		await interaction.deferReply({ ephemeral: true });
 		const blue = embedColors.PlutoBlue;
-		const thumbnail = `https://i.imgur.com/qG3Mm5t.png`;
+		const thumbnail = 'https://i.imgur.com/qG3Mm5t.png';
 		const emb = new EmbedBuilder()
 
 			.setTitle('Supporting Development | Patreon 💙')
 			.setDescription(PatreonInformation)
 			.setColor(blue)
 			.setFooter({
-				text: `For questions, message me on Discord: fenixforever`,
+				text: 'For questions, message me on Discord: fenixforever',
 			})
 			.setThumbnail(thumbnail);
 

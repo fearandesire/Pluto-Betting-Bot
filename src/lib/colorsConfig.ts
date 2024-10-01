@@ -1,4 +1,4 @@
-import { ColorResolvable } from 'discord.js';
+import type { ColorResolvable } from 'discord.js';
 
 const embedColors: Record<string, ColorResolvable> = {
 	// Pluto

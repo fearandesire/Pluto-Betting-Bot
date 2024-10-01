@@ -1,7 +1,7 @@
-import { CacheManager } from '../../../cache/RedisCacheManager.js';
-import { Match } from '@kh-openapi';
-import MatchApiWrapper from '../../Khronos/matches/matchApiWrapper.js';
+import type { Match } from '@kh-openapi';
 import { resolveTeam } from 'resolve-team';
+import type { CacheManager } from '../../../cache/RedisCacheManager.js';
+import MatchApiWrapper from '../../Khronos/matches/matchApiWrapper.js';
 
 export default class MatchCacheService {
 	constructor(private cache: CacheManager) {}
@@ -38,12 +38,12 @@ export default class MatchCacheService {
 	async matchesByTeam(team: string) {
 		const resolvedTeamName = await resolveTeam(team, { full: false });
 		if (!resolvedTeamName) {
-			throw new Error(`Unable to identify the sports team you specified`);
+			throw new Error('Unable to identify the sports team you specified');
 		}
 		// Search match cache and identify matches that contain the team
 		const matchCache = await this.getMatches();
 		if (!matchCache) {
-			throw new Error(`Unable to retrieve stored matches at this time.`);
+			throw new Error('Unable to retrieve stored matches at this time.');
 		}
 		const matches = matchCache.filter((match: Match) => {
 			return (

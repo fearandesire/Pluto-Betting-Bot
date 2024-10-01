@@ -1,9 +1,9 @@
-import BetslipWrapper from './betslip-wrapper.js';
-import { PlacedBetslip } from '@kh-openapi';
-import { CommandInteraction, EmbedBuilder, Guild } from 'discord.js';
-import embedColors from '../../../../lib/colorsConfig.js';
+import type { PlacedBetslip } from '@kh-openapi';
 import { helpfooter } from '@pluto-config';
+import { type CommandInteraction, EmbedBuilder, type Guild } from 'discord.js';
+import embedColors from '../../../../lib/colorsConfig.js';
 import { patreonFooter } from '../../patreon/interfaces.js';
+import type BetslipWrapper from './betslip-wrapper.js';
 
 export default class BetslipDataManager {
 	constructor(private betslipWrapper: BetslipWrapper) {}
@@ -14,7 +14,7 @@ export default class BetslipDataManager {
 		});
 		const guild = interaction.guild;
 		if (!guild) {
-			throw new Error(`Guild not identified from interaction.`);
+			throw new Error('Guild not identified from interaction.');
 		}
 		return this.displayUsersBets(guild, activeBets);
 	}

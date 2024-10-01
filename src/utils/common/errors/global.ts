@@ -1,6 +1,6 @@
+import { helpfooter } from '@pluto-config';
 import { EmbedBuilder } from 'discord.js';
 import embedColors from '../../../lib/colorsConfig.js';
-import { helpfooter } from '@pluto-config';
 import { nonPatreonMemberMsg } from '../../api/patreon/interfaces.js';
 
 /**
@@ -21,32 +21,32 @@ export class ErrorEmbeds {
 			.setColor(embedColors.error)
 			.setFooter({
 				text: extraData
-					? extraData.footerData + ' | ' + helpfooter()
+					? `${extraData.footerData} | ${helpfooter()}`
 					: helpfooter(),
 			});
 	}
 
 	// Specific error methods just call the generalized method with predefined titles
 	static patreonMembersOnly() {
-		return this.createErrorEmbed('Access Denied', nonPatreonMemberMsg);
+		return ErrorEmbeds.createErrorEmbed('Access Denied', nonPatreonMemberMsg);
 	}
 	static internalErr(description: string) {
-		return this.createErrorEmbed('Internal Error', description);
+		return ErrorEmbeds.createErrorEmbed('Internal Error', description);
 	}
 
 	static betErr(description: string) {
-		return this.createErrorEmbed('Invalid Bet', description);
+		return ErrorEmbeds.createErrorEmbed('Invalid Bet', description);
 	}
 
 	static invalidRequest(description: string) {
-		return this.createErrorEmbed('Invalid Request', description);
+		return ErrorEmbeds.createErrorEmbed('Invalid Request', description);
 	}
 
 	static accountErr(description: string) {
-		return this.createErrorEmbed('Account Error', description);
+		return ErrorEmbeds.createErrorEmbed('Account Error', description);
 	}
 
 	static unknownErr(description: string) {
-		return this.createErrorEmbed('Unknown Error', description);
+		return ErrorEmbeds.createErrorEmbed('Unknown Error', description);
 	}
 }

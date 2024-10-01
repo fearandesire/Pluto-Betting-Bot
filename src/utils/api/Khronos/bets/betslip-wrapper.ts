@@ -1,14 +1,14 @@
 import {
 	BetslipsApi,
-	CancelBetslipRequest,
-	DoubleDownBetRequest,
-	DoubleDownDto,
-	GetActiveBetslipsRequest,
-	InitBetslipRequest,
-	PlaceBetslipRequest,
-	PlacedBetslip,
+	type CancelBetslipRequest,
+	type DoubleDownBetRequest,
+	type DoubleDownDto,
+	type GetActiveBetslipsRequest,
+	type InitBetslipRequest,
+	type PlaceBetslipRequest,
+	type PlacedBetslip,
 } from '@kh-openapi';
-import { IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js';
+import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js';
 
 export default class BetslipWrapper {
 	private betslipApi: BetslipsApi;

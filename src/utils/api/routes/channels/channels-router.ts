@@ -4,8 +4,8 @@
  */
 
 import Router from 'koa-router';
-import ChannelManager from '../../../guilds/channels/ChannelManager.js';
 import _ from 'lodash';
+import ChannelManager from '../../../guilds/channels/ChannelManager.js';
 
 const ChannelsRoutes = new Router();
 
@@ -13,7 +13,7 @@ const ChannelsRoutes = new Router();
  * Handles POST requests to create channels based on incoming data.
  * @param {Object} ctx - Context for the incoming HTTP request.
  */
-ChannelsRoutes.post(`/channels/incoming`, async (ctx: any) => {
+ChannelsRoutes.post('/channels/incoming', async (ctx: any) => {
 	try {
 		const channelManager = new ChannelManager();
 		const validated = await channelManager.validateAndParseChannels(
@@ -49,7 +49,7 @@ ChannelsRoutes.post(`/channels/incoming`, async (ctx: any) => {
 			error: error,
 		});
 		ctx.body = {
-			message: `Unexpected error occurred`,
+			message: 'Unexpected error occurred',
 			statusCode: 500,
 		};
 	}
@@ -60,7 +60,7 @@ ChannelsRoutes.post(`/channels/incoming`, async (ctx: any) => {
  * Expecting the incoming data to be an array of strings that are the channel names to search & remove
  * @param {Object} ctx - Context for the incoming HTTP request.
  */
-ChannelsRoutes.delete(`/channels/delete`, async (ctx: any) => {
+ChannelsRoutes.delete('/channels/delete', async (ctx: any) => {
 	try {
 		const { channelNames }: { channelNames: string[] } = ctx.request.body;
 

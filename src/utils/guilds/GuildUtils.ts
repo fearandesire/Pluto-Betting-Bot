@@ -1,6 +1,6 @@
-import { SapDiscClient } from '../../index.js';
-import _ from 'lodash';
 import type { Guild } from 'discord.js';
+import _ from 'lodash';
+import { SapDiscClient } from '../../index.js';
 
 export default class GuildUtils {
 	async findEmoji(name: string) {

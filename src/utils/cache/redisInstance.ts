@@ -1,5 +1,5 @@
-import { default as Redis } from 'ioredis'; // Issue from https://github.com/redis/ioredis/issues/1624
 import { bold, green, yellow } from 'colorette';
+import { default as Redis } from 'ioredis'; // Issue from https://github.com/redis/ioredis/issues/1624
 
 const { R_HOST, R_PORT, R_PASS, R_DB } = process.env;
 

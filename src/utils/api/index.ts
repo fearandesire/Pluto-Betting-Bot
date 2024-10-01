@@ -4,17 +4,17 @@
  *
  */
 
-import Koa from 'koa';
 import cors from '@koa/cors';
-import logger from 'koa-logger';
+import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
+import logger from 'koa-logger';
 import logClr from '../bot_res/ColorConsole.js';
 import { pageNotFound, responseTime } from './requests/middleware.js';
-import ScheduleRouter from './routes/schedule/schedule.js';
-import NotificationRouter from './routes/notifications/notifications.controller.js';
 import { matchCache } from './routes/cache/match-cache.js';
 import ChannelsRoutes from './routes/channels/channels-router.js';
+import NotificationRouter from './routes/notifications/notifications.controller.js';
 import PropsRouter from './routes/props/props.js';
+import ScheduleRouter from './routes/schedule/schedule.js';
 
 const app = new Koa();
 app.use(logger());

@@ -9,7 +9,7 @@ export class Endpoints {
 			remove: '/channels/delete',
 		},
 		schedule: {
-			daily: `/schedule/daily/all`,
+			daily: '/schedule/daily/all',
 		},
 	};
 }
@@ -23,9 +23,9 @@ export class OutgoingEndpoints {
 		},
 		bets: {
 			create: 'betslips/create', // Initalize
-			pending: `betslips/pending`,
-			place: `betslips/place`, // Finalizes & stores - If there's only one matchup, this can be used.
-			cancel: `betslips/cancel`,
+			pending: 'betslips/pending',
+			place: 'betslips/place', // Finalizes & stores - If there's only one matchup, this can be used.
+			cancel: 'betslips/cancel',
 		},
 		game_schedule: 'discord/config/type',
 		categories: {

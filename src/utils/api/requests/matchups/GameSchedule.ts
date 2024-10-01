@@ -1,13 +1,13 @@
-import { ColorResolvable, EmbedBuilder, TextChannel } from 'discord.js';
+import { type ColorResolvable, EmbedBuilder, TextChannel } from 'discord.js';
 import embedColors from '../../../../lib/colorsConfig.js';
 import GuildUtils from '../../../guilds/GuildUtils.js';
-import {
+import { AxiosKhronosInstance } from '../../common/axios-config.js';
+import { OutgoingEndpoints } from '../../common/endpoints.js';
+import type {
 	IConfigRow,
 	IMatchupAggregated,
 	SportsServing,
 } from '../../common/interfaces/kh-pluto/kh-pluto.interface.js';
-import { OutgoingEndpoints } from '../../common/endpoints.js';
-import { AxiosKhronosInstance } from '../../common/axios-config.js';
 
 /**
  * Responsible for retrieving & displaying upcoming games / matchups
@@ -37,7 +37,7 @@ export default class GameSchedule {
 		const scheduleEmbed = new EmbedBuilder()
 			.setDescription(`## Daily Schedule | ${today}\n${desc}`)
 			.setColor(embedColors.PlutoRed as ColorResolvable)
-			.setFooter({ text: `dev. fenixforever` });
+			.setFooter({ text: 'dev. fenixforever' });
 		return { scheduleEmbed };
 	}
 
@@ -66,7 +66,7 @@ export default class GameSchedule {
 					chanId,
 				});
 				if (!chan) {
-					throw new Error(`Failed to locate channel`);
+					throw new Error('Failed to locate channel');
 				}
 				if (chan instanceof TextChannel) {
 					await chan.send({ embeds: [scheduleEmbed] });
@@ -171,7 +171,7 @@ export default class GameSchedule {
 
 	async reqAll() {
 		const reqGamesSched = await this.axiosKhronosInstance({
-			method: `get`,
+			method: 'get',
 			url: `${this.outRoutes.matches.getAll}`,
 		});
 		return reqGamesSched.data;

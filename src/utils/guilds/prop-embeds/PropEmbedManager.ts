@@ -2,18 +2,18 @@ import {
 	ActionRowBuilder,
 	ButtonBuilder,
 	ButtonStyle,
-	EmbedBuilder,
 	type Client,
+	EmbedBuilder,
 } from 'discord.js';
-import GuildUtils from '../GuildUtils.js';
+import { PropButtons } from '../../../lib/interfaces/props/prop-buttons.interface.js';
 import {
 	MarketKeyTranslations,
 	type PropZod,
 } from '../../api/common/interfaces/index.js';
-import StringUtils from '../../common/string-utils.js';
-import TeamInfo from '../../common/TeamInfo.js';
-import { PropButtons } from '../../../lib/interfaces/props/prop-buttons.interface.js';
 import { DateManager } from '../../common/DateManager.js';
+import TeamInfo from '../../common/TeamInfo.js';
+import StringUtils from '../../common/string-utils.js';
+import GuildUtils from '../GuildUtils.js';
 
 interface AggregateDetailsParams {
 	HTEAM_TRANSFORMED: string;

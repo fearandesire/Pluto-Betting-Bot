@@ -1,12 +1,12 @@
+import { _, helpfooter } from '@pluto-config';
 import { format } from 'date-fns';
 import { EmbedBuilder } from 'discord.js';
-import { _, helpfooter } from '@pluto-config';
 import embedColors from '../../lib/colorsConfig.js';
+import { patreonFooter } from '../api/patreon/interfaces.js';
 import type {
 	IMatchupsGrouped,
 	IOddsField,
 } from '../matches/matchups.interface.js';
-import { patreonFooter } from '../api/patreon/interfaces.js';
 
 /**
  * Parses data of games to be displayed in a schedule.

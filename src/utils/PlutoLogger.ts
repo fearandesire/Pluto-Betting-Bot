@@ -1,6 +1,6 @@
 import {
-	EmbedBuilder,
 	type ColorResolvable,
+	EmbedBuilder,
 	type TextChannel,
 } from 'discord.js';
 
@@ -86,12 +86,12 @@ export default class PlutoLogger {
 				break;
 			default:
 				// Default to General Logs
-				color = data?.color || `#c4f3fd`;
-				title = data?.title || `General`;
+				color = data?.color || '#c4f3fd';
+				title = data?.title || 'General';
 				break;
 		}
-		const desc = data.description || `N/A`;
-		const footer = data?.footer !== null ? data.footer : `N/A`;
+		const desc = data.description || 'N/A';
+		const footer = data?.footer !== null ? data.footer : 'N/A';
 		if (!footer) return;
 		logsEmbed.setColor(color as ColorResolvable);
 		logsEmbed.setTitle(`${title} Logs`);

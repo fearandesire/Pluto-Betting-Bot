@@ -1,6 +1,6 @@
+import type { IApiError } from '../../../lib/interfaces/errors/api-errors.js';
 import PatreonManager from './PatreonManager.js';
 import { type IPatreonReadUser, PatreonTiers } from './interfaces.js';
-import type { IApiError } from '../../../lib/interfaces/errors/api-errors.js';
 export default class PatreonFacade {
 	static readonly patreonManager = new PatreonManager();
 
@@ -12,7 +12,8 @@ export default class PatreonFacade {
 	static async memberDetails(
 		userId: string,
 	): Promise<IPatreonReadUser | IApiError | false> {
-		const result = await this.patreonManager.reqPatreonUserData(userId);
+		const result =
+			await PatreonFacade.patreonManager.reqPatreonUserData(userId);
 		if ('message' in result) {
 			return result; // This is a PatreonError
 		}
@@ -25,7 +26,7 @@ export default class PatreonFacade {
 	 * @returns {Promise<boolean | PatreonError>} - true if the user is a sponsor-tier Patreon member, PatreonError if there was an error, otherwise false
 	 */
 	static async isSponsorTier(userId: string): Promise<boolean | IApiError> {
-		const memberDetails = await this.memberDetails(userId);
+		const memberDetails = await PatreonFacade.memberDetails(userId);
 		if (memberDetails === false) {
 			return false;
 		}
@@ -39,7 +40,7 @@ export default class PatreonFacade {
 
 	static async isSupporterTier(userId: string): Promise<boolean> {
 		try {
-			const memberDetails = await this.memberDetails(userId);
+			const memberDetails = await PatreonFacade.memberDetails(userId);
 			if (!memberDetails || 'message' in memberDetails) {
 				return false;
 			}
