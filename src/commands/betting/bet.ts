@@ -24,7 +24,7 @@ export class UserCommand extends Command {
 							.setName('team')
 							.setDescription('The team you want to bet on')
 							.setRequired(true)
-							.setAutocomplete(true),
+							.setAutocomplete(false),
 					)
 					.addIntegerOption((option) =>
 						option
