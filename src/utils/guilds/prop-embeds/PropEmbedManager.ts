@@ -52,6 +52,9 @@ export default class PropEmbedManager {
 			prop.commence_time,
 		);
 		const matchString = `${HTEAM_TRANSFORMED} vs ${AWTEAM_TRANSFORMED}`;
+		const createBtnString = (name: string) => name.replace(/\s+/g, '_');
+		const HTEAM_BTN_STRING = createBtnString(HTEAM_TRANSFORMED);
+		const AWTEAM_BTN_STRING = createBtnString(AWTEAM_TRANSFORMED);
 		const ovrUnderStr = (amount: string) => `Over/Under **\`${amount}\`**`;
 		const { point } = prop;
 		const title = 'Accuracy Challenge';
@@ -78,11 +81,11 @@ export default class PropEmbedManager {
 			];
 			buttons = [
 				new ButtonBuilder()
-					.setCustomId(`${PropButtons.OVER}_${prop.id}`)
+					.setCustomId(`prop_${PropButtons.OVER}_${prop.id}`)
 					.setLabel('Over ⬆️')
 					.setStyle(ButtonStyle.Primary),
 				new ButtonBuilder()
-					.setCustomId(`${PropButtons.UNDER}_${prop.id}`)
+					.setCustomId(`prop_${PropButtons.UNDER}_${prop.id}`)
 					.setLabel('Under ⬇️')
 					.setStyle(ButtonStyle.Primary),
 			];
@@ -99,11 +102,11 @@ export default class PropEmbedManager {
 			];
 			buttons = [
 				new ButtonBuilder()
-					.setCustomId(`${prop.home_team}_${prop.id}`)
+					.setCustomId(`prop_${HTEAM_BTN_STRING}_${prop.id}`)
 					.setLabel(`${HTEAM_TRANSFORMED}`)
 					.setStyle(ButtonStyle.Primary),
 				new ButtonBuilder()
-					.setCustomId(`${prop.away_team}_${prop.id}`)
+					.setCustomId(`prop_${AWTEAM_BTN_STRING}_${prop.id}`)
 					.setLabel(`${AWTEAM_TRANSFORMED}`)
 					.setStyle(ButtonStyle.Primary),
 			];
@@ -125,11 +128,11 @@ export default class PropEmbedManager {
 			];
 			buttons = [
 				new ButtonBuilder()
-					.setCustomId(`${PropButtons.OVER}_${prop.id}`)
+					.setCustomId(`prop_${PropButtons.OVER}_${prop.id}`)
 					.setLabel('Over ⬆️')
 					.setStyle(ButtonStyle.Primary),
 				new ButtonBuilder()
-					.setCustomId(`${PropButtons.UNDER}_${prop.id}`)
+					.setCustomId(`prop_${PropButtons.UNDER}_${prop.id}`)
 					.setLabel('Under ⬇️')
 					.setStyle(ButtonStyle.Primary),
 			];

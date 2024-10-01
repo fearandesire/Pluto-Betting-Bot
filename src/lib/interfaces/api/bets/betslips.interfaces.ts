@@ -7,10 +7,6 @@ export interface IPendingBetslip {
 	team: string;
 }
 
-export interface IPendingBetslipFull extends IPendingBetslip {
-	matchup_id: string;
-}
-
 export interface IAPIBetslipPayload {
 	userid: string;
 	team: string;
@@ -45,29 +41,3 @@ export interface IFinalizedBetslip
 	extends ICreateBetslipFull,
 		INewBalance,
 		IBetId {}
-
-export interface ValidatedBetslipData {
-	chosenTeam: string;
-	matchupsForTeam: Match[];
-}
-// Extend the base interface for a response that includes a 'betslip'
-export interface IAPIProcessedBetslip extends IApiResponse {
-	betslip: IFinalizedBetslip;
-}
-
-// Extend the base interface for a response that includes 'chosenTeam' and 'matchupsForTeam'
-export interface IValidatedBetslipData extends IApiResponse {
-	chosenTeam: string;
-	matchupsForTeam: Match[];
-	betslip: IPendingBetslip;
-}
-
-export function isFinalizedBetslip(payload: any): payload is IFinalizedBetslip {
-	return 'amount' in payload;
-}
-
-export function isValidatedBetslipData(
-	payload: any,
-): payload is ValidatedBetslipData {
-	return 'chosenTeam' in payload && 'matchupsForTeam' in payload;
-}

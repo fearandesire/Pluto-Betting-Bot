@@ -1,15 +1,20 @@
 import {
 	InteractionHandler,
 	InteractionHandlerTypes,
+	none,
+	some,
 } from '@sapphire/framework';
 // pnpm issue with @sapphire framework
 import { None, Option, Result } from '@sapphire/framework';
 import type { ButtonInteraction } from 'discord.js';
 import { EmbedBuilder } from 'discord.js';
 import embedColors from '../lib/colorsConfig.js';
-import { btnIds } from '../lib/interfaces/interaction-handlers/interaction-handlers.interface.js';
 import {
-	PropButtons,
+	btnIds,
+	startsWithAny,
+} from '../lib/interfaces/interaction-handlers/interaction-handlers.interface.js';
+import {
+	type ParsedPropButton,
 	parsePropButtonId,
 } from '../lib/interfaces/props/prop-buttons.interface.js';
 import type { Match } from '../openapi/khronos/models/Match.js';
@@ -23,6 +28,9 @@ import { patreonFooter } from '../utils/api/patreon/interfaces.js';
 import MatchCacheService from '../utils/api/routes/cache/MatchCacheService.js';
 import { CacheManager } from '../utils/cache/RedisCacheManager.js';
 import { ErrorEmbeds } from '../utils/common/errors/global.js';
+import type { ICreateBetslipFull } from '../lib/interfaces/api/bets/betslips.interfaces.js';
+import _ from 'lodash';
+
 /**
  * @module ButtonListener
  */
@@ -47,117 +55,125 @@ export class ButtonHandler extends InteractionHandler {
 	 */
 	// @ts-ignore - Weird TS Error
 	public override async parse(interaction: ButtonInteraction) {
-		// Blanket Clearing Action Components
-		const allBtnIds = [
-			...Object.values(btnIds),
-			PropButtons.OVER,
-			PropButtons.UNDER,
-		];
-		if (!allBtnIds.some((id) => interaction.customId.startsWith(id))) {
+		// Define valid button ID prefixes
+		const validPrefixes = ['prop_', 'matchup'];
+
+		// Check if the button's custom ID starts with any valid prefix
+		if (!startsWithAny(interaction.customId, validPrefixes)) {
+			// Clear action components for invalid button IDs
 			await interaction.update({
 				components: [],
 			});
 			return this.none();
 		}
 
-		if (interaction.customId === 'matchup_btn_cancel') {
-			await interaction.update({
-				components: [],
-			});
-
-			return this.some();
+		// Handle prop buttons
+		if (_.startsWith(interaction.customId, 'prop_')) {
+			await interaction.deferReply({ ephemeral: true });
+			const parsedButton = parsePropButtonId(interaction.customId);
+			return parsedButton ? this.some(parsedButton) : this.none();
 		}
 
-		if (interaction.customId === 'matchup_btn_confirm') {
-			await interaction.deferUpdate();
-			await interaction.editReply({
-				components: [],
-			});
-			try {
-				const cachedBet = await new BetsCacheService(
-					new CacheManager(),
-				).getUserBet(interaction.user.id);
-				if (!cachedBet) {
+		// Handle matchup buttons
+		if (_.startsWith(interaction.customId, 'matchup')) {
+			// Cancel button
+			if (interaction.customId === btnIds.matchup_btn_cancel) {
+				await interaction.update({
+					components: [],
+				});
+				return this.some({
+					hasFailed: false,
+				});
+			}
+
+			// Confirm button
+			if (interaction.customId === btnIds.matchup_btn_confirm) {
+				await interaction.deferUpdate();
+				await interaction.editReply({
+					components: [],
+				});
+				try {
+					const cachedBet = await new BetsCacheService(
+						new CacheManager(),
+					).getUserBet(interaction.user.id);
+					if (!cachedBet) {
+						console.error({
+							method: this.constructor.name,
+							message: 'Cached bet not found',
+							data: {
+								userId: interaction.user.id,
+							},
+						});
+						const errMsg = 'Unable to locate your bet data.';
+						return this.some({
+							hasFailed: true,
+							errMsg: errMsg,
+						});
+					}
+					const matchId = cachedBet.match.id;
+					let locatedMatch: Match | null = await new MatchCacheService(
+						new CacheManager(),
+					).getMatch(matchId);
+
+					// If the match is not found in cache, attempt to locate it via API
+					if (!locatedMatch) {
+						const matchesApi = new MatchApiWrapper();
+						const { matches } = await matchesApi.getAllMatches();
+						locatedMatch =
+							matches.find((match: Match) => match.id === matchId) ?? null;
+
+						if (!locatedMatch) {
+							console.error({
+								method: this.constructor.name,
+								message: 'Match not found after API fetch',
+								data: {
+									matchup_id: matchId,
+								},
+							});
+							return this.some({
+								hasFailed: true,
+								errMsg: 'Unable to locate match data.',
+							});
+						}
+					}
+					// Continue processing with the found match
+					const matchDetails = locatedMatch;
+					return this.some({
+						betslip: cachedBet,
+						matchData: matchDetails,
+					});
+				} catch (error) {
+					const errMsg =
+						'An error occurred when collecting betslip or match data.';
 					console.error({
-						method: this.constructor.name,
-						message: 'Cached bet not found',
+						trace: this.constructor.name,
+						message: errMsg,
 						data: {
-							userId: interaction.user.id,
+							error,
 						},
 					});
-					const errMsg = 'Unable to locate your bet data.';
 					return this.some({
 						hasFailed: true,
 						errMsg: errMsg,
 					});
 				}
-				const matchId = cachedBet.match.id;
-				let locatedMatch: Match | null = await new MatchCacheService(
-					new CacheManager(),
-				).getMatch(matchId);
-
-				// If the match is not found in cache, attempt to locate it via API
-				if (!locatedMatch) {
-					const matchesApi = new MatchApiWrapper();
-					const { matches } = await matchesApi.getAllMatches();
-					locatedMatch =
-						matches.find((match: Match) => match.id === matchId) ?? null;
-
-					if (!locatedMatch) {
-						console.error({
-							method: this.constructor.name,
-							message: 'Match not found after API fetch',
-							data: {
-								matchup_id: matchId,
-							},
-						});
-						return this.some({
-							hasFailed: true,
-							errMsg: 'Unable to locate match data.',
-						});
-					}
-				}
-				// Continue processing with the found match
-				const matchDetails = locatedMatch;
-				return this.some({
-					betslip: cachedBet,
-					matchData: matchDetails,
-				});
-			} catch (error) {
-				const errMsg =
-					'An error occurred when collecting betslip or match data.';
-				console.error({
-					trace: this.constructor.name,
-					message: errMsg,
-					data: {
-						error,
-					},
-				});
-				return this.some({
-					hasFailed: true,
-					errMsg: errMsg,
-				});
 			}
 		}
 
-		const parsedPropButton = parsePropButtonId(interaction.customId);
-
-		if (parsedPropButton) {
-			await interaction.deferReply({ ephemeral: true });
-			return this.some(parsedPropButton);
-		}
-
+		// If we reach here, it means we didn't handle the button
 		return this.none();
 	}
 
-	public async run(interaction: ButtonInteraction, payload: any) {
-		if (payload?.hasFailed) {
+	public async run(interaction: ButtonInteraction, payload: ButtonPayload) {
+		if ('hasFailed' in payload && payload.hasFailed) {
 			const errMsg = payload.errMsg;
 			await interaction.editReply({
 				embeds: [ErrorEmbeds.internalErr(errMsg)],
 				components: [],
 			});
+			return;
 		}
+
 		if (interaction.customId === btnIds.matchup_btn_cancel) {
 			const betslipWrapper = new BetslipWrapper();
 			await betslipWrapper.clearPending(interaction.user.id);
@@ -172,21 +188,23 @@ export class ButtonHandler extends InteractionHandler {
 				components: [],
 			});
 		} else if (interaction.customId === btnIds.matchup_btn_confirm) {
-			const { betslip, matchData } = payload;
-			const matchOpponent = betslip.opponent;
+			if ('betslip' in payload && 'matchData' in payload) {
+				const { betslip, matchData } = payload;
+				const matchOpponent = betslip.opponent;
 
-			const { dateofmatchup } = matchData;
-			const sanitizedBetslip = await new BetsCacheService(
-				new CacheManager(),
-			).sanitize(betslip);
-			return new BetslipManager(
-				new BetslipWrapper(),
-				new BetsCacheService(new CacheManager()),
-			).placeBet(interaction, sanitizedBetslip, {
-				dateofmatchup,
-				opponent: matchOpponent,
-			});
-		} else if (payload.action === 'over' || payload.action === 'under') {
+				const { dateofmatchup } = matchData;
+				const sanitizedBetslip = await new BetsCacheService(
+					new CacheManager(),
+				).sanitize(betslip);
+				return new BetslipManager(
+					new BetslipWrapper(),
+					new BetsCacheService(new CacheManager()),
+				).placeBet(interaction, sanitizedBetslip, {
+					dateofmatchup,
+					opponent: matchOpponent,
+				});
+			}
+		} else if ('action' in payload) {
 			const predictionApi = new PredictionApiWrapper();
 			const propsApi = new PropsApiWrapper();
 
@@ -206,20 +224,37 @@ export class ButtonHandler extends InteractionHandler {
 				});
 
 				await interaction.editReply({
-					content: `Your prediction has been stored (${payload.action}`,
+					content: `Your prediction has been stored (${payload.action})`,
 				});
 
 				// Delete the ephemeral message after 5 seconds
 				setTimeout(() => {
 					interaction.deleteReply().catch(console.error);
 				}, 5000);
-			} catch (error: any) {
+			} catch (error) {
 				await interaction.editReply({
-					content: `${error?.message || 'There was an error storing your prediction.'}`,
+					content:
+						error instanceof Error
+							? error.message
+							: 'There was an error storing your prediction.',
 				});
 			}
-		} else {
-			return;
 		}
 	}
 }
+
+interface FailedPayload {
+	hasFailed: true;
+	errMsg: string;
+}
+
+interface ConfirmPayload {
+	betslip: ICreateBetslipFull;
+	matchData: Match;
+}
+
+interface PropPayload extends ParsedPropButton {
+	action: 'over' | 'under';
+}
+
+type ButtonPayload = FailedPayload | ConfirmPayload | PropPayload;
