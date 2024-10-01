@@ -7,7 +7,6 @@ import { CacheManager } from '../../utils/cache/RedisCacheManager.js';
 import BettingValidation from '../../utils/betting/betting-validation.js';
 import { ErrorEmbeds } from '../../utils/common/errors/global.js';
 import { resolveTeam } from 'resolve-team';
-import { match } from 'assert';
 
 @ApplyOptions<Command.Options>({
 	description: '🎲 Place a bet on a match',
