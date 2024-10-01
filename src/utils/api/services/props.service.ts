@@ -5,7 +5,7 @@ import {
 } from '../common/interfaces/index.js';
 import { DateManager } from '../../common/DateManager.js';
 import PropEmbedManager from '../../guilds/prop-embeds/PropEmbedManager.js';
-import { SapDiscClient } from '../../../Pluto.js';
+import { SapDiscClient } from '../../../index.js';
 
 /**
  * Service for processing and managing props.
