@@ -72,6 +72,7 @@ export class BetslipManager {
 			// Call the API to initialize the bet
 			const response = await this.betslipInstance.init({
 				sport,
+				// @ts-ignore
 				initBetslipDTO: payload,
 			});
 			if (!response) {
