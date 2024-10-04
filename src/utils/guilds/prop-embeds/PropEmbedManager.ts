@@ -27,7 +27,7 @@ export default class PropEmbedManager {
 		this.client = client;
 	}
 
-	private async transformTeamName(teamName: string): Promise<string> {
+	async transformTeamName(teamName: string): Promise<string> {
 		const shortName = new StringUtils().getShortName(teamName);
 		const emoji = this.client.emojis.cache.find(
 			(emoji) => emoji.name?.toLowerCase() === shortName.toLowerCase(),
@@ -191,5 +191,28 @@ export default class PropEmbedManager {
 				}
 			}
 		}
+	}
+
+	async createSingleEmbed(
+		prop: PropZod,
+		{ HTEAM_TRANSFORMED, AWTEAM_TRANSFORMED }: AggregateDetailsParams,
+	) {
+		const { title, desc, fields, buttons } = this.aggregateDetails(prop, {
+			HTEAM_TRANSFORMED,
+			AWTEAM_TRANSFORMED,
+		});
+
+		const teamColor = await TeamInfo.getTeamColor(prop.home_team);
+
+		const embed = new EmbedBuilder()
+			.setTitle(title)
+			.setDescription(desc)
+			.addFields(fields)
+			.setColor(teamColor);
+
+		// Create buttons
+		const row = new ActionRowBuilder<ButtonBuilder>().addComponents(buttons);
+
+		return { embed, row };
 	}
 }
