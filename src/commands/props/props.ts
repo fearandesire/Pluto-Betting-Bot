@@ -14,6 +14,7 @@ import type {
 import type { UpdatePropResultResponseDto } from '@khronos-index';
 import PropEmbedManager from '../../utils/guilds/prop-embeds/PropEmbedManager.js';
 import type { PropZod } from '@pluto-api-interfaces';
+import { DateManager } from '../../utils/common/DateManager.js';
 
 @ApplyOptions<Command.Options>({
 	description: 'Manage props',
@@ -60,7 +61,7 @@ export class UserCommand extends Command {
 					)
 					.addSubcommand((subcommand) =>
 						subcommand
-							.setName('createembed')
+							.setName('generate_prop_embed')
 							.setDescription('Create a prop embed for a specific event')
 							.addStringOption((option) =>
 								option
@@ -285,8 +286,14 @@ export class UserCommand extends Command {
 		}
 
 		const result = prop.result ? `✅ ${prop.result}` : '⏳ Pending';
+		const date = prop.commence_time
+			? new DateManager().humanReadable(prop.commence_time.toString())
+			: 'Date unknown';
+
 		return `${statusEmoji} **Status:** ${statusText}
-				🏅 **Sport:** ${prop.sport_title}
+				🏠 **Home Team:** ${prop.home_team}
+				🏁 **Away Team:** ${prop.away_team}
+				🗓️ **Date:** ${date}
 				🆔 **ID:** ${prop.id}
 				🎯 **Result:** ${result}`;
 	}
@@ -313,9 +320,17 @@ export class UserCommand extends Command {
 				});
 			}
 
+			// Log what we are comparing
+			console.log(
+				'Comparing ->',
+				prop.market_key.toLowerCase(),
+				marketKey.toLowerCase(),
+				prop.description?.toLowerCase(),
+				player.toLowerCase(),
+			);
 			if (
-				prop.market_key.toLowerCase() !== marketKey ||
-				prop.description?.toLowerCase() !== player
+				prop.market_key.toLowerCase() !== marketKey.toLowerCase() ||
+				prop.description?.toLowerCase() !== player.toLowerCase()
 			) {
 				return interaction.editReply({
 					content:

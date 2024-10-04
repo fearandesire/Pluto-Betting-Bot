@@ -6,7 +6,9 @@ import {
 	isBefore,
 	parseISO,
 	startOfDay,
+	isValid,
 } from 'date-fns';
+import { replace } from 'lodash';
 
 /**
  * A utility class for managing date-related operations, particularly for filtering items based on a date range.
@@ -53,15 +55,30 @@ export class DateManager<T extends { commence_time?: string }> {
 	}
 
 	/**
-	 * Creates a simple human-readable date string from an ISO 8601 timestamp.
-	 * @param {string} isoTimestamp - The ISO 8601 timestamp to format.
-	 * @returns {string} A formatted string in the format 'day of the week, time (12 hour format)'.
-	 * @example
-	 * // returns 'Mon, 2:00 PM'
-	 * createSimpleHumanReadableDate('2023-04-10T14:00:00Z')
+	 * Creates a simple human-readable date string from an ISO 8601 timestamp or Date object.
+	 * @param {string | Date} input - The ISO 8601 timestamp or Date object to format.
+	 * @returns {string} A formatted string in the format 'Mon 4 PM' or 'Invalid Date' if parsing fails.
 	 */
-	humanReadable(isoTimestamp: string): string {
-		const date = parseISO(isoTimestamp);
-		return format(date, 'EEE, h:mm a');
+	humanReadable(input: string | Date): string {
+		try {
+			let date: Date;
+			if (typeof input === 'string') {
+				date = parseISO(input);
+			} else if (input instanceof Date) {
+				date = input;
+			} else {
+				throw new Error('Invalid input type');
+			}
+
+			if (!isValid(date)) {
+				throw new Error('Invalid date');
+			}
+
+			const formattedDate = format(date, 'EEE h a').replace(' 0', ' ');
+			return formattedDate;
+		} catch (error) {
+			console.error(`Error parsing date: ${input}`, error);
+			return 'Invalid Date';
+		}
 	}
 }
