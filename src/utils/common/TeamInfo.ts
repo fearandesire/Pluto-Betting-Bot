@@ -6,4 +6,9 @@ export default class TeamInfo {
 		const res = team?.colors[0] ?? '#0099ff';
 		return res as ColorResolvable;
 	}
+
+	static getTeamShortName(teamName: string): string {
+		const nameParts = teamName.split(' ');
+		return nameParts[nameParts.length - 1];
+	}
 }

@@ -1,20 +1,14 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
-import {
-	ApplicationCommandOptionType,
-	PermissionFlagsBits,
-	EmbedBuilder,
-} from 'discord.js';
+import { PermissionFlagsBits, EmbedBuilder } from 'discord.js';
 import PropsApiWrapper from '../../utils/api/Khronos/props/propsApiWrapper.js';
 import type { Prop } from '../../openapi/khronos/models/Prop.js';
-import type {
-	UpdatePropResultDto,
-	UpdatePropResultDtoStatusEnum,
-} from '../../openapi/khronos/models/UpdatePropResultDto.js';
+import type { UpdatePropResultDto } from '../../openapi/khronos/models/UpdatePropResultDto.js';
 import type { UpdatePropResultResponseDto } from '@khronos-index';
 import PropEmbedManager from '../../utils/guilds/prop-embeds/PropEmbedManager.js';
 import type { PropZod } from '@pluto-api-interfaces';
 import { DateManager } from '../../utils/common/DateManager.js';
+import TeamInfo from '../../utils/common/TeamInfo.js';
 
 @ApplyOptions<Command.Options>({
 	description: 'Manage props',
@@ -54,6 +48,7 @@ export class UserCommand extends Command {
 							.setName('viewupcoming')
 							.setDescription('View props for upcoming events'),
 					)
+					// Show props that have an active prediction placed
 					.addSubcommand((subcommand) =>
 						subcommand
 							.setName('viewactive')
@@ -252,20 +247,81 @@ export class UserCommand extends Command {
 		try {
 			const props: Prop[] = await propsApi.getAll({ recent: true });
 
-			return this.sendPropsEmbed(
+			// Group props by event ID
+			const eventMap = new Map<string, Prop>();
+			for (const prop of props) {
+				if (!eventMap.has(prop.event_id)) {
+					eventMap.set(prop.event_id, prop);
+				}
+			}
+
+			const uniqueEvents = Array.from(eventMap.values());
+
+			return this.sendUpcomingEventsEmbed(
 				interaction,
-				props,
-				'All Recent Props',
-				'Displaying all recent props',
+				uniqueEvents,
+				'Upcoming Events',
+				'Displaying upcoming events with props',
 			);
 		} catch (error) {
 			this.container.logger.error(error);
 			return interaction.reply({
 				content:
-					'An error occurred while fetching props. Please try again later.',
+					'An error occurred while fetching upcoming events. Please try again later.',
 				ephemeral: true,
 			});
 		}
+	}
+
+	private async sendUpcomingEventsEmbed(
+		interaction: Command.ChatInputCommandInteraction,
+		events: Prop[],
+		title: string,
+		description: string,
+	) {
+		if (events.length === 0) {
+			return interaction.reply({
+				content: 'No upcoming events found.',
+				ephemeral: true,
+			});
+		}
+
+		const embed = new EmbedBuilder()
+			.setTitle(`🗓️ ${title}`)
+			.setDescription(
+				`${description}\nUse \`/props view_for_event <event_id>\` to see props for a specific event.`,
+			)
+			.setColor('#0099ff')
+			.setTimestamp();
+
+		events.slice(0, 25).forEach((event, index) => {
+			embed.addFields({
+				name: `${index + 1}. ${event.home_team} vs ${event.away_team}`,
+				value: this.formatEventField(event),
+			});
+		});
+
+		if (events.length > 25) {
+			embed.setFooter({
+				text: `Showing 25 out of ${events.length} events. Use the 'view_for_event' command to see props for a specific event.`,
+			});
+		}
+
+		return interaction.reply({ embeds: [embed] });
+	}
+
+	private formatEventField(event: Prop): string {
+		const date = new DateManager().humanReadable(event.commence_time);
+		const shortenTeamName = (teamName: string) => {
+			return TeamInfo.getTeamShortName(teamName);
+		};
+		const hTeamShort = shortenTeamName(event.home_team);
+		const aTeamShort = shortenTeamName(event.away_team);
+
+		return `🆔 **Event ID:** \`${event.event_id}\`
+				⚔️ **Match:** ${hTeamShort} vs ${aTeamShort}
+				🎱 **Market Key:** ${event.market_key}
+				🗓️ **Date:** ${date}`;
 	}
 
 	private async sendPropsEmbed(
