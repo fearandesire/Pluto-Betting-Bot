@@ -331,63 +331,52 @@ export class UserCommand extends Command {
 	) {
 		if (props.length === 0) {
 			return interaction.reply({
-				content: 'No props found.',
+				content: 'No props found for this event.',
 				ephemeral: true,
 			});
 		}
 
+		const firstProp = props[0];
+		const date = new DateManager().humanReadable(firstProp.commence_time);
+
 		const embed = new EmbedBuilder()
 			.setTitle(`🏆 ${title}`)
-			.setDescription(description)
+			.setDescription(
+				`${description}\n\n**Match:** ${firstProp.home_team} vs ${firstProp.away_team}\n**Date:** ${date}\n**Event ID:** ${firstProp.event_id}`,
+			)
 			.setColor('#0099ff')
 			.setTimestamp();
 
-		props.slice(0, 25).forEach((prop, index) => {
-			embed.addFields({
-				name: `${index + 1}. ${prop.description || prop.market_key}`,
-				value: this.formatPropField(prop),
-			});
-		});
+		const formattedProps = this.formatPropsForEmbed(props);
+		for (const field of formattedProps) {
+			embed.addFields(field);
+		}
 
 		if (props.length > 25) {
 			embed.setFooter({
-				text: `Showing 25 out of ${props.length} props. Use a more specific command to see more.`,
+				text: `Showing 25 out of ${props.length} props. More props are available, but cannot be displayed in this embed.`,
 			});
 		}
-
 		return interaction.reply({ embeds: [embed] });
 	}
 
-	private formatPropField(prop: Prop): string {
-		let statusEmoji: string;
-		let statusText: string;
-		switch (prop.status) {
-			case 'pending':
-				statusEmoji = '🟡';
-				statusText = 'Pending';
-				break;
-			case 'completed':
-				statusEmoji = '🟢';
-				statusText = 'Completed';
-				break;
-			case 'error':
-				statusEmoji = '🔴';
-				statusText = 'Error';
-				break;
-			default:
-				statusEmoji = '⚪';
-				statusText = 'Unknown';
-		}
+	private formatPropsForEmbed(
+		props: Prop[],
+	): { name: string; value: string }[] {
+		return props.slice(0, 25).map((prop) => {
+			let pointDisplay = '';
+			if (
+				prop.market_key.toLowerCase() !== 'h2h' &&
+				!prop.market_key.toLowerCase().includes('total')
+			) {
+				pointDisplay = prop.point ? `\n📊 **Over/Under:** ${prop.point}` : '';
+			}
 
-		const result = prop.result ? `✅ ${prop.result}` : '⏳ Pending';
-		const date = prop.commence_time;
-		const formattedDate = new DateManager().humanReadable(date);
-		return `${statusEmoji} **Status:** ${statusText}
-				⚔️ **Match:** ${prop.home_team} vs ${prop.away_team}
-				🗓️ **Date:** ${formattedDate}
-				🆔 **Event ID:** ${prop.id}
-				🎱 **Market Key:** ${prop.market_key}
-				🎯 **Result:** ${result}`;
+			return {
+				name: prop.description || prop.market_key,
+				value: `🆔 **Prop ID:** ${prop.id}\n🎱 **Market Key:** ${prop.market_key}${pointDisplay}`,
+			};
+		});
 	}
 
 	private async createPropEmbed(
