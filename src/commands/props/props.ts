@@ -61,6 +61,17 @@ export class UserCommand extends Command {
 					)
 					.addSubcommand((subcommand) =>
 						subcommand
+							.setName('view_for_event')
+							.setDescription('View all props for a specific event')
+							.addStringOption((option) =>
+								option
+									.setName('event_id')
+									.setDescription('The ID of the event')
+									.setRequired(true),
+							),
+					)
+					.addSubcommand((subcommand) =>
+						subcommand
 							.setName('generate_prop_embed')
 							.setDescription('Create a prop embed for a specific event')
 							.addStringOption((option) =>
@@ -105,11 +116,39 @@ export class UserCommand extends Command {
 				return this.createPropEmbed(interaction);
 			case 'viewupcoming':
 				return this.viewUpcomingProps(interaction);
+			case 'view_for_event':
+				return this.viewPropsForEvent(interaction);
 			default:
 				return interaction.reply({
 					content: 'Invalid subcommand',
 					ephemeral: true,
 				});
+		}
+	}
+
+	private async viewPropsForEvent(
+		interaction: Command.ChatInputCommandInteraction,
+	) {
+		const eventId = interaction.options.getString('event_id', true);
+
+		const propsApi = new PropsApiWrapper();
+
+		try {
+			const props: Prop[] = await propsApi.getPropsByEventId(eventId);
+
+			return this.sendPropsEmbed(
+				interaction,
+				props,
+				'Props for Event',
+				`Displaying all props for event: ${eventId}`,
+			);
+		} catch (error) {
+			this.container.logger.error(error);
+			return interaction.reply({
+				content:
+					'An error occurred while fetching props. Please try again later.',
+				ephemeral: true,
+			});
 		}
 	}
 
@@ -289,10 +328,9 @@ export class UserCommand extends Command {
 		const date = prop.commence_time;
 
 		return `${statusEmoji} **Status:** ${statusText}
-				🏠 **Home Team:** ${prop.home_team}
-				🏁 **Away Team:** ${prop.away_team}
+				⚔️ **Match:** ${prop.home_team} vs ${prop.away_team}
 				🗓️ **Date:** ${date}
-				🆔 **ID:** ${prop.id}
+				🆔 **Event ID:** ${prop.id}
 				🎱 **Market Key:** ${prop.market_key}
 				🎯 **Result:** ${result}`;
 	}
