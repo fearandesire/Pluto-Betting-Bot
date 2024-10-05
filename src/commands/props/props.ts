@@ -320,7 +320,6 @@ export class UserCommand extends Command {
 
 		return `🆔 **Event ID:** \`${event.event_id}\`
 				⚔️ **Match:** ${hTeamShort} vs ${aTeamShort}
-				🎱 **Market Key:** ${event.market_key}
 				🗓️ **Date:** ${date}`;
 	}
 
@@ -382,10 +381,10 @@ export class UserCommand extends Command {
 
 		const result = prop.result ? `✅ ${prop.result}` : '⏳ Pending';
 		const date = prop.commence_time;
-
+		const formattedDate = new DateManager().humanReadable(date);
 		return `${statusEmoji} **Status:** ${statusText}
 				⚔️ **Match:** ${prop.home_team} vs ${prop.away_team}
-				🗓️ **Date:** ${date}
+				🗓️ **Date:** ${formattedDate}
 				🆔 **Event ID:** ${prop.id}
 				🎱 **Market Key:** ${prop.market_key}
 				🎯 **Result:** ${result}`;
