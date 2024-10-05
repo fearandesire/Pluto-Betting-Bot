@@ -286,15 +286,14 @@ export class UserCommand extends Command {
 		}
 
 		const result = prop.result ? `✅ ${prop.result}` : '⏳ Pending';
-		const date = prop.commence_time
-			? new DateManager().humanReadable(prop.commence_time.toString())
-			: 'Date unknown';
+		const date = prop.commence_time;
 
 		return `${statusEmoji} **Status:** ${statusText}
 				🏠 **Home Team:** ${prop.home_team}
 				🏁 **Away Team:** ${prop.away_team}
 				🗓️ **Date:** ${date}
 				🆔 **ID:** ${prop.id}
+				🎱 **Market Key:** ${prop.market_key}
 				🎯 **Result:** ${result}`;
 	}
 
