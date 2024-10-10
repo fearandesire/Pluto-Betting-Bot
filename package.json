@@ -7,7 +7,7 @@
 	"private": true,
 	"author": "fearandesire <fenixcoding@gmail.com>",
 	"email": "fenixcoding@gmail.com",
-	"url": "https://blog.fearandesire.com",
+	"url": "https://docs.pluto.fearandesire.com/",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/fearandesire/Pluto-Betting-Bot"
@@ -169,18 +169,13 @@
 			"^@/(.*)$": "<rootDir>/src/$1",
 			"^lib/(.*)$": "<rootDir>/lib/$1"
 		},
-		"moduleFileExtensions": [
-			"ts",
-			"js"
-		],
+		"moduleFileExtensions": ["ts", "js"],
 		"rootDir": "src",
 		"testRegex": ".*\\.spec\\.ts$",
 		"transform": {
 			"^.+\\.(t|j)s$": "ts-jest"
 		},
-		"collectCoverageFrom": [
-			"**/*.(t|j)s"
-		],
+		"collectCoverageFrom": ["**/*.(t|j)s"],
 		"coverageDirectory": "../coverage",
 		"testEnvironment": "node"
 	}
