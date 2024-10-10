@@ -9,11 +9,14 @@ export default class StringUtils {
 	}
 
 	static sportKeyTransform(sport: string): string {
-		// Convert americanfootball_nfl to nfl, baseball_mlb to mlb, etc.
-		if (sport.includes('_')) {
-			return sport.split('_')[1];
-		}
-		return sport;
+		const lowercaseSport = sport.toLowerCase();
+		const sportMap: Record<string, string> = {
+			nba: 'nba',
+			nfl: 'nfl',
+		};
+		return (
+			Object.keys(sportMap).find((key) => lowercaseSport.includes(key)) || sport
+		);
 	}
 
 	static standardizeString(input: string): string {
