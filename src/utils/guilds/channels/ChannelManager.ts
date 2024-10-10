@@ -73,7 +73,7 @@ export default class ChannelManager {
 		const { sport, matchOdds } = channel;
 		const { favored } = matchOdds;
 		const favoredTeamInfo = await resolveTeam(favored, {
-			sport: sport,
+			sport: parsedSport,
 			full: true,
 		});
 		this.validateFavoredTeamInfo(favoredTeamInfo);
@@ -247,7 +247,7 @@ export default class ChannelManager {
 	async locateChannel(channelName: string) {
 		const channelsToDelete: GuildBasedChannel[] = [];
 		// Iterate over all guilds the client is in
-		SapDiscClient.guilds.cache.forEach((guild: Guild) => {
+		for (const guild of SapDiscClient.guilds.cache.values()) {
 			const channel = guild.channels.cache.find(
 				(GC) => GC.name.toLowerCase() === channelName.toLowerCase(),
 			);
@@ -258,7 +258,7 @@ export default class ChannelManager {
 			if (channel) {
 				channelsToDelete.push(channel);
 			}
-		});
+		}
 		return channelsToDelete;
 	}
 
