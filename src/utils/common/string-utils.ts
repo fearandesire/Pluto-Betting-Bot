@@ -8,6 +8,13 @@ export default class StringUtils {
 		return name;
 	}
 
+	/**
+	 * Extract the base sport from the sport key string
+	 *
+	 * @example 'americanfootball_nfl' -> 'nfl'
+	 * @example 'basketball_nba_preseason' -> 'nba'
+	 * @param sport - The sport key string to transform
+	 */
 	static sportKeyTransform(sport: string): string {
 		const lowercaseSport = sport.toLowerCase();
 		const sportMap: Record<string, string> = {

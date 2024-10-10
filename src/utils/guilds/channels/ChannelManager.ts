@@ -66,6 +66,7 @@ export default class ChannelManager {
 		betChanRows: IConfigRow[],
 		categoriesServing: ICategoryData,
 	) {
+		// Identify the sport the channels are intended for - Also allowing us to identify which categories/guilds we will create channels for.
 		const parsedSport = await StringUtils.sportKeyTransform(
 			channel.sport,
 		).toLowerCase();
