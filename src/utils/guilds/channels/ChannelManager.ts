@@ -279,14 +279,11 @@ export default class ChannelManager {
 
 	private async fetchVsImg(matchup: string, sport: string) {
 		const matchupFileName = `${matchup
-			.replace('at', 'vs') // Ensure "at" is replaced with "vs" first
-			.replace(/-/g, '_') // Replace ALL instances of "-" with "_"
+			.replace('at', 'vs')
+			.replace(/-/g, '_')
 			.split('_')
 			.map((part) =>
-				// Convert each part to Start Case without lodash
-				part
-					.toLowerCase()
-					.replace(/\b[a-z]/g, (char) => char.toUpperCase()),
+				part.toLowerCase().replace(/\b[a-z]/g, (char) => char.toUpperCase()),
 			)
 			.join('_')}.jpg`;
 
