@@ -221,7 +221,7 @@ export class ButtonHandler extends InteractionHandler {
 				}
 
 				// ? Prioritize handling a cancel
-				if (payload.action === 'cancel') {
+				if (payload.action.toLowerCase() === 'cancel') {
 					try {
 						await predictionApi.deletePrediction({
 							userId: interaction.user.id,
@@ -230,33 +230,33 @@ export class ButtonHandler extends InteractionHandler {
 						return interaction.editReply({
 							content: 'Your prediction has been cancelled.',
 						});
-					} catch (error) {
-						return interaction.editReply({
-							content:
-								error instanceof Error
-									? error.message
-									: 'You have not made a prediction on this prop yet.',
-						});
+					} catch (error: any) {
+						// Identify type of err
+						if (error?.response) {
+							return interaction.editReply({
+								content: 'You have not made a prediction on this prop yet.',
+							});
+						}
 					}
+				} else {
+					await predictionApi.createPrediction({
+						user_id: interaction.user.id,
+						prop_id: payload.propId,
+						choice: payload.action,
+						status: 'pending',
+						guild_id: interaction.guildId!,
+						market_key: prop.market_key,
+					});
+
+					await interaction.editReply({
+						content: `Your prediction has been stored.\nPrediction: ${payload.action}`,
+					});
+
+					// Delete the ephemeral message after 5 seconds
+					setTimeout(() => {
+						interaction.deleteReply().catch(console.error);
+					}, 5000);
 				}
-
-				await predictionApi.createPrediction({
-					user_id: interaction.user.id,
-					prop_id: payload.propId,
-					choice: payload.action,
-					status: 'pending',
-					guild_id: interaction.guildId!,
-					market_key: prop.market_key,
-				});
-
-				await interaction.editReply({
-					content: `Your prediction has been stored.\nPrediction: ${payload.action}`,
-				});
-
-				// Delete the ephemeral message after 5 seconds
-				setTimeout(() => {
-					interaction.deleteReply().catch(console.error);
-				}, 5000);
 			} catch (error) {
 				await interaction.editReply({
 					content:

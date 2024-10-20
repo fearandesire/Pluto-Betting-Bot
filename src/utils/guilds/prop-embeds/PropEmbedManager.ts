@@ -109,6 +109,10 @@ export default class PropEmbedManager {
 					.setCustomId(`prop_${AWTEAM_BTN_STRING}_${prop.id}`)
 					.setLabel(`${AWTEAM_TRANSFORMED}`)
 					.setStyle(ButtonStyle.Primary),
+				new ButtonBuilder()
+					.setCustomId(`prop_${PropButtons.CANCEL}_${prop.id}`)
+					.setLabel('Cancel')
+					.setStyle(ButtonStyle.Danger),
 			];
 		} else if (marketKey === 'totals' && !prop.description) {
 			// Total score of the match (over/under)
@@ -137,7 +141,7 @@ export default class PropEmbedManager {
 					.setStyle(ButtonStyle.Primary),
 				new ButtonBuilder()
 					.setCustomId(`prop_${PropButtons.CANCEL}_${prop.id}`)
-					.setLabel('Cancel ❌')
+					.setLabel('Cancel')
 					.setStyle(ButtonStyle.Danger),
 			];
 		} else {
