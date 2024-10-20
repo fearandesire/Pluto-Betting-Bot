@@ -26,4 +26,5 @@ export function parsePropButtonId(customId: string): ParsedPropButton | null {
 export enum PropButtons {
 	OVER = 'OVER',
 	UNDER = 'UNDER',
+	CANCEL = 'CANCEL',
 }

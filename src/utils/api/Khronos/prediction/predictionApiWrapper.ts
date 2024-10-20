@@ -1,20 +1,20 @@
 import {
 	type CreatePredictionDto,
+	type GetPredictionByIdRequest,
 	PredictionApi,
-	type UpdatePredictionDto,
+	type RemovePredictionRequest,
 } from '../../../../openapi/khronos/index.js';
-import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js';
+import { KH_API_CONFIG } from '../KhronosInstances.js';
 
 export default class PredictionApiWrapper {
 	private predictionApi: PredictionApi;
-	private readonly khConfig: IKH_API_CONFIG = KH_API_CONFIG;
 	constructor() {
 		this.predictionApi = new PredictionApi(KH_API_CONFIG);
 	}
 
 	async createPrediction(createPredictionDto: CreatePredictionDto) {
 		try {
-			const response = await this.predictionApi.predictionControllerCreate({
+			const response = await this.predictionApi.createPrediction({
 				createPredictionDto,
 			});
 			return response;
@@ -28,22 +28,11 @@ export default class PredictionApiWrapper {
 		}
 	}
 
-	async getAllPredictions() {
-		await this.predictionApi.predictionControllerFindAll();
+	async getPredictionById(params: GetPredictionByIdRequest) {
+		await this.predictionApi.getPredictionById(params);
 	}
 
-	async getPredictionById(id: string) {
-		await this.predictionApi.predictionControllerFindOne({ id });
-	}
-
-	async updatePrediction(id: string, updatePredictionDto: UpdatePredictionDto) {
-		await this.predictionApi.predictionControllerUpdate({
-			id,
-			updatePredictionDto,
-		});
-	}
-
-	async deletePrediction(id: string) {
-		await this.predictionApi.predictionControllerRemove({ id });
+	async deletePrediction(params: RemovePredictionRequest) {
+		await this.predictionApi.removePrediction(params);
 	}
 }

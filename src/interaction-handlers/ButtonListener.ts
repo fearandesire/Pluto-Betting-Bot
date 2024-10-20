@@ -16,6 +16,7 @@ import {
 import {
 	type ParsedPropButton,
 	parsePropButtonId,
+	PropButtons,
 } from '../lib/interfaces/props/prop-buttons.interface.js';
 import type { Match } from '../openapi/khronos/models/Match.js';
 import { BetslipManager } from '../utils/api/Khronos/bets/BetslipsManager.js';
@@ -67,9 +68,10 @@ export class ButtonHandler extends InteractionHandler {
 			return this.none();
 		}
 
-		// Handle prop buttons
+		// ? Handle prop buttons
 		if (_.startsWith(interaction.customId, 'prop_')) {
 			await interaction.deferReply({ ephemeral: true });
+			// ? Parse the prop button pressed for data / action
 			const parsedButton = parsePropButtonId(interaction.customId);
 			return parsedButton ? this.some(parsedButton) : this.none();
 		}
@@ -174,6 +176,7 @@ export class ButtonHandler extends InteractionHandler {
 			return;
 		}
 
+		// ? Handle Cancelling A Betslip
 		if (interaction.customId === btnIds.matchup_btn_cancel) {
 			const betslipWrapper = new BetslipWrapper();
 			await betslipWrapper.clearPending(interaction.user.id);
@@ -187,7 +190,9 @@ export class ButtonHandler extends InteractionHandler {
 				embeds: [cancelEmbed],
 				components: [],
 			});
-		} else if (interaction.customId === btnIds.matchup_btn_confirm) {
+		}
+		// ? Handle Confirming A Betslip
+		else if (interaction.customId === btnIds.matchup_btn_confirm) {
 			if ('betslip' in payload && 'matchData' in payload) {
 				const { betslip, matchData } = payload;
 				const matchOpponent = betslip.opponent;
@@ -205,6 +210,7 @@ export class ButtonHandler extends InteractionHandler {
 				});
 			}
 		} else if ('action' in payload) {
+			// ? Handle A Prediction
 			const predictionApi = new PredictionApiWrapper();
 			const propsApi = new PropsApiWrapper();
 
@@ -212,6 +218,26 @@ export class ButtonHandler extends InteractionHandler {
 				const prop = await propsApi.getPropById(payload.propId);
 				if (!prop) {
 					throw new Error('Prop not found');
+				}
+
+				// ? Prioritize handling a cancel
+				if (payload.action === 'cancel') {
+					try {
+						await predictionApi.deletePrediction({
+							userId: interaction.user.id,
+							id: payload.propId,
+						});
+						return interaction.editReply({
+							content: 'Your prediction has been cancelled.',
+						});
+					} catch (error) {
+						return interaction.editReply({
+							content:
+								error instanceof Error
+									? error.message
+									: 'You have not made a prediction on this prop yet.',
+						});
+					}
 				}
 
 				await predictionApi.createPrediction({
@@ -224,7 +250,7 @@ export class ButtonHandler extends InteractionHandler {
 				});
 
 				await interaction.editReply({
-					content: `Your prediction has been stored (${payload.action})`,
+					content: `Your prediction has been stored.\nPrediction: ${payload.action}`,
 				});
 
 				// Delete the ephemeral message after 5 seconds
@@ -254,7 +280,7 @@ interface ConfirmPayload {
 }
 
 interface PropPayload extends ParsedPropButton {
-	action: 'over' | 'under';
+	action: 'over' | 'under' | 'cancel';
 }
 
 type ButtonPayload = FailedPayload | ConfirmPayload | PropPayload;

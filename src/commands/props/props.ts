@@ -170,6 +170,7 @@ export class UserCommand extends Command {
 					propId,
 					winner: result,
 					status: 'completed' as UpdatePropResultDto['status'],
+					user_id: interaction.user.id,
 				},
 				override: true,
 			});
@@ -195,17 +196,17 @@ export class UserCommand extends Command {
 			.addFields(
 				{
 					name: 'Correct Predictions',
-					value: response.correctPredictions.toString(),
+					value: response.correct_predictions_count.toString(),
 					inline: true,
 				},
 				{
 					name: 'Incorrect Predictions',
-					value: response.incorrectPredictions.toString(),
+					value: response.incorrect_predictions_count.toString(),
 					inline: true,
 				},
 				{
 					name: 'Total Predictions',
-					value: response.totalPredictions.toString(),
+					value: response.total_predictions_count.toString(),
 					inline: true,
 				},
 			);
