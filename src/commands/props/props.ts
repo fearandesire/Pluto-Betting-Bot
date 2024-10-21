@@ -4,7 +4,7 @@ import { PermissionFlagsBits, EmbedBuilder } from 'discord.js';
 import PropsApiWrapper from '../../utils/api/Khronos/props/propsApiWrapper.js';
 import type { Prop } from '../../openapi/khronos/models/Prop.js';
 import type { UpdatePropResultDto } from '../../openapi/khronos/models/UpdatePropResultDto.js';
-import type { UpdatePropResultResponseDto } from '@khronos-index';
+import type { UpdatePropResultResponseDto } from '../../openapi/khronos/models/index.js';
 import PropEmbedManager from '../../utils/guilds/prop-embeds/PropEmbedManager.js';
 import type { PropZod } from '@pluto-api-interfaces';
 import { DateManager } from '../../utils/common/DateManager.js';
