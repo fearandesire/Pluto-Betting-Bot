@@ -21,7 +21,7 @@ export class UserCommand extends Command {
 		registry.registerChatInputCommand(
 			(builder) =>
 				builder
-					.setName('prediction_leaderboard')
+					.setName('accuracy_leaderboard')
 					.setDescription(this.description)
 					.setDMPermission(false)
 					.addStringOption((option) =>
