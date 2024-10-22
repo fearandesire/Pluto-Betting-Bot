@@ -1,4 +1,4 @@
-import { _, helpfooter } from '@pluto-config';
+import { helpfooter } from '@pluto-config';
 import { format } from 'date-fns';
 import { EmbedBuilder } from 'discord.js';
 import embedColors from '../../lib/colorsConfig.js';
@@ -7,6 +7,7 @@ import type {
 	IMatchupsGrouped,
 	IOddsField,
 } from '../matches/matchups.interface.js';
+import _ from 'lodash';
 
 /**
  * Parses data of games to be displayed in a schedule.

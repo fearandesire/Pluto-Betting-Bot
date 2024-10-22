@@ -1,5 +1,3 @@
-import { Command } from '@sapphire/framework';
-import _ from 'lodash';
 import { Log } from '../utils/bot_res/consoleLog.js';
 import { findEmoji } from '../utils/bot_res/findEmoji.js';
 
@@ -20,8 +18,9 @@ export {
 
 // ? Embed usage
 const footers = [
+	'💲 Use /balance to check your profile & level',
+	'👁️ Use /commands to see all commands',
 	'❓ Learn more about Pluto via /help',
-	// '💙 Support Pluto via /patreon',
 ];
 
 function helpfooter() {
@@ -29,4 +28,4 @@ function helpfooter() {
 	return footers[randomIndex];
 }
 // ? General Config
-export { helpfooter, Command, _, Log, findEmoji, appOwner };
+export { helpfooter, Log, findEmoji, appOwner };
