@@ -19,7 +19,7 @@ import _ from 'lodash';
  * @param {string} options.footer - Footer text for the embed.
  * @returns {EmbedBuilder} - Discord Embed with the games formatted and scheduled.
  */
-export default async function parseScheduled(
+export default async function parseScheduledGames(
 	scheduledArr: IOddsField[],
 	options: {
 		includeOdds: boolean;
@@ -49,13 +49,13 @@ export default async function parseScheduled(
 
 	// Group and sort the games by actual date
 	const groupedGames: IMatchupsGrouped = {};
-	scheduledArr.forEach((match) => {
+	for (const match of scheduledArr) {
 		const date = match.dates.mdy;
 		if (!groupedGames[date]) {
 			groupedGames[date] = [];
 		}
 		groupedGames[date].push(match);
-	});
+	}
 
 	const sortedDates = Object.keys(groupedGames).sort(
 		(a, b) => new Date(a).getTime() - new Date(b).getTime(),
