@@ -10,6 +10,7 @@ import {
 	type AllUserPredictionsDto,
 } from '../../openapi/khronos/index.js';
 import type { User } from 'discord.js';
+import TeamInfo from '../../utils/common/TeamInfo.js';
 
 @ApplyOptions<Command.Options>({
 	description: 'View your prediction history',
@@ -26,14 +27,14 @@ export class UserCommand extends Command {
 						option
 							.setName('user')
 							.setDescription(
-								'The user to view history for (default: yourself)',
+								'[Optional] The user to view history for (default: yourself)',
 							)
 							.setRequired(false),
 					)
 					.addStringOption((option) =>
 						option
 							.setName('status')
-							.setDescription('Filter predictions by status')
+							.setDescription('[Optional] Filter predictions by status')
 							.setRequired(false)
 							.addChoices(
 								{
@@ -80,12 +81,16 @@ export class UserCommand extends Command {
 				});
 			}
 
-			const parsedPredictions = this.parsePredictions(usersPredictions);
-			const embed = this.createHistoryEmbed(parsedPredictions, user, 1, status);
+			const embed = await this.createHistoryEmbed(
+				usersPredictions,
+				user,
+				1,
+				status,
+			);
 			const pagination = new Pagination();
 			const components = pagination.createPaginationButtons(
 				1,
-				Math.ceil(parsedPredictions.length / 10),
+				Math.ceil(usersPredictions.length / 10),
 			);
 
 			const reply = await interaction.reply({
@@ -97,7 +102,7 @@ export class UserCommand extends Command {
 			this.handlePagination(
 				interaction,
 				reply as Message,
-				parsedPredictions,
+				usersPredictions,
 				user,
 				status,
 			);
@@ -110,18 +115,12 @@ export class UserCommand extends Command {
 		}
 	}
 
-	private parsePredictions(
-		propPredictions: AllUserPredictionsDto[],
-	): AllUserPredictionsDto[] {
-		return propPredictions;
-	}
-
-	private createHistoryEmbed(
+	private async createHistoryEmbed(
 		predictions: AllUserPredictionsDto[],
 		user: User,
 		currentPage: number,
 		status: GetAllPredictionsFilteredStatusEnum | null,
-	): EmbedBuilder {
+	): Promise<EmbedBuilder> {
 		const startIndex = (currentPage - 1) * 10;
 		const endIndex = startIndex + 10;
 		const pageEntries = predictions.slice(startIndex, endIndex);
@@ -130,42 +129,67 @@ export class UserCommand extends Command {
 		const embed = new EmbedBuilder()
 			.setTitle(`Prediction History for ${user.username}`)
 			.setColor(embedColors.PlutoBlue)
-			.setDescription(
-				pageEntries
-					.map(
-						(prediction) =>
-							`**Match:** ${prediction.match_string}\n` +
-							`**Description:** ${prediction.description || 'N/A'}\n\n` +
-							`**Choice:** ${prediction.choice}\n` +
-							`**Status:** ${prediction.status}\n` +
-							`**Outcome:** ${this.getPredictionOutcome(prediction)}\n\n`,
-					)
-					.join('---\n'),
-			)
 			.setFooter({ text: `Page ${currentPage} of ${totalPages}` });
 
-		// Get count
 		const totalPredictions = predictions.length;
-		embed.setDescription(
-			`You've placed ${totalPredictions} predictions so far!\n\n${embed.data.description}`,
-		);
+		let headerText = `Total predictions: \`${totalPredictions}\``;
 		if (status) {
-			embed.setDescription(
-				`Showing predictions filtered by status: ${status}\n\n${embed.data.description}`,
-			);
+			headerText += ` | Filtered by: \`${status}\``;
+		}
+
+		embed.setDescription(headerText);
+
+		for (const prediction of pageEntries) {
+			const field = await this.createPredictionField(prediction);
+			embed.addFields(field);
 		}
 
 		return embed;
 	}
 
-	private getPredictionOutcome(prediction: AllUserPredictionsDto): string {
-		return prediction.status === GetAllPredictionsFilteredStatusEnum.Completed
-			? prediction.is_correct !== null
-				? prediction.is_correct
-					? 'Correct'
-					: 'Incorrect'
-				: 'Pending'
-			: 'Pending';
+	private async createPredictionField(
+		prediction: AllUserPredictionsDto,
+	): Promise<{ name: string; value: string; inline: boolean }> {
+		const outcomeEmoji = this.getOutcomeEmoji(prediction);
+		const parsedMatchString = await this.parseMatchString(
+			prediction.match_string,
+		);
+		const parsedChoice = this.parseChoice(prediction.choice);
+
+		let value = `**Choice**: \`${parsedChoice}\` ${outcomeEmoji} `;
+
+		if (prediction.description && prediction.description.trim() !== '') {
+			value += `\n${prediction.description}`;
+		}
+
+		return {
+			name: `**Match**: ${parsedMatchString}`,
+			value: value,
+			inline: true,
+		};
+	}
+
+	private getOutcomeEmoji(prediction: AllUserPredictionsDto): string {
+		if (prediction.status !== GetAllPredictionsFilteredStatusEnum.Completed) {
+			return '⏳';
+		}
+		if (prediction.is_correct === null) {
+			return '⏳';
+		}
+		return prediction?.is_correct ? '✅' : '❌';
+	}
+
+	private async parseMatchString(matchString: string) {
+		const [awayTeam, homeTeam] = matchString.split(' vs. ');
+		const result = await TeamInfo.resolveTeamIdentifier({
+			away_team: awayTeam,
+			home_team: homeTeam,
+		});
+
+		return `${result.away_team} vs. ${result.home_team}`;
+	}
+	private parseChoice(choice: string) {
+		return choice.charAt(0).toUpperCase() + choice.slice(1).toLowerCase();
 	}
 
 	private async handlePagination(
@@ -204,7 +228,7 @@ export class UserCommand extends Command {
 					break;
 			}
 
-			const newEmbed = this.createHistoryEmbed(
+			const newEmbed = await this.createHistoryEmbed(
 				predictions,
 				user,
 				currentPage,
