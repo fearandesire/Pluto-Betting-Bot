@@ -1,5 +1,6 @@
 import {
 	type CreatePredictionDto,
+	type GetAllPredictionsFilteredRequest,
 	type GetPredictionByIdRequest,
 	PredictionApi,
 	type RemovePredictionRequest,
@@ -34,5 +35,16 @@ export default class PredictionApiWrapper {
 
 	async deletePrediction(params: RemovePredictionRequest) {
 		await this.predictionApi.removePrediction(params);
+	}
+
+	async getPredictionsFiltered(params: GetAllPredictionsFilteredRequest) {
+		try {
+			const response =
+				await this.predictionApi.getAllPredictionsFiltered(params);
+			return response;
+		} catch (error) {
+			console.error('Error fetching filtered predictions', error);
+			throw error;
+		}
 	}
 }
