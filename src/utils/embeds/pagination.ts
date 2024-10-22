@@ -1,5 +1,8 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 
+/**
+ * @description - Utility class for creating & managing pagination buttons for Discord Embeds
+ */
 export default class Pagination {
 	/**
 	 * Creates buttons to navigate and assist with pagination of a Discord Embed

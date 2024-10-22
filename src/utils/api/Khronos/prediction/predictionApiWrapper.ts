@@ -1,7 +1,9 @@
 import {
+	type AllUserPredictionsDto,
 	type CreatePredictionDto,
 	type GetAllPredictionsFilteredRequest,
 	type GetPredictionByIdRequest,
+	type GetPredictionsForUserRequest,
 	PredictionApi,
 	type RemovePredictionRequest,
 } from '../../../../openapi/khronos/index.js';
@@ -46,5 +48,12 @@ export default class PredictionApiWrapper {
 			console.error('Error fetching filtered predictions', error);
 			throw error;
 		}
+	}
+
+	async getPredictionsForUser(
+		params: GetPredictionsForUserRequest,
+	): Promise<AllUserPredictionsDto[]> {
+		const response = await this.predictionApi.getPredictionsForUser(params);
+		return response;
 	}
 }
