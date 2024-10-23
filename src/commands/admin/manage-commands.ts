@@ -1,3 +1,4 @@
+import { plutoGuildId } from './../../lib/configs/constants.js';
 import { ApplyOptions } from '@sapphire/decorators';
 import { type ApplicationCommandRegistry, Command } from '@sapphire/framework';
 import { PermissionFlagsBits } from 'discord.js';
@@ -54,7 +55,7 @@ export class ManageCommandsCommand extends Command {
 									.setRequired(true),
 							),
 					),
-			{ idHints: ['1290465328995766333'], guildIds: ['777353407383339038'] },
+			{ idHints: ['1290465328995766333'], guildIds: [plutoGuildId] },
 		);
 	}
 

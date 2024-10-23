@@ -1,3 +1,4 @@
+import { plutoGuildId } from './../../lib/configs/constants.js';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
 import { PermissionFlagsBits, EmbedBuilder } from 'discord.js';
@@ -90,7 +91,7 @@ export class UserCommand extends Command {
 					),
 			{
 				idHints: ['1288178546942021643', '1290465537859784745'],
-				guildIds: ['777353407383339038'],
+				guildIds: [plutoGuildId],
 			},
 		);
 	}
