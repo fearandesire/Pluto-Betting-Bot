@@ -64,7 +64,7 @@ export default async function parseScheduledGames(
 	const fields = await Promise.all(
 		sortedDates.map(async (date) => {
 			const gamesList = await Promise.all(
-				groupedGames[date].map(await createMatchStr(includeOdds)),
+				groupedGames[date].map(await createMatchStr()),
 			);
 			return {
 				name: format(new Date(date), 'PP'), // Format date as 'MM/DD/YYYY'
@@ -87,19 +87,36 @@ export default async function parseScheduledGames(
  * @param {boolean} includeOdds - Whether to include odds information.
  * @returns {string} - Formatted string representing the match.
  */
-async function createMatchStr(
-	includeOdds: boolean,
-): Promise<(game: IOddsField) => Promise<string>> {
+async function createMatchStr(): Promise<
+	(game: IOddsField) => Promise<string>
+> {
 	return async (game: IOddsField): Promise<string> => {
 		const { teams } = game;
 		const aTeam = shortNameParse(teams.away_team.name);
 		const hTeam = shortNameParse(teams.home_team.name);
-		// Arrow function to replace anything before the first digit. e.g `Sat, 9:00 PM` => `9:00 PM`
-		// const rmDay = (timeStr) => { }
-		const oddsStr = includeOdds
-			? ` *(${teams.away_team.odds})* *@* ${hTeam} *(${teams.home_team.odds})* | *${game.dates.legible}*`
-			: ` @ ${hTeam} | *${game.dates.legible}*`;
-		return `${aTeam}${oddsStr}`;
+
+		// Parse odds, considering the '+' and '-' signs
+		const parseOdds = (odds: string): number => {
+			if (odds.startsWith('+')) {
+				return Number.parseFloat(odds.substring(1));
+			}
+			return Number.parseFloat(odds);
+		};
+
+		const awayOdds = parseOdds(teams.away_team.odds);
+		const homeOdds = parseOdds(teams.home_team.odds);
+
+		const isAwayTeamFavored = awayOdds < homeOdds;
+
+		const awayTeamStr = isAwayTeamFavored
+			? `${aTeam} **\`(${teams.away_team.odds})\`**`
+			: `${aTeam} \`(${teams.away_team.odds})\``;
+
+		const homeTeamStr = isAwayTeamFavored
+			? `${hTeam} \`(${teams.home_team.odds})\``
+			: `${hTeam} **\`(${teams.home_team.odds})\`**`;
+
+		return `${awayTeamStr} @ ${homeTeamStr}`;
 	};
 }
 
