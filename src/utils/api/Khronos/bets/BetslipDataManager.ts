@@ -44,12 +44,16 @@ export default class BetslipDataManager {
 				guild.emojis.cache.find((emoji) => emoji.name === bet.team) || '';
 			const teamShortName = bet.team.split(' ').pop() ?? bet.team;
 			const chosenTeamStr = `${teamEmoji} ${teamShortName}`;
+			// Parse to numbers
+			const amount = Number(bet.amount).toFixed(2);
+			const profit = Number(bet.profit).toFixed(2);
+			const payout = Number(bet.payout).toFixed(2);
 
 			const description =
 				`**Team:** ${chosenTeamStr}\n` +
-				`**Amount:** \`$${bet.amount.toFixed(2)}\`\n` +
-				`**Profit:** \`$${bet.profit.toFixed(2)}\`\n` +
-				`**Payout:** \`$${bet.payout.toFixed(2)}\``;
+				`**Amount:** \`$${amount}\`\n` +
+				`**Profit:** \`$${profit}\`\n` +
+				`**Payout:** \`$${payout}\``;
 
 			embed.addFields({
 				name: `**ID:** \`${bet.betid}\``,

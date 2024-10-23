@@ -160,7 +160,7 @@ export class AccountManager {
 			// Resolve current dsicord usernames
 			const lbData = res.map((user: any) => ({
 				userid: user.id,
-				balance: user.balance,
+				balance: `${Number(user.balance).toFixed(2)}`,
 			}));
 			// Pre-fetch all members
 			const lbUserIds = lbData.map((entry: any) => entry.userid);
@@ -173,7 +173,8 @@ export class AccountManager {
 				const member: GuildMember | undefined = lbMembers.get(entry.userid);
 				return {
 					...entry,
-					memberTag: member?.user.tag ?? `<@${entry.userid}>`,
+					memberTag:
+						member?.user.tag ?? member?.displayName ?? `<@${entry.userid}>`,
 				};
 			});
 			return this.paginationUtilities.displayLeaderboardPage(
