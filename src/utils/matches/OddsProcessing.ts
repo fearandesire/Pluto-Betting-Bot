@@ -41,8 +41,7 @@ export async function prepareAndFormat(matchups: Match[], thumbnail: string) {
 	const options = {
 		includeOdds: true,
 		footer: {
-			text: `${count} upcoming matches | ${helpfooter()}`,
-			iconURL: patreonFooterUrl,
+			text: `\`${count}\` upcoming matches | ${helpfooter()}`,
 		},
 		thumbnail,
 	};

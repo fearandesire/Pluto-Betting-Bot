@@ -212,7 +212,7 @@ export class BetslipManager {
 			.setColor(embedColors.success)
 			.setThumbnail(embedImg)
 			.setFooter({
-				text: `${helpfooter()} | Bet ID: ${betslip.betid}`,
+				text: `${helpfooter('betting')} | Bet ID: ${betslip.betid}`,
 			});
 		await interaction.followUp({
 			embeds: [successEmbed],
@@ -252,7 +252,7 @@ export class BetslipManager {
 				.setColor(embedColors.success)
 				.setThumbnail(interaction.user.displayAvatarURL())
 				.setFooter({
-					text: helpfooter(),
+					text: helpfooter('betting'),
 				});
 			return interaction.followUp({
 				embeds: [cancelledEmbed],
@@ -304,7 +304,7 @@ export class BetslipManager {
 			)
 			.setColor(embedColors.PlutoYellow)
 			.setFooter({
-				text: helpfooter(),
+				text: helpfooter('betting'),
 			});
 		const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
 			new ButtonBuilder()

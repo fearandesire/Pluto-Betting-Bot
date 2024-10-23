@@ -43,7 +43,7 @@ export default async function parseScheduledGames(
 			.setTitle(title)
 			.setColor(embedColors.PlutoRed)
 			.setDescription(description)
-			.setFooter(patreonFooter || { text: helpfooter() })
+			.setFooter({ text: helpfooter('default') })
 			.setThumbnail(thumbnail);
 	}
 
