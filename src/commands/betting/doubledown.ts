@@ -1,3 +1,4 @@
+import { isApiError } from './../../lib/interfaces/errors/api-errors.js';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
 import { EmbedBuilder } from 'discord.js';
@@ -37,7 +38,7 @@ export class UserCommand extends Command {
 		await interaction.deferReply();
 		// Ensure user is Patreon member
 		const isMember = await PatreonFacade.memberDetails(interaction.user.id);
-		if (!isMember) {
+		if (!isMember || isApiError(isMember)) {
 			await interaction.reply({
 				embeds: [ErrorEmbeds.patreonMembersOnly()],
 			});
