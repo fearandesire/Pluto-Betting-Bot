@@ -3,7 +3,6 @@ import { Command } from '@sapphire/framework';
 import { EmbedBuilder, PermissionFlagsBits } from 'discord.js';
 import GuildConfigWrapper from '../../utils/api/Khronos/guild/guild-config.wrapper.js';
 import embedColors from '../../lib/colorsConfig.js';
-import { DiscordConfigEnums } from '../../utils/api/common/interfaces/kh-pluto/kh-pluto.interface.js';
 import { DiscordConfigSettingTypeEnum } from '../../openapi/khronos/models/DiscordConfig.js';
 import GuildWrapper from '../../utils/api/Khronos/guild/guild-wrapper.js';
 import StringUtils from '../../utils/common/string-utils.js';
@@ -33,7 +32,7 @@ export class UserCommand extends Command {
 									.setDescription('The type of configuration')
 									.setRequired(true)
 									.addChoices(
-										...Object.entries(DiscordConfigEnums).map(
+										...Object.entries(DiscordConfigSettingTypeEnum).map(
 											([key, value]) => ({
 												name: key,
 												value: value,
@@ -68,11 +67,6 @@ export class UserCommand extends Command {
 			ephemeral: true,
 		});
 		const subcommand = interaction.options.getSubcommand();
-		const type = interaction.options.getString(
-			'type',
-			true,
-		) as DiscordConfigEnums;
-		const value = interaction.options.getString('value', true);
 		const guildId = interaction.guildId;
 
 		if (!guildId) {
@@ -83,6 +77,11 @@ export class UserCommand extends Command {
 
 		try {
 			if (subcommand === 'set') {
+				const type = interaction.options.getString(
+					'type',
+					true,
+				) as DiscordConfigSettingTypeEnum;
+				const value = interaction.options.getString('value', true);
 				await this.addConfig(interaction, guildId, type, value);
 			} else if (subcommand === 'view') {
 				await this.viewConfig(interaction, guildId);
@@ -95,7 +94,7 @@ export class UserCommand extends Command {
 	private async addConfig(
 		interaction: Command.ChatInputCommandInteraction,
 		guildId: string,
-		type: DiscordConfigEnums,
+		type: DiscordConfigSettingTypeEnum,
 		value: string,
 	) {
 		await this.guildConfigWrapper.setGuildConfig({
@@ -123,7 +122,7 @@ export class UserCommand extends Command {
 			.setColor(embedColors.info)
 			.setTitle(`${interaction.guild.name} Guild Configuration`)
 			.setDescription(
-				'Here are the current configuration settings for this guild.',
+				'Here are the current configuration settings for this guild.\nSet / Change using `/config set`',
 			);
 
 		for (const [key, value] of Object.entries(DiscordConfigSettingTypeEnum)) {
