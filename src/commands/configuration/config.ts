@@ -4,12 +4,16 @@ import { EmbedBuilder, PermissionFlagsBits } from 'discord.js';
 import GuildConfigWrapper from '../../utils/api/Khronos/guild/guild-config.wrapper.js';
 import embedColors from '../../lib/colorsConfig.js';
 import { DiscordConfigEnums } from '../../utils/api/common/interfaces/kh-pluto/kh-pluto.interface.js';
+import { DiscordConfigSettingTypeEnum } from '../../openapi/khronos/models/DiscordConfig.js';
+import GuildWrapper from '../../utils/api/Khronos/guild/guild-wrapper.js';
+import StringUtils from '../../utils/common/string-utils.js';
 
 @ApplyOptions<Command.Options>({
 	description: 'Manage guild configurations',
 })
 export class UserCommand extends Command {
 	private guildConfigWrapper = new GuildConfigWrapper();
+	private guildWrapper = new GuildWrapper();
 
 	public override registerApplicationCommands(registry: Command.Registry) {
 		registry.registerChatInputCommand(
@@ -45,6 +49,11 @@ export class UserCommand extends Command {
 									)
 									.setRequired(true),
 							),
+					)
+					.addSubcommand((subcommand) =>
+						subcommand
+							.setName('view')
+							.setDescription('View current guild configurations'),
 					),
 			{
 				idHints: ['1298717775287812096'],
@@ -73,8 +82,10 @@ export class UserCommand extends Command {
 		}
 
 		try {
-			if (subcommand === 'add') {
+			if (subcommand === 'set') {
 				await this.addConfig(interaction, guildId, type, value);
+			} else if (subcommand === 'view') {
+				await this.viewConfig(interaction, guildId);
 			}
 		} catch (error) {
 			await this.handleError(interaction, error);
@@ -98,6 +109,34 @@ export class UserCommand extends Command {
 			.setTitle('Configuration Set')
 			.setDescription(`Successfully set configuration for ${type}`)
 			.addFields({ name: 'Value', value });
+
+		await interaction.editReply({ embeds: [embed] });
+	}
+
+	private async viewConfig(
+		interaction: Command.ChatInputCommandInteraction,
+		guildId: string,
+	) {
+		const config = await this.guildWrapper.getGuild(guildId);
+
+		const embed = new EmbedBuilder()
+			.setColor(embedColors.info)
+			.setTitle(`${interaction.guild.name} Guild Configuration`)
+			.setDescription(
+				'Here are the current configuration settings for this guild.',
+			);
+
+		for (const [key, value] of Object.entries(DiscordConfigSettingTypeEnum)) {
+			// Parse the name to be human-readable
+			let configName = key.replace(/_/g, ' ');
+			configName = StringUtils.toTitleCase(configName);
+			const settingValue = config[value] || 'Not set';
+			embed.addFields({ name: configName, value: settingValue });
+		}
+		embed.setAuthor({
+			name: interaction.user.username,
+			iconURL: interaction.user.displayAvatarURL(),
+		});
 
 		await interaction.editReply({ embeds: [embed] });
 	}

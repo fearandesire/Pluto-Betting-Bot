@@ -35,4 +35,20 @@ export default class StringUtils {
 			.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
 			.join(' ');
 	}
+
+	/**
+	 * Transform a string to title case, capitalizing the first letter of each word
+	 *
+	 * @example 'LOG CHANNEL' -> 'Log Channel'
+	 * @param input - The string to transform
+	 */
+	static toTitleCase(input: string): string {
+		return input
+			.toLowerCase()
+			.split(' ')
+			.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+			.join(' ');
+	}
+
+	static transform;
 }
