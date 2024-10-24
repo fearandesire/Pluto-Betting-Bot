@@ -15,6 +15,10 @@ export default class PatreonManager {
 			const res = await this.patreonApi.get(`/read/${userid}`);
 			return res.data as IPatreonReadUser;
 		} catch (error) {
+			console.error({
+				message: `[${this.reqPatreonUserData.name}] Error`,
+				error,
+			});
 			return {
 				message: 'Failed to fetch Patreon user data',
 				metadata: {

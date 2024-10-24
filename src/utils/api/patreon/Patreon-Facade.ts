@@ -14,6 +14,7 @@ export default class PatreonFacade {
 	): Promise<IPatreonReadUser | IApiError | false> {
 		const result =
 			await PatreonFacade.patreonManager.reqPatreonUserData(userId);
+
 		if ('message' in result) {
 			return result; // This is a PatreonError
 		}

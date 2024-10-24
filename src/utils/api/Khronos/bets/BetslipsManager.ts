@@ -233,6 +233,7 @@ export class BetslipManager {
 		try {
 			const patreonOverride = await PatreonFacade.isSponsorTier(userid);
 			if (isApiError(patreonOverride)) {
+				console.error(`Unknown Err in patreonOverride:\n${patreonOverride}`);
 				const errEmbed = ErrorEmbeds.accountErr(
 					'Unable to cancel bet due to an error.\nPlease reach out for support.',
 				);
@@ -258,6 +259,10 @@ export class BetslipManager {
 				embeds: [cancelledEmbed],
 			});
 		} catch (error) {
+			console.error({
+				message: `[${this.cancelBet.name}] Error`,
+				error,
+			});
 			return new ApiErrorHandler().handle(
 				interaction,
 				error,
