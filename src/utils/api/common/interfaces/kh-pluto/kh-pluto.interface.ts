@@ -11,6 +11,15 @@ export enum SportsServing {
 	nfl = 'nfl',
 }
 
+export enum DiscordConfigEnums {
+	GAMES_CATEGORY = 'GAMES_CATEGORY',
+	BETTING_CHANNEL = 'BETTING_CHAN',
+	DAILY_SCHEDULE_CHAN = 'DAILY_SCHEDULE_CHAN',
+	PREDICTIONS_CHAN = 'PREDICTIONS_CHAN',
+	LOGS_CHAN = 'LOGS_CHAN',
+	//	LOGS_ENABLED = 'LOGS_ENABLED',
+}
+
 export type KH_ValidConfigType =
 	| `BETTING_CHAN`
 	| `LOGS`

@@ -3,15 +3,7 @@ import { Command } from '@sapphire/framework';
 import { EmbedBuilder, PermissionFlagsBits } from 'discord.js';
 import GuildConfigWrapper from '../../utils/api/Khronos/guild/guild-config.wrapper.js';
 import embedColors from '../../lib/colorsConfig.js';
-
-enum DiscordConfigEnums {
-	GAMES_CATEGORY = 'GAMES_CATEGORY',
-	BETTING_CHANNEL = 'BETTING_CHAN',
-	DAILY_SCHEDULE_CHAN = 'DAILY_SCHEDULE_CHAN',
-	PREDICTIONS_CHAN = 'PREDICTIONS_CHAN',
-	LOGS_CHAN = 'LOGS_CHAN',
-	//	LOGS_ENABLED = 'LOGS_ENABLED',
-}
+import { DiscordConfigEnums } from '../../utils/api/common/interfaces/kh-pluto/kh-pluto.interface.js';
 
 @ApplyOptions<Command.Options>({
 	description: 'Manage guild configurations',

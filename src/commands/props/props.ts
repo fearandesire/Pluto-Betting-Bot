@@ -1,3 +1,4 @@
+import { LogType } from '../../utils/logging/AppLog.interface.js';
 import { plutoGuildId } from './../../lib/configs/constants.js';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
@@ -10,6 +11,7 @@ import PropEmbedManager from '../../utils/guilds/prop-embeds/PropEmbedManager.js
 import type { PropZod } from '@pluto-api-interfaces';
 import { DateManager } from '../../utils/common/DateManager.js';
 import TeamInfo from '../../utils/common/TeamInfo.js';
+import AppLog from '../../utils/logging/AppLog.js';
 
 @ApplyOptions<Command.Options>({
 	description: 'Manage props',
@@ -152,8 +154,14 @@ export class UserCommand extends Command {
 		interaction: Command.ChatInputCommandInteraction,
 	) {
 		await new PropsApiWrapper().generateAllPropEmbeds();
-		return interaction.reply({
+
+		await interaction.reply({
 			content: 'Prop Embeds populated successfully',
+		});
+		await AppLog.log({
+			guildId: interaction.guildId,
+			description: `${interaction.user.username} generated all prop embeds`,
+			type: LogType.Info,
 		});
 	}
 
@@ -177,6 +185,13 @@ export class UserCommand extends Command {
 			});
 
 			const embed = this.createResultEmbed(response);
+
+			await AppLog.log({
+				guildId: interaction.guildId,
+				description: `Prop result updated for ${propId}`,
+				type: LogType.Info,
+			});
+
 			return interaction.editReply({ embeds: [embed] });
 		} catch (error) {
 			this.container.logger.error(error);
@@ -435,6 +450,12 @@ export class UserCommand extends Command {
 			});
 
 			await interaction.editReply({ embeds: [embed], components: [row] });
+
+			await AppLog.log({
+				guildId: interaction.guildId,
+				description: `Prop embed created for ${propId}`,
+				type: LogType.Info,
+			});
 		} catch (error) {
 			this.container.logger.error(error);
 			return interaction.editReply({
