@@ -48,7 +48,4 @@ const env = envSchema.parse({
 	APP_OWNER_ID: process.env.APP_OWNER_ID,
 });
 
-console.log({
-	env,
-});
 export default env;
