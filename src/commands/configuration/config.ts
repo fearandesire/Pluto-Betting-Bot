@@ -64,7 +64,7 @@ export class UserCommand extends Command {
 		interaction: Command.ChatInputCommandInteraction,
 	) {
 		await interaction.deferReply({
-			ephemeral: true,
+			ephemeral: false,
 		});
 		const subcommand = interaction.options.getSubcommand();
 		const guildId = interaction.guildId;
@@ -117,6 +117,12 @@ export class UserCommand extends Command {
 		guildId: string,
 	) {
 		const config = await this.guildWrapper.getGuild(guildId);
+		const definedSettings = new Map<string, string>();
+
+		// Populate defined settings from the discordConfig array
+		for (const setting of config.discordConfig) {
+			definedSettings.set(setting.setting_type, setting.setting_value);
+		}
 
 		const embed = new EmbedBuilder()
 			.setColor(embedColors.info)
@@ -129,9 +135,10 @@ export class UserCommand extends Command {
 			// Parse the name to be human-readable
 			let configName = key.replace(/_/g, ' ');
 			configName = StringUtils.toTitleCase(configName);
-			const settingValue = config[value] || 'Not set';
+			const settingValue = definedSettings.get(value) || 'Not set';
 			embed.addFields({ name: configName, value: settingValue });
 		}
+
 		embed.setAuthor({
 			name: interaction.user.username,
 			iconURL: interaction.user.displayAvatarURL(),
