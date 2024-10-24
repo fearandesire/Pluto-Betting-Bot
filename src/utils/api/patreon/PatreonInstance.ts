@@ -1,5 +1,5 @@
 import axios, { AxiosHeaders, type AxiosInstance } from 'axios';
-import { PATREON_API_KEY, PATREON_API_URL } from './config.js';
+import env from '../../../lib/startup/env.js';
 
 export class AxiosConfigurator {
 	private readonly baseURL: string;
@@ -34,7 +34,7 @@ export class AxiosConfigurator {
 }
 
 const patreonApiInstance = new AxiosConfigurator(
-	PATREON_API_URL!,
+	env.PATREON_API_URL,
 	90000,
 ).createInstance();
 

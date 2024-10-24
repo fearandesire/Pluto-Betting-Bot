@@ -1,3 +1,4 @@
+import './lib/startup/env.js';
 import './utils/api/Khronos/KhronosInstances.js';
 import './lib/startup/cache.js';
 import { LogLevel, SapphireClient } from '@sapphire/framework';

@@ -1,4 +1,4 @@
-import * as dotenv from 'dotenv';
+import env from '../../../lib/startup/env.js';
 /**
  * @module KhronosApi
  * @readonly
@@ -15,15 +15,10 @@ import {
 	MatchesApi,
 } from '../../../openapi/khronos/index.js';
 
-dotenv.config({
-	path: '.env',
-	override: true,
-});
-
 export const KH_API_CONFIG = new Configuration({
-	basePath: `${process.env.KH_API_URL}`,
+	basePath: `${env.KH_API_URL}`,
 	headers: {
-		'x-api-key': `${process.env.KH_PLUTO_CLIENT_KEY}`,
+		'x-api-key': `${env.KH_PLUTO_CLIENT_KEY}`,
 	},
 });
 

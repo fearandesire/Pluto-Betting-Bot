@@ -30,7 +30,7 @@ export default async function parseScheduledGames(
 	const { includeOdds, thumbnail } = options;
 
 	// Set initial title and color based on whether odds are included
-	const title = includeOdds ? ':mega: H2H Odds' : 'Scheduled Games';
+	const title = includeOdds ? 'Odds 🎲' : 'Scheduled Games';
 	const embColor = includeOdds
 		? embedColors.PlutoBlue
 		: embedColors.PlutoYellow;
@@ -40,9 +40,8 @@ export default async function parseScheduledGames(
 			? 'There are no odds currently stored right now.'
 			: 'No games are scheduled for the day.';
 		return new EmbedBuilder()
-			.setTitle(title)
 			.setColor(embedColors.PlutoRed)
-			.setDescription(description)
+			.setDescription(`## ${title}\n${description}`)
 			.setFooter({ text: helpfooter('default') })
 			.setThumbnail(thumbnail);
 	}
