@@ -40,8 +40,9 @@ export default async function parseScheduledGames(
 			? 'There are no odds currently stored right now.'
 			: 'No games are scheduled for the day.';
 		return new EmbedBuilder()
+			.setTitle(title)
 			.setColor(embedColors.PlutoRed)
-			.setDescription(`## ${title}\n${description}`)
+			.setDescription(description)
 			.setFooter({ text: helpfooter('default') })
 			.setThumbnail(thumbnail);
 	}
