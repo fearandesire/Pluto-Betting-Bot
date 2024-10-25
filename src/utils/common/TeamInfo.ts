@@ -7,6 +7,11 @@ interface TeamShortNameOrEmojiOptions {
 }
 
 export default class TeamInfo {
+	/**
+	 * Get the color of a team
+	 * @param teamName - The name of the team
+	 * @returns The color of the team
+	 */
 	static async getTeamColor(teamName: string) {
 		const team = await resolveTeam(teamName, { full: true });
 		const res = team?.colors[0] ?? '#0099ff';

@@ -11,6 +11,7 @@ import type { PropZod } from '@pluto-api-interfaces';
 import { DateManager } from '../../utils/common/DateManager.js';
 import TeamInfo from '../../utils/common/TeamInfo.js';
 import AppLog from '../../utils/logging/AppLog.js';
+import StringUtils from '../../utils/common/string-utils';
 
 export class UserCommand extends Subcommand {
 	public constructor(
@@ -221,7 +222,7 @@ export class UserCommand extends Subcommand {
 	) {
 		await new PropsApiWrapper().generateAllPropEmbeds();
 
-		await interaction.reply({
+		await interaction.editReply({
 			content: 'Prop Embeds populated successfully',
 		});
 		await AppLog.log({
@@ -507,14 +508,6 @@ export class UserCommand extends Subcommand {
 				});
 			}
 
-			// Log what we are comparing
-			console.log(
-				'Comparing ->',
-				prop.market_key.toLowerCase(),
-				marketKey.toLowerCase(),
-				prop.description?.toLowerCase(),
-				player.toLowerCase(),
-			);
 			if (
 				prop.market_key.toLowerCase() !== marketKey.toLowerCase() ||
 				prop.description?.toLowerCase() !== player.toLowerCase()
@@ -532,10 +525,20 @@ export class UserCommand extends Subcommand {
 			const AWTEAM_TRANSFORMED = await propEmbedManager.transformTeamName(
 				prop.away_team,
 			);
+			const HTEAM_SHORT_NAME = new StringUtils().getShortName(prop.home_team);
+			const AWTEAM_SHORT_NAME = new StringUtils().getShortName(prop.away_team);
 
 			const { embed, row } = await propEmbedManager.createSingleEmbed(prop, {
-				HTEAM_TRANSFORMED,
-				AWTEAM_TRANSFORMED,
+				home: {
+					fullName: prop.home_team,
+					transformed: HTEAM_TRANSFORMED,
+					shortName: HTEAM_SHORT_NAME,
+				},
+				away: {
+					fullName: prop.away_team,
+					transformed: AWTEAM_TRANSFORMED,
+					shortName: AWTEAM_SHORT_NAME,
+				},
 			});
 
 			await interaction.editReply({ embeds: [embed], components: [row] });

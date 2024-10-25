@@ -4,6 +4,8 @@ import {
 	ButtonStyle,
 	type Client,
 	EmbedBuilder,
+	type Emoji,
+	type GuildEmoji,
 } from 'discord.js';
 import { PropButtons } from '../../../lib/interfaces/props/prop-buttons.interface.js';
 import {
@@ -16,8 +18,16 @@ import StringUtils from '../../common/string-utils.js';
 import GuildUtils from '../GuildUtils.js';
 
 interface AggregateDetailsParams {
-	HTEAM_TRANSFORMED: string;
-	AWTEAM_TRANSFORMED: string;
+	home: {
+		fullName: string;
+		transformed: GuildEmoji | Emoji | string;
+		shortName: string;
+	};
+	away: {
+		fullName: string;
+		transformed: GuildEmoji | Emoji | string;
+		shortName: string;
+	};
 }
 
 export default class PropEmbedManager {
@@ -27,17 +37,23 @@ export default class PropEmbedManager {
 		this.client = client;
 	}
 
-	async transformTeamName(teamName: string): Promise<string> {
+	/**
+	 * Convert a team name to emoji
+	 * Fallback to the short name if no emoji is found
+	 */
+	async transformTeamName(
+		teamName: string,
+	): Promise<GuildEmoji | Emoji | string> {
 		const shortName = new StringUtils().getShortName(teamName);
 		const emoji = this.client.emojis.cache.find(
 			(emoji) => emoji.name?.toLowerCase() === shortName.toLowerCase(),
 		);
-		return emoji ? `${emoji}` : shortName;
+		return emoji ? emoji : shortName;
 	}
 
 	private aggregateDetails(
 		prop: PropZod,
-		{ HTEAM_TRANSFORMED, AWTEAM_TRANSFORMED }: AggregateDetailsParams,
+		{ home, away }: AggregateDetailsParams,
 	): {
 		title: string;
 		desc: string;
@@ -51,10 +67,11 @@ export default class PropEmbedManager {
 		const humanReadableDate = new DateManager().humanReadable(
 			prop.commence_time,
 		);
-		const matchString = `${HTEAM_TRANSFORMED} vs ${AWTEAM_TRANSFORMED}`;
+		const matchString = `${home.transformed} vs ${away.transformed}`;
+		// Strip spaces and replace with underscores for a uniform button ID
 		const createBtnString = (name: string) => name.replace(/\s+/g, '_');
-		const HTEAM_BTN_STRING = createBtnString(HTEAM_TRANSFORMED);
-		const AWTEAM_BTN_STRING = createBtnString(AWTEAM_TRANSFORMED);
+		const homeBtnString = createBtnString(home.fullName);
+		const awayBtnString = createBtnString(away.fullName);
 		const ovrUnderStr = (amount: string) => `Over/Under **\`${amount}\`**`;
 		const { point } = prop;
 		const title = 'Accuracy Challenge';
@@ -95,7 +112,7 @@ export default class PropEmbedManager {
 			];
 		} else if (marketKey === 'h2h') {
 			// Team-based prop (who will win)
-			desc = `Who will win the match between **${HTEAM_TRANSFORMED}** and **${AWTEAM_TRANSFORMED}**?`;
+			desc = `Who will win the match between **${home.transformed}** and **${away.transformed}**?`;
 			fields = [
 				{
 					name: 'Match',
@@ -106,21 +123,28 @@ export default class PropEmbedManager {
 			];
 			buttons = [
 				new ButtonBuilder()
-					.setCustomId(`prop_${HTEAM_BTN_STRING}_${prop.id}`)
-					.setLabel(`${HTEAM_TRANSFORMED}`)
+					.setCustomId(`prop_${homeBtnString}_${prop.id}`)
+					.setLabel(home.shortName)
 					.setStyle(ButtonStyle.Primary),
 				new ButtonBuilder()
-					.setCustomId(`prop_${AWTEAM_BTN_STRING}_${prop.id}`)
-					.setLabel(`${AWTEAM_TRANSFORMED}`)
+					.setCustomId(`prop_${awayBtnString}_${prop.id}`)
+					.setLabel(away.shortName)
 					.setStyle(ButtonStyle.Primary),
 				new ButtonBuilder()
 					.setCustomId(`prop_${PropButtons.CANCEL}_${prop.id}`)
 					.setLabel('Cancel')
 					.setStyle(ButtonStyle.Danger),
 			];
+			// Add team emojis if they are available
+			if (typeof home.transformed !== 'string') {
+				buttons[0].setEmoji(home.transformed.id);
+			}
+			if (typeof away.transformed !== 'string') {
+				buttons[1].setEmoji(away.transformed.id);
+			}
 		} else if (marketKey === 'totals' && !prop.description) {
 			// Total score of the match (over/under)
-			desc = `Will the total score of the match between **${HTEAM_TRANSFORMED}** and **${AWTEAM_TRANSFORMED}** be over/under **\`${prop.point}\`**?`;
+			desc = `Will the total score of the match between **${home.transformed}** and **${away.transformed}** be over/under **\`${prop.point}\`**?`;
 			fields = [
 				{
 					name: 'Match',
@@ -169,9 +193,24 @@ export default class PropEmbedManager {
 					const AWTEAM_TRANSFORMED = await this.transformTeamName(
 						prop.away_team,
 					);
+					const HTEAM_SHORT_NAME = new StringUtils().getShortName(
+						prop.home_team,
+					);
+					const AWTEAM_SHORT_NAME = new StringUtils().getShortName(
+						prop.away_team,
+					);
+
 					const { title, desc, fields, buttons } = this.aggregateDetails(prop, {
-						HTEAM_TRANSFORMED,
-						AWTEAM_TRANSFORMED,
+						home: {
+							fullName: prop.home_team,
+							transformed: HTEAM_TRANSFORMED,
+							shortName: HTEAM_SHORT_NAME,
+						},
+						away: {
+							fullName: prop.away_team,
+							transformed: AWTEAM_TRANSFORMED,
+							shortName: AWTEAM_SHORT_NAME,
+						},
 					});
 
 					const teamColor = await TeamInfo.getTeamColor(prop.home_team);
@@ -207,11 +246,11 @@ export default class PropEmbedManager {
 
 	async createSingleEmbed(
 		prop: PropZod,
-		{ HTEAM_TRANSFORMED, AWTEAM_TRANSFORMED }: AggregateDetailsParams,
+		{ home, away }: AggregateDetailsParams,
 	) {
 		const { title, desc, fields, buttons } = this.aggregateDetails(prop, {
-			HTEAM_TRANSFORMED,
-			AWTEAM_TRANSFORMED,
+			home,
+			away,
 		});
 
 		const teamColor = await TeamInfo.getTeamColor(prop.home_team);
