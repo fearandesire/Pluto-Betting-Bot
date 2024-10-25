@@ -38,6 +38,8 @@ COPY . .
 COPY --from=openapi-generator /app/src/openapi ./src/openapi
 # Copy OpenAPI Config, Tools files
 COPY openapitools.json openapi.config.json ./
+# Copy OpenAPI Spec
+COPY Khronos-Swagger-Spec-v1.json ./
 
 # Build the application
 RUN pnpm build
