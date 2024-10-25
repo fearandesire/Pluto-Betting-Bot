@@ -7,7 +7,7 @@ import type { Prop } from '../../openapi/khronos/models/Prop.js';
 import type { UpdatePropResultDto } from '../../openapi/khronos/models/UpdatePropResultDto.js';
 import type { UpdatePropResultResponseDto } from '../../openapi/khronos/models/index.js';
 import PropEmbedManager from '../../utils/guilds/prop-embeds/PropEmbedManager.js';
-import type { PropZod } from '@pluto-api-interfaces';
+import { MarketKeyTranslations, type PropZod } from '@pluto-api-interfaces';
 import { DateManager } from '../../utils/common/DateManager.js';
 import TeamInfo from '../../utils/common/TeamInfo.js';
 import AppLog from '../../utils/logging/AppLog.js';
@@ -31,6 +31,7 @@ export class UserCommand extends Subcommand {
 						{ name: 'active', chatInputRun: 'viewActive' },
 						{ name: 'for_event', chatInputRun: 'viewForEvent' },
 						{ name: 'upcoming', chatInputRun: 'viewUpcoming' },
+						{ name: 'player', chatInputRun: 'viewForPlayer' },
 					],
 				},
 				{
@@ -70,6 +71,17 @@ export class UserCommand extends Subcommand {
 								subcommand
 									.setName('active')
 									.setDescription('View props with active predictions'),
+							)
+							.addSubcommand((subcommand) =>
+								subcommand
+									.setName('player')
+									.setDescription('View props for a specific player')
+									.addStringOption((option) =>
+										option
+											.setName('player')
+											.setDescription('The name of the player')
+											.setRequired(true),
+									),
 							)
 							.addSubcommand((subcommand) =>
 								subcommand
@@ -144,10 +156,16 @@ export class UserCommand extends Subcommand {
 							),
 					),
 			{
-				idHints: ['1288178546942021643', '1290465537859784745'],
+				idHints: ['1290465537859784745'],
 				guildIds: [plutoGuildId],
 			},
 		);
+	}
+
+	public async viewForPlayer(
+		interaction: Subcommand.ChatInputCommandInteraction,
+	) {
+		return this.viewPropsByPlayer(interaction);
 	}
 
 	// View group methods
@@ -165,9 +183,11 @@ export class UserCommand extends Subcommand {
 		return this.viewPropsForEvent(interaction);
 	}
 
+	// NOTE: Needs further filtering to be implemented, since there's a high number of props
 	public async viewUpcoming(
 		interaction: Subcommand.ChatInputCommandInteraction,
 	) {
+		await interaction.deferReply();
 		return this.viewUpcomingProps(interaction);
 	}
 
@@ -189,6 +209,22 @@ export class UserCommand extends Subcommand {
 		interaction: Subcommand.ChatInputCommandInteraction,
 	) {
 		return this.setResult(interaction);
+	}
+
+	private async viewPropsByPlayer(
+		interaction: Subcommand.ChatInputCommandInteraction,
+	) {
+		const player = interaction.options.getString('player', true);
+		const propsApi = new PropsApiWrapper();
+
+		const props = await propsApi.getPropsByPlayer({ description: player });
+
+		return this.sendPropsEmbed(
+			interaction,
+			props as Prop[],
+			`Props for ${props[0].description}`,
+			`${props.length} total props`,
+		);
 	}
 
 	private async viewPropsForEvent(
@@ -330,6 +366,7 @@ export class UserCommand extends Subcommand {
 
 		try {
 			const props: Prop[] = await propsApi.getAll({ upcoming: true });
+
 			return this.sendPropsEmbed(
 				interaction,
 				props,
@@ -338,10 +375,9 @@ export class UserCommand extends Subcommand {
 			);
 		} catch (error) {
 			this.container.logger.error(error);
-			return interaction.reply({
+			return interaction.editReply({
 				content:
 					'An error occurred while fetching upcoming props. Please try again later.',
-				ephemeral: true,
 			});
 		}
 	}
@@ -435,40 +471,50 @@ export class UserCommand extends Subcommand {
 		props: Prop[],
 		title: string,
 		description: string,
+		forPlayer = false,
 	) {
-		if (props.length === 0) {
-			return interaction.reply({
-				content: 'No props were found matching the search criteria.',
-				ephemeral: true,
+		try {
+			if (props.length === 0) {
+				return interaction.editReply({
+					content: 'No props were found matching the search criteria.',
+				});
+			}
+
+			const firstProp = props[0];
+			const date = new DateManager().toDiscordUnix(firstProp.commence_time);
+			const eventId = firstProp.event_id;
+			const embed = new EmbedBuilder()
+				.setTitle(`${title}`)
+				.setDescription(
+					`${description}\n\n**Event Information**\n🆔 **Event ID:** \`${eventId}\`\n🗓️ **Date:** ${date}\n${firstProp.home_team} vs ${firstProp.away_team}`,
+				)
+				.setColor('#0099ff')
+				.setTimestamp();
+
+			const formattedProps = this.formatPropsForEmbed(props, {
+				displayingForPlayer: forPlayer,
+			});
+			for (const field of formattedProps) {
+				embed.addFields(field);
+			}
+
+			if (props.length > 25) {
+				embed.setFooter({
+					text: `Showing 25 out of ${props.length} props. More props are available, but cannot be displayed in this embed.`,
+				});
+			}
+			return interaction.editReply({ embeds: [embed] });
+		} catch (error) {
+			this.container.logger.error(error);
+			return interaction.editReply({
+				content: 'An error occurred while sending the props embed.',
 			});
 		}
-
-		const firstProp = props[0];
-		const date = new DateManager().toDiscordUnix(firstProp.commence_time);
-
-		const embed = new EmbedBuilder()
-			.setTitle(`🏆 ${title}`)
-			.setDescription(
-				`${description}\n\n**Match:** ${firstProp.home_team} vs ${firstProp.away_team}\n**Date:** ${date}\n**Event ID:** ${firstProp.event_id}`,
-			)
-			.setColor('#0099ff')
-			.setTimestamp();
-
-		const formattedProps = this.formatPropsForEmbed(props);
-		for (const field of formattedProps) {
-			embed.addFields(field);
-		}
-
-		if (props.length > 25) {
-			embed.setFooter({
-				text: `Showing 25 out of ${props.length} props. More props are available, but cannot be displayed in this embed.`,
-			});
-		}
-		return interaction.reply({ embeds: [embed] });
 	}
 
 	private formatPropsForEmbed(
 		props: Prop[],
+		options: { displayingForPlayer: boolean },
 	): { name: string; value: string }[] {
 		return props.slice(0, 25).map((prop) => {
 			let pointDisplay = '';
@@ -476,12 +522,15 @@ export class UserCommand extends Subcommand {
 				prop.market_key.toLowerCase() !== 'h2h' &&
 				!prop.market_key.toLowerCase().includes('total')
 			) {
-				pointDisplay = prop.point ? `\n📊 **Over/Under:** ${prop.point}` : '';
+				pointDisplay = prop.point ? `\n**Over/Under:** ${prop.point}` : '';
 			}
-
+			const translatedKey = StringUtils.toTitleCase(
+				MarketKeyTranslations[prop.market_key],
+			);
 			return {
-				name: prop.description || prop.market_key,
-				value: `🆔 **Prop ID:** ${prop.id}\n🎱 **Market Key:** ${prop.market_key}${pointDisplay}`,
+				name: translatedKey,
+				value: `**Prop ID:** ${prop.id}${pointDisplay}`,
+				inline: false,
 			};
 		});
 	}

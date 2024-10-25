@@ -2,6 +2,7 @@ import {
 	PropsApi,
 	type FindAllPropsRequest,
 	type FindOnePropRequest,
+	type FindPropsByDescriptionRequest,
 	type GetPropsForEventRequest,
 	type PropDto,
 	type SetPropResultRequest,
@@ -67,5 +68,9 @@ export default class PropsApiWrapper {
 			}
 			throw error;
 		}
+	}
+
+	async getPropsByPlayer(params: FindPropsByDescriptionRequest) {
+		return await this.propsApi.findPropsByDescription(params);
 	}
 }
