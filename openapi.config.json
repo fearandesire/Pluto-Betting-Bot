@@ -1,0 +1,7 @@
+{
+	"modelPropertyNaming": "original",
+	"supportsES6": true,
+	"withInterfaces": true,
+	"useSingleRequestParameter": true,
+	"typescriptThreePlus": true
+}

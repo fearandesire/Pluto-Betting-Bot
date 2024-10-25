@@ -36,6 +36,8 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 # Copy the rest of the files and generated OpenAPI code
 COPY . .
 COPY --from=openapi-generator /app/src/openapi ./src/openapi
+# Copy OpenAPI Config, Tools files
+COPY openapitools.json openapitools ./
 
 # Build the application
 RUN pnpm build
