@@ -21,7 +21,7 @@ export class PropsController {
 		const guildChannelsResult = GuildChannelArraySchema.safeParse(
 			body.guildChannels,
 		);
-		const optionsDefault = { daysAhead: 2 };
+		const optionsDefault = { daysAhead: 7 };
 		const optionsResult = PropOptionsSchema.safeParse(optionsDefault);
 
 		if (

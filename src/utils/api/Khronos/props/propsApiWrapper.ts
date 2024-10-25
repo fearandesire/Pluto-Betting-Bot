@@ -1,5 +1,6 @@
 import {
 	PropsApi,
+	type FindAllPropsRequest,
 	type FindOnePropRequest,
 	type GetPropsForEventRequest,
 	type PropDto,
@@ -22,7 +23,7 @@ export default class PropsApiWrapper {
 	 * @param params - Optional parameters for finding props
 	 * @returns A promise that resolves to the raw response from the API
 	 */
-	async getAll(params: { recent?: boolean; withActivePredictions?: boolean }) {
+	async getAll(params: FindAllPropsRequest) {
 		return await this.propsApi.findAllProps(params);
 	}
 

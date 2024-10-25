@@ -88,6 +88,10 @@ export default class PropEmbedManager {
 					.setCustomId(`prop_${PropButtons.UNDER}_${prop.id}`)
 					.setLabel('Under ⬇️')
 					.setStyle(ButtonStyle.Primary),
+				new ButtonBuilder()
+					.setCustomId(`prop_${PropButtons.CANCEL}_${prop.id}`)
+					.setLabel('Cancel')
+					.setStyle(ButtonStyle.Danger),
 			];
 		} else if (marketKey === 'h2h') {
 			// Team-based prop (who will win)

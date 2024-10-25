@@ -1,5 +1,5 @@
-import { appOwner } from '@pluto-core-config';
 import { Precondition } from '@sapphire/framework';
+import env from '../lib/startup/env.js';
 import type {
 	CommandInteraction,
 	ContextMenuCommandInteraction,
@@ -25,10 +25,11 @@ export class OwnerOnlyPrecondition extends Precondition {
 	}
 
 	private async checkOwner(userId: string) {
-		return process.env.OWNER_IDS?.split(',').includes(userId)
+		const ownerId = env.APP_OWNER_ID;
+		return ownerId === userId
 			? this.ok()
 			: this.error({
-					message: 'Only the app owner can use this command.',
+					message: 'Only the app owner can use this command',
 				});
 	}
 }

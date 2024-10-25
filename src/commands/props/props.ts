@@ -1,7 +1,6 @@
 import { LogType } from '../../utils/logging/AppLog.interface.js';
 import { plutoGuildId } from './../../lib/configs/constants.js';
-import { ApplyOptions } from '@sapphire/decorators';
-import { Command } from '@sapphire/framework';
+import { Subcommand } from '@sapphire/plugin-subcommands';
 import { PermissionFlagsBits, EmbedBuilder } from 'discord.js';
 import PropsApiWrapper from '../../utils/api/Khronos/props/propsApiWrapper.js';
 import type { Prop } from '../../openapi/khronos/models/Prop.js';
@@ -13,82 +12,134 @@ import { DateManager } from '../../utils/common/DateManager.js';
 import TeamInfo from '../../utils/common/TeamInfo.js';
 import AppLog from '../../utils/logging/AppLog.js';
 
-@ApplyOptions<Command.Options>({
-	description: 'Manage props',
-})
-export class UserCommand extends Command {
-	public override registerApplicationCommands(registry: Command.Registry) {
+export class UserCommand extends Subcommand {
+	public constructor(
+		context: Subcommand.LoaderContext,
+		options: Subcommand.Options,
+	) {
+		super(context, {
+			...options,
+			name: 'props',
+			description: 'Manage props',
+			subcommands: [
+				{
+					name: 'view',
+					type: 'group',
+					entries: [
+						{ name: 'recent', chatInputRun: 'viewRecent' },
+						{ name: 'active', chatInputRun: 'viewActive' },
+						{ name: 'for_event', chatInputRun: 'viewForEvent' },
+						{ name: 'upcoming', chatInputRun: 'viewUpcoming' },
+					],
+				},
+				{
+					name: 'generate',
+					type: 'group',
+					entries: [
+						{ name: 'all', chatInputRun: 'generateAll' },
+						{ name: 'prop_embed', chatInputRun: 'generatePropEmbed' },
+					],
+				},
+				{
+					name: 'manage',
+					type: 'group',
+					entries: [{ name: 'setresult', chatInputRun: 'manageSetresult' }],
+				},
+			],
+		});
+	}
+
+	public override registerApplicationCommands(registry: Subcommand.Registry) {
 		registry.registerChatInputCommand(
 			(builder) =>
 				builder
 					.setName(this.name)
 					.setDescription(this.description)
 					.setDefaultMemberPermissions(PermissionFlagsBits.KickMembers)
-					.addSubcommand((subcommand) =>
-						subcommand
+					.addSubcommandGroup((group) =>
+						group
+							.setName('view')
+							.setDescription('View props')
+							.addSubcommand((subcommand) =>
+								subcommand
+									.setName('recent')
+									.setDescription('View props up to one week ago from today'),
+							)
+							.addSubcommand((subcommand) =>
+								subcommand
+									.setName('active')
+									.setDescription('View props with active predictions'),
+							)
+							.addSubcommand((subcommand) =>
+								subcommand
+									.setName('for_event')
+									.setDescription('View all props for a specific event')
+									.addStringOption((option) =>
+										option
+											.setName('event_id')
+											.setDescription('The ID of the event')
+											.setRequired(true),
+									),
+							)
+							.addSubcommand((subcommand) =>
+								subcommand
+									.setName('upcoming')
+									.setDescription('View upcoming props'),
+							),
+					)
+					.addSubcommandGroup((group) =>
+						group
 							.setName('generate')
-							.setDescription('Generate all prop embeds'),
-					)
-					.addSubcommand((subcommand) =>
-						subcommand
-							.setName('setresult')
-							.setDescription('Set the result of a prop')
-							.addStringOption((option) =>
-								option
-									.setName('prop_id')
-									.setDescription('The ID of the prop')
-									.setRequired(true),
+							.setDescription('Generate prop embeds')
+							.addSubcommand((subcommand) =>
+								subcommand
+									.setName('all')
+									.setDescription('Generate all prop embeds'),
 							)
-							.addStringOption((option) =>
-								option
-									.setName('result')
-									.setDescription('The result of the prop')
-									.setRequired(true),
+							.addSubcommand((subcommand) =>
+								subcommand
+									.setName('prop_embed')
+									.setDescription('Create a prop embed for a specific event')
+									.addStringOption((option) =>
+										option
+											.setName('prop_id')
+											.setDescription('The ID of the prop')
+											.setRequired(true),
+									)
+									.addStringOption((option) =>
+										option
+											.setName('market_key')
+											.setDescription('The market key for the prop')
+											.setRequired(true),
+									)
+									.addStringOption((option) =>
+										option
+											.setName('player')
+											.setDescription('The player name for the prop')
+											.setRequired(true),
+									),
 							),
 					)
-					.addSubcommand((subcommand) =>
-						subcommand
-							.setName('viewupcoming')
-							.setDescription('View props for upcoming events'),
-					)
-					// Show props that have an active prediction placed
-					.addSubcommand((subcommand) =>
-						subcommand
-							.setName('viewactive')
-							.setDescription('View active props'),
-					)
-					.addSubcommand((subcommand) =>
-						subcommand
-							.setName('view_for_event')
-							.setDescription('View all props for a specific event')
-							.addStringOption((option) =>
-								option
-									.setName('event_id')
-									.setDescription('The ID of the event')
-									.setRequired(true),
-							),
-					)
-					.addSubcommand((subcommand) =>
-						subcommand
-							.setName('generate_prop_embed')
-							.setDescription('Create a prop embed for a specific event')
-							.addStringOption((option) =>
-								option
-									.setName('prop_id')
-									.setDescription('The ID of the prop')
-									.setRequired(true),
-							)
-							.addStringOption((option) =>
-								option
-									.setName('market_key')
-									.setDescription('The market key for the prop')
-									.setRequired(true),
-							)
-							.addStringOption((option) =>
-								option
-									.setName('player')
-									.setDescription('The player name for the prop')
-									.setRequired(true),
+					.addSubcommandGroup((group) =>
+						group
+							.setName('manage')
+							.setDescription('Manage props')
+							.addSubcommand((subcommand) =>
+								subcommand
+									.setName('setresult')
+									.setDescription('Set the result of a prop')
+									.addStringOption((option) =>
+										option
+											.setName('prop_id')
+											.setDescription('The ID of the prop')
+											.setRequired(true),
+									)
+									.addStringOption((option) =>
+										option
+											.setName('result')
+											.setDescription('The result of the prop')
+											.setRequired(true),
+									),
 							),
 					),
 			{
@@ -98,34 +149,49 @@ export class UserCommand extends Command {
 		);
 	}
 
-	public override async chatInputRun(
-		interaction: Command.ChatInputCommandInteraction,
-	) {
-		const subcommand = interaction.options.getSubcommand();
+	// View group methods
+	public async viewRecent(interaction: Subcommand.ChatInputCommandInteraction) {
+		return this.viewRecentProps(interaction);
+	}
 
-		switch (subcommand) {
-			case 'generate':
-				return this.generateProps(interaction);
-			case 'setresult':
-				return this.setResult(interaction);
-			case 'viewactive':
-				return this.viewActiveProps(interaction);
-			case 'generate_prop_embed':
-				return this.createPropEmbed(interaction);
-			case 'viewupcoming':
-				return this.viewUpcomingProps(interaction);
-			case 'view_for_event':
-				return this.viewPropsForEvent(interaction);
-			default:
-				return interaction.reply({
-					content: 'Invalid subcommand',
-					ephemeral: true,
-				});
-		}
+	public async viewActive(interaction: Subcommand.ChatInputCommandInteraction) {
+		return this.viewActiveProps(interaction);
+	}
+
+	public async viewForEvent(
+		interaction: Subcommand.ChatInputCommandInteraction,
+	) {
+		return this.viewPropsForEvent(interaction);
+	}
+
+	public async viewUpcoming(
+		interaction: Subcommand.ChatInputCommandInteraction,
+	) {
+		return this.viewUpcomingProps(interaction);
+	}
+
+	// Generate group methods
+	public async generateAll(
+		interaction: Subcommand.ChatInputCommandInteraction,
+	) {
+		return this.generateProps(interaction);
+	}
+
+	public async generatePropEmbed(
+		interaction: Subcommand.ChatInputCommandInteraction,
+	) {
+		return this.createPropEmbed(interaction);
+	}
+
+	// Manage group methods
+	public async manageSetresult(
+		interaction: Subcommand.ChatInputCommandInteraction,
+	) {
+		return this.setResult(interaction);
 	}
 
 	private async viewPropsForEvent(
-		interaction: Command.ChatInputCommandInteraction,
+		interaction: Subcommand.ChatInputCommandInteraction,
 	) {
 		const eventId = interaction.options.getString('event_id', true);
 
@@ -151,7 +217,7 @@ export class UserCommand extends Command {
 	}
 
 	private async generateProps(
-		interaction: Command.ChatInputCommandInteraction,
+		interaction: Subcommand.ChatInputCommandInteraction,
 	) {
 		await new PropsApiWrapper().generateAllPropEmbeds();
 
@@ -165,7 +231,7 @@ export class UserCommand extends Command {
 		});
 	}
 
-	private async setResult(interaction: Command.ChatInputCommandInteraction) {
+	private async setResult(interaction: Subcommand.ChatInputCommandInteraction) {
 		const propId = interaction.options.getString('prop_id', true);
 		const result = interaction.options.getString('result', true);
 
@@ -231,7 +297,7 @@ export class UserCommand extends Command {
 	}
 
 	private async viewActiveProps(
-		interaction: Command.ChatInputCommandInteraction,
+		interaction: Subcommand.ChatInputCommandInteraction,
 	) {
 		const propsApi = new PropsApiWrapper();
 
@@ -257,12 +323,35 @@ export class UserCommand extends Command {
 	}
 
 	private async viewUpcomingProps(
-		interaction: Command.ChatInputCommandInteraction,
+		interaction: Subcommand.ChatInputCommandInteraction,
 	) {
 		const propsApi = new PropsApiWrapper();
 
 		try {
-			const props: Prop[] = await propsApi.getAll({ recent: true });
+			const props: Prop[] = await propsApi.getAll({ upcoming: true });
+			return this.sendPropsEmbed(
+				interaction,
+				props,
+				'Upcoming Props',
+				'Displaying upcoming props.',
+			);
+		} catch (error) {
+			this.container.logger.error(error);
+			return interaction.reply({
+				content:
+					'An error occurred while fetching upcoming props. Please try again later.',
+				ephemeral: true,
+			});
+		}
+	}
+
+	private async viewRecentProps(
+		interaction: Subcommand.ChatInputCommandInteraction,
+	) {
+		const propsApi = new PropsApiWrapper();
+
+		try {
+			const props: Prop[] = await propsApi.getAll({ withinOneWeek: true });
 
 			// Group props by event ID
 			const eventMap = new Map<string, Prop>();
@@ -274,31 +363,31 @@ export class UserCommand extends Command {
 
 			const uniqueEvents = Array.from(eventMap.values());
 
-			return this.sendUpcomingEventsEmbed(
+			return this.sendRecentEventsEmbed(
 				interaction,
 				uniqueEvents,
-				'Upcoming Events',
-				'Displaying upcoming events with props',
+				'Recent Props',
+				'Displaying recent props.',
 			);
 		} catch (error) {
 			this.container.logger.error(error);
 			return interaction.reply({
 				content:
-					'An error occurred while fetching upcoming events. Please try again later.',
+					'An error occurred while fetching recent props. Please try again later.',
 				ephemeral: true,
 			});
 		}
 	}
 
-	private async sendUpcomingEventsEmbed(
-		interaction: Command.ChatInputCommandInteraction,
+	private async sendRecentEventsEmbed(
+		interaction: Subcommand.ChatInputCommandInteraction,
 		events: Prop[],
 		title: string,
 		description: string,
 	) {
 		if (events.length === 0) {
 			return interaction.reply({
-				content: 'No upcoming events found.',
+				content: 'No recent props found.',
 				ephemeral: true,
 			});
 		}
@@ -341,14 +430,14 @@ export class UserCommand extends Command {
 	}
 
 	private async sendPropsEmbed(
-		interaction: Command.ChatInputCommandInteraction,
+		interaction: Subcommand.ChatInputCommandInteraction,
 		props: Prop[],
 		title: string,
 		description: string,
 	) {
 		if (props.length === 0) {
 			return interaction.reply({
-				content: 'No props found for this event.',
+				content: 'No props were found matching the search criteria.',
 				ephemeral: true,
 			});
 		}
@@ -397,7 +486,7 @@ export class UserCommand extends Command {
 	}
 
 	private async createPropEmbed(
-		interaction: Command.ChatInputCommandInteraction,
+		interaction: Subcommand.ChatInputCommandInteraction,
 	) {
 		const propId = interaction.options.getString('prop_id', true);
 		const marketKey = interaction.options
