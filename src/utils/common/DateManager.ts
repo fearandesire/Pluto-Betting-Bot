@@ -54,12 +54,17 @@ export class DateManager<T extends { commence_time?: string }> {
 		return isAfter(itemDate, currentDate) && isBefore(itemDate, futureDate);
 	}
 
+	toMMDDYYYY(input: string | Date): string {
+		const date = new Date(input);
+		return format(date, 'MM/dd/yyyy');
+	}
+
 	/**
 	 * Creates a simple human-readable date string from an ISO 8601 timestamp or Date object.
 	 * @param {string | Date} input - The ISO 8601 timestamp or Date object to format.
-	 * @returns {string} A formatted string in the format 'Mon 4 PM' or 'Invalid Date' if parsing fails.
+	 * @returns {string} A formatted string in the format  in a Discord Unix Timestamp
 	 */
-	humanReadable(input: string | Date): string {
+	toDiscordUnix(input: string | Date): string {
 		try {
 			let date: Date;
 			if (typeof input === 'string') {
@@ -74,8 +79,8 @@ export class DateManager<T extends { commence_time?: string }> {
 				throw new Error('Invalid date');
 			}
 
-			const formattedDate = format(date, 'EEE h a').replace(' 0', ' ');
-			return formattedDate;
+			const unixTimestamp = Math.floor(date.getTime() / 1000);
+			return `<t:${unixTimestamp}:d> @ <t:${unixTimestamp}:t>`;
 		} catch (error) {
 			console.error(`Error parsing date: ${input}`, error);
 			return 'Invalid Date';

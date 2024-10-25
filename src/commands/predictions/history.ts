@@ -11,6 +11,10 @@ import {
 } from '../../openapi/khronos/index.js';
 import type { User } from 'discord.js';
 import TeamInfo from '../../utils/common/TeamInfo.js';
+import PropsApiWrapper from '../../utils/api/Khronos/props/propsApiWrapper.js';
+import { MarketKeyAbbreviations } from '../../utils/api/common/interfaces/market-abbreviations.js';
+import _ from 'lodash';
+import { DateManager } from '../../utils/common/DateManager.js';
 
 @ApplyOptions<Command.Options>({
 	description: 'View your prediction history',
@@ -47,7 +51,7 @@ export class UserCommand extends Command {
 								},
 							),
 					),
-			{ guildIds: [plutoGuildId] },
+			{ idHints: ['1298280482123026536'], guildIds: [plutoGuildId] },
 		);
 	}
 
@@ -155,17 +159,36 @@ export class UserCommand extends Command {
 			prediction.match_string,
 		);
 		const parsedChoice = this.parseChoice(prediction.choice);
-
-		let value = `**Choice**: \`${parsedChoice}\` ${outcomeEmoji} `;
+		// Get Prop via ID within the prediction
+		const propApiWrapper = new PropsApiWrapper();
+		const prop = await propApiWrapper.getPropById(prediction.prop_id);
+		// type of prop
+		const { market_key, point } = prop;
+		let parsedMarketKey = MarketKeyAbbreviations[market_key] || market_key;
+		parsedMarketKey = _.startCase(parsedMarketKey);
+		const outcomeStr = (emoji: string) => {
+			if (emoji === '⏳') {
+				return 'Pending ⏳';
+			}
+			if (emoji === '✅') {
+				return 'Correct ✅';
+			}
+			if (emoji === '❌') {
+				return 'Incorrect ❌';
+			}
+			return emoji;
+		};
+		const date = new DateManager().toMMDDYYYY(prediction.created_at);
+		let value = `**Date**: ${date}\n**Status**: ${outcomeStr(outcomeEmoji)}\n**Choice**: \`${parsedChoice} ${point ? `${point}` : ''}\`\n**Market**: ${parsedMarketKey} `;
 
 		if (prediction.description && prediction.description.trim() !== '') {
-			value += `\n${prediction.description}`;
+			value += `\n**Player:** ${prediction.description}`;
 		}
 
 		return {
-			name: `**Match**: ${parsedMatchString}`,
+			name: `${parsedMatchString}`,
 			value: value,
-			inline: true,
+			inline: false,
 		};
 	}
 

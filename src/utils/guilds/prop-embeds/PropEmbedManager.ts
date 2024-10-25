@@ -64,7 +64,7 @@ export default class PropEmbedManager {
 		const marketDescription = MarketKeyTranslations[marketKey] || marketKey;
 		const standardizedMarketDescription =
 			StringUtils.standardizeString(marketDescription);
-		const humanReadableDate = new DateManager().humanReadable(
+		const humanReadableDate = new DateManager().toDiscordUnix(
 			prop.commence_time,
 		);
 		const matchString = `${home.transformed} vs ${away.transformed}`;

@@ -11,7 +11,7 @@ import type { PropZod } from '@pluto-api-interfaces';
 import { DateManager } from '../../utils/common/DateManager.js';
 import TeamInfo from '../../utils/common/TeamInfo.js';
 import AppLog from '../../utils/logging/AppLog.js';
-import StringUtils from '../../utils/common/string-utils';
+import StringUtils from '../../utils/common/string-utils.js';
 
 export class UserCommand extends Subcommand {
 	public constructor(
@@ -418,7 +418,7 @@ export class UserCommand extends Subcommand {
 	}
 
 	private formatEventField(event: Prop): string {
-		const date = new DateManager().humanReadable(event.commence_time);
+		const date = new DateManager().toDiscordUnix(event.commence_time);
 		const shortenTeamName = (teamName: string) => {
 			return TeamInfo.getTeamShortName(teamName);
 		};
@@ -444,7 +444,7 @@ export class UserCommand extends Subcommand {
 		}
 
 		const firstProp = props[0];
-		const date = new DateManager().humanReadable(firstProp.commence_time);
+		const date = new DateManager().toDiscordUnix(firstProp.commence_time);
 
 		const embed = new EmbedBuilder()
 			.setTitle(`🏆 ${title}`)
