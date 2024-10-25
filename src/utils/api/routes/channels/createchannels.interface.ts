@@ -28,6 +28,17 @@ export interface IChannelAggregated {
 	};
 }
 
+export interface ScheduledChannelsGuildData {
+	guildId: string;
+	bettingChannelId: string;
+	gameCategoryId: string;
+	sport: string;
+}
+export interface ScheduledChannelsData {
+	channels: IChannelAggregated[];
+	guilds: ScheduledChannelsGuildData[];
+}
+
 export enum SportEmojis {
 	nba = '🏀',
 	nfl = '🏈',

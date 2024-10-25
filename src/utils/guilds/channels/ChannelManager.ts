@@ -20,7 +20,11 @@ import type {
 	IConfigRow,
 	SportsServing,
 } from '../../api/common/interfaces/kh-pluto/kh-pluto.interface.js';
-import type { IChannelAggregated } from '../../api/routes/channels/createchannels.interface.js';
+import type {
+	IChannelAggregated,
+	ScheduledChannelsGuildData,
+	ScheduledChannelsData,
+} from '../../api/routes/channels/createchannels.interface.js';
 import { findEmoji } from '../../bot_res/findEmoji.js';
 import StringUtils from '../../common/string-utils.js';
 
@@ -34,6 +38,15 @@ interface IPrepareMatchEmbed {
 	bettingChanId: string;
 	header: string;
 	sport: SportsServing;
+}
+
+interface ICreateChannelAndSendEmbed {
+	channel: IChannelAggregated;
+	guild: ScheduledChannelsGuildData;
+	metadata: {
+		favoredTeamInfo: any;
+		matchImg: Buffer | null;
+	};
 }
 
 /**
@@ -56,21 +69,25 @@ export default class ChannelManager {
 	 * Channel Creation
 	 * Embed creation & Sending on channel creation
 	 * @param {Object} channel - The channel data to process.
-	 * @param {Array} betChanRows - Array of betting channel data.
-	 * @param {Object} categoriesServing - Arrays of categories separated by sport.
-	 * These are the categories that Pluto is serving,
-	 * and is where we will be creating the channels.
+	 * @param {Array} guilds - Array of guild data.
 	 */
-	async processChannels(
+	async processChannels(data: ScheduledChannelsData) {
+		const { channels, guilds } = data;
+
+		for (const channel of channels) {
+			await this.processChannel(channel, guilds);
+		}
+	}
+
+	private async processChannel(
 		channel: IChannelAggregated,
-		betChanRows: IConfigRow[],
-		categoriesServing: ICategoryData,
+		guilds: ScheduledChannelsGuildData[],
 	) {
-		// Identify the sport the channels are intended for - Also allowing us to identify which categories/guilds we will create channels for.
 		const parsedSport = await StringUtils.sportKeyTransform(
 			channel.sport,
 		).toLowerCase();
 		channel.sport = parsedSport as SportsServing;
+
 		const { sport, matchOdds } = channel;
 		const { favored } = matchOdds;
 		const favoredTeamInfo = await resolveTeam(favored, {
@@ -79,20 +96,17 @@ export default class ChannelManager {
 		});
 		this.validateFavoredTeamInfo(favoredTeamInfo);
 
-		// ? Create channels by sport
-		const gameCategories = categoriesServing[sport];
-		if (!gameCategories || _.isEmpty(gameCategories)) {
-			return;
-		}
+		// Fetch vs. image for the match
 		const matchImg = await this.fetchVsImg(channel.channelname, sport);
-		for (const gameCatRow of gameCategories) {
-			await this.createChannelAndSendEmbed(
+
+		const eligibleGuilds = guilds.filter((guild) => guild.sport === sport);
+
+		for (const guild of eligibleGuilds) {
+			await this.createChannelAndSendEmbed({
 				channel,
-				gameCatRow,
-				betChanRows,
-				favoredTeamInfo,
-				matchImg,
-			);
+				guild,
+				metadata: { favoredTeamInfo, matchImg },
+			});
 		}
 	}
 
@@ -105,18 +119,19 @@ export default class ChannelManager {
 	 */
 	async validateAndParseChannels(body: {
 		channels: IChannelAggregated[];
-		bettingChannelRows: IConfigRow[];
+		guilds: ScheduledChannelsGuildData[];
 	}) {
 		// Directly checking for non-empty arrays
 		if (
 			!Array.isArray(body.channels) ||
 			body.channels.length === 0 ||
-			!Array.isArray(body.bettingChannelRows) ||
-			body.bettingChannelRows.length === 0
+			!Array.isArray(body.guilds) ||
+			body.guilds.length === 0
 		) {
-			console.error(
-				`[validateAndParseChannels] Validation failed. Channels: ${JSON.stringify(body.channels)}, BettingChannelRows: ${JSON.stringify(body.bettingChannelRows)}`,
-			);
+			console.error('[validateAndParseChannels] Validation failed', {
+				guilds: body.guilds,
+				channels: body.channels,
+			});
 			return false;
 		}
 		return true;
@@ -142,42 +157,34 @@ export default class ChannelManager {
 	 * @param {Object} favoredTeamInfo - Resolved team information.
 	 * @param {Buffer} matchImg - The image for the match
 	 */
-	async createChannelAndSendEmbed(
-		channel: IChannelAggregated,
-		configRow: IConfigRow,
-		bettingChanRows: IConfigRow[],
-		favoredTeamInfo: any,
-		matchImg: Buffer | null,
-	) {
-		const guild: Guild = SapDiscClient.guilds.cache.get(
-			configRow.guild_id,
-		) as Guild;
+	async createChannelAndSendEmbed(data: ICreateChannelAndSendEmbed) {
+		const { channel, guild, metadata } = data;
+		const locatedGuild = (await SapDiscClient.guilds.cache.get(
+			guild.guildId,
+		)) as Guild;
 
-		if (!guild) return null;
+		if (!locatedGuild) return null;
 
 		// Prevent creating duplicate channels
 		if (
-			await guild.channels.cache.find(
+			await locatedGuild.channels.cache.find(
 				(GC) => GC.name.toLowerCase() === channel.channelname.toLowerCase(),
 			)
 		) {
 			return;
 		}
 
-		const guildsCategory = guild.channels.cache.get(
-			`${configRow.setting_value}`,
+		const guildsGameCategory = await locatedGuild.channels.cache.get(
+			`${guild.gameCategoryId}`,
 		);
-		if (!guildsCategory) {
+		if (!guildsGameCategory) {
 			return;
 		}
 
-		// Locate the betting channel for the guild
-		const sortedBetChan = bettingChanRows.find(
-			(row) => row.guild_id === guild.id,
-		);
+		const bettingChanId = guild.bettingChannelId;
 
-		const bettingChanId = sortedBetChan?.setting_value;
 		const { home_team, away_team } = channel;
+
 		if (_.isEmpty(home_team) || _.isEmpty(away_team)) {
 			throw new Error('Missing home and away teams in channel data.');
 		}
@@ -189,7 +196,7 @@ export default class ChannelManager {
 		const strUtils = new StringUtils();
 		const args = {
 			favored: matchOdds.favored,
-			favoredTeamClr: favoredTeamInfo.colors[0],
+			favoredTeamClr: metadata.favoredTeamInfo.colors[0],
 			home_team,
 			homeTeamShortName: strUtils.getShortName(home_team),
 			awayTeamShortName: strUtils.getShortName(away_team),
@@ -199,26 +206,29 @@ export default class ChannelManager {
 			sport: channel.sport,
 		};
 
+		// Prepare the embed data
 		const matchEmbed = await this.prepMatchEmbed(args);
-		// Correctly create an AttachmentBuilder instance with the matchImg buffer
+		// Create an AttachmentBuilder instance with the matchImg buffer
 		let attachment: AttachmentBuilder | null = null;
-		if (matchImg) {
-			attachment = new AttachmentBuilder(matchImg, { name: 'match.jpg' });
+		if (metadata.matchImg) {
+			attachment = new AttachmentBuilder(metadata.matchImg, {
+				name: 'match.jpg',
+			});
 			matchEmbed.embed.setImage('attachment://match.jpg');
 		}
 
-		const gameChan: TextChannel = await guild.channels.create({
+		// ! Create the game channel
+		const gameChan: TextChannel = await locatedGuild.channels.create({
 			name: `${channel.channelname}`,
 			type: ChannelType.GuildText,
 			topic: 'Enjoy the Game!',
-			parent: guildsCategory as CategoryChannelResolvable,
+			parent: guildsGameCategory as CategoryChannelResolvable,
 		});
 
-		// Check if the created channel is a TextChannel before using TextChannel-specific methods
+		// ? Send the embed to the game channel
 		const messageOptions: MessageCreateOptions = {
 			embeds: [matchEmbed.embed],
 		};
-		// Only include 'files' property if attachment is found
 		if (attachment) {
 			messageOptions.files = [attachment];
 		}

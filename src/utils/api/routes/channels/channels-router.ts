@@ -6,6 +6,7 @@
 import Router from 'koa-router';
 import _ from 'lodash';
 import ChannelManager from '../../../guilds/channels/ChannelManager.js';
+import type { ScheduledChannelsData } from './createchannels.interface.js';
 
 const ChannelsRoutes = new Router();
 
@@ -30,15 +31,11 @@ ChannelsRoutes.post('/channels/incoming', async (ctx: any) => {
 			};
 			return;
 		}
-		const { channels, bettingChannelRows, categoriesBySport } =
-			ctx.request.body;
-		for (const channel of channels) {
-			await channelManager.processChannels(
-				channel,
-				bettingChannelRows,
-				categoriesBySport,
-			);
-		}
+		const { channels, guilds } = ctx.request.body as ScheduledChannelsData;
+		await channelManager.processChannels({
+			channels,
+			guilds,
+		});
 		ctx.body = {
 			message: 'Channels created.',
 			status: 200,
