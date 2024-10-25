@@ -239,10 +239,16 @@ export class ButtonHandler extends InteractionHandler {
 						}
 					}
 				} else {
+					// ? Creating a prediction
+
+					// NOTE: Must sanitize the choice
+					// Restore the space - replace _
+					const sanitizedChoice = payload.action.replace(/_/g, ' ');
+
 					await predictionApi.createPrediction({
 						user_id: interaction.user.id,
 						prop_id: payload.propId,
-						choice: payload.action,
+						choice: sanitizedChoice,
 						status: 'pending',
 						guild_id: interaction.guildId!,
 						market_key: prop.market_key,
