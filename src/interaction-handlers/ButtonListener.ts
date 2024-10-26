@@ -216,6 +216,7 @@ export class ButtonHandler extends InteractionHandler {
 
 			try {
 				const prop = await propsApi.getPropById(payload.propId);
+				console.log();
 				if (!prop) {
 					throw new Error('Prop not found');
 				}
@@ -240,18 +241,20 @@ export class ButtonHandler extends InteractionHandler {
 					}
 				} else {
 					// ? Creating a prediction
-
+					console.log(`Creating a prediction for ${payload.propId}`);
 					// NOTE: Must sanitize the choice
 					// Restore the space - replace _
 					const sanitizedChoice = payload.action.replace(/_/g, ' ');
 
 					await predictionApi.createPrediction({
-						user_id: interaction.user.id,
-						prop_id: payload.propId,
-						choice: sanitizedChoice,
-						status: 'pending',
-						guild_id: interaction.guildId!,
-						market_key: prop.market_key,
+						createPredictionDto: {
+							user_id: interaction.user.id,
+							prop_id: payload.propId,
+							choice: sanitizedChoice,
+							status: 'pending',
+							guild_id: interaction.guildId!,
+							market_key: prop.market_key,
+						},
 					});
 
 					const predictionEmbed = new EmbedBuilder()
@@ -278,11 +281,17 @@ export class ButtonHandler extends InteractionHandler {
 					}, 10000);
 				}
 			} catch (error: any) {
+				let errMsg = 'There was an error storing your prediction.';
+
+				// Check for Axios Err for more info
+				if (error?.response && error?.response?.status === 409) {
+					errMsg = 'You have already made a prediction on this prop.';
+				}
 				console.log(`Error when handling prediction: ${error?.message}`, error);
 				await interaction.editReply({
 					content:
 						error instanceof Error
-							? error.message
+							? errMsg
 							: 'There was an error storing your prediction.',
 				});
 			}

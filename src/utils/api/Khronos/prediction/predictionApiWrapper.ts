@@ -1,11 +1,11 @@
 import {
 	type AllUserPredictionsDto,
-	type CreatePredictionDto,
 	type GetAllPredictionsFilteredRequest,
 	type GetPredictionByIdRequest,
 	type GetPredictionsForUserRequest,
 	PredictionApi,
 	type RemovePredictionRequest,
+	type CreatePredictionRequest,
 } from '../../../../openapi/khronos/index.js';
 import { KH_API_CONFIG } from '../KhronosInstances.js';
 
@@ -15,18 +15,13 @@ export default class PredictionApiWrapper {
 		this.predictionApi = new PredictionApi(KH_API_CONFIG);
 	}
 
-	async createPrediction(createPredictionDto: CreatePredictionDto) {
+	async createPrediction(
+		predictionData: CreatePredictionRequest,
+	): Promise<void> {
 		try {
-			const response = await this.predictionApi.createPrediction({
-				createPredictionDto,
-			});
-			return response;
-		} catch (error: any) {
-			if (error?.response && error?.response?.status === 409) {
-				throw new Error("You've already made a prediction for this prop!");
-			}
-			// Handle unknown errors
-			console.error('Unknown error creating prediction', error);
+			await this.predictionApi.createPrediction(predictionData);
+		} catch (error) {
+			console.error('Error creating prediction:', error);
 			throw error;
 		}
 	}
