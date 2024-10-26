@@ -8,8 +8,9 @@ RUN corepack enable
 FROM base AS openapi-generator
 WORKDIR /app
 
-# Install OpenJDK for OpenAPI generator
-RUN apt-get update && apt-get install -y openjdk-17-jdk
+# Install OpenJDK for OpenAPI generator and curl for downloading
+RUN apt-get update && apt-get install -y openjdk-17-jdk 
+# curl
 
 # Copy package.json and pnpm-lock.yaml
 COPY package.json pnpm-lock.yaml ./
@@ -19,6 +20,10 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
 # Copy the rest of the files
 COPY . .
+
+# Download the Swagger spec file
+# ARG SWAGGER_SPEC_URL
+# RUN curl -o Khronos-Swagger-Spec-v1.json ${SWAGGER_SPEC_URL}
 
 # Generate OpenAPI code
 RUN pnpm ci-gen-api
