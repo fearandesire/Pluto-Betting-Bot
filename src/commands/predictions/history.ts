@@ -58,15 +58,16 @@ export class UserCommand extends Command {
 	public override async chatInputRun(
 		interaction: Command.ChatInputCommandInteraction,
 	) {
+		await interaction.deferReply();
+
 		const user = interaction.options.getUser('user') || interaction.user;
 		const status = interaction.options.getString(
 			'status',
 		) as GetAllPredictionsFilteredStatusEnum | null;
 
 		if (!user) {
-			return interaction.reply({
+			return interaction.editReply({
 				content: 'Invalid user specified.',
-				ephemeral: true,
 			});
 		}
 
@@ -79,9 +80,8 @@ export class UserCommand extends Command {
 			);
 
 			if (!usersPredictions || usersPredictions.length === 0) {
-				return interaction.reply({
+				return interaction.editReply({
 					content: 'No predictions found for the specified criteria.',
-					ephemeral: true,
 				});
 			}
 
@@ -97,10 +97,9 @@ export class UserCommand extends Command {
 				Math.ceil(usersPredictions.length / 10),
 			);
 
-			const reply = await interaction.reply({
+			const reply = await interaction.editReply({
 				embeds: [embed],
 				components,
-				fetchReply: true,
 			});
 
 			this.handlePagination(
@@ -112,9 +111,8 @@ export class UserCommand extends Command {
 			);
 		} catch (error) {
 			this.container.logger.error(error);
-			return interaction.reply({
+			return interaction.editReply({
 				content: 'An error occurred while fetching the prediction history.',
-				ephemeral: true,
 			});
 		}
 	}
@@ -236,6 +234,8 @@ export class UserCommand extends Command {
 				return;
 			}
 
+			await i.deferUpdate();
+
 			switch (i.customId) {
 				case 'first':
 					currentPage = 1;
@@ -263,7 +263,10 @@ export class UserCommand extends Command {
 				totalPages,
 			);
 
-			await i.update({ embeds: [newEmbed], components: newComponents });
+			await interaction.editReply({
+				embeds: [newEmbed],
+				components: newComponents,
+			});
 		});
 
 		collector.on('end', async () => {
@@ -279,7 +282,7 @@ export class UserCommand extends Command {
 					return row;
 				});
 
-			await reply.edit({ components: disabledComponents });
+			await interaction.editReply({ components: disabledComponents });
 		});
 	}
 }
