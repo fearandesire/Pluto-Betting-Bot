@@ -32,7 +32,7 @@ export default class PropsApiWrapper {
 	 * Get a prop by id
 	 */
 	async getPropById(id: string): Promise<Prop> {
-		const params: FindOnePropRequest = { id };
+		const params: FindOnePropRequest = { id, withPredictions: false };
 		return await this.propsApi.findOneProp(params);
 	}
 
