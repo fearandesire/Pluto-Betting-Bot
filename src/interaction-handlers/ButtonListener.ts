@@ -277,7 +277,8 @@ export class ButtonHandler extends InteractionHandler {
 						interaction.deleteReply().catch(console.error);
 					}, 10000);
 				}
-			} catch (error) {
+			} catch (error: any) {
+				console.log(`Error when handling prediction: ${error?.message}`, error);
 				await interaction.editReply({
 					content:
 						error instanceof Error
