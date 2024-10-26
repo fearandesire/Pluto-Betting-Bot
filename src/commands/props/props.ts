@@ -256,6 +256,10 @@ export class UserCommand extends Subcommand {
 	private async generateProps(
 		interaction: Subcommand.ChatInputCommandInteraction,
 	) {
+		await interaction.deferReply();
+		await interaction.editReply({
+			content: 'Generating prop embeds, please wait...',
+		});
 		await new PropsApiWrapper().generateAllPropEmbeds();
 
 		await interaction.editReply({
