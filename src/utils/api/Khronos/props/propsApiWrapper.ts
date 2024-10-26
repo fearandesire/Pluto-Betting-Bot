@@ -4,7 +4,7 @@ import {
 	type FindOnePropRequest,
 	type FindPropsByDescriptionRequest,
 	type GetPropsForEventRequest,
-	type PropDto,
+	type Prop,
 	type SetPropResultRequest,
 } from '@kh-openapi';
 import { KH_API_CONFIG } from '../KhronosInstances.js';
@@ -31,7 +31,7 @@ export default class PropsApiWrapper {
 	/**
 	 * Get a prop by id
 	 */
-	async getPropById(id: string): Promise<PropDto> {
+	async getPropById(id: string): Promise<Prop> {
 		const params: FindOnePropRequest = { id };
 		return await this.propsApi.findOneProp(params);
 	}

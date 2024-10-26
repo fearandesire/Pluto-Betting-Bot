@@ -216,7 +216,12 @@ export class ButtonHandler extends InteractionHandler {
 
 			try {
 				const prop = await propsApi.getPropById(payload.propId);
-				console.log();
+				console.log({
+					message: 'Prop found',
+					data: {
+						prop,
+					},
+				});
 				if (!prop) {
 					throw new Error('Prop not found');
 				}
