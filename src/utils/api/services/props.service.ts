@@ -11,7 +11,7 @@ import {
  * Service for processing and managing props.
  */
 export class PropsService {
-	private defaultFilteredMarketKey = 'totals';
+	private defaultFilteredMarketKeys = ['totals', 'h2h'];
 	private defaultOptions = {
 		daysAhead: 7,
 	};
@@ -75,10 +75,10 @@ export class PropsService {
 	 * @param {string[]} marketKeysToFilter - Array of market keys to filter out.
 	 * @returns {PropZod[]} Array of props without the specified market keys.
 	 */
-	private filterPropsByMarketKeys(
+	public async filterPropsByMarketKeys(
 		props: PropZod[],
-		marketKeysToFilter: string[] = [this.defaultFilteredMarketKey],
-	): PropZod[] {
+		marketKeysToFilter: string[] = this.defaultFilteredMarketKeys,
+	): Promise<PropZod[]> {
 		const filteredProps = props.filter(
 			(prop) => !marketKeysToFilter.includes(prop.market_key),
 		);

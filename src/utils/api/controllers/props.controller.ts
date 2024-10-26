@@ -49,8 +49,12 @@ export class PropsController {
 			return { success: false, message: 'Invalid request body' };
 		}
 
-		await this.propsService.processAndCreateEmbeds(
+		// Filter out 'h2h' and 'totals' props
+		const filteredProps = await this.propsService.filterPropsByMarketKeys(
 			validatedData.props,
+		);
+		await this.propsService.processAndCreateEmbeds(
+			filteredProps,
 			validatedData.guildChannels,
 			validatedData.options,
 		);
