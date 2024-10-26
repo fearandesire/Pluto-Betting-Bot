@@ -156,8 +156,7 @@ export class UserCommand extends Subcommand {
 							),
 					),
 			{
-				idHints: ['1290465537859784745'],
-				guildIds: [plutoGuildId],
+				idHints: ['1288178546942021643', '1290465537859784745'],
 			},
 		);
 	}
