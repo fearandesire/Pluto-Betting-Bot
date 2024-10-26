@@ -51,7 +51,7 @@ export class UserCommand extends Command {
 								},
 							),
 					),
-			{ idHints: ['1298280482123026536'], guildIds: [plutoGuildId] },
+			{ idHints: ['1298280482123026536'] },
 		);
 	}
 
