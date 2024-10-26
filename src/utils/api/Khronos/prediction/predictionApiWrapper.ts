@@ -27,7 +27,13 @@ export default class PredictionApiWrapper {
 	}
 
 	async getPredictionById(params: GetPredictionByIdRequest) {
-		await this.predictionApi.getPredictionById(params);
+		try {
+			const response = await this.predictionApi.getPredictionById(params);
+			return response;
+		} catch (error) {
+			console.error('Error fetching prediction by id:', error);
+			throw error;
+		}
 	}
 
 	async deletePrediction(params: RemovePredictionRequest) {
