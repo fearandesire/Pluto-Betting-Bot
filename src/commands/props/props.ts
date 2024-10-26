@@ -288,7 +288,7 @@ export class UserCommand extends Subcommand {
 					status: 'completed' as UpdatePropResultDto['status'],
 					user_id: interaction.user.id,
 				},
-				override: true,
+				override: false,
 			});
 
 			const embed = this.createResultEmbed(response);
