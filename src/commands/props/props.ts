@@ -261,14 +261,9 @@ export class UserCommand extends Subcommand {
 		});
 		await new PropsApiWrapper().generateAllPropEmbeds();
 
-		const successMsg = await interaction.editReply({
+		await interaction.editReply({
 			content: 'Prop Embeds populated successfully',
 		});
-
-		// Delete success msg after 5 seconds
-		setTimeout(() => {
-			successMsg.delete().catch(console.error);
-		}, 2000);
 
 		await AppLog.log({
 			guildId: interaction.guildId,
