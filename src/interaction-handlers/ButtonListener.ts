@@ -216,12 +216,7 @@ export class ButtonHandler extends InteractionHandler {
 
 			try {
 				const prop = await propsApi.getPropById(payload.propId);
-				console.log({
-					message: 'Prop found',
-					data: {
-						prop,
-					},
-				});
+
 				if (!prop) {
 					throw new Error('Prop not found');
 				}
@@ -246,7 +241,6 @@ export class ButtonHandler extends InteractionHandler {
 					}
 				} else {
 					// ? Creating a prediction
-					console.log(`Creating a prediction for ${payload.propId}`);
 					// NOTE: Must sanitize the choice
 					// Restore the space - replace _
 					const sanitizedChoice = payload.action.replace(/_/g, ' ');
