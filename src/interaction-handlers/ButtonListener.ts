@@ -254,14 +254,28 @@ export class ButtonHandler extends InteractionHandler {
 						market_key: prop.market_key,
 					});
 
+					const predictionEmbed = new EmbedBuilder()
+						.setColor(embedColors.PlutoGreen)
+						.setTitle('Prediction Stored')
+						.setDescription(
+							'Your prediction has been recorded.\nView your predictions with `/history`',
+						)
+						.addFields({
+							name: 'Prediction',
+							value: `\`${_.startCase(sanitizedChoice)}\``,
+							inline: true,
+						})
+						.setTimestamp();
+
 					await interaction.editReply({
-						content: `Your prediction has been stored.\nPrediction: ${payload.action}`,
+						content: '',
+						embeds: [predictionEmbed],
 					});
 
-					// Delete the ephemeral message after 5 seconds
+					// Delete the ephemeral message after 10 seconds
 					setTimeout(() => {
 						interaction.deleteReply().catch(console.error);
-					}, 5000);
+					}, 10000);
 				}
 			} catch (error) {
 				await interaction.editReply({

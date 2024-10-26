@@ -527,8 +527,13 @@ export class UserCommand extends Subcommand {
 			const translatedKey = StringUtils.toTitleCase(
 				MarketKeyTranslations[prop.market_key],
 			);
+			const hasPlayer = prop?.description;
+			let title = translatedKey;
+			if (hasPlayer) {
+				title = `${prop.description} - ${translatedKey}`;
+			}
 			return {
-				name: translatedKey,
+				name: title,
 				value: `**Prop ID:** ${prop.id}${pointDisplay}`,
 				inline: false,
 			};
