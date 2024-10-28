@@ -1,4 +1,13 @@
-import { z } from 'zod';
+import {
+	nullable,
+	number,
+	object,
+	record,
+	string,
+	union,
+	z,
+	type infer,
+} from 'zod';
 import { BettingMarketSchema } from './betting-market.schema.js';
 
 /**
@@ -75,3 +84,33 @@ export const PropOptionsSchema = z.object({
  * Type definition for prop options.
  */
 export type PropOptions = z.infer<typeof PropOptionsSchema>;
+
+export const PredictionPercentageStatsSchema = z.object({
+	prop_id: z.string(),
+
+	home_team: z.string(),
+
+	away_team: z.string(),
+
+	total_predictions: z.number(),
+
+	percentages: z.record(z.number()),
+
+	betting_on: z.union([z.string(), z.number()]),
+
+	betting_on_label: z.string(),
+
+	description: z.string().nullable(),
+});
+
+export type PredictionPercentageStats = z.infer<
+	typeof PredictionPercentageStatsSchema
+>;
+
+export const PredictionStatsNotificationsArraySchema = z.array(
+	PredictionPercentageStatsSchema,
+);
+
+export type PredictionStatsNotificationsArray = z.infer<
+	typeof PredictionStatsNotificationsArraySchema
+>;

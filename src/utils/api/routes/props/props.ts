@@ -18,4 +18,10 @@ PropsRouter.post('/props/daily', async (ctx) => {
 	}
 });
 
+PropsRouter.post('/props/stats/post-start', async (ctx) => {
+	const result = await propsController.processPostStart(
+		ctx.request.body as RequestBody,
+	);
+});
+
 export default PropsRouter;

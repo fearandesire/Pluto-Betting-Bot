@@ -73,4 +73,8 @@ export default class PropsApiWrapper {
 	async getPropsByPlayer(params: FindPropsByDescriptionRequest) {
 		return await this.propsApi.findPropsByDescription(params);
 	}
+
+	async getStatsProps() {
+		// Add none
+	}
 }

@@ -173,6 +173,7 @@ export class UserCommand extends Subcommand {
 	}
 
 	public async viewActive(interaction: Subcommand.ChatInputCommandInteraction) {
+		await interaction.deferReply();
 		return this.viewActiveProps(interaction);
 	}
 
@@ -352,6 +353,7 @@ export class UserCommand extends Subcommand {
 				props,
 				'Active Props',
 				'Displaying props with active predictions',
+				{ isViewingActiveProps: true },
 			);
 		} catch (error) {
 			this.container.logger.error(error);
@@ -475,7 +477,7 @@ export class UserCommand extends Subcommand {
 		props: Prop[],
 		title: string,
 		description: string,
-		forPlayer = false,
+		options?: PropEmbedOptions,
 	) {
 		try {
 			if (props.length === 0) {
@@ -483,25 +485,36 @@ export class UserCommand extends Subcommand {
 					content: 'No props were found matching the search criteria.',
 				});
 			}
+			let embed: EmbedBuilder;
+			if (!options?.isViewingActiveProps) {
+				const firstProp = props[0];
+				const date = new DateManager().toDiscordUnix(firstProp.commence_time);
+				const eventId = firstProp.event_id;
+				embed = new EmbedBuilder()
+					.setTitle(`${title}`)
+					.setDescription(
+						`${description}\n\n**Event Information**\n🆔 **Event ID:** \`${eventId}\`\n🗓️ **Date:** ${date}\n${firstProp.home_team} vs ${firstProp.away_team}`,
+					)
+					.setColor('#0099ff')
+					.setTimestamp();
 
-			const firstProp = props[0];
-			const date = new DateManager().toDiscordUnix(firstProp.commence_time);
-			const eventId = firstProp.event_id;
-			const embed = new EmbedBuilder()
-				.setTitle(`${title}`)
-				.setDescription(
-					`${description}\n\n**Event Information**\n🆔 **Event ID:** \`${eventId}\`\n🗓️ **Date:** ${date}\n${firstProp.home_team} vs ${firstProp.away_team}`,
-				)
-				.setColor('#0099ff')
-				.setTimestamp();
-
-			const formattedProps = this.formatPropsForEmbed(props, {
-				displayingForPlayer: forPlayer,
-			});
-			for (const field of formattedProps) {
-				embed.addFields(field);
+				const formattedProps = this.formatPropsForEmbed(props);
+				for (const field of formattedProps) {
+					embed.addFields(field);
+				}
 			}
+			if (options?.isViewingActiveProps) {
+				embed = new EmbedBuilder()
+					.setTitle(title)
+					.setDescription(description)
+					.setColor('#0099ff')
+					.setTimestamp();
 
+				const formattedProps = this.formatPropsForEmbed(props);
+				for (const field of formattedProps) {
+					embed.addFields(field);
+				}
+			}
 			if (props.length > 25) {
 				embed.setFooter({
 					text: `Showing 25 out of ${props.length} props. More props are available, but cannot be displayed in this embed.`,
@@ -518,7 +531,6 @@ export class UserCommand extends Subcommand {
 
 	private formatPropsForEmbed(
 		props: Prop[],
-		options: { displayingForPlayer: boolean },
 	): { name: string; value: string }[] {
 		return props.slice(0, 25).map((prop) => {
 			let pointDisplay = '';
@@ -614,4 +626,8 @@ export class UserCommand extends Subcommand {
 			});
 		}
 	}
+}
+
+interface PropEmbedOptions {
+	isViewingActiveProps?: boolean;
 }

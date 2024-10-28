@@ -1,4 +1,8 @@
-import { GuildsApi, type Guild } from '@kh-openapi';
+import {
+	GuildsApi,
+	type GetGuildsBySportAndConfigTypeRequest,
+	type Guild,
+} from '@kh-openapi';
 import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js';
 import type { Channel } from 'discord.js';
 import { DiscordConfigEnums } from '../../common/interfaces/kh-pluto/kh-pluto.interface.js';
@@ -52,5 +56,12 @@ export default class GuildWrapper {
 			console.error(`Log channel not found for guild ${guildId}`);
 		}
 		return logChannel;
+	}
+
+	async getGuildsForSportWithConfig(
+		params: GetGuildsBySportAndConfigTypeRequest,
+	): Promise<Guild[]> {
+		const guilds = await this.guildsApi.getGuildsBySportAndConfigType(params);
+		return guilds;
 	}
 }

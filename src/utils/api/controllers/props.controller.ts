@@ -1,6 +1,8 @@
 import {
+	PredictionStatsNotificationsArraySchema,
 	PropArraySchema,
 	PropOptionsSchema,
+	type PredictionStatsNotificationsArray,
 } from '../common/interfaces/index.js';
 import {
 	GuildChannelArraySchema,
@@ -16,7 +18,7 @@ export class PropsController {
 		this.propsService = new PropsService();
 	}
 
-	validateRequestBody(body: RequestBody): ValidatedData | null {
+	validateReqPropEmbedBody(body: RequestBody): ValidatedData | null {
 		const propsResult = PropArraySchema.safeParse(body.props);
 		const guildChannelsResult = GuildChannelArraySchema.safeParse(
 			body.guildChannels,
@@ -43,7 +45,7 @@ export class PropsController {
 	async processDaily(
 		body: RequestBody,
 	): Promise<{ success: boolean; message: string }> {
-		const validatedData = this.validateRequestBody(body);
+		const validatedData = this.validateReqPropEmbedBody(body);
 
 		if (!validatedData) {
 			return { success: false, message: 'Invalid request body' };
@@ -63,5 +65,30 @@ export class PropsController {
 			success: true,
 			message: 'Props processed and embeds created successfully',
 		};
+	}
+
+	validatePredictionStatsBody(
+		body: RequestBody,
+	): PredictionStatsNotificationsArray | null {
+		const result = PredictionStatsNotificationsArraySchema.safeParse(body);
+
+		if (!result.success) {
+			return null;
+		}
+
+		return result.data;
+	}
+
+	/**
+	 * @summary Iterate through receiving data - create an embed for each record and display the stats of each prop.
+	 * @description This method is used to post stats of the props that have just recently started. It will go through the incoming data which will have the stats already aggregated.
+	 * Each object in the array will be the data included to make the embed.
+	 */
+	async processPostStart(body: RequestBody) {
+		const validatedData = this.validatePredictionStatsBody(body);
+
+		if (!validatedData) {
+			return { success: false, message: 'Invalid request body' };
+		}
 	}
 }
