@@ -214,17 +214,24 @@ export class UserCommand extends Subcommand {
 	private async viewPropsByPlayer(
 		interaction: Subcommand.ChatInputCommandInteraction,
 	) {
-		const player = interaction.options.getString('player', true);
-		const propsApi = new PropsApiWrapper();
+		try {
+			const player = interaction.options.getString('player', true);
+			const propsApi = new PropsApiWrapper();
 
-		const props = await propsApi.getPropsByPlayer({ description: player });
+			const props = await propsApi.getPropsByPlayer({ description: player });
 
-		return this.sendPropsEmbed(
-			interaction,
-			props as Prop[],
-			`Props for ${props[0].description}`,
-			`${props.length} total props`,
-		);
+			return this.sendPropsEmbed(
+				interaction,
+				props as Prop[],
+				`Props for ${props[0].description}`,
+				`${props.length} total props`,
+			);
+		} catch (error) {
+			this.container.logger.error(error);
+			return interaction.editReply({
+				content: 'An error occured while retrieving the requested data.',
+			});
+		}
 	}
 
 	private async viewPropsForEvent(
