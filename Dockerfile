@@ -8,9 +8,8 @@ RUN corepack enable
 FROM base AS openapi-generator
 WORKDIR /app
 
-# Install OpenJDK for OpenAPI generator and curl for downloading
-RUN apt-get update && apt-get install -y openjdk-17-jdk 
-# curl
+# Install OpenJDK for OpenAPI generator
+RUN apt-get update && apt-get install -y openjdk-17-jdk
 
 # Copy package.json and pnpm-lock.yaml
 COPY package.json pnpm-lock.yaml ./
@@ -18,12 +17,8 @@ COPY package.json pnpm-lock.yaml ./
 # Install dependencies
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
-# Copy the rest of the files
+# Copy the rest of the files including the downloaded spec
 COPY . .
-
-# Download the Swagger spec file
-# ARG SWAGGER_SPEC_URL
-# RUN curl -o Khronos-Swagger-Spec-v1.json ${SWAGGER_SPEC_URL}
 
 # Generate OpenAPI code
 RUN pnpm ci-gen-api
@@ -41,10 +36,6 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 # Copy the rest of the files and generated OpenAPI code
 COPY . .
 COPY --from=openapi-generator /app/src/openapi ./src/openapi
-# Copy OpenAPI Config, Tools files
-COPY openapitools.json openapi.config.json ./
-# Copy OpenAPI Spec
-COPY Khronos-Swagger-Spec-v1.json ./
 
 # Build the application
 RUN pnpm build
