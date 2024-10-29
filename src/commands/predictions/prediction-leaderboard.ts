@@ -3,16 +3,10 @@ import { Command } from '@sapphire/framework';
 import { LeaderboardControllerGetLeaderboardTimeFrameEnum } from '../../openapi/khronos/apis/LeaderboardApi.js';
 import LeaderboardWrapper from '../../utils/api/Khronos/leaderboard/leaderboard-wrapper.js';
 import type { LeaderboardDto } from '../../openapi/khronos/models/index.js';
-import {
-	ActionRowBuilder,
-	ButtonBuilder,
-	ButtonStyle,
-	EmbedBuilder,
-	type Message,
-} from 'discord.js';
+import { EmbedBuilder, type Message } from 'discord.js';
 import embedColors from '../../lib/colorsConfig.js';
 import Pagination from '../../utils/embeds/pagination.js';
-import { plutoGuildId } from '../../lib/configs/constants.js';
+import ClientTools from '../../utils/bot_res/ClientTools.js';
 
 @ApplyOptions<Command.Options>({
 	description: 'View the leaderboard for accuracy challenge',
@@ -91,8 +85,8 @@ export class UserCommand extends Command {
 			});
 
 			const thumbnail = interaction.guild?.iconURL({ extension: 'png' });
-			const parsedLeaderboard = this.parseLeaderboard(leaderboard);
-			const embed = this.createLeaderboardEmbed(
+			const parsedLeaderboard = await this.parseLeaderboard(leaderboard);
+			const embed = await this.createLeaderboardEmbed(
 				parsedLeaderboard,
 				weekNumber,
 				1,
@@ -134,9 +128,9 @@ export class UserCommand extends Command {
 		await interaction.reply({ embeds: [embed] });
 	}
 
-	private parseLeaderboard(
+	private async parseLeaderboard(
 		leaderboard: LeaderboardDto[],
-	): ParsedLeaderboardEntry[] {
+	): Promise<ParsedLeaderboardEntry[]> {
 		return leaderboard.map((entry, index) => ({
 			position: index + 1,
 			userId: entry.user_id,
@@ -146,33 +140,34 @@ export class UserCommand extends Command {
 		}));
 	}
 
-	private createLeaderboardEmbed(
+	private async createLeaderboardEmbed(
 		leaderboard: ParsedLeaderboardEntry[],
 		weekNumber: number,
 		currentPage: number,
 		metadata?: {
 			thumbnail?: string;
 		},
-	): EmbedBuilder {
+	): Promise<EmbedBuilder> {
 		const startIndex = (currentPage - 1) * 20;
 		const endIndex = startIndex + 20;
 		const pageEntries = leaderboard.slice(startIndex, endIndex);
 		const totalPages = Math.ceil(leaderboard.length / 20);
+
+		const descriptionLines = await Promise.all(
+			pageEntries.map(async (entry) => {
+				const member = await this.getMember(entry.userId);
+				const username = member ? member.username : entry.userId;
+				const total = entry.correctPredictions + entry.incorrectPredictions;
+				return `${entry.position}. ${username} - Score: ${entry.score} (${entry.correctPredictions}/${total})`;
+			}),
+		);
+
 		const embed = new EmbedBuilder()
 			.setTitle(`Leaderboard | Week ${weekNumber}`)
 			.setColor(embedColors.PlutoBlue)
-			.setDescription(
-				pageEntries
-					.map(
-						(entry) =>
-							`${entry.position}. <@${entry.userId}> - Score: ${entry.score} (${entry.correctPredictions}/${
-								entry.correctPredictions + entry.incorrectPredictions
-							})`,
-					)
-					.join('\n'),
-			)
+			.setDescription(descriptionLines.join('\n'))
 			.setFooter({
-				text: `Page ${currentPage} of ${Math.ceil(leaderboard.length / 20)}`,
+				text: `Page ${currentPage} of ${totalPages}`,
 			});
 
 		if (metadata?.thumbnail) {
@@ -180,6 +175,10 @@ export class UserCommand extends Command {
 		}
 
 		return embed;
+	}
+
+	private async getMember(userId: string) {
+		return await new ClientTools(this.container).resolveMember(userId);
 	}
 
 	private async handlePagination(
@@ -217,7 +216,7 @@ export class UserCommand extends Command {
 					break;
 			}
 
-			const newEmbed = this.createLeaderboardEmbed(
+			const newEmbed = await this.createLeaderboardEmbed(
 				leaderboard,
 				weekNumber,
 				currentPage,
