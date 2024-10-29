@@ -90,7 +90,7 @@ export class UserCommand extends Command {
 				timeFrame: LeaderboardControllerGetLeaderboardTimeFrameEnum.Weekly,
 			});
 
-			const thumbnail = await interaction.guild?.iconURL();
+			const thumbnail = interaction.guild?.iconURL({ extension: 'png' });
 			const parsedLeaderboard = this.parseLeaderboard(leaderboard);
 			const embed = this.createLeaderboardEmbed(
 				parsedLeaderboard,
@@ -175,7 +175,7 @@ export class UserCommand extends Command {
 				text: `Page ${currentPage} of ${Math.ceil(leaderboard.length / 20)}`,
 			});
 
-		if (metadata.thumbnail) {
+		if (metadata?.thumbnail) {
 			embed.setThumbnail(metadata.thumbnail);
 		}
 
