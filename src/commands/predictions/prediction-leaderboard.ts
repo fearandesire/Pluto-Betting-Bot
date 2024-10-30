@@ -166,7 +166,7 @@ export class UserCommand extends Command {
 				const member = await this.getMember(entry.userId);
 				const username = member ? member.username : entry.userId;
 				const total = entry.correctPredictions + entry.incorrectPredictions;
-				return `${entry.position}. ${username} - Score: ${entry.score} (${entry.correctPredictions}/${total})`;
+				return `${entry.position}. ${username} - **\`${entry.score}\`** *(${entry.correctPredictions}/${total})*`;
 			}),
 		);
 
