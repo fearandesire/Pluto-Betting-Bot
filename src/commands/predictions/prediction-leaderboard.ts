@@ -135,8 +135,8 @@ export class UserCommand extends Command {
 			position: index + 1,
 			userId: entry.user_id,
 			score: entry.score,
-			correctPredictions: entry.correctPredictions,
-			incorrectPredictions: entry.incorrectPredictions,
+			correctPredictions: entry.correct_predictions,
+			incorrectPredictions: entry.incorrect_predictions,
 		}));
 	}
 
