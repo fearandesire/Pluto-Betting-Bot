@@ -7,6 +7,7 @@ import { EmbedBuilder, type Message } from 'discord.js';
 import embedColors from '../../lib/colorsConfig.js';
 import Pagination from '../../utils/embeds/pagination.js';
 import ClientTools from '../../utils/bot_res/ClientTools.js';
+import _ from 'lodash';
 
 @ApplyOptions<Command.Options>({
 	description: 'View the leaderboard for accuracy challenge',
@@ -83,6 +84,13 @@ export class UserCommand extends Command {
 				seasonYear: currentYear,
 				timeFrame: LeaderboardControllerGetLeaderboardTimeFrameEnum.Weekly,
 			});
+			if (_.isEmpty(leaderboard)) {
+				return interaction.reply({
+					content:
+						'No leaderboard data found for the specified week. Please try again with a different week number.',
+					ephemeral: true,
+				});
+			}
 
 			const thumbnail = interaction.guild?.iconURL({ extension: 'png' });
 			const parsedLeaderboard = await this.parseLeaderboard(leaderboard);
