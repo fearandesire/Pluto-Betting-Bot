@@ -51,6 +51,7 @@ export class UserCommand extends Command {
 	public override async chatInputRun(
 		interaction: Command.ChatInputCommandInteraction,
 	) {
+		await interaction.deferReply();
 		const subcommand = interaction.options.getSubcommand();
 
 		switch (subcommand) {
@@ -62,9 +63,8 @@ export class UserCommand extends Command {
 				await this.handleUnavailableLeaderboard(interaction, subcommand);
 				break;
 			default:
-				await interaction.reply({
+				await interaction.editReply({
 					content: 'Invalid subcommand.',
-					ephemeral: true,
 				});
 		}
 	}
@@ -84,16 +84,24 @@ export class UserCommand extends Command {
 				seasonYear: currentYear,
 				timeFrame: LeaderboardControllerGetLeaderboardTimeFrameEnum.Weekly,
 			});
-			if (_.isEmpty(leaderboard)) {
-				return interaction.reply({
+
+			if (!leaderboard || _.isEmpty(leaderboard)) {
+				return interaction.editReply({
 					content:
 						'No leaderboard data found for the specified week. Please try again with a different week number.',
-					ephemeral: true,
 				});
 			}
 
 			const thumbnail = interaction.guild?.iconURL({ extension: 'png' });
 			const parsedLeaderboard = await this.parseLeaderboard(leaderboard);
+
+			if (!parsedLeaderboard || _.isEmpty(parsedLeaderboard)) {
+				return interaction.editReply({
+					content:
+						'Unable to process leaderboard data. Please try again later.',
+				});
+			}
+
 			const embed = await this.createLeaderboardEmbed(
 				parsedLeaderboard,
 				weekNumber,
@@ -106,18 +114,16 @@ export class UserCommand extends Command {
 				Math.ceil(parsedLeaderboard.length / 20),
 			);
 
-			const reply = await interaction.reply({
+			const reply = await interaction.editReply({
 				embeds: [embed],
 				components,
-				fetchReply: true,
 			});
 
 			this.handlePagination(interaction, reply, parsedLeaderboard, weekNumber);
 		} catch (error) {
 			this.container.logger.error(error);
-			return interaction.reply({
+			return interaction.editReply({
 				content: 'An error occurred while fetching the leaderboard.',
-				ephemeral: true,
 			});
 		}
 	}
@@ -133,7 +139,7 @@ export class UserCommand extends Command {
 				`Only viewing the Weekly leaderboard is currently available. The ${type} leaderboard is being actively developed and will be available soon.`,
 			);
 
-		await interaction.reply({ embeds: [embed] });
+		await interaction.editReply({ embeds: [embed] });
 	}
 
 	private async parseLeaderboard(
