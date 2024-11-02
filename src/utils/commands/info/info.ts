@@ -1,6 +1,7 @@
 import { helpfooter } from '@pluto-config';
 import embedColors from '../../../lib/colorsConfig.js';
 import { plutoDocsUrl } from '../../../lib/configs/constants.js';
+import { patreonUrl } from '../../../utils/api/patreon/interfaces.js';
 
 export default class PlutoInfo {
 	static commandsInfo() {
@@ -64,8 +65,7 @@ export default class PlutoInfo {
 	static faqInfo() {
 		return {
 			title: '❓ FAQ',
-			description:
-				'# **__Leveling__**\nExperience *(XP)* is distributed when bets are closed.\n- A winning bet is worth 50 XP\n- A losing bet is 20.\nLevels are incorporated into the system to establish a structured progression system that goes beyond mere financial gains.\nThis system not only provides a clear measure of who the top performers are but also facilitates rewarding *(prizes, giveaway entries, etc)* the top betters at the end of each season.\nEveryone starts at level 0, and the max level is 100.\n## **__Tiers__**\nTiers are ranks that you receive as you level up.\nHere is the list of tiers and their level ranges:\nBronze: 0-15\nSilver: 15-30\nGold: 30-50\nEmerald: 50-75\nDiamond: 75-100\n# **__Parlays__**\n*TBD*\n💙 [Support the continued development of Pluto by making a donation](https://ko-fi.com/fenix7559)',
+			description: `# **__Leveling__**\nExperience *(XP)* is distributed when bets are closed.\n- A winning bet is worth 50 XP\n- A losing bet is 20.\nLevels are incorporated into the system to establish a structured progression system that goes beyond mere financial gains.\nThis system not only provides a clear measure of who the top performers are but also facilitates rewarding *(prizes, giveaway entries, etc)* the top betters at the end of each season.\nEveryone starts at level 0, and the max level is 100.\n## **__Tiers__**\nTiers are ranks that you receive as you level up.\nHere is the list of tiers and their level ranges:\nBronze: 0-15\nSilver: 15-30\nGold: 30-50\nEmerald: 50-75\nDiamond: 75-100\n# **__Parlays__**\n*TBD*\n💙 [Support the continued development of Pluto](${patreonUrl})`,
 			color: embedColors.PlutoBlue,
 			thumbnail: 'https://i.imgur.com/RWjfjyv.png',
 			footer: helpfooter(),
