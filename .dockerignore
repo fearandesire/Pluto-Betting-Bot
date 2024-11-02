@@ -1,5 +1,3 @@
-/dist
-tsconfig.tsbuildinfo
 .idea
 .VSCodeCounter
 .vscode
@@ -8,22 +6,6 @@ Writerside
 bump.json
 npm-debug.log
 .run
-
-.env*
-.flaskenv*
-!.env.project
-!.env.vault
-
-/dist
-tsconfig.tsbuildinfo
-.idea
-.VSCodeCounter
-.vscode
-logs
-Writerside
-bump.json
-npm-debug.log
-.run    
 node_modules
 .env*
 .flaskenv*
@@ -36,18 +18,12 @@ node_modules
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
-# Swap the comments on the following lines if you don't wish to use Zero-Installs
-# Documentation here: https://yarnpkg.com/features/Zero-Installs
-#.pnp.*
 backups
-
 # Ignore git
 .git
-
 # Codebuddy
 .codebuddy/*
 # Aider files
 *.aider
-
 .pnpm-store
 pnpm-debug.log
