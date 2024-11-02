@@ -273,6 +273,11 @@ export class UserCommand extends Command {
 
 			this.handlePagination(interaction, reply, parsedLeaderboard);
 		} catch (error) {
+			if (error instanceof EmptyDataException) {
+				return interaction.editReply({
+					content: error.message,
+				});
+			}
 			this.container.logger.error(error);
 			return interaction.editReply({
 				content: 'An error occurred while fetching the all-time leaderboard.',
@@ -295,6 +300,13 @@ export class UserCommand extends Command {
 	async createLeaderboardEmbed(
 		params: CreateLeaderboardEmbedParams,
 	): Promise<EmbedBuilder> {
+		if (
+			!params.leaderboardData ||
+			params.leaderboardData.length === 0 ||
+			_.isEmpty(params.leaderboardData)
+		) {
+			throw new EmptyDataException(`the ${params.type} leaderboard`);
+		}
 		const startIndex = (params.currentPage - 1) * 20;
 		const endIndex = startIndex + 20;
 		const pageEntries = params.leaderboardData.slice(startIndex, endIndex);
@@ -417,4 +429,12 @@ class CreateLeaderboardEmbedParams {
 	metadata?: {
 		thumbnail?: string;
 	};
+}
+
+class EmptyDataException extends Error {
+	constructor(message: string) {
+		super(message);
+		this.name = 'EmptyDataException';
+		this.message = `No data found for ${message}.`;
+	}
 }
