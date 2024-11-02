@@ -24,10 +24,16 @@ jobs:
         run: |
           curl -o Khronos-Swagger-Spec-v1.json ${{ secrets.SWAGGER_SPEC_URL }}
 
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Download assets
         run: |
           mkdir -p assets
-          echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
           docker pull ghcr.io/${{ github.repository_owner }}/pluto-assets:latest
           docker create --name temp ghcr.io/${{ github.repository_owner }}/pluto-assets:latest
           docker cp temp:/assets/. ./assets/
@@ -57,6 +63,8 @@ jobs:
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
+    permissions:
+      packages: read
     steps:
       - name: Deploy to DigitalOcean
         uses: appleboy/ssh-action@v1.0.3
@@ -68,8 +76,11 @@ jobs:
           timeout: 5m
           script: |
             cd /usr/apps/Pluto-Betting-Bot/
-            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            docker-compose pull
-            docker-compose down
-            docker-compose up -d
+            # Create a temporary file for Docker login credentials
+            echo '${{ secrets.GITHUB_TOKEN }}' | docker login ghcr.io -u ${{ github.actor }} --password-stdin || exit 1
+            docker-compose pull || exit 1
+            docker-compose down || exit 1
+            docker-compose up -d || exit 1
+            # Cleanup Docker credentials after deployment
+            docker logout ghcr.io
             echo "Started Pluto API"
