@@ -47,7 +47,9 @@ export class PropsService {
 	}
 
 	/**
-	 * Selects a random prop per event from the given props.
+	 * @summary Selects a random prop per event from the given props.
+	 * @description Iterates through the props we received, groups them by event ID and selects one prop at random.
+	 * This is used to limit the number of props we send - and effectively limit it to 1 prop per event / match
 	 * @param {PropZod[]} props - Array of props to select from.
 	 * @returns {PropZod[]} Array of unique props, one per event.
 	 */
@@ -56,7 +58,7 @@ export class PropsService {
 
 		// Group props by event_id
 		for (const prop of props) {
-			if (!prop.event_id) continue; // Skip props without event_id
+			if (!prop.event_id) continue;
 			if (!eventMap.has(prop.event_id)) {
 				eventMap.set(prop.event_id, []);
 			}
