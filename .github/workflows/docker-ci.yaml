@@ -24,6 +24,15 @@ jobs:
         run: |
           curl -o Khronos-Swagger-Spec-v1.json ${{ secrets.SWAGGER_SPEC_URL }}
 
+      - name: Download assets
+        run: |
+          mkdir -p assets
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          docker pull ghcr.io/${{ github.repository_owner }}/pluto-assets:latest
+          docker create --name temp ghcr.io/${{ github.repository_owner }}/pluto-assets:latest
+          docker cp temp:/assets/. ./assets/
+          docker rm temp
+
       - name: Log in to the Container registry
         uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
         with:
