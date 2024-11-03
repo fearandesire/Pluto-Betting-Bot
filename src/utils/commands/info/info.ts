@@ -2,6 +2,7 @@ import { helpfooter } from '@pluto-config';
 import embedColors from '../../../lib/colorsConfig.js';
 import { plutoDocsUrl } from '../../../lib/configs/constants.js';
 import { patreonUrl } from '../../../utils/api/patreon/interfaces.js';
+import { APP_VERSION } from '../../../utils/scripts/pkg-version.js';
 
 export default class PlutoInfo {
 	static commandsInfo() {
@@ -55,7 +56,7 @@ export default class PlutoInfo {
 	static helpInfo() {
 		return {
 			title: 'Pluto Documentation',
-			description: `Pluto is a full-fledged betting app that creates a competitive sports betting environment.\n# Getting Started\n1. Run the \`/odds\` command to view current betting odds.\n2. Use the \`/bet\` command to place bets, starting with a balance of $50.\n3. Use the \`/dailyclaim\` command every 24 hours to get free money if you run out of funds.\n\n**💜 [Support Pluto](https://www.patreon.com/fenix_)**\n**📒 [Documentation](${plutoDocsUrl})**`,
+			description: `Pluto is a full-fledged betting app that creates a competitive sports betting environment.\n# Getting Started\n1. Run the \`/odds\` command to view current betting odds.\n2. Use the \`/bet\` command to place bets, starting with a balance of $50.\n3. Use the \`/dailyclaim\` command every 24 hours to get free money if you run out of funds.\n\n**💜 [Support Pluto](https://www.patreon.com/fenix_)**\n**📒 [Documentation](${plutoDocsUrl})**\n\nVersion: \`${APP_VERSION}\``,
 			thumbnail: 'https://i.imgur.com/RWjfjyv.png',
 			color: embedColors.PlutoBlue,
 			footer: helpfooter(),
