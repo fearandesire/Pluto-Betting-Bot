@@ -1,6 +1,6 @@
 {
 	"name": "pluto-betting",
-	"version": "3.5.0-pre.2",
+	"version": "3.4.9",
 	"description": "Pluto Betting App - Discord Interface",
 	"type": "module",
 	"license": "MIT",
@@ -26,7 +26,7 @@
 		"sap-cmd": "sapphire generate slashcommand",
 		"dvault": "npx dotenv-vault@latest",
 		"release": "release-it",
-		"docker:push": "docker-compose build && docker push ghcr.io/fearandesire/pluto-betting-bot:latest",
+		"docker:push": "docker-compose build && docker push ghcr.io/fearandesire/pluto-betting-bot:3.4.9",
 		"docker:pull": "docker-compose pull",
 		"biome:lint": "biome check --write .",
 		"biome:fix": "biome check --write --unsafe  .",
