@@ -138,7 +138,7 @@ export class UserCommand extends Command {
 				components,
 			});
 
-			this.handlePagination(interaction, reply, parsedLeaderboard);
+			await this.handlePagination(interaction, reply, parsedLeaderboard);
 		} catch (error) {
 			this.container.logger.error(error);
 			return interaction.editReply({
@@ -173,7 +173,8 @@ export class UserCommand extends Command {
 				type: 'monthly',
 			});
 
-			await interaction.editReply({ embeds: [embed] });
+			const reply = await interaction.editReply({ embeds: [embed] });
+			await this.handlePagination(interaction, reply, parsedLeaderboard);
 		} catch (error) {
 			this.container.logger.error(error);
 			return interaction.editReply({
@@ -224,7 +225,7 @@ export class UserCommand extends Command {
 				components,
 			});
 
-			this.handlePagination(interaction, reply, parsedLeaderboard);
+			await this.handlePagination(interaction, reply, parsedLeaderboard);
 		} catch (error) {
 			this.container.logger.error(error);
 			return interaction.editReply({
@@ -239,6 +240,10 @@ export class UserCommand extends Command {
 		try {
 			const guildId = interaction.guildId;
 
+			await interaction.editReply({
+				content: 'Fetching leaderboard data...',
+			});
+
 			const leaderboardWrapper = new LeaderboardWrapper();
 			const leaderboard = await leaderboardWrapper.getLeaderboard({
 				guildId,
@@ -251,12 +256,21 @@ export class UserCommand extends Command {
 				});
 			}
 
+			await this.container.logger.info({
+				leaderboardEntries: leaderboard.length,
+			});
+
+			await interaction.editReply({
+				content: 'Processing leaderboard data...',
+			});
+
 			const thumbnail = interaction.guild?.iconURL({ extension: 'png' });
 			const parsedLeaderboard = await this.parseLeaderboard(leaderboard);
 
 			const embed = await this.createLeaderboardEmbed({
 				leaderboardData: parsedLeaderboard,
 				type: 'allTime',
+				currentPage: 1,
 				metadata: { thumbnail },
 			});
 
@@ -267,11 +281,12 @@ export class UserCommand extends Command {
 			);
 
 			const reply = await interaction.editReply({
+				content: null,
 				embeds: [embed],
 				components,
 			});
 
-			this.handlePagination(interaction, reply, parsedLeaderboard);
+			await this.handlePagination(interaction, reply, parsedLeaderboard);
 		} catch (error) {
 			if (error instanceof EmptyDataException) {
 				return interaction.editReply({
@@ -288,13 +303,23 @@ export class UserCommand extends Command {
 	private async parseLeaderboard(
 		leaderboard: LeaderboardDto[],
 	): Promise<ParsedLeaderboardEntry[]> {
-		return leaderboard.map((entry, index) => ({
-			position: index + 1,
-			userId: entry.user_id,
-			score: entry.score,
-			correctPredictions: entry.correct_predictions,
-			incorrectPredictions: entry.incorrect_predictions,
-		}));
+		// Process in chunks to handle large datasets
+		const chunkSize = 50;
+		const chunks = _.chunk(leaderboard, chunkSize);
+
+		const processedChunks = await Promise.all(
+			chunks.map(async (chunk) => {
+				return chunk.map((entry, indexInChunk) => ({
+					position: indexInChunk + 1 + chunks.indexOf(chunk) * chunkSize,
+					userId: entry.user_id,
+					score: entry.score,
+					correctPredictions: entry.correct_predictions,
+					incorrectPredictions: entry.incorrect_predictions,
+				}));
+			}),
+		);
+
+		return processedChunks.flat();
 	}
 
 	async createLeaderboardEmbed(
@@ -307,17 +332,28 @@ export class UserCommand extends Command {
 		) {
 			throw new EmptyDataException(`the ${params.type} leaderboard`);
 		}
-		const startIndex = (params.currentPage - 1) * 20;
+
+		const currentPage = params.currentPage || 1;
+		const startIndex = (currentPage - 1) * 20;
 		const endIndex = startIndex + 20;
 		const pageEntries = params.leaderboardData.slice(startIndex, endIndex);
 		const totalPages = Math.ceil(params.leaderboardData.length / 20);
 
+		// Process user data in parallel with proper error handling
 		const descriptionLines = await Promise.all(
 			pageEntries.map(async (entry) => {
-				const member = await this.getMember(entry.userId);
-				const username = member ? member.username : entry.userId;
-				const total = entry.correctPredictions + entry.incorrectPredictions;
-				return `${entry.position}. ${username} - **\`${entry.score}\`** *(${entry.correctPredictions}/${total})*`;
+				try {
+					const member = await this.getMember(entry.userId);
+					const username = member ? member.username : entry.userId;
+					const total = entry.correctPredictions + entry.incorrectPredictions;
+					return `${entry.position}. ${username} - **\`${entry.score}\`** *(${entry.correctPredictions}/${total})*`;
+				} catch (error) {
+					this.container.logger.error(
+						`Error processing user ${entry.userId}:`,
+						error,
+					);
+					return `${entry.position}. Unknown User - **\`${entry.score}\`** *(${entry.correctPredictions}/${entry.correctPredictions + entry.incorrectPredictions})*`;
+				}
 			}),
 		);
 
@@ -328,7 +364,7 @@ export class UserCommand extends Command {
 			.setColor(embedColors.PlutoBlue)
 			.setDescription(descriptionLines.join('\n'))
 			.setFooter({
-				text: `Page ${params.currentPage} of ${totalPages}`,
+				text: `Page ${currentPage} of ${totalPages} | Total Entries: ${params.leaderboardData.length}`,
 			});
 
 		if (params.metadata?.thumbnail) {
@@ -345,7 +381,12 @@ export class UserCommand extends Command {
 	}
 
 	private async getMember(userId: string) {
-		return await new ClientTools(this.container).resolveMember(userId);
+		try {
+			return await new ClientTools(this.container).resolveMember(userId);
+		} catch (error) {
+			this.container.logger.error(`Failed to resolve member ${userId}:`, error);
+			return null;
+		}
 	}
 
 	private async handlePagination(
