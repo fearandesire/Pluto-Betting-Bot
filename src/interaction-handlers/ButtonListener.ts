@@ -1,3 +1,4 @@
+import { ApiModules } from '../lib/interfaces/api/api.interface.js';
 import {
 	InteractionHandler,
 	InteractionHandlerTypes,
@@ -31,6 +32,8 @@ import { CacheManager } from '../utils/cache/RedisCacheManager.js';
 import { ErrorEmbeds } from '../utils/common/errors/global.js';
 import type { ICreateBetslipFull } from '../lib/interfaces/api/bets/betslips.interfaces.js';
 import _ from 'lodash';
+import { isKhronosApiError } from '../utils/api/Khronos/error-handling/types.js';
+import { ApiErrorHandler } from 'src/utils/api/Khronos/error-handling/ApiErrorHandler.js';
 
 /**
  * @module ButtonListener
@@ -279,20 +282,12 @@ export class ButtonHandler extends InteractionHandler {
 						interaction.deleteReply().catch(console.error);
 					}, 10000);
 				}
-			} catch (error: any) {
-				let errMsg = 'There was an error storing your prediction.';
-
-				// Check for Axios Err for more info
-				if (error?.response && error?.response?.status === 409) {
-					errMsg = 'You have already made a prediction on this prop.';
-				}
-				console.log(`Error when handling prediction: ${error?.message}`, error);
-				await interaction.editReply({
-					content:
-						error instanceof Error
-							? errMsg
-							: 'There was an error storing your prediction.',
-				});
+			} catch (error: unknown) {
+				return new ApiErrorHandler().handle(
+					interaction,
+					error,
+					ApiModules.predictions,
+				);
 			}
 		}
 	}
