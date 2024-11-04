@@ -59,23 +59,11 @@ export default class PropsApiWrapper {
 	 * @returns A promise that resolves to the raw response from the API
 	 */
 	async setResult(params: SetPropResultRequest) {
-		try {
-			return await this.propsApi.setPropResult(params);
-		} catch (error: any) {
-			if (error?.response) {
-				const errorData = await error.response.json();
-				throw new Error(errorData.message);
-			}
-			throw error;
-		}
+		return await this.propsApi.setPropResult(params);
 	}
 
 	async getPropsByPlayer(params: FindPropsByDescriptionRequest) {
-		try {
-			return await this.propsApi.findPropsByDescription(params);
-		} catch (error: any) {
-			throw error;
-		}
+		return await this.propsApi.findPropsByDescription(params);
 	}
 
 	async getStatsProps() {
