@@ -53,34 +53,15 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
+        uses: docker/build-push-action@v6.9.0
         with:
           context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-
-  deploy:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    permissions:
-      packages: read
-    steps:
-      - name: Deploy to DigitalOcean
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.DO_HOST }}
-          username: ${{ secrets.DO_USERNAME }}
-          key: ${{ secrets.KEYFILE }}
-          script_stop: true
-          timeout: 5m
-          script: |
-            cd /usr/apps/Pluto-Betting-Bot/
-            # Create a temporary file for Docker login credentials
-            echo '${{ secrets.GITHUB_TOKEN }}' | docker login ghcr.io -u ${{ github.actor }} --password-stdin || exit 1
-            docker-compose pull || exit 1
-            docker-compose down || exit 1
-            docker-compose up -d || exit 1
-            # Cleanup Docker credentials after deployment
-            docker logout ghcr.io
-            echo "Started Pluto API"
+          build-args: |
+            DOTENV_KEY=${{ secrets.DOTENV_KEY }}
+            R_HOST=${{ secrets.R_HOST }}
+          network: |
+            ${{ secrets.NETWORK_1 }}
+            ${{ secrets.NETWORK_2 }}

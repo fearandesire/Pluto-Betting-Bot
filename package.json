@@ -26,7 +26,7 @@
 		"sap-cmd": "sapphire generate slashcommand",
 		"dvault": "npx dotenv-vault@latest",
 		"release": "release-it",
-		"docker:push": "docker-compose build && docker push ghcr.io/fearandesire/pluto-betting-bot:3.4.9",
+		"docker:push": "docker-compose build --no-cache && docker-compose push",
 		"docker:pull": "docker-compose pull",
 		"biome:lint": "biome check --write .",
 		"biome:fix": "biome check --write --unsafe  .",
