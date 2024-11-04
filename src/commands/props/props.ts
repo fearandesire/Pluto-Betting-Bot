@@ -1,5 +1,4 @@
 import { LogType } from '../../utils/logging/AppLog.interface.js';
-import { plutoGuildId } from './../../lib/configs/constants.js';
 import { Subcommand } from '@sapphire/plugin-subcommands';
 import { PermissionFlagsBits, EmbedBuilder } from 'discord.js';
 import PropsApiWrapper from '../../utils/api/Khronos/props/propsApiWrapper.js';
@@ -12,6 +11,8 @@ import { DateManager } from '../../utils/common/DateManager.js';
 import TeamInfo from '../../utils/common/TeamInfo.js';
 import AppLog from '../../utils/logging/AppLog.js';
 import StringUtils from '../../utils/common/string-utils.js';
+import { ApiErrorHandler } from '../../utils/api/Khronos/error-handling/ApiErrorHandler.js';
+import { ApiModules } from '../../lib/interfaces/api/api.interface.js';
 
 export class UserCommand extends Subcommand {
 	public constructor(
@@ -310,11 +311,7 @@ export class UserCommand extends Subcommand {
 			return interaction.editReply({ embeds: [embed] });
 		} catch (error) {
 			this.container.logger.error(error);
-			if (error instanceof Error) {
-				return interaction.editReply({
-					content: error.message,
-				});
-			}
+			return new ApiErrorHandler().handle(interaction, error, ApiModules.props);
 		}
 	}
 
@@ -364,11 +361,7 @@ export class UserCommand extends Subcommand {
 			);
 		} catch (error) {
 			this.container.logger.error(error);
-			return interaction.reply({
-				content:
-					'An error occurred while fetching props. Please try again later.',
-				ephemeral: true,
-			});
+			return new ApiErrorHandler().handle(interaction, error, ApiModules.props);
 		}
 	}
 
@@ -388,10 +381,7 @@ export class UserCommand extends Subcommand {
 			);
 		} catch (error) {
 			this.container.logger.error(error);
-			return interaction.editReply({
-				content:
-					'An error occurred while fetching upcoming props. Please try again later.',
-			});
+			return new ApiErrorHandler().handle(interaction, error, ApiModules.props);
 		}
 	}
 
@@ -421,11 +411,7 @@ export class UserCommand extends Subcommand {
 			);
 		} catch (error) {
 			this.container.logger.error(error);
-			return interaction.reply({
-				content:
-					'An error occurred while fetching recent props. Please try again later.',
-				ephemeral: true,
-			});
+			return new ApiErrorHandler().handle(interaction, error, ApiModules.props);
 		}
 	}
 
@@ -530,9 +516,7 @@ export class UserCommand extends Subcommand {
 			return interaction.editReply({ embeds: [embed] });
 		} catch (error) {
 			this.container.logger.error(error);
-			return interaction.editReply({
-				content: 'An error occurred while sending the props embed.',
-			});
+			return new ApiErrorHandler().handle(interaction, error, ApiModules.props);
 		}
 	}
 

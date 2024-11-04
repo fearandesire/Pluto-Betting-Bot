@@ -32,8 +32,7 @@ import { CacheManager } from '../utils/cache/RedisCacheManager.js';
 import { ErrorEmbeds } from '../utils/common/errors/global.js';
 import type { ICreateBetslipFull } from '../lib/interfaces/api/bets/betslips.interfaces.js';
 import _ from 'lodash';
-import { isKhronosApiError } from '../utils/api/Khronos/error-handling/types.js';
-import { ApiErrorHandler } from 'src/utils/api/Khronos/error-handling/ApiErrorHandler.js';
+import { ApiErrorHandler } from '../utils/api/Khronos/error-handling/ApiErrorHandler.js';
 
 /**
  * @module ButtonListener
@@ -234,13 +233,12 @@ export class ButtonHandler extends InteractionHandler {
 						return interaction.editReply({
 							content: 'Your prediction has been cancelled.',
 						});
-					} catch (error: any) {
-						// Identify type of err
-						if (error?.response) {
-							return interaction.editReply({
-								content: 'You have not made a prediction on this prop yet.',
-							});
-						}
+					} catch (error: unknown) {
+						return new ApiErrorHandler().handle(
+							interaction,
+							error,
+							ApiModules.predictions,
+						);
 					}
 				} else {
 					// ? Creating a prediction
@@ -283,6 +281,7 @@ export class ButtonHandler extends InteractionHandler {
 					}, 10000);
 				}
 			} catch (error: unknown) {
+				// ? NOTE: Embed titles may say 'Prediction Error' - but since this is catch-all scope, it could be prop related as well.
 				return new ApiErrorHandler().handle(
 					interaction,
 					error,
