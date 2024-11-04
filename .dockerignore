@@ -27,3 +27,5 @@ backups
 *.aider
 .pnpm-store
 pnpm-debug.log
+
+!assets/*
