@@ -33,7 +33,6 @@ jobs:
 
       - name: Download assets
         run: |
-          mkdir -p assets
           docker pull ghcr.io/${{ github.repository_owner }}/pluto-assets:latest
           docker create --name temp ghcr.io/${{ github.repository_owner }}/pluto-assets:latest
           docker cp temp:/assets/. ./assets/
