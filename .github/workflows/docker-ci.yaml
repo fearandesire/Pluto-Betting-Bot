@@ -23,7 +23,6 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEYFILE }}
-          passphrase: ${{ secrets.SSH_PASS }}
           script: |
             cd apps/Pluto-Betting-Bot
             git pull origin main
