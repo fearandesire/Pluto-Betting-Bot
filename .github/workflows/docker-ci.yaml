@@ -23,13 +23,13 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEYFILE }}
-          password: ${{ secrets.SSH_PASS }}
+          passphrase: ${{ secrets.SSH_PASS }}
           script: |
             cd apps/Pluto-Betting-Bot
             git pull origin main
             # Download the latest Swagger spec
             curl -o Khronos-Swagger-Spec-v1.json '${{ secrets.SWAGGER_SPEC_URL }}'
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            docker pull ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
+            docker-compose build
             docker-compose down
             docker-compose up -d
