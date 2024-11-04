@@ -47,6 +47,12 @@ export class ApiErrorHandler {
 			case ApiModules.account:
 				errEmbed = ErrorEmbeds.accountErr(errorMessage);
 				break;
+			case ApiModules.props:
+				errEmbed = ErrorEmbeds.propsErr(errorMessage);
+				break;
+			case ApiModules.predictions:
+				errEmbed = ErrorEmbeds.predictionsErr(errorMessage);
+				break;
 			case ApiModules.unknown:
 				errEmbed = ErrorEmbeds.internalErr(errorMessage);
 				break;

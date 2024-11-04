@@ -46,6 +46,14 @@ export class ErrorEmbeds {
 		return ErrorEmbeds.createErrorEmbed('Account Error', description);
 	}
 
+	static propsErr(description: string) {
+		return ErrorEmbeds.createErrorEmbed('Props Error', description);
+	}
+
+	static predictionsErr(description: string) {
+		return ErrorEmbeds.createErrorEmbed('Predictions Error', description);
+	}
+
 	static unknownErr(description: string) {
 		return ErrorEmbeds.createErrorEmbed('Unknown Error', description);
 	}
