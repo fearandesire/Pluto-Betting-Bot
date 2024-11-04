@@ -1,66 +1,35 @@
-name: "Docker CI"
-
-on:
-    push:
-        branches: [main]
-    pull_request:
-        branches: [main]
+name: "Docker CI/CD"
 
 env:
     REGISTRY: ghcr.io
     IMAGE_NAME: pluto-betting-bot
 
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
 jobs:
-  build-and-push:
+  deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
-      - name: Download Swagger Specification
-        run: |
-          curl -o Khronos-Swagger-Spec-v1.json ${{ secrets.SWAGGER_SPEC_URL }}
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@master
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Download assets
-        run: |
-          docker pull ghcr.io/${{ github.repository_owner }}/pluto-assets:latest
-          docker create --name temp ghcr.io/${{ github.repository_owner }}/pluto-assets:latest
-          docker cp temp:/assets/. ./assets/
-          docker rm temp
-
-      - name: Log in to the Container registry
-        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
-        with:
-          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v6.9.0
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            DOTENV_KEY=${{ secrets.DOTENV_KEY }}
-            R_HOST=${{ secrets.R_HOST }}
-          network: |
-            ${{ secrets.NETWORK_1 }}
-            ${{ secrets.NETWORK_2 }}
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEYFILE }}
+          password: ${{ secrets.SSH_PASS }}
+          script: |
+            cd apps/Pluto-Betting-Bot
+            git pull origin main
+            # Download the latest Swagger spec
+            curl -o Khronos-Swagger-Spec-v1.json '${{ secrets.SWAGGER_SPEC_URL }}'
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker pull ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
+            docker-compose down
+            docker-compose up -d

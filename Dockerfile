@@ -56,8 +56,6 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-l
 ENV NODE_ENV=production
 ENV DOTENV_KEY=$DOTENV_KEY
 ENV R_HOST=$R_HOST
-LABEL org.opencontainers.image.source="https://github.com/fearandesire/Pluto-Betting-Bot"
-LABEL org.opencontainers.image.description="Pluto Betting Bot"
 
 EXPOSE 2090
 CMD ["pnpm", "start"]
