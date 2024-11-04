@@ -27,4 +27,6 @@ export enum ApiModules {
 	account = 'account',
 	unknown = 'unknown',
 	odds = 'odds',
+	props = 'props',
+	predictions = 'predictions',
 }

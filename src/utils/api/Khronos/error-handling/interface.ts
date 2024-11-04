@@ -3,4 +3,5 @@ export interface IKhronosErr {
 	message: string;
 	exception: string;
 	details?: any;
+	exception_category?: string;
 }
