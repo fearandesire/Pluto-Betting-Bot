@@ -24,7 +24,8 @@ COPY . .
 RUN pnpm ci-gen-api
 
 # Build stage
-FROM base AS builder
+# ? Uses data compiled from the base stage
+FROM base AS builder 
 WORKDIR /app
 
 # Copy package.json and pnpm-lock.yaml

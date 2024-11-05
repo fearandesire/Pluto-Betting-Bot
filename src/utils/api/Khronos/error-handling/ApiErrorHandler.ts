@@ -1,4 +1,8 @@
-import type { ButtonInteraction, CommandInteraction } from 'discord.js';
+import type {
+	ButtonInteraction,
+	CommandInteraction,
+	Message,
+} from 'discord.js';
 import type { EmbedBuilder } from 'discord.js';
 import {
 	ApiHttpErrorTypes,
@@ -30,7 +34,9 @@ export class ApiErrorHandler {
 		};
 
 		// Handle specific error cases
-		if (apiError.exception === ApiHttpErrorTypes.InsufficientBalance) {
+		if (apiError.exception === ApiHttpErrorTypes.ClaimCooldown) {
+			errorMessage = `You are on cooldown and can claim again in ${apiError.details.timeLeft}`;
+		} else if (apiError.exception === ApiHttpErrorTypes.InsufficientBalance) {
 			if (
 				apiError.details?.balance &&
 				typeof apiError.details.balance === 'number'
@@ -80,12 +86,13 @@ export class ApiErrorHandler {
 		interaction: CommandInteraction | ButtonInteraction | null,
 		error: unknown,
 		errModule: ApiModules,
-	): Promise<void> {
+	): Promise<Message<boolean>> {
 		try {
 			const khronosError = await toKhronosApiError(error);
 
 			if (interaction) {
 				await this.errorResponses(interaction, khronosError, errModule);
+				return;
 			}
 			// nO interaction provided, fallback to throwing the error again. someone will catch this dang thing
 			console.error({
