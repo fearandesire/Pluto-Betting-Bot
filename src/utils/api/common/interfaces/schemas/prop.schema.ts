@@ -1,14 +1,8 @@
+import { number, object, union, z } from 'zod';
 import {
-	nullable,
-	number,
-	object,
-	record,
-	string,
-	union,
-	z,
-	type infer,
-} from 'zod';
-import { BettingMarketSchema } from './betting-market.schema.js';
+	BettingMarketSchema,
+	BettingMarketSchemaNonH2h,
+} from './betting-market.schema.js';
 
 /**
  * Enum representing the possible statuses of a prop.
@@ -85,32 +79,96 @@ export const PropOptionsSchema = z.object({
  */
 export type PropOptions = z.infer<typeof PropOptionsSchema>;
 
-export const PredictionPercentageStatsSchema = z.object({
-	prop_id: z.string(),
-
-	home_team: z.string(),
-
-	away_team: z.string(),
-
-	total_predictions: z.number(),
-
-	percentages: z.record(z.number()),
-
-	betting_on: z.union([z.string(), z.number()]),
-
-	betting_on_label: z.string(),
-
-	description: z.string().nullable(),
+/**
+ * Schema for guild configuration where prediction stats should be posted
+ * Matches PropStatsGuildData DTO
+ */
+export const PropStatsGuildConfigSchema = z.object({
+	guild_id: z
+		.string()
+		.describe('The ID of the guild where stats will be posted'),
+	channel_id: z
+		.string()
+		.describe('The ID of the channel where stats will be posted'),
 });
 
-export type PredictionPercentageStats = z.infer<
-	typeof PredictionPercentageStatsSchema
->;
+export const h2HStatsSchema = z.object({
+	home: z.number(),
+	away: z.number(),
+});
 
-export const PredictionStatsNotificationsArraySchema = z.array(
-	PredictionPercentageStatsSchema,
-);
+export const overUnderStatsSchema = z.object({
+	over: z.number(),
+	under: z.number(),
+});
 
-export type PredictionStatsNotificationsArray = z.infer<
-	typeof PredictionStatsNotificationsArraySchema
->;
+// Create base type for stats that's shared between both types
+const BasePropStats = z.object({
+	total_predictions: z.number(),
+});
+
+// H2H specific stats
+export const H2HPropStatsSchema = BasePropStats.extend({
+	percentages: h2HStatsSchema,
+	tallies: h2HStatsSchema,
+});
+
+// Non-H2H stats (all other market types)
+export const NonH2HPropStatsSchema = BasePropStats.extend({
+	percentages: overUnderStatsSchema,
+	tallies: overUnderStatsSchema,
+});
+
+/**
+ * Schema for prop prediction statistics
+ * Part of PropEmbedsOutgoingDto
+ */
+export const PropPredictionStatsSchema = z.object({
+	prop_id: z.string().describe('Unique identifier for the prop'),
+	home_team: z.string().describe('Name of the home team'),
+	away_team: z.string().describe('Name of the away team'),
+	total_predictions: z.number().describe('Total number of predictions made'),
+	market_key: BettingMarketSchema,
+	stats: z.object({
+		total_predictions: z.number(),
+		percentages: z.union([h2HStatsSchema, overUnderStatsSchema]),
+		tallies: z.union([h2HStatsSchema, overUnderStatsSchema]),
+	}),
+	price: z
+		.number()
+		.describe(
+			"The price of the odds - if it's not a H2H market, this is present",
+		)
+		.nullable(),
+	betting_on_label: z
+		.string()
+		.describe('Human-readable label for the betting value'),
+	description: z
+		.string()
+		.nullable()
+		.describe('Optional description of the prediction'),
+});
+
+/**
+ * Combined schema matching PropEmbedsOutgoingDto
+ */
+export const PropEmbedsIncomingSchema = z.object({
+	props: z
+		.array(PropPredictionStatsSchema)
+		.describe('Array of prop prediction statistics'),
+	guilds: z
+		.array(PropStatsGuildConfigSchema)
+		.describe('Array of guild configurations for posting'),
+});
+
+/**
+ * Type definitions
+ */
+export type PropPredictionStats = z.infer<typeof PropPredictionStatsSchema>;
+export type PropStatsGuildConfig = z.infer<typeof PropStatsGuildConfigSchema>;
+export type PropEmbedsIncoming = z.infer<typeof PropEmbedsIncomingSchema>;
+
+// Export the discriminated union types
+export type H2HPropStats = z.infer<typeof H2HPropStatsSchema>;
+export type NonH2HPropStats = z.infer<typeof NonH2HPropStatsSchema>;
+export type PropStats = H2HPropStats | NonH2HPropStats;

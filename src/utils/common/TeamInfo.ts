@@ -1,11 +1,20 @@
 import { findEmoji } from '@pluto-core-config';
-import type { ColorResolvable } from 'discord.js';
+import type { ColorResolvable, EmojiResolvable, GuildEmoji } from 'discord.js';
 import { resolveTeam } from 'resolve-team';
 import StringUtils from './string-utils.js';
 import { container } from '@sapphire/framework';
+import { slice } from 'lodash';
 
 interface TeamShortNameOrEmojiOptions {
 	nameWithEmoji?: boolean;
+}
+
+export interface GetTeamInfoResponse {
+	emoji: string | GuildEmoji | EmojiResolvable;
+	shortName: string;
+	fullName: string;
+	combinedString: string;
+	color: number;
 }
 
 export default class TeamInfo {
@@ -92,18 +101,21 @@ export default class TeamInfo {
 	 * Get team information including emoji, short name, full name, and combined string
 	 * @param teamName The full name of the team
 	 * @returns An object containing team information
+	 * In the event the emoji is not found, the short name is a fallback.
 	 */
-	private async getTeamInfo(teamName: string) {
+	public async getTeamInfo(teamName: string): Promise<GetTeamInfoResponse> {
 		const shortName = new StringUtils().getShortName(teamName);
 		const emoji = container.client.emojis.cache.find(
 			(emoji) => emoji.name?.toLowerCase() === shortName.toLowerCase(),
 		);
-
+		const hexColor = (await TeamInfo.getTeamColor(teamName)) as string;
+		const parsedHex = Number.parseInt(hexColor.slice(1), 16);
 		return {
 			emoji: emoji || shortName,
 			shortName,
 			fullName: teamName,
 			combinedString: `${emoji || shortName} ${shortName}`,
+			color: parsedHex,
 		};
 	}
 }

@@ -6,7 +6,7 @@ import { ApiErrorHandler } from '../error-handling/ApiErrorHandler.js';
 /**
  * App / Business specific logic
  */
-export default class PropsService {
+export default class PropsRepoService {
 	private propsApi: PropsApiWrapper;
 
 	constructor() {

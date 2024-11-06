@@ -10,7 +10,7 @@ import {
 /**
  * Service for processing and managing props.
  */
-export class PropsService {
+export class PropsPresentation {
 	private defaultFilteredMarketKeys = ['totals', 'h2h'];
 	private defaultOptions = {
 		daysAhead: 7,

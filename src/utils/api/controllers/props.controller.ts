@@ -1,21 +1,20 @@
 import {
-	PredictionStatsNotificationsArraySchema,
 	PropArraySchema,
+	PropEmbedsIncomingSchema,
 	PropOptionsSchema,
-	type PredictionStatsNotificationsArray,
 } from '../common/interfaces/index.js';
 import {
 	GuildChannelArraySchema,
 	type RequestBody,
 	type ValidatedData,
 } from '../routes/props/props-route.interface.js';
-import { PropsService } from '../services/props.service.js';
+import { PropsPresentation } from '../services/props-presentation.service.js';
 
 export class PropsController {
-	private propsService: PropsService;
+	private propsService: PropsPresentation;
 
 	constructor() {
-		this.propsService = new PropsService();
+		this.propsService = new PropsPresentation();
 	}
 
 	validateReqPropEmbedBody(body: RequestBody): ValidatedData | null {
@@ -67,16 +66,10 @@ export class PropsController {
 		};
 	}
 
-	validatePredictionStatsBody(
-		body: RequestBody,
-	): PredictionStatsNotificationsArray | null {
-		const result = PredictionStatsNotificationsArraySchema.safeParse(body);
+	validatePredictionStatsBody(body: RequestBody) {
+		const result = PropEmbedsIncomingSchema.safeParse(body);
 
-		if (!result.success) {
-			return null;
-		}
-
-		return result.data;
+		return result;
 	}
 
 	/**
@@ -87,8 +80,16 @@ export class PropsController {
 	async processPostStart(body: RequestBody) {
 		const validatedData = this.validatePredictionStatsBody(body);
 
-		if (!validatedData) {
-			return { success: false, message: 'Invalid request body' };
+		if (!validatedData.success) {
+			const errData = {
+				source: this.validatePredictionStatsBody.name,
+				message: 'Invalidation failed parsing incoming prediction stats body',
+				error: validatedData.error,
+			};
+			console.error(errData);
+			throw Error(`${errData.message}: ${errData.error.message}`);
 		}
+
+		return validatedData.data;
 	}
 }
