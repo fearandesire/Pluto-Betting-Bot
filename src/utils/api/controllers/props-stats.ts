@@ -9,7 +9,7 @@ import { PropsPresentation } from '../services/props-presentation.service.js';
 import ClientTools from '../../bot_res/ClientTools.js';
 import type { EmbedData, Guild, TextBasedChannel } from 'discord.js';
 import TeamInfo, { type GetTeamInfoResponse } from '../../common/TeamInfo.js';
-import { EmbedBuilder } from 'discord.js';
+import { bold, EmbedBuilder, underline } from 'discord.js';
 
 /**
  * @summary Handles the logic for compiling and formatting prop embeds
@@ -79,12 +79,12 @@ export default class PropsStats extends PropsPresentation {
 			return [
 				{
 					name: teamData.away.combinedString,
-					value: `${away}%`,
+					value: `${bold(`\`${away}%\``)}`,
 					inline: true,
 				},
 				{
 					name: teamData.home.combinedString,
-					value: `${home}%`,
+					value: `${bold(`\`${home}%\``)}`,
 					inline: true,
 				},
 			];
@@ -98,13 +98,13 @@ export default class PropsStats extends PropsPresentation {
 
 		return [
 			{
-				name: 'Over',
-				value: `${over}%`,
+				name: `${underline('Over')}`,
+				value: `${bold(`\`${over}%\``)}`,
 				inline: true,
 			},
 			{
-				name: 'Under',
-				value: `${under}%`,
+				name: `${underline('Under')}`,
+				value: `${bold(`\`${under}%\``)}`,
 				inline: true,
 			},
 		];
