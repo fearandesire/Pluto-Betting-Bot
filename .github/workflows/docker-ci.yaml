@@ -32,5 +32,4 @@ jobs:
             curl -o Khronos-Swagger-Spec-v1.json '${{ secrets.SWAGGER_SPEC_URL }}'
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker-compose build
-            docker-compose down
-            docker-compose up -d
+            docker-compose push
