@@ -83,13 +83,9 @@ export default class NotificationService {
 	async notifyUser(betData: DisplayBetNotification, client: SapphireClient) {
 		const { userId, betId, result, displayResult } = betData;
 
-		// Basic message setup
-		let msg = '';
-		let color: ColorResolvable = '#57f287'; // Assuming this is defined elsewhere
+		const color: ColorResolvable = '#57f287';
 
-		// Check if the bet result is a win
 		if ('profit' in result && 'displayProfit' in displayResult) {
-			// It's safe to access properties specific to DisplayResultWon
 			const {
 				team,
 				displayBetAmount,
@@ -101,38 +97,65 @@ export default class NotificationService {
 				...displayResult,
 			};
 
-			msg = `### Congrats, you won your bet! 🎊\n# __Details__\n\n**\`${displayBetAmount}\`** on the **${team}**\n**Profit:** **\`${displayProfit}\`**\n**Payout:** **\`${displayPayout}\`**\n**Balance**: *\`${displayOldBalance}\`* → **\`${displayNewBalance}\` 💰**`;
-			color = '#57f287';
+			const embed = new EmbedBuilder()
+				.setTitle('🎉 Bet Won! 🎉')
+				.setColor(color)
+				.addFields(
+					{ name: '🎯 Team Selected', value: team, inline: true },
+					{ name: '💰 Bet Amount', value: displayBetAmount, inline: true },
+					{ name: '💫 Profit', value: displayProfit, inline: true },
+					{ name: '🏆 Total Payout', value: displayPayout, inline: false },
+					{
+						name: '📊 Balance Update',
+						value: `${displayOldBalance} → ${displayNewBalance}`,
+						inline: false,
+					},
+				)
+				.setTimestamp()
+				.setFooter({
+					text: `Pluto | Bet ID: ${betId}`,
+				});
+
+			try {
+				await client.users.send(userId, {
+					embeds: [embed],
+				});
+			} catch (err) {
+				logClr({
+					text: `Failed to DM ${userId} | Bet ID: ${betId}\nAccount Privacy issue, Bot blocked, or no longer in the server.`,
+					color: 'red',
+					status: 'error',
+				});
+			}
 		} else if ('betAmount' in result) {
-			// Assuming losers always have a betAmount, adjust as necessary
 			const { team, displayBetAmount } = {
 				team: result.team,
 				displayBetAmount: displayResult.displayBetAmount,
 			};
 
-			msg = `### Bad news...you lost a bet\n# __Details__\n\n${displayBetAmount} bet on the **${team}**\nBetter luck next time!`;
-			color = '#ff6961';
-		}
+			const embed = new EmbedBuilder()
+				.setTitle('❌ Bet Lost')
+				.setColor('#ff6961')
+				.addFields(
+					{ name: '🎯 Team Selected', value: team, inline: true },
+					{ name: '💸 Lost', value: displayBetAmount, inline: true },
+				)
+				.setTimestamp()
+				.setFooter({
+					text: `Pluto | Bet ID: ${betId}`,
+				});
 
-		const embed = new EmbedBuilder()
-			.setTitle('Bet Result')
-			.setDescription(msg)
-			.setColor(color)
-			.setFooter({
-				text: 'Pluto | Dev. fenixforever',
-			});
-
-		try {
-			await client.users.send(userId, {
-				embeds: [embed],
-			});
-		} catch (err) {
-			// Log the error with assumed logClr function, ensuring it matches the provided error handling style
-			logClr({
-				text: `Failed to DM ${userId} | Bet ID: ${betId}\nAccount Privacy issue, Bot blocked, or no longer in the server.`,
-				color: 'red',
-				status: 'error',
-			});
+			try {
+				await client.users.send(userId, {
+					embeds: [embed],
+				});
+			} catch (err) {
+				logClr({
+					text: `Failed to DM ${userId} | Bet ID: ${betId}\nAccount Privacy issue, Bot blocked, or no longer in the server.`,
+					color: 'red',
+					status: 'error',
+				});
+			}
 		}
 	}
 }
