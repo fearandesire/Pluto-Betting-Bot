@@ -16,7 +16,7 @@ import { bold, EmbedBuilder, underline } from 'discord.js';
  * @description The goal of the compilation of methods in this class is to achieve an object of formatted embeds data that are ready to send to the guilds.
  * The formatted embeds should follow something along the lines of:
  * Title: 'Accuracy Challenge Stats'
- * Description: '## away team vs home team'
+ * Description: '## away team vs. home team'
  * Fields:
  * - Over: percentages.over
  * - Under: percentages.under
@@ -25,13 +25,25 @@ import { bold, EmbedBuilder, underline } from 'discord.js';
  * So we will anonymously handle it, regardless of what the field name is
  */
 
+// Add these type guards at the top of the file or in a separate types file
+type H2HPercentages = { home: number; away: number };
+type OverUnderPercentages = { over: number; under: number };
+
+function isH2HStats(
+	stats: H2HPropStats | NonH2HPropStats,
+): stats is H2HPropStats {
+	return 'home' in (stats.percentages as H2HPercentages);
+}
+
 export default class PropsStats extends PropsPresentation {
 	private clientTools: ClientTools;
 
 	/**
 	 * Orchestrates the logic to prepare the embeds for sending prop stats
+	 * @param data The incoming props data
+	 * @param combinedEmbed Whether to combine all props into a single embed
 	 */
-	async compileEmbedData(data: PropEmbedsIncoming) {
+	async compileEmbedData(data: PropEmbedsIncoming, combinedEmbed = true) {
 		this.clientTools = new ClientTools(container);
 
 		// Fetch Discord Guild information in parallel
@@ -54,11 +66,64 @@ export default class PropsStats extends PropsPresentation {
 			throw new Error('No valid guilds found for prop stats');
 		}
 
-		// Format the data for the prop embeds
-		const formattedProps = await this.formatPropEmbedData(data.props);
+		// Format the data based on the feature flag
+		const formattedProps = combinedEmbed
+			? await this.formatCombinedPropEmbed(data.props)
+			: await this.formatPropEmbedData(data.props);
 
 		// Send the embeds to the guilds
 		await this.sendPropStatEmbeds(formattedProps, validGuildData);
+	}
+
+	/**
+	 * Formats multiple props into a single summary embed
+	 */
+	private async formatCombinedPropEmbed(
+		props: PropEmbedsIncoming['props'],
+	): Promise<EmbedData[]> {
+		const teamInfo = new TeamInfo();
+
+		const propFields = await Promise.all(
+			props.map(async (prop) => {
+				const awayTeamInfo = await teamInfo.getTeamInfo(prop.away_team);
+				const homeTeamInfo = await teamInfo.getTeamInfo(prop.home_team);
+
+				const isH2H = prop.market_key === 'h2h';
+				const percentages = isH2H
+					? ((prop.stats as H2HPropStats).percentages as {
+							home: number;
+							away: number;
+						})
+					: ((prop.stats as NonH2HPropStats).percentages as {
+							over: number;
+							under: number;
+						});
+				const fieldTitle = `${awayTeamInfo.combinedString} vs. ${homeTeamInfo.combinedString}`;
+				// @ts-ignore
+				const h2hFieldValue = `${awayTeamInfo.combinedString} - ${bold(`${percentages.away}%`)}\n${homeTeamInfo.combinedString} - ${bold(`${percentages.home}%`)}`;
+
+				// @ts-ignore
+				const nonH2HFieldValue = `Over - ${bold(`${percentages.over}%`)}\nUnder - ${bold(`${percentages.under}%`)}`;
+
+				return {
+					name: fieldTitle,
+					value: isH2H ? h2hFieldValue : nonH2HFieldValue,
+					inline: false,
+				};
+			}),
+		);
+
+		// Create a single embed with all props
+		const summaryEmbed: EmbedData = {
+			title: 'Accuracy Challenge Stats Summary',
+			description:
+				'### Games are Live!\nHere is the breakdown of the predictions that are locked in! ',
+			fields: propFields,
+			// Use a neutral color for the combined embed
+			color: 0x5865f2, // Discord blurple
+		};
+
+		return [summaryEmbed];
 	}
 
 	async formatFieldData(
@@ -78,12 +143,12 @@ export default class PropsStats extends PropsPresentation {
 			const { home, away } = prop.stats.percentages;
 			return [
 				{
-					name: teamData.away.combinedString,
+					name: `${underline(teamData.away.combinedString)}`,
 					value: `${bold(`\`${away}%\``)}`,
 					inline: true,
 				},
 				{
-					name: teamData.home.combinedString,
+					name: `${underline(teamData.home.combinedString)}`,
 					value: `${bold(`\`${home}%\``)}`,
 					inline: true,
 				},
@@ -120,7 +185,7 @@ export default class PropsStats extends PropsPresentation {
 				const homeTeamInfo = await teamInfo.getTeamInfo(prop.home_team);
 
 				const title = 'Accuracy Challenge Stats';
-				const description = `### ${awayTeamInfo.combinedString} vs ${homeTeamInfo.combinedString}\nThe game has started & predictions are locked 🔒!`;
+				const description = `### ${awayTeamInfo.combinedString} vs. ${homeTeamInfo.combinedString}\nThe game is live!\nHere is the breakdown of the predictions that are locked in 👇:`;
 
 				// Create fields based on market type
 				// Create fields based on market type
