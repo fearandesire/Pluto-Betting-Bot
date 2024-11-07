@@ -3,7 +3,6 @@ import {
 	InteractionHandler,
 	InteractionHandlerTypes,
 } from '@sapphire/framework';
-import { None, Option, Result } from '@sapphire/framework';
 import type { StringSelectMenuInteraction } from 'discord.js';
 import type { ButtonInteraction } from 'discord.js';
 import { isPendingBetslip } from '../lib/interfaces/api/bets/betslips-identify.js';
@@ -15,9 +14,7 @@ import { BetsCacheService } from '../utils/api/common/bets/BetsCacheService.js';
 import MatchCacheService from '../utils/api/routes/cache/MatchCacheService.js';
 import { CacheManager } from '../utils/cache/RedisCacheManager.js';
 import { ErrorEmbeds } from '../utils/common/errors/global.js';
-@ApplyOptions<InteractionHandler.Options>({
-	interactionHandlerType: InteractionHandlerTypes.SelectMenu,
-})
+
 export class MenuHandler extends InteractionHandler {
 	public constructor(
 		ctx: InteractionHandler.LoaderContext,

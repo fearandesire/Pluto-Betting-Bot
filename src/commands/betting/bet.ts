@@ -31,14 +31,14 @@ export class UserCommand extends Command {
 							.setName('amount')
 							.setDescription('The amount you want to bet')
 							.setRequired(true),
-					),
-			/* 					.addStringOption((option) =>
+					)
+					.addStringOption((option) =>
 						option
 							.setName('match')
 							.setDescription('The match you want to bet on')
 							.setRequired(false)
 							.setAutocomplete(true),
-					), */
+					),
 			{
 				idHints: ['1022572274546651337'],
 			},
@@ -57,7 +57,7 @@ export class UserCommand extends Command {
 			const errEmbed = ErrorEmbeds.betErr('You must bet at least $1!');
 			return interaction.editReply({ embeds: [errEmbed] });
 		}
-		const matchSelection = null;
+		const matchSelection = interaction.options.getString('match', false);
 
 		if (!matchSelection) {
 			team = await this.identifyTeam(team);
