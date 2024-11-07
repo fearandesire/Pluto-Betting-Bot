@@ -73,9 +73,12 @@ export default async function parseScheduledGames(
 		}),
 	);
 
+	const description =
+		'Use /bet to place bets on any of these matches\nFor teams with multiple games this week, specify your desired match using the `match` field.';
 	// Construct and return the embed
 	return new EmbedBuilder()
 		.setTitle(title)
+		.setDescription(description)
 		.setColor(embColor)
 		.setFooter({ text: helpfooter() })
 		.setThumbnail(thumbnail)
