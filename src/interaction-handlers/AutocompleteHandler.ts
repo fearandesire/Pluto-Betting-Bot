@@ -9,6 +9,7 @@ import type { AutocompleteInteraction } from 'discord.js';
 import MatchCacheService from '../utils/api/routes/cache/MatchCacheService.js';
 import { CacheManager } from '../utils/cache/RedisCacheManager.js';
 import StringUtils from '../utils/common/string-utils.js'; // Import StringUtils
+import MatchApiWrapper from '../utils/api/Khronos/matches/matchApiWrapper.js';
 export class AutocompleteHandler extends InteractionHandler {
 	private matchCacheService: MatchCacheService; // Moved to class property
 	private stringUtils: StringUtils; // Moved to class property
@@ -36,7 +37,13 @@ export class AutocompleteHandler extends InteractionHandler {
 	public override async parse(interaction: AutocompleteInteraction) {
 		if (interaction?.commandName !== 'bet') return this.none();
 		const focusedOption = interaction.options.getFocused(true);
-		const matches = await this.matchCacheService.getMatches();
+		let matches = await this.matchCacheService.getMatches();
+		if (!matches) {
+			matches = await new MatchApiWrapper().getAllMatches();
+			if (matches) {
+				await this.matchCacheService.cacheMatches(matches);
+			}
+		}
 
 		switch (focusedOption.name) {
 			case 'match': {
