@@ -9,6 +9,7 @@ import {
 	type ValidatedData,
 } from '../routes/props/props-route.interface.js';
 import { PropsPresentation } from '../services/props-presentation.service.js';
+import { z } from 'zod';
 
 export class PropsController {
 	private propsService: PropsPresentation;
@@ -67,8 +68,9 @@ export class PropsController {
 	}
 
 	validatePredictionStatsBody(body: RequestBody) {
-		const result = PropEmbedsIncomingSchema.safeParse(body);
+		const PredictionStatsArraySchema = z.array(PropEmbedsIncomingSchema);
 
+		const result = PredictionStatsArraySchema.safeParse(body);
 		return result;
 	}
 
@@ -83,7 +85,7 @@ export class PropsController {
 		if (!validatedData.success) {
 			const errData = {
 				source: this.validatePredictionStatsBody.name,
-				message: 'Invalidation failed parsing incoming prediction stats body',
+				message: 'Failed to validate prediction stats array',
 				error: validatedData.error,
 			};
 			console.error(errData);
