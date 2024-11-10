@@ -10,6 +10,7 @@ import MatchCacheService from '../utils/api/routes/cache/MatchCacheService.js';
 import { CacheManager } from '../utils/cache/RedisCacheManager.js';
 import StringUtils from '../utils/common/string-utils.js'; // Import StringUtils
 import MatchApiWrapper from '../utils/api/Khronos/matches/matchApiWrapper.js';
+import GuildWrapper from '../utils/api/Khronos/guild/guild-wrapper.js';
 export class AutocompleteHandler extends InteractionHandler {
 	private matchCacheService: MatchCacheService; // Moved to class property
 	private stringUtils: StringUtils; // Moved to class property
@@ -37,18 +38,26 @@ export class AutocompleteHandler extends InteractionHandler {
 	public override async parse(interaction: AutocompleteInteraction) {
 		if (interaction?.commandName !== 'bet') return this.none();
 		const focusedOption = interaction.options.getFocused(true);
-		let matches = await this.matchCacheService.getMatches();
-		if (!matches) {
-			matches = await new MatchApiWrapper().getAllMatches();
-			if (matches) {
-				await this.matchCacheService.cacheMatches(matches);
-			}
-		}
+
+		// Fetch matches and guild data in parallel
+		const [matches, guildData] = await Promise.all([
+			this.matchRetrieval(),
+			new GuildWrapper().getGuild(interaction.guildId),
+		]);
+
+		if (!matches) return this.none();
+
+		// Filter matches by sport
+		const sportFilteredMatches = matches.filter((match: Match) =>
+			match.sport_key.includes(guildData.sport),
+		);
+
+		if (!sportFilteredMatches.length) return this.none();
 
 		switch (focusedOption.name) {
 			case 'match': {
 				const currentInput = focusedOption.value as string;
-				const searchResult = matches.filter((match: Match) => {
+				const searchResult = sportFilteredMatches.filter((match: Match) => {
 					const homeTeam = match.home_team.toLowerCase();
 					const awayTeam = match.away_team.toLowerCase();
 					return (
@@ -65,7 +74,7 @@ export class AutocompleteHandler extends InteractionHandler {
 			}
 			case 'team': {
 				const matchSelection = interaction.options.getString('match', true);
-				const selectedMatch = matches.find(
+				const selectedMatch = sportFilteredMatches.find(
 					(match: Match) => match.id === matchSelection,
 				);
 
@@ -82,6 +91,24 @@ export class AutocompleteHandler extends InteractionHandler {
 			}
 			default:
 				return this.none();
+		}
+	}
+
+	private async matchRetrieval(): Promise<Match[] | null> {
+		try {
+			const cachedMatches = await this.matchCacheService.getMatches();
+			if (cachedMatches) return cachedMatches;
+
+			const freshMatches = await new MatchApiWrapper().getAllMatches();
+			if (freshMatches) {
+				await this.matchCacheService.cacheMatches(freshMatches.matches);
+				return freshMatches.matches;
+			}
+
+			return null;
+		} catch (error) {
+			this.container.logger.error('Failed to fetch matches:', error);
+			return null;
 		}
 	}
 }
