@@ -220,6 +220,13 @@ export class ButtonHandler extends InteractionHandler {
 				const prop = await propsApi.getPropById(payload.propId);
 
 				if (!prop) {
+					console.error({
+						method: this.constructor.name,
+						message: 'Prop not found',
+						data: {
+							propId: payload.propId,
+						},
+					});
 					throw new Error('Prop not found');
 				}
 
@@ -281,6 +288,13 @@ export class ButtonHandler extends InteractionHandler {
 					}, 10000);
 				}
 			} catch (error: unknown) {
+				console.error({
+					method: this.constructor.name,
+					message: 'Error occured regarding predictions',
+					data: {
+						error,
+					},
+				});
 				// ? NOTE: Embed titles may say 'Prediction Error' - but since this is catch-all scope, it could be prop related as well.
 				return new ApiErrorHandler().handle(
 					interaction,
