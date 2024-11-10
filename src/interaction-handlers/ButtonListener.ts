@@ -214,22 +214,8 @@ export class ButtonHandler extends InteractionHandler {
 		} else if ('action' in payload) {
 			// ? Handle A Prediction
 			const predictionApi = new PredictionApiWrapper();
-			const propsApi = new PropsApiWrapper();
 
 			try {
-				const prop = await propsApi.getPropById(payload.propId);
-
-				if (!prop) {
-					console.error({
-						method: this.constructor.name,
-						message: 'Prop not found',
-						data: {
-							propId: payload.propId,
-						},
-					});
-					throw new Error('Prop not found');
-				}
-
 				// ? Prioritize handling a cancel
 				if (payload.action.toLowerCase() === 'cancel') {
 					try {
@@ -260,7 +246,6 @@ export class ButtonHandler extends InteractionHandler {
 							choice: sanitizedChoice,
 							status: 'pending',
 							guild_id: interaction.guildId!,
-							market_key: prop.market_key,
 						},
 					});
 
