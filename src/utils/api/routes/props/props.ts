@@ -21,6 +21,11 @@ PropsRouter.post('/props/daily', async (ctx) => {
 
 PropsRouter.post('/props/stats/post-start', async (ctx) => {
 	try {
+		console.info({
+			method: 'props/stats/post-start',
+			body: ctx.request.body,
+			message: 'Processing post-start stats',
+		});
 		const result = await propsController.processPostStart(
 			ctx.request.body as RequestBody,
 		);
