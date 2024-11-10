@@ -2,6 +2,7 @@ import {
 	PropArraySchema,
 	PropEmbedsIncomingSchema,
 	PropOptionsSchema,
+	type PropEmbedsIncoming,
 } from '../common/interfaces/index.js';
 import {
 	GuildChannelArraySchema,
@@ -79,7 +80,7 @@ export class PropsController {
 	 * @description This method is used to post stats of the props that have just recently started. It will go through the incoming data which will have the stats already aggregated.
 	 * Each object in the array will be the data included to make the embed.
 	 */
-	async processPostStart(body: RequestBody) {
+	async processPostStart(body: RequestBody): Promise<PropEmbedsIncoming[]> {
 		const validatedData = this.validatePredictionStatsBody(body);
 
 		if (!validatedData.success) {

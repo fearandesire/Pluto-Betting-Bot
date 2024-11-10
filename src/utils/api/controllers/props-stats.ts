@@ -43,7 +43,7 @@ export default class PropsStats extends PropsPresentation {
 	 * @param data The incoming props data
 	 * @param combinedEmbed Whether to combine all props into a single embed
 	 */
-	async compileEmbedData(data: PropEmbedsIncoming, combinedEmbed = true) {
+	async compileEmbedData(data, combinedEmbed = true) {
 		this.clientTools = new ClientTools(container);
 
 		// Fetch Discord Guild information in parallel
