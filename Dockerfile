@@ -54,9 +54,5 @@ COPY --from=builder /app/assets ./assets
 # Install production dependencies
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile
 
-ENV NODE_ENV=production
-ENV DOTENV_KEY=$DOTENV_KEY
-ENV R_HOST=$R_HOST
-
 EXPOSE 2090
 CMD ["pnpm", "start"]
