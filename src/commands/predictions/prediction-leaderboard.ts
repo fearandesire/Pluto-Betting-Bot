@@ -412,8 +412,8 @@ export class UserCommand extends Command {
 
 		collector.on('collect', async (i) => {
 			if (i.user.id !== interaction.user.id) {
-				await i.reply({
-					content: 'You cannot use these buttons.',
+				await i.followUp({
+					content: 'Only the original user can interact with these buttons.',
 					ephemeral: true,
 				});
 				return;
@@ -445,7 +445,7 @@ export class UserCommand extends Command {
 				totalPages,
 			);
 
-			await i.update({ embeds: [newEmbed], components: newComponents });
+			await i.editReply({ embeds: [newEmbed], components: newComponents });
 		});
 
 		collector.on('end', async () => {
