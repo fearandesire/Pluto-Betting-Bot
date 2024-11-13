@@ -7,10 +7,9 @@ import {
 import {
 	GuildChannelArraySchema,
 	type RequestBody,
-	type ValidatedData,
+	type ValidatedDataPropEmbeds,
 } from '../routes/props/props-route.interface.js';
 import { PropsPresentation } from '../services/props-presentation.service.js';
-import { z } from 'zod';
 
 export class PropsController {
 	private propsService: PropsPresentation;
@@ -19,7 +18,7 @@ export class PropsController {
 		this.propsService = new PropsPresentation();
 	}
 
-	validateReqPropEmbedBody(body: RequestBody): ValidatedData | null {
+	validateReqPropEmbedBody(body: RequestBody): ValidatedDataPropEmbeds | null {
 		const propsResult = PropArraySchema.safeParse(body.props);
 		const guildChannelsResult = GuildChannelArraySchema.safeParse(
 			body.guildChannels,

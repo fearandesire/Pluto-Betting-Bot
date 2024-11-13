@@ -16,6 +16,7 @@ import { DateManager } from '../../common/DateManager.js';
 import TeamInfo from '../../common/TeamInfo.js';
 import StringUtils from '../../common/string-utils.js';
 import GuildUtils from '../GuildUtils.js';
+import _ from 'lodash';
 
 interface AggregateDetailsParams {
 	home: {
@@ -182,61 +183,81 @@ export default class PropEmbedManager {
 
 	async createEmbeds(
 		props: PropZod[],
-		guildChannels: { guild_id: string; channel_id: string }[],
+		guildChannels: { guild_id: string; channel_id: string; sport: string }[],
 	) {
-		for (const { guild_id, channel_id } of guildChannels) {
-			const embeds = await Promise.all(
-				props.map(async (prop) => {
-					const HTEAM_TRANSFORMED = await this.transformTeamName(
-						prop.home_team,
-					);
-					const AWTEAM_TRANSFORMED = await this.transformTeamName(
-						prop.away_team,
-					);
-					const HTEAM_SHORT_NAME = new StringUtils().getShortName(
-						prop.home_team,
-					);
-					const AWTEAM_SHORT_NAME = new StringUtils().getShortName(
-						prop.away_team,
-					);
+		// Group props by sport
+		const propsBySport = _.groupBy(props, 'sport_title');
+		// Group guild channels by sport
+		const guildsBySport = _.groupBy(guildChannels, 'sport');
 
-					const { title, desc, fields, buttons } = this.aggregateDetails(prop, {
-						home: {
-							fullName: prop.home_team,
-							transformed: HTEAM_TRANSFORMED,
-							shortName: HTEAM_SHORT_NAME,
-						},
-						away: {
-							fullName: prop.away_team,
-							transformed: AWTEAM_TRANSFORMED,
-							shortName: AWTEAM_SHORT_NAME,
-						},
-					});
+		// For each sport that has props
+		for (const sport in propsBySport) {
+			// Get the guilds for this sport
+			const sportGuilds = guildsBySport[sport];
+			const sportProps = propsBySport[sport];
 
-					const teamColor = await TeamInfo.getTeamColor(prop.home_team);
+			// For each guild that follows this sport
+			for (const { guild_id, channel_id } of sportGuilds) {
+				const guildUtils = new GuildUtils();
+				const guild = await guildUtils.getGuild(guild_id);
 
-					const embed = new EmbedBuilder()
-						.setTitle(title)
-						.setDescription(desc)
-						.addFields(fields)
-						.setColor(teamColor);
+				if (!guild) {
+					console.error(`[PropEmbedManager] Guild not found: ${guild_id}`);
+					continue;
+				}
 
-					// Create buttons
-					const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-						buttons,
-					);
+				const channel = await guild.channels.fetch(channel_id);
+				if (!channel?.isTextBased()) continue;
 
-					return { embed, row };
-				}),
-			);
-			const guildUtils = new GuildUtils();
-			const guild = await guildUtils.getGuild(guild_id);
-			if (!guild) {
-				console.error(`[PropEmbedManager] Guild not found: ${guild_id}`);
-				continue;
-			}
-			const channel = await guild.channels.fetch(channel_id);
-			if (channel?.isTextBased()) {
+				// Create all embeds for this sport's props
+				const embeds = await Promise.all(
+					sportProps.map(async (prop) => {
+						const HTEAM_TRANSFORMED = await this.transformTeamName(
+							prop.home_team,
+						);
+						const AWTEAM_TRANSFORMED = await this.transformTeamName(
+							prop.away_team,
+						);
+						const HTEAM_SHORT_NAME = new StringUtils().getShortName(
+							prop.home_team,
+						);
+						const AWTEAM_SHORT_NAME = new StringUtils().getShortName(
+							prop.away_team,
+						);
+
+						const { title, desc, fields, buttons } = this.aggregateDetails(
+							prop,
+							{
+								home: {
+									fullName: prop.home_team,
+									transformed: HTEAM_TRANSFORMED,
+									shortName: HTEAM_SHORT_NAME,
+								},
+								away: {
+									fullName: prop.away_team,
+									transformed: AWTEAM_TRANSFORMED,
+									shortName: AWTEAM_SHORT_NAME,
+								},
+							},
+						);
+
+						const teamColor = await TeamInfo.getTeamColor(prop.home_team);
+
+						const embed = new EmbedBuilder()
+							.setTitle(title)
+							.setDescription(desc)
+							.addFields(fields)
+							.setColor(teamColor);
+
+						const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+							buttons,
+						);
+
+						return { embed, row };
+					}),
+				);
+
+				// Send all embeds to the channel
 				for (const { embed, row } of embeds) {
 					await channel.send({ embeds: [embed], components: [row] });
 				}

@@ -29,7 +29,7 @@ export class PropsPresentation {
 	 */
 	public async processAndCreateEmbeds(
 		props: PropZod[],
-		guildChannels: { guild_id: string; channel_id: string }[],
+		guildChannels: { guild_id: string; channel_id: string; sport: string }[],
 		options: PropOptions = {},
 	): Promise<void> {
 		// Validate options

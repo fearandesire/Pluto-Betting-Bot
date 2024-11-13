@@ -5,6 +5,7 @@ import type { PropOptions, PropZod } from '../../common/interfaces/index.js';
 export const GuildChannelSchema = z.object({
 	guild_id: z.string(),
 	channel_id: z.string(),
+	sport: z.string(),
 });
 
 export const GuildChannelArraySchema = z.array(GuildChannelSchema);
@@ -16,8 +17,8 @@ export interface RequestBody {
 	guildChannels: { guild_id: string; channel_id: string }[];
 }
 
-export interface ValidatedData {
+export interface ValidatedDataPropEmbeds {
 	props: PropZod[];
-	guildChannels: { guild_id: string; channel_id: string }[];
+	guildChannels: { guild_id: string; channel_id: string; sport: string }[];
 	options: PropOptions;
 }
