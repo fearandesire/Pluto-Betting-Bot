@@ -15,7 +15,7 @@ export default class PatreonFacade {
 		const result =
 			await PatreonFacade.patreonManager.reqPatreonUserData(userId);
 
-		if ('message' in result) {
+		if (result && 'message' in result) {
 			return result; // This is a PatreonError
 		}
 		return result || false;
