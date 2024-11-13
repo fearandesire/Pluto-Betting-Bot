@@ -445,7 +445,7 @@ export class UserCommand extends Command {
 				totalPages,
 			);
 
-			await i.editReply({ embeds: [newEmbed], components: newComponents });
+			await i.update({ embeds: [newEmbed], components: newComponents });
 		});
 
 		collector.on('end', async () => {
