@@ -7,7 +7,7 @@ import { EmbedBuilder, type Message } from 'discord.js';
 import embedColors from '../../lib/colorsConfig.js';
 import Pagination from '../../utils/embeds/pagination.js';
 import ClientTools from '../../utils/bot_res/ClientTools.js';
-import _ from 'lodash';
+import _, { groupBy } from 'lodash';
 
 @ApplyOptions<Command.Options>({
 	description: 'View the leaderboard for accuracy challenge',
@@ -113,7 +113,7 @@ export class UserCommand extends Command {
 			}
 
 			const thumbnail = interaction.guild?.iconURL({ extension: 'png' });
-			const parsedLeaderboard = await this.parseLeaderboard(leaderboard);
+			const parsedLeaderboard = await this.parseLeaderboardData(leaderboard);
 
 			if (!parsedLeaderboard || _.isEmpty(parsedLeaderboard)) {
 				return interaction.editReply({
@@ -167,7 +167,8 @@ export class UserCommand extends Command {
 					content: noContent,
 				});
 			}
-			const parsedLeaderboard = await this.parseLeaderboard(leaderboardMonthly);
+			const parsedLeaderboard =
+				await this.parseLeaderboardData(leaderboardMonthly);
 			const embed = await this.createLeaderboardEmbed({
 				leaderboardData: parsedLeaderboard,
 				type: 'monthly',
@@ -205,7 +206,7 @@ export class UserCommand extends Command {
 			}
 
 			const thumbnail = interaction.guild?.iconURL({ extension: 'png' });
-			const parsedLeaderboard = await this.parseLeaderboard(leaderboard);
+			const parsedLeaderboard = await this.parseLeaderboardData(leaderboard);
 
 			const embed = await this.createLeaderboardEmbed({
 				leaderboardData: parsedLeaderboard,
@@ -265,7 +266,7 @@ export class UserCommand extends Command {
 			});
 
 			const thumbnail = interaction.guild?.iconURL({ extension: 'png' });
-			const parsedLeaderboard = await this.parseLeaderboard(leaderboard);
+			const parsedLeaderboard = await this.parseLeaderboardData(leaderboard);
 
 			const embed = await this.createLeaderboardEmbed({
 				leaderboardData: parsedLeaderboard,
@@ -300,26 +301,36 @@ export class UserCommand extends Command {
 		}
 	}
 
-	private async parseLeaderboard(
-		leaderboard: LeaderboardDto[],
-	): Promise<ParsedLeaderboardEntry[]> {
-		// Process in chunks to handle large datasets
-		const chunkSize = 50;
-		const chunks = _.chunk(leaderboard, chunkSize);
+	private parseLeaderboardData(
+		leaderboardData: LeaderboardDto[],
+	): ParsedLeaderboardEntry[] {
+		const groupedByUser = groupBy(leaderboardData, 'user_id');
 
-		const processedChunks = await Promise.all(
-			chunks.map(async (chunk) => {
-				return chunk.map((entry, indexInChunk) => ({
-					position: indexInChunk + 1 + chunks.indexOf(chunk) * chunkSize,
+		const parsedData = Object.values(groupedByUser).map((userEntries) => {
+			return userEntries.reduce(
+				(acc, entry) => ({
 					userId: entry.user_id,
-					score: entry.score,
-					correctPredictions: entry.correct_predictions,
-					incorrectPredictions: entry.incorrect_predictions,
-				}));
-			}),
-		);
+					score: acc.score + entry.score,
+					correctPredictions:
+						acc.correctPredictions + entry.correct_predictions,
+					incorrectPredictions:
+						acc.incorrectPredictions + entry.incorrect_predictions,
+				}),
+				{
+					userId: userEntries[0].user_id,
+					score: 0,
+					correctPredictions: 0,
+					incorrectPredictions: 0,
+				},
+			);
+		});
 
-		return processedChunks.flat();
+		const sortedData = parsedData.sort((a, b) => b.score - a.score);
+		// Adds a 'position' property for each entry of where it is in the leaderboard
+		return sortedData.map((entry, index) => ({
+			...entry,
+			position: index + 1,
+		}));
 	}
 
 	async createLeaderboardEmbed(

@@ -167,7 +167,6 @@ export class AccountManager {
 			const lbMembers = await guild.members.fetch({
 				user: lbUserIds,
 			});
-
 			// Map lbData to include Discord member details
 			const formattedLbData = lbData.map((entry: any) => {
 				const member: GuildMember | undefined = lbMembers.get(entry.userid);
