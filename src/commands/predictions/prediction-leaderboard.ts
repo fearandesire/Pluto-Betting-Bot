@@ -7,7 +7,7 @@ import { EmbedBuilder, type Message } from 'discord.js';
 import embedColors from '../../lib/colorsConfig.js';
 import Pagination from '../../utils/embeds/pagination.js';
 import ClientTools from '../../utils/bot_res/ClientTools.js';
-import _, { groupBy } from 'lodash';
+import _ from 'lodash';
 
 @ApplyOptions<Command.Options>({
 	description: 'View the leaderboard for accuracy challenge',
@@ -304,7 +304,7 @@ export class UserCommand extends Command {
 	private parseLeaderboardData(
 		leaderboardData: LeaderboardDto[],
 	): ParsedLeaderboardEntry[] {
-		const groupedByUser = groupBy(leaderboardData, 'user_id');
+		const groupedByUser = _.groupBy(leaderboardData, 'user_id');
 
 		const parsedData = Object.values(groupedByUser).map((userEntries) => {
 			return userEntries.reduce(
