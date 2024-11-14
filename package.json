@@ -72,6 +72,7 @@
 		"@pluto-config": "./dist/lib/PlutoConfig.js"
 	},
 	"dependencies": {
+		"@axiomhq/winston": "^1.2.0",
 		"@favware/colorette-spinner": "^1.0.1",
 		"@kaname-png/plugin-statcord": "^2.1.4",
 		"@koa/cors": "^4.0.0",
@@ -124,7 +125,8 @@
 		"resolve-team": "^1.8.6",
 		"winston": "^3.8.2",
 		"winston-daily-rotate-file": "^5.0.0",
-		"zod": "^3.23.8"
+		"zod": "^3.23.8",
+		"zod-validation-error": "^3.4.0"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.2",
