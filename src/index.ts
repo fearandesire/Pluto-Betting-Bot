@@ -2,7 +2,6 @@ import './lib/startup/env.js';
 import './utils/api/Khronos/KhronosInstances.js';
 import './lib/startup/cache.js';
 import { LogLevel, SapphireClient } from '@sapphire/framework';
-import { blue, bold, green, red, yellow } from 'colorette';
 import { GatewayIntentBits, Partials } from 'discord.js';
 import '@sapphire/plugin-hmr/register';
 import './utils/api/index.js';
