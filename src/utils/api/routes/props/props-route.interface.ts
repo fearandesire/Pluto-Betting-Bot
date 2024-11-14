@@ -12,13 +12,13 @@ export const GuildChannelArraySchema = z.array(GuildChannelSchema);
 
 export type PropRaw = Omit<Prop, 'event' | 'predictions'>;
 
-export interface RequestBody {
+export interface ReqBodyPropsEmbedsData {
 	props: PropZod[];
-	guildChannels: { guild_id: string; channel_id: string }[];
+	guilds: { guild_id: string; channel_id: string; sport: string }[];
 }
 
 export interface ValidatedDataPropEmbeds {
 	props: PropZod[];
-	guildChannels: { guild_id: string; channel_id: string; sport: string }[];
+	guildChannels: { guild_id?: string; channel_id: string; sport: string }[];
 	options: PropOptions;
 }

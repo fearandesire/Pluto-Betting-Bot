@@ -7,10 +7,12 @@ import {
 } from '../common/interfaces/index.js';
 import {
 	GuildChannelArraySchema,
-	type RequestBody,
+	type ReqBodyPropsEmbedsData,
 	type ValidatedDataPropEmbeds,
 } from '../routes/props/props-route.interface.js';
 import { PropsPresentation } from '../services/props-presentation.service.js';
+import { ValidationError } from '../../../utils/errors/ValidationError.js';
+import { fromZodError } from 'zod-validation-error';
 
 export class PropsController {
 	private propsService: PropsPresentation;
@@ -19,59 +21,114 @@ export class PropsController {
 		this.propsService = new PropsPresentation();
 	}
 
-	validateReqPropEmbedBody(body: RequestBody): ValidatedDataPropEmbeds | null {
-		const propsResult = PropArraySchema.safeParse(body.props);
-		const guildChannelsResult = GuildChannelArraySchema.safeParse(
-			body.guildChannels,
-		);
-		const optionsDefault = { daysAhead: 7 };
-		const optionsResult = PropOptionsSchema.safeParse(optionsDefault);
+	validateReqPropEmbedBody(body: ReqBodyPropsEmbedsData) {
+		try {
+			const propsResult = PropArraySchema.safeParse(body.props);
+			const guildChannelsResult = GuildChannelArraySchema.safeParse(
+				body.guilds,
+			);
+			const optionsDefault = { daysAhead: 7 };
+			const optionsResult = PropOptionsSchema.safeParse(optionsDefault);
 
-		if (
-			!propsResult.success ||
-			!guildChannelsResult.success ||
-			!optionsResult.success
-		) {
-			return null;
+			// Collect all validation errors
+			const errors: string[] = [];
+
+			if (!propsResult.success) {
+				errors.push(
+					`Props validation: ${fromZodError(propsResult.error).message}`,
+				);
+			}
+			if (!guildChannelsResult.success) {
+				errors.push(
+					`Guild channels validation: ${fromZodError(guildChannelsResult.error).message}`,
+				);
+			}
+			if (!optionsResult.success) {
+				errors.push(
+					`Options validation: ${fromZodError(optionsResult.error).message}`,
+				);
+			}
+
+			if (errors.length > 0) {
+				throw new ValidationError(
+					'Request body validation failed',
+					errors,
+					this.validateReqPropEmbedBody.name,
+				);
+			}
+
+			return {
+				props: propsResult.data,
+				guildChannels: guildChannelsResult.data,
+				options: optionsResult.data,
+			};
+		} catch (error) {
+			if (error instanceof ValidationError) {
+				throw error;
+			}
+
+			throw new ValidationError(
+				'Unexpected validation error',
+				error,
+				this.validateReqPropEmbedBody.name,
+			);
 		}
-
-		return {
-			props: propsResult.data,
-			// @ts-expect-error - zod issue
-			guildChannels: guildChannelsResult.data,
-			options: optionsResult.data,
-		};
 	}
 
 	async processDaily(
-		body: RequestBody,
-	): Promise<{ success: boolean; message: string }> {
-		WinstonLogger.info({
-			message: 'Processing props embeds generation request',
-		});
-		const validatedData = this.validateReqPropEmbedBody(body);
+		body: ReqBodyPropsEmbedsData,
+	): Promise<{ success: boolean; message: string; details?: unknown }> {
+		try {
+			WinstonLogger.info({
+				message: 'Processing props embeds generation request',
+				metadata: {
+					source: this.processDaily.name,
+					bodyLength: body.props?.length || 0,
+					guildsLength: body.guilds?.length || 0,
+				},
+			});
 
-		if (!validatedData) {
-			return { success: false, message: 'Invalid request body' };
+			const validatedData = this.validateReqPropEmbedBody(body);
+
+			// Filter out 'h2h' and 'totals' props
+			const filteredProps = await this.propsService.filterPropsByMarketKeys(
+				validatedData.props,
+			);
+
+			await this.propsService.processAndCreateEmbeds(
+				filteredProps,
+				validatedData.guildChannels,
+				validatedData.options,
+			);
+
+			return {
+				success: true,
+				message: 'Props processed and embeds created successfully',
+			};
+		} catch (error) {
+			const processedError =
+				error instanceof ValidationError
+					? error
+					: new Error('Failed to validate incoming props');
+
+			WinstonLogger.error({
+				message: processedError.message,
+				metadata: {
+					source: this.processDaily.name,
+					details: error instanceof ValidationError ? error.details : undefined,
+					stack: processedError.stack,
+				},
+			});
+
+			return {
+				success: false,
+				message: processedError.message,
+				details: error instanceof ValidationError ? error.details : undefined,
+			};
 		}
-
-		// Filter out 'h2h' and 'totals' props
-		const filteredProps = await this.propsService.filterPropsByMarketKeys(
-			validatedData.props,
-		);
-		await this.propsService.processAndCreateEmbeds(
-			filteredProps,
-			validatedData.guildChannels,
-			validatedData.options,
-		);
-
-		return {
-			success: true,
-			message: 'Props processed and embeds created successfully',
-		};
 	}
 
-	validatePredictionStatsBody(body: RequestBody) {
+	validatePredictionStatsBody(body: ReqBodyPropsEmbedsData) {
 		const result = PropEmbedsIncomingSchema.safeParse(body);
 		return result;
 	}
@@ -81,7 +138,9 @@ export class PropsController {
 	 * @description This method is used to post stats of the props that have just recently started. It will go through the incoming data which will have the stats already aggregated.
 	 * Each object in the array will be the data included to make the embed.
 	 */
-	async processPostStart(body: RequestBody): Promise<PropEmbedsIncoming> {
+	async processPostStart(
+		body: ReqBodyPropsEmbedsData,
+	): Promise<PropEmbedsIncoming> {
 		const validatedData = this.validatePredictionStatsBody(body);
 
 		if (!validatedData.success) {
