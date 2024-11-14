@@ -25,6 +25,9 @@ const envSchema = z.object({
 	PATREON_API_URL: z.string().url(),
 	KH_PLUTO_CLIENT_KEY: z.string(),
 	APP_OWNER_ID: z.string(),
+	AXIOM_DATASET: z.string(),
+	AXIOM_API_TOKEN: z.string(),
+	AXIOM_ORG_ID: z.string(),
 });
 
 // Parse and validate the environment variables
@@ -46,6 +49,9 @@ const env = envSchema.parse({
 	PATREON_API_URL: process.env.PATREON_API_URL,
 	KH_PLUTO_CLIENT_KEY: process.env.KH_PLUTO_CLIENT_KEY,
 	APP_OWNER_ID: process.env.APP_OWNER_ID,
+	AXIOM_DATASET: process.env.AXIOM_DATASET,
+	AXIOM_API_TOKEN: process.env.AXIOM_API_TOKEN,
+	AXIOM_ORG_ID: process.env.AXIOM_ORG_ID,
 });
 
 export default env;

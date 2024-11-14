@@ -1,3 +1,4 @@
+import { WinstonLogger } from '../../logging/WinstonLogger.js';
 import {
 	PropArraySchema,
 	PropEmbedsIncomingSchema,
@@ -45,6 +46,9 @@ export class PropsController {
 	async processDaily(
 		body: RequestBody,
 	): Promise<{ success: boolean; message: string }> {
+		WinstonLogger.info({
+			message: 'Processing props embeds generation request',
+		});
 		const validatedData = this.validateReqPropEmbedBody(body);
 
 		if (!validatedData) {

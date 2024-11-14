@@ -7,6 +7,7 @@ import { GatewayIntentBits, Partials } from 'discord.js';
 import '@sapphire/plugin-hmr/register';
 import './utils/api/index.js';
 
+import { WinstonLogger } from './utils/logging/WinstonLogger.js';
 const SapDiscClient = new SapphireClient({
 	caseInsensitiveCommands: true,
 	shards: 'auto',
@@ -29,18 +30,23 @@ const SapDiscClient = new SapphireClient({
 	loadMessageCommandListeners: true,
 });
 
-console.log(bold(yellow('[Startup]')), 'Launching Pluto');
+WinstonLogger.info({
+	message: 'Pluto is starting up',
+});
 const login = async () => {
 	try {
 		await SapDiscClient.login(process.env.TOKEN);
-		console.log(bold(green('[Startup]')), 'Pluto is up and running!');
+		WinstonLogger.info({
+			message: 'Pluto is up and running!',
+		});
 	} catch (error) {
-		console.log(bold(red('[Startup]')), 'Failed to login');
+		WinstonLogger.error({
+			message: 'Failed to login',
+		});
 		SapDiscClient.logger.fatal(error);
 		SapDiscClient.destroy();
 		process.exit(1);
 	}
-	console.log(bold(blue('[Startup]')), 'Index ops complete!');
 };
 login();
 

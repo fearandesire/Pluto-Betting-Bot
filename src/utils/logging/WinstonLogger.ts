@@ -1,7 +1,16 @@
-import winston from 'winston';
+import winston, { format } from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 import env from '../../lib/startup/env.js';
+import { WinstonTransport as AxiomTransport } from '@axiomhq/winston';
+import { json } from 'node:stream/consumers';
 const isProduction = env.NODE_ENV === 'production';
+const { AXIOM_DATASET, AXIOM_API_TOKEN, AXIOM_ORG_ID } = env;
+
+console.log({
+	AXIOM_DATASET,
+	AXIOM_API_TOKEN,
+	AXIOM_ORG_ID,
+});
 
 // Core Winston Config
 const coreWinstonConfig = {
@@ -59,12 +68,19 @@ if (!isProduction) {
 	transports.push(createDailyRotateFileTransport('debug', 'debug'));
 }
 
+const axiomTransport = new AxiomTransport({
+	dataset: AXIOM_DATASET,
+	token: AXIOM_API_TOKEN,
+	orgId: AXIOM_ORG_ID,
+	...coreWinstonConfig,
+});
+
 // Create and export the Winston logger instance
 export const WinstonLogger = winston.createLogger({
 	defaultMeta: {
 		source_application: `PLUTO_${env.NODE_ENV.toUpperCase()}`,
 		environment: env.NODE_ENV,
 	},
-	transports,
+	transports: [axiomTransport, ...transports],
 	exitOnError: false,
 });
