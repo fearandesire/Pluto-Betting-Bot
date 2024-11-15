@@ -2,15 +2,8 @@ import winston, { format } from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 import env from '../../lib/startup/env.js';
 import { WinstonTransport as AxiomTransport } from '@axiomhq/winston';
-import { json } from 'node:stream/consumers';
 const isProduction = env.NODE_ENV === 'production';
 const { AXIOM_DATASET, AXIOM_API_TOKEN, AXIOM_ORG_ID } = env;
-
-console.log({
-	AXIOM_DATASET,
-	AXIOM_API_TOKEN,
-	AXIOM_ORG_ID,
-});
 
 // Core Winston Config
 const coreWinstonConfig = {
