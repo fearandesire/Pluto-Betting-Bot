@@ -53,7 +53,8 @@ export default class BetslipDataManager {
 				`**Team:** ${chosenTeamStr}\n` +
 				`**Amount:** \`$${amount}\`\n` +
 				`**Profit:** \`$${profit}\`\n` +
-				`**Payout:** \`$${payout}\``;
+				`**Payout:** \`$${payout}\`\n` +
+				`**Date Placed:** ${bet.dateofbet}`;
 
 			embed.addFields({
 				name: `**ID:** \`${bet.betid}\``,
