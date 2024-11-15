@@ -268,7 +268,9 @@ export class UserCommand extends Subcommand {
 		await interaction.editReply({
 			content: 'Generating prop embeds, please wait...',
 		});
-		await new PropsApiWrapper().generateAllPropEmbeds();
+		await new PropsApiWrapper().generateAllPropEmbeds({
+			guildId: interaction.guildId,
+		});
 
 		await interaction.editReply({
 			content: 'Prop Embeds populated successfully',

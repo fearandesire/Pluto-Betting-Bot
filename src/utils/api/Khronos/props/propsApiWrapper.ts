@@ -4,6 +4,7 @@ import {
 	type FindOnePropRequest,
 	type FindPropsByDescriptionRequest,
 	type GetPropsForEventRequest,
+	type ManualSendPropsRequest,
 	type Prop,
 	type SetPropResultRequest,
 } from '@kh-openapi';
@@ -49,8 +50,8 @@ export default class PropsApiWrapper {
 	/**
 	 * Generate all prop embeds to be sent to the configured Guild's Props Channel / Predictions / Accuracy Channel
 	 */
-	async generateAllPropEmbeds() {
-		await this.propsApi.manualSendProps();
+	async generateAllPropEmbeds(args: ManualSendPropsRequest) {
+		await this.propsApi.manualSendProps(args);
 	}
 
 	/**
