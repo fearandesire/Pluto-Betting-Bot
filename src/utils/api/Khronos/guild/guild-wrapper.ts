@@ -45,10 +45,10 @@ export default class GuildWrapper {
 
 	async getLogChannel(guildId: string): Promise<Channel> {
 		const guild = await this.getGuild(guildId);
-		if (!guild.discordConfig || guild?.discordConfig.length === 0) {
-			throw new Error('Guild does not have discordConfig');
+		if (!guild.config || guild?.config.length === 0) {
+			throw new Error('Guild does not have any configuration set');
 		}
-		const logChanConfig = guild.discordConfig.find(
+		const logChanConfig = guild.config.find(
 			(config) => config.setting_type === DiscordConfigEnums.LOGS_CHAN,
 		).setting_value;
 		const logChannel = await container.client.channels.cache.get(logChanConfig);

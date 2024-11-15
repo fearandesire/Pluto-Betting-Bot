@@ -116,11 +116,11 @@ export class UserCommand extends Command {
 		interaction: Command.ChatInputCommandInteraction,
 		guildId: string,
 	) {
-		const config = await this.guildWrapper.getGuild(guildId);
+		const guild = await this.guildWrapper.getGuild(guildId);
 		const definedSettings = new Map<string, string>();
 
 		// Populate defined settings from the discordConfig array
-		for (const setting of config.discordConfig) {
+		for (const setting of guild.config) {
 			definedSettings.set(setting.setting_type, setting.setting_value);
 		}
 
