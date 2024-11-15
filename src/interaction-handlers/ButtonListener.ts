@@ -58,18 +58,6 @@ export class ButtonHandler extends InteractionHandler {
 	 */
 	// @ts-ignore - Weird TS Error
 	public override async parse(interaction: ButtonInteraction) {
-		// Define valid button ID prefixes
-		const validPrefixes = ['prop_', 'matchup'];
-
-		// Check if the button's custom ID starts with any valid prefix
-		if (!startsWithAny(interaction.customId, validPrefixes)) {
-			// Clear action components for invalid button IDs
-			await interaction.update({
-				components: [],
-			});
-			return this.none();
-		}
-
 		// ? Handle prop buttons
 		if (_.startsWith(interaction.customId, 'prop_')) {
 			await interaction.deferReply({ ephemeral: true });
