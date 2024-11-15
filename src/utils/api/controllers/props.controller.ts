@@ -8,11 +8,11 @@ import {
 import {
 	GuildChannelArraySchema,
 	type ReqBodyPropsEmbedsData,
-	type ValidatedDataPropEmbeds,
 } from '../routes/props/props-route.interface.js';
 import { PropsPresentation } from '../services/props-presentation.service.js';
 import { ValidationError } from '../../../utils/errors/ValidationError.js';
 import { fromZodError } from 'zod-validation-error';
+import _ from 'lodash';
 
 export class PropsController {
 	private propsService: PropsPresentation;
@@ -88,10 +88,7 @@ export class PropsController {
 				},
 			});
 
-			// ? Ensure the incoming data matches our expected schema
 			const validatedData = this.validateReqPropEmbedBody(body);
-
-			// ? Filtering: Filter out 'h2h' and 'totals' props - NFL only gets filtered
 			const filteredProps = await this.propsService.filterPropsByMarketKeys(
 				validatedData.props,
 			);
@@ -107,23 +104,23 @@ export class PropsController {
 				message: 'Props processed and embeds created successfully',
 			};
 		} catch (error) {
-			const processedError =
-				error instanceof ValidationError
-					? error
-					: new Error('Failed to validate incoming props');
+			const errorMessage =
+				_.isError(error) || error instanceof ValidationError
+					? error.message
+					: 'Validation failed due to an unknown error';
 
 			WinstonLogger.error({
-				message: processedError.message,
+				message: errorMessage,
 				metadata: {
 					source: this.processPropsForPredictionEmbeds.name,
 					details: error instanceof ValidationError ? error.details : undefined,
-					stack: processedError.stack,
+					stack: _.isError(error) ? error.stack : undefined,
 				},
 			});
 
 			return {
 				success: false,
-				message: processedError.message,
+				message: errorMessage,
 				details: error instanceof ValidationError ? error.details : undefined,
 			};
 		}
