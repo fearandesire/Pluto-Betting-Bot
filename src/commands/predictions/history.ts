@@ -4,7 +4,6 @@ import { ButtonBuilder, EmbedBuilder, type Message } from 'discord.js';
 import PredictionApiWrapper from '../../utils/api/Khronos/prediction/predictionApiWrapper.js';
 import Pagination from '../../utils/embeds/pagination.js';
 import embedColors from '../../lib/colorsConfig.js';
-import { plutoGuildId } from '../../lib/configs/constants.js';
 import {
 	GetAllPredictionsFilteredStatusEnum,
 	type AllUserPredictionsDto,

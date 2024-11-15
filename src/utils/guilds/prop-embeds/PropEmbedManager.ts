@@ -89,13 +89,13 @@ export default class PropEmbedManager {
 					value: matchString,
 					inline: true,
 				},
-				{ name: 'Date', value: humanReadableDate, inline: true },
-				{ name: 'Player', value: `**${prop.description}**`, inline: true },
 				{
 					name: 'Over/Under',
 					value: `**\`${point}\`** ${standardizedMarketDescription}`,
 					inline: true,
 				},
+				{ name: 'Player', value: `**${prop.description}**`, inline: true },
+				{ name: 'Date', value: humanReadableDate, inline: true },
 			];
 			buttons = [
 				new ButtonBuilder()
@@ -145,19 +145,19 @@ export default class PropEmbedManager {
 			}
 		} else if (marketKey === 'totals' && !prop.description) {
 			// Total score of the match (over/under)
-			desc = `Will the total score of the match between **${home.transformed}** and **${away.transformed}** be over/under **\`${prop.point}\`**?`;
+			desc = `Total Score: **${home.transformed}** *vs.* **${away.transformed}** - ${prop.point} points (Over/Under)?`;
 			fields = [
 				{
 					name: 'Match',
 					value: matchString,
 					inline: true,
 				},
-				{ name: 'Date', value: humanReadableDate, inline: true },
 				{
 					name: 'Total Score',
 					value: ovrUnderStr(prop.point),
 					inline: true,
 				},
+				{ name: 'Date', value: humanReadableDate, inline: true },
 			];
 			buttons = [
 				new ButtonBuilder()

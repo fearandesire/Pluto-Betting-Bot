@@ -8,19 +8,11 @@ const PropsRouter = new Router();
 const propsController = new PropsController();
 
 PropsRouter.post('/props/daily', async (ctx) => {
-	const result = await propsController.processDaily(
+	ctx.status = 200;
+	ctx.body = { message: 'Received req to process props for embed generation' };
+	await propsController.processPropsForPredictionEmbeds(
 		ctx.request.body as ReqBodyPropsEmbedsData,
 	);
-	if (result.success) {
-		ctx.status = 200;
-		ctx.body = { message: result.message };
-	} else {
-		ctx.status = 400;
-		ctx.body = {
-			message: result.message,
-			details: result.details,
-		};
-	}
 });
 
 PropsRouter.post('/props/stats/post-start', async (ctx) => {

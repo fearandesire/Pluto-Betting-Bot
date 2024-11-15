@@ -75,22 +75,23 @@ export class PropsController {
 		}
 	}
 
-	async processDaily(
+	async processPropsForPredictionEmbeds(
 		body: ReqBodyPropsEmbedsData,
 	): Promise<{ success: boolean; message: string; details?: unknown }> {
 		try {
 			WinstonLogger.info({
 				message: 'Processing props embeds generation request',
 				metadata: {
-					source: this.processDaily.name,
+					source: this.processPropsForPredictionEmbeds.name,
 					bodyLength: body.props?.length || 0,
 					guildsLength: body.guilds?.length || 0,
 				},
 			});
 
+			// ? Ensure the incoming data matches our expected schema
 			const validatedData = this.validateReqPropEmbedBody(body);
 
-			// Filter out 'h2h' and 'totals' props
+			// ? Filtering: Filter out 'h2h' and 'totals' props - NFL only gets filtered
 			const filteredProps = await this.propsService.filterPropsByMarketKeys(
 				validatedData.props,
 			);
@@ -114,7 +115,7 @@ export class PropsController {
 			WinstonLogger.error({
 				message: processedError.message,
 				metadata: {
-					source: this.processDaily.name,
+					source: this.processPropsForPredictionEmbeds.name,
 					details: error instanceof ValidationError ? error.details : undefined,
 					stack: processedError.stack,
 				},

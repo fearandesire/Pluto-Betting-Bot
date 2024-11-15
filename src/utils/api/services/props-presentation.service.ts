@@ -81,9 +81,14 @@ export class PropsPresentation {
 		props: PropZod[],
 		marketKeysToFilter: string[] = this.defaultFilteredMarketKeys,
 	): Promise<PropZod[]> {
-		const filteredProps = props.filter(
-			(prop) => !marketKeysToFilter.includes(prop.market_key),
-		);
+		const filteredProps = props.filter((prop) => {
+			// Only filter out market keys for NFL props
+			if (prop.sport_title?.toLowerCase() === 'nfl') {
+				return !marketKeysToFilter.includes(prop.market_key);
+			}
+			// Keep all props from other sports
+			return true;
+		});
 
 		if (filteredProps.length === 0) {
 			return [];
