@@ -193,8 +193,11 @@ export default class PropEmbedManager {
 		// For each sport that has props
 		for (const sport in propsBySport) {
 			// Get the guilds for this sport
-			const sportGuilds = guildsBySport[sport];
-			const sportProps = propsBySport[sport];
+			const sportGuilds = guildsBySport[sport] || [];
+			const sportProps = propsBySport[sport] || [];
+
+			// ? Skip empty entries
+			if (!sportProps.length || !sportGuilds.length) continue;
 
 			// For each guild that follows this sport
 			for (const { guild_id, channel_id } of sportGuilds) {
