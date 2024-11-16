@@ -17,6 +17,7 @@ import TeamInfo from '../../common/TeamInfo.js';
 import StringUtils from '../../common/string-utils.js';
 import GuildUtils from '../GuildUtils.js';
 import _ from 'lodash';
+import { WinstonLogger } from '../../logging/WinstonLogger.js';
 
 interface AggregateDetailsParams {
 	home: {
@@ -144,8 +145,7 @@ export default class PropEmbedManager {
 				buttons[1].setEmoji(away.transformed.id);
 			}
 		} else if (marketKey === 'totals' && !prop.description) {
-			// Total score of the match (over/under)
-			desc = `Total Score: **${home.transformed}** *vs.* **${away.transformed}** - ${prop.point} points (Over/Under)?`;
+			desc = `Will the total score between **${home.transformed}** *vs.* **${away.transformed}** be over/under **\`${prop.point}\`**?`;
 			fields = [
 				{
 					name: 'Match',
@@ -185,36 +185,92 @@ export default class PropEmbedManager {
 		props: PropZod[],
 		guildChannels: { guild_id: string; channel_id: string; sport: string }[],
 	) {
+		let totalEmbedsCreated = 0;
+
+		await WinstonLogger.info('Starting prop embed creation process', {
+			totalProps: props.length,
+			totalGuildChannels: guildChannels.length,
+			source: this.createEmbeds.name,
+		});
+
 		// Group props by sport
 		const propsBySport = _.groupBy(props, 'sport_title');
-		// Group guild channels by sport
 		const guildsBySport = _.groupBy(guildChannels, 'sport');
+
+		await WinstonLogger.info('Iterating through props & guilds by sport', {
+			propsBySportLength: Object.keys(propsBySport).length,
+			guildsBySportLength: Object.keys(guildsBySport).length,
+			propsBySport,
+			guildsBySport,
+			source: this.createEmbeds.name,
+		});
 
 		// For each sport that has props
 		for (const sport in propsBySport) {
-			// Get the guilds for this sport
 			const sportGuilds = guildsBySport[sport] || [];
 			const sportProps = propsBySport[sport] || [];
 
+			await WinstonLogger.info(`Processing props for sport: ${sport}`, {
+				sport,
+				propsCount: sportProps.length,
+				guildsCount: sportGuilds.length,
+				source: this.createEmbeds.name,
+			});
+
 			// ? Skip empty entries
-			if (!sportProps.length || !sportGuilds.length) continue;
+			if (!sportProps.length || !sportGuilds.length) {
+				await WinstonLogger.info('Skipping sport due to no props or guilds', {
+					sport,
+					sportPropsLength: sportProps.length,
+					sportGuildsLength: sportGuilds.length,
+					source: this.createEmbeds.name,
+				});
+				continue;
+			}
 
 			// For each guild that follows this sport
 			for (const { guild_id, channel_id } of sportGuilds) {
+				await WinstonLogger.info('Processing guild', {
+					guild_id,
+					channel_id,
+					sport,
+					source: this.createEmbeds.name,
+				});
+
 				const guildUtils = new GuildUtils();
 				const guild = await guildUtils.getGuild(guild_id);
 
 				if (!guild) {
-					console.error(`[PropEmbedManager] Guild not found: ${guild_id}`);
+					await WinstonLogger.info('Skipping guild due to not found', {
+						guild_id,
+						source: this.createEmbeds.name,
+					});
 					continue;
 				}
 
 				const channel = await guild.channels.fetch(channel_id);
-				if (!channel?.isTextBased()) continue;
+				if (!channel?.isTextBased()) {
+					await WinstonLogger.info(
+						'Skipping channel due to not being text based',
+						{
+							channel_id,
+							source: this.createEmbeds.name,
+						},
+					);
+					continue;
+				}
 
 				// Create all embeds for this sport's props
 				const embeds = await Promise.all(
 					sportProps.map(async (prop) => {
+						await WinstonLogger.info('Creating embed for prop', {
+							prop_id: prop.id,
+							home_team: prop.home_team,
+							away_team: prop.away_team,
+							market_key: prop.market_key,
+							source: this.createEmbeds.name,
+						});
+
 						const HTEAM_TRANSFORMED = await this.transformTeamName(
 							prop.home_team,
 						);
@@ -260,18 +316,57 @@ export default class PropEmbedManager {
 					}),
 				);
 
+				await WinstonLogger.info('Created embeds batch for guild', {
+					guild_id,
+					channel_id,
+					embedsCount: embeds.length,
+					source: this.createEmbeds.name,
+				});
+
 				// Send all embeds to the channel
 				for (const { embed, row } of embeds) {
-					await channel.send({ embeds: [embed], components: [row] });
+					try {
+						await channel.send({ embeds: [embed], components: [row] });
+						totalEmbedsCreated++;
+
+						await WinstonLogger.info('Successfully sent embed to channel', {
+							guild_id,
+							channel_id,
+							currentTotal: totalEmbedsCreated,
+							source: this.createEmbeds.name,
+						});
+					} catch (error) {
+						await WinstonLogger.error('Failed to send embed to channel', {
+							guild_id,
+							channel_id,
+							error: error instanceof Error ? error.message : 'Unknown error',
+							source: this.createEmbeds.name,
+						});
+					}
 				}
 			}
 		}
+
+		await WinstonLogger.info('Completed prop embed creation process', {
+			totalEmbedsCreated,
+			totalProps: props.length,
+			totalGuildChannels: guildChannels.length,
+			source: this.createEmbeds.name,
+		});
 	}
 
 	async createSingleEmbed(
 		prop: PropZod,
 		{ home, away }: AggregateDetailsParams,
 	) {
+		await WinstonLogger.info('Creating single embed', {
+			prop_id: prop.id,
+			home_team: prop.home_team,
+			away_team: prop.away_team,
+			market_key: prop.market_key,
+			source: this.createSingleEmbed.name,
+		});
+
 		const { title, desc, fields, buttons } = this.aggregateDetails(prop, {
 			home,
 			away,

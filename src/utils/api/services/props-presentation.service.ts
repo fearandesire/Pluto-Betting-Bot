@@ -1,6 +1,7 @@
 import { SapDiscClient } from '../../../index.js';
 import { DateManager } from '../../common/DateManager.js';
 import PropEmbedManager from '../../guilds/prop-embeds/PropEmbedManager.js';
+import { WinstonLogger } from '../../logging/WinstonLogger.js';
 import {
 	type PropOptions,
 	PropOptionsSchema,
@@ -39,8 +40,16 @@ export class PropsPresentation {
 
 		const dateManager = new DateManager<PropZod>(daysAhead);
 		const propsWithinDateRange = dateManager.filterByDateRange(props);
+		await WinstonLogger.info('Props filtered by date range', {
+			propsWithinDateRangeLength: propsWithinDateRange?.length || 0,
+			source: this.processAndCreateEmbeds.name,
+		});
 
 		const uniqueProps = this.selectRandomPropPerEvent(propsWithinDateRange);
+		await WinstonLogger.info('Unique props selected', {
+			uniquePropsLength: uniqueProps?.length || 0,
+			source: this.processAndCreateEmbeds.name,
+		});
 
 		const embedManager = new PropEmbedManager(SapDiscClient);
 		await embedManager.createEmbeds(uniqueProps, guildChannels);
