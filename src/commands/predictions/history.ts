@@ -14,6 +14,11 @@ import PropsApiWrapper from '../../utils/api/Khronos/props/propsApiWrapper.js';
 import { MarketKeyAbbreviations } from '../../utils/api/common/interfaces/market-abbreviations.js';
 import _ from 'lodash';
 import { DateManager } from '../../utils/common/DateManager.js';
+import {
+	PaginatedFieldMessageEmbed,
+	PaginatedMessage,
+	PaginatedMessageEmbedFields,
+} from '@sapphire/discord.js-utilities';
 
 @ApplyOptions<Command.Options>({
 	description: 'View your prediction history',
@@ -83,31 +88,26 @@ export class UserCommand extends Command {
 					content: 'No predictions found for the specified criteria.',
 				});
 			}
+			const descStr = status ? `Filtered by: \`${status}\`` : null;
+			const templateEmbed = new EmbedBuilder()
+				.setTitle(`Prediction History | ${user.username}`)
+				.setDescription(descStr)
+				.setColor(embedColors.PlutoBlue);
 
-			const embed = await this.createHistoryEmbed(
-				usersPredictions,
-				user,
-				1,
-				status,
-			);
-			const pagination = new Pagination();
-			const components = pagination.createPaginationButtons(
-				1,
-				Math.ceil(usersPredictions.length / 10),
+			const formattedPredictions = await Promise.all(
+				usersPredictions.map((prediction) =>
+					this.createPredictionField(prediction),
+				),
 			);
 
-			const reply = await interaction.editReply({
-				embeds: [embed],
-				components,
-			});
+			const paginatedMsg = new PaginatedMessageEmbedFields({
+				template: { embeds: [templateEmbed] },
+			})
+				.setItems(formattedPredictions)
+				.setItemsPerPage(10)
+				.make();
 
-			this.handlePagination(
-				interaction,
-				reply as Message,
-				usersPredictions,
-				user,
-				status,
-			);
+			await paginatedMsg.run(interaction);
 		} catch (error) {
 			this.container.logger.error(error);
 			return interaction.editReply({
