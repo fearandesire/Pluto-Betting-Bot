@@ -53,7 +53,6 @@ commands/slash/devEval2.js
 
 #vscode settings
 .vscode/
-docker-compose.yml
 docker-compose.debug.yml
 lib/matchupimages
 daily.drawio
