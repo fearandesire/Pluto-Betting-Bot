@@ -1,0 +1,5860 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/matches/info/{matchid}": {
+      "get": {
+        "operationId": "matchInfo",
+        "summary": "Get match information via ID",
+        "parameters": [
+          {
+            "name": "matchid",
+            "required": true,
+            "in": "path",
+            "description": "Match ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetMatchInfoDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The requested match has ended.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/KHApiErrStandard"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 400
+                        },
+                        "message": {
+                          "example": "The requested match has ended."
+                        },
+                        "exception": {
+                          "example": "MatchHasEnded"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Matches"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/matches/daily": {
+      "get": {
+        "operationId": "sendDailyMatches",
+        "summary": "Compile matches for the current day and send to the client (Pluto) to be distributed to all subscribers for this data.",
+        "description": "This method is executed on a daily schedule via Cron, everyday at 6 AM",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Matches were successfully sent to the Discord client."
+          },
+          "400": {
+            "description": "Failed to send daily matches."
+          },
+          "404": {
+            "description": "No matches are available.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/KHApiErrStandard"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 404
+                        },
+                        "message": {
+                          "example": "No matches are available."
+                        },
+                        "exception": {
+                          "example": "NoMatchesAvailable"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Matches"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/matches/all": {
+      "get": {
+        "operationId": "getAllMatches",
+        "summary": "Get all stored matches",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully fetched all matches.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetAllMatchesDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested match could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/KHApiErrStandard"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 404
+                        },
+                        "message": {
+                          "example": "The requested match could not be found."
+                        },
+                        "exception": {
+                          "example": "MatchNotFound"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Matches"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/matches/by/sport": {
+      "get": {
+        "operationId": "matchesForSport",
+        "summary": "Get all stored matches for a specific sport",
+        "parameters": [
+          {
+            "name": "sport",
+            "required": true,
+            "in": "header",
+            "description": "Sport to fetch stored matches for (e.g., nba, nfl, nba preseason)",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Matches for the specified sport.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchesForSportRespDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid sport provided in the header."
+          },
+          "404": {
+            "description": "The requested match could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/KHApiErrStandard"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 404
+                        },
+                        "message": {
+                          "example": "The requested match could not be found."
+                        },
+                        "exception": {
+                          "example": "MatchNotFound"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Matches"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/matches/aggregated": {
+      "get": {
+        "operationId": "MatchesController_getAggregatedMatches",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Matches"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/espn/event": {
+      "get": {
+        "operationId": "EspnService_getEvent",
+        "parameters": [
+          {
+            "name": "homeTeam",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "awayTeam",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/espn/scores": {
+      "get": {
+        "operationId": "EspnService_getScores",
+        "parameters": [
+          {
+            "name": "team",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/espn/events/all": {
+      "get": {
+        "operationId": "EspnService_listAllGames",
+        "summary": "",
+        "description": "Endpoint to list all games from ESPN data.\nFetches data first and then lists all games.",
+        "parameters": [
+          {
+            "name": "withScores",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/espn/matches/events": {
+      "get": {
+        "operationId": "EspnService_matchEventsWithMatches",
+        "summary": "",
+        "description": "Retrieve all events from the ESPN API that are also available in Khronos matches DB",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/channels/all": {
+      "get": {
+        "operationId": "findAllChannels",
+        "summary": "Find all channels",
+        "parameters": [
+          {
+            "name": "sport",
+            "required": false,
+            "in": "query",
+            "description": "Filter channels by sport",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AllChannelsDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "NoChannelsFoundException": {
+                    "description": "No channels are stored in the database for the specified sport. ",
+                    "value": {
+                      "statusCode": 404,
+                      "message": "No channels were located for this request",
+                      "error": "Not Found"
+                    }
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "description": "No channels are stored in the database for the specified sport. ",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number",
+                      "example": 404
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "No channels were located for this request"
+                    },
+                    "error": {
+                      "type": "string",
+                      "example": "Not Found"
+                    }
+                  },
+                  "required": [
+                    "statusCode",
+                    "message"
+                  ]
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "Channels"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "removeAllChannels",
+        "summary": "Remove all channels",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoveAllChannelsDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Channels"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/channels/{id}": {
+      "get": {
+        "operationId": "GameChannelController_findById",
+        "summary": "Find a channel by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Channel ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Channel found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoredChannelDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Channel not found."
+          }
+        },
+        "tags": [
+          "Channels"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "deleteChannel",
+        "summary": "Delete a channel by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Channel ID to delete",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Channel deleted successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoveAllChannelsDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Channels"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "updateChannel",
+        "summary": "Update a channel by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Channel ID to update",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateChannelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Channel updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateChannelDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Channels"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/channels/push-scheduled": {
+      "get": {
+        "operationId": "GameChannelController_pushScheduled",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Channels"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/guilds": {
+      "get": {
+        "operationId": "getAllGuilds",
+        "summary": "Get all guilds",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Returns all stored guilds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Guild"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested guilds could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/KHApiErrStandard"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 404
+                        },
+                        "message": {
+                          "example": "The requested guilds could not be found."
+                        },
+                        "exception": {
+                          "example": "GuildsNotFound"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "guilds"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "addGuild",
+        "summary": "Add a new guild",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGuildDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully added guild.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Guild"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The requested guild already exists.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/KHApiErrStandard"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 409
+                        },
+                        "message": {
+                          "example": "The requested guild already exists."
+                        },
+                        "exception": {
+                          "example": "GuildAlreadyExists"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "guilds"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/guilds/sport/{sport}": {
+      "get": {
+        "operationId": "getGuildsBySport",
+        "summary": "Get guilds by sport",
+        "parameters": [
+          {
+            "name": "sport",
+            "required": true,
+            "in": "path",
+            "description": "Sport to filter guilds by",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns guilds filtered by sport.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Guild"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested guilds could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/KHApiErrStandard"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 404
+                        },
+                        "message": {
+                          "example": "The requested guilds could not be found."
+                        },
+                        "exception": {
+                          "example": "GuildsNotFound"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "guilds"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/guilds/id/{id}": {
+      "get": {
+        "operationId": "getGuildById",
+        "summary": "Get guild by id",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Guild id to filter guild by",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns guild filtered by id.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Guild"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested guild could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/KHApiErrStandard"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 404
+                        },
+                        "message": {
+                          "example": "The requested guild could not be found."
+                        },
+                        "exception": {
+                          "example": "GuildNotFound"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "guilds"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/guilds/sport/{sport}/config/{configType}": {
+      "get": {
+        "operationId": "getGuildsBySportAndConfigType",
+        "summary": "Get guilds by sport and config type",
+        "parameters": [
+          {
+            "name": "sport",
+            "required": true,
+            "in": "path",
+            "description": "Sport to filter guilds by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "configType",
+            "required": true,
+            "in": "path",
+            "description": "Config type to filter guilds by",
+            "schema": {
+              "enum": [
+                "GAMES_CATEGORY",
+                "BETTING_CHAN",
+                "DAILY_SCHEDULE_CHAN",
+                "PREDICTIONS_CHAN",
+                "LOGS_CHAN",
+                "LOGS_ENABLED"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns guilds filtered by sport and config type.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Guild"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested guilds could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/KHApiErrStandard"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 404
+                        },
+                        "message": {
+                          "example": "The requested guilds could not be found."
+                        },
+                        "exception": {
+                          "example": "GuildsNotFound"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "guilds"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/discord/configs/set": {
+      "post": {
+        "operationId": "setGuildConfig",
+        "summary": "Add or Update a Discord configuration",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateConfigDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully stored the config."
+          }
+        },
+        "tags": [
+          "Discord Config"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/discord/configs/games/schedule/all": {
+      "get": {
+        "operationId": "getGameSchedule",
+        "summary": "Get game schedules",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Game schedules retrieved successfully."
+          }
+        },
+        "tags": [
+          "Discord Config"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/discord/configs/categories/sports/all": {
+      "get": {
+        "operationId": "DiscordConfigController_getGameCategories",
+        "summary": "Get all game categories",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Game categories retrieved successfully."
+          }
+        },
+        "tags": [
+          "Discord Config"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/discord/configs/by-guild": {
+      "get": {
+        "operationId": "allCategoriesByGuild",
+        "summary": "Get all categories grouped by guild",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Categories grouped by guild retrieved successfully."
+          }
+        },
+        "tags": [
+          "Discord Config"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/discord/configs/type/{config}": {
+      "get": {
+        "operationId": "configByType",
+        "summary": "Get all values that match a configuration by type",
+        "parameters": [
+          {
+            "name": "config",
+            "required": true,
+            "in": "path",
+            "description": "Config type",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Configuration by type retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoredConfigDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Discord Config"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/discord/configs/all/betting-channels": {
+      "get": {
+        "operationId": "allBettingChannels",
+        "summary": "Get all betting channels",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "All betting channels retrieved successfully."
+          }
+        },
+        "tags": [
+          "Discord Config"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/score/sync": {
+      "post": {
+        "operationId": "syncScore",
+        "summary": "Sync matchups with scores",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Matchups synced successfully"
+          },
+          "201": {
+            "description": ""
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "tags": [
+          "score"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/score/update": {
+      "post": {
+        "operationId": "updateScore",
+        "summary": "Update game status and scores",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Game status updated successfully"
+          },
+          "201": {
+            "description": ""
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "tags": [
+          "score"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/betslips/init": {
+      "post": {
+        "operationId": "initBetslip",
+        "summary": "Initialize a new betslip.",
+        "parameters": [
+          {
+            "name": "sport",
+            "required": true,
+            "in": "header",
+            "description": "The target sport for the betslip.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InitBetslipDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InitBetslipRespDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Possible error responses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KHApiErrStandard"
+                },
+                "examples": {
+                  "example1": {
+                    "summary": "INSUFFICIENT_BALANCE",
+                    "value": {
+                      "statusCode": 400,
+                      "message": "Insufficient balance for this bet",
+                      "exception": "INSUFFICIENT_BALANCE"
+                    }
+                  },
+                  "example2": {
+                    "summary": "GAME_STARTED",
+                    "value": {
+                      "statusCode": 400,
+                      "message": "Game has already started",
+                      "exception": "GAME_STARTED"
+                    }
+                  },
+                  "example3": {
+                    "summary": "NO_MATCH_ID",
+                    "value": {
+                      "statusCode": 400,
+                      "message": "No match ID was provided",
+                      "exception": "NO_MATCH_ID"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Possible error responses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KHApiErrStandard"
+                },
+                "examples": {
+                  "example1": {
+                    "summary": "TEAM_NOT_FOUND",
+                    "value": {
+                      "statusCode": 404,
+                      "message": "Team not found",
+                      "exception": "TEAM_NOT_FOUND"
+                    }
+                  },
+                  "example2": {
+                    "summary": "NO_GAMES_FOR_TEAM",
+                    "value": {
+                      "statusCode": 404,
+                      "message": "No games found for the specified team",
+                      "exception": "NO_GAMES_FOR_TEAM"
+                    }
+                  },
+                  "example3": {
+                    "summary": "AccountNotFound",
+                    "value": {
+                      "statusCode": 404,
+                      "message": "The requested account could not be found.\nTry using `/register` first to instantly create an account.",
+                      "exception": "AccountNotFound"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Possible error responses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KHApiErrStandard"
+                },
+                "examples": {
+                  "example1": {
+                    "summary": "HAS_PENDING_BET",
+                    "value": {
+                      "statusCode": 409,
+                      "message": "You have a pending bet you must resolve before placing a new bet",
+                      "exception": "HAS_PENDING_BET"
+                    }
+                  },
+                  "example2": {
+                    "summary": "DUPLICATE_BETSLIP",
+                    "value": {
+                      "statusCode": 409,
+                      "message": "A betslip for this game already exists",
+                      "exception": "DUPLICATE_BETSLIP"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Betslips"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/betslips/place": {
+      "post": {
+        "operationId": "placeBetslip",
+        "summary": "Creates a new betslip. This is called when the user has selected a team to bet on.",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlaceBetDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlacedBetslipDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Possible error responses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KHApiErrStandard"
+                },
+                "examples": {
+                  "example1": {
+                    "summary": "GAME_STARTED",
+                    "value": {
+                      "statusCode": 400,
+                      "message": "Game has already started",
+                      "exception": "GAME_STARTED"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Possible error responses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KHApiErrStandard"
+                },
+                "examples": {
+                  "example1": {
+                    "summary": "AccountNotFound",
+                    "value": {
+                      "statusCode": 404,
+                      "message": "The requested account could not be found.\nTry using `/register` first to instantly create an account.",
+                      "exception": "AccountNotFound"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Possible error responses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KHApiErrStandard"
+                },
+                "examples": {
+                  "example1": {
+                    "summary": "DUPLICATE_BETSLIP",
+                    "value": {
+                      "statusCode": 409,
+                      "message": "A betslip for this game already exists",
+                      "exception": "DUPLICATE_BETSLIP"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Betslips"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/betslips/modify/{betId}": {
+      "patch": {
+        "operationId": "changeBetAmount",
+        "summary": "Change the amount of a bet.",
+        "parameters": [
+          {
+            "name": "betId",
+            "required": true,
+            "in": "path",
+            "description": "The ID of the bet to modify.",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeBetAmountDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IChangeBetAmountResp"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Possible error responses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KHApiErrStandard"
+                },
+                "examples": {
+                  "example1": {
+                    "summary": "INSUFFICIENT_BALANCE",
+                    "value": {
+                      "statusCode": 400,
+                      "message": "Insufficient balance for this bet",
+                      "exception": "INSUFFICIENT_BALANCE"
+                    }
+                  },
+                  "example2": {
+                    "summary": "GAME_STARTED",
+                    "value": {
+                      "statusCode": 400,
+                      "message": "Game has already started",
+                      "exception": "GAME_STARTED"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Possible error responses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KHApiErrStandard"
+                },
+                "examples": {
+                  "example1": {
+                    "summary": "BET_NOT_FOUND",
+                    "value": {
+                      "statusCode": 404,
+                      "message": "The specified bet was not found",
+                      "exception": "BET_NOT_FOUND"
+                    }
+                  },
+                  "example2": {
+                    "summary": "NoOddsForTeam",
+                    "value": {
+                      "statusCode": 404,
+                      "message": "No odds were found for the specified team",
+                      "exception": "NoOddsForTeam"
+                    }
+                  },
+                  "example3": {
+                    "summary": "NoOddsForTeam",
+                    "value": {
+                      "statusCode": 404,
+                      "message": "No odds were found for the specified team",
+                      "exception": "NoOddsForTeam"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Betslips"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/betslips/cancel/{betId}": {
+      "delete": {
+        "operationId": "cancelBetslip",
+        "summary": "Cancel a betslip.",
+        "parameters": [
+          {
+            "name": "betId",
+            "required": true,
+            "in": "path",
+            "description": "The ID of the betslip to cancel.",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Indicates if the Patreon override is enabled, which means the user is a Patreon member and in some cases, meets the required Patreon tier.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatreonDataDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 200,
+                    "message": "Successfully deleted betslip."
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Possible error responses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KHApiErrStandard"
+                },
+                "examples": {
+                  "example1": {
+                    "summary": "MatchHasEnded",
+                    "value": {
+                      "statusCode": 400,
+                      "message": "The requested match has ended.",
+                      "exception": "MatchHasEnded"
+                    }
+                  },
+                  "example2": {
+                    "summary": "GAME_STARTED",
+                    "value": {
+                      "statusCode": 400,
+                      "message": "Game has already started",
+                      "exception": "GAME_STARTED"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Possible error responses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KHApiErrStandard"
+                },
+                "examples": {
+                  "example1": {
+                    "summary": "CANCEL_BET_NOT_FOUND",
+                    "value": {
+                      "statusCode": 404,
+                      "message": "The bet to cancel was not found",
+                      "exception": "CANCEL_BET_NOT_FOUND"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Betslips"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/betslips/active/{userid}": {
+      "get": {
+        "operationId": "getActiveBetslips",
+        "summary": "Get all active betslips for a user.",
+        "parameters": [
+          {
+            "name": "userid",
+            "required": true,
+            "in": "path",
+            "description": "The ID of the user.",
+            "schema": {
+              "example": "208016830491525120",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlacedBetslip"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Possible error responses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KHApiErrStandard"
+                },
+                "examples": {
+                  "example1": {
+                    "summary": "NO_ACTIVE_BETS",
+                    "value": {
+                      "statusCode": 404,
+                      "message": "No active bets were found",
+                      "exception": "NO_ACTIVE_BETS"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Betslips"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/betslips/clearpending/{userid}": {
+      "post": {
+        "operationId": "clearPendingBets",
+        "summary": "Clear a pending betslip for a user. Called when a user has cancelled a potential bet",
+        "parameters": [
+          {
+            "name": "userid",
+            "required": true,
+            "in": "path",
+            "description": "The ID of the user.",
+            "schema": {
+              "example": "208016830491525120",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 200,
+                    "message": "Successfully cleared pending betslip."
+                  }
+                }
+              }
+            }
+          },
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Betslips"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/betslips/closeoutstanding/{matchid}": {
+      "post": {
+        "operationId": "BetslipController_manualClose",
+        "parameters": [
+          {
+            "name": "matchid",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Betslips"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/betslips/doubledown/{userId}/{betId}": {
+      "patch": {
+        "operationId": "doubleDownBet",
+        "summary": "Double the amount of an existing bet.",
+        "description": "Doubles the bet amount for an existing betslip, if the user's balance permits. A new profit and payout will be calculated as well.",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "description": "The ID of the user.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "betId",
+            "required": true,
+            "in": "path",
+            "description": "The ID of the bet to double.",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bet doubled successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DoubleDownDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Possible error responses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KHApiErrStandard"
+                },
+                "examples": {
+                  "example1": {
+                    "summary": "INSUFFICIENT_BALANCE",
+                    "value": {
+                      "statusCode": 400,
+                      "message": "Insufficient balance for this bet",
+                      "exception": "INSUFFICIENT_BALANCE"
+                    }
+                  },
+                  "example2": {
+                    "summary": "MatchHasEnded",
+                    "value": {
+                      "statusCode": 400,
+                      "message": "The requested match has ended.",
+                      "exception": "MatchHasEnded"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Possible error responses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KHApiErrStandard"
+                },
+                "examples": {
+                  "example1": {
+                    "summary": "BET_NOT_FOUND",
+                    "value": {
+                      "statusCode": 404,
+                      "message": "The specified bet was not found",
+                      "exception": "BET_NOT_FOUND"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Betslips"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/accounts/create/{userid}": {
+      "post": {
+        "operationId": "createAccount",
+        "summary": "Create Account",
+        "parameters": [
+          {
+            "name": "userid",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "208016830491525120",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Possible error responses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KHApiErrStandard"
+                },
+                "examples": {
+                  "example1": {
+                    "summary": "AccountAlreadyExists",
+                    "value": {
+                      "statusCode": 409,
+                      "message": "You already have an account registered.",
+                      "exception": "AccountAlreadyExists"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Accounts"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/accounts/balance/{userid}": {
+      "get": {
+        "operationId": "getBalance",
+        "summary": "Get an account's balance",
+        "parameters": [
+          {
+            "name": "userid",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "208016830491525120",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetBalanceDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Possible error responses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KHApiErrStandard"
+                },
+                "examples": {
+                  "example1": {
+                    "summary": "AccountNotFound",
+                    "value": {
+                      "statusCode": 404,
+                      "message": "The requested account could not be found.\nTry using `/register` first to instantly create an account.",
+                      "exception": "AccountNotFound"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Possible error responses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KHApiErrStandard"
+                },
+                "examples": {
+                  "example1": {
+                    "summary": "ClaimCooldown",
+                    "value": {
+                      "statusCode": 409,
+                      "message": "You're still on cooldown from your last claim!",
+                      "exception": "ClaimCooldown"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Accounts"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/accounts/profile/{userid}": {
+      "get": {
+        "operationId": "userProfile",
+        "summary": "Get a user's profile",
+        "parameters": [
+          {
+            "name": "userid",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "208016830491525120",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetProfileDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested account could not be found.\nTry using `/register` first to instantly create an account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/KHApiErrStandard"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 404
+                        },
+                        "message": {
+                          "example": "The requested account could not be found.\nTry using `/register` first to instantly create an account."
+                        },
+                        "exception": {
+                          "example": "AccountNotFound"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Accounts"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/accounts/dailyclaim/claim/{userid}": {
+      "post": {
+        "operationId": "dailyClaim",
+        "summary": "Process a user's daily claim request. If the user is not on cooldown, they will receive the allocated, pre-defined amount for a daily claim.",
+        "parameters": [
+          {
+            "name": "userid",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "208016830491525120",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Indicates if the Patreon override is enabled, which means the user is a Patreon member and in some cases, meets the required Patreon tier.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DailyClaimBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "statusCode": {
+                      "description": "The HTTP status code",
+                      "type": "number",
+                      "example": 201
+                    },
+                    "balance": {
+                      "description": "The updated balance",
+                      "type": "number"
+                    },
+                    "userid": {
+                      "description": "The user's ID",
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Accounts"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/accounts/all": {
+      "get": {
+        "operationId": "getAll",
+        "summary": "Retrieve all stored accounts & their linked data",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Account"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Accounts"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/accounts/leaderboard": {
+      "get": {
+        "operationId": "getLeaderboard",
+        "summary": "Get leaderboard",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GetLeaderboardDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Accounts"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/odds/game/{id}": {
+      "get": {
+        "operationId": "findById",
+        "summary": "Find odds by game ID",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Game ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Odds found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Odds"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested match could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/KHApiErrStandard"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 404
+                        },
+                        "message": {
+                          "example": "The requested match could not be found."
+                        },
+                        "exception": {
+                          "example": "MatchNotFound"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "odds"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/odds/fetch/{sport}": {
+      "post": {
+        "operationId": "fetch",
+        "summary": "Fetch and store odds for a sport",
+        "description": "The service this method utilizes is set on a daily schedule. This endpoint exists to manually trigger the process.",
+        "parameters": [
+          {
+            "name": "sport",
+            "required": true,
+            "in": "path",
+            "description": "Sport to fetch odds for",
+            "schema": {
+              "enum": [
+                "nba",
+                "nfl"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successfully processed: Odds + Channel data."
+          },
+          "401": {
+            "description": "401 Unauthenticated or unauthorized. The API key might be missing or invalid (unauthenticated), or it might be at its usage limit (unauthorized). The response body will contain more info."
+          },
+          "422": {
+            "description": "422 One or more of the query params are invalid. The response body will contain more info."
+          },
+          "429": {
+            "description": "429 Requests are being sent too frequently - the request was throttled."
+          },
+          "500": {
+            "description": "500 Internal error."
+          }
+        },
+        "tags": [
+          "odds"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/props": {
+      "post": {
+        "operationId": "createProp",
+        "summary": "Create a new prop",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePropDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The prop has been successfully created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Prop"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request."
+          }
+        },
+        "tags": [
+          "Props"
+        ]
+      },
+      "get": {
+        "operationId": "findAllProps",
+        "summary": "Get all props",
+        "parameters": [
+          {
+            "name": "withinOneWeek",
+            "required": false,
+            "in": "query",
+            "description": "If true, returns props from the last week and future. Defaults to false.",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "withActivePredictions",
+            "required": false,
+            "in": "query",
+            "description": "If true, returns only props with active predictions. Defaults to false.",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "upcoming",
+            "required": false,
+            "in": "query",
+            "description": "If true, returns only upcoming props. Defaults to false.",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "guildId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Return all props based on the specified criteria.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Prop"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Props"
+        ]
+      }
+    },
+    "/props/{id}": {
+      "get": {
+        "operationId": "findOneProp",
+        "summary": "Get a prop by id",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "withPredictions",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Return the prop.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Prop"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Prop not found."
+          }
+        },
+        "tags": [
+          "Props"
+        ]
+      },
+      "delete": {
+        "operationId": "removeProp",
+        "summary": "Delete a prop",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The prop has been successfully deleted."
+          },
+          "404": {
+            "description": "Prop not found."
+          }
+        },
+        "tags": [
+          "Props"
+        ]
+      }
+    },
+    "/props/update/{id}": {
+      "patch": {
+        "operationId": "updateProp",
+        "summary": "Update a prop",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePropDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The prop has been successfully updated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Prop"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request."
+          },
+          "404": {
+            "description": "Prop not found."
+          }
+        },
+        "tags": [
+          "Props"
+        ]
+      }
+    },
+    "/props/result": {
+      "patch": {
+        "operationId": "setPropResult",
+        "summary": "Update prop result and close predictions",
+        "parameters": [
+          {
+            "name": "override",
+            "required": false,
+            "in": "query",
+            "description": "If true, bypasses certain restrictions, such as the game the prop is from needing to be completed first. Used in development. Use with caution.",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePropResultDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Prop result updated and predictions closed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdatePropResultResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid prop state (not started, or already finished), no predictions for the prop, or invalid winner for h2h market"
+          },
+          "404": {
+            "description": "Prop with the provided ID was not found or some processing predictions were not found"
+          }
+        },
+        "tags": [
+          "Props"
+        ]
+      }
+    },
+    "/props/manual/send/{guildId}": {
+      "get": {
+        "operationId": "manualSendProps",
+        "summary": "Manually send props to Pluto",
+        "parameters": [
+          {
+            "name": "guildId",
+            "required": true,
+            "in": "path",
+            "description": "The ID of the guild to send props to",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Props sent to Pluto successfully."
+          }
+        },
+        "tags": [
+          "Props"
+        ]
+      }
+    },
+    "/props/event/{id}": {
+      "get": {
+        "operationId": "getPropsForEvent",
+        "summary": "Get props for a specific event",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Props for the specified event.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Prop"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Props"
+        ]
+      }
+    },
+    "/props/search": {
+      "get": {
+        "operationId": "findPropsByDescription",
+        "summary": "Find props by description",
+        "parameters": [
+          {
+            "name": "description",
+            "required": true,
+            "in": "query",
+            "description": "The description to search for",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns an array of props that match the given description.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Prop"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No matching props found."
+          }
+        },
+        "tags": [
+          "Props"
+        ]
+      }
+    },
+    "/props/{id}/stats": {
+      "get": {
+        "operationId": "getPropStats",
+        "summary": "Get prediction statistics for a prop",
+        "description": "Retrieves aggregated statistics about predictions made for a specific prop",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The ID of the prop to get statistics for",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns aggregated prediction statistics for the prop",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PredictionStatsDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Prop not found"
+          }
+        },
+        "tags": [
+          "Props"
+        ]
+      }
+    },
+    "/prediction": {
+      "post": {
+        "operationId": "createPrediction",
+        "summary": "Create a new prediction",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePredictionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Prediction created successfully."
+          },
+          "400": {
+            "description": "Bad Request: Match has already started."
+          },
+          "409": {
+            "description": "Conflict: Prediction already exists."
+          }
+        },
+        "tags": [
+          "Prediction"
+        ]
+      },
+      "get": {
+        "operationId": "getAllPredictionsFiltered",
+        "summary": "Get predictions based on the provided filters. For instance, all predictions for a prop with options to filter by status.",
+        "parameters": [
+          {
+            "name": "user_id",
+            "required": false,
+            "in": "query",
+            "description": "User ID to filter predictions",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "prop_id",
+            "required": false,
+            "in": "query",
+            "description": "Prop ID to filter predictions",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Status to filter predictions",
+            "schema": {
+              "example": "pending",
+              "enum": [
+                "pending",
+                "completed",
+                "error"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns all predictions grouped by prop based on the provided filters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PropPredictionsDto"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No predictions found based on the provided filters"
+          }
+        },
+        "tags": [
+          "Prediction"
+        ]
+      }
+    },
+    "/prediction/{id}": {
+      "get": {
+        "operationId": "getPredictionById",
+        "summary": "Get a prediction by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Prediction found."
+          },
+          "404": {
+            "description": "Prediction not found."
+          }
+        },
+        "tags": [
+          "Prediction"
+        ]
+      },
+      "patch": {
+        "operationId": "updatePrediction",
+        "summary": "Update a prediction",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePredictionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Prediction updated successfully."
+          },
+          "404": {
+            "description": "Prediction not found."
+          }
+        },
+        "tags": [
+          "Prediction"
+        ]
+      },
+      "delete": {
+        "operationId": "removePrediction",
+        "summary": "Remove a prediction",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Prop ID - Which we will use to find the prediction the user has placed on it",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "user_id",
+            "required": true,
+            "in": "query",
+            "description": "User ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Prediction removed successfully."
+          },
+          "404": {
+            "description": "Prediction not found."
+          }
+        },
+        "tags": [
+          "Prediction"
+        ]
+      }
+    },
+    "/prediction/user/{user_id}": {
+      "get": {
+        "operationId": "getPredictionsForUser",
+        "summary": "Get all predictions for a user",
+        "parameters": [
+          {
+            "name": "user_id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Predictions found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AllUserPredictionsDto"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No predictions found for the user."
+          }
+        },
+        "tags": [
+          "Prediction"
+        ]
+      }
+    },
+    "/prediction/count": {
+      "get": {
+        "operationId": "getPredictionsCount",
+        "summary": "Get the count of predictions and unique users for a given status of a prediction. E.g all pending or all completed",
+        "parameters": [
+          {
+            "name": "prop_id",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Predictions count found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PredictionsCountDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No predictions found for the given status."
+          }
+        },
+        "tags": [
+          "Prediction"
+        ]
+      }
+    },
+    "/week-manager/current-week": {
+      "get": {
+        "operationId": "getCurrentWeek",
+        "summary": "Get the current active week for a sport",
+        "parameters": [
+          {
+            "name": "sport",
+            "required": true,
+            "in": "query",
+            "description": "The sport to get the current week for (e.g., \"nfl\" or \"nba\")",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the current active week",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeasonWeekDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Week Manager"
+        ]
+      }
+    },
+    "/leaderboard/init-weeks/{sport}": {
+      "post": {
+        "operationId": "LeaderboardController_initializeWeeks",
+        "summary": "Initialize season scheduled weeks for a given sport",
+        "parameters": [
+          {
+            "name": "sport",
+            "required": true,
+            "in": "path",
+            "description": "The sport to initialize weeks for",
+            "schema": {
+              "enum": [
+                "nba",
+                "nfl"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Weeks initialized successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Weeks initialized successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "201": {
+            "description": ""
+          },
+          "400": {
+            "description": "Invalid sport provided"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "tags": [
+          "Leaderboard"
+        ]
+      }
+    },
+    "/leaderboard": {
+      "get": {
+        "operationId": "LeaderboardController_getLeaderboard",
+        "summary": "Get leaderboard",
+        "parameters": [
+          {
+            "name": "guild_id",
+            "required": true,
+            "in": "query",
+            "description": "Discord Guild ID",
+            "schema": {
+              "example": "777353407383339038",
+              "type": "string"
+            }
+          },
+          {
+            "name": "week_number",
+            "required": false,
+            "in": "query",
+            "description": "Week number",
+            "schema": {
+              "example": 5,
+              "type": "number"
+            }
+          },
+          {
+            "name": "season_year",
+            "required": false,
+            "in": "query",
+            "description": "Season year",
+            "schema": {
+              "example": 2024,
+              "type": "number"
+            }
+          },
+          {
+            "name": "time_frame",
+            "required": false,
+            "in": "query",
+            "description": "Time frame for the leaderboard",
+            "schema": {
+              "example": "weekly",
+              "enum": [
+                "weekly",
+                "monthly",
+                "seasonal",
+                "all_time"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the leaderboard based on the provided criteria.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LeaderboardDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "tags": [
+          "Leaderboard"
+        ]
+      }
+    },
+    "/schedule/cron-jobs": {
+      "get": {
+        "operationId": "ScheduleController_getActiveCronJobs",
+        "summary": "Get active cron jobs",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Returns a list of active cron job information"
+          }
+        },
+        "tags": [
+          "Schedule"
+        ]
+      }
+    },
+    "/schedule/cron-jobs/{jobName}": {
+      "delete": {
+        "operationId": "ScheduleController_stopCronJob",
+        "summary": "Stop a cron job",
+        "parameters": [
+          {
+            "name": "jobName",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cron job stopped successfully"
+          },
+          "404": {
+            "description": "Cron job not found"
+          }
+        },
+        "tags": [
+          "Schedule"
+        ]
+      }
+    },
+    "/hello-world": {
+      "get": {
+        "operationId": "HelloWorldController_getHello",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    }
+  },
+  "info": {
+    "title": "Khronos API Documentation",
+    "description": "Khronos is a sports-focused API that integrates with my other app, Pluto for Discord.",
+    "version": "1",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [
+    {
+      "url": "http://localhost:2088/api/khronos/v1",
+      "description": "Khronos Server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "api-key": {
+        "type": "apiKey",
+        "name": "x-api-key",
+        "in": "header"
+      }
+    },
+    "schemas": {
+      "KHApiErrStandard": {
+        "type": "object",
+        "properties": {
+          "statusCode": {
+            "type": "number",
+            "example": 400
+          },
+          "message": {
+            "type": "string",
+            "example": "Bad Request"
+          },
+          "exception": {
+            "type": "string",
+            "example": "ValidationException"
+          }
+        },
+        "required": [
+          "statusCode",
+          "message",
+          "exception"
+        ]
+      },
+      "Channel": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "sport": {
+            "type": "string"
+          },
+          "channelname": {
+            "type": "string"
+          },
+          "crontime": {
+            "type": "string"
+          },
+          "gametime": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "created": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "sport",
+          "channelname",
+          "crontime",
+          "gametime",
+          "created"
+        ]
+      },
+      "Score": {
+        "type": "object",
+        "properties": {
+          "matchup_id": {
+            "type": "string"
+          },
+          "home_score": {
+            "type": "number"
+          },
+          "away_score": {
+            "type": "number"
+          },
+          "commence_time": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "complete": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "matchup_id",
+          "home_score",
+          "away_score",
+          "commence_time",
+          "complete"
+        ]
+      },
+      "Match": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the match"
+          },
+          "channel": {
+            "$ref": "#/components/schemas/Channel"
+          },
+          "score": {
+            "$ref": "#/components/schemas/Score"
+          },
+          "sport_key": {
+            "type": "string",
+            "description": "e.g 'americanfootball_nfl' or 'basketball_nba'."
+          },
+          "sport_title": {
+            "type": "string",
+            "description": "e.g 'NBA' or 'NFL'."
+          },
+          "commence_time": {
+            "type": "string",
+            "description": "The start time of the matchup in ISO 8601 format.",
+            "format": "date-time"
+          },
+          "home_team": {
+            "type": "string",
+            "description": "Name of the home team."
+          },
+          "away_team": {
+            "type": "string",
+            "description": "Name of the away team."
+          },
+          "bookmaker_key": {
+            "type": "string",
+            "description": "e.g 'fanduel' or 'draftkings'."
+          },
+          "bookmaker_title": {
+            "type": "string",
+            "description": "e.g 'FanDuel' or 'DraftKings'."
+          },
+          "market_key": {
+            "enum": [
+              "h2h",
+              "totals",
+              "player_pass_tds",
+              "player_pass_yds",
+              "player_pass_completions",
+              "player_pass_attempts",
+              "player_pass_interceptions",
+              "player_pass_longest_completion",
+              "player_rush_yds",
+              "player_rush_attempts",
+              "player_rush_longest",
+              "player_receptions",
+              "player_reception_yds",
+              "player_reception_longest",
+              "player_kicking_points",
+              "player_field_goals",
+              "player_tackles_assists",
+              "player_1st_td",
+              "player_last_td",
+              "player_anytime_td",
+              "player_pass_tds_alternate",
+              "player_pass_yds_alternate",
+              "player_rush_yds_alternate",
+              "player_rush_reception_yds_alternate",
+              "player_reception_yds_alternate",
+              "player_receptions_alternate",
+              "player_points",
+              "player_rebounds",
+              "player_assists",
+              "player_threes",
+              "player_blocks",
+              "player_steals",
+              "player_blocks_steals",
+              "player_turnovers",
+              "player_points_rebounds_assists",
+              "player_points_rebounds",
+              "player_points_assists",
+              "player_rebounds_assists",
+              "player_first_basket",
+              "player_double_double",
+              "player_triple_double",
+              "player_points_alternate",
+              "player_rebounds_alternate",
+              "player_assists_alternate",
+              "player_blocks_alternate",
+              "player_steals_alternate",
+              "player_threes_alternate",
+              "player_points_assists_alternate",
+              "player_points_rebounds_alternate",
+              "player_rebounds_assists_alternate",
+              "player_points_rebounds_assists_alternate"
+            ],
+            "type": "string",
+            "description": "Market type for betting.",
+            "default": "h2h"
+          },
+          "last_update": {
+            "type": "string",
+            "description": "The last update time of the matchup details in ISO 8601 format.",
+            "format": "date-time"
+          },
+          "home_team_odds": {
+            "type": "number",
+            "description": "Betting odds for the home team. Nullable."
+          },
+          "away_team_odds": {
+            "type": "number",
+            "description": "Betting odds for the away team. Nullable."
+          },
+          "winner": {
+            "type": "string",
+            "description": "The winner of the matchup. Nullable."
+          },
+          "loser": {
+            "type": "string",
+            "description": "The loser of the matchup. Nullable."
+          },
+          "complete": {
+            "type": "boolean",
+            "description": "Flag indicating if the match is complete."
+          },
+          "dateofmatchup": {
+            "type": "string",
+            "description": "The date of the matchup (e.g., 11/24/2023). Nullable."
+          },
+          "legiblestart": {
+            "type": "string",
+            "description": "A human-readable format of the start time (e.g., Tue, 8:00 PM). Nullable."
+          },
+          "cron_timer": {
+            "type": "string",
+            "description": "A cron format string representing the start time of the matchup. Nullable."
+          },
+          "closing_bets": {
+            "type": "boolean",
+            "description": "Flag indicating whether bets are in the process of being closed for this matchup. Defaults to false."
+          },
+          "espn_id": {
+            "type": "string",
+            "description": "ESPN ID for the matchup. Nullable."
+          },
+          "created_at": {
+            "type": "string",
+            "description": "The creation timestamp of the matchup.",
+            "format": "date-time"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the matchup. Nullable."
+          }
+        },
+        "required": [
+          "id",
+          "channel",
+          "score",
+          "sport_key",
+          "sport_title",
+          "commence_time",
+          "home_team",
+          "away_team",
+          "bookmaker_key",
+          "bookmaker_title",
+          "market_key",
+          "last_update",
+          "home_team_odds",
+          "away_team_odds",
+          "winner",
+          "loser",
+          "complete",
+          "dateofmatchup",
+          "legiblestart",
+          "cron_timer",
+          "closing_bets",
+          "espn_id",
+          "created_at",
+          "description"
+        ]
+      },
+      "GetMatchInfoDto": {
+        "type": "object",
+        "properties": {
+          "statusCode": {
+            "type": "number",
+            "default": 200
+          },
+          "message": {
+            "type": "string",
+            "default": "Successfully fetched matchup info."
+          },
+          "match": {
+            "$ref": "#/components/schemas/Match"
+          }
+        },
+        "required": [
+          "statusCode",
+          "message",
+          "match"
+        ]
+      },
+      "GetAllMatchesDto": {
+        "type": "object",
+        "properties": {
+          "statusCode": {
+            "type": "number",
+            "description": "Status Code"
+          },
+          "matches": {
+            "description": "List of matches",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Match"
+            }
+          }
+        },
+        "required": [
+          "statusCode",
+          "matches"
+        ]
+      },
+      "MatchesForSportRespDTO": {
+        "type": "object",
+        "properties": {
+          "statusCode": {
+            "type": "number",
+            "default": 200,
+            "example": 200
+          },
+          "matches": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Match"
+            }
+          }
+        },
+        "required": [
+          "statusCode",
+          "matches"
+        ]
+      },
+      "AllChannelsDto": {
+        "type": "object",
+        "properties": {
+          "statusCode": {
+            "type": "number",
+            "default": 200
+          },
+          "channels": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "statusCode",
+          "channels"
+        ]
+      },
+      "RemoveAllChannelsDto": {
+        "type": "object",
+        "properties": {
+          "statusCode": {
+            "type": "number",
+            "default": 200
+          },
+          "message": {
+            "type": "string",
+            "default": "All channels have been removed successfully"
+          }
+        },
+        "required": [
+          "statusCode",
+          "message"
+        ]
+      },
+      "StoredChannelDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateChannelDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "Guild": {
+        "type": "object",
+        "properties": {
+          "guild_id": {
+            "type": "string",
+            "description": "Unique identifier of the guild"
+          },
+          "guild_name": {
+            "type": "string",
+            "description": "Name of the guild"
+          },
+          "date_joined": {
+            "type": "string",
+            "description": "Date when the guild joined",
+            "example": "2024-01-01"
+          },
+          "sport": {
+            "type": "string",
+            "description": "Sport associated with the guild"
+          },
+          "config": {
+            "description": "Discord configurations associated with the guild",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DiscordConfig"
+            }
+          }
+        },
+        "required": [
+          "guild_id",
+          "guild_name",
+          "date_joined",
+          "sport"
+        ]
+      },
+      "DiscordConfig": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the Discord configuration entry"
+          },
+          "guild_id": {
+            "type": "string",
+            "description": "Guild ID associated with the setting"
+          },
+          "setting_type": {
+            "enum": [
+              "GAMES_CATEGORY",
+              "BETTING_CHAN",
+              "DAILY_SCHEDULE_CHAN",
+              "PREDICTIONS_CHAN",
+              "LOGS_CHAN",
+              "LOGS_ENABLED"
+            ],
+            "type": "string",
+            "description": "Type of setting",
+            "example": "GAMES_CATEGORY"
+          },
+          "setting_value": {
+            "type": "string",
+            "description": "Value of the setting",
+            "example": "123456789012345678"
+          },
+          "guild": {
+            "description": "Guild related to the config",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Guild"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "guild_id",
+          "setting_type",
+          "setting_value",
+          "guild"
+        ]
+      },
+      "CreateGuildDto": {
+        "type": "object",
+        "properties": {
+          "guild_id": {
+            "type": "string"
+          },
+          "guild_name": {
+            "type": "string"
+          },
+          "date_joined": {
+            "type": "string"
+          },
+          "sport": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "guild_id",
+          "guild_name",
+          "date_joined",
+          "sport"
+        ]
+      },
+      "CreateConfigDto": {
+        "type": "object",
+        "properties": {
+          "guild_id": {
+            "type": "string",
+            "description": "The unique identifier for the guild",
+            "example": "123456789"
+          },
+          "setting_type": {
+            "enum": [
+              "GAMES_CATEGORY",
+              "BETTING_CHAN",
+              "DAILY_SCHEDULE_CHAN",
+              "PREDICTIONS_CHAN",
+              "LOGS_CHAN",
+              "LOGS_ENABLED"
+            ],
+            "type": "string",
+            "description": "The type of setting for the Discord configuration",
+            "example": "PREDICTIONS_CHAN"
+          },
+          "setting_value": {
+            "type": "string",
+            "description": "The value associated with the setting",
+            "example": "123456789012345678"
+          }
+        },
+        "required": [
+          "guild_id",
+          "setting_type",
+          "setting_value"
+        ]
+      },
+      "StoredConfigDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the Discord configuration entry"
+          },
+          "guild_id": {
+            "type": "string",
+            "description": "Guild ID associated with the setting"
+          },
+          "setting_type": {
+            "enum": [
+              "GAMES_CATEGORY",
+              "BETTING_CHAN",
+              "DAILY_SCHEDULE_CHAN",
+              "PREDICTIONS_CHAN",
+              "LOGS_CHAN",
+              "LOGS_ENABLED"
+            ],
+            "type": "string",
+            "description": "Type of setting",
+            "example": "GAMES_CATEGORY"
+          },
+          "setting_value": {
+            "type": "string",
+            "description": "Value of the setting",
+            "example": "123456789012345678"
+          },
+          "guild": {
+            "description": "Guild related to the config",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Guild"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "guild_id",
+          "setting_type",
+          "setting_value",
+          "guild"
+        ]
+      },
+      "InitBetslipDTO": {
+        "type": "object",
+        "properties": {
+          "userid": {
+            "type": "string",
+            "example": "208016830491525120",
+            "default": "208016830491525120",
+            "description": "The ID of the user placing the bet"
+          },
+          "team": {
+            "type": "string",
+            "example": "Boston Celtics",
+            "default": "Boston Celtics",
+            "description": "The name of the team (or, player, etc) the user is betting on"
+          },
+          "amount": {
+            "type": "number",
+            "example": 100,
+            "default": 100,
+            "description": "The amount the user is betting"
+          },
+          "guild_id": {
+            "type": "string",
+            "example": "777353407383339038",
+            "description": "The guild id - The origin of where the bet was placed"
+          },
+          "matchup_id": {
+            "type": "string",
+            "example": "9768de636bd9b326cee827df527c6b0f",
+            "default": "9768de636bd9b326cee827df527c6b0f",
+            "description": "The Identifier for a match. This is & must be provided if there's multiple matches for the team, and the user submits the specific match they want to bet on."
+          },
+          "market_key": {
+            "enum": [
+              "h2h",
+              "totals",
+              "player_pass_tds",
+              "player_pass_yds",
+              "player_pass_completions",
+              "player_pass_attempts",
+              "player_pass_interceptions",
+              "player_pass_longest_completion",
+              "player_rush_yds",
+              "player_rush_attempts",
+              "player_rush_longest",
+              "player_receptions",
+              "player_reception_yds",
+              "player_reception_longest",
+              "player_kicking_points",
+              "player_field_goals",
+              "player_tackles_assists",
+              "player_1st_td",
+              "player_last_td",
+              "player_anytime_td",
+              "player_pass_tds_alternate",
+              "player_pass_yds_alternate",
+              "player_rush_yds_alternate",
+              "player_rush_reception_yds_alternate",
+              "player_reception_yds_alternate",
+              "player_receptions_alternate",
+              "player_points",
+              "player_rebounds",
+              "player_assists",
+              "player_threes",
+              "player_blocks",
+              "player_steals",
+              "player_blocks_steals",
+              "player_turnovers",
+              "player_points_rebounds_assists",
+              "player_points_rebounds",
+              "player_points_assists",
+              "player_rebounds_assists",
+              "player_first_basket",
+              "player_double_double",
+              "player_triple_double",
+              "player_points_alternate",
+              "player_rebounds_alternate",
+              "player_assists_alternate",
+              "player_blocks_alternate",
+              "player_steals_alternate",
+              "player_threes_alternate",
+              "player_points_assists_alternate",
+              "player_points_rebounds_alternate",
+              "player_rebounds_assists_alternate",
+              "player_points_rebounds_assists_alternate"
+            ],
+            "type": "string",
+            "example": "h2h",
+            "default": "h2h",
+            "description": "The market key for the bet"
+          },
+          "event_id": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "default": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "The event ID from the source API"
+          }
+        },
+        "required": [
+          "userid",
+          "team",
+          "amount",
+          "guild_id",
+          "market_key",
+          "event_id"
+        ]
+      },
+      "BetslipWithAggregationDTO": {
+        "type": "object",
+        "properties": {
+          "userid": {
+            "type": "string",
+            "description": "The user ID associated with the betslip",
+            "example": "user123"
+          },
+          "team": {
+            "type": "string",
+            "description": "The team (or player) chosen in the bet",
+            "example": "Team A"
+          },
+          "amount": {
+            "type": "number",
+            "description": "The amount bet",
+            "example": 100
+          },
+          "profit": {
+            "type": "number",
+            "description": "The profit from the bet, if applicable",
+            "example": 50,
+            "nullable": true
+          },
+          "payout": {
+            "type": "number",
+            "description": "The total payout from the bet, if applicable",
+            "example": 150,
+            "nullable": true
+          },
+          "opponent": {
+            "type": "string",
+            "description": "Opposing team in the match the user has bet on",
+            "example": "Golden State Warriors"
+          },
+          "dateofmatchup": {
+            "type": "string",
+            "description": "Date of the match the user has bet on",
+            "example": "2020-01-01T00:00:00.000Z"
+          },
+          "match": {
+            "description": "Match details",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Match"
+              }
+            ]
+          }
+        },
+        "required": [
+          "userid",
+          "team",
+          "amount",
+          "profit",
+          "payout",
+          "opponent",
+          "dateofmatchup",
+          "match"
+        ]
+      },
+      "InitBetslipRespDTO": {
+        "type": "object",
+        "properties": {
+          "statusCode": {
+            "type": "number",
+            "default": 201,
+            "description": "The HTTP status code",
+            "example": 201
+          },
+          "betslip": {
+            "description": "The data containing finalized betslip details -- This is sent back to the client (Pluto) for the user to confirm their betslip",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BetslipWithAggregationDTO"
+              }
+            ]
+          }
+        },
+        "required": [
+          "statusCode",
+          "betslip"
+        ]
+      },
+      "PlaceBetDto": {
+        "type": "object",
+        "properties": {
+          "userid": {
+            "type": "string",
+            "example": "208016830491525120"
+          },
+          "team": {
+            "type": "string",
+            "example": "Boston Celtics"
+          },
+          "amount": {
+            "type": "number",
+            "example": 100
+          },
+          "guild_id": {
+            "type": "string",
+            "example": "777353407383339038",
+            "description": "The guild id - The origin of where the bet was placed"
+          },
+          "matchup_id": {
+            "type": "string",
+            "description": "The Identifier for a match. // aka event_id",
+            "example": "9768de636bd9b326cee827df527c6b0f"
+          },
+          "market_key": {
+            "enum": [
+              "h2h",
+              "totals",
+              "player_pass_tds",
+              "player_pass_yds",
+              "player_pass_completions",
+              "player_pass_attempts",
+              "player_pass_interceptions",
+              "player_pass_longest_completion",
+              "player_rush_yds",
+              "player_rush_attempts",
+              "player_rush_longest",
+              "player_receptions",
+              "player_reception_yds",
+              "player_reception_longest",
+              "player_kicking_points",
+              "player_field_goals",
+              "player_tackles_assists",
+              "player_1st_td",
+              "player_last_td",
+              "player_anytime_td",
+              "player_pass_tds_alternate",
+              "player_pass_yds_alternate",
+              "player_rush_yds_alternate",
+              "player_rush_reception_yds_alternate",
+              "player_reception_yds_alternate",
+              "player_receptions_alternate",
+              "player_points",
+              "player_rebounds",
+              "player_assists",
+              "player_threes",
+              "player_blocks",
+              "player_steals",
+              "player_blocks_steals",
+              "player_turnovers",
+              "player_points_rebounds_assists",
+              "player_points_rebounds",
+              "player_points_assists",
+              "player_rebounds_assists",
+              "player_first_basket",
+              "player_double_double",
+              "player_triple_double",
+              "player_points_alternate",
+              "player_rebounds_alternate",
+              "player_assists_alternate",
+              "player_blocks_alternate",
+              "player_steals_alternate",
+              "player_threes_alternate",
+              "player_points_assists_alternate",
+              "player_points_rebounds_alternate",
+              "player_rebounds_assists_alternate",
+              "player_points_rebounds_assists_alternate"
+            ],
+            "type": "string",
+            "description": "The prop type the match & bet belongs to.",
+            "example": "h2h"
+          }
+        },
+        "required": [
+          "userid",
+          "team",
+          "amount",
+          "guild_id",
+          "matchup_id",
+          "market_key"
+        ]
+      },
+      "PlacedBetslip": {
+        "type": "object",
+        "properties": {
+          "betid": {
+            "type": "number",
+            "description": "The unique identifier for the betslip",
+            "example": 1
+          },
+          "userid": {
+            "type": "string",
+            "description": "The user ID associated with the betslip",
+            "example": "user123"
+          },
+          "team": {
+            "type": "string",
+            "description": "The team/player chosen in the bet",
+            "example": "Team A"
+          },
+          "matchup_id": {
+            "type": "string",
+            "description": "ID of related match",
+            "example": "match123"
+          },
+          "amount": {
+            "type": "number",
+            "description": "The amount bet",
+            "example": 100
+          },
+          "profit": {
+            "type": "number",
+            "description": "The profit from the bet, if applicable",
+            "example": 50,
+            "nullable": true
+          },
+          "payout": {
+            "type": "number",
+            "description": "The total payout from the bet, if applicable",
+            "example": 150,
+            "nullable": true
+          },
+          "betresult": {
+            "type": "string",
+            "description": "The result of the bet",
+            "example": "pending",
+            "enum": [
+              "pending",
+              "won",
+              "lost"
+            ]
+          },
+          "dateofbet": {
+            "type": "string",
+            "description": "The date of the bet",
+            "example": "2024-01-01",
+            "nullable": true
+          },
+          "guild_id": {
+            "type": "string",
+            "description": "The Discord guild ID associated with the betslip",
+            "example": "1234567891011121314"
+          },
+          "newBalance": {
+            "type": "number",
+            "description": "New Balance",
+            "example": 1000
+          },
+          "dateofmatchup": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "betid",
+          "userid",
+          "team",
+          "matchup_id",
+          "amount",
+          "profit",
+          "payout",
+          "betresult",
+          "dateofbet",
+          "guild_id",
+          "newBalance",
+          "dateofmatchup"
+        ]
+      },
+      "PlacedBetslipDto": {
+        "type": "object",
+        "properties": {
+          "statusCode": {
+            "type": "number",
+            "description": "HTTP status code"
+          },
+          "betslip": {
+            "description": "Placed Betslip Data",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PlacedBetslip"
+              }
+            ]
+          }
+        },
+        "required": [
+          "statusCode",
+          "betslip"
+        ]
+      },
+      "ChangeBetAmountDto": {
+        "type": "object",
+        "properties": {
+          "newAmount": {
+            "type": "number",
+            "example": 10
+          },
+          "userid": {
+            "type": "string",
+            "example": "208016830491525120"
+          }
+        },
+        "required": [
+          "newAmount",
+          "userid"
+        ]
+      },
+      "Modified": {
+        "type": "object",
+        "properties": {
+          "newBalance": {
+            "type": "number",
+            "description": "The new balance after the bet amount change",
+            "example": 800
+          },
+          "payout": {
+            "type": "number",
+            "description": "The total payout after the bet amount change",
+            "example": 150
+          },
+          "profit": {
+            "type": "number",
+            "description": "The profit from the bet amount change",
+            "example": 50
+          }
+        },
+        "required": [
+          "newBalance",
+          "payout",
+          "profit"
+        ]
+      },
+      "IChangeBetAmountResp": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Bet successfully changed! New balance: $800",
+            "description": "Response message"
+          },
+          "modified": {
+            "description": "Details of the modifications",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Modified"
+              }
+            ]
+          }
+        },
+        "required": [
+          "message",
+          "modified"
+        ]
+      },
+      "PatreonDataDto": {
+        "type": "object",
+        "properties": {
+          "patreonOverride": {
+            "type": "boolean",
+            "description": "Indicates if the Patreon override is enabled, which means the user is a Patreon member and in some cases, meets the required Patreon tier.",
+            "example": true
+          }
+        },
+        "required": [
+          "patreonOverride"
+        ]
+      },
+      "DoubledBetslipDto": {
+        "type": "object",
+        "properties": {
+          "newBetAmount": {
+            "type": "number",
+            "example": 200,
+            "description": "The new amount of the bet after doubling."
+          },
+          "newProfit": {
+            "type": "number",
+            "example": 40,
+            "description": "The profit expected if the bet wins, calculated based on the doubled bet amount."
+          },
+          "newPayout": {
+            "type": "number",
+            "example": 240,
+            "description": "The total potential payout (original bet plus profit) if the bet wins."
+          },
+          "newBalance": {
+            "type": "number",
+            "example": 760,
+            "description": "The new balance of the user’s account after the bet amount has been doubled and deducted."
+          },
+          "userId": {
+            "type": "string",
+            "example": "12345",
+            "description": "The unique identifier of the user who owns the bet."
+          },
+          "betId": {
+            "type": "number",
+            "example": 67890,
+            "description": "The unique identifier of the bet that has been doubled."
+          }
+        },
+        "required": [
+          "newBetAmount",
+          "newProfit",
+          "newPayout",
+          "newBalance",
+          "userId",
+          "betId"
+        ]
+      },
+      "DoubleDownDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "number",
+            "example": 200,
+            "description": "The HTTP status code of the response."
+          },
+          "message": {
+            "type": "string",
+            "example": "Bet amount doubled successfully.",
+            "description": "A message detailing the result of the operation."
+          },
+          "betslip": {
+            "description": "The detailed information about the doubled betslip.",
+            "example": {
+              "newBetAmount": 200,
+              "newProfit": 40,
+              "newPayout": 240,
+              "newBalance": 760,
+              "userId": "12345",
+              "betId": 67890
+            },
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DoubledBetslipDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "status",
+          "message",
+          "betslip"
+        ]
+      },
+      "XpEntity": {
+        "type": "object",
+        "properties": {
+          "userid": {
+            "type": "string"
+          },
+          "xp": {
+            "type": "number"
+          },
+          "level": {
+            "type": "number"
+          },
+          "tier": {
+            "type": "string"
+          },
+          "account": {
+            "$ref": "#/components/schemas/Account"
+          }
+        },
+        "required": [
+          "userid",
+          "xp",
+          "level",
+          "tier",
+          "account"
+        ]
+      },
+      "BetslipPending": {
+        "type": "object",
+        "properties": {
+          "userid": {
+            "type": "string"
+          },
+          "account": {
+            "$ref": "#/components/schemas/Account"
+          },
+          "amount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "userid",
+          "account",
+          "amount"
+        ]
+      },
+      "Account": {
+        "type": "object",
+        "properties": {
+          "userid": {
+            "type": "string",
+            "description": "User ID"
+          },
+          "lastclaimtime": {
+            "type": "string",
+            "description": "Last claim time",
+            "nullable": true
+          },
+          "registerdate": {
+            "type": "string",
+            "description": "Registration date"
+          },
+          "monies": {
+            "$ref": "#/components/schemas/Monies"
+          },
+          "xp": {
+            "$ref": "#/components/schemas/XpEntity"
+          },
+          "pending_betslip": {
+            "$ref": "#/components/schemas/BetslipPending"
+          },
+          "claimstoday": {
+            "type": "number",
+            "description": "Claims today",
+            "default": 0
+          }
+        },
+        "required": [
+          "userid",
+          "lastclaimtime",
+          "registerdate",
+          "monies",
+          "xp",
+          "pending_betslip",
+          "claimstoday"
+        ]
+      },
+      "Monies": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the money record"
+          },
+          "balance": {
+            "type": "number",
+            "description": "Current balance amount"
+          },
+          "account": {
+            "$ref": "#/components/schemas/Account"
+          }
+        },
+        "required": [
+          "id",
+          "balance",
+          "account"
+        ]
+      },
+      "GetBalanceDto": {
+        "type": "object",
+        "properties": {
+          "statusCode": {
+            "type": "number",
+            "default": 201,
+            "example": 201,
+            "description": ""
+          },
+          "balance": {
+            "type": "number",
+            "example": 1000,
+            "default": 1000,
+            "description": "The balance of the user"
+          },
+          "userid": {
+            "type": "string",
+            "example": "208016830491525120",
+            "default": "208016830491525120",
+            "description": "The identifier of the user"
+          },
+          "isNewUser": {
+            "type": "boolean",
+            "example": false,
+            "default": false,
+            "description": "Whether the user is new or not. This is flagged within the service if an account has to be created for them."
+          }
+        },
+        "required": [
+          "statusCode",
+          "balance",
+          "userid",
+          "isNewUser"
+        ]
+      },
+      "GetProfileDto": {
+        "type": "object",
+        "properties": {
+          "statusCode": {
+            "type": "number",
+            "default": 200,
+            "example": 200
+          },
+          "userid": {
+            "type": "string",
+            "example": "user123"
+          },
+          "balance": {
+            "type": "number",
+            "example": 1000
+          },
+          "level": {
+            "type": "number",
+            "example": 5
+          },
+          "tier": {
+            "type": "string",
+            "example": "gold"
+          },
+          "isNewUser": {
+            "type": "boolean",
+            "example": false
+          }
+        },
+        "required": [
+          "statusCode",
+          "userid",
+          "balance",
+          "level",
+          "tier",
+          "isNewUser"
+        ]
+      },
+      "DailyClaimBodyDto": {
+        "type": "object",
+        "properties": {
+          "patreonOverride": {
+            "type": "boolean",
+            "description": "Indicates if the Patreon override is enabled, which means the user is a Patreon member and in some cases, meets the required Patreon tier.",
+            "example": true
+          }
+        },
+        "required": [
+          "patreonOverride"
+        ]
+      },
+      "GetLeaderboardDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the leaderboard entry",
+            "example": "507f1f77bcf86cd799439011"
+          },
+          "balance": {
+            "type": "number",
+            "description": "The balance associated with the leaderboard entry",
+            "example": 1000
+          }
+        },
+        "required": [
+          "id",
+          "balance"
+        ]
+      },
+      "Outcome": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the outcome"
+          },
+          "price": {
+            "type": "number",
+            "description": "The price for the outcome"
+          },
+          "point": {
+            "type": "number",
+            "description": "The point for the outcome",
+            "nullable": true
+          }
+        },
+        "required": [
+          "name",
+          "price",
+          "point"
+        ]
+      },
+      "Market": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "The unique key for the market"
+          },
+          "last_update": {
+            "format": "date-time",
+            "type": "string",
+            "description": "The last update timestamp"
+          },
+          "outcomes": {
+            "type": "array",
+            "items": {
+              "description": "The list of outcomes available",
+              "example": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -127
+                },
+                {
+                  "name": "Brooklyn Nets",
+                  "price": 155
+                }
+              ],
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Outcome"
+              }
+            }
+          }
+        },
+        "required": [
+          "key",
+          "last_update",
+          "outcomes"
+        ]
+      },
+      "Bookmaker": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "The unique key for the bookmaker"
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the bookmaker"
+          },
+          "last_update": {
+            "format": "date-time",
+            "type": "string",
+            "description": "The last update timestamp"
+          },
+          "markets": {
+            "description": "The list of markets available",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Market"
+            }
+          }
+        },
+        "required": [
+          "key",
+          "title",
+          "last_update",
+          "markets"
+        ]
+      },
+      "Odds": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The unique identifier for the odds/match"
+          },
+          "sport_key": {
+            "type": "string",
+            "description": "The sport key"
+          },
+          "sport_title": {
+            "type": "string",
+            "description": "The title of the sport"
+          },
+          "commence_time": {
+            "format": "date-time",
+            "type": "string",
+            "description": "The time the event commences"
+          },
+          "home_team": {
+            "type": "string",
+            "description": "The home team"
+          },
+          "away_team": {
+            "type": "string",
+            "description": "The away team"
+          },
+          "bookmakers": {
+            "description": "The list of bookmakers",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Bookmaker"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "sport_key",
+          "sport_title",
+          "commence_time",
+          "home_team",
+          "away_team",
+          "bookmakers"
+        ]
+      },
+      "CreatePropDto": {
+        "type": "object",
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "description": "Unique identifier for the event. This is provided by the source of the props (The-Odds API)",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "sport_key": {
+            "type": "string",
+            "description": "Key of the sport",
+            "example": "americanfootball_nfl"
+          },
+          "sport_title": {
+            "type": "string",
+            "description": "Title of the sport",
+            "example": "nfl"
+          },
+          "commence_time": {
+            "format": "date-time",
+            "type": "string",
+            "description": "The commencement time of the event"
+          },
+          "home_team": {
+            "type": "string",
+            "description": "The name of the home team"
+          },
+          "away_team": {
+            "type": "string",
+            "description": "The name of the away team"
+          },
+          "bookmaker_key": {
+            "type": "string",
+            "description": "The key of the bookmaker"
+          },
+          "bookmaker_title": {
+            "type": "string",
+            "description": "The title of the bookmaker"
+          },
+          "last_update": {
+            "format": "date-time",
+            "type": "string",
+            "description": "The last update time"
+          },
+          "market_key": {
+            "enum": [
+              "h2h",
+              "totals",
+              "player_pass_tds",
+              "player_pass_yds",
+              "player_pass_completions",
+              "player_pass_attempts",
+              "player_pass_interceptions",
+              "player_pass_longest_completion",
+              "player_rush_yds",
+              "player_rush_attempts",
+              "player_rush_longest",
+              "player_receptions",
+              "player_reception_yds",
+              "player_reception_longest",
+              "player_kicking_points",
+              "player_field_goals",
+              "player_tackles_assists",
+              "player_1st_td",
+              "player_last_td",
+              "player_anytime_td",
+              "player_pass_tds_alternate",
+              "player_pass_yds_alternate",
+              "player_rush_yds_alternate",
+              "player_rush_reception_yds_alternate",
+              "player_reception_yds_alternate",
+              "player_receptions_alternate",
+              "player_points",
+              "player_rebounds",
+              "player_assists",
+              "player_threes",
+              "player_blocks",
+              "player_steals",
+              "player_blocks_steals",
+              "player_turnovers",
+              "player_points_rebounds_assists",
+              "player_points_rebounds",
+              "player_points_assists",
+              "player_rebounds_assists",
+              "player_first_basket",
+              "player_double_double",
+              "player_triple_double",
+              "player_points_alternate",
+              "player_rebounds_alternate",
+              "player_assists_alternate",
+              "player_blocks_alternate",
+              "player_steals_alternate",
+              "player_threes_alternate",
+              "player_points_assists_alternate",
+              "player_points_rebounds_alternate",
+              "player_rebounds_assists_alternate",
+              "player_points_rebounds_assists_alternate"
+            ],
+            "type": "string",
+            "description": "The key of the betting market"
+          },
+          "price": {
+            "type": "number",
+            "description": "The price of the bet"
+          },
+          "point": {
+            "type": "number",
+            "description": "The point value of the bet, if applicable"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "completed",
+              "error"
+            ],
+            "type": "string",
+            "description": "The status of the prop",
+            "nullable": true
+          },
+          "result": {
+            "type": "string",
+            "description": "The result of the prop/event. The winner goes here.",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The player involved in the prop.",
+            "example": "Jayson Tatum",
+            "nullable": true
+          }
+        },
+        "required": [
+          "event_id",
+          "sport_key",
+          "sport_title",
+          "commence_time",
+          "home_team",
+          "away_team",
+          "bookmaker_key",
+          "bookmaker_title",
+          "last_update",
+          "market_key",
+          "price"
+        ]
+      },
+      "ProcessedPredictions": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the processing record"
+          },
+          "prediction_id": {
+            "type": "string",
+            "description": "ID of the associated prediction"
+          },
+          "process_type": {
+            "enum": [
+              "prop_result",
+              "leaderboard"
+            ],
+            "type": "string",
+            "description": "Type of processing (e.g., \"leaderboard\")"
+          },
+          "processed_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Timestamp of when the prediction was processed"
+          },
+          "status": {
+            "enum": [
+              "success",
+              "failure",
+              "in_progress"
+            ],
+            "type": "string",
+            "description": "Status of the processing. New records default to IN_PROGRESS"
+          },
+          "details": {
+            "type": "object",
+            "description": "Any additional processing details or metadata"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Timestamp of when the record was created"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Timestamp of when the record was last updated"
+          },
+          "prediction": {
+            "$ref": "#/components/schemas/Prediction"
+          }
+        },
+        "required": [
+          "id",
+          "prediction_id",
+          "process_type",
+          "processed_at",
+          "status",
+          "details",
+          "created_at",
+          "updated_at",
+          "prediction"
+        ]
+      },
+      "Prediction": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the prediction"
+          },
+          "user_id": {
+            "type": "string",
+            "description": "User ID"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Creation timestamp"
+          },
+          "prop_id": {
+            "type": "string",
+            "description": "ID of the associated prop"
+          },
+          "choice": {
+            "type": "string",
+            "description": "User's choice"
+          },
+          "is_correct": {
+            "type": "boolean",
+            "description": "Whether the prediction is correct"
+          },
+          "status": {
+            "type": "string",
+            "description": "Status of the prediction"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Last update timestamp"
+          },
+          "guild_id": {
+            "type": "string",
+            "description": "Guild ID"
+          },
+          "processed_predictions": {
+            "description": "Processed predictions",
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProcessedPredictions"
+            }
+          },
+          "prop": {
+            "$ref": "#/components/schemas/Prop"
+          },
+          "market_key": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "created_at",
+          "prop_id",
+          "choice",
+          "is_correct",
+          "status",
+          "updated_at",
+          "guild_id",
+          "processed_predictions",
+          "prop",
+          "market_key"
+        ]
+      },
+      "Prop": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the prop"
+          },
+          "event_id": {
+            "type": "string",
+            "description": "Events ID associated with the prop"
+          },
+          "sport_key": {
+            "type": "string",
+            "description": "Sport key, e.g., americanfootball_nfl"
+          },
+          "sport_title": {
+            "type": "string",
+            "description": "Sport title, e.g., NFL, NBA"
+          },
+          "commence_time": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Commencement time of the event"
+          },
+          "home_team": {
+            "type": "string",
+            "description": "Home team name"
+          },
+          "away_team": {
+            "type": "string",
+            "description": "Away team name"
+          },
+          "bookmaker_key": {
+            "type": "string",
+            "description": "Bookmaker key, e.g., fanduel"
+          },
+          "bookmaker_title": {
+            "type": "string",
+            "description": "Bookmaker title, e.g., FanDuel"
+          },
+          "last_update": {
+            "format": "date-time",
+            "type": "string",
+            "description": "The last update time of the prop details in ISO 8601 format. Provided by The Odds API."
+          },
+          "market_key": {
+            "description": "Market key type, e.g., h2h, totals",
+            "enum": [
+              "h2h",
+              "totals",
+              "player_pass_tds",
+              "player_pass_yds",
+              "player_pass_completions",
+              "player_pass_attempts",
+              "player_pass_interceptions",
+              "player_pass_longest_completion",
+              "player_rush_yds",
+              "player_rush_attempts",
+              "player_rush_longest",
+              "player_receptions",
+              "player_reception_yds",
+              "player_reception_longest",
+              "player_kicking_points",
+              "player_field_goals",
+              "player_tackles_assists",
+              "player_1st_td",
+              "player_last_td",
+              "player_anytime_td",
+              "player_pass_tds_alternate",
+              "player_pass_yds_alternate",
+              "player_rush_yds_alternate",
+              "player_rush_reception_yds_alternate",
+              "player_reception_yds_alternate",
+              "player_receptions_alternate",
+              "player_points",
+              "player_rebounds",
+              "player_assists",
+              "player_threes",
+              "player_blocks",
+              "player_steals",
+              "player_blocks_steals",
+              "player_turnovers",
+              "player_points_rebounds_assists",
+              "player_points_rebounds",
+              "player_points_assists",
+              "player_rebounds_assists",
+              "player_first_basket",
+              "player_double_double",
+              "player_triple_double",
+              "player_points_alternate",
+              "player_rebounds_alternate",
+              "player_assists_alternate",
+              "player_blocks_alternate",
+              "player_steals_alternate",
+              "player_threes_alternate",
+              "player_points_assists_alternate",
+              "player_points_rebounds_alternate",
+              "player_rebounds_assists_alternate",
+              "player_points_rebounds_assists_alternate"
+            ],
+            "type": "string"
+          },
+          "price": {
+            "type": "number",
+            "description": "Price of the prop. E.g -140",
+            "example": -140
+          },
+          "point": {
+            "type": "number",
+            "description": "Point value, e.g., 40.5",
+            "nullable": true
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "completed",
+              "error"
+            ],
+            "type": "string",
+            "description": "Status of the prop"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Creation timestamp"
+          },
+          "result": {
+            "type": "string",
+            "description": "Result of the prop",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The player involved in the prop. If not a player prop, this will be null.",
+            "nullable": true
+          },
+          "event": {
+            "$ref": "#/components/schemas/Events"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "predictions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Prediction"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "event_id",
+          "sport_key",
+          "sport_title",
+          "commence_time",
+          "home_team",
+          "away_team",
+          "bookmaker_key",
+          "bookmaker_title",
+          "last_update",
+          "market_key",
+          "price",
+          "point",
+          "status",
+          "created_at",
+          "result",
+          "description",
+          "event",
+          "updated_at"
+        ]
+      },
+      "Events": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Unique identifier for the event, provided by the incoming request"
+          },
+          "sport_key": {
+            "type": "string",
+            "example": "americanfootball_nfl",
+            "description": "Key identifying the sport"
+          },
+          "sport_title": {
+            "type": "string",
+            "example": "NFL",
+            "description": "Title of the sport"
+          },
+          "commence_time": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-09-06T00:20:00Z",
+            "description": "Timestamp when the event is scheduled to start"
+          },
+          "home_team": {
+            "type": "string",
+            "example": "Kansas City Chiefs",
+            "description": "Name of the home team"
+          },
+          "away_team": {
+            "type": "string",
+            "example": "Baltimore Ravens",
+            "description": "Name of the away team"
+          },
+          "props": {
+            "description": "List of props associated with this event",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Prop"
+            }
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-08-27T21:27:19Z",
+            "description": "Timestamp of when the event was created"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-08-27T21:27:19Z",
+            "description": "Timestamp of when the event was last updated"
+          }
+        },
+        "required": [
+          "id",
+          "sport_key",
+          "sport_title",
+          "commence_time",
+          "home_team",
+          "away_team",
+          "props",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "UpdatePropDto": {
+        "type": "object",
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "description": "Unique identifier for the event. This is provided by the source of the props (The-Odds API)",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "sport_key": {
+            "type": "string",
+            "description": "Key of the sport",
+            "example": "americanfootball_nfl"
+          },
+          "sport_title": {
+            "type": "string",
+            "description": "Title of the sport",
+            "example": "nfl"
+          },
+          "commence_time": {
+            "format": "date-time",
+            "type": "string",
+            "description": "The commencement time of the event"
+          },
+          "home_team": {
+            "type": "string",
+            "description": "The name of the home team"
+          },
+          "away_team": {
+            "type": "string",
+            "description": "The name of the away team"
+          },
+          "bookmaker_key": {
+            "type": "string",
+            "description": "The key of the bookmaker"
+          },
+          "bookmaker_title": {
+            "type": "string",
+            "description": "The title of the bookmaker"
+          },
+          "last_update": {
+            "format": "date-time",
+            "type": "string",
+            "description": "The last update time"
+          },
+          "market_key": {
+            "enum": [
+              "h2h",
+              "totals",
+              "player_pass_tds",
+              "player_pass_yds",
+              "player_pass_completions",
+              "player_pass_attempts",
+              "player_pass_interceptions",
+              "player_pass_longest_completion",
+              "player_rush_yds",
+              "player_rush_attempts",
+              "player_rush_longest",
+              "player_receptions",
+              "player_reception_yds",
+              "player_reception_longest",
+              "player_kicking_points",
+              "player_field_goals",
+              "player_tackles_assists",
+              "player_1st_td",
+              "player_last_td",
+              "player_anytime_td",
+              "player_pass_tds_alternate",
+              "player_pass_yds_alternate",
+              "player_rush_yds_alternate",
+              "player_rush_reception_yds_alternate",
+              "player_reception_yds_alternate",
+              "player_receptions_alternate",
+              "player_points",
+              "player_rebounds",
+              "player_assists",
+              "player_threes",
+              "player_blocks",
+              "player_steals",
+              "player_blocks_steals",
+              "player_turnovers",
+              "player_points_rebounds_assists",
+              "player_points_rebounds",
+              "player_points_assists",
+              "player_rebounds_assists",
+              "player_first_basket",
+              "player_double_double",
+              "player_triple_double",
+              "player_points_alternate",
+              "player_rebounds_alternate",
+              "player_assists_alternate",
+              "player_blocks_alternate",
+              "player_steals_alternate",
+              "player_threes_alternate",
+              "player_points_assists_alternate",
+              "player_points_rebounds_alternate",
+              "player_rebounds_assists_alternate",
+              "player_points_rebounds_assists_alternate"
+            ],
+            "type": "string",
+            "description": "The key of the betting market"
+          },
+          "price": {
+            "type": "number",
+            "description": "The price of the bet"
+          },
+          "point": {
+            "type": "number",
+            "description": "The point value of the bet, if applicable"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "completed",
+              "error"
+            ],
+            "type": "string",
+            "description": "The status of the prop",
+            "nullable": true
+          },
+          "result": {
+            "type": "string",
+            "description": "The result of the prop/event. The winner goes here.",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The player involved in the prop.",
+            "example": "Jayson Tatum",
+            "nullable": true
+          }
+        }
+      },
+      "UpdatePropResultDto": {
+        "type": "object",
+        "properties": {
+          "propId": {
+            "type": "string",
+            "description": "The ID of the prop/match",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "winner": {
+            "type": "string",
+            "description": "The winner of the match/or the correct choice",
+            "example": "Team A"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "completed",
+              "error"
+            ],
+            "type": "string",
+            "description": "The new status of the prop",
+            "example": "completed"
+          },
+          "user_id": {
+            "type": "string",
+            "description": "The ID of the user who is updating the prop result. Included for logging purposes.",
+            "example": "1232131313"
+          }
+        },
+        "required": [
+          "propId",
+          "winner",
+          "status",
+          "user_id"
+        ]
+      },
+      "UpdatePropResultResponseDto": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Message indicating the result of the prop update",
+            "example": "Prop result updated and predictions closed successfully"
+          },
+          "total_predictions_count": {
+            "type": "number",
+            "description": "Total number of predictions",
+            "example": 10
+          },
+          "correct_predictions_count": {
+            "type": "number",
+            "description": "Number of correct predictions",
+            "example": 5
+          },
+          "incorrect_predictions_count": {
+            "type": "number",
+            "description": "Number of incorrect predictions",
+            "example": 5
+          }
+        },
+        "required": [
+          "message",
+          "total_predictions_count",
+          "correct_predictions_count",
+          "incorrect_predictions_count"
+        ]
+      },
+      "ProcessedPredictionsDto": {
+        "type": "object",
+        "properties": {
+          "total_predictions": {
+            "type": "number",
+            "description": "Total number of predictions made",
+            "example": 100,
+            "minimum": 0
+          },
+          "percentages": {
+            "type": "object",
+            "description": "Percentage distribution of predictions",
+            "example": {
+              "over": 60,
+              "under": 40
+            },
+            "additionalProperties": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          },
+          "tallies": {
+            "type": "object",
+            "description": "Raw count of predictions by category",
+            "example": {
+              "over": 60,
+              "under": 40
+            },
+            "additionalProperties": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "required": [
+          "total_predictions",
+          "percentages",
+          "tallies"
+        ]
+      },
+      "PredictionStatsDto": {
+        "type": "object",
+        "properties": {
+          "prop_id": {
+            "type": "string",
+            "description": "Unique identifier of the prop",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "home_team": {
+            "type": "string",
+            "description": "Name of the home team",
+            "example": "Los Angeles Lakers"
+          },
+          "away_team": {
+            "type": "string",
+            "description": "Name of the away team",
+            "example": "Golden State Warriors"
+          },
+          "stats": {
+            "description": "Detailed prediction statistics",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProcessedPredictionsDto"
+              }
+            ]
+          },
+          "betting_on_label": {
+            "type": "string",
+            "description": "Human-readable label for the betting option",
+            "example": "Over 215.5 points"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "description": "Additional description of the prediction",
+            "example": "Total points scored in the game"
+          },
+          "sport": {
+            "type": "string",
+            "description": "The sport category",
+            "example": "NBA",
+            "enum": [
+              "NBA",
+              "NFL",
+              "MLB",
+              "NHL"
+            ]
+          }
+        },
+        "required": [
+          "prop_id",
+          "home_team",
+          "away_team",
+          "stats",
+          "betting_on_label",
+          "description",
+          "sport"
+        ]
+      },
+      "CreatePredictionDto": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "description": "User ID",
+            "example": "771235938474576"
+          },
+          "prop_id": {
+            "type": "string",
+            "description": "Prop ID",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "choice": {
+            "type": "string",
+            "description": "Who or what the user is betting/predicting on",
+            "example": "Jayson Tatum"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "completed",
+              "error"
+            ],
+            "type": "string",
+            "description": "Status of the prediction",
+            "example": "pending"
+          },
+          "guild_id": {
+            "type": "string",
+            "description": "Discord Guild ID",
+            "example": "987654321128397129"
+          }
+        },
+        "required": [
+          "user_id",
+          "prop_id",
+          "choice",
+          "status",
+          "guild_id"
+        ]
+      },
+      "PredictionDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the prediction",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "user_id": {
+            "type": "string",
+            "description": "User ID",
+            "example": "user123"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Creation timestamp",
+            "example": "2023-04-15T10:30:00Z"
+          },
+          "prop_id": {
+            "type": "string",
+            "description": "ID of the associated prop",
+            "example": "prop456"
+          },
+          "choice": {
+            "type": "string",
+            "description": "User's choice",
+            "example": "Option A"
+          },
+          "is_correct": {
+            "type": "boolean",
+            "description": "Whether the prediction is correct",
+            "example": true,
+            "nullable": true
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "completed",
+              "error"
+            ],
+            "type": "string",
+            "description": "Status of the prediction",
+            "example": "pending"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Last update timestamp",
+            "example": "2023-04-15T11:45:00Z"
+          },
+          "guild_id": {
+            "type": "string",
+            "description": "Guild ID",
+            "example": "guild789"
+          },
+          "market_key": {
+            "type": "string",
+            "description": "Market key",
+            "example": "market123"
+          },
+          "prop": {
+            "description": "Prop data",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Prop"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "created_at",
+          "prop_id",
+          "choice",
+          "status",
+          "updated_at",
+          "guild_id",
+          "market_key"
+        ]
+      },
+      "PropPredictionsDto": {
+        "type": "object",
+        "properties": {
+          "prop": {
+            "description": "The prop data",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Prop"
+              }
+            ]
+          },
+          "predictions": {
+            "nullable": true,
+            "description": "Array of predictions for this prop",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PredictionDTO"
+            }
+          }
+        },
+        "required": [
+          "prop",
+          "predictions"
+        ]
+      },
+      "AllUserPredictionsDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the prediction"
+          },
+          "user_id": {
+            "type": "string",
+            "description": "User ID"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Creation timestamp"
+          },
+          "prop_id": {
+            "type": "string",
+            "description": "ID of the associated prop"
+          },
+          "choice": {
+            "type": "string",
+            "description": "User's choice"
+          },
+          "is_correct": {
+            "type": "boolean",
+            "description": "Whether the prediction is correct"
+          },
+          "status": {
+            "type": "string",
+            "description": "Status of the prediction"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Last update timestamp"
+          },
+          "guild_id": {
+            "type": "string",
+            "description": "Guild ID"
+          },
+          "processed_predictions": {
+            "description": "Processed predictions",
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProcessedPredictions"
+            }
+          },
+          "match_string": {
+            "type": "string",
+            "description": "A string representing the match",
+            "example": "Team A vs Team B"
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional description of the prediction",
+            "example": "Prediction for the final score"
+          },
+          "prop": {
+            "$ref": "#/components/schemas/Prop"
+          },
+          "market_key": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "created_at",
+          "prop_id",
+          "choice",
+          "is_correct",
+          "status",
+          "updated_at",
+          "guild_id",
+          "processed_predictions",
+          "match_string",
+          "prop",
+          "market_key"
+        ]
+      },
+      "UpdatePredictionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the prediction",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "user_id": {
+            "type": "string",
+            "description": "User ID",
+            "example": "user123"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Creation timestamp",
+            "example": "2023-04-15T10:30:00Z"
+          },
+          "prop_id": {
+            "type": "string",
+            "description": "ID of the associated prop",
+            "example": "prop456"
+          },
+          "choice": {
+            "type": "string",
+            "description": "User's choice",
+            "example": "Option A"
+          },
+          "is_correct": {
+            "type": "boolean",
+            "description": "Whether the prediction is correct",
+            "example": true,
+            "nullable": true
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "completed",
+              "error"
+            ],
+            "type": "string",
+            "description": "Status of the prediction",
+            "example": "pending"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Last update timestamp",
+            "example": "2023-04-15T11:45:00Z"
+          },
+          "guild_id": {
+            "type": "string",
+            "description": "Guild ID",
+            "example": "guild789"
+          },
+          "market_key": {
+            "type": "string",
+            "description": "Market key",
+            "example": "market123"
+          },
+          "prop": {
+            "description": "Prop data",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Prop"
+              }
+            ]
+          }
+        }
+      },
+      "PredictionsCountDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number",
+            "description": "Total number of predictions",
+            "example": 100
+          },
+          "unique_users": {
+            "type": "number",
+            "description": "Total number of unique users",
+            "example": 50
+          }
+        },
+        "required": [
+          "total",
+          "unique_users"
+        ]
+      },
+      "SeasonWeekDto": {
+        "type": "object",
+        "properties": {
+          "week_number": {
+            "type": "number",
+            "minimum": 1,
+            "description": "The week number in the season",
+            "example": 1
+          },
+          "season_year": {
+            "type": "number",
+            "minimum": 2000,
+            "description": "The year of the season",
+            "example": 2024
+          },
+          "start_date": {
+            "format": "date-time",
+            "type": "string",
+            "description": "The start date of the week",
+            "example": "2024-03-25T00:00:00.000Z"
+          },
+          "end_date": {
+            "format": "date-time",
+            "type": "string",
+            "description": "The end date of the week",
+            "example": "2024-03-31T23:59:59.999Z"
+          },
+          "is_active": {
+            "type": "boolean",
+            "description": "Whether this week is currently active",
+            "example": true,
+            "default": false
+          },
+          "sport": {
+            "type": "string",
+            "description": "The sport associated with this season week",
+            "enum": [
+              "nba",
+              "nfl"
+            ],
+            "example": "nfl"
+          }
+        },
+        "required": [
+          "week_number",
+          "season_year",
+          "start_date",
+          "end_date",
+          "is_active",
+          "sport"
+        ]
+      },
+      "LeaderboardDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the leaderboard entry",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "user_id": {
+            "type": "string",
+            "description": "User ID",
+            "example": "987654321"
+          },
+          "guild_id": {
+            "type": "string",
+            "description": "Guild ID",
+            "example": "123456789"
+          },
+          "score": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Total score",
+            "default": 0
+          },
+          "correct_predictions": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Number of correct predictions",
+            "default": 0
+          },
+          "incorrect_predictions": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Number of incorrect predictions",
+            "default": 0
+          },
+          "week_number": {
+            "type": "number",
+            "minimum": 1,
+            "description": "Week number relative to the system start",
+            "maximum": 53
+          },
+          "season_year": {
+            "type": "number",
+            "minimum": 2024,
+            "description": "Year of the season",
+            "example": 2024
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Creation timestamp",
+            "example": "2024-04-15T12:00:00Z"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Last update timestamp",
+            "example": "2024-04-15T12:30:00Z"
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "guild_id",
+          "score",
+          "correct_predictions",
+          "incorrect_predictions",
+          "week_number",
+          "season_year",
+          "created_at",
+          "updated_at"
+        ]
+      }
+    }
+  }
+}
