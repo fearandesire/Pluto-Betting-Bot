@@ -526,25 +526,52 @@ export class UserCommand extends Subcommand {
 		props: Prop[],
 	): { name: string; value: string }[] {
 		return props.slice(0, 25).map((prop) => {
-			let pointDisplay = '';
-			if (
-				prop.market_key.toLowerCase() !== 'h2h' &&
-				!prop.market_key.toLowerCase().includes('total')
-			) {
-				pointDisplay = prop.point ? `\n**Over/Under:** ${prop.point}` : '';
-			}
+			// Get team short names for cleaner display
+			const homeTeam = TeamInfo.getTeamShortName(prop.home_team);
+			const awayTeam = TeamInfo.getTeamShortName(prop.away_team);
+			const matchup = `${homeTeam} vs. ${awayTeam}`;
+
+			// Format the market information
 			const translatedKey = StringUtils.toTitleCase(
 				MarketKeyTranslations[prop.market_key],
 			);
-			const hasPlayer = prop?.description;
-			let title = translatedKey;
-			if (hasPlayer) {
+
+			// Format title based on prop type
+			let title: string;
+			if (prop.description) {
+				// Player prop
 				title = `${prop.description} - ${translatedKey}`;
+			} else if (prop.market_key.toLowerCase() === 'h2h') {
+				// Head to head prop
+				title = `${matchup} - ${translatedKey}`;
+			} else if (prop.market_key.toLowerCase().includes('total')) {
+				// Totals prop
+				title = `${matchup} - ${translatedKey}`;
+			} else {
+				// Other props
+				title = `${matchup} - ${translatedKey}`;
 			}
+
+			// Format the value field with relevant information
+			const details = [`**Prop ID:** \`${prop.id}\``];
+
+			// Add point/line if applicable
+			if (
+				prop.point !== null &&
+				prop.market_key.toLowerCase() !== 'h2h' &&
+				!prop.market_key.toLowerCase().includes('total')
+			) {
+				details.push(`**Over/Under:** ${prop.point}`);
+			}
+
+			// Parse the date of the match
+			const date = new DateManager().toDiscordUnix(prop.commence_time);
+			details.push(`**Date:** ${date}`);
+
 			return {
 				name: title,
-				value: `**Prop ID:** ${prop.id}${pointDisplay}`,
-				inline: false,
+				value: details.join('\n'),
+				inline: true,
 			};
 		});
 	}
