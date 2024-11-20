@@ -40,7 +40,7 @@ export default class TeamInfo {
 	 * If a single team is provided, the function will return the team emoji if found, otherwise the team short name.
 	 * If an object is provided, the function will return an object with the away and home team emoji if found, otherwise the team short name.
 	 * An optional parameter can be provided to return the team short name with the emoji -- For example, `KNICKS` -> `🗽 Knicks`
-	 *
+	 * Fallbacks when an emoji is not found to just the short team name.
 	 * Standard output otherwise would be `🗽`
 	 */
 	static async resolveTeamIdentifier(
@@ -67,7 +67,7 @@ export default class TeamInfo {
 			if (options?.nameWithEmoji) {
 				return `${teamEmoji} ${teamShortName}`;
 			}
-			return teamEmoji;
+			return teamEmoji || teamShortName;
 		}
 
 		const { away_team, home_team } = teamName;
