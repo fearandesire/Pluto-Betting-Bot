@@ -9,6 +9,7 @@ import {
 	type SetPropResultRequest,
 } from '@kh-openapi';
 import { KH_API_CONFIG } from '../KhronosInstances.js';
+import { WinstonLogger } from '../../../logging/WinstonLogger.js';
 
 /**
  * Wrapper for the Props Controller in Khronos
@@ -26,7 +27,14 @@ export default class PropsApiWrapper {
 	 * @returns A promise that resolves to the raw response from the API
 	 */
 	async getAll(params: FindAllPropsRequest) {
-		return await this.propsApi.findAllProps(params);
+		const response = await this.propsApi.findAllProps(params);
+		await WinstonLogger.info({
+			message: `Retrieved ${response.length} props`,
+			metadata: {
+				source: `${this.constructor.name}.${this.getAll.name}`,
+			},
+		});
+		return response;
 	}
 
 	/**
