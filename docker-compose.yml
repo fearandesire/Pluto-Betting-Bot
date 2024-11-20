@@ -1,0 +1,23 @@
+services:
+  pluto_api:
+    image: ghcr.io/fearandesire/pluto-betting-bot:latest
+    build:
+      context: .
+    env_file:
+      - .env
+    volumes:
+      - .env.vault:/app/.env.vault
+      - ./Khronos-Swagger-Spec-v1.json:/app/Khronos-Swagger-Spec-v1.json
+    ports:
+      - 2090:2090
+    networks:
+      - webnet
+      - redis-net
+    restart: always
+    container_name: pluto_api
+
+networks:
+  webnet:
+    external: true
+  redis-net:
+    external: true
