@@ -13,6 +13,8 @@ import AppLog from '../../utils/logging/AppLog.js';
 import StringUtils from '../../utils/common/string-utils.js';
 import { ApiErrorHandler } from '../../utils/api/Khronos/error-handling/ApiErrorHandler.js';
 import { ApiModules } from '../../lib/interfaces/api/api.interface.js';
+import { PaginatedMessageEmbedFields } from '@sapphire/discord.js-utilities';
+import embedColors from '../../lib/colorsConfig.js';
 
 export class UserCommand extends Subcommand {
 	public constructor(
@@ -352,6 +354,7 @@ export class UserCommand extends Subcommand {
 		try {
 			const props: Prop[] = await propsApi.getAll({
 				withActivePredictions: true,
+				guildId: interaction.guildId,
 			});
 
 			return this.sendPropsEmbed(
@@ -373,7 +376,10 @@ export class UserCommand extends Subcommand {
 		const propsApi = new PropsApiWrapper();
 
 		try {
-			const props: Prop[] = await propsApi.getAll({ upcoming: true });
+			const props: Prop[] = await propsApi.getAll({
+				upcoming: true,
+				guildId: interaction.guildId,
+			});
 
 			return this.sendPropsEmbed(
 				interaction,
@@ -393,7 +399,10 @@ export class UserCommand extends Subcommand {
 		const propsApi = new PropsApiWrapper();
 
 		try {
-			const props: Prop[] = await propsApi.getAll({ withinOneWeek: true });
+			const props: Prop[] = await propsApi.getAll({
+				withinOneWeek: true,
+				guildId: interaction.guildId,
+			});
 
 			// Group props by event ID
 			const eventMap = new Map<string, Prop>();
@@ -481,6 +490,7 @@ export class UserCommand extends Subcommand {
 				});
 			}
 			let embed: EmbedBuilder;
+			let formattedProps: { name: string; value: string; inline: boolean }[];
 			if (!options?.isViewingActiveProps) {
 				const firstProp = props[0];
 				const date = new DateManager().toDiscordUnix(firstProp.commence_time);
@@ -490,10 +500,10 @@ export class UserCommand extends Subcommand {
 					.setDescription(
 						`${description}\n\n**Event Information**\n🆔 **Event ID:** \`${eventId}\`\n🗓️ **Date:** ${date}\n${firstProp.home_team} vs ${firstProp.away_team}`,
 					)
-					.setColor('#0099ff')
+					.setColor(embedColors.PlutoBlue)
 					.setTimestamp();
 
-				const formattedProps = this.formatPropsForEmbed(props);
+				formattedProps = await this.formatPropsForEmbed(props);
 				for (const field of formattedProps) {
 					embed.addFields(field);
 				}
@@ -502,78 +512,90 @@ export class UserCommand extends Subcommand {
 				embed = new EmbedBuilder()
 					.setTitle(title)
 					.setDescription(description)
-					.setColor('#0099ff')
+					.setColor(embedColors.PlutoBlue)
 					.setTimestamp();
 
-				const formattedProps = this.formatPropsForEmbed(props);
+				formattedProps = await this.formatPropsForEmbed(props);
 				for (const field of formattedProps) {
 					embed.addFields(field);
 				}
+				const paginatedMsg = new PaginatedMessageEmbedFields({
+					template: { embeds: [embed] },
+				})
+					.setItems(formattedProps)
+					.setItemsPerPage(15)
+					.make();
+				return paginatedMsg.run(interaction);
 			}
-			if (props.length > 25) {
-				embed.setFooter({
-					text: `Showing 25 out of ${props.length} props. More props are available, but cannot be displayed in this embed.`,
-				});
-			}
-			return interaction.editReply({ embeds: [embed] });
 		} catch (error) {
 			this.container.logger.error(error);
 			return new ApiErrorHandler().handle(interaction, error, ApiModules.props);
 		}
 	}
 
-	private formatPropsForEmbed(
+	private async formatPropsForEmbed(
 		props: Prop[],
-	): { name: string; value: string }[] {
-		return props.slice(0, 25).map((prop) => {
-			// Get team short names for cleaner display
-			const homeTeam = TeamInfo.getTeamShortName(prop.home_team);
-			const awayTeam = TeamInfo.getTeamShortName(prop.away_team);
-			const matchup = `${homeTeam} vs. ${awayTeam}`;
+	): Promise<{ name: string; value: string; inline: boolean }[]> {
+		return await Promise.all(
+			props.map(async (prop) => {
+				// Get team short names for cleaner display
+				const homeTeam = await TeamInfo.resolveTeamIdentifier(prop.home_team);
+				const awayTeam = await TeamInfo.resolveTeamIdentifier(prop.away_team);
+				const matchup = `${homeTeam} vs. ${awayTeam}`;
 
-			// Format the market information
-			const translatedKey = StringUtils.toTitleCase(
-				MarketKeyTranslations[prop.market_key],
-			);
+				// Format the market information
+				const translatedKey = StringUtils.toTitleCase(
+					MarketKeyTranslations[prop.market_key],
+				);
 
-			// Format title based on prop type
-			let title: string;
-			if (prop.description) {
-				// Player prop
-				title = `${prop.description} - ${translatedKey}`;
-			} else if (prop.market_key.toLowerCase() === 'h2h') {
-				// Head to head prop
-				title = `${matchup} - ${translatedKey}`;
-			} else if (prop.market_key.toLowerCase().includes('total')) {
-				// Totals prop
-				title = `${matchup} - ${translatedKey}`;
-			} else {
-				// Other props
-				title = `${matchup} - ${translatedKey}`;
-			}
+				// Format title based on prop type
+				let title: string;
+				let marketInfo: string;
 
-			// Format the value field with relevant information
-			const details = [`**Prop ID:** \`${prop.id}\``];
+				if (prop.description) {
+					// Player prop
+					title = prop.description;
+					marketInfo = translatedKey;
+				} else if (prop.market_key.toLowerCase() === 'h2h') {
+					// Head to head prop
+					title = matchup;
+					marketInfo = 'H2H';
+				} else if (prop.market_key.toLowerCase().includes('total')) {
+					// Totals prop
+					title = matchup;
+					marketInfo = 'Totals';
+				} else {
+					// Other props
+					title = matchup;
+					marketInfo = translatedKey;
+				}
 
-			// Add point/line if applicable
-			if (
-				prop.point !== null &&
-				prop.market_key.toLowerCase() !== 'h2h' &&
-				!prop.market_key.toLowerCase().includes('total')
-			) {
-				details.push(`**Over/Under:** ${prop.point}`);
-			}
+				// Format the value field with relevant information
+				const details = [
+					`**Prop ID:** \`${prop.id}\``,
+					`**Market:** ${marketInfo}`,
+				];
 
-			// Parse the date of the match
-			const date = new DateManager().toDiscordUnix(prop.commence_time);
-			details.push(`**Date:** ${date}`);
+				// Add point/line if applicable
+				if (
+					prop.point !== null &&
+					prop.market_key.toLowerCase() !== 'h2h' &&
+					!prop.market_key.toLowerCase().includes('total')
+				) {
+					details.push(`**Over/Under:** ${prop.point}`);
+				}
 
-			return {
-				name: title,
-				value: details.join('\n'),
-				inline: true,
-			};
-		});
+				// Parse the date of the match
+				const date = new DateManager().toDiscordUnix(prop.commence_time);
+				details.push(`**Date:** ${date}`);
+
+				return {
+					name: title,
+					value: details.join('\n'),
+					inline: false,
+				};
+			}),
+		);
 	}
 
 	private async createPropEmbed(
