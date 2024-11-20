@@ -190,3 +190,5 @@ Writerside/**/*
 !.yarn/sdks
 !.yarn/versions
 !.yarn/cache
+
+src/utils/bot_res/img-pup.ts
