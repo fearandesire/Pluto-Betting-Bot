@@ -11,13 +11,6 @@ node_modules
 .flaskenv*
 !.env.project
 !.env.vault
-# Yarn v4
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/sdks
-!.yarn/versions
 backups
 # Ignore git
 .git
@@ -29,5 +22,3 @@ backups
 pnpm-debug.log
 
 !assets/*
-!Khronos-Swagger-Spec-v1.json
-!./Khronos-Swagger-Spec-v1.json
