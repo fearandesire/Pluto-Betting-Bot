@@ -5,8 +5,7 @@ import PropsApiWrapper from '../../utils/api/Khronos/props/propsApiWrapper.js';
 import type { Prop } from '../../openapi/khronos/models/Prop.js';
 import type { UpdatePropResultDto } from '../../openapi/khronos/models/UpdatePropResultDto.js';
 import type { UpdatePropResultResponseDto } from '../../openapi/khronos/models/index.js';
-import PropEmbedManager from '../../utils/guilds/prop-embeds/PropEmbedManager.js';
-import { MarketKeyTranslations, type PropZod } from '@pluto-api-interfaces';
+import { MarketKeyTranslations } from '@pluto-api-interfaces';
 import { DateManager } from '../../utils/common/DateManager.js';
 import TeamInfo from '../../utils/common/TeamInfo.js';
 import AppLog from '../../utils/logging/AppLog.js';
@@ -29,21 +28,7 @@ export class UserCommand extends Subcommand {
 				{
 					name: 'view',
 					type: 'group',
-					entries: [
-						{ name: 'recent', chatInputRun: 'viewRecent' },
-						{ name: 'active', chatInputRun: 'viewActive' },
-						{ name: 'for_event', chatInputRun: 'viewForEvent' },
-						{ name: 'upcoming', chatInputRun: 'viewUpcoming' },
-						{ name: 'player', chatInputRun: 'viewForPlayer' },
-					],
-				},
-				{
-					name: 'generate',
-					type: 'group',
-					entries: [
-						{ name: 'all', chatInputRun: 'generateAll' },
-						{ name: 'prop_embed', chatInputRun: 'generatePropEmbed' },
-					],
+					entries: [{ name: 'active', chatInputRun: 'viewActive' }],
 				},
 				{
 					name: 'manage',
@@ -67,73 +52,8 @@ export class UserCommand extends Subcommand {
 							.setDescription('View props')
 							.addSubcommand((subcommand) =>
 								subcommand
-									.setName('recent')
-									.setDescription('View props up to one week ago from today'),
-							)
-							.addSubcommand((subcommand) =>
-								subcommand
 									.setName('active')
 									.setDescription('View props with active predictions'),
-							)
-							.addSubcommand((subcommand) =>
-								subcommand
-									.setName('player')
-									.setDescription('View props for a specific player')
-									.addStringOption((option) =>
-										option
-											.setName('player')
-											.setDescription('The name of the player')
-											.setRequired(true),
-									),
-							)
-							.addSubcommand((subcommand) =>
-								subcommand
-									.setName('for_event')
-									.setDescription('View all props for a specific event')
-									.addStringOption((option) =>
-										option
-											.setName('event_id')
-											.setDescription('The ID of the event')
-											.setRequired(true),
-									),
-							)
-							.addSubcommand((subcommand) =>
-								subcommand
-									.setName('upcoming')
-									.setDescription('View upcoming props'),
-							),
-					)
-					.addSubcommandGroup((group) =>
-						group
-							.setName('generate')
-							.setDescription('Generate prop embeds')
-							.addSubcommand((subcommand) =>
-								subcommand
-									.setName('all')
-									.setDescription('Generate all prop embeds'),
-							)
-							.addSubcommand((subcommand) =>
-								subcommand
-									.setName('prop_embed')
-									.setDescription('Create a prop embed for a specific event')
-									.addStringOption((option) =>
-										option
-											.setName('prop_id')
-											.setDescription('The ID of the prop')
-											.setRequired(true),
-									)
-									.addStringOption((option) =>
-										option
-											.setName('market_key')
-											.setDescription('The market key for the prop')
-											.setRequired(true),
-									)
-									.addStringOption((option) =>
-										option
-											.setName('player')
-											.setDescription('The player name for the prop')
-											.setRequired(true),
-									),
 							),
 					)
 					.addSubcommandGroup((group) =>
@@ -164,125 +84,15 @@ export class UserCommand extends Subcommand {
 		);
 	}
 
-	public async viewForPlayer(
-		interaction: Subcommand.ChatInputCommandInteraction,
-	) {
-		return this.viewPropsByPlayer(interaction);
-	}
-
-	// View group methods
-	public async viewRecent(interaction: Subcommand.ChatInputCommandInteraction) {
-		return this.viewRecentProps(interaction);
-	}
-
 	public async viewActive(interaction: Subcommand.ChatInputCommandInteraction) {
 		await interaction.deferReply();
 		return this.viewActiveProps(interaction);
 	}
 
-	public async viewForEvent(
-		interaction: Subcommand.ChatInputCommandInteraction,
-	) {
-		return this.viewPropsForEvent(interaction);
-	}
-
-	// NOTE: Needs further filtering to be implemented, since there's a high number of props
-	public async viewUpcoming(
-		interaction: Subcommand.ChatInputCommandInteraction,
-	) {
-		await interaction.deferReply();
-		return this.viewUpcomingProps(interaction);
-	}
-
-	// Generate group methods
-	public async generateAll(
-		interaction: Subcommand.ChatInputCommandInteraction,
-	) {
-		return this.generateProps(interaction);
-	}
-
-	public async generatePropEmbed(
-		interaction: Subcommand.ChatInputCommandInteraction,
-	) {
-		return this.createPropEmbed(interaction);
-	}
-
-	// Manage group methods
 	public async manageSetresult(
 		interaction: Subcommand.ChatInputCommandInteraction,
 	) {
 		return this.setResult(interaction);
-	}
-
-	private async viewPropsByPlayer(
-		interaction: Subcommand.ChatInputCommandInteraction,
-	) {
-		try {
-			const player = interaction.options.getString('player', true);
-			const propsApi = new PropsApiWrapper();
-
-			const props = await propsApi.getPropsByPlayer({ description: player });
-
-			return this.sendPropsEmbed(
-				interaction,
-				props as Prop[],
-				`Props for ${props[0].description}`,
-				`${props.length} total props`,
-			);
-		} catch (error) {
-			this.container.logger.error(error);
-			return interaction.editReply({
-				content: 'An error occured while retrieving the requested data.',
-			});
-		}
-	}
-
-	private async viewPropsForEvent(
-		interaction: Subcommand.ChatInputCommandInteraction,
-	) {
-		const eventId = interaction.options.getString('event_id', true);
-
-		const propsApi = new PropsApiWrapper();
-
-		try {
-			const props: Prop[] = await propsApi.getPropsByEventId(eventId);
-
-			return this.sendPropsEmbed(
-				interaction,
-				props,
-				'Props for Event',
-				`Displaying all props for event: ${eventId}`,
-			);
-		} catch (error) {
-			this.container.logger.error(error);
-			return interaction.reply({
-				content:
-					'An error occurred while fetching props. Please try again later.',
-				ephemeral: true,
-			});
-		}
-	}
-
-	private async generateProps(
-		interaction: Subcommand.ChatInputCommandInteraction,
-	) {
-		await interaction.deferReply();
-		await interaction.editReply({
-			content: 'Generating prop embeds, please wait...',
-		});
-		await new PropsApiWrapper().generateAllPropEmbeds({
-			guildId: interaction.guildId,
-		});
-
-		await interaction.editReply({
-			content: 'Prop Embeds populated successfully',
-		});
-
-		await AppLog.log({
-			guildId: interaction.guildId,
-			description: `${interaction.user.username} generated all prop embeds`,
-			type: LogType.Info,
-		});
 	}
 
 	private async setResult(interaction: Subcommand.ChatInputCommandInteraction) {
@@ -324,7 +134,7 @@ export class UserCommand extends Subcommand {
 	): EmbedBuilder {
 		const embed = new EmbedBuilder()
 			.setTitle('Prop Result Updated')
-			.setColor('#00FF00')
+			.setColor(embedColors.PlutoGreen)
 			.addFields(
 				{
 					name: 'Correct Predictions',
@@ -353,8 +163,8 @@ export class UserCommand extends Subcommand {
 
 		try {
 			const props: Prop[] = await propsApi.getAll({
-				withActivePredictions: true,
 				guildId: interaction.guildId,
+				withActivePredictions: true,
 			});
 
 			return this.sendPropsEmbed(
@@ -370,112 +180,6 @@ export class UserCommand extends Subcommand {
 		}
 	}
 
-	private async viewUpcomingProps(
-		interaction: Subcommand.ChatInputCommandInteraction,
-	) {
-		const propsApi = new PropsApiWrapper();
-
-		try {
-			const props: Prop[] = await propsApi.getAll({
-				upcoming: true,
-				guildId: interaction.guildId,
-			});
-
-			return this.sendPropsEmbed(
-				interaction,
-				props,
-				'Upcoming Props',
-				'Displaying upcoming props.',
-			);
-		} catch (error) {
-			this.container.logger.error(error);
-			return new ApiErrorHandler().handle(interaction, error, ApiModules.props);
-		}
-	}
-
-	private async viewRecentProps(
-		interaction: Subcommand.ChatInputCommandInteraction,
-	) {
-		const propsApi = new PropsApiWrapper();
-
-		try {
-			const props: Prop[] = await propsApi.getAll({
-				withinOneWeek: true,
-				guildId: interaction.guildId,
-			});
-
-			// Group props by event ID
-			const eventMap = new Map<string, Prop>();
-			for (const prop of props) {
-				if (!eventMap.has(prop.event_id)) {
-					eventMap.set(prop.event_id, prop);
-				}
-			}
-
-			const uniqueEvents = Array.from(eventMap.values());
-
-			return this.sendRecentEventsEmbed(
-				interaction,
-				uniqueEvents,
-				'Recent Props',
-				'Displaying recent props.',
-			);
-		} catch (error) {
-			this.container.logger.error(error);
-			return new ApiErrorHandler().handle(interaction, error, ApiModules.props);
-		}
-	}
-
-	private async sendRecentEventsEmbed(
-		interaction: Subcommand.ChatInputCommandInteraction,
-		events: Prop[],
-		title: string,
-		description: string,
-	) {
-		if (events.length === 0) {
-			return interaction.reply({
-				content: 'No recent props found.',
-				ephemeral: true,
-			});
-		}
-
-		const embed = new EmbedBuilder()
-			.setTitle(`🗓️ ${title}`)
-			.setDescription(
-				`${description}\nUse \`/props view_for_event <event_id>\` to see props for a specific event.`,
-			)
-			.setColor('#0099ff')
-			.setTimestamp();
-
-		events.slice(0, 25).forEach((event, index) => {
-			embed.addFields({
-				name: `${index + 1}. ${event.home_team} vs ${event.away_team}`,
-				value: this.formatEventField(event),
-			});
-		});
-
-		if (events.length > 25) {
-			embed.setFooter({
-				text: `Showing 25 out of ${events.length} events. Use the 'view_for_event' command to see props for a specific event.`,
-			});
-		}
-
-		return interaction.reply({ embeds: [embed] });
-	}
-
-	private formatEventField(event: Prop): string {
-		const date = new DateManager().toDiscordUnix(event.commence_time);
-		const shortenTeamName = (teamName: string) => {
-			return TeamInfo.getTeamShortName(teamName);
-		};
-		const hTeamShort = shortenTeamName(event.home_team);
-		const aTeamShort = shortenTeamName(event.away_team);
-
-		return `🆔 **Event ID:** \`${event.event_id}\`
-				⚔️ **Match:** ${hTeamShort} vs ${aTeamShort}
-				🗓️ **Date:** ${date}`;
-	}
-
 	private async sendPropsEmbed(
 		interaction: Subcommand.ChatInputCommandInteraction,
 		props: Prop[],
@@ -489,184 +193,97 @@ export class UserCommand extends Subcommand {
 					content: 'No props were found matching the search criteria.',
 				});
 			}
-			let embed: EmbedBuilder;
-			let formattedProps: { name: string; value: string; inline: boolean }[];
-			if (!options?.isViewingActiveProps) {
-				const firstProp = props[0];
-				const date = new DateManager().toDiscordUnix(firstProp.commence_time);
-				const eventId = firstProp.event_id;
-				embed = new EmbedBuilder()
-					.setTitle(`${title}`)
-					.setDescription(
-						`${description}\n\n**Event Information**\n🆔 **Event ID:** \`${eventId}\`\n🗓️ **Date:** ${date}\n${firstProp.home_team} vs ${firstProp.away_team}`,
-					)
-					.setColor(embedColors.PlutoBlue)
-					.setTimestamp();
 
-				formattedProps = await this.formatPropsForEmbed(props);
-				for (const field of formattedProps) {
-					embed.addFields(field);
-				}
-			}
+			const templateEmbed = new EmbedBuilder()
+				.setTitle(title)
+				.setDescription(description)
+				.setColor(embedColors.PlutoBlue)
+				.setTimestamp();
+
 			if (options?.isViewingActiveProps) {
-				embed = new EmbedBuilder()
-					.setTitle(title)
-					.setDescription(description)
-					.setColor(embedColors.PlutoBlue)
-					.setTimestamp();
+				const formattedProps = await Promise.all(
+					props.map((prop) => this.formatPropField(prop)),
+				);
 
-				formattedProps = await this.formatPropsForEmbed(props);
-				for (const field of formattedProps) {
-					embed.addFields(field);
-				}
 				const paginatedMsg = new PaginatedMessageEmbedFields({
-					template: { embeds: [embed] },
+					template: { embeds: [templateEmbed] },
 				})
 					.setItems(formattedProps)
 					.setItemsPerPage(15)
 					.make();
+
 				return paginatedMsg.run(interaction);
 			}
+
+			const firstProp = props[0];
+			const date = new DateManager().toDiscordUnix(firstProp.commence_time);
+
+			templateEmbed.setDescription(
+				`${description}\n\n**Event Information**\n🆔 **Event ID:** \`${firstProp.event_id}\`\n🗓️ **Date:** ${date}\n${firstProp.home_team} vs ${firstProp.away_team}`,
+			);
+
+			const formattedProps = await Promise.all(
+				props.map((prop) => this.formatPropField(prop)),
+			);
+
+			templateEmbed.addFields(formattedProps);
+			return interaction.editReply({ embeds: [templateEmbed] });
 		} catch (error) {
 			this.container.logger.error(error);
 			return new ApiErrorHandler().handle(interaction, error, ApiModules.props);
 		}
 	}
 
-	private async formatPropsForEmbed(
-		props: Prop[],
-	): Promise<{ name: string; value: string; inline: boolean }[]> {
-		return await Promise.all(
-			props.map(async (prop) => {
-				// Get team short names for cleaner display
-				const homeTeam = await TeamInfo.resolveTeamIdentifier(prop.home_team);
-				const awayTeam = await TeamInfo.resolveTeamIdentifier(prop.away_team);
-				const matchup = `${homeTeam} vs. ${awayTeam}`;
+	private async formatPropField(
+		prop: Prop,
+	): Promise<{ name: string; value: string; inline: boolean }> {
+		const {
+			home_team,
+			away_team,
+			market_key,
+			description,
+			point,
+			id,
+			commence_time,
+		} = prop;
 
-				// Format the market information
-				const translatedKey = StringUtils.toTitleCase(
-					MarketKeyTranslations[prop.market_key],
-				);
+		const homeTeam = await TeamInfo.resolveTeamIdentifier(home_team);
+		const awayTeam = await TeamInfo.resolveTeamIdentifier(away_team);
+		const matchup = `${homeTeam} vs. ${awayTeam}`;
 
-				// Format title based on prop type
-				let title: string;
-				let marketInfo: string;
-
-				if (prop.description) {
-					// Player prop
-					title = `👤 ${prop.description}`;
-					marketInfo = translatedKey;
-				} else if (prop.market_key.toLowerCase() === 'h2h') {
-					// Head to head prop
-					title = matchup;
-					marketInfo = 'H2H';
-				} else if (prop.market_key.toLowerCase().includes('total')) {
-					// Totals prop
-					title = matchup;
-					marketInfo = 'Totals';
-				} else {
-					// Other props
-					title = matchup;
-					marketInfo = translatedKey;
-				}
-
-				// Format the value field with relevant information
-				const details = [
-					`**Prop ID:** \`${prop.id}\``,
-					`**Market:** ${marketInfo}`,
-				];
-
-				// Add point/line if applicable
-				if (
-					prop.point !== null &&
-					prop.market_key.toLowerCase() !== 'h2h' &&
-					!prop.market_key.toLowerCase().includes('total')
-				) {
-					details.push(`**Over/Under:** ${prop.point}`);
-				}
-
-				// Parse the date of the match
-				const date = new DateManager().toDiscordUnix(prop.commence_time);
-				details.push(`**Date:** ${date}`);
-
-				return {
-					name: title,
-					value: details.join('\n'),
-					inline: false,
-				};
-			}),
+		const translatedKey = StringUtils.toTitleCase(
+			MarketKeyTranslations[market_key],
 		);
-	}
 
-	private async createPropEmbed(
-		interaction: Subcommand.ChatInputCommandInteraction,
-	) {
-		const propId = interaction.options.getString('prop_id', true);
-		const marketKey = interaction.options
-			.getString('market_key', true)
-			.toLowerCase();
-		const player = interaction.options.getString('player', true).toLowerCase();
-
-		const propsApi = new PropsApiWrapper();
-
-		try {
-			await interaction.deferReply();
-
-			const prop = (await propsApi.getPropById(propId)) as unknown as PropZod;
-
-			if (!prop) {
-				return interaction.editReply({
-					content: `No prop found with ID: ${propId}`,
-				});
-			}
-
-			if (
-				prop.market_key.toLowerCase() !== marketKey.toLowerCase() ||
-				prop.description?.toLowerCase() !== player.toLowerCase()
-			) {
-				return interaction.editReply({
-					content:
-						'The provided market key or player does not match the prop details.',
-				});
-			}
-
-			const propEmbedManager = new PropEmbedManager(this.container.client);
-			const HTEAM_TRANSFORMED = await propEmbedManager.transformTeamName(
-				prop.home_team,
-			);
-			const AWTEAM_TRANSFORMED = await propEmbedManager.transformTeamName(
-				prop.away_team,
-			);
-			const HTEAM_SHORT_NAME = new StringUtils().getShortName(prop.home_team);
-			const AWTEAM_SHORT_NAME = new StringUtils().getShortName(prop.away_team);
-
-			const { embed, row } = await propEmbedManager.createSingleEmbed(prop, {
-				home: {
-					fullName: prop.home_team,
-					transformed: HTEAM_TRANSFORMED,
-					shortName: HTEAM_SHORT_NAME,
-				},
-				away: {
-					fullName: prop.away_team,
-					transformed: AWTEAM_TRANSFORMED,
-					shortName: AWTEAM_SHORT_NAME,
-				},
-			});
-
-			await interaction.editReply({ embeds: [embed], components: [row] });
-
-			await AppLog.log({
-				guildId: interaction.guildId,
-				description: `Prop embed created for ${propId}`,
-				type: LogType.Info,
-			});
-		} catch (error) {
-			this.container.logger.error(error);
-			return interaction.editReply({
-				content:
-					'An error occurred while creating the prop embed. Please try again later.',
-			});
+		let title: string;
+		if (description) {
+			title = `${description} - ${translatedKey}`;
+		} else if (market_key.toLowerCase() === 'h2h') {
+			title = `${matchup} - H2H`;
+		} else if (market_key.toLowerCase().includes('total')) {
+			title = `${matchup} - Totals`;
+		} else {
+			title = `${matchup} - ${translatedKey}`;
 		}
+
+		const details = [`**Prop ID:** \`${id}\``];
+
+		if (
+			point !== null &&
+			market_key.toLowerCase() !== 'h2h' &&
+			!market_key.toLowerCase().includes('total')
+		) {
+			details.push(`**Over/Under:** ${point}`);
+		}
+
+		const date = new DateManager().toDiscordUnix(commence_time);
+		details.push(`**Date:** ${date}`);
+
+		return {
+			name: title,
+			value: details.join('\n'),
+			inline: true,
+		};
 	}
 }
 
