@@ -554,7 +554,7 @@ export class UserCommand extends Subcommand {
 
 				if (prop.description) {
 					// Player prop
-					title = prop.description;
+					title = `👤 ${prop.description}`;
 					marketInfo = translatedKey;
 				} else if (prop.market_key.toLowerCase() === 'h2h') {
 					// Head to head prop
