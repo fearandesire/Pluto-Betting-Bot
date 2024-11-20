@@ -102,6 +102,7 @@ export default class TeamInfo {
 	 * @param teamName The full name of the team
 	 * @returns An object containing team information
 	 * In the event the emoji is not found, the short name is a fallback.
+	 * This method assumes the full team name is provided.
 	 */
 	public async getTeamInfo(teamName: string): Promise<GetTeamInfoResponse> {
 		const shortName = new StringUtils().getShortName(teamName);
