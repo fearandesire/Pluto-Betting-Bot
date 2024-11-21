@@ -3,8 +3,6 @@ services:
     image: ghcr.io/fearandesire/pluto-betting-bot:latest
     build:
       context: .
-    env_file:
-      - .env
     volumes:
       - .env.vault:/app/.env.vault
       - ./Khronos-Swagger-Spec-v1.json:/app/Khronos-Swagger-Spec-v1.json
