@@ -1,6 +1,10 @@
 import { LogType } from '../../utils/logging/AppLog.interface.js';
 import { Subcommand } from '@sapphire/plugin-subcommands';
-import { PermissionFlagsBits, EmbedBuilder } from 'discord.js';
+import {
+	PermissionFlagsBits,
+	EmbedBuilder,
+	type ChatInputCommandInteraction,
+} from 'discord.js';
 import PropsApiWrapper from '../../utils/api/Khronos/props/propsApiWrapper.js';
 import type { Prop } from '../../openapi/khronos/models/Prop.js';
 import type { UpdatePropResultDto } from '../../openapi/khronos/models/UpdatePropResultDto.js';
@@ -14,6 +18,9 @@ import { ApiErrorHandler } from '../../utils/api/Khronos/error-handling/ApiError
 import { ApiModules } from '../../lib/interfaces/api/api.interface.js';
 import { PaginatedMessageEmbedFields } from '@sapphire/discord.js-utilities';
 import embedColors from '../../lib/colorsConfig.js';
+import { entries } from 'lodash';
+import { type } from 'node:os';
+import { log } from 'node:console';
 
 export class UserCommand extends Subcommand {
 	public constructor(
@@ -29,6 +36,14 @@ export class UserCommand extends Subcommand {
 					name: 'view',
 					type: 'group',
 					entries: [{ name: 'active', chatInputRun: 'viewActive' }],
+				},
+				{
+					name: 'generate',
+					type: 'group',
+					entries: [
+						{ name: 'all', chatInputRun: 'generateAll' },
+						{ name: 'prop_embed', chatInputRun: 'generatePropEmbed' },
+					],
 				},
 				{
 					name: 'manage',
@@ -54,6 +69,16 @@ export class UserCommand extends Subcommand {
 								subcommand
 									.setName('active')
 									.setDescription('View props with active predictions'),
+							),
+					)
+					.addSubcommandGroup((group) =>
+						group
+							.setName('generate')
+							.setDescription('Generate prop embeds')
+							.addSubcommand((subcommand) =>
+								subcommand
+									.setName('all')
+									.setDescription('Generate all prop embeds'),
 							),
 					)
 					.addSubcommandGroup((group) =>
@@ -93,6 +118,12 @@ export class UserCommand extends Subcommand {
 		interaction: Subcommand.ChatInputCommandInteraction,
 	) {
 		return this.setResult(interaction);
+	}
+
+	public async generateAll(
+		interaction: Subcommand.ChatInputCommandInteraction,
+	) {
+		return this.generateProps(interaction);
 	}
 
 	private async setResult(interaction: Subcommand.ChatInputCommandInteraction) {
@@ -154,6 +185,28 @@ export class UserCommand extends Subcommand {
 			);
 
 		return embed;
+	}
+
+	private async generateProps(
+		interaction: Subcommand.ChatInputCommandInteraction,
+	) {
+		await interaction.deferReply();
+		await interaction.editReply({
+			content: 'Generating prop embeds, please wait...',
+		});
+		await new PropsApiWrapper().generateAllPropEmbeds({
+			guildId: interaction.guildId,
+		});
+
+		await interaction.editReply({
+			content: 'Prop Embeds populated successfully',
+		});
+
+		await AppLog.log({
+			guildId: interaction.guildId,
+			description: `${interaction.user.username} generated all prop embeds`,
+			type: LogType.Info,
+		});
 	}
 
 	private async viewActiveProps(
