@@ -25,16 +25,6 @@ import { bold, EmbedBuilder, underline } from 'discord.js';
  * So we will anonymously handle it, regardless of what the field name is
  */
 
-// Add these type guards at the top of the file or in a separate types file
-type H2HPercentages = { home: number; away: number };
-type OverUnderPercentages = { over: number; under: number };
-
-function isH2HStats(
-	stats: H2HPropStats | NonH2HPropStats,
-): stats is H2HPropStats {
-	return 'home' in (stats.percentages as H2HPercentages);
-}
-
 export default class PropsStats extends PropsPresentation {
 	private clientTools: ClientTools;
 
