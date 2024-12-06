@@ -127,15 +127,19 @@ export const PropPredictionStatsSchema = z.object({
 	prop_id: z.string().describe('Unique identifier for the prop'),
 	home_team: z.string().describe('Name of the home team'),
 	away_team: z.string().describe('Name of the away team'),
-	total_predictions: z.number().describe('Total number of predictions made'),
+	total_predictions: z
+		.string()
+		.describe('Total number of predictions made')
+		.transform((val) => Number(val)),
 	market_key: BettingMarketSchema,
 	stats: z.object({
-		total_predictions: z.number(),
+		total_predictions: z.string().transform((val) => Number(val)),
 		percentages: z.union([h2HStatsSchema, overUnderStatsSchema]),
 		tallies: z.union([h2HStatsSchema, overUnderStatsSchema]),
 	}),
 	price: z
-		.number()
+		.string()
+		.transform((val) => Number(val))
 		.describe(
 			"The price of the odds - if it's not a H2H market, this is present",
 		)
