@@ -1,6 +1,35 @@
 {
   "openapi": "3.0.0",
   "paths": {
+    "/sample": {
+      "get": {
+        "operationId": "SampleController_sampleQuery",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/sample/edentest": {
+      "get": {
+        "operationId": "SampleController_getData",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/matches/info/{matchid}": {
       "get": {
         "operationId": "matchInfo",
@@ -2424,6 +2453,29 @@
         ]
       }
     },
+    "/props/manual/checkresult/{matchid}": {
+      "post": {
+        "operationId": "PropsController_checkForPropResult",
+        "parameters": [
+          {
+            "name": "matchid",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Props"
+        ]
+      }
+    },
     "/props/manual/send/{guildId}": {
       "get": {
         "operationId": "manualSendProps",
@@ -2544,6 +2596,42 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PredictionStatsDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Prop not found"
+          }
+        },
+        "tags": [
+          "Props"
+        ]
+      }
+    },
+    "/props/{id}/reset": {
+      "patch": {
+        "operationId": "resetPropAndPredictions",
+        "summary": "Reset a prop and its predictions to pending status",
+        "description": "Resets the specified prop and all its associated predictions back to pending status",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The ID of the prop to reset",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The prop and its predictions have been successfully reset to pending status.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Prop"
                 }
               }
             }
