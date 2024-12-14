@@ -25,7 +25,7 @@
 		"ci-gen-api": "rimraf ./src/openapi && pnpm gen-api && pnpm post-api-fix",
 		"sap-cmd": "sapphire generate slashcommand",
 		"dvault": "npx dotenv-vault@latest",
-		"dvault-prod": "npx dotenv-vault@latest push prod",
+		"dvault-prod": "npx dotenv-vault@latest push production",
 		"release": "release-it",
 		"docker:push": "docker-compose build --no-cache && docker-compose push",
 		"docker:pull": "docker-compose pull",
