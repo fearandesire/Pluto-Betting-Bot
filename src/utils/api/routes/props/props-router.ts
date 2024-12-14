@@ -16,7 +16,14 @@ PropsRouter.post('/props/daily', async (ctx) => {
 });
 
 PropsRouter.post('/props/stats/post-start', async (ctx) => {
-	try {
+	// ? Disabled for now
+	ctx.status = 200;
+	ctx.body = {
+		message:
+			'Received request to process Props post-start stats (Disabled Feature)',
+	};
+	return;
+	/* 	try {
 		WinstonLogger.info({
 			message: 'Received request to process Props post-start stats',
 		});
@@ -29,7 +36,7 @@ PropsRouter.post('/props/stats/post-start', async (ctx) => {
 	} catch (error) {
 		ctx.status = 400;
 		ctx.body = { message: (error as Error).message };
-	}
+	} */
 });
 
 export default PropsRouter;
