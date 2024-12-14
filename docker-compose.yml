@@ -3,8 +3,8 @@ services:
     image: ghcr.io/fearandesire/pluto-betting-bot:latest
     build:
       context: .
-    environment:
-        - DOTENV_KEY=${PLUTO_DOTENV_KEY}
+    env_file:
+      - .env
     volumes:
       - .env.vault:/app/.env.vault
       - ./Khronos-Swagger-Spec-v1.json:/app/Khronos-Swagger-Spec-v1.json
