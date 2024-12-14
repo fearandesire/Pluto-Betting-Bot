@@ -25,6 +25,7 @@
 		"ci-gen-api": "rimraf ./src/openapi && pnpm gen-api && pnpm post-api-fix",
 		"sap-cmd": "sapphire generate slashcommand",
 		"dvault": "npx dotenv-vault@latest",
+		"dvault-prod": "npx dotenv-vault@latest push prod",
 		"release": "release-it",
 		"docker:push": "docker-compose build --no-cache && docker-compose push",
 		"docker:pull": "docker-compose pull",
@@ -176,18 +177,13 @@
 			"^@/(.*)$": "<rootDir>/src/$1",
 			"^lib/(.*)$": "<rootDir>/lib/$1"
 		},
-		"moduleFileExtensions": [
-			"ts",
-			"js"
-		],
+		"moduleFileExtensions": ["ts", "js"],
 		"rootDir": "src",
 		"testRegex": ".*\\.spec\\.ts$",
 		"transform": {
 			"^.+\\.(t|j)s$": "ts-jest"
 		},
-		"collectCoverageFrom": [
-			"**/*.(t|j)s"
-		],
+		"collectCoverageFrom": ["**/*.(t|j)s"],
 		"coverageDirectory": "../coverage",
 		"testEnvironment": "node"
 	}

@@ -74,3 +74,4 @@ assets/**/*
 Writerside/**/*
 
 src/utils/bot_res/img-pup.ts
+.flaskenv*
