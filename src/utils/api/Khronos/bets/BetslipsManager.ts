@@ -304,10 +304,13 @@ export class BetslipManager {
 			payout: betData.payData.payout,
 		});
 		const formattedBetData = this.formatBetStr(betAmount, payout, profit);
+		// uppercase the first letter of users team choice with lodash
+		const usersTeamUpper = _.upperFirst(usersTeam);
+
 		const embed = new EmbedBuilder()
 			.setTitle('Pending Betslip')
 			.setDescription(
-				`## ${chosenTeamStr} *vs.* ${oppTeamStr}\n**${usersTeam}** | **${dateofmatchup}**\n${formattedBetData}\n*Confirm your bet via the buttons below*`,
+				`## ${chosenTeamStr} *vs.* ${oppTeamStr}\n**${usersTeamUpper}** | **${dateofmatchup}**\n${formattedBetData}\n*Confirm your bet via the buttons below*`,
 			)
 			.setColor(embedColors.PlutoYellow)
 			.setFooter({
