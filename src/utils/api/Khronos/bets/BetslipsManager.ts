@@ -213,7 +213,7 @@ export class BetslipManager {
 			.setColor(embedColors.success)
 			.setThumbnail(embedImg)
 			.setFooter({
-				text: `${helpfooter('betting')} | Bet ID: ${betslip.betid}`,
+				text: `Bet ID: ${betslip.betid} | ${helpfooter('betting')}`,
 			});
 		await interaction.followUp({
 			embeds: [successEmbed],
@@ -312,6 +312,7 @@ export class BetslipManager {
 			.setDescription(
 				`## ${chosenTeamStr} *vs.* ${oppTeamStr}\n**${usersTeamUpper}** | **${dateofmatchup}**\n${formattedBetData}\n*Confirm your bet via the buttons below*`,
 			)
+			.setThumbnail(interaction.user.displayAvatarURL())
 			.setColor(embedColors.PlutoYellow)
 			.setFooter({
 				text: helpfooter('betting'),
