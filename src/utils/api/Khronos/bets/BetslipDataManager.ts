@@ -7,6 +7,11 @@ import type BetslipWrapper from './betslip-wrapper.js';
 export default class BetslipDataManager {
 	constructor(private betslipWrapper: BetslipWrapper) {}
 
+	private formatDate(isoDate: string): string {
+		const date = new Date(isoDate);
+		return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
+	}
+
 	async getActiveBets(interaction: CommandInteraction, userId: string) {
 		const activeBets = await this.betslipWrapper.activeBetsForUser({
 			userid: userId,
@@ -48,7 +53,7 @@ export default class BetslipDataManager {
 				`**Amount:** \`$${amount}\`\n` +
 				`**Profit:** \`$${profit}\`\n` +
 				`**Payout:** \`$${payout}\`\n` +
-				`**Date Placed:** ${bet.dateofbet}`;
+				`**Date Placed:** ${this.formatDate(bet.dateofbet)}`;
 
 			embed.addFields({
 				name: `**ID:** \`${bet.betid}\``,
