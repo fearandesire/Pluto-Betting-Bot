@@ -5,7 +5,7 @@ import type {
 	PlaceBetDto,
 	PlacedBetslip,
 } from '@kh-openapi';
-import { helpfooter } from '@pluto-config';
+import { helpfooter, supportMessage } from '@pluto-config';
 import {
 	ActionRowBuilder,
 	ButtonBuilder,
@@ -236,7 +236,7 @@ export class BetslipManager {
 			if (isApiError(patreonOverride)) {
 				console.error(`Unknown Err in patreonOverride:\n${patreonOverride}`);
 				const errEmbed = ErrorEmbeds.accountErr(
-					'Unable to cancel bet due to an error.\nPlease reach out for support.',
+					`Unable to cancel bet due to an error.\n${supportMessage}`,
 				);
 				return interaction.followUp({ embeds: [errEmbed] });
 			}

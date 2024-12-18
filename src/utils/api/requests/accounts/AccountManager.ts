@@ -20,6 +20,7 @@ import { ApiErrorHandler } from '../../Khronos/error-handling/ApiErrorHandler.js
 import { plutoWelcomeMsg } from '../../common/interfaces/kh-pluto/kh-pluto.interface.js';
 import MoneyFormatter from '../../common/money-formatting/money-format.js';
 import PatreonFacade from '../../patreon/Patreon-Facade.js';
+import { supportMessage } from '../../../../lib/PlutoConfig.js';
 
 export class AccountsWrapper {
 	private accountsApi: AccountsApi;
@@ -89,7 +90,7 @@ export class AccountManager {
 			const { balance } = res;
 			if (!balance) {
 				const errEmbed = ErrorEmbeds.accountErr(
-					`Unable to locate your account's balance.\nPlease reach out for support.`,
+					`Unable to locate your account's balance.\n${supportMessage}`,
 				);
 				return interaction.editReply({ embeds: [errEmbed] });
 			}

@@ -77,4 +77,6 @@ function randomFooter(type: FooterTypes = 'default'): string {
 	return selectedFooters[randomIndex];
 }
 
-export { randomFooter as helpfooter, Log, findEmoji, appOwner };
+const supportMessage = 'Please reach out to `fenixforever` for support.';
+
+export { randomFooter as helpfooter, Log, findEmoji, appOwner, supportMessage };
