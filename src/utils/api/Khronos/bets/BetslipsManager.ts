@@ -30,6 +30,7 @@ import PatreonFacade from '../../patreon/Patreon-Facade.js';
 import { ApiErrorHandler } from '../error-handling/ApiErrorHandler.js';
 import GuildWrapper from '../guild/guild-wrapper.js';
 import BetslipWrapper from './betslip-wrapper.js';
+import _ from 'lodash';
 
 interface InitializeParams {
 	team: string;
@@ -294,7 +295,8 @@ export class BetslipManager {
 		let oppTeamStr = await findEmoji(opponent);
 
 		if (!chosenTeamStr || chosenTeamStr === '') chosenTeamStr = usersTeam;
-		if (!oppTeamStr || oppTeamStr === '') oppTeamStr = opponent;
+		if (!oppTeamStr || oppTeamStr === '')
+			oppTeamStr = _.last(opponent.split(' ')); // Fallback to use the shortname of the opponent
 
 		const { betAmount, profit, payout } = await MoneyFormatter.formatAmounts({
 			amount: betslip.amount,
