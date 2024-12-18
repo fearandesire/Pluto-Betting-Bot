@@ -2071,6 +2071,296 @@
         ]
       }
     },
+    "/accounts": {
+      "get": {
+        "operationId": "getMany",
+        "summary": "Get multiple accounts by IDs",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Account"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Accounts"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "createAccount",
+        "summary": "Create a new account",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "userid": {
+                    "type": "string",
+                    "example": "208016830491525120"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Possible error responses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KHApiErrStandard"
+                },
+                "examples": {
+                  "example1": {
+                    "summary": "AccountAlreadyExists",
+                    "value": {
+                      "statusCode": 409,
+                      "message": "You already have an account registered.",
+                      "exception": "AccountAlreadyExists"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Accounts"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/accounts/{id}": {
+      "get": {
+        "operationId": "getOne",
+        "summary": "Get a single account by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "208016830491525120",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested account could not be found.\nTry using `/register` first to instantly create an account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/KHApiErrStandard"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 404
+                        },
+                        "message": {
+                          "example": "The requested account could not be found.\nTry using `/register` first to instantly create an account."
+                        },
+                        "exception": {
+                          "example": "AccountNotFound"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Accounts"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "updateAccount",
+        "summary": "Update an account by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "208016830491525120",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested account could not be found.\nTry using `/register` first to instantly create an account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/KHApiErrStandard"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 404
+                        },
+                        "message": {
+                          "example": "The requested account could not be found.\nTry using `/register` first to instantly create an account."
+                        },
+                        "exception": {
+                          "example": "AccountNotFound"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Accounts"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "deleteAccount",
+        "summary": "Delete an account by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "208016830491525120",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested account could not be found.\nTry using `/register` first to instantly create an account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/KHApiErrStandard"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 404
+                        },
+                        "message": {
+                          "example": "The requested account could not be found.\nTry using `/register` first to instantly create an account."
+                        },
+                        "exception": {
+                          "example": "AccountNotFound"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Accounts"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
     "/odds/game/{id}": {
       "get": {
         "operationId": "findById",
