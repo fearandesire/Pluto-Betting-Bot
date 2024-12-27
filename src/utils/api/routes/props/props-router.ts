@@ -1,8 +1,6 @@
 import Router from 'koa-router';
 import { PropsController } from '../../controllers/props.controller.js';
 import type { ReqBodyPropsEmbedsData } from './props-route.interface.js';
-import PropsStats from '../../controllers/props-stats.js';
-import { WinstonLogger } from '../../../logging/WinstonLogger.js';
 
 const PropsRouter = new Router();
 const propsController = new PropsController();

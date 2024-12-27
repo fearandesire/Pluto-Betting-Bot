@@ -6,6 +6,10 @@ export const GuildChannelSchema = z.object({
 	guild_id: z.string(),
 	channel_id: z.string(),
 	sport: z.string(),
+	preferred_teams: z
+		.string()
+		.optional()
+		.describe('Array of teams a guild is constrained to receive data for'),
 });
 
 export const GuildChannelArraySchema = z.array(GuildChannelSchema);

@@ -13,6 +13,9 @@ import { PropsPresentation } from '../services/props-presentation.service.js';
 import { ValidationError } from '../../../utils/errors/ValidationError.js';
 import { fromZodError } from 'zod-validation-error';
 import _ from 'lodash';
+/**
+ * Handling processing data for incoming requests for props
+ */
 
 export class PropsController {
 	private propsService: PropsPresentation;

@@ -22,6 +22,35 @@ export class PropsPresentation {
 	 */
 
 	/**
+	 * Filters props based on a guild's preferred teams.
+	 * @param {PropZod[]} props - Array of props to filter.
+	 * @param {string | undefined} preferredTeams - Comma-separated string of preferred teams, or undefined.
+	 * @returns {PropZod[]} Filtered array of props.
+	 */
+	private filterPropsByPreferredTeams(
+		props: PropZod[],
+		preferredTeams?: string,
+	): PropZod[] {
+		// If no preferred teams, return all props
+		if (!preferredTeams) {
+			return props;
+		}
+
+		const preferredTeamsArray = preferredTeams
+			.split(',')
+			.map((team) => team.trim());
+
+		// Return props that have either home_team or away_team in preferred teams
+		return props.filter((prop) =>
+			preferredTeamsArray.some(
+				(team) =>
+					prop.home_team.toLowerCase().includes(team.toLowerCase()) ||
+					prop.away_team.toLowerCase().includes(team.toLowerCase()),
+			),
+		);
+	}
+
+	/**
 	 * Processes props and creates embeds for the specified guild channels.
 	 * @param {PropZod[]} props - Array of props to process.
 	 * @param {Object[]} guildChannels - Array of guild and channel objects.
@@ -52,7 +81,30 @@ export class PropsPresentation {
 		});
 
 		const embedManager = new PropEmbedManager(SapDiscClient);
-		await embedManager.createEmbeds(uniqueProps, guildChannels);
+
+		// Group props by guild based on preferred teams
+		const guildProps = new Map<string, PropZod[]>();
+
+		for (const channel of guildChannels) {
+			const filteredProps = this.filterPropsByPreferredTeams(
+				uniqueProps,
+				channel.preferred_teams,
+			);
+			guildProps.set(channel.guild_id, filteredProps);
+
+			await WinstonLogger.info('Props filtered by preferred teams for guild', {
+				guildId: channel.guild_id,
+				preferredTeams: channel.preferred_teams,
+				filteredPropsLength: filteredProps.length,
+				source: this.processAndCreateEmbeds.name,
+			});
+		}
+
+		// Create embeds for each guild with their filtered props
+		for (const channel of guildChannels) {
+			const guildFilteredProps = guildProps.get(channel.guild_id) || [];
+			await embedManager.createEmbeds(guildFilteredProps, [channel]);
+		}
 	}
 
 	/**
