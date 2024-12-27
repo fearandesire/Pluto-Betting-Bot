@@ -22,7 +22,7 @@ export class UserCommand extends Command {
 				builder
 					.setName('accuracy_leaderboard')
 					.setDescription(this.description)
-					.setDMPermission(false)
+					.setContexts([0])
 					.addSubcommand((subcommand) =>
 						subcommand
 							.setName('weekly')
@@ -32,7 +32,7 @@ export class UserCommand extends Command {
 									.setName('week_number')
 									.setDescription('The week number to view.')
 									.setMinValue(1)
-									.setRequired(true),
+									.setRequired(false),
 							),
 					)
 					.addSubcommand((subcommand) =>
@@ -95,7 +95,8 @@ export class UserCommand extends Command {
 	private async handleWeeklyLeaderboard(
 		interaction: Command.ChatInputCommandInteraction,
 	) {
-		const weekNumber = interaction.options.getInteger('week_number', true);
+		const weekNumber =
+			interaction.options.getInteger('week_number', false) ?? null;
 		const guildId = interaction.guildId;
 		const currentYear = new Date().getFullYear();
 
@@ -125,10 +126,14 @@ export class UserCommand extends Command {
 				});
 			}
 
+			const weeklyTitle = weekNumber
+				? `Week ${weekNumber}`
+				: `Week ${leaderboard?.current_week}`;
 			const embed = await this.createLeaderboardEmbed({
 				leaderboardData: parsedLeaderboard,
 				type: 'weekly',
-				metadata: { thumbnail },
+				title: weeklyTitle,
+				metadata: { thumbnail, currentWeek: leaderboard?.current_week },
 			});
 			const pagination = new Pagination();
 			const components = pagination.createPaginationButtons(
@@ -486,6 +491,7 @@ class CreateLeaderboardEmbedParams {
 	type: 'weekly' | 'monthly' | 'seasonal' | 'allTime';
 	metadata?: {
 		thumbnail?: string;
+		currentWeek?: number;
 	};
 }
 
