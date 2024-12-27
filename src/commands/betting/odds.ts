@@ -35,6 +35,7 @@ export class UserCommand extends Command {
 			const sport = guildConfig.sport;
 			const matchupsForGuild = await new MatchApiWrapper().matchesForSport({
 				sport: sport.toLowerCase(),
+				guildId,
 			});
 			const { matches } = matchupsForGuild;
 			const oddsEmbed = await prepareAndFormat(matches, embedThumbnail);
