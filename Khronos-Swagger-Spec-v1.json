@@ -205,6 +205,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "guildId",
+            "required": true,
+            "in": "path",
+            "description": "Guild ID to fetch matches for",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -270,6 +279,156 @@
         },
         "tags": [
           "Matches"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/discord/configs/set": {
+      "post": {
+        "operationId": "setGuildConfig",
+        "summary": "Add or Update a Discord configuration",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateConfigDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully stored the config."
+          }
+        },
+        "tags": [
+          "Discord Config"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/discord/configs/games/schedule/all": {
+      "get": {
+        "operationId": "getGameSchedule",
+        "summary": "Get game schedules",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Game schedules retrieved successfully."
+          }
+        },
+        "tags": [
+          "Discord Config"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/discord/configs/categories/sports/all": {
+      "get": {
+        "operationId": "DiscordConfigController_getGameCategories",
+        "summary": "Get all game categories",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Game categories retrieved successfully."
+          }
+        },
+        "tags": [
+          "Discord Config"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/discord/configs/by-guild": {
+      "get": {
+        "operationId": "allCategoriesByGuild",
+        "summary": "Get all categories grouped by guild",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Categories grouped by guild retrieved successfully."
+          }
+        },
+        "tags": [
+          "Discord Config"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/discord/configs/type/{config}": {
+      "get": {
+        "operationId": "configByType",
+        "summary": "Get all values that match a configuration by type",
+        "parameters": [
+          {
+            "name": "config",
+            "required": true,
+            "in": "path",
+            "description": "Config type",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Configuration by type retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoredConfigDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Discord Config"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/discord/configs/all/betting-channels": {
+      "get": {
+        "operationId": "allBettingChannels",
+        "summary": "Get all betting channels",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "All betting channels retrieved successfully."
+          }
+        },
+        "tags": [
+          "Discord Config"
         ],
         "security": [
           {
@@ -794,7 +953,8 @@
                 "DAILY_SCHEDULE_CHAN",
                 "PREDICTIONS_CHAN",
                 "LOGS_CHAN",
-                "LOGS_ENABLED"
+                "LOGS_ENABLED",
+                "PREFERRED_TEAMS"
               ],
               "type": "string"
             }
@@ -844,156 +1004,6 @@
         },
         "tags": [
           "guilds"
-        ],
-        "security": [
-          {
-            "x-api-key": []
-          }
-        ]
-      }
-    },
-    "/discord/configs/set": {
-      "post": {
-        "operationId": "setGuildConfig",
-        "summary": "Add or Update a Discord configuration",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateConfigDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successfully stored the config."
-          }
-        },
-        "tags": [
-          "Discord Config"
-        ],
-        "security": [
-          {
-            "x-api-key": []
-          }
-        ]
-      }
-    },
-    "/discord/configs/games/schedule/all": {
-      "get": {
-        "operationId": "getGameSchedule",
-        "summary": "Get game schedules",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Game schedules retrieved successfully."
-          }
-        },
-        "tags": [
-          "Discord Config"
-        ],
-        "security": [
-          {
-            "x-api-key": []
-          },
-          {
-            "bearer": []
-          }
-        ]
-      }
-    },
-    "/discord/configs/categories/sports/all": {
-      "get": {
-        "operationId": "DiscordConfigController_getGameCategories",
-        "summary": "Get all game categories",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Game categories retrieved successfully."
-          }
-        },
-        "tags": [
-          "Discord Config"
-        ],
-        "security": [
-          {
-            "x-api-key": []
-          }
-        ]
-      }
-    },
-    "/discord/configs/by-guild": {
-      "get": {
-        "operationId": "allCategoriesByGuild",
-        "summary": "Get all categories grouped by guild",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Categories grouped by guild retrieved successfully."
-          }
-        },
-        "tags": [
-          "Discord Config"
-        ],
-        "security": [
-          {
-            "x-api-key": []
-          }
-        ]
-      }
-    },
-    "/discord/configs/type/{config}": {
-      "get": {
-        "operationId": "configByType",
-        "summary": "Get all values that match a configuration by type",
-        "parameters": [
-          {
-            "name": "config",
-            "required": true,
-            "in": "path",
-            "description": "Config type",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Configuration by type retrieved successfully.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StoredConfigDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "Discord Config"
-        ],
-        "security": [
-          {
-            "x-api-key": []
-          }
-        ]
-      }
-    },
-    "/discord/configs/all/betting-channels": {
-      "get": {
-        "operationId": "allBettingChannels",
-        "summary": "Get all betting channels",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "All betting channels retrieved successfully."
-          }
-        },
-        "tags": [
-          "Discord Config"
         ],
         "security": [
           {
@@ -3608,6 +3618,279 @@
           }
         }
       }
+    },
+    "/store/items": {
+      "get": {
+        "operationId": "StoreController_getAllItems",
+        "summary": "Get all available store items",
+        "parameters": [
+          {
+            "name": "type",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns all available store items",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StoreItem"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Store"
+        ]
+      },
+      "post": {
+        "operationId": "StoreController_createItem",
+        "summary": "Create a new store item",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Returns the created store item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoreItem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Store"
+        ]
+      }
+    },
+    "/store/items/{id}": {
+      "get": {
+        "operationId": "StoreController_getItemById",
+        "summary": "Get a specific store item by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the specified store item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoreItem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Store"
+        ]
+      },
+      "delete": {
+        "operationId": "StoreController_deleteItem",
+        "summary": "Delete a store item",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the deleted store item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoreItem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Store"
+        ]
+      }
+    },
+    "/store/purchase/{userId}/{itemId}": {
+      "post": {
+        "operationId": "StoreController_purchaseItem",
+        "summary": "Purchase an item for a user",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "itemId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "quantity",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the updated inventory entry",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserInventory"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Store"
+        ]
+      }
+    },
+    "/store/inventory/{userId}": {
+      "get": {
+        "operationId": "StoreController_getUserInventory",
+        "summary": "Get a user's inventory",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the user's inventory",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserInventory"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Store"
+        ]
+      }
+    },
+    "/store/inventory/{userId}/{inventoryId}/toggle": {
+      "put": {
+        "operationId": "StoreController_toggleItemEquipped",
+        "summary": "Toggle equipped status of an inventory item",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "inventoryId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the updated inventory entry",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserInventory"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Store"
+        ]
+      }
+    },
+    "/store/inventory/{userId}/{inventoryId}/use": {
+      "post": {
+        "operationId": "StoreController_useItem",
+        "summary": "Use a consumable item from inventory",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "inventoryId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the updated inventory entry",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserInventory"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Store"
+        ]
+      }
     }
   },
   "info": {
@@ -3888,6 +4171,169 @@
           "matches"
         ]
       },
+      "CreateConfigDto": {
+        "type": "object",
+        "properties": {
+          "guild_id": {
+            "type": "string",
+            "description": "The unique identifier for the guild",
+            "example": "123456789"
+          },
+          "setting_type": {
+            "type": "string",
+            "description": "The type of setting for the Discord configuration",
+            "enum": [
+              "GAMES_CATEGORY",
+              "BETTING_CHAN",
+              "DAILY_SCHEDULE_CHAN",
+              "PREDICTIONS_CHAN",
+              "LOGS_CHAN",
+              "LOGS_ENABLED",
+              "PREFERRED_TEAMS"
+            ],
+            "example": "PREDICTIONS_CHAN"
+          },
+          "setting_value": {
+            "type": "string",
+            "description": "The value associated with the setting",
+            "example": "123456789012345678"
+          }
+        },
+        "required": [
+          "guild_id",
+          "setting_type",
+          "setting_value"
+        ]
+      },
+      "DiscordConfig": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the Discord configuration entry"
+          },
+          "guild_id": {
+            "type": "string",
+            "description": "Guild ID associated with the setting"
+          },
+          "setting_type": {
+            "type": "string",
+            "description": "Type of setting",
+            "enum": [
+              "GAMES_CATEGORY",
+              "BETTING_CHAN",
+              "DAILY_SCHEDULE_CHAN",
+              "PREDICTIONS_CHAN",
+              "LOGS_CHAN",
+              "LOGS_ENABLED",
+              "PREFERRED_TEAMS"
+            ],
+            "example": "GAMES_CATEGORY"
+          },
+          "setting_value": {
+            "type": "string",
+            "description": "Value of the setting",
+            "example": "123456789012345678"
+          },
+          "guild": {
+            "description": "Guild related to the config",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Guild"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "guild_id",
+          "setting_type",
+          "setting_value",
+          "guild"
+        ]
+      },
+      "Guild": {
+        "type": "object",
+        "properties": {
+          "guild_id": {
+            "type": "string",
+            "description": "Unique identifier of the guild"
+          },
+          "guild_name": {
+            "type": "string",
+            "description": "Name of the guild"
+          },
+          "date_joined": {
+            "type": "string",
+            "description": "Date when the guild joined",
+            "example": "2024-01-01"
+          },
+          "sport": {
+            "type": "string",
+            "description": "Sport associated with the guild"
+          },
+          "config": {
+            "description": "Discord configurations associated with the guild",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DiscordConfig"
+            }
+          }
+        },
+        "required": [
+          "guild_id",
+          "guild_name",
+          "date_joined",
+          "sport"
+        ]
+      },
+      "StoredConfigDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the Discord configuration entry"
+          },
+          "guild_id": {
+            "type": "string",
+            "description": "Guild ID associated with the setting"
+          },
+          "setting_type": {
+            "type": "string",
+            "description": "Type of setting",
+            "enum": [
+              "GAMES_CATEGORY",
+              "BETTING_CHAN",
+              "DAILY_SCHEDULE_CHAN",
+              "PREDICTIONS_CHAN",
+              "LOGS_CHAN",
+              "LOGS_ENABLED",
+              "PREFERRED_TEAMS"
+            ],
+            "example": "GAMES_CATEGORY"
+          },
+          "setting_value": {
+            "type": "string",
+            "description": "Value of the setting",
+            "example": "123456789012345678"
+          },
+          "guild": {
+            "description": "Guild related to the config",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Guild"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "guild_id",
+          "setting_type",
+          "setting_value",
+          "guild"
+        ]
+      },
       "AllChannelsDto": {
         "type": "object",
         "properties": {}
@@ -3929,169 +4375,9 @@
           }
         }
       },
-      "Guild": {
-        "type": "object",
-        "properties": {
-          "guild_id": {
-            "type": "string",
-            "description": "Unique identifier of the guild"
-          },
-          "guild_name": {
-            "type": "string",
-            "description": "Name of the guild"
-          },
-          "date_joined": {
-            "type": "string",
-            "description": "Date when the guild joined",
-            "example": "2024-01-01"
-          },
-          "sport": {
-            "type": "string",
-            "description": "Sport associated with the guild"
-          },
-          "config": {
-            "description": "Discord configurations associated with the guild",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DiscordConfig"
-            }
-          }
-        },
-        "required": [
-          "guild_id",
-          "guild_name",
-          "date_joined",
-          "sport"
-        ]
-      },
-      "DiscordConfig": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique identifier for the Discord configuration entry"
-          },
-          "guild_id": {
-            "type": "string",
-            "description": "Guild ID associated with the setting"
-          },
-          "setting_type": {
-            "type": "string",
-            "description": "Type of setting",
-            "enum": [
-              "GAMES_CATEGORY",
-              "BETTING_CHAN",
-              "DAILY_SCHEDULE_CHAN",
-              "PREDICTIONS_CHAN",
-              "LOGS_CHAN",
-              "LOGS_ENABLED"
-            ],
-            "example": "GAMES_CATEGORY"
-          },
-          "setting_value": {
-            "type": "string",
-            "description": "Value of the setting",
-            "example": "123456789012345678"
-          },
-          "guild": {
-            "description": "Guild related to the config",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Guild"
-              }
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "guild_id",
-          "setting_type",
-          "setting_value",
-          "guild"
-        ]
-      },
       "CreateGuildDto": {
         "type": "object",
         "properties": {}
-      },
-      "CreateConfigDto": {
-        "type": "object",
-        "properties": {
-          "guild_id": {
-            "type": "string",
-            "description": "The unique identifier for the guild",
-            "example": "123456789"
-          },
-          "setting_type": {
-            "type": "string",
-            "description": "The type of setting for the Discord configuration",
-            "enum": [
-              "GAMES_CATEGORY",
-              "BETTING_CHAN",
-              "DAILY_SCHEDULE_CHAN",
-              "PREDICTIONS_CHAN",
-              "LOGS_CHAN",
-              "LOGS_ENABLED"
-            ],
-            "example": "PREDICTIONS_CHAN"
-          },
-          "setting_value": {
-            "type": "string",
-            "description": "The value associated with the setting",
-            "example": "123456789012345678"
-          }
-        },
-        "required": [
-          "guild_id",
-          "setting_type",
-          "setting_value"
-        ]
-      },
-      "StoredConfigDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique identifier for the Discord configuration entry"
-          },
-          "guild_id": {
-            "type": "string",
-            "description": "Guild ID associated with the setting"
-          },
-          "setting_type": {
-            "type": "string",
-            "description": "Type of setting",
-            "enum": [
-              "GAMES_CATEGORY",
-              "BETTING_CHAN",
-              "DAILY_SCHEDULE_CHAN",
-              "PREDICTIONS_CHAN",
-              "LOGS_CHAN",
-              "LOGS_ENABLED"
-            ],
-            "example": "GAMES_CATEGORY"
-          },
-          "setting_value": {
-            "type": "string",
-            "description": "Value of the setting",
-            "example": "123456789012345678"
-          },
-          "guild": {
-            "description": "Guild related to the config",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Guild"
-              }
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "guild_id",
-          "setting_type",
-          "setting_value",
-          "guild"
-        ]
       },
       "PlacedBetslip": {
         "type": "object",
@@ -5811,6 +6097,118 @@
           "week_number",
           "season_year",
           "created_at",
+          "updated_at"
+        ]
+      },
+      "StoreItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the store item",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the item",
+            "example": "Lucky Coin"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the item",
+            "example": "A magical coin that brings luck to your bets"
+          },
+          "price": {
+            "type": "number",
+            "description": "Price of the item in coins",
+            "example": 50
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of the item",
+            "enum": [
+              "CONSUMABLE",
+              "COLLECTIBLE"
+            ],
+            "example": "CONSUMABLE"
+          },
+          "is_available": {
+            "type": "boolean",
+            "description": "Whether the item is currently available in the store",
+            "example": true
+          },
+          "is_equippable": {
+            "type": "boolean",
+            "description": "Whether the item can be equipped by users",
+            "example": false
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Timestamp of when the item was created"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Timestamp of when the item was last updated"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "price",
+          "type",
+          "is_available",
+          "is_equippable",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "UserInventory": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the inventory entry",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "user_id": {
+            "type": "string",
+            "description": "User ID who owns the item"
+          },
+          "item_id": {
+            "type": "string",
+            "description": "ID of the store item"
+          },
+          "quantity": {
+            "type": "number",
+            "description": "Quantity of the item owned",
+            "example": 1
+          },
+          "is_equipped": {
+            "type": "boolean",
+            "description": "Whether the item is currently equipped/active",
+            "example": false
+          },
+          "purchased_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "When the item was purchased"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Last time the item status was updated"
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "item_id",
+          "quantity",
+          "is_equipped",
+          "purchased_at",
           "updated_at"
         ]
       }

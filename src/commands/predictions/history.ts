@@ -1,8 +1,7 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
-import { ButtonBuilder, EmbedBuilder, type Message } from 'discord.js';
+import { EmbedBuilder } from 'discord.js';
 import PredictionApiWrapper from '../../utils/api/Khronos/prediction/predictionApiWrapper.js';
-import Pagination from '../../utils/embeds/pagination.js';
 import embedColors from '../../lib/colorsConfig.js';
 import {
 	GetAllPredictionsFilteredStatusEnum,
@@ -14,11 +13,7 @@ import PropsApiWrapper from '../../utils/api/Khronos/props/propsApiWrapper.js';
 import { MarketKeyAbbreviations } from '../../utils/api/common/interfaces/market-abbreviations.js';
 import _ from 'lodash';
 import { DateManager } from '../../utils/common/DateManager.js';
-import {
-	PaginatedFieldMessageEmbed,
-	PaginatedMessage,
-	PaginatedMessageEmbedFields,
-} from '@sapphire/discord.js-utilities';
+import { PaginatedMessageEmbedFields } from '@sapphire/discord.js-utilities';
 
 @ApplyOptions<Command.Options>({
 	description: 'View your prediction history',
