@@ -68,14 +68,33 @@ export default class ChannelManager {
 	/**
 	 * Channel Creation
 	 * Embed creation & Sending on channel creation
-	 * @param {Object} channel - The channel data to process.
-	 * @param {Array} guilds - Array of guild data.
+	 * @param {ScheduledChannelsData} data - The data containing channels and guilds information
 	 */
 	async processChannels(data: ScheduledChannelsData) {
 		const { channels, guilds } = data;
 
-		for (const channel of channels) {
-			await this.processChannel(channel, guilds);
+		// Process each guild separately
+		for (const guild of guilds) {
+			const eligibleChannels = _.chain(channels)
+				// First filter by sport
+				.filter((channel) => channel.sport === guild.sport)
+				// Then filter by preferred teams if they exist
+				.filter((channel) => {
+					if (!guild.preferred_teams?.length) return true;
+
+					const teamsInMatch = [channel.home_team, channel.away_team];
+					return _.some(guild.preferred_teams, (team) =>
+						_.some(teamsInMatch, (matchTeam) =>
+							_.includes(matchTeam.toLowerCase(), team.toLowerCase()),
+						),
+					);
+				})
+				.value();
+
+			// Process each eligible channel for this guild
+			for (const channel of eligibleChannels) {
+				await this.processChannel(channel, [guild]);
+			}
 		}
 	}
 

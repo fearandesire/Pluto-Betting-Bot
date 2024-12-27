@@ -33,6 +33,7 @@ export interface ScheduledChannelsGuildData {
 	bettingChannelId: string;
 	gameCategoryId: string;
 	sport: string;
+	preferred_teams?: string[];
 }
 export interface ScheduledChannelsData {
 	channels: IChannelAggregated[];
