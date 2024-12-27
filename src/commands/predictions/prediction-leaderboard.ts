@@ -2,7 +2,10 @@ import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
 import { LeaderboardControllerGetLeaderboardTimeFrameEnum } from '../../openapi/khronos/apis/LeaderboardApi.js';
 import LeaderboardWrapper from '../../utils/api/Khronos/leaderboard/leaderboard-wrapper.js';
-import type { LeaderboardDto } from '../../openapi/khronos/models/index.js';
+import type {
+	LeaderboardDto,
+	LeaderboardResponseDto,
+} from '../../openapi/khronos/models/index.js';
 import { EmbedBuilder, type Message } from 'discord.js';
 import embedColors from '../../lib/colorsConfig.js';
 import Pagination from '../../utils/embeds/pagination.js';
@@ -105,7 +108,7 @@ export class UserCommand extends Command {
 				timeFrame: LeaderboardControllerGetLeaderboardTimeFrameEnum.Weekly,
 			});
 
-			if (!leaderboard || _.isEmpty(leaderboard)) {
+			if (!leaderboard || _.isEmpty(leaderboard.entries)) {
 				return interaction.editReply({
 					content:
 						'No leaderboard data found for the specified week. Please try again with a different week number.',
@@ -162,7 +165,7 @@ export class UserCommand extends Command {
 			const noContent =
 				'There were no entries to populate a monthly leaderboard from the prior month.';
 
-			if (!leaderboardMonthly || leaderboardMonthly.length === 0) {
+			if (!leaderboardMonthly || leaderboardMonthly.entries.length === 0) {
 				return interaction.editReply({
 					content: noContent,
 				});
@@ -199,7 +202,7 @@ export class UserCommand extends Command {
 				timeFrame: LeaderboardControllerGetLeaderboardTimeFrameEnum.Seasonal,
 			});
 
-			if (!leaderboard || _.isEmpty(leaderboard)) {
+			if (!leaderboard || _.isEmpty(leaderboard.entries)) {
 				return interaction.editReply({
 					content: `No leaderboard data found for the ${year} season.`,
 				});
@@ -251,14 +254,14 @@ export class UserCommand extends Command {
 				timeFrame: LeaderboardControllerGetLeaderboardTimeFrameEnum.AllTime,
 			});
 
-			if (!leaderboard || _.isEmpty(leaderboard)) {
+			if (!leaderboard || _.isEmpty(leaderboard.entries)) {
 				return interaction.editReply({
 					content: 'No all-time leaderboard data found.',
 				});
 			}
 
 			await this.container.logger.info({
-				leaderboardEntries: leaderboard.length,
+				leaderboardEntries: leaderboard.entries.length,
 			});
 
 			await interaction.editReply({
@@ -302,9 +305,13 @@ export class UserCommand extends Command {
 	}
 
 	private parseLeaderboardData(
-		leaderboardData: LeaderboardDto[],
+		leaderboardData: LeaderboardResponseDto,
 	): ParsedLeaderboardEntry[] {
-		const groupedByUser = _.groupBy(leaderboardData, 'user_id');
+		if (!leaderboardData.entries || leaderboardData.entries.length === 0) {
+			return [];
+		}
+
+		const groupedByUser = _.groupBy(leaderboardData.entries, 'user_id');
 
 		const parsedData = Object.values(groupedByUser).map((userEntries) => {
 			return userEntries.reduce(
@@ -326,7 +333,6 @@ export class UserCommand extends Command {
 		});
 
 		const sortedData = parsedData.sort((a, b) => b.score - a.score);
-		// Adds a 'position' property for each entry of where it is in the leaderboard
 		return sortedData.map((entry, index) => ({
 			...entry,
 			position: index + 1,
