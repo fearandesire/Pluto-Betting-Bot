@@ -18,7 +18,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "number"
+                }
+              }
+            }
           }
         }
       }
@@ -664,7 +671,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -1021,6 +1035,9 @@
           "200": {
             "description": "Matchups synced successfully"
           },
+          "201": {
+            "description": ""
+          },
           "500": {
             "description": "Internal server error"
           }
@@ -1043,6 +1060,9 @@
         "responses": {
           "200": {
             "description": "Game status updated successfully"
+          },
+          "201": {
+            "description": ""
           },
           "500": {
             "description": "Internal server error"
@@ -1556,6 +1576,9 @@
                 }
               }
             }
+          },
+          "201": {
+            "description": ""
           }
         },
         "tags": [
@@ -1596,6 +1619,9 @@
                 }
               }
             }
+          },
+          "201": {
+            "description": ""
           }
         },
         "tags": [
@@ -3465,6 +3491,9 @@
               }
             }
           },
+          "201": {
+            "description": ""
+          },
           "400": {
             "description": "Invalid sport provided"
           },
@@ -3514,7 +3543,7 @@
           },
           {
             "name": "time_frame",
-            "required": true,
+            "required": false,
             "in": "query",
             "description": "Time frame for the leaderboard",
             "schema": {
@@ -3535,10 +3564,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/LeaderboardDto"
-                  }
+                  "$ref": "#/components/schemas/LeaderboardResponseDto"
                 }
               }
             }
@@ -3773,6 +3799,16 @@
                 }
               }
             }
+          },
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserInventory"
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -3885,6 +3921,16 @@
                 }
               }
             }
+          },
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserInventory"
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -3937,17 +3983,65 @@
           "exception"
         ]
       },
-      "GetMatchInfoDto": {
-        "type": "object",
-        "properties": {}
-      },
       "Channel": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "sport": {
+            "type": "string"
+          },
+          "channelname": {
+            "type": "string"
+          },
+          "crontime": {
+            "type": "string"
+          },
+          "gametime": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "created": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "sport",
+          "channelname",
+          "crontime",
+          "gametime",
+          "created"
+        ]
       },
       "Score": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "matchup_id": {
+            "type": "string"
+          },
+          "home_score": {
+            "type": "number"
+          },
+          "away_score": {
+            "type": "number"
+          },
+          "commence_time": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "complete": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "matchup_id",
+          "home_score",
+          "away_score",
+          "commence_time",
+          "complete"
+        ]
       },
       "Match": {
         "type": "object",
@@ -3992,8 +4086,6 @@
             "description": "e.g 'FanDuel' or 'DraftKings'."
           },
           "market_key": {
-            "type": "string",
-            "description": "Market type for betting.",
             "enum": [
               "h2h",
               "totals",
@@ -4047,6 +4139,8 @@
               "player_rebounds_assists_alternate",
               "player_points_rebounds_assists_alternate"
             ],
+            "type": "string",
+            "description": "Market type for betting.",
             "default": "h2h"
           },
           "last_update": {
@@ -4131,6 +4225,27 @@
           "description"
         ]
       },
+      "GetMatchInfoDto": {
+        "type": "object",
+        "properties": {
+          "statusCode": {
+            "type": "number",
+            "default": 200
+          },
+          "message": {
+            "type": "string",
+            "default": "Successfully fetched matchup info."
+          },
+          "match": {
+            "$ref": "#/components/schemas/Match"
+          }
+        },
+        "required": [
+          "statusCode",
+          "message",
+          "match"
+        ]
+      },
       "GetAllMatchesDto": {
         "type": "object",
         "properties": {
@@ -4180,8 +4295,6 @@
             "example": "123456789"
           },
           "setting_type": {
-            "type": "string",
-            "description": "The type of setting for the Discord configuration",
             "enum": [
               "GAMES_CATEGORY",
               "BETTING_CHAN",
@@ -4191,6 +4304,8 @@
               "LOGS_ENABLED",
               "PREFERRED_TEAMS"
             ],
+            "type": "string",
+            "description": "The type of setting for the Discord configuration",
             "example": "PREDICTIONS_CHAN"
           },
           "setting_value": {
@@ -4217,8 +4332,6 @@
             "description": "Guild ID associated with the setting"
           },
           "setting_type": {
-            "type": "string",
-            "description": "Type of setting",
             "enum": [
               "GAMES_CATEGORY",
               "BETTING_CHAN",
@@ -4228,6 +4341,8 @@
               "LOGS_ENABLED",
               "PREFERRED_TEAMS"
             ],
+            "type": "string",
+            "description": "Type of setting",
             "example": "GAMES_CATEGORY"
           },
           "setting_value": {
@@ -4299,8 +4414,6 @@
             "description": "Guild ID associated with the setting"
           },
           "setting_type": {
-            "type": "string",
-            "description": "Type of setting",
             "enum": [
               "GAMES_CATEGORY",
               "BETTING_CHAN",
@@ -4310,6 +4423,8 @@
               "LOGS_ENABLED",
               "PREFERRED_TEAMS"
             ],
+            "type": "string",
+            "description": "Type of setting",
             "example": "GAMES_CATEGORY"
           },
           "setting_value": {
@@ -4336,15 +4451,68 @@
       },
       "AllChannelsDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "statusCode": {
+            "type": "number",
+            "default": 200
+          },
+          "channels": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "statusCode",
+          "channels"
+        ]
       },
       "RemoveAllChannelsDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "statusCode": {
+            "type": "number",
+            "default": 200
+          },
+          "message": {
+            "type": "string",
+            "default": "All channels have been removed successfully"
+          }
+        },
+        "required": [
+          "statusCode",
+          "message"
+        ]
       },
       "StoredChannelDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "sport": {
+            "type": "string"
+          },
+          "channelname": {
+            "type": "string"
+          },
+          "crontime": {
+            "type": "string"
+          },
+          "gametime": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "created": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "sport",
+          "channelname",
+          "crontime",
+          "gametime",
+          "created"
+        ]
       },
       "UpdateChannelDto": {
         "type": "object",
@@ -4377,7 +4545,26 @@
       },
       "CreateGuildDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "guild_id": {
+            "type": "string"
+          },
+          "guild_name": {
+            "type": "string"
+          },
+          "date_joined": {
+            "type": "string"
+          },
+          "sport": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "guild_id",
+          "guild_name",
+          "date_joined",
+          "sport"
+        ]
       },
       "PlacedBetslip": {
         "type": "object",
@@ -4444,6 +4631,9 @@
             "type": "number",
             "description": "New Balance",
             "example": 1000
+          },
+          "dateofmatchup": {
+            "type": "string"
           }
         },
         "required": [
@@ -4457,7 +4647,8 @@
           "betresult",
           "dateofbet",
           "guild_id",
-          "newBalance"
+          "newBalance",
+          "dateofmatchup"
         ]
       },
       "InitBetslipDTO": {
@@ -4493,6 +4684,59 @@
             "description": "The Identifier for a match. This is & must be provided if there's multiple matches for the team, and the user submits the specific match they want to bet on."
           },
           "market_key": {
+            "enum": [
+              "h2h",
+              "totals",
+              "player_pass_tds",
+              "player_pass_yds",
+              "player_pass_completions",
+              "player_pass_attempts",
+              "player_pass_interceptions",
+              "player_pass_longest_completion",
+              "player_rush_yds",
+              "player_rush_attempts",
+              "player_rush_longest",
+              "player_receptions",
+              "player_reception_yds",
+              "player_reception_longest",
+              "player_kicking_points",
+              "player_field_goals",
+              "player_tackles_assists",
+              "player_1st_td",
+              "player_last_td",
+              "player_anytime_td",
+              "player_pass_tds_alternate",
+              "player_pass_yds_alternate",
+              "player_rush_yds_alternate",
+              "player_rush_reception_yds_alternate",
+              "player_reception_yds_alternate",
+              "player_receptions_alternate",
+              "player_points",
+              "player_rebounds",
+              "player_assists",
+              "player_threes",
+              "player_blocks",
+              "player_steals",
+              "player_blocks_steals",
+              "player_turnovers",
+              "player_points_rebounds_assists",
+              "player_points_rebounds",
+              "player_points_assists",
+              "player_rebounds_assists",
+              "player_first_basket",
+              "player_double_double",
+              "player_triple_double",
+              "player_points_alternate",
+              "player_rebounds_alternate",
+              "player_assists_alternate",
+              "player_blocks_alternate",
+              "player_steals_alternate",
+              "player_threes_alternate",
+              "player_points_assists_alternate",
+              "player_points_rebounds_alternate",
+              "player_rebounds_assists_alternate",
+              "player_points_rebounds_assists_alternate"
+            ],
             "type": "string",
             "example": "h2h",
             "default": "h2h",
@@ -4579,6 +4823,7 @@
         "properties": {
           "statusCode": {
             "type": "number",
+            "default": 201,
             "description": "The HTTP status code",
             "example": 201
           },
@@ -4622,6 +4867,59 @@
             "example": "9768de636bd9b326cee827df527c6b0f"
           },
           "market_key": {
+            "enum": [
+              "h2h",
+              "totals",
+              "player_pass_tds",
+              "player_pass_yds",
+              "player_pass_completions",
+              "player_pass_attempts",
+              "player_pass_interceptions",
+              "player_pass_longest_completion",
+              "player_rush_yds",
+              "player_rush_attempts",
+              "player_rush_longest",
+              "player_receptions",
+              "player_reception_yds",
+              "player_reception_longest",
+              "player_kicking_points",
+              "player_field_goals",
+              "player_tackles_assists",
+              "player_1st_td",
+              "player_last_td",
+              "player_anytime_td",
+              "player_pass_tds_alternate",
+              "player_pass_yds_alternate",
+              "player_rush_yds_alternate",
+              "player_rush_reception_yds_alternate",
+              "player_reception_yds_alternate",
+              "player_receptions_alternate",
+              "player_points",
+              "player_rebounds",
+              "player_assists",
+              "player_threes",
+              "player_blocks",
+              "player_steals",
+              "player_blocks_steals",
+              "player_turnovers",
+              "player_points_rebounds_assists",
+              "player_points_rebounds",
+              "player_points_assists",
+              "player_rebounds_assists",
+              "player_first_basket",
+              "player_double_double",
+              "player_triple_double",
+              "player_points_alternate",
+              "player_rebounds_alternate",
+              "player_assists_alternate",
+              "player_blocks_alternate",
+              "player_steals_alternate",
+              "player_threes_alternate",
+              "player_points_assists_alternate",
+              "player_points_rebounds_alternate",
+              "player_rebounds_assists_alternate",
+              "player_points_rebounds_assists_alternate"
+            ],
             "type": "string",
             "description": "The prop type the match & bet belongs to.",
             "example": "h2h"
@@ -4815,11 +5113,49 @@
       },
       "XpEntity": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "userid": {
+            "type": "string"
+          },
+          "xp": {
+            "type": "number"
+          },
+          "level": {
+            "type": "number"
+          },
+          "tier": {
+            "type": "string"
+          },
+          "account": {
+            "$ref": "#/components/schemas/Account"
+          }
+        },
+        "required": [
+          "userid",
+          "xp",
+          "level",
+          "tier",
+          "account"
+        ]
       },
       "BetslipPending": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "userid": {
+            "type": "string"
+          },
+          "account": {
+            "$ref": "#/components/schemas/Account"
+          },
+          "amount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "userid",
+          "account",
+          "amount"
+        ]
       },
       "Account": {
         "type": "object",
@@ -4888,8 +5224,8 @@
         "properties": {
           "statusCode": {
             "type": "number",
-            "example": 201,
             "default": 201,
+            "example": 201,
             "description": ""
           },
           "balance": {
@@ -4923,6 +5259,7 @@
         "properties": {
           "statusCode": {
             "type": "number",
+            "default": 200,
             "example": 200
           },
           "userid": {
@@ -5171,7 +5508,6 @@
             "description": "The last update time"
           },
           "market_key": {
-            "type": "string",
             "enum": [
               "h2h",
               "totals",
@@ -5225,6 +5561,7 @@
               "player_rebounds_assists_alternate",
               "player_points_rebounds_assists_alternate"
             ],
+            "type": "string",
             "description": "The key of the betting market"
           },
           "price": {
@@ -5236,12 +5573,12 @@
             "description": "The point value of the bet, if applicable"
           },
           "status": {
-            "type": "string",
             "enum": [
               "pending",
               "completed",
               "error"
             ],
+            "type": "string",
             "description": "The status of the prop",
             "nullable": true
           },
@@ -5269,6 +5606,140 @@
           "last_update",
           "market_key",
           "price"
+        ]
+      },
+      "ProcessedPredictions": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the processing record"
+          },
+          "prediction_id": {
+            "type": "string",
+            "description": "ID of the associated prediction"
+          },
+          "process_type": {
+            "enum": [
+              "prop_result",
+              "leaderboard"
+            ],
+            "type": "string",
+            "description": "Type of processing (e.g., \"leaderboard\")"
+          },
+          "processed_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Timestamp of when the prediction was processed"
+          },
+          "status": {
+            "enum": [
+              "success",
+              "failure",
+              "in_progress"
+            ],
+            "type": "string",
+            "description": "Status of the processing. New records default to IN_PROGRESS"
+          },
+          "details": {
+            "type": "object",
+            "description": "Any additional processing details or metadata"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Timestamp of when the record was created"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Timestamp of when the record was last updated"
+          },
+          "prediction": {
+            "$ref": "#/components/schemas/Prediction"
+          }
+        },
+        "required": [
+          "id",
+          "prediction_id",
+          "process_type",
+          "processed_at",
+          "status",
+          "details",
+          "created_at",
+          "updated_at",
+          "prediction"
+        ]
+      },
+      "Prediction": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the prediction"
+          },
+          "user_id": {
+            "type": "string",
+            "description": "User ID"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Creation timestamp"
+          },
+          "prop_id": {
+            "type": "string",
+            "description": "ID of the associated prop"
+          },
+          "choice": {
+            "type": "string",
+            "description": "User's choice"
+          },
+          "is_correct": {
+            "type": "boolean",
+            "description": "Whether the prediction is correct"
+          },
+          "status": {
+            "type": "string",
+            "description": "Status of the prediction"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Last update timestamp"
+          },
+          "guild_id": {
+            "type": "string",
+            "description": "Guild ID"
+          },
+          "processed_predictions": {
+            "description": "Processed predictions",
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProcessedPredictions"
+            }
+          },
+          "prop": {
+            "$ref": "#/components/schemas/Prop"
+          },
+          "market_key": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "created_at",
+          "prop_id",
+          "choice",
+          "is_correct",
+          "status",
+          "updated_at",
+          "guild_id",
+          "processed_predictions",
+          "prop",
+          "market_key"
         ]
       },
       "Prop": {
@@ -5317,105 +5788,7 @@
             "description": "The last update time of the prop details in ISO 8601 format. Provided by The Odds API."
           },
           "market_key": {
-            "type": "string",
-            "description": "Market key type, e.g., h2h, totals"
-          },
-          "price": {
-            "type": "number",
-            "description": "Price of the prop. E.g -140",
-            "example": -140
-          },
-          "point": {
-            "type": "number",
-            "description": "Point value, e.g., 40.5",
-            "nullable": true
-          },
-          "status": {
-            "type": "string",
-            "description": "Status of the prop"
-          },
-          "created_at": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Creation timestamp"
-          },
-          "result": {
-            "type": "string",
-            "description": "Result of the prop",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "description": "The player involved in the prop. If not a player prop, this will be null.",
-            "nullable": true
-          }
-        },
-        "required": [
-          "id",
-          "event_id",
-          "sport_key",
-          "sport_title",
-          "commence_time",
-          "home_team",
-          "away_team",
-          "bookmaker_key",
-          "bookmaker_title",
-          "last_update",
-          "market_key",
-          "price",
-          "point",
-          "status",
-          "created_at",
-          "result",
-          "description"
-        ]
-      },
-      "UpdatePropDto": {
-        "type": "object",
-        "properties": {
-          "event_id": {
-            "type": "string",
-            "description": "Unique identifier for the event. This is provided by the source of the props (The-Odds API)",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "sport_key": {
-            "type": "string",
-            "description": "Key of the sport",
-            "example": "americanfootball_nfl"
-          },
-          "sport_title": {
-            "type": "string",
-            "description": "Title of the sport",
-            "example": "nfl"
-          },
-          "commence_time": {
-            "format": "date-time",
-            "type": "string",
-            "description": "The commencement time of the event"
-          },
-          "home_team": {
-            "type": "string",
-            "description": "The name of the home team"
-          },
-          "away_team": {
-            "type": "string",
-            "description": "The name of the away team"
-          },
-          "bookmaker_key": {
-            "type": "string",
-            "description": "The key of the bookmaker"
-          },
-          "bookmaker_title": {
-            "type": "string",
-            "description": "The title of the bookmaker"
-          },
-          "last_update": {
-            "format": "date-time",
-            "type": "string",
-            "description": "The last update time"
-          },
-          "market_key": {
-            "type": "string",
+            "description": "Market key type, e.g., h2h, totals",
             "enum": [
               "h2h",
               "totals",
@@ -5469,6 +5842,248 @@
               "player_rebounds_assists_alternate",
               "player_points_rebounds_assists_alternate"
             ],
+            "type": "string"
+          },
+          "price": {
+            "type": "number",
+            "description": "Price of the prop. E.g -140",
+            "example": -140
+          },
+          "point": {
+            "type": "number",
+            "description": "Point value, e.g., 40.5",
+            "nullable": true
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "completed",
+              "error"
+            ],
+            "type": "string",
+            "description": "Status of the prop"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Creation timestamp"
+          },
+          "result": {
+            "type": "string",
+            "description": "Result of the prop",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The player involved in the prop. If not a player prop, this will be null.",
+            "nullable": true
+          },
+          "event": {
+            "$ref": "#/components/schemas/Events"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "predictions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Prediction"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "event_id",
+          "sport_key",
+          "sport_title",
+          "commence_time",
+          "home_team",
+          "away_team",
+          "bookmaker_key",
+          "bookmaker_title",
+          "last_update",
+          "market_key",
+          "price",
+          "point",
+          "status",
+          "created_at",
+          "result",
+          "description",
+          "event",
+          "updated_at"
+        ]
+      },
+      "Events": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Unique identifier for the event, provided by the incoming request"
+          },
+          "espn_id": {
+            "type": "string",
+            "example": "401547689",
+            "description": "ESPN unique identifier for the event"
+          },
+          "sport_key": {
+            "type": "string",
+            "example": "americanfootball_nfl",
+            "description": "Key identifying the sport"
+          },
+          "sport_title": {
+            "type": "string",
+            "example": "NFL",
+            "description": "Title of the sport"
+          },
+          "commence_time": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-09-06T00:20:00Z",
+            "description": "Timestamp when the event is scheduled to start"
+          },
+          "home_team": {
+            "type": "string",
+            "example": "Kansas City Chiefs",
+            "description": "Name of the home team"
+          },
+          "away_team": {
+            "type": "string",
+            "example": "Baltimore Ravens",
+            "description": "Name of the away team"
+          },
+          "props": {
+            "description": "List of props associated with this event",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Prop"
+            }
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-08-27T21:27:19Z",
+            "description": "Timestamp of when the event was created"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-08-27T21:27:19Z",
+            "description": "Timestamp of when the event was last updated"
+          }
+        },
+        "required": [
+          "id",
+          "sport_key",
+          "sport_title",
+          "commence_time",
+          "home_team",
+          "away_team",
+          "props",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "UpdatePropDto": {
+        "type": "object",
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "description": "Unique identifier for the event. This is provided by the source of the props (The-Odds API)",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "sport_key": {
+            "type": "string",
+            "description": "Key of the sport",
+            "example": "americanfootball_nfl"
+          },
+          "sport_title": {
+            "type": "string",
+            "description": "Title of the sport",
+            "example": "nfl"
+          },
+          "commence_time": {
+            "format": "date-time",
+            "type": "string",
+            "description": "The commencement time of the event"
+          },
+          "home_team": {
+            "type": "string",
+            "description": "The name of the home team"
+          },
+          "away_team": {
+            "type": "string",
+            "description": "The name of the away team"
+          },
+          "bookmaker_key": {
+            "type": "string",
+            "description": "The key of the bookmaker"
+          },
+          "bookmaker_title": {
+            "type": "string",
+            "description": "The title of the bookmaker"
+          },
+          "last_update": {
+            "format": "date-time",
+            "type": "string",
+            "description": "The last update time"
+          },
+          "market_key": {
+            "enum": [
+              "h2h",
+              "totals",
+              "player_pass_tds",
+              "player_pass_yds",
+              "player_pass_completions",
+              "player_pass_attempts",
+              "player_pass_interceptions",
+              "player_pass_longest_completion",
+              "player_rush_yds",
+              "player_rush_attempts",
+              "player_rush_longest",
+              "player_receptions",
+              "player_reception_yds",
+              "player_reception_longest",
+              "player_kicking_points",
+              "player_field_goals",
+              "player_tackles_assists",
+              "player_1st_td",
+              "player_last_td",
+              "player_anytime_td",
+              "player_pass_tds_alternate",
+              "player_pass_yds_alternate",
+              "player_rush_yds_alternate",
+              "player_rush_reception_yds_alternate",
+              "player_reception_yds_alternate",
+              "player_receptions_alternate",
+              "player_points",
+              "player_rebounds",
+              "player_assists",
+              "player_threes",
+              "player_blocks",
+              "player_steals",
+              "player_blocks_steals",
+              "player_turnovers",
+              "player_points_rebounds_assists",
+              "player_points_rebounds",
+              "player_points_assists",
+              "player_rebounds_assists",
+              "player_first_basket",
+              "player_double_double",
+              "player_triple_double",
+              "player_points_alternate",
+              "player_rebounds_alternate",
+              "player_assists_alternate",
+              "player_blocks_alternate",
+              "player_steals_alternate",
+              "player_threes_alternate",
+              "player_points_assists_alternate",
+              "player_points_rebounds_alternate",
+              "player_rebounds_assists_alternate",
+              "player_points_rebounds_assists_alternate"
+            ],
+            "type": "string",
             "description": "The key of the betting market"
           },
           "price": {
@@ -5480,12 +6095,12 @@
             "description": "The point value of the bet, if applicable"
           },
           "status": {
-            "type": "string",
             "enum": [
               "pending",
               "completed",
               "error"
             ],
+            "type": "string",
             "description": "The status of the prop",
             "nullable": true
           },
@@ -5516,12 +6131,12 @@
             "example": "Team A"
           },
           "status": {
-            "type": "string",
             "enum": [
               "pending",
               "completed",
               "error"
             ],
+            "type": "string",
             "description": "The new status of the prop",
             "example": "completed"
           },
@@ -5643,9 +6258,9 @@
           },
           "description": {
             "type": "string",
+            "nullable": true,
             "description": "Additional description of the prediction",
-            "example": "Total points scored in the game",
-            "nullable": true
+            "example": "Total points scored in the game"
           },
           "sport": {
             "type": "string",
@@ -5688,12 +6303,12 @@
             "example": "Jayson Tatum"
           },
           "status": {
-            "type": "string",
             "enum": [
               "pending",
               "completed",
               "error"
             ],
+            "type": "string",
             "description": "Status of the prediction",
             "example": "pending"
           },
@@ -5747,13 +6362,13 @@
             "nullable": true
           },
           "status": {
-            "type": "string",
-            "description": "Status of the prediction",
             "enum": [
               "pending",
               "completed",
               "error"
             ],
+            "type": "string",
+            "description": "Status of the prediction",
             "example": "pending"
           },
           "updated_at": {
@@ -5787,12 +6402,10 @@
           "created_at",
           "prop_id",
           "choice",
-          "is_correct",
           "status",
           "updated_at",
           "guild_id",
-          "market_key",
-          "prop"
+          "market_key"
         ]
       },
       "PropPredictionsDto": {
@@ -5807,6 +6420,7 @@
             ]
           },
           "predictions": {
+            "nullable": true,
             "description": "Array of predictions for this prop",
             "type": "array",
             "items": {
@@ -5865,7 +6479,7 @@
             "nullable": true,
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/ProcessedPredictions"
             }
           },
           "match_string": {
@@ -5877,6 +6491,12 @@
             "type": "string",
             "description": "Optional description of the prediction",
             "example": "Prediction for the final score"
+          },
+          "prop": {
+            "$ref": "#/components/schemas/Prop"
+          },
+          "market_key": {
+            "type": "string"
           }
         },
         "required": [
@@ -5890,7 +6510,9 @@
           "updated_at",
           "guild_id",
           "processed_predictions",
-          "match_string"
+          "match_string",
+          "prop",
+          "market_key"
         ]
       },
       "UpdatePredictionDto": {
@@ -5929,13 +6551,13 @@
             "nullable": true
           },
           "status": {
-            "type": "string",
-            "description": "Status of the prediction",
             "enum": [
               "pending",
               "completed",
               "error"
             ],
+            "type": "string",
+            "description": "Status of the prediction",
             "example": "pending"
           },
           "updated_at": {
@@ -5997,15 +6619,15 @@
           },
           "seasonYear": {
             "type": "number",
+            "minimum": 2000,
             "description": "The year of the season",
-            "example": 2024,
-            "minimum": 2000
+            "example": 2024
           },
           "weekNumber": {
             "type": "number",
+            "minimum": 1,
             "description": "The week number in the season",
-            "example": 1,
-            "minimum": 1
+            "example": 1
           },
           "startDate": {
             "type": "string",
@@ -6046,33 +6668,33 @@
           },
           "score": {
             "type": "number",
+            "minimum": 0,
             "description": "Total score",
-            "default": 0,
-            "minimum": 0
+            "default": 0
           },
           "correct_predictions": {
             "type": "number",
+            "minimum": 0,
             "description": "Number of correct predictions",
-            "default": 0,
-            "minimum": 0
+            "default": 0
           },
           "incorrect_predictions": {
             "type": "number",
+            "minimum": 0,
             "description": "Number of incorrect predictions",
-            "default": 0,
-            "minimum": 0
+            "default": 0
           },
           "week_number": {
             "type": "number",
-            "description": "Week number relative to the system start",
             "minimum": 1,
+            "description": "Week number relative to the system start",
             "maximum": 53
           },
           "season_year": {
             "type": "number",
+            "minimum": 2024,
             "description": "Year of the season",
-            "example": 2024,
-            "minimum": 2024
+            "example": 2024
           },
           "created_at": {
             "format": "date-time",
@@ -6100,6 +6722,26 @@
           "updated_at"
         ]
       },
+      "LeaderboardResponseDto": {
+        "type": "object",
+        "properties": {
+          "entries": {
+            "description": "Array of leaderboard entries",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LeaderboardDto"
+            }
+          },
+          "current_week": {
+            "type": "number",
+            "description": "Current week number (only included for weekly time frame)",
+            "example": 5
+          }
+        },
+        "required": [
+          "entries"
+        ]
+      },
       "StoreItem": {
         "type": "object",
         "properties": {
@@ -6124,12 +6766,12 @@
             "example": 50
           },
           "type": {
-            "type": "string",
-            "description": "Type of the item",
             "enum": [
               "CONSUMABLE",
               "COLLECTIBLE"
             ],
+            "type": "string",
+            "description": "Type of the item",
             "example": "CONSUMABLE"
           },
           "is_available": {
@@ -6200,6 +6842,12 @@
             "format": "date-time",
             "type": "string",
             "description": "Last time the item status was updated"
+          },
+          "user": {
+            "$ref": "#/components/schemas/Account"
+          },
+          "item": {
+            "$ref": "#/components/schemas/StoreItem"
           }
         },
         "required": [
@@ -6209,7 +6857,9 @@
           "quantity",
           "is_equipped",
           "purchased_at",
-          "updated_at"
+          "updated_at",
+          "user",
+          "item"
         ]
       }
     }
