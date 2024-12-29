@@ -72,15 +72,19 @@ export default class ChannelManager {
 	 */
 	async processChannels(data: ScheduledChannelsData) {
 		const { channels, guilds } = data;
-
+		// ? Transform Sport Key in all Channels
+		const transformedChannels = channels.map((channel) => ({
+			...channel,
+			sport: StringUtils.sportKeyTransform(channel.sport) as SportsServing,
+		}));
 		// Process each guild separately
 		for (const guild of guilds) {
-			const eligibleChannels = _.chain(channels)
+			const eligibleChannels = _.chain(transformedChannels)
 				// First filter by sport
 				.filter((channel) => channel.sport === guild.sport)
 				// Then filter by preferred teams if they exist
 				.filter((channel) => {
-					if (!guild.preferred_teams?.length) return true;
+					if (!guild?.preferred_teams?.length) return true;
 
 					const teamsInMatch = [channel.home_team, channel.away_team];
 					return _.some(guild.preferred_teams, (team) =>
