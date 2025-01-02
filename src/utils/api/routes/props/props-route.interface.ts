@@ -8,6 +8,7 @@ export const GuildChannelSchema = z.object({
 	sport: z.string(),
 	preferred_teams: z
 		.string()
+		.nullable()
 		.optional()
 		.describe('Array of teams a guild is constrained to receive data for'),
 });
