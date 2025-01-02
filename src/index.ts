@@ -5,7 +5,6 @@ import { LogLevel, SapphireClient } from '@sapphire/framework';
 import { GatewayIntentBits, Partials } from 'discord.js';
 import '@sapphire/plugin-hmr/register';
 import './utils/api/index.js';
-
 import { WinstonLogger } from './utils/logging/WinstonLogger.js';
 const SapDiscClient = new SapphireClient({
 	caseInsensitiveCommands: true,
@@ -23,7 +22,7 @@ const SapDiscClient = new SapphireClient({
 	],
 	partials: [Partials.Channel],
 	logger: {
-		level: LogLevel.Debug,
+		level: LogLevel.Info,
 	},
 	typing: true,
 	loadMessageCommandListeners: true,

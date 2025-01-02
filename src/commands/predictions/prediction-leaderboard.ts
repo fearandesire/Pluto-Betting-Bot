@@ -2,15 +2,14 @@ import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
 import { LeaderboardControllerGetLeaderboardTimeFrameEnum } from '../../openapi/khronos/apis/LeaderboardApi.js';
 import LeaderboardWrapper from '../../utils/api/Khronos/leaderboard/leaderboard-wrapper.js';
-import type {
-	LeaderboardDto,
-	LeaderboardResponseDto,
-} from '../../openapi/khronos/models/index.js';
+import type { LeaderboardResponseDto } from '../../openapi/khronos/models/index.js';
 import { EmbedBuilder, type Message } from 'discord.js';
 import embedColors from '../../lib/colorsConfig.js';
 import Pagination from '../../utils/embeds/pagination.js';
 import ClientTools from '../../utils/bot_res/ClientTools.js';
 import _ from 'lodash';
+import GuildWrapper from '../../utils/api/Khronos/guild/guild-wrapper.js';
+import CalendarWrapper from '../../utils/api/Khronos/calendar/calendar-wrapper.js';
 
 @ApplyOptions<Command.Options>({
 	description: 'View the leaderboard for accuracy challenge',
@@ -48,7 +47,7 @@ export class UserCommand extends Command {
 								option
 									.setName('year')
 									.setDescription(
-										'The season year to view (defaults to current year)',
+										'Season ending year (e.g. 2024 for the 2023-2024 season)',
 									)
 									.setMinValue(2000)
 									.setMaxValue(9999)
@@ -71,10 +70,11 @@ export class UserCommand extends Command {
 	) {
 		await interaction.deferReply();
 		const subcommand = interaction.options.getSubcommand();
-
+		// ? Retrieve guild for sport
+		const { sport } = await new GuildWrapper().getGuild(interaction.guildId);
 		switch (subcommand) {
 			case 'weekly':
-				await this.handleWeeklyLeaderboard(interaction);
+				await this.handleWeeklyLeaderboard(interaction, sport);
 				break;
 			case 'monthly':
 				await this.handleMonthlyLeaderboard(interaction);
@@ -94,11 +94,12 @@ export class UserCommand extends Command {
 
 	private async handleWeeklyLeaderboard(
 		interaction: Command.ChatInputCommandInteraction,
+		sport: string,
 	) {
 		const weekNumber =
 			interaction.options.getInteger('week_number', false) ?? null;
 		const guildId = interaction.guildId;
-		const currentYear = new Date().getFullYear();
+		const currentYear = await new CalendarWrapper().getSeasonYear({ sport });
 
 		try {
 			const leaderboardWrapper = new LeaderboardWrapper();
@@ -197,8 +198,9 @@ export class UserCommand extends Command {
 	) {
 		try {
 			const guildId = interaction.guildId;
-			const year =
-				interaction.options.getInteger('year') ?? new Date().getFullYear();
+			const { sport } = await new GuildWrapper().getGuild(guildId);
+			const defaultYear = await new CalendarWrapper().getSeasonYear({ sport });
+			const year = interaction.options.getInteger('year') ?? defaultYear;
 
 			const leaderboardWrapper = new LeaderboardWrapper();
 			const leaderboard = await leaderboardWrapper.getLeaderboard({

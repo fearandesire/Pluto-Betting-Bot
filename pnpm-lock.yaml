@@ -3832,8 +3832,8 @@ packages:
   kuler@2.0.0:
     resolution: {integrity: sha512-Xq9nH7KlWZmXAtodXDDRE7vs6DU1gTU8zYDHDiWLSip45Egwq3plLHzPn27NgvzL2r1LMPC1vdqh98sQxtqj4A==}
 
-  ky@1.7.1:
-    resolution: {integrity: sha512-KJ/IXXkFhTDqxcN8wKqMXk1/UoOpc0UnOB6H7QcqlPInh/M2B5Mlj+i9exez1w4RSwJhNFmHiUDPriAYFwb5VA==}
+  ky@1.7.4:
+    resolution: {integrity: sha512-zYEr/gh7uLW2l4su11bmQ2M9xLgQLjyvx58UyNM/6nuqyWFHPX5ktMjvpev3F8QWdjSsHUpnWew4PBCswBNuMQ==}
     engines: {node: '>=18'}
 
   latest-version@9.0.0:
@@ -9951,7 +9951,7 @@ snapshots:
 
   kuler@2.0.0: {}
 
-  ky@1.7.1: {}
+  ky@1.7.4: {}
 
   latest-version@9.0.0:
     dependencies:
@@ -10457,7 +10457,7 @@ snapshots:
 
   package-json@10.0.1:
     dependencies:
-      ky: 1.7.1
+      ky: 1.7.4
       registry-auth-token: 5.0.2
       registry-url: 6.0.1
       semver: 7.6.3

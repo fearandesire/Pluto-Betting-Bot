@@ -3937,6 +3937,49 @@
           "Store"
         ]
       }
+    },
+    "/calendar/season-year": {
+      "get": {
+        "operationId": "getSeasonYear",
+        "summary": "Get the current season year for a given sport",
+        "parameters": [
+          {
+            "required": true,
+            "description": "The sport to get the season year for",
+            "name": "sport",
+            "in": "query",
+            "schema": {
+              "example": "nfl",
+              "type": "string"
+            }
+          },
+          {
+            "required": false,
+            "description": "The date to get the season year for",
+            "name": "date",
+            "in": "query",
+            "schema": {
+              "example": "2024-01-01",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the current season year for the given sport",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "calendar"
+        ]
+      }
     }
   },
   "info": {
