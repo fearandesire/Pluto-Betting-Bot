@@ -1,35 +1,6 @@
 {
   "openapi": "3.0.0",
   "paths": {
-    "/sample": {
-      "get": {
-        "operationId": "SampleController_sampleQuery",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        }
-      }
-    },
-    "/sample/edentest": {
-      "get": {
-        "operationId": "SampleController_getData",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "number"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/matches/info/{matchid}": {
       "get": {
         "operationId": "matchInfo",
@@ -3391,9 +3362,9 @@
         ]
       }
     },
-    "/week-manager/weeknumber": {
+    "/week-manager/getCurrentWeek": {
       "get": {
-        "operationId": "getCurrentWeekNumber",
+        "operationId": "getCurrentWeek",
         "summary": "Get the current week number for a sport",
         "parameters": [
           {
@@ -3413,38 +3384,6 @@
               "application/json": {
                 "schema": {
                   "type": "number"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "Week Manager"
-        ]
-      }
-    },
-    "/week-manager/weekdetails": {
-      "get": {
-        "operationId": "getCurrentWeekDetails",
-        "summary": "Get the current week details for a sport",
-        "parameters": [
-          {
-            "name": "sport",
-            "required": true,
-            "in": "query",
-            "description": "The sport to get the current week for (e.g., \"nfl\" or \"nba\")",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Returns the current week details",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SeasonWeekDto"
                 }
               }
             }
@@ -3944,20 +3883,26 @@
         "summary": "Get the current season year for a given sport",
         "parameters": [
           {
-            "required": true,
-            "description": "The sport to get the season year for",
             "name": "sport",
+            "required": true,
             "in": "query",
+            "description": "The sport slug to get the season year for",
             "schema": {
               "example": "nfl",
+              "enum": [
+                "nba",
+                "mlb",
+                "nfl",
+                "nhl"
+              ],
               "type": "string"
             }
           },
           {
+            "name": "referenceDate",
             "required": false,
-            "description": "The date to get the season year for",
-            "name": "date",
             "in": "query",
+            "description": "Reference date to get the season year for. If not provided, current date will be used.",
             "schema": {
               "example": "2024-01-01",
               "type": "string"
@@ -6646,49 +6591,6 @@
         "required": [
           "total",
           "unique_users"
-        ]
-      },
-      "SeasonWeekDto": {
-        "type": "object",
-        "properties": {
-          "sport": {
-            "type": "string",
-            "description": "The sport associated with this season week",
-            "enum": [
-              "nba",
-              "nfl"
-            ],
-            "example": "nfl"
-          },
-          "seasonYear": {
-            "type": "number",
-            "minimum": 2000,
-            "description": "The year of the season",
-            "example": 2024
-          },
-          "weekNumber": {
-            "type": "number",
-            "minimum": 1,
-            "description": "The week number in the season",
-            "example": 1
-          },
-          "startDate": {
-            "type": "string",
-            "description": "The start date of the week",
-            "example": "2024-03-25T00:00:00.000Z"
-          },
-          "endDate": {
-            "type": "string",
-            "description": "The end date of the week",
-            "example": "2024-03-31T23:59:59.999Z"
-          }
-        },
-        "required": [
-          "sport",
-          "seasonYear",
-          "weekNumber",
-          "startDate",
-          "endDate"
         ]
       },
       "LeaderboardDto": {

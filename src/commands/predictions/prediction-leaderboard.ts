@@ -10,6 +10,7 @@ import ClientTools from '../../utils/bot_res/ClientTools.js';
 import _ from 'lodash';
 import GuildWrapper from '../../utils/api/Khronos/guild/guild-wrapper.js';
 import CalendarWrapper from '../../utils/api/Khronos/calendar/calendar-wrapper.js';
+import type { GetSeasonYearSportEnum } from '../../openapi/khronos/apis/CalendarApi.js';
 
 @ApplyOptions<Command.Options>({
 	description: 'View the leaderboard for accuracy challenge',
@@ -99,7 +100,9 @@ export class UserCommand extends Command {
 		const weekNumber =
 			interaction.options.getInteger('week_number', false) ?? null;
 		const guildId = interaction.guildId;
-		const currentYear = await new CalendarWrapper().getSeasonYear({ sport });
+		const currentYear = await new CalendarWrapper().getSeasonYear({
+			sport: sport as GetSeasonYearSportEnum,
+		});
 
 		try {
 			const leaderboardWrapper = new LeaderboardWrapper();
@@ -199,7 +202,9 @@ export class UserCommand extends Command {
 		try {
 			const guildId = interaction.guildId;
 			const { sport } = await new GuildWrapper().getGuild(guildId);
-			const defaultYear = await new CalendarWrapper().getSeasonYear({ sport });
+			const defaultYear = await new CalendarWrapper().getSeasonYear({
+				sport: sport as GetSeasonYearSportEnum,
+			});
 			const year = interaction.options.getInteger('year') ?? defaultYear;
 
 			const leaderboardWrapper = new LeaderboardWrapper();
