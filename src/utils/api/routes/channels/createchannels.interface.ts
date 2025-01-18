@@ -10,30 +10,18 @@ export interface IChannelAPI {
 	created: boolean;
 }
 
-/**
- * Interface for team record information
- */
+export const teamRecordSchema = z.object({
+	total_record: z.string(),
+});
 
-export interface TeamRecord {
-	total_record: string;
-}
-
-/**
- * Interface for the return value of extractTeamRecordsFromScoreboard
- */
-export interface TeamRecordsResult {
-	home_team: TeamRecord;
-	away_team: TeamRecord;
-}
+export const teamRecordsResultSchema = z.object({
+	home_team: teamRecordSchema,
+	away_team: teamRecordSchema,
+});
 
 export const channelMetadataSchema = z.object({
 	headline: z.string().optional(),
-	records: z
-		.object({
-			home_team: z.string(),
-			away_team: z.string(),
-		})
-		.optional(),
+	records: teamRecordsResultSchema,
 });
 
 export type ChannelMetadata = z.infer<typeof channelMetadataSchema>;

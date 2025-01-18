@@ -35,10 +35,7 @@ interface IPrepareMatchEmbed {
 	bettingChanId: string;
 	header: string;
 	sport: SportsServing;
-	records?: {
-		home_team?: string;
-		away_team?: string;
-	};
+	records?: ChannelMetadata['records'];
 }
 
 interface ICreateChannelAndSendEmbed {
@@ -268,7 +265,7 @@ export default class ChannelManager {
 
 		// Build records string if available
 		const recordsStr = args.records
-			? `\n\n🔵 **Team Records**\n${args.awayTeamShortName}: ${args.records.away_team}\n${args.homeTeamShortName}: ${args.records.home_team}`
+			? `\n\n🔵 **Team Records**\n${args.awayTeamShortName}: ${args.records.away_team.total_record}\n${args.homeTeamShortName}: ${args.records.home_team.total_record}`
 			: '';
 
 		const matchEmbed = new EmbedBuilder()
