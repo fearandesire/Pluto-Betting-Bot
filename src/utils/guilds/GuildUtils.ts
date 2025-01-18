@@ -4,24 +4,41 @@ import { SapDiscClient } from '../../index.js';
 
 export default class GuildUtils {
 	async findEmoji(name: string) {
-		const searchFor = await parseNameForEmoji(name.toLowerCase());
+		const normalizedName = await normalizeEmojiName(name);
+		const lowerEmojiName = normalizedName.toLowerCase();
 		const emojiCache = SapDiscClient.emojis.cache;
 
 		// First, try to find an exact match
 		const exactMatch = await emojiCache.find(
-			(emoji) => emoji.name && emoji.name.toLowerCase() === searchFor,
+			(emoji) => emoji.name && emoji.name.toLowerCase() === lowerEmojiName,
 		);
 		if (exactMatch) {
 			return exactMatch;
 		}
 
-		// If no exact match, find the first partial match
+		// If no exact match is found, try matching with numbers
+		if (/\d/.test(lowerEmojiName)) {
+			const numericMatch = await emojiCache.find((emoji) => {
+				if (!emoji?.name) return false;
+				// Special handling for numeric team names (e.g. 76ers)
+				return (
+					emoji.name.toLowerCase().replace(/[\s_-]/g, '') ===
+					lowerEmojiName.replace(/[\s_-]/g, '')
+				);
+			});
+			if (numericMatch) return numericMatch;
+		}
+
+		// If still no match, find the first partial match
 		const partialMatch = await emojiCache.find(
 			(emoji) =>
-				emoji.name && searchFor && emoji.name.toLowerCase().includes(searchFor),
+				emoji.name &&
+				lowerEmojiName &&
+				emoji.name.toLowerCase().includes(lowerEmojiName),
 		);
 		return partialMatch ?? null;
 	}
+
 	async constructTeamString(teamName: string) {
 		const emoji = await this.findEmoji(teamName);
 		return emoji ? `${emoji} ${teamName}` : teamName;
@@ -58,9 +75,26 @@ export default class GuildUtils {
 	}
 }
 
-async function parseNameForEmoji(name: string) {
-	if (name.includes(' ')) {
-		return _.last(_.split(name, ' '));
+/**
+ * Normalizes an emoji name by handling special cases and removing unnecessary characters
+ * @param name The emoji name to normalize
+ * @returns The normalized emoji name
+ */
+function normalizeEmojiName(name: string): string {
+	let normalizedName = name;
+
+	// If name contains spaces, take the last part (e.g. "Toronto Raptors" -> "Raptors")
+	if (normalizedName.includes(' ')) {
+		normalizedName = _.last(_.split(normalizedName, ' ')) || normalizedName;
 	}
-	return name;
+
+	// Remove any colons that might be in the name
+	normalizedName = normalizedName.replace(/:/g, '');
+
+	// Handle special cases for team names with numbers
+	if (/\d/.test(normalizedName)) {
+		normalizedName = normalizedName.replace(/[\s_-]/g, '').toLowerCase();
+	}
+
+	return normalizedName;
 }
