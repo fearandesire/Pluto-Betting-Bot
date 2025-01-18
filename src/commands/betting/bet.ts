@@ -59,9 +59,7 @@ export class UserCommand extends Command {
 		}
 		const matchSelection = interaction.options.getString('match', false);
 
-		if (!matchSelection) {
-			team = await this.identifyTeam(team);
-		}
+		team = await this.identifyTeam(team);
 		const betslipData = {
 			team,
 			amount,
