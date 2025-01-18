@@ -1,8 +1,5 @@
-import { number, object, union, z } from 'zod';
-import {
-	BettingMarketSchema,
-	BettingMarketSchemaNonH2h,
-} from './betting-market.schema.js';
+import { z } from 'zod';
+import { BettingMarketSchema } from './betting-market.schema.js';
 
 /**
  * Enum representing the possible statuses of a prop.

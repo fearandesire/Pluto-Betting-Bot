@@ -7,6 +7,7 @@ import {
 	type Emoji,
 	type GuildEmoji,
 } from 'discord.js';
+import _ from 'lodash';
 import { PropButtons } from '../../../lib/interfaces/props/prop-buttons.interface.js';
 import {
 	MarketKeyTranslations,
@@ -15,9 +16,8 @@ import {
 import { DateManager } from '../../common/DateManager.js';
 import TeamInfo from '../../common/TeamInfo.js';
 import StringUtils from '../../common/string-utils.js';
-import GuildUtils from '../GuildUtils.js';
-import _ from 'lodash';
 import { WinstonLogger } from '../../logging/WinstonLogger.js';
+import GuildUtils from '../GuildUtils.js';
 
 interface AggregateDetailsParams {
 	home: {

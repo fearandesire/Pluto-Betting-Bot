@@ -4,6 +4,7 @@ import type {
 	Message,
 } from 'discord.js';
 import type { EmbedBuilder } from 'discord.js';
+import { APP_OWNER_INFO } from '../../../../lib/configs/constants.js';
 import {
 	ApiHttpErrorTypes,
 	ApiModules,
@@ -12,7 +13,6 @@ import { ErrorEmbeds } from '../../../common/errors/global.js';
 import MoneyFormatter from '../../common/money-formatting/money-format.js';
 import { toKhronosApiError } from './types.js';
 import type { KhronosApiError } from './types.js';
-import { APP_OWNER_INFO } from '../../../../lib/configs/constants.js';
 
 /**
  * @summary Handles errors from the Khronos API.

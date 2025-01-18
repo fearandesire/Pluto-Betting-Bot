@@ -1,7 +1,6 @@
 import type { Match } from '@kh-openapi';
 import { helpfooter } from '@pluto-config';
 import _ from 'lodash';
-import { patreonFooterUrl } from '../api/patreon/interfaces.js';
 import parseScheduledGames from '../bot_res/parseScheduled.js';
 import { formatOdds } from './formatOdds.js';
 import type { IOddsField } from './matchups.interface.js';

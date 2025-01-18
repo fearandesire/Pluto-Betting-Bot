@@ -1,19 +1,19 @@
 import { ApplyOptions } from '@sapphire/decorators';
+import { PaginatedMessageEmbedFields } from '@sapphire/discord.js-utilities';
 import { Command } from '@sapphire/framework';
 import { EmbedBuilder } from 'discord.js';
-import PredictionApiWrapper from '../../utils/api/Khronos/prediction/predictionApiWrapper.js';
+import type { User } from 'discord.js';
+import _ from 'lodash';
 import embedColors from '../../lib/colorsConfig.js';
 import {
-	GetAllPredictionsFilteredStatusEnum,
 	type AllUserPredictionsDto,
+	GetAllPredictionsFilteredStatusEnum,
 } from '../../openapi/khronos/index.js';
-import type { User } from 'discord.js';
-import TeamInfo from '../../utils/common/TeamInfo.js';
+import PredictionApiWrapper from '../../utils/api/Khronos/prediction/predictionApiWrapper.js';
 import PropsApiWrapper from '../../utils/api/Khronos/props/propsApiWrapper.js';
 import { MarketKeyAbbreviations } from '../../utils/api/common/interfaces/market-abbreviations.js';
-import _ from 'lodash';
 import { DateManager } from '../../utils/common/DateManager.js';
-import { PaginatedMessageEmbedFields } from '@sapphire/discord.js-utilities';
+import TeamInfo from '../../utils/common/TeamInfo.js';
 
 @ApplyOptions<Command.Options>({
 	description: 'View your prediction history',

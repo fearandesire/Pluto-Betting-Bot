@@ -1,38 +1,29 @@
-import { ApiModules } from '../lib/interfaces/api/api.interface.js';
 import {
 	InteractionHandler,
 	InteractionHandlerTypes,
-	none,
-	some,
 } from '@sapphire/framework';
-// pnpm issue with @sapphire framework
-import { None, Option, Result } from '@sapphire/framework';
 import type { ButtonInteraction } from 'discord.js';
 import { EmbedBuilder } from 'discord.js';
+import _ from 'lodash';
 import embedColors from '../lib/colorsConfig.js';
-import {
-	btnIds,
-	startsWithAny,
-} from '../lib/interfaces/interaction-handlers/interaction-handlers.interface.js';
+import { ApiModules } from '../lib/interfaces/api/api.interface.js';
+import type { ICreateBetslipFull } from '../lib/interfaces/api/bets/betslips.interfaces.js';
+import { btnIds } from '../lib/interfaces/interaction-handlers/interaction-handlers.interface.js';
 import {
 	type ParsedPropButton,
 	parsePropButtonId,
-	PropButtons,
 } from '../lib/interfaces/props/prop-buttons.interface.js';
 import type { Match } from '../openapi/khronos/models/Match.js';
 import { BetslipManager } from '../utils/api/Khronos/bets/BetslipsManager.js';
 import BetslipWrapper from '../utils/api/Khronos/bets/betslip-wrapper.js';
+import { ApiErrorHandler } from '../utils/api/Khronos/error-handling/ApiErrorHandler.js';
 import MatchApiWrapper from '../utils/api/Khronos/matches/matchApiWrapper.js';
 import PredictionApiWrapper from '../utils/api/Khronos/prediction/predictionApiWrapper.js';
-import PropsApiWrapper from '../utils/api/Khronos/props/propsApiWrapper.js';
 import { BetsCacheService } from '../utils/api/common/bets/BetsCacheService.js';
 import { patreonFooter } from '../utils/api/patreon/interfaces.js';
 import MatchCacheService from '../utils/api/routes/cache/MatchCacheService.js';
 import { CacheManager } from '../utils/cache/RedisCacheManager.js';
 import { ErrorEmbeds } from '../utils/common/errors/global.js';
-import type { ICreateBetslipFull } from '../lib/interfaces/api/bets/betslips.interfaces.js';
-import _ from 'lodash';
-import { ApiErrorHandler } from '../utils/api/Khronos/error-handling/ApiErrorHandler.js';
 
 /**
  * @module ButtonListener

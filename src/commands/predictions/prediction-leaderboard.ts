@@ -1,16 +1,16 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
-import { LeaderboardControllerGetLeaderboardTimeFrameEnum } from '../../openapi/khronos/apis/LeaderboardApi.js';
-import LeaderboardWrapper from '../../utils/api/Khronos/leaderboard/leaderboard-wrapper.js';
-import type { LeaderboardResponseDto } from '../../openapi/khronos/models/index.js';
 import { EmbedBuilder, type Message } from 'discord.js';
-import embedColors from '../../lib/colorsConfig.js';
-import Pagination from '../../utils/embeds/pagination.js';
-import ClientTools from '../../utils/bot_res/ClientTools.js';
 import _ from 'lodash';
-import GuildWrapper from '../../utils/api/Khronos/guild/guild-wrapper.js';
-import CalendarWrapper from '../../utils/api/Khronos/calendar/calendar-wrapper.js';
+import embedColors from '../../lib/colorsConfig.js';
 import type { GetSeasonYearSportEnum } from '../../openapi/khronos/apis/CalendarApi.js';
+import { LeaderboardControllerGetLeaderboardTimeFrameEnum } from '../../openapi/khronos/apis/LeaderboardApi.js';
+import type { LeaderboardResponseDto } from '../../openapi/khronos/models/index.js';
+import CalendarWrapper from '../../utils/api/Khronos/calendar/calendar-wrapper.js';
+import GuildWrapper from '../../utils/api/Khronos/guild/guild-wrapper.js';
+import LeaderboardWrapper from '../../utils/api/Khronos/leaderboard/leaderboard-wrapper.js';
+import ClientTools from '../../utils/bot_res/ClientTools.js';
+import Pagination from '../../utils/embeds/pagination.js';
 
 @ApplyOptions<Command.Options>({
 	description: 'View the leaderboard for accuracy challenge',

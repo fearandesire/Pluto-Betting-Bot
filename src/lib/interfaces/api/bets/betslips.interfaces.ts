@@ -1,6 +1,3 @@
-import type { Match } from '@kh-openapi';
-import type { IApiResponse } from '../api.interface.js';
-
 export interface IPendingBetslip {
 	userid: string;
 	amount: number;

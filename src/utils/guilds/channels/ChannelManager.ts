@@ -15,15 +15,12 @@ import {
 import _ from 'lodash';
 import { resolveTeam } from 'resolve-team';
 import { SapDiscClient } from '../../../index.js';
+import type { SportsServing } from '../../api/common/interfaces/kh-pluto/kh-pluto.interface.js';
 import type {
-	ICategoryData,
-	IConfigRow,
-	SportsServing,
-} from '../../api/common/interfaces/kh-pluto/kh-pluto.interface.js';
-import type {
+	ChannelMetadata,
 	IChannelAggregated,
-	ScheduledChannelsGuildData,
 	ScheduledChannelsData,
+	ScheduledChannelsGuildData,
 } from '../../api/routes/channels/createchannels.interface.js';
 import { findEmoji } from '../../bot_res/findEmoji.js';
 import StringUtils from '../../common/string-utils.js';
@@ -38,6 +35,10 @@ interface IPrepareMatchEmbed {
 	bettingChanId: string;
 	header: string;
 	sport: SportsServing;
+	records?: {
+		home_team?: string;
+		away_team?: string;
+	};
 }
 
 interface ICreateChannelAndSendEmbed {
@@ -46,7 +47,7 @@ interface ICreateChannelAndSendEmbed {
 	metadata: {
 		favoredTeamInfo: any;
 		matchImg: Buffer | null;
-	};
+	} & ChannelMetadata;
 }
 
 /**
@@ -111,7 +112,7 @@ export default class ChannelManager {
 		).toLowerCase();
 		channel.sport = parsedSport as SportsServing;
 
-		const { sport, matchOdds } = channel;
+		const { sport, matchOdds, metadata } = channel;
 		const { favored } = matchOdds;
 		const favoredTeamInfo = await resolveTeam(favored, {
 			sport: parsedSport,
@@ -128,7 +129,7 @@ export default class ChannelManager {
 			await this.createChannelAndSendEmbed({
 				channel,
 				guild,
-				metadata: { favoredTeamInfo, matchImg },
+				metadata: { favoredTeamInfo, matchImg, ...metadata },
 			});
 		}
 	}
@@ -225,7 +226,8 @@ export default class ChannelManager {
 			awayTeamShortName: strUtils.getShortName(away_team),
 			away_team,
 			bettingChanId,
-			header: channel.matchData.headline,
+			header: metadata.headline,
+			records: metadata.records,
 			sport: channel.sport,
 		};
 
@@ -263,14 +265,16 @@ export default class ChannelManager {
 		const embedClr = args.favoredTeamClr;
 		const teamEmoji = (await findEmoji(args.favored)) ?? '';
 		const matchVersus = `${args.awayTeamShortName} @ ${args.homeTeamShortName}`;
-		// const parseHeaderEmoji = SportEmojis[args.sport]
-		// const sanitizedHeader =
-		// 	args?.header ?? args?.header?.replace(/-/, '|') ?? ''
+
+		// Build records string if available
+		const recordsStr = args.records
+			? `\n\n🔵 **Team Records**\n${args.awayTeamShortName}: ${args.records.away_team}\n${args.homeTeamShortName}: ${args.records.home_team}`
+			: '';
+
 		const matchEmbed = new EmbedBuilder()
 			.setColor(embedClr)
-			// Inserting for the playoffs, but will need to be reviewed for regular season
 			.setDescription(
-				`## ${matchVersus}\n\n🔵 **Game Details**\nThe ${teamEmoji} **${args.favored}** are favored to win this match!\n\n🔵 **Info**\n*Use \`/commands\` in <#${args.bettingChanId}> channel to place bets with Pluto*`,
+				`## ${matchVersus}\n\n🔵 **Game Details**\nThe ${teamEmoji} **${args.favored}** are favored to win this match!${recordsStr}\n\n🔵 **Info**\n*Use \`/commands\` in <#${args.bettingChanId}> channel to place bets with Pluto*`,
 			)
 			.setFooter({
 				text: 'Pluto | Created by fenixforever',

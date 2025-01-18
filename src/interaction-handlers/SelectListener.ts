@@ -1,4 +1,3 @@
-import { ApplyOptions } from '@sapphire/decorators';
 import {
 	InteractionHandler,
 	InteractionHandlerTypes,

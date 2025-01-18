@@ -1,4 +1,3 @@
-import { isApiError } from './../../lib/interfaces/errors/api-errors.js';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
 import { EmbedBuilder } from 'discord.js';
@@ -12,6 +11,7 @@ import MoneyFormatter from '../../utils/api/common/money-formatting/money-format
 import PatreonFacade from '../../utils/api/patreon/Patreon-Facade.js';
 import { CacheManager } from '../../utils/cache/RedisCacheManager.js';
 import { ErrorEmbeds } from '../../utils/common/errors/global.js';
+import { isApiError } from './../../lib/interfaces/errors/api-errors.js';
 
 @ApplyOptions<Command.Options>({
 	description: 'Double down an existing bet',

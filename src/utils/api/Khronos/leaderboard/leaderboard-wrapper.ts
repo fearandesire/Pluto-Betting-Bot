@@ -2,7 +2,7 @@ import {
 	LeaderboardApi,
 	type LeaderboardControllerGetLeaderboardRequest,
 } from '../../../../openapi/khronos/apis/LeaderboardApi.js';
-import { KH_API_CONFIG, type IKH_API_CONFIG } from '../KhronosInstances.js';
+import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js';
 
 export default class LeaderboardWrapper {
 	private leaderboardsApi: LeaderboardApi;

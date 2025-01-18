@@ -1,9 +1,8 @@
 import { findEmoji } from '@pluto-core-config';
+import { container } from '@sapphire/framework';
 import type { ColorResolvable, EmojiResolvable, GuildEmoji } from 'discord.js';
 import { resolveTeam } from 'resolve-team';
 import StringUtils from './string-utils.js';
-import { container } from '@sapphire/framework';
-import { slice } from 'lodash';
 
 interface TeamShortNameOrEmojiOptions {
 	nameWithEmoji?: boolean;

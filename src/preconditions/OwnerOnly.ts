@@ -1,10 +1,10 @@
 import { Precondition } from '@sapphire/framework';
-import env from '../lib/startup/env.js';
 import type {
 	CommandInteraction,
 	ContextMenuCommandInteraction,
 	Message,
 } from 'discord.js';
+import env from '../lib/startup/env.js';
 
 export class OwnerOnlyPrecondition extends Precondition {
 	public override async messageRun(message: Message) {

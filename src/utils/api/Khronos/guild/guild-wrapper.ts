@@ -1,13 +1,13 @@
 import {
-	GuildsApi,
 	type GetGuildsBySportAndConfigTypeRequest,
 	type Guild,
+	GuildsApi,
 } from '@kh-openapi';
-import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js';
-import type { Channel } from 'discord.js';
-import { DiscordConfigEnums } from '../../common/interfaces/kh-pluto/kh-pluto.interface.js';
 import { container } from '@sapphire/framework';
 import { isAxiosError } from 'axios';
+import type { Channel } from 'discord.js';
+import { DiscordConfigEnums } from '../../common/interfaces/kh-pluto/kh-pluto.interface.js';
+import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js';
 
 export default class GuildWrapper {
 	static getLogChannel(

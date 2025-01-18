@@ -3,14 +3,12 @@ import {
 	InteractionHandler,
 	InteractionHandlerTypes,
 } from '@sapphire/framework';
-// pnpm issue with @sapphire framework
-import { None, Option, Result } from '@sapphire/framework';
 import type { AutocompleteInteraction } from 'discord.js';
+import GuildWrapper from '../utils/api/Khronos/guild/guild-wrapper.js';
+import MatchApiWrapper from '../utils/api/Khronos/matches/matchApiWrapper.js';
 import MatchCacheService from '../utils/api/routes/cache/MatchCacheService.js';
 import { CacheManager } from '../utils/cache/RedisCacheManager.js';
 import StringUtils from '../utils/common/string-utils.js'; // Import StringUtils
-import MatchApiWrapper from '../utils/api/Khronos/matches/matchApiWrapper.js';
-import GuildWrapper from '../utils/api/Khronos/guild/guild-wrapper.js';
 export class AutocompleteHandler extends InteractionHandler {
 	private matchCacheService: MatchCacheService; // Moved to class property
 	private stringUtils: StringUtils; // Moved to class property

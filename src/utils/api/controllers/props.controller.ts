@@ -1,18 +1,18 @@
+import _ from 'lodash';
+import { fromZodError } from 'zod-validation-error';
+import { ValidationError } from '../../../utils/errors/ValidationError.js';
 import { WinstonLogger } from '../../logging/WinstonLogger.js';
 import {
 	PropArraySchema,
+	type PropEmbedsIncoming,
 	PropEmbedsIncomingSchema,
 	PropOptionsSchema,
-	type PropEmbedsIncoming,
 } from '../common/interfaces/index.js';
 import {
 	GuildChannelArraySchema,
 	type ReqBodyPropsEmbedsData,
 } from '../routes/props/props-route.interface.js';
 import { PropsPresentation } from '../services/props-presentation.service.js';
-import { ValidationError } from '../../../utils/errors/ValidationError.js';
-import { fromZodError } from 'zod-validation-error';
-import _ from 'lodash';
 /**
  * Handling processing data for incoming requests for props
  */

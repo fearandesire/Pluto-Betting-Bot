@@ -1,15 +1,15 @@
+import { container } from '@sapphire/framework';
+import type { EmbedData, Guild, TextBasedChannel } from 'discord.js';
+import { EmbedBuilder, bold, underline } from 'discord.js';
+import ClientTools from '../../bot_res/ClientTools.js';
+import TeamInfo, { type GetTeamInfoResponse } from '../../common/TeamInfo.js';
 import type {
-	PropEmbedsIncoming,
 	H2HPropStats,
 	NonH2HPropStats,
+	PropEmbedsIncoming,
 	PropPredictionStats,
 } from '../common/interfaces/schemas/prop.schema.js';
-import { container } from '@sapphire/framework';
 import { PropsPresentation } from '../services/props-presentation.service.js';
-import ClientTools from '../../bot_res/ClientTools.js';
-import type { EmbedData, Guild, TextBasedChannel } from 'discord.js';
-import TeamInfo, { type GetTeamInfoResponse } from '../../common/TeamInfo.js';
-import { bold, EmbedBuilder, underline } from 'discord.js';
 
 /**
  * @summary Handles the logic for compiling and formatting prop embeds

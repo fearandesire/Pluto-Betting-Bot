@@ -1,11 +1,11 @@
 import {
 	type AllUserPredictionsDto,
+	type CreatePredictionRequest,
 	type GetAllPredictionsFilteredRequest,
 	type GetPredictionByIdRequest,
 	type GetPredictionsForUserRequest,
 	PredictionApi,
 	type RemovePredictionRequest,
-	type CreatePredictionRequest,
 } from '../../../../openapi/khronos/index.js';
 import { KH_API_CONFIG } from '../KhronosInstances.js';
 

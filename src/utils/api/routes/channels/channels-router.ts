@@ -6,6 +6,7 @@
 import Router from 'koa-router';
 import _ from 'lodash';
 import ChannelManager from '../../../guilds/channels/ChannelManager.js';
+import { WinstonLogger } from '../../../logging/WinstonLogger.js';
 import type { ScheduledChannelsData } from './createchannels.interface.js';
 
 const ChannelsRoutes = new Router();
@@ -21,7 +22,7 @@ ChannelsRoutes.post('/channels/incoming', async (ctx: any) => {
 			ctx.request.body,
 		);
 		if (!validated) {
-			console.error({
+			WinstonLogger.error({
 				route: '/channels/incoming',
 				message: 'Unable to create game channels; Invalid data received',
 			});

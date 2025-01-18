@@ -30,10 +30,7 @@
 		"docker:push": "docker-compose build --no-cache && docker-compose push",
 		"docker:pull": "docker-compose pull",
 		"biome:lint": "biome check --write .",
-		"biome:fix": "biome check --write --unsafe  .",
-		"trunk": "trunk",
-		"lint": "trunk check",
-		"fmt": "trunk fmt"
+		"biome:fix": "biome check --write --unsafe  ."
 	},
 	"aliases": {
 		"@pluto-api-interfaces": "./dist/utils/api/common/interfaces/index.js",
@@ -177,18 +174,13 @@
 			"^@/(.*)$": "<rootDir>/src/$1",
 			"^lib/(.*)$": "<rootDir>/lib/$1"
 		},
-		"moduleFileExtensions": [
-			"ts",
-			"js"
-		],
+		"moduleFileExtensions": ["ts", "js"],
 		"rootDir": "src",
 		"testRegex": ".*\\.spec\\.ts$",
 		"transform": {
 			"^.+\\.(t|j)s$": "ts-jest"
 		},
-		"collectCoverageFrom": [
-			"**/*.(t|j)s"
-		],
+		"collectCoverageFrom": ["**/*.(t|j)s"],
 		"coverageDirectory": "../coverage",
 		"testEnvironment": "node"
 	}

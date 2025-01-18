@@ -31,6 +31,9 @@
 			},
 			"complexity": {
 				"noStaticOnlyClass": "off"
+			},
+			"correctness": {
+				"noUnusedImports": "error"
 			}
 		}
 	},

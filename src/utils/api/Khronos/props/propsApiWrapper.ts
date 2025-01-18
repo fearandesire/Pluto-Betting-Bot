@@ -1,15 +1,15 @@
 import {
-	PropsApi,
 	type FindAllPropsRequest,
 	type FindOnePropRequest,
 	type FindPropsByDescriptionRequest,
 	type GetPropsForEventRequest,
 	type ManualSendPropsRequest,
 	type Prop,
+	PropsApi,
 	type SetPropResultRequest,
 } from '@kh-openapi';
-import { KH_API_CONFIG } from '../KhronosInstances.js';
 import { WinstonLogger } from '../../../logging/WinstonLogger.js';
+import { KH_API_CONFIG } from '../KhronosInstances.js';
 
 /**
  * Wrapper for the Props Controller in Khronos

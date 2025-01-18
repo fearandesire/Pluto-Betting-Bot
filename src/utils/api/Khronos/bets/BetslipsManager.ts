@@ -15,6 +15,7 @@ import {
 	EmbedBuilder,
 	type GuildEmoji,
 } from 'discord.js';
+import _ from 'lodash';
 import embedColors from '../../../../lib/colorsConfig.js';
 import { ApiModules } from '../../../../lib/interfaces/api/api.interface.js';
 import type { IAPIBetslipPayload } from '../../../../lib/interfaces/api/bets/betslips.interfaces.js';
@@ -30,7 +31,6 @@ import PatreonFacade from '../../patreon/Patreon-Facade.js';
 import { ApiErrorHandler } from '../error-handling/ApiErrorHandler.js';
 import GuildWrapper from '../guild/guild-wrapper.js';
 import BetslipWrapper from './betslip-wrapper.js';
-import _ from 'lodash';
 
 interface InitializeParams {
 	team: string;

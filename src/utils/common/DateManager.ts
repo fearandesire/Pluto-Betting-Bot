@@ -4,11 +4,10 @@ import {
 	format,
 	isAfter,
 	isBefore,
+	isValid,
 	parseISO,
 	startOfDay,
-	isValid,
 } from 'date-fns';
-import { replace } from 'lodash';
 
 /**
  * A utility class for managing date-related operations, particularly for filtering items based on a date range.

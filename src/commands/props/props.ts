@@ -1,26 +1,19 @@
-import { LogType } from '../../utils/logging/AppLog.interface.js';
+import { MarketKeyTranslations } from '@pluto-api-interfaces';
+import { PaginatedMessageEmbedFields } from '@sapphire/discord.js-utilities';
 import { Subcommand } from '@sapphire/plugin-subcommands';
-import {
-	PermissionFlagsBits,
-	EmbedBuilder,
-	type ChatInputCommandInteraction,
-} from 'discord.js';
-import PropsApiWrapper from '../../utils/api/Khronos/props/propsApiWrapper.js';
+import { EmbedBuilder, PermissionFlagsBits } from 'discord.js';
+import embedColors from '../../lib/colorsConfig.js';
+import { ApiModules } from '../../lib/interfaces/api/api.interface.js';
 import type { Prop } from '../../openapi/khronos/models/Prop.js';
 import type { UpdatePropResultDto } from '../../openapi/khronos/models/UpdatePropResultDto.js';
 import type { UpdatePropResultResponseDto } from '../../openapi/khronos/models/index.js';
-import { MarketKeyTranslations } from '@pluto-api-interfaces';
+import { ApiErrorHandler } from '../../utils/api/Khronos/error-handling/ApiErrorHandler.js';
+import PropsApiWrapper from '../../utils/api/Khronos/props/propsApiWrapper.js';
 import { DateManager } from '../../utils/common/DateManager.js';
 import TeamInfo from '../../utils/common/TeamInfo.js';
-import AppLog from '../../utils/logging/AppLog.js';
 import StringUtils from '../../utils/common/string-utils.js';
-import { ApiErrorHandler } from '../../utils/api/Khronos/error-handling/ApiErrorHandler.js';
-import { ApiModules } from '../../lib/interfaces/api/api.interface.js';
-import { PaginatedMessageEmbedFields } from '@sapphire/discord.js-utilities';
-import embedColors from '../../lib/colorsConfig.js';
-import { entries } from 'lodash';
-import { type } from 'node:os';
-import { log } from 'node:console';
+import { LogType } from '../../utils/logging/AppLog.interface.js';
+import AppLog from '../../utils/logging/AppLog.js';
 
 export class UserCommand extends Subcommand {
 	public constructor(
