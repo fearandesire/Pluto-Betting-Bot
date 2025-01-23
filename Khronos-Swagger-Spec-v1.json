@@ -2648,39 +2648,6 @@
       }
     },
     "/props": {
-      "post": {
-        "operationId": "createProp",
-        "summary": "Create a new prop",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreatePropDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "The prop has been successfully created.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Prop"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request."
-          }
-        },
-        "tags": [
-          "Props"
-        ]
-      },
       "get": {
         "operationId": "findAllProps",
         "summary": "Get all props",
@@ -3095,6 +3062,38 @@
         ]
       }
     },
+    "/week-manager/getCurrentWeek": {
+      "get": {
+        "operationId": "getCurrentWeek",
+        "summary": "Get the current week number for a sport",
+        "parameters": [
+          {
+            "name": "sport",
+            "required": true,
+            "in": "query",
+            "description": "The sport to get the current week for (e.g., \"nfl\" or \"nba\")",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the current week number",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Week Manager"
+        ]
+      }
+    },
     "/prediction": {
       "post": {
         "operationId": "createPrediction",
@@ -3359,38 +3358,6 @@
         },
         "tags": [
           "Prediction"
-        ]
-      }
-    },
-    "/week-manager/getCurrentWeek": {
-      "get": {
-        "operationId": "getCurrentWeek",
-        "summary": "Get the current week number for a sport",
-        "parameters": [
-          {
-            "name": "sport",
-            "required": true,
-            "in": "query",
-            "description": "The sport to get the current week for (e.g., \"nfl\" or \"nba\")",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Returns the current week number",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "number"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "Week Manager"
         ]
       }
     },
@@ -5455,151 +5422,6 @@
           "home_team",
           "away_team",
           "bookmakers"
-        ]
-      },
-      "CreatePropDto": {
-        "type": "object",
-        "properties": {
-          "event_id": {
-            "type": "string",
-            "description": "Unique identifier for the event. This is provided by the source of the props (The-Odds API)",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "sport_key": {
-            "type": "string",
-            "description": "Key of the sport",
-            "example": "americanfootball_nfl"
-          },
-          "sport_title": {
-            "type": "string",
-            "description": "Title of the sport",
-            "example": "nfl"
-          },
-          "commence_time": {
-            "format": "date-time",
-            "type": "string",
-            "description": "The commencement time of the event"
-          },
-          "home_team": {
-            "type": "string",
-            "description": "The name of the home team"
-          },
-          "away_team": {
-            "type": "string",
-            "description": "The name of the away team"
-          },
-          "bookmaker_key": {
-            "type": "string",
-            "description": "The key of the bookmaker"
-          },
-          "bookmaker_title": {
-            "type": "string",
-            "description": "The title of the bookmaker"
-          },
-          "last_update": {
-            "format": "date-time",
-            "type": "string",
-            "description": "The last update time"
-          },
-          "market_key": {
-            "enum": [
-              "h2h",
-              "totals",
-              "player_pass_tds",
-              "player_pass_yds",
-              "player_pass_completions",
-              "player_pass_attempts",
-              "player_pass_interceptions",
-              "player_pass_longest_completion",
-              "player_rush_yds",
-              "player_rush_attempts",
-              "player_rush_longest",
-              "player_receptions",
-              "player_reception_yds",
-              "player_reception_longest",
-              "player_kicking_points",
-              "player_field_goals",
-              "player_tackles_assists",
-              "player_1st_td",
-              "player_last_td",
-              "player_anytime_td",
-              "player_pass_tds_alternate",
-              "player_pass_yds_alternate",
-              "player_rush_yds_alternate",
-              "player_rush_reception_yds_alternate",
-              "player_reception_yds_alternate",
-              "player_receptions_alternate",
-              "player_points",
-              "player_rebounds",
-              "player_assists",
-              "player_threes",
-              "player_blocks",
-              "player_steals",
-              "player_blocks_steals",
-              "player_turnovers",
-              "player_points_rebounds_assists",
-              "player_points_rebounds",
-              "player_points_assists",
-              "player_rebounds_assists",
-              "player_first_basket",
-              "player_double_double",
-              "player_triple_double",
-              "player_points_alternate",
-              "player_rebounds_alternate",
-              "player_assists_alternate",
-              "player_blocks_alternate",
-              "player_steals_alternate",
-              "player_threes_alternate",
-              "player_points_assists_alternate",
-              "player_points_rebounds_alternate",
-              "player_rebounds_assists_alternate",
-              "player_points_rebounds_assists_alternate"
-            ],
-            "type": "string",
-            "description": "The key of the betting market"
-          },
-          "price": {
-            "type": "number",
-            "description": "The price of the bet"
-          },
-          "point": {
-            "type": "number",
-            "description": "The point value of the bet, if applicable"
-          },
-          "status": {
-            "enum": [
-              "pending",
-              "completed",
-              "error"
-            ],
-            "type": "string",
-            "description": "The status of the prop",
-            "nullable": true
-          },
-          "result": {
-            "type": "string",
-            "description": "The result of the prop/event. The winner goes here.",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "description": "The player involved in the prop.",
-            "example": "Jayson Tatum",
-            "nullable": true
-          }
-        },
-        "required": [
-          "event_id",
-          "sport_key",
-          "sport_title",
-          "commence_time",
-          "home_team",
-          "away_team",
-          "bookmaker_key",
-          "bookmaker_title",
-          "last_update",
-          "market_key",
-          "price"
         ]
       },
       "ProcessedPredictions": {

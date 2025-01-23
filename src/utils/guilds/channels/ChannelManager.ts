@@ -16,11 +16,12 @@ import _ from 'lodash';
 import { resolveTeam } from 'resolve-team';
 import { SapDiscClient } from '../../../index.js';
 import type { SportsServing } from '../../api/common/interfaces/kh-pluto/kh-pluto.interface.js';
-import type {
-	ChannelMetadata,
-	IChannelAggregated,
-	ScheduledChannelsData,
-	ScheduledChannelsGuildData,
+import {
+	type ChannelMetadata,
+	type IChannelAggregated,
+	type ScheduledChannelsData,
+	type ScheduledChannelsGuildData,
+	scheduledChannelsDataSchema,
 } from '../../api/routes/channels/createchannels.interface.js';
 import { findEmoji } from '../../bot_res/findEmoji.js';
 import StringUtils from '../../common/string-utils.js';
@@ -142,19 +143,9 @@ export default class ChannelManager {
 		channels: IChannelAggregated[];
 		guilds: ScheduledChannelsGuildData[];
 	}) {
-		// Directly checking for non-empty arrays
-		if (
-			!Array.isArray(body.channels) ||
-			body.channels.length === 0 ||
-			!Array.isArray(body.guilds) ||
-			body.guilds.length === 0
-		) {
-			console.error('[validateAndParseChannels] Validation failed', {
-				guilds: body.guilds,
-				channels: body.channels,
-			});
-			return false;
-		}
+		const { channels, guilds } = body;
+		// Zod Validation
+		await scheduledChannelsDataSchema.parse(body);
 		return true;
 	}
 

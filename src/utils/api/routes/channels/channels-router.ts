@@ -6,8 +6,8 @@
 import Router from 'koa-router';
 import _ from 'lodash';
 import ChannelManager from '../../../guilds/channels/ChannelManager.js';
-import { WinstonLogger } from '../../../logging/WinstonLogger.js';
 import type { ScheduledChannelsData } from './createchannels.interface.js';
+import { WinstonLogger } from '../../../logging/WinstonLogger.js';
 
 const ChannelsRoutes = new Router();
 
@@ -15,42 +15,25 @@ const ChannelsRoutes = new Router();
  * Handles POST requests to create channels based on incoming data.
  * @param {Object} ctx - Context for the incoming HTTP request.
  */
-ChannelsRoutes.post('/channels/incoming', async (ctx: any) => {
+ChannelsRoutes.post('/channels/create', async (ctx: any) => {
+	const channelManager = new ChannelManager();
+	await channelManager.validateAndParseChannels(ctx.request.body);
+	const { channels, guilds } = ctx.request.body as ScheduledChannelsData;
 	try {
-		const channelManager = new ChannelManager();
-		const validated = await channelManager.validateAndParseChannels(
-			ctx.request.body,
-		);
-		if (!validated) {
-			WinstonLogger.error({
-				route: '/channels/incoming',
-				message: 'Unable to create game channels; Invalid data received',
-			});
-			ctx.body = {
-				message: 'Unable to create game channels; Invalid data received',
-				statusCode: 500,
-			};
-			return;
-		}
-		const { channels, guilds } = ctx.request.body as ScheduledChannelsData;
 		await channelManager.processChannels({
 			channels,
 			guilds,
 		});
-		ctx.body = {
-			message: 'Channels created.',
-			status: 200,
-		};
-	} catch (error) {
-		console.error({
-			route: '/channels/incoming',
-			error: error,
+	} catch (err) {
+		WinstonLogger.error('Error creating channels', {
+			error: err,
 		});
-		ctx.body = {
-			message: 'Unexpected error occurred',
-			statusCode: 500,
-		};
+		throw err;
 	}
+	ctx.body = {
+		message: 'Channels created.',
+		status: 200,
+	};
 });
 
 /**

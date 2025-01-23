@@ -122,6 +122,7 @@
 		"puppeteer-extra-plugin-stealth": "^2.11.2",
 		"resolve-team": "^1.8.6",
 		"winston": "^3.8.2",
+		"winston-console-format": "^1.0.8",
 		"winston-daily-rotate-file": "^5.0.0",
 		"zod": "^3.23.8",
 		"zod-validation-error": "^3.4.0"

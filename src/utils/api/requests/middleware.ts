@@ -1,16 +1,9 @@
-// @ts-nocheck
 export async function responseTime(ctx, next) {
 	const started = Date.now();
 	await next();
-	// once all middleware below completes, this continues
 	const ellapsed = `${Date.now() - started}ms`;
-	// Timestamp HH:MM:SS
-	const timestamp = `[${new Date().toLocaleTimeString()}]`;
-	console.log(`${timestamp} API Response time is: ${ellapsed}`);
-	ctx.set('X-ResponseTime', ellapsed);
 }
 
-/* Boilerplate: http://localhost:5010/api/123456695 */
 export async function pageNotFound(ctx, next) {
 	return next().then(() => {
 		if (ctx.status === 404) {

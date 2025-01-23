@@ -4,6 +4,7 @@ import DailyRotateFile from 'winston-daily-rotate-file';
 import env from '../../lib/startup/env.js';
 const isProduction = env.NODE_ENV === 'production';
 const { AXIOM_DATASET, AXIOM_API_TOKEN, AXIOM_ORG_ID } = env;
+import { consoleFormat } from 'winston-console-format';
 
 // Core Winston Config
 const coreWinstonConfig = {
@@ -28,14 +29,19 @@ const baseWinstonConfig = {
 
 const winstonConsoleConfig = {
 	format: winston.format.combine(
-		winston.format.cli(),
-		winston.format.colorize({
-			all: true,
+		winston.format.colorize({ all: true }),
+		winston.format.timestamp({ format: 'MM/DD HH:mm:ss' }),
+		winston.format.padLevels(),
+		consoleFormat({
+			showMeta: true,
+			inspectOptions: {
+				depth: 4,
+				colors: true,
+				maxArrayLength: 10,
+				breakLength: 120,
+				compact: Number.POSITIVE_INFINITY,
+			},
 		}),
-		winston.format.timestamp(),
-		winston.format.printf(
-			({ level, message, timestamp }) => `${timestamp} ${level}: ${message}`,
-		),
 	),
 };
 
