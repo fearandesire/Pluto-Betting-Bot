@@ -8,6 +8,7 @@ import cors from '@koa/cors';
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
 import logger from 'koa-logger';
+import { v4 as uuidv4 } from 'uuid';
 import {
 	createMessageBuilder,
 	fromError,
@@ -56,6 +57,7 @@ async function handleZodError(
 		context: 'http',
 		path,
 		method,
+		reqId: ctx.state.reqId,
 	});
 
 	ctx.status = 400;
@@ -67,6 +69,24 @@ async function handleZodError(
 }
 
 const app = new Koa();
+
+// Add request ID middleware before any other middleware
+app.use(async (ctx, next) => {
+	// Check for existing request ID in common header variations
+	const existingRequestId =
+		ctx.get('X-Request-ID') ||
+		ctx.get('Request-ID') ||
+		ctx.get('reqId') ||
+		ctx.get('x-request-id'); // lowercase variant
+
+	// Use existing request ID if present, otherwise generate new UUID
+	ctx.state.reqId = existingRequestId || uuidv4();
+
+	// Always set/forward the X-Request-ID header as reqId
+	ctx.set('reqId', ctx.state.reqId);
+	await next();
+});
+
 app.use(
 	logger((str, args: any[]) => {
 		// Extract the meaningful parts from args array
@@ -79,6 +99,9 @@ app.use(
 			path,
 			...(status && { status }),
 			duration,
+			reqId: str.includes('-->')
+				? args[4]?.state?.reqId
+				: args[3]?.state?.reqId,
 		};
 
 		// Use info for 2xx status codes, error for others
