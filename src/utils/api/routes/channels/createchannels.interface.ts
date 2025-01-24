@@ -27,7 +27,7 @@ export const teamRecordsResultSchema = z.object({
 /** Channel metadata schema containing headline and team records */
 export const channelMetadataSchema = z.object({
 	headline: z.string().optional(),
-	records: teamRecordsResultSchema,
+	records: teamRecordsResultSchema.optional(),
 });
 
 export type ChannelMetadata = z.infer<typeof channelMetadataSchema>;
