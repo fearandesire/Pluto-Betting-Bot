@@ -143,7 +143,6 @@ export default class ChannelManager {
 		channels: IChannelAggregated[];
 		guilds: ScheduledChannelsGuildData[];
 	}) {
-		const { channels, guilds } = body;
 		// Zod Validation
 		await scheduledChannelsDataSchema.parse(body);
 		return true;
