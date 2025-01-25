@@ -27,7 +27,7 @@
 		"dvault": "npx dotenv-vault@latest",
 		"dvault-prod": "npx dotenv-vault@latest push production",
 		"release": "release-it",
-		"docker:push": "docker-compose build --no-cache && docker-compose push",
+		"docker:push": "docker-compose build && docker-compose push",
 		"docker:pull": "docker-compose pull",
 		"biome:lint": "biome check --write .",
 		"biome:fix": "biome check --write --unsafe  ."
@@ -177,18 +177,13 @@
 			"^@/(.*)$": "<rootDir>/src/$1",
 			"^lib/(.*)$": "<rootDir>/lib/$1"
 		},
-		"moduleFileExtensions": [
-			"ts",
-			"js"
-		],
+		"moduleFileExtensions": ["ts", "js"],
 		"rootDir": "src",
 		"testRegex": ".*\\.spec\\.ts$",
 		"transform": {
 			"^.+\\.(t|j)s$": "ts-jest"
 		},
-		"collectCoverageFrom": [
-			"**/*.(t|j)s"
-		],
+		"collectCoverageFrom": ["**/*.(t|j)s"],
 		"coverageDirectory": "../coverage",
 		"testEnvironment": "node"
 	}

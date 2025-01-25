@@ -26,8 +26,8 @@ export const teamRecordsResultSchema = z.object({
 
 /** Channel metadata schema containing headline and team records */
 export const channelMetadataSchema = z.object({
-	headline: z.string().optional(),
-	records: teamRecordsResultSchema.optional(),
+	headline: z.string().optional().nullable(),
+	records: teamRecordsResultSchema.optional().nullable(),
 });
 
 export type ChannelMetadata = z.infer<typeof channelMetadataSchema>;
@@ -50,7 +50,7 @@ export const channelAggregatedSchema = z.object({
 	matchOdds: matchOddsSchema,
 	home_team: z.string(),
 	away_team: z.string(),
-	metadata: channelMetadataSchema,
+	metadata: channelMetadataSchema.optional(),
 });
 
 export type IChannelAggregated = z.infer<typeof channelAggregatedSchema>;
