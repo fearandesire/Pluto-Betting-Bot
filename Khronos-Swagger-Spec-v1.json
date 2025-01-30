@@ -265,6 +265,64 @@
         ]
       }
     },
+    "/matches/cleanup/stale": {
+      "post": {
+        "operationId": "cleanupStaleMatches",
+        "summary": "Clean up and archive stale matches",
+        "description": "Identifies and archives matches that are complete and occurred before the current day",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully cleaned up stale matches",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "results": {
+                      "type": "object",
+                      "properties": {
+                        "successful": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "IDs of successfully archived matches"
+                        },
+                        "failed": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "IDs of matches that failed to archive"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Matches"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
     "/discord/configs/set": {
       "post": {
         "operationId": "setGuildConfig",
@@ -3892,6 +3950,43 @@
           "calendar"
         ]
       }
+    },
+    "/stats/overall/h2h/{userId}": {
+      "get": {
+        "operationId": "getOverallH2hBettingStats",
+        "summary": "Get overall H2H betting stats",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "description": "The ID of the user",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Overall H2H betting stats",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OverallStatsDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Stats"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ]
+      }
     }
   },
   "info": {
@@ -6633,6 +6728,111 @@
           "updated_at",
           "user",
           "item"
+        ]
+      },
+      "TeamBetStats": {
+        "type": "object",
+        "properties": {
+          "team": {
+            "type": "string",
+            "description": "The team name"
+          },
+          "count": {
+            "type": "number",
+            "description": "The number of bets for the team"
+          }
+        },
+        "required": [
+          "team",
+          "count"
+        ]
+      },
+      "TeamLossStats": {
+        "type": "object",
+        "properties": {
+          "team": {
+            "type": "string",
+            "description": "The team name"
+          },
+          "losses": {
+            "type": "number",
+            "description": "The number of losses for the team"
+          }
+        },
+        "required": [
+          "team",
+          "losses"
+        ]
+      },
+      "ProfitLossSummary": {
+        "type": "object",
+        "properties": {
+          "totalWon": {
+            "type": "number",
+            "description": "The total amount won"
+          },
+          "totalLost": {
+            "type": "number",
+            "description": "The total amount lost"
+          },
+          "netProfit": {
+            "type": "number",
+            "description": "The net profit"
+          }
+        },
+        "required": [
+          "totalWon",
+          "totalLost",
+          "netProfit"
+        ]
+      },
+      "OverallStatsDto": {
+        "type": "object",
+        "properties": {
+          "totalBets": {
+            "type": "number",
+            "description": "Total number of bets"
+          },
+          "winRate": {
+            "type": "number",
+            "description": "Win rate"
+          },
+          "mostBetTeam": {
+            "description": "Most bet team statistics",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TeamBetStats"
+              }
+            ]
+          },
+          "mostLossesTeam": {
+            "description": "Team with most losses statistics",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TeamLossStats"
+              }
+            ]
+          },
+          "highestBetAmount": {
+            "type": "number",
+            "description": "Highest bet amount"
+          },
+          "profitLossSummary": {
+            "description": "Profit and loss summary",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProfitLossSummary"
+              }
+            ]
+          }
+        },
+        "required": [
+          "totalBets",
+          "winRate",
+          "mostBetTeam",
+          "mostLossesTeam",
+          "highestBetAmount",
+          "profitLossSummary"
         ]
       }
     }
