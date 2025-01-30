@@ -58,6 +58,9 @@ export type IChannelAggregated = z.infer<typeof channelAggregatedSchema>;
 /** Guild-specific scheduled channels configuration schema */
 export const scheduledChannelsGuildSchema = z.object({
 	guildId: z.string(),
+	eligibleMatches: z
+		.array(z.string())
+		.describe('Channel IDs that are eligible to be created for this guild'),
 	bettingChannelId: z.string(),
 	gameCategoryId: z.string(),
 	sport: z.string(),
