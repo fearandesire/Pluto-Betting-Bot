@@ -205,7 +205,9 @@ export default class PropsStats extends PropsPresentation {
 
 		// Send the embeds to the guilds
 		for (const { guild, channel } of guildsAndChannels) {
-			await channel.send({ embeds });
+			if ('send' in channel) {
+				await channel.send({ embeds });
+			}
 		}
 	}
 }

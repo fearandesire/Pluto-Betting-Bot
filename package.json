@@ -101,7 +101,7 @@
 		"date-fns": "^4.1.0",
 		"date-fns-tz": "^3.2.0",
 		"discord-api-types": "^0.37.77",
-		"discord.js": "^14.14.1",
+		"discord.js": "^14.17.3",
 		"dotenv": "16.4.5",
 		"dotenv-vault": "1.26.1",
 		"esm-module-alias": "^2.1.0",
@@ -177,13 +177,18 @@
 			"^@/(.*)$": "<rootDir>/src/$1",
 			"^lib/(.*)$": "<rootDir>/lib/$1"
 		},
-		"moduleFileExtensions": ["ts", "js"],
+		"moduleFileExtensions": [
+			"ts",
+			"js"
+		],
 		"rootDir": "src",
 		"testRegex": ".*\\.spec\\.ts$",
 		"transform": {
 			"^.+\\.(t|j)s$": "ts-jest"
 		},
-		"collectCoverageFrom": ["**/*.(t|j)s"],
+		"collectCoverageFrom": [
+			"**/*.(t|j)s"
+		],
 		"coverageDirectory": "../coverage",
 		"testEnvironment": "node"
 	}
