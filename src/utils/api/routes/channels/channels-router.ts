@@ -17,6 +17,9 @@ const ChannelsRoutes = new Router();
  */
 ChannelsRoutes.post('/channels/create', async (ctx: any) => {
 	const channelManager = new ChannelManager();
+	WinstonLogger.info('Received request to create channels', {
+		body: ctx.request.body,
+	});
 	await channelManager.validateAndParseChannels(ctx.request.body);
 	const { channels, guilds } = ctx.request.body as ScheduledChannelsData;
 	try {
