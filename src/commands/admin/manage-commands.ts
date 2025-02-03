@@ -1,7 +1,7 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { type ApplicationCommandRegistry, Command } from '@sapphire/framework';
 import { PermissionFlagsBits } from 'discord.js';
-import { plutoGuildId } from './../../lib/configs/constants.js';
+import { pltuoDevGuild } from './../../lib/configs/constants.js';
 
 @ApplyOptions<Command.Options>({
 	description: 'Manage bot commands',
@@ -55,7 +55,7 @@ export class ManageCommandsCommand extends Command {
 									.setRequired(true),
 							),
 					),
-			{ idHints: ['1290465328995766333'], guildIds: [plutoGuildId] },
+			{ idHints: ['1290465328995766333'], guildIds: [pltuoDevGuild] },
 		);
 	}
 

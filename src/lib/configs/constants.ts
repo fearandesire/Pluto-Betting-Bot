@@ -1,5 +1,9 @@
 export const plutoDocsUrl = 'https://docs.pluto.fearandesire.com';
-export const plutoGuildId = '777353407383339038';
+export const pltuoDevGuild = '777353407383339038';
+export const DEV_IDS = {
+	guild: '777353407383339038',
+	gameCategory: '1166497991935406120',
+};
 
 export const APP_OWNER_INFO = {
 	discord_username: 'fenixforever',

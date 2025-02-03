@@ -2,7 +2,8 @@
 FROM node:20-slim AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
+RUN npm install -g pnpm
+
 
 # OpenAPI generation stage
 FROM base AS openapi-generator
@@ -32,7 +33,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 
 # Install dependencies
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --force
 
 # Copy the rest of the files and generated OpenAPI code
 COPY . .
@@ -52,7 +53,7 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/assets ./assets
 
 # Install production dependencies
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --force
 
 EXPOSE 2090
 CMD ["pnpm", "start"]
