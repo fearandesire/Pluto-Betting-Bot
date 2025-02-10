@@ -6,7 +6,7 @@ permissions:
   pull-requests: write
 
 jobs:
-  dependabot:
+  dependabot-auto-merge:
     runs-on: ubuntu-latest
     if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'fearandesire/pluto-betting-bot'
     steps:
