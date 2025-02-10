@@ -18,7 +18,7 @@
 		"requireCommits": false,
 		"requireCommitsFail": true,
 		"commitsPath": "",
-		"addUntrackedFiles": false,
+		"addUntrackedFiles": true,
 		"commit": false,
 		"commitMessage": "chore(release): v${version}",
 		"commitArgs": [],
@@ -46,7 +46,7 @@
 		"timeout": 10
 	},
 	"github": {
-		"release": false,
+		"release": true,
 		"releaseName": "Release ${version}",
 		"releaseNotes": null,
 		"autoGenerate": false,
