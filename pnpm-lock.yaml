@@ -171,14 +171,14 @@ importers:
         specifier: ^11.0.5
         version: 11.0.5
       winston:
-        specifier: ^3.14.2
-        version: 3.14.2
+        specifier: ^3.17.0
+        version: 3.17.0
       winston-console-format:
         specifier: ^1.0.8
         version: 1.0.8
       winston-daily-rotate-file:
         specifier: ^5.0.0
-        version: 5.0.0(winston@3.14.2)
+        version: 5.0.0(winston@3.17.0)
       zod:
         specifier: ^3.23.8
         version: 3.23.8
@@ -5870,8 +5870,8 @@ packages:
     resolution: {integrity: sha512-8drMJ4rkgaPo1Me4zD/3WLfI/zPdA9o2IipKODunnGDcuqbHwjsbB79ylv04LCGGzU0xQ6vTznOMpQGaLhhm6A==}
     engines: {node: '>= 12.0.0'}
 
-  winston@3.14.2:
-    resolution: {integrity: sha512-CO8cdpBB2yqzEf8v895L+GNKYJiEq8eKlHU38af3snQBQ+sdAIUepjMSguOIJC7ICbzm0ZI+Af2If4vIJrtmOg==}
+  winston@3.17.0:
+    resolution: {integrity: sha512-DLiFIXYC5fMPxaRg832S6F5mJYvePtmO5G9v9IgUFPhXm9/GkXarH/TUrBAVzhTCzAj9anE/+GjrgXp/54nOgw==}
     engines: {node: '>= 12.0.0'}
 
   word-wrap@1.2.5:
@@ -12169,17 +12169,17 @@ snapshots:
       logform: 2.6.1
       triple-beam: 1.4.1
 
-  winston-daily-rotate-file@5.0.0(winston@3.14.2):
+  winston-daily-rotate-file@5.0.0(winston@3.17.0):
     dependencies:
       file-stream-rotator: 0.6.1
       object-hash: 3.0.0
       triple-beam: 1.4.1
-      winston: 3.14.2
+      winston: 3.17.0
       winston-transport: 4.7.1
 
   winston-transport@4.7.1:
     dependencies:
-      logform: 2.6.1
+      logform: 2.7.0
       readable-stream: 3.6.2
       triple-beam: 1.4.1
 
@@ -12189,19 +12189,19 @@ snapshots:
       readable-stream: 3.6.2
       triple-beam: 1.4.1
 
-  winston@3.14.2:
+  winston@3.17.0:
     dependencies:
       '@colors/colors': 1.6.0
       '@dabh/diagnostics': 2.0.3
       async: 3.2.6
       is-stream: 2.0.1
-      logform: 2.6.1
+      logform: 2.7.0
       one-time: 1.0.0
       readable-stream: 3.6.2
       safe-stable-stringify: 2.5.0
       stack-trace: 0.0.10
       triple-beam: 1.4.1
-      winston-transport: 4.7.1
+      winston-transport: 4.9.0
 
   word-wrap@1.2.5: {}
 
