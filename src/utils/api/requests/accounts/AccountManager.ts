@@ -89,14 +89,15 @@ export class AccountManager {
 			);
 			const { balance } = res;
 			if (!balance) {
-				const errEmbed = ErrorEmbeds.accountErr(
+				const errEmbed = await ErrorEmbeds.accountErr(
 					`Unable to locate your account's balance.\n${supportMessage}`,
 				);
 				return interaction.editReply({ embeds: [errEmbed] });
 			}
 			const formattedBalance = MoneyFormatter.toUSD(balance);
 			const descStr = `Your balance is **\`${formattedBalance}\`**`;
-			const embed = await new EmbedsSuccess(interaction).sv1(
+			const embed = await EmbedsSuccess.sv1(
+				interaction,
 				'💰 Processed Daily Claim',
 				descStr,
 			);
@@ -135,7 +136,8 @@ export class AccountManager {
 				} else {
 					descStr = `💰 **Balance:** \`${formattedBalance}\`\n🛡️ **Level:** \`${level}\`\n💫 **Tier:** \`${Tier}\``;
 				}
-				const embed = await new EmbedsSuccess(interaction).sv1(
+				const embed = await EmbedsSuccess.sv1(
+					interaction,
 					`${user?.displayName}'s Profile`,
 					descStr,
 				);

@@ -19,7 +19,7 @@
 		"requireCommitsFail": true,
 		"commitsPath": "",
 		"addUntrackedFiles": true,
-		"commit": false,
+		"commit": true,
 		"commitMessage": "chore(release): v${version}",
 		"commitArgs": [],
 		"tag": true,
@@ -33,25 +33,13 @@
 		"pushArgs": ["--follow-tags"],
 		"pushRepo": ""
 	},
-	"npm": {
-		"publish": false,
-		"publishPath": ".",
-		"publishArgs": [],
-		"tag": null,
-		"otp": null,
-		"ignoreVersion": false,
-		"allowSameVersion": false,
-		"versionArgs": ["--workspaces-update=false"],
-		"skipChecks": false,
-		"timeout": 10
-	},
 	"github": {
 		"release": true,
 		"releaseName": "Release ${version}",
 		"releaseNotes": null,
 		"autoGenerate": false,
 		"preRelease": false,
-		"draft": true,
+		"draft": false,
 		"tokenRef": "GITHUB_TOKEN",
 		"assets": null,
 		"host": null,
@@ -64,5 +52,17 @@
 			"issue": ":rocket: _This issue has been resolved in v${version}. See [${releaseName}](${releaseUrl}) for release notes._",
 			"pr": ":rocket: _This pull request is included in v${version}. See [${releaseName}](${releaseUrl}) for release notes._"
 		}
+	},
+	"npm": {
+		"publish": false,
+		"publishPath": ".",
+		"publishArgs": [],
+		"tag": null,
+		"otp": null,
+		"ignoreVersion": false,
+		"allowSameVersion": false,
+		"versionArgs": ["--workspaces-update=false"],
+		"skipChecks": false,
+		"timeout": 10
 	}
 }

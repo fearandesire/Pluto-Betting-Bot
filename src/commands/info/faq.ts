@@ -18,7 +18,7 @@ export class UserCommand extends Command {
 	public override async chatInputRun(
 		interaction: Command.ChatInputCommandInteraction,
 	) {
-		const faqInfo = PlutoInfo.faqInfo();
+		const faqInfo = await PlutoInfo.faqInfo();
 		const embed = new EmbedBuilder()
 			.setTitle(faqInfo.title)
 			.setDescription(faqInfo.description)

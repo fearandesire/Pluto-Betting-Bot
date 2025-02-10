@@ -1,8 +1,8 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Subcommand } from '@sapphire/plugin-subcommands';
-import StatsWraps from '../../utils/api/Khronos/stats/stats-wrapper.js';
 import { Colors } from 'discord.js';
 import { helpfooter } from '../../lib/PlutoConfig.js';
+import StatsWraps from '../../utils/api/Khronos/stats/stats-wrapper.js';
 
 @ApplyOptions<Subcommand.Options>({
 	description: '📈 View Your Betting Stats',
@@ -55,7 +55,7 @@ export class UserCommand extends Subcommand {
 				description:
 					"You don't have enough betting history to display statistics.",
 				footer: {
-					text: helpfooter(),
+					text: await helpfooter(),
 				},
 			};
 			return await interaction.editReply({ embeds: [noStatsEmbed] });
@@ -109,7 +109,7 @@ export class UserCommand extends Subcommand {
 			],
 			timestamp: new Date().toISOString(),
 			footer: {
-				text: helpfooter(),
+				text: await helpfooter(),
 			},
 		};
 

@@ -77,7 +77,7 @@ export class BetslipManager {
 				initBetslipDTO: payload,
 			});
 			if (!response) {
-				const errEmb = ErrorEmbeds.internalErr(
+				const errEmb = await ErrorEmbeds.internalErr(
 					'Unable to contact the server, please try again later.',
 				);
 				return interaction.editReply({ embeds: [errEmb] });
@@ -89,7 +89,7 @@ export class BetslipManager {
 					guild_id,
 				};
 				if (!betslip.dateofmatchup || !betslip.opponent) {
-					const errEmb = ErrorEmbeds.internalErr(
+					const errEmb = await ErrorEmbeds.internalErr(
 						'Unable to process bet due to missing required data, please try again later.',
 					);
 					return interaction.editReply({ embeds: [errEmb] });
@@ -165,7 +165,7 @@ export class BetslipManager {
 					matchInfo,
 				);
 			} else {
-				const errEmbed = ErrorEmbeds.internalErr(
+				const errEmbed = await ErrorEmbeds.internalErr(
 					'Failed to place your bet due to an unexpected response from the API. Please try again later.',
 				);
 				return interaction.followUp({
@@ -173,7 +173,7 @@ export class BetslipManager {
 				});
 			}
 		} catch (error) {
-			const errEmbed = ErrorEmbeds.internalErr(
+			const errEmbed = await ErrorEmbeds.internalErr(
 				'Failed to place your bet due to an internal error. Please try again later.',
 			);
 			console.error(error);
@@ -213,7 +213,7 @@ export class BetslipManager {
 			.setColor(embedColors.success)
 			.setThumbnail(embedImg)
 			.setFooter({
-				text: `Bet ID: ${betslip.betid} | ${helpfooter('betting')}`,
+				text: `Bet ID: ${betslip.betid} | ${await helpfooter('betting')}`,
 			});
 		await interaction.followUp({
 			embeds: [successEmbed],
@@ -235,7 +235,7 @@ export class BetslipManager {
 			const patreonOverride = await PatreonFacade.isSponsorTier(userid);
 			if (isApiError(patreonOverride)) {
 				console.error(`Unknown Err in patreonOverride:\n${patreonOverride}`);
-				const errEmbed = ErrorEmbeds.accountErr(
+				const errEmbed = await ErrorEmbeds.accountErr(
 					`Unable to cancel bet due to an error.\n${supportMessage}`,
 				);
 				return interaction.followUp({ embeds: [errEmbed] });
@@ -254,7 +254,7 @@ export class BetslipManager {
 				.setColor(embedColors.success)
 				.setThumbnail(interaction.user.displayAvatarURL())
 				.setFooter({
-					text: helpfooter('betting'),
+					text: await helpfooter('betting'),
 				});
 			return interaction.followUp({
 				embeds: [cancelledEmbed],
@@ -315,7 +315,7 @@ export class BetslipManager {
 			.setThumbnail(interaction.user.displayAvatarURL())
 			.setColor(embedColors.PlutoYellow)
 			.setFooter({
-				text: helpfooter('betting'),
+				text: await helpfooter('betting'),
 			});
 		const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
 			new ButtonBuilder()

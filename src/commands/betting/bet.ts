@@ -54,7 +54,7 @@ export class UserCommand extends Command {
 		const validator = new BettingValidation();
 		const amountValid = validator.validateAmount(amount);
 		if (!amountValid) {
-			const errEmbed = ErrorEmbeds.betErr('You must bet at least $1!');
+			const errEmbed = await ErrorEmbeds.betErr('You must bet at least $1!');
 			return interaction.editReply({ embeds: [errEmbed] });
 		}
 		const matchSelection = interaction.options.getString('match', false);

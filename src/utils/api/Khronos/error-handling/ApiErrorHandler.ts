@@ -50,32 +50,32 @@ export class ApiErrorHandler {
 		}
 
 		// Create appropriate error embed
-		const errEmbed = this.createErrorEmbed(errModule, errorMessage);
+		const errEmbed = await this.createErrorEmbed(errModule, errorMessage);
 
 		return interaction.editReply({
 			embeds: [errEmbed],
 		});
 	}
 
-	private createErrorEmbed(
+	private async createErrorEmbed(
 		errModule: ApiModules,
 		errorMessage: string,
-	): EmbedBuilder {
+	): Promise<EmbedBuilder> {
 		switch (errModule) {
 			// ? Handle different error categories/types
 			case ApiModules.betting:
-				return ErrorEmbeds.betErr(errorMessage);
+				return await ErrorEmbeds.betErr(errorMessage);
 			case ApiModules.account:
-				return ErrorEmbeds.accountErr(errorMessage);
+				return await ErrorEmbeds.accountErr(errorMessage);
 			case ApiModules.props:
-				return ErrorEmbeds.propsErr(errorMessage);
+				return await ErrorEmbeds.propsErr(errorMessage);
 			case ApiModules.predictions:
-				return ErrorEmbeds.predictionsErr(errorMessage);
+				return await ErrorEmbeds.predictionsErr(errorMessage);
 			case ApiModules.unknown:
-				return ErrorEmbeds.internalErr(errorMessage);
+				return await ErrorEmbeds.internalErr(errorMessage);
 			// ? Fallback
 			default:
-				return ErrorEmbeds.unknownErr(errorMessage);
+				return await ErrorEmbeds.unknownErr(errorMessage);
 		}
 	}
 
@@ -108,7 +108,7 @@ export class ApiErrorHandler {
 				message: 'Issue while handling an error',
 				error: e,
 			});
-			const errEmbed = ErrorEmbeds.internalErr(
+			const errEmbed = await ErrorEmbeds.internalErr(
 				`An issue occurred while handling an error related to your request.\n\nIf this issue persists, please contact ${APP_OWNER_INFO.discord_username}`,
 			);
 			await interaction.editReply({ embeds: [errEmbed] });

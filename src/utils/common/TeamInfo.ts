@@ -1,7 +1,7 @@
-import { findEmoji } from '@pluto-core-config';
 import { container } from '@sapphire/framework';
 import type { ColorResolvable, EmojiResolvable, GuildEmoji } from 'discord.js';
 import { resolveTeam } from 'resolve-team';
+import { findEmoji } from '../bot_res/findEmoji.js';
 import StringUtils from './string-utils.js';
 
 interface TeamShortNameOrEmojiOptions {

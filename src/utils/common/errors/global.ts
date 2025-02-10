@@ -10,7 +10,7 @@ import { nonPatreonMemberMsg } from '../../api/patreon/interfaces.js';
  */
 export class ErrorEmbeds {
 	// Generalized method for creating error embeds
-	static createErrorEmbed(
+	static async createErrorEmbed(
 		title: string,
 		description: string,
 		extraData?: { footerData?: string; [key: string]: any },
@@ -21,8 +21,8 @@ export class ErrorEmbeds {
 			.setColor(embedColors.error)
 			.setFooter({
 				text: extraData
-					? `${extraData.footerData} | ${helpfooter()}`
-					: helpfooter(),
+					? `${extraData.footerData} | ${await helpfooter()}`
+					: await helpfooter(),
 			});
 	}
 

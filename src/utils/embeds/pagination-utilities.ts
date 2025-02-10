@@ -15,20 +15,21 @@ export default class PaginationUtilities {
 		const usersPerPage = 10; // Customize this value as needed
 		const paginationUtilities = new PaginationUtilities();
 		const pagesTotal = Math.ceil(formattedLbData.length / usersPerPage);
+		let currentPageNumber = currentPage; // Local variable to track page number
 
-		if (currentPage < 1 || currentPage > pagesTotal) {
+		if (currentPageNumber < 1 || currentPageNumber > pagesTotal) {
 			throw new Error('Invalid page number');
 		}
 
 		const pageData = paginationUtilities.paginateArray(
 			formattedLbData,
-			currentPage,
+			currentPageNumber,
 			usersPerPage,
 		);
 
 		let description = pageData
 			.map((entry, index) => {
-				const position = (currentPage - 1) * usersPerPage + index + 1;
+				const position = (currentPageNumber - 1) * usersPerPage + index + 1;
 				return `**${position}.** ${entry.memberTag}: **\`$${entry.balance}\`**`;
 			})
 			.join('\n');
@@ -36,10 +37,10 @@ export default class PaginationUtilities {
 		if (!description) description = 'No entries to display.';
 
 		const embed = new EmbedBuilder()
-			.setTitle(`Leaderboard | Page ${currentPage} of ${pagesTotal}`)
+			.setTitle(`Leaderboard | Page ${currentPageNumber} of ${pagesTotal}`)
 			.setDescription(description)
 			.setColor(0xffac33) // Customizable
-			.setFooter({ text: `Page ${currentPage} of ${pagesTotal}` });
+			.setFooter({ text: `Page ${currentPageNumber} of ${pagesTotal}` });
 
 		const message = await interaction.followUp({
 			embeds: [embed],
@@ -60,10 +61,13 @@ export default class PaginationUtilities {
 		});
 
 		collector.on('collect', async (reaction: any, user: User) => {
-			if (reaction.emoji.name === '⬅️' && currentPage > 1) {
-				currentPage--;
-			} else if (reaction.emoji.name === '➡️' && currentPage < pagesTotal) {
-				currentPage++;
+			if (reaction.emoji.name === '⬅️' && currentPageNumber > 1) {
+				currentPageNumber--;
+			} else if (
+				reaction.emoji.name === '➡️' &&
+				currentPageNumber < pagesTotal
+			) {
+				currentPageNumber++;
 			} else {
 				return;
 			}
@@ -71,20 +75,20 @@ export default class PaginationUtilities {
 			// Generate and edit message with new leaderboard page
 			const newPageData = paginationUtilities.paginateArray(
 				formattedLbData,
-				currentPage,
+				currentPageNumber,
 				usersPerPage,
 			);
 			const newDescription = newPageData
 				.map((entry, index) => {
-					const position = (currentPage - 1) * usersPerPage + index + 1;
+					const position = (currentPageNumber - 1) * usersPerPage + index + 1;
 					return `**${position}.** ${entry.memberTag}: **\`$${entry.balance}\`**`;
 				})
 				.join('\n');
 			const newEmbed = new EmbedBuilder()
-				.setTitle(`Leaderboard | Page ${currentPage} of ${pagesTotal}`)
+				.setTitle(`Leaderboard | Page ${currentPageNumber} of ${pagesTotal}`)
 				.setDescription(newDescription)
 				.setColor(0xffac33) // Customizable
-				.setFooter({ text: `Page ${currentPage} of ${pagesTotal}` });
+				.setFooter({ text: `Page ${currentPageNumber} of ${pagesTotal}` });
 			await message.edit({ embeds: [newEmbed] });
 			// Remove user's reaction to prevent rate limiting
 			await reaction.users.remove(user.id);

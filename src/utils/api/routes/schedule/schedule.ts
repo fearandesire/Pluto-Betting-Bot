@@ -1,4 +1,3 @@
-import { Log } from '@pluto-config';
 import Router from 'koa-router';
 import _ from 'lodash';
 import {
@@ -28,19 +27,15 @@ ScheduleRouter.post('/schedule/daily/all', async (ctx) => {
 		const gameSchedule = new GameSchedule();
 
 		for (const sport of Object.values(SportsServing)) {
-			Log.Yellow(`Processing Daily Schedule for ${sport}`);
 			const games = filterGames(aggregatedMatchups, sport);
 			const rows = filterRows(dailyScheduleRows, sport);
 			if (games === null || games.length === 0) {
-				Log.Red(`No games found for ${sport}`);
 				return;
 			}
 			if (!rows) {
-				Log.Red(`No channels found for ${sport}`);
 				return;
 			}
 			await gameSchedule.sendDailyGames(sport, games, rows);
-			Log.Green(`Successfully sent daily schedule for ${sport}`);
 		}
 
 		ctx.body = {

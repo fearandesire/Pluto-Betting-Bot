@@ -40,7 +40,7 @@ export async function prepareAndFormat(matchups: Match[], thumbnail: string) {
 	const options = {
 		includeOdds: true,
 		footer: {
-			text: `\`${count}\` upcoming matches | ${helpfooter()}`,
+			text: `\`${count}\` upcoming matches | ${await helpfooter()}`,
 		},
 		thumbnail,
 	};

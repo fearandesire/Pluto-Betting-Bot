@@ -27,7 +27,7 @@ export class UserCommand extends Command {
 			).getActiveBets(interaction, interaction.user.id);
 			return interaction.followUp({ embeds: [activeBetsEmbed] });
 		} catch (error) {
-			const errEmb = ErrorEmbeds.accountErr(
+			const errEmb = await ErrorEmbeds.accountErr(
 				'You currently have no active bets.',
 			);
 			return interaction.followUp({ embeds: [errEmb] });

@@ -1,4 +1,3 @@
-import { MarketKeyTranslations } from '@pluto-api-interfaces';
 import { PaginatedMessageEmbedFields } from '@sapphire/discord.js-utilities';
 import { Subcommand } from '@sapphire/plugin-subcommands';
 import { EmbedBuilder, PermissionFlagsBits } from 'discord.js';
@@ -9,6 +8,7 @@ import type { UpdatePropResultDto } from '../../openapi/khronos/models/UpdatePro
 import type { UpdatePropResultResponseDto } from '../../openapi/khronos/models/index.js';
 import { ApiErrorHandler } from '../../utils/api/Khronos/error-handling/ApiErrorHandler.js';
 import PropsApiWrapper from '../../utils/api/Khronos/props/propsApiWrapper.js';
+import { MarketKeyTranslations } from '../../utils/api/common/interfaces/market-translations.js';
 import { DateManager } from '../../utils/common/DateManager.js';
 import TeamInfo from '../../utils/common/TeamInfo.js';
 import StringUtils from '../../utils/common/string-utils.js';

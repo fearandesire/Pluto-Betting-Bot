@@ -1,9 +1,9 @@
 import { KH_API_CONFIG } from '../KhronosInstances.js';
 
 import {
-	StatsApi,
 	type GetOverallH2hBettingStatsRequest,
 	type OverallStatsDto,
+	StatsApi,
 } from '../../../../openapi/khronos/index.js';
 
 export default class StatsWraps {

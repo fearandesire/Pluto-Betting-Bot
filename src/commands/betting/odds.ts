@@ -28,7 +28,9 @@ export class UserCommand extends Command {
 		const embedThumbnail = interaction.guild!.iconURL({ extension: 'jpg' });
 		if (!embedThumbnail)
 			return interaction.followUp({
-				embeds: [ErrorEmbeds.internalErr('Unable to resolve Guild Icon.')],
+				embeds: [
+					await ErrorEmbeds.internalErr('Unable to resolve Guild Icon.'),
+				],
 			});
 		try {
 			const guildConfig = await new GuildWrapper().getGuild(guildId);
@@ -40,7 +42,7 @@ export class UserCommand extends Command {
 			const { matches } = matchupsForGuild;
 			const oddsEmbed = await prepareAndFormat(matches, embedThumbnail);
 			if (!oddsEmbed) {
-				const errEmb = ErrorEmbeds.invalidRequest(
+				const errEmb = await ErrorEmbeds.invalidRequest(
 					'No Odds are currently posted.',
 				);
 				return interaction.followUp({

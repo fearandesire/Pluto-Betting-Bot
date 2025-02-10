@@ -151,7 +151,7 @@ export class ButtonHandler extends InteractionHandler {
 		if ('hasFailed' in payload && payload.hasFailed) {
 			const errMsg = payload.errMsg;
 			await interaction.editReply({
-				embeds: [ErrorEmbeds.internalErr(errMsg)],
+				embeds: [await ErrorEmbeds.internalErr(errMsg)],
 				components: [],
 			});
 			return;

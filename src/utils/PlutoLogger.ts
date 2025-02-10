@@ -50,8 +50,8 @@ export default class PlutoLogger {
 			footer?: string;
 		},
 	) {
-		let color;
-		let title;
+		let color: string;
+		let title: string;
 		// # Pre-Built Embed for Log Channel
 		const logsEmbed = new EmbedBuilder();
 		switch (data?.id) {

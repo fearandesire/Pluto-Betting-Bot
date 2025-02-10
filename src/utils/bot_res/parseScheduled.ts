@@ -42,7 +42,7 @@ export default async function parseScheduledGames(
 			.setTitle(title)
 			.setColor(embedColors.PlutoRed)
 			.setDescription(description)
-			.setFooter({ text: helpfooter('default') })
+			.setFooter({ text: await helpfooter('core') })
 			.setThumbnail(thumbnail);
 	}
 
@@ -79,7 +79,7 @@ export default async function parseScheduledGames(
 		.setTitle(title)
 		.setDescription(description)
 		.setColor(embColor)
-		.setFooter({ text: helpfooter() })
+		.setFooter({ text: await helpfooter('core') })
 		.setThumbnail(thumbnail)
 		.addFields(fields);
 }

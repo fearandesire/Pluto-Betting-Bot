@@ -40,7 +40,7 @@ export class UserCommand extends Command {
 		const isMember = await PatreonFacade.memberDetails(interaction.user.id);
 		if (!isMember || isApiError(isMember)) {
 			await interaction.reply({
-				embeds: [ErrorEmbeds.patreonMembersOnly()],
+				embeds: [await ErrorEmbeds.patreonMembersOnly()],
 			});
 			return;
 		}

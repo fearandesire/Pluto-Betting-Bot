@@ -23,12 +23,18 @@ export default class BetslipDataManager {
 		return this.displayUsersBets(guild, activeBets);
 	}
 
+	/**
+	 * Displays the user's active bets in an embed
+	 * @param guild - The guild the bets are from
+	 * @param bets - The bets to display
+	 * @returns An embed containing the user's active bets
+	 */
 	async displayUsersBets(guild: Guild, bets: PlacedBetslip[]) {
 		const embed = new EmbedBuilder()
 			.setTitle('🎲 Active Bets')
 			.setColor(embedColors.PlutoYellow)
 			.setFooter({
-				text: helpfooter('betting'),
+				text: await helpfooter('betting'),
 			});
 
 		if (bets.length === 0) {

@@ -53,7 +53,7 @@ export class MenuHandler extends InteractionHandler {
 		if (!matchDetails) {
 			await interaction.editReply({
 				embeds: [
-					ErrorEmbeds.internalErr(
+					await ErrorEmbeds.internalErr(
 						'Due to an internal error, the match data selected is not available. Please try again later.',
 					),
 				],
@@ -66,7 +66,7 @@ export class MenuHandler extends InteractionHandler {
 		if (!cachedBet || !isPendingBetslip(cachedBet)) {
 			await interaction.editReply({
 				embeds: [
-					ErrorEmbeds.internalErr(
+					await ErrorEmbeds.internalErr(
 						'Due to an internal error, your initial bet data was not found. Please try again later.',
 					),
 				],

@@ -100,7 +100,7 @@ export default class GameSchedule {
 	 * 3. Returns the formatted scheduled games
 	 */
 	async getFormattedSchedule(sport: SportsServing) {
-		let games;
+		let games: IMatchupAggregated[] = [];
 		if (!sport) {
 			games = await this.reqAll(); // Fetches schedule
 		} else {
