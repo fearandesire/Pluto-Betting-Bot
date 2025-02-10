@@ -57,8 +57,8 @@ importers:
         specifier: ^7.0.0
         version: 7.0.0
       '@sapphire/ratelimits':
-        specifier: ^2.4.9
-        version: 2.4.9
+        specifier: ^2.4.11
+        version: 2.4.11
       '@sapphire/time-utilities':
         specifier: ^1.7.12
         version: 1.7.12
@@ -1596,10 +1596,6 @@ packages:
 
   '@sapphire/ratelimits@2.4.11':
     resolution: {integrity: sha512-O6FNA/P0wxU4Ve9gxL948CoZw7+sSpujyUR2CLyLLCNuNvuFGFxPCJVl5crFVLXMIyBIrc2qk+/H9bsqsyQK1Q==}
-    engines: {node: '>=v14.0.0', npm: '>=7.0.0'}
-
-  '@sapphire/ratelimits@2.4.9':
-    resolution: {integrity: sha512-eEE385IrFsD90gg696MWNqbeDjo1ZgtBvL66BezIwJEwDguhLP5AVsBsT4uCacX/92aeHl8i2nVvtusIBXZNSg==}
     engines: {node: '>=v14.0.0', npm: '>=7.0.0'}
 
   '@sapphire/result@2.6.6':
@@ -7601,8 +7597,6 @@ snapshots:
       prettier: 3.3.3
 
   '@sapphire/ratelimits@2.4.11': {}
-
-  '@sapphire/ratelimits@2.4.9': {}
 
   '@sapphire/result@2.6.6': {}
 
