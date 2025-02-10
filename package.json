@@ -102,7 +102,7 @@
 		"dotenv": "16.4.7",
 		"dotenv-vault": "1.26.2",
 		"esm-module-alias": "^2.2.1",
-		"ioredis": "^5.4.1",
+		"ioredis": "^5.5.0",
 		"koa": "^2.15.3",
 		"koa-bodyparser": "^4.4.1",
 		"koa-logger": "^3.2.1",
