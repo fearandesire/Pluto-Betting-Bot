@@ -72,7 +72,7 @@
 		"@kaname-png/plugin-statcord": "^2.3.3",
 		"@koa/cors": "^5.0.0",
 		"@openapitools/openapi-generator-cli": "^2.16.3",
-		"@sapphire/decorators": "^6.1.0",
+		"@sapphire/decorators": "^6.1.1",
 		"@sapphire/discord-utilities": "^3.4.0",
 		"@sapphire/discord.js-utilities": "^7.3.2",
 		"@sapphire/fetch": "^3.0.3",
