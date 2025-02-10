@@ -76,7 +76,7 @@
 		"@sapphire/discord-utilities": "^3.4.0",
 		"@sapphire/discord.js-utilities": "^7.3.2",
 		"@sapphire/fetch": "^3.0.3",
-		"@sapphire/framework": "^5.2.1",
+		"@sapphire/framework": "^5.3.2",
 		"@sapphire/pieces": "^4.3.1",
 		"@sapphire/plugin-api": "^6.1.1",
 		"@sapphire/plugin-editable-commands": "^4.0.4",
