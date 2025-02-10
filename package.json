@@ -99,7 +99,7 @@
 		"date-fns-tz": "^3.2.0",
 		"discord-api-types": "^0.37.99",
 		"discord.js": "^14.17.3",
-		"dotenv": "16.4.5",
+		"dotenv": "16.4.7",
 		"dotenv-vault": "1.26.2",
 		"esm-module-alias": "^2.2.1",
 		"ioredis": "^5.4.1",
