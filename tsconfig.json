@@ -20,45 +20,7 @@
 		"allowJs": true,
 		"baseUrl": ".",
 		"paths": {
-			"@pluto-api-interfaces": ["./src/utils/api/common/interfaces/index.ts"],
 			"@khronos-index": ["./src/openapi/khronos/index.ts"],
-			"@pluto-api-routes": ["./src/utils/api/routes"],
-			"@pluto-betOps": ["./src/utils/db/betOps"],
-			"@pluto-betOps-modifyAmount": ["./src/utils/db/betOps/modifyAmount.ts"],
-			"@pluto-bettingStats": ["./src/utils/bot_res/getBettingStats.ts"],
-			"@pluto-check-balance": ["./src/utils/db/validation/checkbalance.ts"],
-			"@pluto-core": ["src/index.ts"],
-			"@pluto-core-config": ["./src/lib/PlutoConfig.ts"],
-			"@pluto-currency": ["./src/utils/db/currency"],
-			"@pluto-date-utils": ["./src/utils/date"],
-			"@pluto-db": ["./src/database/dbindex.ts"],
-			"@pluto-db-utils": ["./src/utils/db"],
-			"@pluto-embed-reply": ["./src/utils/bot_res/embeds/embedReply.ts"],
-			"@pluto-general-utils": ["./src/utils/bot_res"],
-			"@pluto-internal-color-logger": ["./src/utils/bot_res/ColorConsole.ts"],
-			"@pluto-internal-logger": ["./src/utils/bot_res/consoleLog.ts"],
-			"@pluto-iso-manager": ["./src/utils/time/IsoManager.ts"],
-			"@pluto-leaderboard": ["./src/utils/betting/currency/leaderboard.ts"],
-			"@pluto-list-user-bets": ["./src/utils/db/listMyBets.ts"],
-			"@pluto-logger": ["./src/utils/PlutoLogger.ts"],
-			"@pluto-matchupOps": ["./src/utils/db/matchupOps.ts"],
-			"@pluto-newBet": ["./src/utils/db/betOps/newBet.ts"],
-			"@pluto-process-claim": ["./src/utils/db/betOps/processClaim.ts"],
-			"@pluto-redis": ["./src/utils/cache/RedisCacheManager.ts"],
-			"@pluto-reply": ["./src/utils/bot_res/reply.ts"],
-			"@pluto-server-config": ["./src/utils/serverConfig.ts"],
-			"@pluto-stats-embed-builder": ["./src/utils/bot_res/statsEmbBuilder.ts"],
-			"@pluto-transfer": ["./src/utils/db/currency/transferBetween.ts"],
-			"@pluto-validate": ["./src/utils/db/validation"],
-			"@pluto-validate-betAuthor": [
-				"./src/utils/db/validation/verifyBetAuthor.ts"
-			],
-			"@pluto-validate-checkbalance": [
-				"./src/utils/db/validation/checkbalance.ts"
-			],
-			"@pluto-validate-user": [
-				"./src/utils/db/validation/validateExistingUser.ts"
-			],
 			"@kh-openapi": ["./src/openapi/khronos/index.ts"],
 			"@pluto-config": ["./src/lib/PlutoConfig.ts"]
 		},
