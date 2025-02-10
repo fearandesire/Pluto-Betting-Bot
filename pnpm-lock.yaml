@@ -190,8 +190,8 @@ importers:
         specifier: 1.9.4
         version: 1.9.4
       '@biomejs/cli-win32-x64':
-        specifier: ^1.9.2
-        version: 1.9.2
+        specifier: ^1.9.4
+        version: 1.9.4
       '@sapphire/cli':
         specifier: ^1.9.3
         version: 1.9.3
@@ -538,12 +538,6 @@ packages:
     resolution: {integrity: sha512-tlbhLk+WXZmgwoIKwHIHEBZUwxml7bRJgk0X2sPyNR3S93cdRq6XulAZRQJ17FYGGzWne0fgrXBKpl7l4M87Hg==}
     engines: {node: '>=14.21.3'}
     cpu: [arm64]
-    os: [win32]
-
-  '@biomejs/cli-win32-x64@1.9.2':
-    resolution: {integrity: sha512-JC3XvdYcjmu1FmAehVwVV0SebLpeNTnO2ZaMdGCSOdS7f8O9Fq14T2P1gTG1Q29Q8Dt1S03hh0IdVpIZykOL8g==}
-    engines: {node: '>=14.21.3'}
-    cpu: [x64]
     os: [win32]
 
   '@biomejs/cli-win32-x64@1.9.4':
@@ -6450,10 +6444,7 @@ snapshots:
   '@biomejs/cli-win32-arm64@1.9.4':
     optional: true
 
-  '@biomejs/cli-win32-x64@1.9.2': {}
-
-  '@biomejs/cli-win32-x64@1.9.4':
-    optional: true
+  '@biomejs/cli-win32-x64@1.9.4': {}
 
   '@colors/colors@1.6.0': {}
 
