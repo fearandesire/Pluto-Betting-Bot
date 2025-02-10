@@ -1,11 +1,11 @@
 {
 	"name": "pluto-betting",
-	"version": "3.4.9",
-	"description": "Pluto Betting App - Discord Interface",
+	"version": "3.5.0",
+	"description": "Sports Betting Application for Discord",
 	"type": "module",
 	"license": "MIT",
 	"private": true,
-	"author": "fearandesire <fenixcoding@gmail.com>",
+	"author": "fenix <fenixcoding@gmail.com>",
 	"email": "fenixcoding@gmail.com",
 	"url": "https://docs.pluto.fearandesire.com/",
 	"repository": {
@@ -15,7 +15,7 @@
 	"main": "./dist/index.js",
 	"scripts": {
 		"build": "rimraf ./dist && tsc",
-		"clear-dist": "rimraf ./dist",
+		"lint": "biome check --write .",
 		"start": "node --loader esm-module-alias/loader --no-warnings ./dist/index.js",
 		"dev": "pnpm build && node --loader esm-module-alias/loader --no-warnings ./dist/index.js",
 		"watch": "tsc --watch ./src/index.ts",
@@ -27,10 +27,7 @@
 		"dvault": "npx dotenv-vault@latest",
 		"dvault-prod": "npx dotenv-vault@latest push production",
 		"release": "release-it",
-		"docker:push": "docker-compose build && docker-compose push",
-		"docker:pull": "docker-compose pull",
-		"biome:lint": "biome check --write .",
-		"biome:fix": "biome check --write --unsafe  ."
+		"docker:ci": "docker-compose build && docker-compose push"
 	},
 	"aliases": {
 		"@pluto-api-interfaces": "./dist/utils/api/common/interfaces/index.js",
@@ -110,6 +107,7 @@
 		"koa-bodyparser": "^4.4.1",
 		"koa-logger": "^3.2.1",
 		"koa-router": "^12.0.1",
+		"lefthook": "^1.10.10",
 		"lodash": "^4.17.21",
 		"module-alias": "^2.2.3",
 		"numeral": "^2.0.6",
@@ -162,7 +160,7 @@
 		"pkgroll": "^2.4.2",
 		"prettier": "^3.3.3",
 		"prettier-eslint-cli": "^7.1.0",
-		"release-it": "^17.6.0",
+		"release-it": "^18.1.2",
 		"release-it-changelogen": "^0.1.0",
 		"rimraf": "^5.0.10",
 		"ts-jest": "^29.2.5",
@@ -177,18 +175,13 @@
 			"^@/(.*)$": "<rootDir>/src/$1",
 			"^lib/(.*)$": "<rootDir>/lib/$1"
 		},
-		"moduleFileExtensions": [
-			"ts",
-			"js"
-		],
+		"moduleFileExtensions": ["ts", "js"],
 		"rootDir": "src",
 		"testRegex": ".*\\.spec\\.ts$",
 		"transform": {
 			"^.+\\.(t|j)s$": "ts-jest"
 		},
-		"collectCoverageFrom": [
-			"**/*.(t|j)s"
-		],
+		"collectCoverageFrom": ["**/*.(t|j)s"],
 		"coverageDirectory": "../coverage",
 		"testEnvironment": "node"
 	}
