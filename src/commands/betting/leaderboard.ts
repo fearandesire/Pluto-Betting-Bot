@@ -1,5 +1,6 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
+import { InteractionContextType } from 'discord.js';
 import {
 	AccountManager,
 	AccountsWrapper,
@@ -14,7 +15,7 @@ export class UserCommand extends Command {
 			builder //
 				.setName(this.name)
 				.setDescription(this.description)
-				.setDMPermission(false),
+				.setContexts(InteractionContextType.Guild),
 		);
 	}
 

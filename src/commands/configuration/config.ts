@@ -1,6 +1,10 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
-import { EmbedBuilder, PermissionFlagsBits } from 'discord.js';
+import {
+	EmbedBuilder,
+	InteractionContextType,
+	PermissionFlagsBits,
+} from 'discord.js';
 import embedColors from '../../lib/colorsConfig.js';
 import { DiscordConfigSettingTypeEnum } from '../../openapi/khronos/models/DiscordConfig.js';
 import GuildConfigWrapper from '../../utils/api/Khronos/guild/guild-config.wrapper.js';
@@ -20,7 +24,7 @@ export class UserCommand extends Command {
 				builder //
 					.setName(this.name)
 					.setDescription(this.description)
-					.setDMPermission(false)
+					.setContexts(InteractionContextType.Guild)
 					.setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
 					.addSubcommand((subcommand) =>
 						subcommand

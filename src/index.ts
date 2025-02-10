@@ -1,7 +1,12 @@
 import './lib/startup/env.js';
 import './utils/api/Khronos/KhronosInstances.js';
 import './lib/startup/cache.js';
-import { LogLevel, SapphireClient } from '@sapphire/framework';
+import {
+	ApplicationCommandRegistries,
+	LogLevel,
+	RegisterBehavior,
+	SapphireClient,
+} from '@sapphire/framework';
 import { GatewayIntentBits, Partials } from 'discord.js';
 import '@sapphire/plugin-hmr/register';
 import './utils/api/index.js';
@@ -22,11 +27,15 @@ const SapDiscClient = new SapphireClient({
 	],
 	partials: [Partials.Channel],
 	logger: {
-		level: LogLevel.Info,
+		level: LogLevel.Debug,
 	},
 	typing: true,
 	loadMessageCommandListeners: true,
 });
+
+ApplicationCommandRegistries.setDefaultBehaviorWhenNotIdentical(
+	RegisterBehavior.BulkOverwrite,
+);
 
 WinstonLogger.info({
 	message: 'Pluto is starting up',

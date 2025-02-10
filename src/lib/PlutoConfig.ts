@@ -104,16 +104,47 @@ const footers = {
 
 type FooterTypes = keyof typeof footers | 'all';
 
-async function randomFooter(type: FooterTypes = 'core'): Promise<string> {
-	if (type === 'all') {
-		const allFooters = Object.values(footers).flat();
-		return allFooters[Math.floor(Math.random() * allFooters.length)];
+// Cache for combined footer arrays
+const footerCache = new Map<FooterTypes, readonly string[]>();
+
+// Pre-compute the 'all' footers array
+const allFooters = Object.freeze(
+	Object.values(footers).flat(),
+) as readonly string[];
+
+/**
+ * Get a random footer message based on the specified type
+ * @param type - The type of footer message to return
+ * @returns A random footer message string
+ */
+function randomFooter(type: FooterTypes = 'core'): string {
+	// Use cached array if available
+	let selectedFooters = footerCache.get(type);
+
+	if (!selectedFooters) {
+		if (type === 'all') {
+			selectedFooters = allFooters;
+		} else {
+			// Create and cache the combined array
+			selectedFooters = Object.freeze([
+				...footers.core,
+				...(type === 'core' ? [] : footers[type]),
+			]);
+		}
+		footerCache.set(type, selectedFooters);
 	}
 
-	const selectedFooters =
-		type === 'core' ? footers.core : [...footers.core, ...footers[type]];
+	// Use crypto random for better randomization if available
+	let randomIndex: number;
+	if (typeof crypto !== 'undefined') {
+		const array = new Uint32Array(1);
+		crypto.getRandomValues(array);
+		randomIndex = array[0] % selectedFooters.length;
+	} else {
+		randomIndex = Math.floor(Math.random() * selectedFooters.length);
+	}
 
-	return selectedFooters[Math.floor(Math.random() * selectedFooters.length)];
+	return selectedFooters[randomIndex];
 }
 
 const supportMessage = 'Please reach out to `fenixforever` for support.';

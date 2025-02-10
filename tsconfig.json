@@ -31,5 +31,10 @@
 		"tsBuildInfoFile": "./dist/.tsbuildinfo"
 	},
 	"include": ["src"],
-	"exclude": ["ecosystem.config.js", "node_modules", "dist"]
+	"exclude": [
+		"ecosystem.config.js",
+		"node_modules",
+		"dist",
+		"src/utils/bot_res/img-pup.ts"
+	]
 }

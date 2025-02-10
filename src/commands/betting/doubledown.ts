@@ -1,6 +1,6 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
-import { EmbedBuilder } from 'discord.js';
+import { EmbedBuilder, InteractionContextType } from 'discord.js';
 import embedColors from '../../lib/colorsConfig.js';
 import { ApiModules } from '../../lib/interfaces/api/api.interface.js';
 import { BetslipManager } from '../../utils/api/Khronos/bets/BetslipsManager.js';
@@ -18,17 +18,21 @@ import { isApiError } from './../../lib/interfaces/errors/api-errors.js';
 })
 export class UserCommand extends Command {
 	public override registerApplicationCommands(registry: Command.Registry) {
-		registry.registerChatInputCommand((builder) =>
-			builder //
-				.setName(this.name)
-				.setDescription(this.description)
-				.setDMPermission(false)
-				.addIntegerOption((option) =>
-					option
-						.setName('betid')
-						.setDescription('The ID of the bet to double down')
-						.setRequired(true),
-				),
+		registry.registerChatInputCommand(
+			(builder) =>
+				builder //
+					.setName(this.name)
+					.setDescription(this.description)
+					.setContexts(InteractionContextType.Guild)
+					.addIntegerOption((option) =>
+						option
+							.setName('betid')
+							.setDescription('The ID of the bet to double down')
+							.setRequired(true),
+					),
+			{
+				idHints: ['1233093568067932251'],
+			},
 		);
 	}
 
@@ -39,8 +43,9 @@ export class UserCommand extends Command {
 		// Ensure user is Patreon member
 		const isMember = await PatreonFacade.memberDetails(interaction.user.id);
 		if (!isMember || isApiError(isMember)) {
+			const errEmbed = await ErrorEmbeds.patreonMembersOnly();
 			await interaction.reply({
-				embeds: [await ErrorEmbeds.patreonMembersOnly()],
+				embeds: [errEmbed],
 			});
 			return;
 		}

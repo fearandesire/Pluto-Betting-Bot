@@ -1,5 +1,6 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
+import { InteractionContextType } from 'discord.js';
 import { BetslipManager } from '../../utils/api/Khronos/bets/BetslipsManager.js';
 import BetslipWrapper from '../../utils/api/Khronos/bets/betslip-wrapper.js';
 import { BetsCacheService } from '../../utils/api/common/bets/BetsCacheService.js';
@@ -15,7 +16,7 @@ export class UserCommand extends Command {
 			builder //
 				.setName(this.name)
 				.setDescription(this.description)
-				.setDMPermission(false)
+				.setContexts(InteractionContextType.Guild)
 				.addIntegerOption((option) =>
 					option //
 						.setName('betid')

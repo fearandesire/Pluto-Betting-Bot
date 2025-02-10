@@ -1,7 +1,7 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { PaginatedMessageEmbedFields } from '@sapphire/discord.js-utilities';
 import { Command } from '@sapphire/framework';
-import { EmbedBuilder } from 'discord.js';
+import { EmbedBuilder, InteractionContextType } from 'discord.js';
 import type { User } from 'discord.js';
 import _ from 'lodash';
 import embedColors from '../../lib/colorsConfig.js';
@@ -25,7 +25,7 @@ export class UserCommand extends Command {
 				builder //
 					.setName(this.name)
 					.setDescription(this.description)
-					.setDMPermission(false)
+					.setContexts(InteractionContextType.Guild)
 					.addUserOption((option) =>
 						option
 							.setName('user')

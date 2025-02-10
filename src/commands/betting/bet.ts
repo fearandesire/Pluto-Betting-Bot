@@ -1,5 +1,6 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
+import { InteractionContextType } from 'discord.js';
 import { resolveTeam } from 'resolve-team';
 import { BetslipManager } from '../../utils/api/Khronos/bets/BetslipsManager.js';
 import BetslipWrapper from '../../utils/api/Khronos/bets/betslip-wrapper.js';
@@ -18,7 +19,7 @@ export class UserCommand extends Command {
 				builder //
 					.setName(this.name)
 					.setDescription(this.description)
-					.setDMPermission(false)
+					.setContexts(InteractionContextType.Guild)
 					.addStringOption((option) =>
 						option
 							.setName('team')

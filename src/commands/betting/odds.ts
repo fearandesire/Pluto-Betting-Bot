@@ -1,5 +1,6 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
+import { InteractionContextType } from 'discord.js';
 import { ApiModules } from '../../lib/interfaces/api/api.interface.js';
 import { ApiErrorHandler } from '../../utils/api/Khronos/error-handling/ApiErrorHandler.js';
 import GuildWrapper from '../../utils/api/Khronos/guild/guild-wrapper.js';
@@ -16,7 +17,7 @@ export class UserCommand extends Command {
 			builder //
 				.setName(this.name)
 				.setDescription(this.description)
-				.setDMPermission(false),
+				.setContexts(InteractionContextType.Guild),
 		);
 	}
 
