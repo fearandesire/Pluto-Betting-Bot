@@ -42,8 +42,8 @@ importers:
         specifier: ^4.3.1
         version: 4.3.1
       '@sapphire/plugin-api':
-        specifier: ^6.1.1
-        version: 6.1.1
+        specifier: ^8.0.0
+        version: 8.0.0
       '@sapphire/plugin-editable-commands':
         specifier: ^4.0.4
         version: 4.0.4
@@ -1578,8 +1578,8 @@ packages:
     resolution: {integrity: sha512-t42o6i8gPQ3QISIsMl463hj057yfyHsaSrs4FssdiGLmnvL9cuLGLTsjGEPn904wHUhPzS8W5aAPr788RK2/jQ==}
     engines: {node: '>=v14.0.0', npm: '>=7.0.0'}
 
-  '@sapphire/plugin-api@6.1.1':
-    resolution: {integrity: sha512-/Znz+AvNvnOwdKw+iehb2ZDDqQk0p9/Ls7WaXxeIsv3alPn/70/Q4i+WjoXFeG6T9KGCv110quJRPc4kS4QPWg==}
+  '@sapphire/plugin-api@8.0.0':
+    resolution: {integrity: sha512-9PTXqcFMSGxVI+siCTdsFRIBEnlgJ6JvyHIliMRe/aaf/KARDoSbD4N8/HVIrZKQLEO1ktnw3kMh9rAWWx9P5g==}
     engines: {node: '>=v18', npm: '>=7'}
 
   '@sapphire/plugin-editable-commands@4.0.4':
@@ -1854,6 +1854,9 @@ packages:
 
   '@types/ws@8.5.12':
     resolution: {integrity: sha512-3tPRkv1EtkDpzlgyKyI8pGsGZAGPEaXeu0DOj5DI25Ja91bdAYddYHbADRYVrZMRbfW+1l5YwXVDKohDJNQxkQ==}
+
+  '@types/ws@8.5.14':
+    resolution: {integrity: sha512-bd/YFLW+URhBzMXurx7lWByOu+xzU9+kb3RboOteXYDfW+tr+JZa99OyNmPINEGB/ahzKrEuc8rcv4gnpJmxTw==}
 
   '@types/yargs-parser@21.0.3':
     resolution: {integrity: sha512-I4q9QU9MQv4oEOz4tAHJtNz1cwuLxn2F3xcc2iV5WdqLPpUnj30aUuxt1mAxYTG+oe8CZMV/+6rU4S4gRDzqtQ==}
@@ -2513,6 +2516,9 @@ packages:
 
   convert-source-map@2.0.0:
     resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
+
+  cookie-es@1.2.2:
+    resolution: {integrity: sha512-+W7VmiVINB+ywl1HGXJXmrqkOhpKrIiVZV6tQuV54ZyQC7MMuBt81Vc336GMLoHBq5hV/F9eXgt5Mnx0Rha5Fg==}
 
   cookies@0.9.1:
     resolution: {integrity: sha512-TG2hpqe4ELx54QER/S3HQ9SRVnQnGBtKUz5bLQWtYAQ+o6GpgMs6sYUvaiJjVxb+UXwhRhAEP3m7LbsIZ77Hmw==}
@@ -5711,11 +5717,11 @@ packages:
   tinyexec@0.3.2:
     resolution: {integrity: sha512-KQQR9yN7R5+OSwaK0XQoj22pwHoTlgYqmUscPYoknOoWCWfj/5/ABTMRi69FrKU5ffPVh5QcFikpWJI/P1ocHA==}
 
-  tldts-core@6.1.41:
-    resolution: {integrity: sha512-SkwZgo1ZzMp2ziMBwci5VBnLR9VywCi02jSgMX5TO5kf9fdaBsxZkblLff3NlJNTcH0vfvEsgw2B7jVR556Vgw==}
+  tldts-core@6.1.77:
+    resolution: {integrity: sha512-bCaqm24FPk8OgBkM0u/SrEWJgHnhBWYqeBo6yUmcZJDCHt/IfyWBb+14CXdGi4RInMv4v7eUAin15W0DoA+Ytg==}
 
-  tldts@6.1.41:
-    resolution: {integrity: sha512-RNpUkL5fYD2DTQQCdr8QMDp6UL0ThtpXT3q3+qPE05dIT+RK2I3M0VByVbQN1dEhLUGzimivVwxK2By9epLk6w==}
+  tldts@6.1.77:
+    resolution: {integrity: sha512-lBpoWgy+kYmuXWQ83+R7LlJCnsd9YW8DGpZSHhrMl4b8Ly/1vzOie3OdtmUJDkKxcgRGOehDu5btKkty+JEe+g==}
     hasBin: true
 
   tmp@0.0.33:
@@ -5940,6 +5946,10 @@ packages:
   undici@6.21.1:
     resolution: {integrity: sha512-q/1rj5D0/zayJB2FraXdaWxbhWiNKDvu8naDT2dl1yTlvJp4BLtOcp2a5BvgGNQpYYJzau7tf1WgKv3b+7mqpQ==}
     engines: {node: '>=18.17'}
+
+  undici@7.3.0:
+    resolution: {integrity: sha512-Qy96NND4Dou5jKoSJ2gm8ax8AJM/Ey9o9mz7KN1bb9GP+G0l20Zw8afxTnY2f4b7hmhn/z8aC2kfArVQlAhFBw==}
+    engines: {node: '>=20.18.1'}
 
   unicorn-magic@0.1.0:
     resolution: {integrity: sha512-lRfVq8fE8gz6QMBuDM6a+LO3IAzTi05H6gCVaUpir2E1Rwpo4ZUog45KpNXKC/Mn3Yb9UDuHumeFTo9iV/D9FQ==}
@@ -6557,7 +6567,7 @@ snapshots:
       '@discordjs/rest': 2.4.2
       '@discordjs/util': 1.1.1
       '@sapphire/async-queue': 1.5.5
-      '@types/ws': 8.5.12
+      '@types/ws': 8.5.14
       '@vladfrangu/async_event_emitter': 2.4.6
       discord-api-types: 0.37.118
       tslib: 2.8.1
@@ -7622,12 +7632,13 @@ snapshots:
       '@sapphire/utilities': 3.18.2
       tslib: 2.8.0
 
-  '@sapphire/plugin-api@6.1.1':
+  '@sapphire/plugin-api@8.0.0':
     dependencies:
-      '@types/ws': 8.5.12
-      tldts: 6.1.41
-      tslib: 2.7.0
-      undici: 6.19.8
+      '@types/ws': 8.5.14
+      '@vladfrangu/async_event_emitter': 2.4.6
+      cookie-es: 1.2.2
+      tldts: 6.1.77
+      undici: 7.3.0
 
   '@sapphire/plugin-editable-commands@4.0.4':
     dependencies:
@@ -7911,6 +7922,10 @@ snapshots:
   '@types/uuid@10.0.0': {}
 
   '@types/ws@8.5.12':
+    dependencies:
+      '@types/node': 20.16.3
+
+  '@types/ws@8.5.14':
     dependencies:
       '@types/node': 20.16.3
 
@@ -8691,6 +8706,8 @@ snapshots:
   convert-gitmoji@0.1.5: {}
 
   convert-source-map@2.0.0: {}
+
+  cookie-es@1.2.2: {}
 
   cookies@0.9.1:
     dependencies:
@@ -12448,11 +12465,11 @@ snapshots:
 
   tinyexec@0.3.2: {}
 
-  tldts-core@6.1.41: {}
+  tldts-core@6.1.77: {}
 
-  tldts@6.1.41:
+  tldts@6.1.77:
     dependencies:
-      tldts-core: 6.1.41
+      tldts-core: 6.1.77
 
   tmp@0.0.33:
     dependencies:
@@ -12682,6 +12699,8 @@ snapshots:
   undici@6.19.8: {}
 
   undici@6.21.1: {}
+
+  undici@7.3.0: {}
 
   unicorn-magic@0.1.0: {}
 
