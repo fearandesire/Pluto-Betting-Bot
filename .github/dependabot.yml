@@ -13,7 +13,6 @@ updates:
     versioning-strategy: auto
     labels:
       - "dependencies"
-      - "automerge"
     commit-message:
       prefix: "chore"
       prefix-development: "chore"
