@@ -223,8 +223,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       '@types/lodash':
-        specifier: ^4.17.7
-        version: 4.17.7
+        specifier: ^4.17.15
+        version: 4.17.15
       '@types/node':
         specifier: ^20.16.3
         version: 20.16.3
@@ -1806,8 +1806,8 @@ packages:
   '@types/koa__cors@5.0.0':
     resolution: {integrity: sha512-LCk/n25Obq5qlernGOK/2LUwa/2YJb2lxHUkkvYFDOpLXlVI6tKcdfCHRBQnOY4LwH6el5WOLs6PD/a8Uzau6g==}
 
-  '@types/lodash@4.17.7':
-    resolution: {integrity: sha512-8wTvZawATi/lsmNu10/j2hk1KEP0IvjubqPE3cu1Xz7xfXXt5oCq3SNUz4fMIP4XGF9Ky+Ue2tBA3hcS7LSBlA==}
+  '@types/lodash@4.17.15':
+    resolution: {integrity: sha512-w/P33JFeySuhN6JLkysYUK2gEmy9kHHFN7E8ro0tkfmlDOgxBDzWEZ/J8cWA+fHqFevpswDTFZnDx+R9lbL6xw==}
 
   '@types/mime@1.3.5':
     resolution: {integrity: sha512-/pyBZWSLD2n0dcHE3hq8s8ZvcETHtEuF+3E7XVt0Ig2nvsVQXdghHVcEkIWjy9A0wKfTn97a/PSDYohKIlnP/w==}
@@ -7818,7 +7818,7 @@ snapshots:
     dependencies:
       '@types/koa': 2.15.0
 
-  '@types/lodash@4.17.7': {}
+  '@types/lodash@4.17.15': {}
 
   '@types/mime@1.3.5': {}
 
