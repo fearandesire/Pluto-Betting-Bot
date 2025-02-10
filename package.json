@@ -114,7 +114,7 @@
 		"pg": "^8.12.0",
 		"pg-monitor": "^2.1.0",
 		"pg-promise": "^10.15.4",
-		"pkg-dir": "^7.0.0",
+		"pkg-dir": "^8.0.0",
 		"puppeteer": "^22.15.0",
 		"puppeteer-extra": "^3.3.6",
 		"puppeteer-extra-plugin-recaptcha": "^3.6.8",
