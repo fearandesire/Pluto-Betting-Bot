@@ -106,7 +106,7 @@
 		"koa": "^2.15.3",
 		"koa-bodyparser": "^4.4.1",
 		"koa-logger": "^3.2.1",
-		"koa-router": "^12.0.1",
+		"koa-router": "^13.0.1",
 		"lefthook": "^1.10.10",
 		"lodash": "^4.17.21",
 		"module-alias": "^2.2.3",
