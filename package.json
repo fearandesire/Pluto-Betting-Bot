@@ -133,7 +133,7 @@
 		"@sapphire/cli": "^1.9.3",
 		"@sapphire/prettier-config": "^2.0.0",
 		"@sapphire/ts-config": "^5.0.1",
-		"@types/color": "^3.0.6",
+		"@types/color": "^4.2.0",
 		"@types/jest": "^29.5.12",
 		"@types/koa": "^2.15.0",
 		"@types/koa-bodyparser": "^4.3.12",
