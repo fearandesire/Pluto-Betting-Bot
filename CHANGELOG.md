@@ -1,5 +1,52 @@
 # Changelog
 
+## v3.5.1
+
+[compare changes](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v3.5.0...v3.5.1)
+
+### 🩹 Fixes
+
+- Rm 'automerge' label attempt ([f6b36b5](https://github.com/fearandesire/Pluto-Betting-Bot/commit/f6b36b5))
+
+### 💅 Refactors
+
+- Added & improved footer generation; adjusted config, dependencies ([9dbfdc2](https://github.com/fearandesire/Pluto-Betting-Bot/commit/9dbfdc2))
+
+### 🏡 Chore
+
+- Configure release and dependabot settings ([443b676](https://github.com/fearandesire/Pluto-Betting-Bot/commit/443b676))
+- Dependabot direct config ([79e11a6](https://github.com/fearandesire/Pluto-Betting-Bot/commit/79e11a6))
+- Dependabot config ([a10b4ce](https://github.com/fearandesire/Pluto-Betting-Bot/commit/a10b4ce))
+- **deps-dev:** Bump typescript from 5.6.2 to 5.7.3 ([#49](https://github.com/fearandesire/Pluto-Betting-Bot/pull/49))
+- Add GitHub workflow for auto-merging Dependabot PRs ([13c7ee4](https://github.com/fearandesire/Pluto-Betting-Bot/commit/13c7ee4))
+- Update Dependabot auto-merge workflow configuration ([4fb1042](https://github.com/fearandesire/Pluto-Betting-Bot/commit/4fb1042))
+- **deps-dev:** Bump @biomejs/biome from 1.9.2 to 1.9.4 ([#43](https://github.com/fearandesire/Pluto-Betting-Bot/pull/43))
+- **deps-dev:** Bump eslint-plugin-import from 2.29.1 to 2.31.0 ([e23395d](https://github.com/fearandesire/Pluto-Betting-Bot/commit/e23395d))
+- **deps-dev:** Bump prettier-eslint-cli from 7.1.0 to 8.0.1 ([d7e3cf6](https://github.com/fearandesire/Pluto-Betting-Bot/commit/d7e3cf6))
+- **deps-dev:** Bump @types/lodash from 4.17.7 to 4.17.15 ([653788f](https://github.com/fearandesire/Pluto-Betting-Bot/commit/653788f))
+- **deps-dev:** Bump @biomejs/cli-win32-x64 from 1.9.2 to 1.9.4 ([f9ce2be](https://github.com/fearandesire/Pluto-Betting-Bot/commit/f9ce2be))
+- **deps-dev:** Bump rimraf from 5.0.10 to 6.0.1 ([8f20d30](https://github.com/fearandesire/Pluto-Betting-Bot/commit/8f20d30))
+- **deps-dev:** Bump rimraf from 5.0.10 to 6.0.1 ([#62](https://github.com/fearandesire/Pluto-Betting-Bot/pull/62))
+- **deps-dev:** Bump vite in the npm_and_yarn group across 1 directory ([#53](https://github.com/fearandesire/Pluto-Betting-Bot/pull/53))
+- **deps-dev:** Bump @types/color from 3.0.6 to 4.2.0 ([1ed15b4](https://github.com/fearandesire/Pluto-Betting-Bot/commit/1ed15b4))
+- **deps-dev:** Bump @types/color from 3.0.6 to 4.2.0 ([#66](https://github.com/fearandesire/Pluto-Betting-Bot/pull/66))
+- **deps-dev:** Bump eslint-plugin-prettier from 5.2.1 to 5.2.3 ([adedbd0](https://github.com/fearandesire/Pluto-Betting-Bot/commit/adedbd0))
+- **deps-dev:** Bump eslint-plugin-prettier from 5.2.1 to 5.2.3 ([#69](https://github.com/fearandesire/Pluto-Betting-Bot/pull/69))
+- **deps-dev:** Bump @types/ws from 8.5.12 to 8.5.14 ([78e4255](https://github.com/fearandesire/Pluto-Betting-Bot/commit/78e4255))
+- **deps-dev:** Bump @types/ws from 8.5.12 to 8.5.14 ([#72](https://github.com/fearandesire/Pluto-Betting-Bot/pull/72))
+- **deps-dev:** Bump @types/jest from 29.5.12 to 29.5.14 ([efa17b0](https://github.com/fearandesire/Pluto-Betting-Bot/commit/efa17b0))
+- **deps-dev:** Bump @types/jest from 29.5.12 to 29.5.14 ([#74](https://github.com/fearandesire/Pluto-Betting-Bot/pull/74))
+
+### 🤖 CI
+
+- Change name of dep bot action ([8762c5e](https://github.com/fearandesire/Pluto-Betting-Bot/commit/8762c5e))
+- Update dependabot config ([c1003f8](https://github.com/fearandesire/Pluto-Betting-Bot/commit/c1003f8))
+
+### ❤️ Contributors
+
+- Fearandesire <fenixcoding@gmail.com>
+- FENIX ([@fearandesire](http://github.com/fearandesire))
+
 ## v3.5.0
 
 [compare changes](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v3.1.11...v3.5.0)
