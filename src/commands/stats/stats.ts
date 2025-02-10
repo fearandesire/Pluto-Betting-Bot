@@ -62,7 +62,7 @@ export class UserCommand extends Subcommand {
 		}
 
 		const formatValue = (value: number) =>
-			value === 0 ? 'N/A' : value.toLocaleString();
+			value === 0 ? 'N/A' : `$${value.toLocaleString()}`;
 		const formatPercentage = (value: number) =>
 			value === 0 ? 'N/A' : `${(value * 100).toFixed(1)}%`;
 
@@ -71,9 +71,11 @@ export class UserCommand extends Subcommand {
 			title: `🎲 ${interaction.user.username}'s Betting Stats`,
 			fields: [
 				{
-					name: '📊 Overall Stats',
+					name: '📊 Totals',
 					value: [
-						`Total Bets: **${formatValue(overallStats.totalBets)}**`,
+						`Bets: **${formatValue(overallStats.totalBets)}**`,
+						`Wins: **${formatValue(overallStats.totalWins)}**`,
+						`Losses: **${formatValue(overallStats.totalLosses)}**`,
 						`Win Rate: **${formatPercentage(overallStats.winRate)}**`,
 						`Highest Bet: **${formatValue(overallStats.highestBetAmount)}** 💰`,
 					].join('\n'),
