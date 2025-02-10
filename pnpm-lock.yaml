@@ -202,8 +202,8 @@ importers:
         specifier: ^5.0.1
         version: 5.0.1
       '@types/color':
-        specifier: ^3.0.6
-        version: 3.0.6
+        specifier: ^4.2.0
+        version: 4.2.0
       '@types/jest':
         specifier: ^29.5.12
         version: 29.5.12
@@ -1720,14 +1720,14 @@ packages:
   '@types/cli-progress@3.11.6':
     resolution: {integrity: sha512-cE3+jb9WRlu+uOSAugewNpITJDt1VF8dHOopPO4IABFc3SXYL5WE/+PTz/FCdZRRfIujiWW3n3aMbv1eIGVRWA==}
 
-  '@types/color-convert@2.0.3':
-    resolution: {integrity: sha512-2Q6wzrNiuEvYxVQqhh7sXM2mhIhvZR/Paq4FdsQkOMgWsCIkKvSGj8Le1/XalulrmgOzPMqNa0ix+ePY4hTrfg==}
+  '@types/color-convert@2.0.4':
+    resolution: {integrity: sha512-Ub1MmDdyZ7mX//g25uBAoH/mWGd9swVbt8BseymnaE18SU4po/PjmCrHxqIIRjBo3hV/vh1KGr0eMxUhp+t+dQ==}
 
-  '@types/color-name@1.1.4':
-    resolution: {integrity: sha512-hulKeREDdLFesGQjl96+4aoJSHY5b2GRjagzzcqCfIrWhe5vkCqIvrLbqzBaI1q94Vg8DNJZZqTR5ocdWmWclg==}
+  '@types/color-name@1.1.5':
+    resolution: {integrity: sha512-j2K5UJqGTxeesj6oQuGpMgifpT5k9HprgQd8D1Y0lOFqKHl3PJu5GMeS4Y5EgjS55AE6OQxf8mPED9uaGbf4Cg==}
 
-  '@types/color@3.0.6':
-    resolution: {integrity: sha512-NMiNcZFRUAiUUCCf7zkAelY8eV3aKqfbzyFQlXpPIEeoNDbsEHGpb854V3gzTsGKYj830I5zPuOwU/TP5/cW6A==}
+  '@types/color@4.2.0':
+    resolution: {integrity: sha512-6+xrIRImMtGAL2X3qYkd02Mgs+gFGs+WsK0b7VVMaO4mYRISwyTjcqNrO0mNSmYEoq++rSLDB2F5HDNmqfOe+A==}
 
   '@types/connect@3.4.38':
     resolution: {integrity: sha512-K6uROf1LD88uDQqJCktA4yzL1YYAK6NgfsI0v/mTgyPKWsX1CnJ0XPSDhViejru1GcRkLWb8RlzFYJRqGUbaug==}
@@ -7758,15 +7758,15 @@ snapshots:
     dependencies:
       '@types/node': 20.16.3
 
-  '@types/color-convert@2.0.3':
+  '@types/color-convert@2.0.4':
     dependencies:
-      '@types/color-name': 1.1.4
+      '@types/color-name': 1.1.5
 
-  '@types/color-name@1.1.4': {}
+  '@types/color-name@1.1.5': {}
 
-  '@types/color@3.0.6':
+  '@types/color@4.2.0':
     dependencies:
-      '@types/color-convert': 2.0.3
+      '@types/color-convert': 2.0.4
 
   '@types/connect@3.4.38':
     dependencies:
