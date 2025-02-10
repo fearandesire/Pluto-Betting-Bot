@@ -82,7 +82,7 @@
 		"@sapphire/plugin-editable-commands": "^4.0.4",
 		"@sapphire/plugin-hmr": "^3.0.2",
 		"@sapphire/plugin-logger": "^4.0.2",
-		"@sapphire/plugin-subcommands": "^7.0.0",
+		"@sapphire/plugin-subcommands": "^7.0.1",
 		"@sapphire/ratelimits": "^2.4.11",
 		"@sapphire/time-utilities": "^1.7.14",
 		"@sapphire/utilities": "^3.18.2",
