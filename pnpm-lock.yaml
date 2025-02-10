@@ -48,8 +48,8 @@ importers:
         specifier: ^4.0.4
         version: 4.0.4
       '@sapphire/plugin-hmr':
-        specifier: ^2.0.3
-        version: 2.0.3
+        specifier: ^3.0.2
+        version: 3.0.2
       '@sapphire/plugin-logger':
         specifier: ^4.0.2
         version: 4.0.2
@@ -1586,8 +1586,8 @@ packages:
     resolution: {integrity: sha512-1Dd04IjZxYjPWupMJPAyOupWUvYNkhOAUdWhoIBRDRjy6eytOHYYD5TpH8QLXsfgbQNV/ETdWDG0IBVH/Vg/EA==}
     engines: {node: '>=v18', npm: '>=7'}
 
-  '@sapphire/plugin-hmr@2.0.3':
-    resolution: {integrity: sha512-SYOep2Oi9VU8X7WFC4oiMYMIEQeVo7r4ygc+88HBvr4HhmkRccdg3+ACT1k4bt6uBBIgPsG/75hLYNTqezy02g==}
+  '@sapphire/plugin-hmr@3.0.2':
+    resolution: {integrity: sha512-Rn1NV/ERUpMVgWQacDlASLbUPQvdzZOZykHlrlGCFMaSStf3t6Pv80gzuHMpd3rSJubo+SwHFyy+kY+Bxvnq6Q==}
     engines: {node: '>=v18', npm: '>=7'}
 
   '@sapphire/plugin-logger@4.0.2':
@@ -2326,6 +2326,10 @@ packages:
   chokidar@3.6.0:
     resolution: {integrity: sha512-7VT13fmjotKpGipCW9JEQAusEPE+Ei8nl6/g4FBAmIm0GOOLMua9NDDo/DWp0ZAxCr3cPq5ZpBqmPAQgDda2Pw==}
     engines: {node: '>= 8.10.0'}
+
+  chokidar@4.0.3:
+    resolution: {integrity: sha512-Qgzu8kfBvo+cA4962jnP1KkS6Dop5NS6g7R5LFYJr4b8Ub94PPQXUksCw9PvXoeXPRRddRNC5C1JQUR2SMGtnA==}
+    engines: {node: '>= 14.16.0'}
 
   chownr@1.1.4:
     resolution: {integrity: sha512-jJ0bqzaylmJtVnNgzTeSOs8DPavpbYgEr/b0YL8/2GO3xJEhInFmhKMUnEJQjZumK7KXGFhUy89PrsJWlakBVg==}
@@ -5158,6 +5162,10 @@ packages:
     resolution: {integrity: sha512-hOS089on8RduqdbhvQ5Z37A0ESjsqz6qnRcffsMU3495FuTdqSm+7bhJ29JvIOsBDEEnan5DPu9t3To9VRlMzA==}
     engines: {node: '>=8.10.0'}
 
+  readdirp@4.1.1:
+    resolution: {integrity: sha512-h80JrZu/MHUZCyHu5ciuoI0+WxsCxzxJTILn6Fs8rxSnFPh+UVHYfeIxK1nVGugMqkfC4vJcBOYbkfkwYK0+gw==}
+    engines: {node: '>= 14.18.0'}
+
   rechoir@0.6.2:
     resolution: {integrity: sha512-HFM8rkZ+i3zrV+4LQjwQ0W+ez98pApMGM3HUrN04j3CqzPOzl9nmP15Y8YXNm8QHGv/eacOVEjqhmWpkRV0NAw==}
     engines: {node: '>= 0.10'}
@@ -7615,9 +7623,9 @@ snapshots:
     dependencies:
       '@skyra/editable-commands': 3.0.4
 
-  '@sapphire/plugin-hmr@2.0.3':
+  '@sapphire/plugin-hmr@3.0.2':
     dependencies:
-      chokidar: 3.6.0
+      chokidar: 4.0.3
 
   '@sapphire/plugin-logger@4.0.2':
     dependencies:
@@ -8493,6 +8501,10 @@ snapshots:
       readdirp: 3.6.0
     optionalDependencies:
       fsevents: 2.3.3
+
+  chokidar@4.0.3:
+    dependencies:
+      readdirp: 4.1.1
 
   chownr@1.1.4: {}
 
@@ -11800,6 +11812,8 @@ snapshots:
   readdirp@3.6.0:
     dependencies:
       picomatch: 2.3.1
+
+  readdirp@4.1.1: {}
 
   rechoir@0.6.2:
     dependencies:
