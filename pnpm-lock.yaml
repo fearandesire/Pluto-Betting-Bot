@@ -54,8 +54,8 @@ importers:
         specifier: ^4.0.2
         version: 4.0.2
       '@sapphire/plugin-subcommands':
-        specifier: ^7.0.0
-        version: 7.0.0
+        specifier: ^7.0.1
+        version: 7.0.1
       '@sapphire/ratelimits':
         specifier: ^2.4.11
         version: 2.4.11
@@ -1399,8 +1399,8 @@ packages:
     resolution: {integrity: sha512-5Nr++u+fA3/jZwj1aL9Z16RgyJZRE1gyUftfWjrzdndE5FkcbnLiVCKvnI8WzSupVhdn6kMaCWAteOSgAaq3lQ==}
     engines: {node: '>=v18', npm: '>=7'}
 
-  '@sapphire/plugin-subcommands@7.0.0':
-    resolution: {integrity: sha512-oBJ5o99hjq1sdBGcL4ksChyg73pZ1zhGVNBLnRHP4K5iegCA60GE4WRZqskrA94owy0hHNeCjj0etUpOCaihbQ==}
+  '@sapphire/plugin-subcommands@7.0.1':
+    resolution: {integrity: sha512-3ngUpfKfcMX4zIlJ4SHLe10N79XU72H+Wdfcnd9ueMf6FOSMJFvVUfqDIp1rb7/iXi7C5dfx0pQqSwqu3UG0KQ==}
     engines: {node: '>=v18', npm: '>=7'}
 
   '@sapphire/prettier-config@2.0.0':
@@ -7121,7 +7121,7 @@ snapshots:
       '@sapphire/timestamp': 1.0.3
       colorette: 2.0.20
 
-  '@sapphire/plugin-subcommands@7.0.0':
+  '@sapphire/plugin-subcommands@7.0.1':
     dependencies:
       '@sapphire/utilities': 3.18.2
 
