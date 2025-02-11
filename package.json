@@ -98,7 +98,7 @@
 		"date-fns": "^4.1.0",
 		"date-fns-tz": "^3.2.0",
 		"discord-api-types": "^0.37.119",
-		"discord.js": "^14.17.3",
+		"discord.js": "^14.18.0",
 		"dotenv": "16.4.7",
 		"dotenv-vault": "1.26.2",
 		"esm-module-alias": "^2.2.1",
