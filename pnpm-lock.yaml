@@ -81,8 +81,8 @@ importers:
         specifier: ^1.20.3
         version: 1.20.3
       color:
-        specifier: ^4.2.3
-        version: 4.2.3
+        specifier: ^5.0.0
+        version: 5.0.0
       color-convert:
         specifier: ^3.0.1
         version: 3.0.1
@@ -2195,12 +2195,16 @@ packages:
   color-string@1.9.1:
     resolution: {integrity: sha512-shrVawQFojnZv6xM40anx4CkoDP+fZsw/ZerEMsW/pyzsRbElpsL/DBVW7q3ExxwusdNXI3lXpuhEZkzs8p5Eg==}
 
+  color-string@2.0.0:
+    resolution: {integrity: sha512-a2H6LDx3QtDmNKlQfPW4EUNbrQ9x3UNEzS8l0OVwoxxPjw+pAKyEA9TjdnB45/aSpuEepyvH/8kx62nj4Xw1Fg==}
+    engines: {node: '>=18'}
+
   color@3.2.1:
     resolution: {integrity: sha512-aBl7dZI9ENN6fUGC7mWpMTPNHmWUSNan9tuWN6ahh5ZLNk9baLJOnSMlrQkHcrfFgz2/RigjUVAjdx36VcemKA==}
 
-  color@4.2.3:
-    resolution: {integrity: sha512-1rXeuUUiGGrykh+CeBdu5Ie7OJwinCgQY0bc7GCRxy5xVHy+moaqkpL/jqQq0MtQOeYcrqEz4abc5f0KtU7W4A==}
-    engines: {node: '>=12.5.0'}
+  color@5.0.0:
+    resolution: {integrity: sha512-16BlyiuyLq3MLxpRWyOTiWsO3ii/eLQLJUQXBSNcxMBBSnyt1ee9YUdaozQp03ifwm5woztEZGDbk9RGVuCsdw==}
+    engines: {node: '>=18'}
 
   colorette@2.0.20:
     resolution: {integrity: sha512-IfEDxwoWIjkeXL1eXcDiow4UbKjhLdq6/EuSVR9GMN7KVH3r9gQ83e73hsz1Nd1T3ijd5xv1wcWRYO+D6kCI2w==}
@@ -7971,15 +7975,19 @@ snapshots:
       color-name: 1.1.4
       simple-swizzle: 0.2.2
 
+  color-string@2.0.0:
+    dependencies:
+      color-name: 2.0.0
+
   color@3.2.1:
     dependencies:
       color-convert: 1.9.3
       color-string: 1.9.1
 
-  color@4.2.3:
+  color@5.0.0:
     dependencies:
-      color-convert: 2.0.1
-      color-string: 1.9.1
+      color-convert: 3.0.1
+      color-string: 2.0.0
 
   colorette@2.0.20: {}
 
