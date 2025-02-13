@@ -56,7 +56,7 @@ export const channelAggregatedSchema = z.object({
 export type IChannelAggregated = z.infer<typeof channelAggregatedSchema>;
 
 /** Guild-specific scheduled channels configuration schema */
-export const scheduledChannelsGuildSchema = z.object({
+export const channelGuildSchema = z.object({
 	guildId: z.string(),
 	eligibleMatches: z
 		.array(z.string())
@@ -67,17 +67,15 @@ export const scheduledChannelsGuildSchema = z.object({
 	preferred_teams: z.array(z.string()).optional().nullable(),
 });
 
-export type ScheduledChannelsGuildData = z.infer<
-	typeof scheduledChannelsGuildSchema
->;
+export type ScheduledChannelsGuildData = z.infer<typeof channelGuildSchema>;
 
 /** Complete scheduled channels data schema */
-export const scheduledChannelsDataSchema = z.object({
+export const incomingChannelDataSchema = z.object({
 	channels: z.array(channelAggregatedSchema),
-	guilds: z.array(scheduledChannelsGuildSchema),
+	guilds: z.array(channelGuildSchema),
 });
 
-export type ScheduledChannelsData = z.infer<typeof scheduledChannelsDataSchema>;
+export type IncomingChannelData = z.infer<typeof incomingChannelDataSchema>;
 
 /** Sport emoji mappings */
 export const sportEmojisSchema = z.enum(['nba', 'nfl']);

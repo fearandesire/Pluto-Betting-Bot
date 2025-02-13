@@ -7,7 +7,7 @@ import Router from 'koa-router';
 import _ from 'lodash';
 import ChannelManager from '../../../guilds/channels/ChannelManager.js';
 import { WinstonLogger } from '../../../logging/WinstonLogger.js';
-import type { ScheduledChannelsData } from './createchannels.interface.js';
+import type { IncomingChannelData } from './createchannels.interface.js';
 
 const ChannelsRoutes = new Router();
 
@@ -21,7 +21,7 @@ ChannelsRoutes.post('/channels/create', async (ctx: any) => {
 		body: ctx.request.body,
 	});
 	await channelManager.validateAndParseChannels(ctx.request.body);
-	const { channels, guilds } = ctx.request.body as ScheduledChannelsData;
+	const { channels, guilds } = ctx.request.body as IncomingChannelData;
 	try {
 		await channelManager.processChannels({
 			channels,

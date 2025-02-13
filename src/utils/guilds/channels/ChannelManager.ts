@@ -19,9 +19,9 @@ import type { SportsServing } from '../../api/common/interfaces/kh-pluto/kh-plut
 import {
 	type ChannelMetadata,
 	type IChannelAggregated,
-	type ScheduledChannelsData,
+	type IncomingChannelData,
 	type ScheduledChannelsGuildData,
-	scheduledChannelsDataSchema,
+	incomingChannelDataSchema,
 } from '../../api/routes/channels/createchannels.interface.js';
 import { findEmoji } from '../../bot_res/findEmoji.js';
 import StringUtils from '../../common/string-utils.js';
@@ -67,9 +67,9 @@ export default class ChannelManager {
 	/**
 	 * Channel Creation
 	 * Embed creation & Sending on channel creation
-	 * @param {ScheduledChannelsData} data - The data containing channels and guilds information
+	 * @param {IncomingChannelData} data - The data containing channels and guilds information
 	 */
-	async processChannels(data: ScheduledChannelsData) {
+	async processChannels(data: IncomingChannelData) {
 		const { channels, guilds } = data;
 		for (const guild of guilds) {
 			const eligibleChannels = channels.filter((channel) =>
@@ -124,7 +124,7 @@ export default class ChannelManager {
 		guilds: ScheduledChannelsGuildData[];
 	}) {
 		// Zod Validation
-		await scheduledChannelsDataSchema.parse(body);
+		await incomingChannelDataSchema.parse(body);
 		return true;
 	}
 

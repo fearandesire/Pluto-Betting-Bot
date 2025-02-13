@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { SportsServing } from '../../api/common/interfaces/index.js';
 
 export const teamRecordSchema = z.object({
 	total_record: z.string(),
@@ -36,11 +37,13 @@ export const channelsAggregatedSchema = z.object({
 		),
 	sport: z
 		.string()
-		.describe('Sport type identifier (e.g., NBA, NFL) for the game channel'),
+		.describe(
+			'Sport type identifier (e.g., NBA, NFL) for the game channel',
+		) as z.ZodType<SportsServing>,
 	created: z
 		.boolean()
 		.describe('Flag indicating whether the Discord channel has been created'),
-	gametime: z.date().describe('Scheduled start time of the game'),
+	gametime: z.string().describe('ISO 8061 Scheduled start time of the game'),
 	channelname: z.string().describe('Name of the Discord channel to be created'),
 	matchOdds: z
 		.object({
@@ -64,6 +67,7 @@ export const channelsAggregatedSchema = z.object({
 				.describe('Team records and statistics from ESPN'),
 		})
 		.optional()
+		.nullable()
 		.describe('Additional metadata about the teams and game'),
 });
 

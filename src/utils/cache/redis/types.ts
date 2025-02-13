@@ -50,6 +50,7 @@ export interface BetSettledPayload {
 // Map channel to their respective payload types
 export type ChannelPayloadMap = {
 	[RedisChannel.CHANNEL_CREATION]: ChannelCreationPayload;
+	// ? all unused for now
 	[RedisChannel.USER_UPDATE]: UserUpdatePayload;
 	[RedisChannel.GUILD_UPDATE]: GuildUpdatePayload;
 	[RedisChannel.BET_PLACED]: BetPlacedPayload;
