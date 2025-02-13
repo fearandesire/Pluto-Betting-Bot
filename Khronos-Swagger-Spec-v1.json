@@ -1,10 +1,51 @@
 {
   "openapi": "3.0.0",
   "paths": {
-    "/matches/info/{matchid}": {
+    "/api/khronos/v1/schedule/cron-jobs": {
+      "get": {
+        "operationId": "ScheduleController_getActiveCronJobs_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Returns a list of active cron job information"
+          }
+        },
+        "summary": "Get active cron jobs",
+        "tags": [
+          "Schedule"
+        ]
+      }
+    },
+    "/api/khronos/v1/schedule/cron-jobs/{jobName}": {
+      "delete": {
+        "operationId": "ScheduleController_stopCronJob_v1",
+        "parameters": [
+          {
+            "name": "jobName",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cron job stopped successfully"
+          },
+          "404": {
+            "description": "Cron job not found"
+          }
+        },
+        "summary": "Stop a cron job",
+        "tags": [
+          "Schedule"
+        ]
+      }
+    },
+    "/api/khronos/v1/matches/info/{matchid}": {
       "get": {
         "operationId": "matchInfo",
-        "summary": "Get match information via ID",
         "parameters": [
           {
             "name": "matchid",
@@ -55,21 +96,21 @@
             }
           }
         },
-        "tags": [
-          "Matches"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Get match information via ID",
+        "tags": [
+          "Matches"
         ]
       }
     },
-    "/matches/daily": {
+    "/api/khronos/v1/matches/daily": {
       "get": {
-        "operationId": "sendDailyMatches",
-        "summary": "Compile matches for the current day and send to the client (Pluto) to be distributed to all subscribers for this data.",
         "description": "This method is executed on a daily schedule via Cron, everyday at 6 AM",
+        "operationId": "sendDailyMatches",
         "parameters": [],
         "responses": {
           "200": {
@@ -106,20 +147,20 @@
             }
           }
         },
-        "tags": [
-          "Matches"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Compile matches for the current day and send to the client (Pluto) to be distributed to all subscribers for this data.",
+        "tags": [
+          "Matches"
         ]
       }
     },
-    "/matches/all": {
+    "/api/khronos/v1/matches/all": {
       "get": {
         "operationId": "getAllMatches",
-        "summary": "Get all stored matches",
         "parameters": [],
         "responses": {
           "200": {
@@ -160,20 +201,20 @@
             }
           }
         },
-        "tags": [
-          "Matches"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Get all stored matches",
+        "tags": [
+          "Matches"
         ]
       }
     },
-    "/matches/by/sport": {
+    "/api/khronos/v1/matches/by/sport": {
       "get": {
         "operationId": "matchesForSport",
-        "summary": "Get all stored matches for a specific sport",
         "parameters": [
           {
             "name": "sport",
@@ -236,40 +277,40 @@
             }
           }
         },
-        "tags": [
-          "Matches"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Get all stored matches for a specific sport",
+        "tags": [
+          "Matches"
         ]
       }
     },
-    "/matches/aggregated": {
+    "/api/khronos/v1/matches/aggregated": {
       "get": {
-        "operationId": "MatchesController_getAggregatedMatches",
+        "operationId": "MatchesController_getAggregatedMatches_v1",
         "parameters": [],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "tags": [
-          "Matches"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "tags": [
+          "Matches"
         ]
       }
     },
-    "/matches/cleanup/stale": {
+    "/api/khronos/v1/matches/cleanup/stale": {
       "post": {
-        "operationId": "cleanupStaleMatches",
-        "summary": "Clean up and archive stale matches",
         "description": "Identifies and archives matches that are complete and occurred before the current day",
+        "operationId": "cleanupStaleMatches",
         "parameters": [],
         "responses": {
           "200": {
@@ -308,22 +349,25 @@
                 }
               }
             }
+          },
+          "201": {
+            "description": ""
           }
         },
-        "tags": [
-          "Matches"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Clean up and archive stale matches",
+        "tags": [
+          "Matches"
         ]
       }
     },
-    "/discord/configs/set": {
+    "/api/khronos/v1/discord/configs/set": {
       "post": {
         "operationId": "setGuildConfig",
-        "summary": "Add or Update a Discord configuration",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -340,29 +384,26 @@
             "description": "Successfully stored the config."
           }
         },
-        "tags": [
-          "Discord Config"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Add or Update a Discord configuration",
+        "tags": [
+          "Discord Config"
         ]
       }
     },
-    "/discord/configs/games/schedule/all": {
+    "/api/khronos/v1/discord/configs/games/schedule/all": {
       "get": {
         "operationId": "getGameSchedule",
-        "summary": "Get game schedules",
         "parameters": [],
         "responses": {
           "200": {
             "description": "Game schedules retrieved successfully."
           }
         },
-        "tags": [
-          "Discord Config"
-        ],
         "security": [
           {
             "x-api-key": []
@@ -370,53 +411,56 @@
           {
             "bearer": []
           }
+        ],
+        "summary": "Get game schedules",
+        "tags": [
+          "Discord Config"
         ]
       }
     },
-    "/discord/configs/categories/sports/all": {
+    "/api/khronos/v1/discord/configs/categories/sports/all": {
       "get": {
-        "operationId": "DiscordConfigController_getGameCategories",
-        "summary": "Get all game categories",
+        "operationId": "DiscordConfigController_getGameCategories_v1",
         "parameters": [],
         "responses": {
           "200": {
             "description": "Game categories retrieved successfully."
           }
         },
-        "tags": [
-          "Discord Config"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Get all game categories",
+        "tags": [
+          "Discord Config"
         ]
       }
     },
-    "/discord/configs/by-guild": {
+    "/api/khronos/v1/discord/configs/by-guild": {
       "get": {
         "operationId": "allCategoriesByGuild",
-        "summary": "Get all categories grouped by guild",
         "parameters": [],
         "responses": {
           "200": {
             "description": "Categories grouped by guild retrieved successfully."
           }
         },
-        "tags": [
-          "Discord Config"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Get all categories grouped by guild",
+        "tags": [
+          "Discord Config"
         ]
       }
     },
-    "/discord/configs/type/{config}": {
+    "/api/khronos/v1/discord/configs/type/{config}": {
       "get": {
         "operationId": "configByType",
-        "summary": "Get all values that match a configuration by type",
         "parameters": [
           {
             "name": "config",
@@ -440,40 +484,40 @@
             }
           }
         },
-        "tags": [
-          "Discord Config"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Get all values that match a configuration by type",
+        "tags": [
+          "Discord Config"
         ]
       }
     },
-    "/discord/configs/all/betting-channels": {
+    "/api/khronos/v1/discord/configs/all/betting-channels": {
       "get": {
         "operationId": "allBettingChannels",
-        "summary": "Get all betting channels",
         "parameters": [],
         "responses": {
           "200": {
             "description": "All betting channels retrieved successfully."
           }
         },
-        "tags": [
-          "Discord Config"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Get all betting channels",
+        "tags": [
+          "Discord Config"
         ]
       }
     },
-    "/channels/all": {
+    "/api/khronos/v1/channels/all": {
       "get": {
         "operationId": "findAllChannels",
-        "summary": "Find all channels",
         "parameters": [
           {
             "name": "sport",
@@ -536,18 +580,18 @@
             "description": ""
           }
         },
-        "tags": [
-          "Channels"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Find all channels",
+        "tags": [
+          "Channels"
         ]
       },
       "delete": {
         "operationId": "removeAllChannels",
-        "summary": "Remove all channels",
         "parameters": [],
         "responses": {
           "200": {
@@ -561,20 +605,20 @@
             }
           }
         },
-        "tags": [
-          "Channels"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Remove all channels",
+        "tags": [
+          "Channels"
         ]
       }
     },
-    "/channels/{id}": {
+    "/api/khronos/v1/channels/{id}": {
       "get": {
-        "operationId": "GameChannelController_findById",
-        "summary": "Find a channel by ID",
+        "operationId": "GameChannelController_findById_v1",
         "parameters": [
           {
             "name": "id",
@@ -601,18 +645,18 @@
             "description": "Channel not found."
           }
         },
-        "tags": [
-          "Channels"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Find a channel by ID",
+        "tags": [
+          "Channels"
         ]
       },
       "delete": {
         "operationId": "deleteChannel",
-        "summary": "Delete a channel by ID",
         "parameters": [
           {
             "name": "id",
@@ -636,18 +680,18 @@
             }
           }
         },
-        "tags": [
-          "Channels"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Delete a channel by ID",
+        "tags": [
+          "Channels"
         ]
       },
       "patch": {
         "operationId": "updateChannel",
-        "summary": "Update a channel by ID",
         "parameters": [
           {
             "name": "id",
@@ -681,39 +725,39 @@
             }
           }
         },
-        "tags": [
-          "Channels"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Update a channel by ID",
+        "tags": [
+          "Channels"
         ]
       }
     },
-    "/channels/push-scheduled": {
+    "/api/khronos/v1/channels/push-scheduled": {
       "get": {
-        "operationId": "GameChannelController_pushScheduled",
+        "operationId": "GameChannelController_pushScheduled_v1",
         "parameters": [],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "tags": [
-          "Channels"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "tags": [
+          "Channels"
         ]
       }
     },
-    "/guilds": {
+    "/api/khronos/v1/guilds": {
       "get": {
         "operationId": "getAllGuilds",
-        "summary": "Get all guilds",
         "parameters": [],
         "responses": {
           "200": {
@@ -757,18 +801,18 @@
             }
           }
         },
-        "tags": [
-          "guilds"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Get all guilds",
+        "tags": [
+          "guilds"
         ]
       },
       "post": {
         "operationId": "addGuild",
-        "summary": "Add a new guild",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -819,20 +863,20 @@
             }
           }
         },
-        "tags": [
-          "guilds"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Add a new guild",
+        "tags": [
+          "guilds"
         ]
       }
     },
-    "/guilds/sport/{sport}": {
+    "/api/khronos/v1/guilds/sport/{sport}": {
       "get": {
         "operationId": "getGuildsBySport",
-        "summary": "Get guilds by sport",
         "parameters": [
           {
             "name": "sport",
@@ -886,20 +930,20 @@
             }
           }
         },
-        "tags": [
-          "guilds"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Get guilds by sport",
+        "tags": [
+          "guilds"
         ]
       }
     },
-    "/guilds/id/{id}": {
+    "/api/khronos/v1/guilds/id/{id}": {
       "get": {
         "operationId": "getGuildById",
-        "summary": "Get guild by id",
         "parameters": [
           {
             "name": "id",
@@ -950,20 +994,20 @@
             }
           }
         },
-        "tags": [
-          "guilds"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Get guild by id",
+        "tags": [
+          "guilds"
         ]
       }
     },
-    "/guilds/sport/{sport}/config/{configType}": {
+    "/api/khronos/v1/guilds/sport/{sport}/config/{configType}": {
       "get": {
         "operationId": "getGuildsBySportAndConfigType",
-        "summary": "Get guilds by sport and config type",
         "parameters": [
           {
             "name": "sport",
@@ -1035,81 +1079,87 @@
             }
           }
         },
-        "tags": [
-          "guilds"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Get guilds by sport and config type",
+        "tags": [
+          "guilds"
         ]
       }
     },
-    "/espn/scoreboard": {
+    "/api/khronos/v1/espn/scoreboard": {
       "get": {
-        "operationId": "EspnController_getScoreboard",
-        "summary": "Get ESPN scoreboard",
+        "operationId": "EspnController_getScoreboard_v1",
         "parameters": [],
         "responses": {
           "200": {
             "description": "ESPN scoreboard"
           }
         },
+        "summary": "Get ESPN scoreboard",
         "tags": [
           "ESPN"
         ]
       }
     },
-    "/score/sync": {
+    "/api/khronos/v1/score/sync": {
       "post": {
         "operationId": "syncScore",
-        "summary": "Sync matchups with scores",
         "parameters": [],
         "responses": {
           "200": {
             "description": "Matchups synced successfully"
           },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "tags": [
-          "score"
-        ],
-        "security": [
-          {
-            "x-api-key": []
-          }
-        ]
-      }
-    },
-    "/score/update": {
-      "post": {
-        "operationId": "updateScore",
-        "summary": "Update game status and scores",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Game status updated successfully"
+          "201": {
+            "description": ""
           },
           "500": {
             "description": "Internal server error"
           }
         },
-        "tags": [
-          "score"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Sync matchups with scores",
+        "tags": [
+          "score"
         ]
       }
     },
-    "/betslips": {
+    "/api/khronos/v1/score/update": {
+      "post": {
+        "operationId": "updateScore",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Game status updated successfully"
+          },
+          "201": {
+            "description": ""
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ],
+        "summary": "Update game status and scores",
+        "tags": [
+          "score"
+        ]
+      }
+    },
+    "/api/khronos/v1/betslips": {
       "get": {
         "operationId": "getAllBetslips",
-        "summary": "Get all betslips with pagination",
         "parameters": [
           {
             "name": "start",
@@ -1145,20 +1195,20 @@
             }
           }
         },
-        "tags": [
-          "Betslips"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Get all betslips with pagination",
+        "tags": [
+          "Betslips"
         ]
       }
     },
-    "/betslips/user/{userid}": {
+    "/api/khronos/v1/betslips/user/{userid}": {
       "get": {
         "operationId": "getUserBetslips",
-        "summary": "Get all betslips for a specific user",
         "parameters": [
           {
             "name": "userid",
@@ -1203,20 +1253,20 @@
             }
           }
         },
-        "tags": [
-          "Betslips"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Get all betslips for a specific user",
+        "tags": [
+          "Betslips"
         ]
       }
     },
-    "/betslips/active/{userid}": {
+    "/api/khronos/v1/betslips/active/{userid}": {
       "get": {
         "operationId": "getActiveBetslips",
-        "summary": "Get all active betslips for a user.",
         "parameters": [
           {
             "name": "userid",
@@ -1264,20 +1314,20 @@
             }
           }
         },
-        "tags": [
-          "Betslips"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Get all active betslips for a user.",
+        "tags": [
+          "Betslips"
         ]
       }
     },
-    "/betslips/{betId}": {
+    "/api/khronos/v1/betslips/{betId}": {
       "get": {
         "operationId": "getBetslip",
-        "summary": "Get a specific betslip by ID",
         "parameters": [
           {
             "name": "betId",
@@ -1321,20 +1371,20 @@
             }
           }
         },
-        "tags": [
-          "Betslips"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Get a specific betslip by ID",
+        "tags": [
+          "Betslips"
         ]
       }
     },
-    "/betslips/init": {
+    "/api/khronos/v1/betslips/init": {
       "post": {
         "operationId": "initBetslip",
-        "summary": "Initialize a new betslip.",
         "parameters": [
           {
             "name": "sport",
@@ -1468,20 +1518,20 @@
             }
           }
         },
-        "tags": [
-          "Betslips"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Initialize a new betslip.",
+        "tags": [
+          "Betslips"
         ]
       }
     },
-    "/betslips/place": {
+    "/api/khronos/v1/betslips/place": {
       "post": {
         "operationId": "placeBetslip",
-        "summary": "Creates a new betslip. This is called when the user has selected a team to bet on.",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -1565,20 +1615,20 @@
             }
           }
         },
-        "tags": [
-          "Betslips"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Creates a new betslip. This is called when the user has selected a team to bet on.",
+        "tags": [
+          "Betslips"
         ]
       }
     },
-    "/betslips/clearpending/{userid}": {
+    "/api/khronos/v1/betslips/clearpending/{userid}": {
       "post": {
         "operationId": "clearPendingBets",
-        "summary": "Clear a pending betslip for a user. Called when a user has cancelled a potential bet",
         "parameters": [
           {
             "name": "userid",
@@ -1604,22 +1654,25 @@
                 }
               }
             }
+          },
+          "201": {
+            "description": ""
           }
         },
-        "tags": [
-          "Betslips"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Clear a pending betslip for a user. Called when a user has cancelled a potential bet",
+        "tags": [
+          "Betslips"
         ]
       }
     },
-    "/betslips/closeoutstanding/{matchid}": {
+    "/api/khronos/v1/betslips/closeoutstanding/{matchid}": {
       "post": {
         "operationId": "closeOutstandingBets",
-        "summary": "Close outstanding bets for a match",
         "parameters": [
           {
             "name": "matchid",
@@ -1644,22 +1697,25 @@
                 }
               }
             }
+          },
+          "201": {
+            "description": ""
           }
         },
-        "tags": [
-          "Betslips"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Close outstanding bets for a match",
+        "tags": [
+          "Betslips"
         ]
       }
     },
-    "/betslips/modify/{betId}": {
+    "/api/khronos/v1/betslips/modify/{betId}": {
       "patch": {
         "operationId": "changeBetAmount",
-        "summary": "Change the amount of a bet.",
         "parameters": [
           {
             "name": "betId",
@@ -1757,21 +1813,21 @@
             }
           }
         },
-        "tags": [
-          "Betslips"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Change the amount of a bet.",
+        "tags": [
+          "Betslips"
         ]
       }
     },
-    "/betslips/doubledown/{userId}/{betId}": {
+    "/api/khronos/v1/betslips/doubledown/{userId}/{betId}": {
       "patch": {
-        "operationId": "doubleDownBet",
-        "summary": "Double the amount of an existing bet.",
         "description": "Doubles the bet amount for an existing betslip, if the user's balance permits. A new profit and payout will be calculated as well.",
+        "operationId": "doubleDownBet",
         "parameters": [
           {
             "name": "userId",
@@ -1852,20 +1908,20 @@
             }
           }
         },
-        "tags": [
-          "Betslips"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Double the amount of an existing bet.",
+        "tags": [
+          "Betslips"
         ]
       }
     },
-    "/betslips/cancel/{betId}": {
+    "/api/khronos/v1/betslips/cancel/{betId}": {
       "delete": {
         "operationId": "cancelBetslip",
-        "summary": "Cancel a betslip.",
         "parameters": [
           {
             "name": "betId",
@@ -1952,20 +2008,20 @@
             }
           }
         },
-        "tags": [
-          "Betslips"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Cancel a betslip.",
+        "tags": [
+          "Betslips"
         ]
       }
     },
-    "/accounts/create/{userid}": {
+    "/api/khronos/v1/accounts/create/{userid}": {
       "post": {
         "operationId": "createAccount",
-        "summary": "Create Account",
         "parameters": [
           {
             "name": "userid",
@@ -2009,20 +2065,20 @@
             }
           }
         },
-        "tags": [
-          "Accounts"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Create Account",
+        "tags": [
+          "Accounts"
         ]
       }
     },
-    "/accounts/balance/{userid}": {
+    "/api/khronos/v1/accounts/balance/{userid}": {
       "get": {
         "operationId": "getBalance",
-        "summary": "Get an account's balance",
         "parameters": [
           {
             "name": "userid",
@@ -2086,20 +2142,20 @@
             }
           }
         },
-        "tags": [
-          "Accounts"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Get an account's balance",
+        "tags": [
+          "Accounts"
         ]
       }
     },
-    "/accounts/profile/{userid}": {
+    "/api/khronos/v1/accounts/profile/{userid}": {
       "get": {
         "operationId": "userProfile",
-        "summary": "Get a user's profile",
         "parameters": [
           {
             "name": "userid",
@@ -2150,20 +2206,20 @@
             }
           }
         },
-        "tags": [
-          "Accounts"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Get a user's profile",
+        "tags": [
+          "Accounts"
         ]
       }
     },
-    "/accounts/dailyclaim/claim/{userid}": {
+    "/api/khronos/v1/accounts/dailyclaim/claim/{userid}": {
       "post": {
         "operationId": "dailyClaim",
-        "summary": "Process a user's daily claim request. If the user is not on cooldown, they will receive the allocated, pre-defined amount for a daily claim.",
         "parameters": [
           {
             "name": "userid",
@@ -2212,20 +2268,20 @@
             }
           }
         },
-        "tags": [
-          "Accounts"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Process a user's daily claim request. If the user is not on cooldown, they will receive the allocated, pre-defined amount for a daily claim.",
+        "tags": [
+          "Accounts"
         ]
       }
     },
-    "/accounts/all": {
+    "/api/khronos/v1/accounts/all": {
       "get": {
         "operationId": "getAll",
-        "summary": "Retrieve all stored accounts & their linked data",
         "parameters": [],
         "responses": {
           "200": {
@@ -2242,20 +2298,20 @@
             }
           }
         },
-        "tags": [
-          "Accounts"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Retrieve all stored accounts & their linked data",
+        "tags": [
+          "Accounts"
         ]
       }
     },
-    "/accounts/leaderboard": {
+    "/api/khronos/v1/accounts/leaderboard": {
       "get": {
         "operationId": "getLeaderboard",
-        "summary": "Get leaderboard",
         "parameters": [],
         "responses": {
           "200": {
@@ -2272,20 +2328,20 @@
             }
           }
         },
-        "tags": [
-          "Accounts"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Get leaderboard",
+        "tags": [
+          "Accounts"
         ]
       }
     },
-    "/accounts": {
+    "/api/khronos/v1/accounts": {
       "get": {
         "operationId": "getMany",
-        "summary": "Get multiple accounts by IDs",
         "parameters": [
           {
             "name": "id",
@@ -2314,18 +2370,18 @@
             }
           }
         },
-        "tags": [
-          "Accounts"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Get multiple accounts by IDs",
+        "tags": [
+          "Accounts"
         ]
       },
       "post": {
         "operationId": "createAccountWithBody",
-        "summary": "Create a new account",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -2374,20 +2430,20 @@
             }
           }
         },
-        "tags": [
-          "Accounts"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Create a new account",
+        "tags": [
+          "Accounts"
         ]
       }
     },
-    "/accounts/{id}": {
+    "/api/khronos/v1/accounts/{id}": {
       "get": {
         "operationId": "getOne",
-        "summary": "Get a single account by ID",
         "parameters": [
           {
             "name": "id",
@@ -2438,18 +2494,18 @@
             }
           }
         },
-        "tags": [
-          "Accounts"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Get a single account by ID",
+        "tags": [
+          "Accounts"
         ]
       },
       "put": {
         "operationId": "updateAccount",
-        "summary": "Update an account by ID",
         "parameters": [
           {
             "name": "id",
@@ -2500,18 +2556,18 @@
             }
           }
         },
-        "tags": [
-          "Accounts"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Update an account by ID",
+        "tags": [
+          "Accounts"
         ]
       },
       "delete": {
         "operationId": "deleteAccount",
-        "summary": "Delete an account by ID",
         "parameters": [
           {
             "name": "id",
@@ -2562,20 +2618,20 @@
             }
           }
         },
-        "tags": [
-          "Accounts"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Delete an account by ID",
+        "tags": [
+          "Accounts"
         ]
       }
     },
-    "/odds/game/{id}": {
+    "/api/khronos/v1/odds/game/{id}": {
       "get": {
         "operationId": "findById",
-        "summary": "Find odds by game ID",
         "parameters": [
           {
             "name": "id",
@@ -2626,21 +2682,21 @@
             }
           }
         },
-        "tags": [
-          "odds"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Find odds by game ID",
+        "tags": [
+          "odds"
         ]
       }
     },
-    "/odds/fetch/{sport}": {
+    "/api/khronos/v1/odds/fetch/{sport}": {
       "post": {
-        "operationId": "fetch",
-        "summary": "Fetch and store odds for a sport",
         "description": "The service this method utilizes is set on a daily schedule. This endpoint exists to manually trigger the process.",
+        "operationId": "fetch",
         "parameters": [
           {
             "name": "sport",
@@ -2673,20 +2729,20 @@
             "description": "500 Internal error."
           }
         },
-        "tags": [
-          "odds"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Fetch and store odds for a sport",
+        "tags": [
+          "odds"
         ]
       }
     },
-    "/props": {
+    "/api/khronos/v1/props": {
       "get": {
         "operationId": "findAllProps",
-        "summary": "Get all props",
         "parameters": [
           {
             "name": "withinOneWeek",
@@ -2739,15 +2795,15 @@
             }
           }
         },
+        "summary": "Get all props",
         "tags": [
           "Props"
         ]
       }
     },
-    "/props/{id}": {
+    "/api/khronos/v1/props/{id}": {
       "get": {
         "operationId": "findOneProp",
-        "summary": "Get a prop by id",
         "parameters": [
           {
             "name": "id",
@@ -2781,13 +2837,13 @@
             "description": "Prop not found."
           }
         },
+        "summary": "Get a prop by id",
         "tags": [
           "Props"
         ]
       },
       "delete": {
         "operationId": "removeProp",
-        "summary": "Delete a prop",
         "parameters": [
           {
             "name": "id",
@@ -2806,15 +2862,15 @@
             "description": "Prop not found."
           }
         },
+        "summary": "Delete a prop",
         "tags": [
           "Props"
         ]
       }
     },
-    "/props/update/{id}": {
+    "/api/khronos/v1/props/update/{id}": {
       "patch": {
         "operationId": "updateProp",
-        "summary": "Update a prop",
         "parameters": [
           {
             "name": "id",
@@ -2853,15 +2909,15 @@
             "description": "Prop not found."
           }
         },
+        "summary": "Update a prop",
         "tags": [
           "Props"
         ]
       }
     },
-    "/props/result": {
+    "/api/khronos/v1/props/result": {
       "patch": {
         "operationId": "setPropResult",
-        "summary": "Update prop result and close predictions",
         "parameters": [
           {
             "name": "override",
@@ -2901,14 +2957,15 @@
             "description": "Prop with the provided ID was not found or some processing predictions were not found"
           }
         },
+        "summary": "Update prop result and close predictions",
         "tags": [
           "Props"
         ]
       }
     },
-    "/props/manual/checkresult/{matchid}": {
+    "/api/khronos/v1/props/manual/checkresult/{matchid}": {
       "post": {
-        "operationId": "PropsController_checkForPropResult",
+        "operationId": "PropsController_checkForPropResult_v1",
         "parameters": [
           {
             "name": "matchid",
@@ -2929,10 +2986,9 @@
         ]
       }
     },
-    "/props/manual/send/{guildId}": {
+    "/api/khronos/v1/props/manual/send/{guildId}": {
       "get": {
         "operationId": "manualSendProps",
-        "summary": "Manually send props to Pluto",
         "parameters": [
           {
             "name": "guildId",
@@ -2949,15 +3005,15 @@
             "description": "Props sent to Pluto successfully."
           }
         },
+        "summary": "Manually send props to Pluto",
         "tags": [
           "Props"
         ]
       }
     },
-    "/props/event/{id}": {
+    "/api/khronos/v1/props/event/{id}": {
       "get": {
         "operationId": "getPropsForEvent",
-        "summary": "Get props for a specific event",
         "parameters": [
           {
             "name": "id",
@@ -2983,15 +3039,15 @@
             }
           }
         },
+        "summary": "Get props for a specific event",
         "tags": [
           "Props"
         ]
       }
     },
-    "/props/search": {
+    "/api/khronos/v1/props/search": {
       "get": {
         "operationId": "findPropsByDescription",
-        "summary": "Find props by description",
         "parameters": [
           {
             "name": "description",
@@ -3021,16 +3077,16 @@
             "description": "No matching props found."
           }
         },
+        "summary": "Find props by description",
         "tags": [
           "Props"
         ]
       }
     },
-    "/props/{id}/stats": {
+    "/api/khronos/v1/props/{id}/stats": {
       "get": {
-        "operationId": "getPropStats",
-        "summary": "Get prediction statistics for a prop",
         "description": "Retrieves aggregated statistics about predictions made for a specific prop",
+        "operationId": "getPropStats",
         "parameters": [
           {
             "name": "id",
@@ -3057,16 +3113,16 @@
             "description": "Prop not found"
           }
         },
+        "summary": "Get prediction statistics for a prop",
         "tags": [
           "Props"
         ]
       }
     },
-    "/props/{id}/reset": {
+    "/api/khronos/v1/props/{id}/reset": {
       "patch": {
-        "operationId": "resetPropAndPredictions",
-        "summary": "Reset a prop and its predictions to pending status",
         "description": "Resets the specified prop and all its associated predictions back to pending status",
+        "operationId": "resetPropAndPredictions",
         "parameters": [
           {
             "name": "id",
@@ -3093,15 +3149,15 @@
             "description": "Prop not found"
           }
         },
+        "summary": "Reset a prop and its predictions to pending status",
         "tags": [
           "Props"
         ]
       }
     },
-    "/week-manager/getCurrentWeek": {
+    "/api/khronos/v1/week-manager/getCurrentWeek": {
       "get": {
         "operationId": "getCurrentWeek",
-        "summary": "Get the current week number for a sport",
         "parameters": [
           {
             "name": "sport",
@@ -3125,15 +3181,15 @@
             }
           }
         },
+        "summary": "Get the current week number for a sport",
         "tags": [
           "Week Manager"
         ]
       }
     },
-    "/prediction": {
+    "/api/khronos/v1/prediction": {
       "post": {
         "operationId": "createPrediction",
-        "summary": "Create a new prediction",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -3156,13 +3212,13 @@
             "description": "Conflict: Prediction already exists."
           }
         },
+        "summary": "Create a new prediction",
         "tags": [
           "Prediction"
         ]
       },
       "get": {
         "operationId": "getAllPredictionsFiltered",
-        "summary": "Get predictions based on the provided filters. For instance, all predictions for a prop with options to filter by status.",
         "parameters": [
           {
             "name": "user_id",
@@ -3189,12 +3245,12 @@
             "description": "Status to filter predictions",
             "schema": {
               "example": "pending",
+              "type": "string",
               "enum": [
                 "pending",
                 "completed",
                 "error"
-              ],
-              "type": "string"
+              ]
             }
           }
         ],
@@ -3216,15 +3272,15 @@
             "description": "No predictions found based on the provided filters"
           }
         },
+        "summary": "Get predictions based on the provided filters. For instance, all predictions for a prop with options to filter by status.",
         "tags": [
           "Prediction"
         ]
       }
     },
-    "/prediction/{id}": {
+    "/api/khronos/v1/prediction/{id}": {
       "get": {
         "operationId": "getPredictionById",
-        "summary": "Get a prediction by ID",
         "parameters": [
           {
             "name": "id",
@@ -3243,13 +3299,13 @@
             "description": "Prediction not found."
           }
         },
+        "summary": "Get a prediction by ID",
         "tags": [
           "Prediction"
         ]
       },
       "patch": {
         "operationId": "updatePrediction",
-        "summary": "Update a prediction",
         "parameters": [
           {
             "name": "id",
@@ -3278,13 +3334,13 @@
             "description": "Prediction not found."
           }
         },
+        "summary": "Update a prediction",
         "tags": [
           "Prediction"
         ]
       },
       "delete": {
         "operationId": "removePrediction",
-        "summary": "Remove a prediction",
         "parameters": [
           {
             "name": "id",
@@ -3313,15 +3369,15 @@
             "description": "Prediction not found."
           }
         },
+        "summary": "Remove a prediction",
         "tags": [
           "Prediction"
         ]
       }
     },
-    "/prediction/user/{user_id}": {
+    "/api/khronos/v1/prediction/user/{user_id}": {
       "get": {
         "operationId": "getPredictionsForUser",
-        "summary": "Get all predictions for a user",
         "parameters": [
           {
             "name": "user_id",
@@ -3350,15 +3406,15 @@
             "description": "No predictions found for the user."
           }
         },
+        "summary": "Get all predictions for a user",
         "tags": [
           "Prediction"
         ]
       }
     },
-    "/prediction/count": {
+    "/api/khronos/v1/prediction/count": {
       "get": {
         "operationId": "getPredictionsCount",
-        "summary": "Get the count of predictions and unique users for a given status of a prediction. E.g all pending or all completed",
         "parameters": [
           {
             "name": "prop_id",
@@ -3392,15 +3448,15 @@
             "description": "No predictions found for the given status."
           }
         },
+        "summary": "Get the count of predictions and unique users for a given status of a prediction. E.g all pending or all completed",
         "tags": [
           "Prediction"
         ]
       }
     },
-    "/leaderboard/init-weeks/{sport}": {
+    "/api/khronos/v1/leaderboard/init-weeks/{sport}": {
       "post": {
-        "operationId": "LeaderboardController_initializeWeeks",
-        "summary": "Initialize season scheduled weeks for a given sport",
+        "operationId": "LeaderboardController_initializeWeeks_v1",
         "parameters": [
           {
             "name": "sport",
@@ -3433,6 +3489,9 @@
               }
             }
           },
+          "201": {
+            "description": ""
+          },
           "400": {
             "description": "Invalid sport provided"
           },
@@ -3440,15 +3499,15 @@
             "description": "Internal server error"
           }
         },
+        "summary": "Initialize season scheduled weeks for a given sport",
         "tags": [
           "Leaderboard"
         ]
       }
     },
-    "/leaderboard": {
+    "/api/khronos/v1/leaderboard": {
       "get": {
-        "operationId": "LeaderboardController_getLeaderboard",
-        "summary": "Get leaderboard",
+        "operationId": "LeaderboardController_getLeaderboard_v1",
         "parameters": [
           {
             "name": "guild_id",
@@ -3482,18 +3541,18 @@
           },
           {
             "name": "time_frame",
-            "required": true,
+            "required": false,
             "in": "query",
             "description": "Time frame for the leaderboard",
             "schema": {
               "example": "weekly",
+              "type": "string",
               "enum": [
                 "weekly",
                 "monthly",
                 "seasonal",
                 "all_time"
-              ],
-              "type": "string"
+              ]
             }
           }
         ],
@@ -3515,79 +3574,29 @@
             "description": "Internal server error"
           }
         },
+        "summary": "Get leaderboard",
         "tags": [
           "Leaderboard"
         ]
       }
     },
-    "/schedule/cron-jobs": {
+    "/api/khronos/v1/hello-world": {
       "get": {
-        "operationId": "ScheduleController_getActiveCronJobs",
-        "summary": "Get active cron jobs",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Returns a list of active cron job information"
-          }
-        },
-        "tags": [
-          "Schedule"
-        ]
-      }
-    },
-    "/schedule/cron-jobs/{jobName}": {
-      "delete": {
-        "operationId": "ScheduleController_stopCronJob",
-        "summary": "Stop a cron job",
-        "parameters": [
-          {
-            "name": "jobName",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Cron job stopped successfully"
-          },
-          "404": {
-            "description": "Cron job not found"
-          }
-        },
-        "tags": [
-          "Schedule"
-        ]
-      }
-    },
-    "/hello-world": {
-      "get": {
-        "operationId": "HelloWorldController_getHello",
+        "operationId": "HelloWorldController_getHello_v1",
         "parameters": [],
         "responses": {
           "200": {
             "description": ""
           }
-        }
+        },
+        "tags": [
+          "HelloWorld"
+        ]
       }
     },
-    "/hello-world/error-test": {
+    "/api/khronos/v1/store/items": {
       "get": {
-        "operationId": "HelloWorldController_errorTest",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        }
-      }
-    },
-    "/store/items": {
-      "get": {
-        "operationId": "StoreController_getAllItems",
-        "summary": "Get all available store items",
+        "operationId": "StoreController_getAllItems_v1",
         "parameters": [
           {
             "name": "type",
@@ -3613,13 +3622,13 @@
             }
           }
         },
+        "summary": "Get all available store items",
         "tags": [
           "Store"
         ]
       },
       "post": {
-        "operationId": "StoreController_createItem",
-        "summary": "Create a new store item",
+        "operationId": "StoreController_createItem_v1",
         "parameters": [],
         "responses": {
           "201": {
@@ -3633,15 +3642,15 @@
             }
           }
         },
+        "summary": "Create a new store item",
         "tags": [
           "Store"
         ]
       }
     },
-    "/store/items/{id}": {
+    "/api/khronos/v1/store/items/{id}": {
       "get": {
-        "operationId": "StoreController_getItemById",
-        "summary": "Get a specific store item by ID",
+        "operationId": "StoreController_getItemById_v1",
         "parameters": [
           {
             "name": "id",
@@ -3664,13 +3673,13 @@
             }
           }
         },
+        "summary": "Get a specific store item by ID",
         "tags": [
           "Store"
         ]
       },
       "delete": {
-        "operationId": "StoreController_deleteItem",
-        "summary": "Delete a store item",
+        "operationId": "StoreController_deleteItem_v1",
         "parameters": [
           {
             "name": "id",
@@ -3693,15 +3702,15 @@
             }
           }
         },
+        "summary": "Delete a store item",
         "tags": [
           "Store"
         ]
       }
     },
-    "/store/purchase/{userId}/{itemId}": {
+    "/api/khronos/v1/store/purchase/{userId}/{itemId}": {
       "post": {
-        "operationId": "StoreController_purchaseItem",
-        "summary": "Purchase an item for a user",
+        "operationId": "StoreController_purchaseItem_v1",
         "parameters": [
           {
             "name": "userId",
@@ -3738,17 +3747,27 @@
                 }
               }
             }
+          },
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserInventory"
+                }
+              }
+            }
           }
         },
+        "summary": "Purchase an item for a user",
         "tags": [
           "Store"
         ]
       }
     },
-    "/store/inventory/{userId}": {
+    "/api/khronos/v1/store/inventory/{userId}": {
       "get": {
-        "operationId": "StoreController_getUserInventory",
-        "summary": "Get a user's inventory",
+        "operationId": "StoreController_getUserInventory_v1",
         "parameters": [
           {
             "name": "userId",
@@ -3774,54 +3793,54 @@
             }
           }
         },
+        "summary": "Get a user's inventory",
         "tags": [
           "Store"
         ]
       }
     },
-    "/store/inventory/{userId}/{inventoryId}/toggle": {
+    "/api/khronos/v1/store/inventory/{userId}/{inventoryId}/toggle": {
       "put": {
-        "operationId": "StoreController_toggleItemEquipped",
+        "operationId": "StoreController_toggleItemEquipped_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "inventoryId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the updated inventory entry",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserInventory"
+                }
+              }
+            }
+          }
+        },
         "summary": "Toggle equipped status of an inventory item",
-        "parameters": [
-          {
-            "name": "userId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "inventoryId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Returns the updated inventory entry",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserInventory"
-                }
-              }
-            }
-          }
-        },
         "tags": [
           "Store"
         ]
       }
     },
-    "/store/inventory/{userId}/{inventoryId}/use": {
+    "/api/khronos/v1/store/inventory/{userId}/{inventoryId}/use": {
       "post": {
-        "operationId": "StoreController_useItem",
-        "summary": "Use a consumable item from inventory",
+        "operationId": "StoreController_useItem_v1",
         "parameters": [
           {
             "name": "userId",
@@ -3850,17 +3869,27 @@
                 }
               }
             }
+          },
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserInventory"
+                }
+              }
+            }
           }
         },
+        "summary": "Use a consumable item from inventory",
         "tags": [
           "Store"
         ]
       }
     },
-    "/calendar/season-year": {
+    "/api/khronos/v1/calendar/season-year": {
       "get": {
         "operationId": "getSeasonYear",
-        "summary": "Get the current season year for a given sport",
         "parameters": [
           {
             "name": "sport",
@@ -3869,13 +3898,13 @@
             "description": "The sport slug to get the season year for",
             "schema": {
               "example": "nfl",
+              "type": "string",
               "enum": [
                 "nba",
                 "mlb",
                 "nfl",
                 "nhl"
-              ],
-              "type": "string"
+              ]
             }
           },
           {
@@ -3901,15 +3930,15 @@
             }
           }
         },
+        "summary": "Get the current season year for a given sport",
         "tags": [
           "calendar"
         ]
       }
     },
-    "/stats/overall/h2h/{userId}": {
+    "/api/khronos/v1/stats/overall/h2h/{userId}": {
       "get": {
         "operationId": "getOverallH2hBettingStats",
-        "summary": "Get overall H2H betting stats",
         "parameters": [
           {
             "name": "userId",
@@ -3936,20 +3965,20 @@
             "description": "No betting history found for user"
           }
         },
-        "tags": [
-          "Stats"
-        ],
         "security": [
           {
             "x-api-key": []
           }
+        ],
+        "summary": "Get overall H2H betting stats",
+        "tags": [
+          "Stats"
         ]
       }
     },
-    "/betting-leaderboard": {
+    "/api/khronos/v1/betting-leaderboard": {
       "get": {
-        "operationId": "BettingLeaderboardController_getLeaderboard",
-        "summary": "Get betting leaderboard",
+        "operationId": "BettingLeaderboardController_getLeaderboard_v1",
         "parameters": [
           {
             "name": "start_date",
@@ -3977,11 +4006,11 @@
             "in": "query",
             "description": "Relative time period for filtering (weekly/monthly)",
             "schema": {
+              "type": "string",
               "enum": [
                 "weekly",
                 "monthly"
-              ],
-              "type": "string"
+              ]
             }
           }
         ],
@@ -4000,6 +4029,7 @@
             }
           }
         },
+        "summary": "Get betting leaderboard",
         "tags": [
           "Betting Leaderboard"
         ]
@@ -4050,17 +4080,65 @@
           "exception"
         ]
       },
-      "GetMatchInfoDto": {
-        "type": "object",
-        "properties": {}
-      },
       "Channel": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "sport": {
+            "type": "string"
+          },
+          "channelname": {
+            "type": "string"
+          },
+          "crontime": {
+            "type": "string"
+          },
+          "gametime": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "created": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "sport",
+          "channelname",
+          "crontime",
+          "gametime",
+          "created"
+        ]
       },
       "Score": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "matchup_id": {
+            "type": "string"
+          },
+          "home_score": {
+            "type": "number"
+          },
+          "away_score": {
+            "type": "number"
+          },
+          "commence_time": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "complete": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "matchup_id",
+          "home_score",
+          "away_score",
+          "commence_time",
+          "complete"
+        ]
       },
       "Match": {
         "type": "object",
@@ -4105,8 +4183,6 @@
             "description": "e.g 'FanDuel' or 'DraftKings'."
           },
           "market_key": {
-            "type": "string",
-            "description": "Market type for betting.",
             "enum": [
               "h2h",
               "totals",
@@ -4160,6 +4236,8 @@
               "player_rebounds_assists_alternate",
               "player_points_rebounds_assists_alternate"
             ],
+            "type": "string",
+            "description": "Market type for betting.",
             "default": "h2h"
           },
           "last_update": {
@@ -4244,6 +4322,27 @@
           "description"
         ]
       },
+      "GetMatchInfoDto": {
+        "type": "object",
+        "properties": {
+          "statusCode": {
+            "type": "number",
+            "default": 200
+          },
+          "message": {
+            "type": "string",
+            "default": "Successfully fetched matchup info."
+          },
+          "match": {
+            "$ref": "#/components/schemas/Match"
+          }
+        },
+        "required": [
+          "statusCode",
+          "message",
+          "match"
+        ]
+      },
       "GetAllMatchesDto": {
         "type": "object",
         "properties": {
@@ -4293,8 +4392,6 @@
             "example": "123456789"
           },
           "setting_type": {
-            "type": "string",
-            "description": "The type of setting for the Discord configuration",
             "enum": [
               "GAMES_CATEGORY",
               "BETTING_CHAN",
@@ -4304,6 +4401,8 @@
               "LOGS_ENABLED",
               "PREFERRED_TEAMS"
             ],
+            "type": "string",
+            "description": "The type of setting for the Discord configuration",
             "example": "PREDICTIONS_CHAN"
           },
           "setting_value": {
@@ -4330,8 +4429,6 @@
             "description": "Guild ID associated with the setting"
           },
           "setting_type": {
-            "type": "string",
-            "description": "Type of setting",
             "enum": [
               "GAMES_CATEGORY",
               "BETTING_CHAN",
@@ -4341,6 +4438,8 @@
               "LOGS_ENABLED",
               "PREFERRED_TEAMS"
             ],
+            "type": "string",
+            "description": "Type of setting",
             "example": "GAMES_CATEGORY"
           },
           "setting_value": {
@@ -4415,8 +4514,6 @@
             "description": "Guild ID associated with the setting"
           },
           "setting_type": {
-            "type": "string",
-            "description": "Type of setting",
             "enum": [
               "GAMES_CATEGORY",
               "BETTING_CHAN",
@@ -4426,6 +4523,8 @@
               "LOGS_ENABLED",
               "PREFERRED_TEAMS"
             ],
+            "type": "string",
+            "description": "Type of setting",
             "example": "GAMES_CATEGORY"
           },
           "setting_value": {
@@ -4455,15 +4554,68 @@
       },
       "AllChannelsDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "statusCode": {
+            "type": "number",
+            "default": 200
+          },
+          "channels": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "statusCode",
+          "channels"
+        ]
       },
       "RemoveAllChannelsDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "statusCode": {
+            "type": "number",
+            "default": 200
+          },
+          "message": {
+            "type": "string",
+            "default": "All channels have been removed successfully"
+          }
+        },
+        "required": [
+          "statusCode",
+          "message"
+        ]
       },
       "StoredChannelDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "sport": {
+            "type": "string"
+          },
+          "channelname": {
+            "type": "string"
+          },
+          "crontime": {
+            "type": "string"
+          },
+          "gametime": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "created": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "sport",
+          "channelname",
+          "crontime",
+          "gametime",
+          "created"
+        ]
       },
       "UpdateChannelDto": {
         "type": "object",
@@ -4496,7 +4648,26 @@
       },
       "CreateGuildDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "guild_id": {
+            "type": "string"
+          },
+          "guild_name": {
+            "type": "string"
+          },
+          "date_joined": {
+            "type": "string"
+          },
+          "sport": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "guild_id",
+          "guild_name",
+          "date_joined",
+          "sport"
+        ]
       },
       "PlacedBetslip": {
         "type": "object",
@@ -4563,6 +4734,9 @@
             "type": "number",
             "description": "New Balance",
             "example": 1000
+          },
+          "dateofmatchup": {
+            "type": "string"
           }
         },
         "required": [
@@ -4576,7 +4750,8 @@
           "betresult",
           "dateofbet",
           "guild_id",
-          "newBalance"
+          "newBalance",
+          "dateofmatchup"
         ]
       },
       "InitBetslipDTO": {
@@ -4612,6 +4787,59 @@
             "description": "The Identifier for a match. This is & must be provided if there's multiple matches for the team, and the user submits the specific match they want to bet on."
           },
           "market_key": {
+            "enum": [
+              "h2h",
+              "totals",
+              "player_pass_tds",
+              "player_pass_yds",
+              "player_pass_completions",
+              "player_pass_attempts",
+              "player_pass_interceptions",
+              "player_pass_longest_completion",
+              "player_rush_yds",
+              "player_rush_attempts",
+              "player_rush_longest",
+              "player_receptions",
+              "player_reception_yds",
+              "player_reception_longest",
+              "player_kicking_points",
+              "player_field_goals",
+              "player_tackles_assists",
+              "player_1st_td",
+              "player_last_td",
+              "player_anytime_td",
+              "player_pass_tds_alternate",
+              "player_pass_yds_alternate",
+              "player_rush_yds_alternate",
+              "player_rush_reception_yds_alternate",
+              "player_reception_yds_alternate",
+              "player_receptions_alternate",
+              "player_points",
+              "player_rebounds",
+              "player_assists",
+              "player_threes",
+              "player_blocks",
+              "player_steals",
+              "player_blocks_steals",
+              "player_turnovers",
+              "player_points_rebounds_assists",
+              "player_points_rebounds",
+              "player_points_assists",
+              "player_rebounds_assists",
+              "player_first_basket",
+              "player_double_double",
+              "player_triple_double",
+              "player_points_alternate",
+              "player_rebounds_alternate",
+              "player_assists_alternate",
+              "player_blocks_alternate",
+              "player_steals_alternate",
+              "player_threes_alternate",
+              "player_points_assists_alternate",
+              "player_points_rebounds_alternate",
+              "player_rebounds_assists_alternate",
+              "player_points_rebounds_assists_alternate"
+            ],
             "type": "string",
             "example": "h2h",
             "default": "h2h",
@@ -4698,6 +4926,7 @@
         "properties": {
           "statusCode": {
             "type": "number",
+            "default": 201,
             "description": "The HTTP status code",
             "example": 201
           },
@@ -4741,6 +4970,59 @@
             "example": "9768de636bd9b326cee827df527c6b0f"
           },
           "market_key": {
+            "enum": [
+              "h2h",
+              "totals",
+              "player_pass_tds",
+              "player_pass_yds",
+              "player_pass_completions",
+              "player_pass_attempts",
+              "player_pass_interceptions",
+              "player_pass_longest_completion",
+              "player_rush_yds",
+              "player_rush_attempts",
+              "player_rush_longest",
+              "player_receptions",
+              "player_reception_yds",
+              "player_reception_longest",
+              "player_kicking_points",
+              "player_field_goals",
+              "player_tackles_assists",
+              "player_1st_td",
+              "player_last_td",
+              "player_anytime_td",
+              "player_pass_tds_alternate",
+              "player_pass_yds_alternate",
+              "player_rush_yds_alternate",
+              "player_rush_reception_yds_alternate",
+              "player_reception_yds_alternate",
+              "player_receptions_alternate",
+              "player_points",
+              "player_rebounds",
+              "player_assists",
+              "player_threes",
+              "player_blocks",
+              "player_steals",
+              "player_blocks_steals",
+              "player_turnovers",
+              "player_points_rebounds_assists",
+              "player_points_rebounds",
+              "player_points_assists",
+              "player_rebounds_assists",
+              "player_first_basket",
+              "player_double_double",
+              "player_triple_double",
+              "player_points_alternate",
+              "player_rebounds_alternate",
+              "player_assists_alternate",
+              "player_blocks_alternate",
+              "player_steals_alternate",
+              "player_threes_alternate",
+              "player_points_assists_alternate",
+              "player_points_rebounds_alternate",
+              "player_rebounds_assists_alternate",
+              "player_points_rebounds_assists_alternate"
+            ],
             "type": "string",
             "description": "The prop type the match & bet belongs to.",
             "example": "h2h"
@@ -4934,11 +5216,49 @@
       },
       "XpEntity": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "userid": {
+            "type": "string"
+          },
+          "xp": {
+            "type": "number"
+          },
+          "level": {
+            "type": "number"
+          },
+          "tier": {
+            "type": "string"
+          },
+          "account": {
+            "$ref": "#/components/schemas/Account"
+          }
+        },
+        "required": [
+          "userid",
+          "xp",
+          "level",
+          "tier",
+          "account"
+        ]
       },
       "BetslipPending": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "userid": {
+            "type": "string"
+          },
+          "account": {
+            "$ref": "#/components/schemas/Account"
+          },
+          "amount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "userid",
+          "account",
+          "amount"
+        ]
       },
       "Account": {
         "type": "object",
@@ -5007,8 +5327,8 @@
         "properties": {
           "statusCode": {
             "type": "number",
-            "example": 201,
             "default": 201,
+            "example": 201,
             "description": ""
           },
           "balance": {
@@ -5042,6 +5362,7 @@
         "properties": {
           "statusCode": {
             "type": "number",
+            "default": 200,
             "example": 200
           },
           "userid": {
@@ -5245,6 +5566,140 @@
           "bookmakers"
         ]
       },
+      "ProcessedPredictions": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the processing record"
+          },
+          "prediction_id": {
+            "type": "string",
+            "description": "ID of the associated prediction"
+          },
+          "process_type": {
+            "enum": [
+              "prop_result",
+              "leaderboard"
+            ],
+            "type": "string",
+            "description": "Type of processing (e.g., \"leaderboard\")"
+          },
+          "processed_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Timestamp of when the prediction was processed"
+          },
+          "status": {
+            "enum": [
+              "success",
+              "failure",
+              "in_progress"
+            ],
+            "type": "string",
+            "description": "Status of the processing. New records default to IN_PROGRESS"
+          },
+          "details": {
+            "type": "object",
+            "description": "Any additional processing details or metadata"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Timestamp of when the record was created"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Timestamp of when the record was last updated"
+          },
+          "prediction": {
+            "$ref": "#/components/schemas/Prediction"
+          }
+        },
+        "required": [
+          "id",
+          "prediction_id",
+          "process_type",
+          "processed_at",
+          "status",
+          "details",
+          "created_at",
+          "updated_at",
+          "prediction"
+        ]
+      },
+      "Prediction": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the prediction"
+          },
+          "user_id": {
+            "type": "string",
+            "description": "User ID"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Creation timestamp"
+          },
+          "prop_id": {
+            "type": "string",
+            "description": "ID of the associated prop"
+          },
+          "choice": {
+            "type": "string",
+            "description": "User's choice"
+          },
+          "is_correct": {
+            "type": "boolean",
+            "description": "Whether the prediction is correct"
+          },
+          "status": {
+            "type": "string",
+            "description": "Status of the prediction"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Last update timestamp"
+          },
+          "guild_id": {
+            "type": "string",
+            "description": "Guild ID"
+          },
+          "processed_predictions": {
+            "description": "Processed predictions",
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProcessedPredictions"
+            }
+          },
+          "prop": {
+            "$ref": "#/components/schemas/Prop"
+          },
+          "market_key": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "created_at",
+          "prop_id",
+          "choice",
+          "is_correct",
+          "status",
+          "updated_at",
+          "guild_id",
+          "processed_predictions",
+          "prop",
+          "market_key"
+        ]
+      },
       "Prop": {
         "type": "object",
         "properties": {
@@ -5291,105 +5746,7 @@
             "description": "The last update time of the prop details in ISO 8601 format. Provided by The Odds API."
           },
           "market_key": {
-            "type": "string",
-            "description": "Market key type, e.g., h2h, totals"
-          },
-          "price": {
-            "type": "number",
-            "description": "Price of the prop. E.g -140",
-            "example": -140
-          },
-          "point": {
-            "type": "number",
-            "description": "Point value, e.g., 40.5",
-            "nullable": true
-          },
-          "status": {
-            "type": "string",
-            "description": "Status of the prop"
-          },
-          "created_at": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Creation timestamp"
-          },
-          "result": {
-            "type": "string",
-            "description": "Result of the prop",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "description": "The player involved in the prop. If not a player prop, this will be null.",
-            "nullable": true
-          }
-        },
-        "required": [
-          "id",
-          "event_id",
-          "sport_key",
-          "sport_title",
-          "commence_time",
-          "home_team",
-          "away_team",
-          "bookmaker_key",
-          "bookmaker_title",
-          "last_update",
-          "market_key",
-          "price",
-          "point",
-          "status",
-          "created_at",
-          "result",
-          "description"
-        ]
-      },
-      "UpdatePropDto": {
-        "type": "object",
-        "properties": {
-          "event_id": {
-            "type": "string",
-            "description": "Unique identifier for the event. This is provided by the source of the props (The-Odds API)",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "sport_key": {
-            "type": "string",
-            "description": "Key of the sport",
-            "example": "americanfootball_nfl"
-          },
-          "sport_title": {
-            "type": "string",
-            "description": "Title of the sport",
-            "example": "nfl"
-          },
-          "commence_time": {
-            "format": "date-time",
-            "type": "string",
-            "description": "The commencement time of the event"
-          },
-          "home_team": {
-            "type": "string",
-            "description": "The name of the home team"
-          },
-          "away_team": {
-            "type": "string",
-            "description": "The name of the away team"
-          },
-          "bookmaker_key": {
-            "type": "string",
-            "description": "The key of the bookmaker"
-          },
-          "bookmaker_title": {
-            "type": "string",
-            "description": "The title of the bookmaker"
-          },
-          "last_update": {
-            "format": "date-time",
-            "type": "string",
-            "description": "The last update time"
-          },
-          "market_key": {
-            "type": "string",
+            "description": "Market key type, e.g., h2h, totals",
             "enum": [
               "h2h",
               "totals",
@@ -5443,6 +5800,248 @@
               "player_rebounds_assists_alternate",
               "player_points_rebounds_assists_alternate"
             ],
+            "type": "string"
+          },
+          "price": {
+            "type": "number",
+            "description": "Price of the prop. E.g -140",
+            "example": -140
+          },
+          "point": {
+            "type": "number",
+            "description": "Point value, e.g., 40.5",
+            "nullable": true
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "completed",
+              "error"
+            ],
+            "type": "string",
+            "description": "Status of the prop"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Creation timestamp"
+          },
+          "result": {
+            "type": "string",
+            "description": "Result of the prop",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The player involved in the prop. If not a player prop, this will be null.",
+            "nullable": true
+          },
+          "event": {
+            "$ref": "#/components/schemas/Events"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "predictions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Prediction"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "event_id",
+          "sport_key",
+          "sport_title",
+          "commence_time",
+          "home_team",
+          "away_team",
+          "bookmaker_key",
+          "bookmaker_title",
+          "last_update",
+          "market_key",
+          "price",
+          "point",
+          "status",
+          "created_at",
+          "result",
+          "description",
+          "event",
+          "updated_at"
+        ]
+      },
+      "Events": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Unique identifier for the event, provided by the incoming request"
+          },
+          "espn_id": {
+            "type": "string",
+            "example": "401547689",
+            "description": "ESPN unique identifier for the event"
+          },
+          "sport_key": {
+            "type": "string",
+            "example": "americanfootball_nfl",
+            "description": "Key identifying the sport"
+          },
+          "sport_title": {
+            "type": "string",
+            "example": "NFL",
+            "description": "Title of the sport"
+          },
+          "commence_time": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-09-06T00:20:00Z",
+            "description": "Timestamp when the event is scheduled to start"
+          },
+          "home_team": {
+            "type": "string",
+            "example": "Kansas City Chiefs",
+            "description": "Name of the home team"
+          },
+          "away_team": {
+            "type": "string",
+            "example": "Baltimore Ravens",
+            "description": "Name of the away team"
+          },
+          "props": {
+            "description": "List of props associated with this event",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Prop"
+            }
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-08-27T21:27:19Z",
+            "description": "Timestamp of when the event was created"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-08-27T21:27:19Z",
+            "description": "Timestamp of when the event was last updated"
+          }
+        },
+        "required": [
+          "id",
+          "sport_key",
+          "sport_title",
+          "commence_time",
+          "home_team",
+          "away_team",
+          "props",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "UpdatePropDto": {
+        "type": "object",
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "description": "Unique identifier for the event. This is provided by the source of the props (The-Odds API)",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "sport_key": {
+            "type": "string",
+            "description": "Key of the sport",
+            "example": "americanfootball_nfl"
+          },
+          "sport_title": {
+            "type": "string",
+            "description": "Title of the sport",
+            "example": "nfl"
+          },
+          "commence_time": {
+            "format": "date-time",
+            "type": "string",
+            "description": "The commencement time of the event"
+          },
+          "home_team": {
+            "type": "string",
+            "description": "The name of the home team"
+          },
+          "away_team": {
+            "type": "string",
+            "description": "The name of the away team"
+          },
+          "bookmaker_key": {
+            "type": "string",
+            "description": "The key of the bookmaker"
+          },
+          "bookmaker_title": {
+            "type": "string",
+            "description": "The title of the bookmaker"
+          },
+          "last_update": {
+            "format": "date-time",
+            "type": "string",
+            "description": "The last update time"
+          },
+          "market_key": {
+            "enum": [
+              "h2h",
+              "totals",
+              "player_pass_tds",
+              "player_pass_yds",
+              "player_pass_completions",
+              "player_pass_attempts",
+              "player_pass_interceptions",
+              "player_pass_longest_completion",
+              "player_rush_yds",
+              "player_rush_attempts",
+              "player_rush_longest",
+              "player_receptions",
+              "player_reception_yds",
+              "player_reception_longest",
+              "player_kicking_points",
+              "player_field_goals",
+              "player_tackles_assists",
+              "player_1st_td",
+              "player_last_td",
+              "player_anytime_td",
+              "player_pass_tds_alternate",
+              "player_pass_yds_alternate",
+              "player_rush_yds_alternate",
+              "player_rush_reception_yds_alternate",
+              "player_reception_yds_alternate",
+              "player_receptions_alternate",
+              "player_points",
+              "player_rebounds",
+              "player_assists",
+              "player_threes",
+              "player_blocks",
+              "player_steals",
+              "player_blocks_steals",
+              "player_turnovers",
+              "player_points_rebounds_assists",
+              "player_points_rebounds",
+              "player_points_assists",
+              "player_rebounds_assists",
+              "player_first_basket",
+              "player_double_double",
+              "player_triple_double",
+              "player_points_alternate",
+              "player_rebounds_alternate",
+              "player_assists_alternate",
+              "player_blocks_alternate",
+              "player_steals_alternate",
+              "player_threes_alternate",
+              "player_points_assists_alternate",
+              "player_points_rebounds_alternate",
+              "player_rebounds_assists_alternate",
+              "player_points_rebounds_assists_alternate"
+            ],
+            "type": "string",
             "description": "The key of the betting market"
           },
           "price": {
@@ -5454,12 +6053,12 @@
             "description": "The point value of the bet, if applicable"
           },
           "status": {
-            "type": "string",
             "enum": [
               "pending",
               "completed",
               "error"
             ],
+            "type": "string",
             "description": "The status of the prop",
             "nullable": true
           },
@@ -5481,6 +6080,7 @@
         "properties": {
           "propId": {
             "type": "string",
+            "format": "uuid",
             "description": "The ID of the prop/match",
             "example": "123e4567-e89b-12d3-a456-426614174000"
           },
@@ -5490,12 +6090,12 @@
             "example": "Team A"
           },
           "status": {
-            "type": "string",
             "enum": [
               "pending",
               "completed",
               "error"
             ],
+            "type": "string",
             "description": "The new status of the prop",
             "example": "completed"
           },
@@ -5617,9 +6217,9 @@
           },
           "description": {
             "type": "string",
+            "nullable": true,
             "description": "Additional description of the prediction",
-            "example": "Total points scored in the game",
-            "nullable": true
+            "example": "Total points scored in the game"
           },
           "sport": {
             "type": "string",
@@ -5653,6 +6253,7 @@
           },
           "prop_id": {
             "type": "string",
+            "format": "uuid",
             "description": "Prop ID",
             "example": "123e4567-e89b-12d3-a456-426614174000"
           },
@@ -5662,12 +6263,12 @@
             "example": "Jayson Tatum"
           },
           "status": {
-            "type": "string",
             "enum": [
               "pending",
               "completed",
               "error"
             ],
+            "type": "string",
             "description": "Status of the prediction",
             "example": "pending"
           },
@@ -5690,6 +6291,7 @@
         "properties": {
           "id": {
             "type": "string",
+            "format": "uuid",
             "description": "Unique identifier for the prediction",
             "example": "123e4567-e89b-12d3-a456-426614174000"
           },
@@ -5721,13 +6323,13 @@
             "nullable": true
           },
           "status": {
-            "type": "string",
-            "description": "Status of the prediction",
             "enum": [
               "pending",
               "completed",
               "error"
             ],
+            "type": "string",
+            "description": "Status of the prediction",
             "example": "pending"
           },
           "updated_at": {
@@ -5761,12 +6363,10 @@
           "created_at",
           "prop_id",
           "choice",
-          "is_correct",
           "status",
           "updated_at",
           "guild_id",
-          "market_key",
-          "prop"
+          "market_key"
         ]
       },
       "PropPredictionsDto": {
@@ -5781,6 +6381,7 @@
             ]
           },
           "predictions": {
+            "nullable": true,
             "description": "Array of predictions for this prop",
             "type": "array",
             "items": {
@@ -5839,7 +6440,7 @@
             "nullable": true,
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/ProcessedPredictions"
             }
           },
           "match_string": {
@@ -5851,6 +6452,12 @@
             "type": "string",
             "description": "Optional description of the prediction",
             "example": "Prediction for the final score"
+          },
+          "prop": {
+            "$ref": "#/components/schemas/Prop"
+          },
+          "market_key": {
+            "type": "string"
           }
         },
         "required": [
@@ -5864,7 +6471,9 @@
           "updated_at",
           "guild_id",
           "processed_predictions",
-          "match_string"
+          "match_string",
+          "prop",
+          "market_key"
         ]
       },
       "UpdatePredictionDto": {
@@ -5872,6 +6481,7 @@
         "properties": {
           "id": {
             "type": "string",
+            "format": "uuid",
             "description": "Unique identifier for the prediction",
             "example": "123e4567-e89b-12d3-a456-426614174000"
           },
@@ -5903,13 +6513,13 @@
             "nullable": true
           },
           "status": {
-            "type": "string",
-            "description": "Status of the prediction",
             "enum": [
               "pending",
               "completed",
               "error"
             ],
+            "type": "string",
+            "description": "Status of the prediction",
             "example": "pending"
           },
           "updated_at": {
@@ -5962,6 +6572,7 @@
         "properties": {
           "id": {
             "type": "string",
+            "format": "uuid",
             "description": "Unique identifier for the leaderboard entry",
             "example": "123e4567-e89b-12d3-a456-426614174000"
           },
@@ -5977,33 +6588,33 @@
           },
           "score": {
             "type": "number",
+            "minimum": 0,
             "description": "Total score",
-            "default": 0,
-            "minimum": 0
+            "default": 0
           },
           "correct_predictions": {
             "type": "number",
+            "minimum": 0,
             "description": "Number of correct predictions",
-            "default": 0,
-            "minimum": 0
+            "default": 0
           },
           "incorrect_predictions": {
             "type": "number",
+            "minimum": 0,
             "description": "Number of incorrect predictions",
-            "default": 0,
-            "minimum": 0
+            "default": 0
           },
           "week_number": {
             "type": "number",
-            "description": "Week number relative to the system start",
             "minimum": 1,
+            "description": "Week number relative to the system start",
             "maximum": 53
           },
           "season_year": {
             "type": "number",
+            "minimum": 2024,
             "description": "Year of the season",
-            "example": 2024,
-            "minimum": 2024
+            "example": 2024
           },
           "created_at": {
             "format": "date-time",
@@ -6075,12 +6686,12 @@
             "example": 50
           },
           "type": {
-            "type": "string",
-            "description": "Type of the item",
             "enum": [
               "CONSUMABLE",
               "COLLECTIBLE"
             ],
+            "type": "string",
+            "description": "Type of the item",
             "example": "CONSUMABLE"
           },
           "is_available": {
@@ -6151,6 +6762,12 @@
             "format": "date-time",
             "type": "string",
             "description": "Last time the item status was updated"
+          },
+          "user": {
+            "$ref": "#/components/schemas/Account"
+          },
+          "item": {
+            "$ref": "#/components/schemas/StoreItem"
           }
         },
         "required": [
@@ -6160,7 +6777,9 @@
           "quantity",
           "is_equipped",
           "purchased_at",
-          "updated_at"
+          "updated_at",
+          "user",
+          "item"
         ]
       },
       "TeamBetStats": {

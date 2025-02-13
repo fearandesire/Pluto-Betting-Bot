@@ -1,5 +1,6 @@
 import './lib/startup/env.js';
 import './utils/api/Khronos/KhronosInstances.js';
+import './utils/cache/RedisPubSubManager.js';
 import './lib/startup/cache.js';
 import {
 	ApplicationCommandRegistries,
@@ -27,7 +28,7 @@ const SapDiscClient = new SapphireClient({
 	],
 	partials: [Partials.Channel],
 	logger: {
-		level: LogLevel.Debug,
+		level: LogLevel.Info,
 	},
 	typing: true,
 	loadMessageCommandListeners: true,

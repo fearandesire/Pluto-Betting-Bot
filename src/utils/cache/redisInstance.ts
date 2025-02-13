@@ -24,13 +24,6 @@ const redisCache = new Redis({
 	db: Number(R_DB),
 });
 
-redisCache.on('connect', () => {
-	WinstonLogger.info({
-		message: `Connected to Redis server\nDB Selection: ${R_DB}`,
-		source: 'startup:redis',
-	});
-});
-
 redisCache.on('error', (err) => {
 	WinstonLogger.error({
 		message: err,
