@@ -141,7 +141,7 @@
 		"@types/koa-router": "^7.4.8",
 		"@types/koa__cors": "^5.0.0",
 		"@types/lodash": "^4.17.15",
-		"@types/node": "^22.13.2",
+		"@types/node": "^22.13.4",
 		"@types/node-cron": "^3.0.11",
 		"@types/numeral": "^2.0.5",
 		"@types/ws": "^8.5.14",
