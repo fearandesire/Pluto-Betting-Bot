@@ -2,6 +2,7 @@ import cors from '@koa/cors';
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
 import { pageNotFound } from '../requests/middleware.js';
+import { createApiKeyAuthMiddleware } from './apiKeyAuth.js';
 import { setupBullBoard } from './bullBoard.js';
 import { createErrorHandler } from './errorHandler.js';
 import { createLoggingMiddleware } from './logging.js';
@@ -18,6 +19,9 @@ export async function setupKoaApp(): Promise<Koa> {
 
 	// Add logging middleware
 	app.use(createLoggingMiddleware());
+
+	// Add API key authentication middleware
+	app.use(createApiKeyAuthMiddleware());
 
 	// Add standard middleware
 	app.use(cors());
