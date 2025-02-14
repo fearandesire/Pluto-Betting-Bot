@@ -1,5 +1,5 @@
 import { createBullBoard } from '@bull-board/api';
-import { BullMQAdapter } from '@bull-board/api/bullMQAdapter.js';
+import { BullMQAdapter } from '@bull-board/api/bullMQAdapter.js'; // .js added as a fix per: https://github.com/felixmosh/bull-board/issues/881
 import { KoaAdapter } from '@bull-board/koa';
 import type Application from 'koa';
 import auth from 'koa-basic-auth';
