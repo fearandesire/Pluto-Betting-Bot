@@ -2,6 +2,7 @@ import './lib/startup/env.js';
 import './utils/cache/queue/ChannelCreationQueue.js';
 import './utils/api/Khronos/KhronosInstances.js';
 import './lib/startup/cache.js';
+import './utils/api/koa/index.js';
 import {
 	ApplicationCommandRegistries,
 	LogLevel,
@@ -10,7 +11,6 @@ import {
 } from '@sapphire/framework';
 import { GatewayIntentBits, Partials } from 'discord.js';
 import '@sapphire/plugin-hmr/register';
-import './utils/api/index.js';
 import { WinstonLogger } from './utils/logging/WinstonLogger.js';
 const SapDiscClient = new SapphireClient({
 	caseInsensitiveCommands: true,

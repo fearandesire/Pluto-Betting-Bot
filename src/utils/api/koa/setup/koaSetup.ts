@@ -1,7 +1,7 @@
 import cors from '@koa/cors';
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
-import { pageNotFound } from '../requests/middleware.js';
+import { pageNotFound } from '../../requests/middleware.js';
 import { createApiKeyAuthMiddleware } from './apiKeyAuth.js';
 import { setupBullBoard } from './bullBoard.js';
 import { createErrorHandler } from './errorHandler.js';

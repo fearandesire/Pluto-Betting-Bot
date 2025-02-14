@@ -1,5 +1,5 @@
 import logger from 'koa-logger';
-import { WinstonLogger } from '../../logging/WinstonLogger.js';
+import { WinstonLogger } from '../../../logging/WinstonLogger.js';
 
 /**
  * Creates and returns the logging middleware

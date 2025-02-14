@@ -1,6 +1,6 @@
 import type { Context } from 'koa';
-import redisCache from '../../cache/redis-instance.js';
-import { WinstonLogger } from '../../logging/WinstonLogger.js';
+import redisCache from '../../../cache/redis-instance.js';
+import { WinstonLogger } from '../../../logging/WinstonLogger.js';
 
 const MAX_FAILED_ATTEMPTS = 5;
 const BAN_DURATION = 60 * 60; // 1 hour in seconds

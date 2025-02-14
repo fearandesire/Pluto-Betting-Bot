@@ -3,8 +3,8 @@ import { BullMQAdapter } from '@bull-board/api/bullMQAdapter.js';
 import { KoaAdapter } from '@bull-board/koa';
 import type Application from 'koa';
 import auth from 'koa-basic-auth';
-import env from '../../../lib/startup/env.js';
-import { channelCreationQueue } from '../../cache/queue/ChannelCreationQueue.js';
+import env from '../../../../lib/startup/env.js';
+import { channelCreationQueue } from '../../../cache/queue/ChannelCreationQueue.js';
 import { AuthRateLimit } from './authRateLimit.js';
 
 /**

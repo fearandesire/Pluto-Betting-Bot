@@ -1,6 +1,6 @@
 import type { Context, Next } from 'koa';
-import env from '../../../lib/startup/env.js';
-import { WinstonLogger } from '../../logging/WinstonLogger.js';
+import env from '../../../../lib/startup/env.js';
+import { WinstonLogger } from '../../../logging/WinstonLogger.js';
 
 /**
  * Creates and returns the API key authentication middleware
