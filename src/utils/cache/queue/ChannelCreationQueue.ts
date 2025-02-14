@@ -112,6 +112,10 @@ export class ChannelCreationQueue {
 		const { success, error } = channelCreationEventSchema.safeParse(job.data);
 		if (!success) {
 			// Remove the job from queue for invalid data
+			WinstonLogger.error({
+				message: 'Invalid job data received -- removing from queue',
+				source: 'ChannelCreationQueue:processJob',
+			});
 			await job.remove();
 			return {
 				success: false,
