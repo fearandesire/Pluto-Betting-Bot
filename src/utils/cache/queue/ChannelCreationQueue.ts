@@ -1,9 +1,9 @@
 import { type Job, Queue, Worker } from 'bullmq';
 import ChannelManager from '../../guilds/channels/ChannelManager.js';
 import { WinstonLogger } from '../../logging/WinstonLogger.js';
-import { REDIS_CONFIG } from '../redis/config.js';
-import type { ChannelCreationPayload } from '../redis/schemas.js';
-import { channelCreationEventSchema } from '../redis/schemas.js';
+import { REDIS_CONFIG } from '../data/config.js';
+import type { ChannelCreationPayload } from '../data/schemas.js';
+import { channelCreationEventSchema } from '../data/schemas.js';
 interface ChannelCreationJobData {
 	channel: ChannelCreationPayload['channel'];
 	guild: ChannelCreationPayload['guild'];
@@ -19,7 +19,7 @@ interface ChannelCreationResult {
 }
 
 export class ChannelCreationQueue {
-	private queue: Queue<ChannelCreationJobData, ChannelCreationResult>;
+	public queue: Queue<ChannelCreationJobData, ChannelCreationResult>;
 	private worker: Worker<ChannelCreationJobData, ChannelCreationResult>;
 	private static readonly MAX_ATTEMPTS = 3;
 	private static readonly BACKOFF_DELAY = 1000; // 1 second initial delay

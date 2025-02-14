@@ -1,6 +1,6 @@
 import type { Match } from '@kh-openapi';
 import { resolveTeam } from 'resolve-team';
-import type { CacheManager } from '../../../cache/RedisCacheManager.js';
+import type { CacheManager } from '../../../cache/cache-manager.js';
 import MatchApiWrapper from '../../Khronos/matches/matchApiWrapper.js';
 
 export default class MatchCacheService {

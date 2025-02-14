@@ -1,5 +1,5 @@
 import MatchCacheService from '../../utils/api/routes/cache/MatchCacheService.js';
-import { CacheManager } from '../../utils/cache/RedisCacheManager.js';
+import { CacheManager } from '../../utils/cache/cache-manager.js';
 
 /**
  * Store matches in cache on startup

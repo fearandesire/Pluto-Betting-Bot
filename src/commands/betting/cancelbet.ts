@@ -4,7 +4,7 @@ import { InteractionContextType } from 'discord.js';
 import { BetslipManager } from '../../utils/api/Khronos/bets/BetslipsManager.js';
 import BetslipWrapper from '../../utils/api/Khronos/bets/betslip-wrapper.js';
 import { BetsCacheService } from '../../utils/api/common/bets/BetsCacheService.js';
-import { CacheManager } from '../../utils/cache/RedisCacheManager.js';
+import { CacheManager } from '../../utils/cache/cache-manager.js';
 
 @ApplyOptions<Command.Options>({
 	description:

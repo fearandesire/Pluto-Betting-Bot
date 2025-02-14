@@ -28,6 +28,8 @@ const envSchema = z.object({
 	AXIOM_DATASET: z.string(),
 	AXIOM_API_TOKEN: z.string(),
 	AXIOM_ORG_ID: z.string(),
+	BULL_BOARD_USERNAME: z.string(),
+	BULL_BOARD_PASSWORD: z.string(),
 });
 
 // Parse and validate the environment variables
@@ -52,6 +54,8 @@ const env = envSchema.parse({
 	AXIOM_DATASET: process.env.AXIOM_DATASET,
 	AXIOM_API_TOKEN: process.env.AXIOM_API_TOKEN,
 	AXIOM_ORG_ID: process.env.AXIOM_ORG_ID,
+	BULL_BOARD_USERNAME: process.env.BULL_BOARD_USERNAME,
+	BULL_BOARD_PASSWORD: process.env.BULL_BOARD_PASSWORD,
 });
 
 export default env;

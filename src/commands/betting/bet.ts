@@ -6,7 +6,7 @@ import { BetslipManager } from '../../utils/api/Khronos/bets/BetslipsManager.js'
 import BetslipWrapper from '../../utils/api/Khronos/bets/betslip-wrapper.js';
 import { BetsCacheService } from '../../utils/api/common/bets/BetsCacheService.js';
 import BettingValidation from '../../utils/betting/betting-validation.js';
-import { CacheManager } from '../../utils/cache/RedisCacheManager.js';
+import { CacheManager } from '../../utils/cache/cache-manager.js';
 import { ErrorEmbeds } from '../../utils/common/errors/global.js';
 
 @ApplyOptions<Command.Options>({

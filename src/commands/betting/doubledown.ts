@@ -9,7 +9,7 @@ import { ApiErrorHandler } from '../../utils/api/Khronos/error-handling/ApiError
 import { BetsCacheService } from '../../utils/api/common/bets/BetsCacheService.js';
 import MoneyFormatter from '../../utils/api/common/money-formatting/money-format.js';
 import PatreonFacade from '../../utils/api/patreon/Patreon-Facade.js';
-import { CacheManager } from '../../utils/cache/RedisCacheManager.js';
+import { CacheManager } from '../../utils/cache/cache-manager.js';
 import { ErrorEmbeds } from '../../utils/common/errors/global.js';
 import { isApiError } from './../../lib/interfaces/errors/api-errors.js';
 

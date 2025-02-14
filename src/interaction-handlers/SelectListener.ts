@@ -11,7 +11,7 @@ import BetslipWrapper from '../utils/api/Khronos/bets/betslip-wrapper.js';
 import BetUtils from '../utils/api/common/bets/BetUtils.js';
 import { BetsCacheService } from '../utils/api/common/bets/BetsCacheService.js';
 import MatchCacheService from '../utils/api/routes/cache/MatchCacheService.js';
-import { CacheManager } from '../utils/cache/RedisCacheManager.js';
+import { CacheManager } from '../utils/cache/cache-manager.js';
 import { ErrorEmbeds } from '../utils/common/errors/global.js';
 
 export class MenuHandler extends InteractionHandler {

@@ -1,5 +1,5 @@
 import Router from 'koa-router';
-import { CacheManager } from '../../../cache/RedisCacheManager.js';
+import { CacheManager } from '../../../cache/cache-manager.js';
 import MatchCacheService from './MatchCacheService.js';
 
 export const matchCache = new Router();

@@ -1,10 +1,7 @@
 import { Redis } from 'ioredis';
-// import { channelCreationQueue } from './queue/ChannelCreationQueue.js';
 import { WinstonLogger } from '../logging/WinstonLogger.js';
-import type { ChannelCreationPayload } from './redis/schemas.js';
-import { channelCreationEventSchema } from './redis/schemas.js';
-import { RedisChannel } from './redis/types.js';
-import type { ChannelPayloadMap } from './redis/types.js';
+import { RedisChannel } from './data/types.js';
+import type { ChannelPayloadMap } from './data/types.js';
 const { R_HOST, R_PORT, R_PASS } = process.env;
 
 export class RedisPubSubManager {
@@ -81,8 +78,8 @@ export class RedisPubSubManager {
 						const parsedMessage = JSON.parse(message);
 
 						switch (channel as RedisChannel) {
+							// ? WIP
 							case RedisChannel.CHANNEL_CREATION:
-								this.handleChannelCreation(parsedMessage);
 								break;
 							default:
 								WinstonLogger.warn({
@@ -138,33 +135,6 @@ export class RedisPubSubManager {
 				data: { channel, error },
 			});
 			throw error;
-		}
-	}
-
-	// Channel-specific handlers
-	private async handleChannelCreation(
-		payload: ChannelCreationPayload,
-	): Promise<void> {
-		try {
-			// validate payload
-			const validatedPayload = channelCreationEventSchema.parse(payload);
-
-			// Add to queue instead of processing directly
-			// await channelCreationQueue.addToQueue(validatedPayload);
-
-			WinstonLogger.info({
-				message: `Added channel creation to queue: ${validatedPayload.channel.id}`,
-				source: 'RedisPubSubManager:handleChannelCreation',
-				data: {
-					channelId: validatedPayload.channel.id,
-					guildId: validatedPayload.guild.guildId,
-				},
-			});
-		} catch (error) {
-			WinstonLogger.error({
-				message: `Error handling channel creation: ${error}`,
-				source: 'RedisPubSubManager:handleChannelCreation',
-			});
 		}
 	}
 }
