@@ -1,6 +1,5 @@
 import { Redis } from 'ioredis';
-import _ from 'lodash';
-import ChannelManager from '../guilds/channels/ChannelManager.js';
+// import { channelCreationQueue } from './queue/ChannelCreationQueue.js';
 import { WinstonLogger } from '../logging/WinstonLogger.js';
 import type { ChannelCreationPayload } from './redis/schemas.js';
 import { channelCreationEventSchema } from './redis/schemas.js';
@@ -146,19 +145,20 @@ export class RedisPubSubManager {
 	private async handleChannelCreation(
 		payload: ChannelCreationPayload,
 	): Promise<void> {
-		// Pseudo code for channel creation handling
 		try {
 			// validate payload
 			const validatedPayload = channelCreationEventSchema.parse(payload);
 
-			const channelManager = new ChannelManager();
-			await channelManager.processChannels({
-				channels: _.castArray(validatedPayload.channel),
-				guilds: validatedPayload.eligibleGuilds,
-			});
+			// Add to queue instead of processing directly
+			// await channelCreationQueue.addToQueue(validatedPayload);
+
 			WinstonLogger.info({
-				message: `Handled channel creation: ${payload.channel.id}`,
+				message: `Added channel creation to queue: ${validatedPayload.channel.id}`,
 				source: 'RedisPubSubManager:handleChannelCreation',
+				data: {
+					channelId: validatedPayload.channel.id,
+					guildId: validatedPayload.guild.guildId,
+				},
 			});
 		} catch (error) {
 			WinstonLogger.error({

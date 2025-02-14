@@ -1,4 +1,5 @@
 import './lib/startup/env.js';
+import './utils/cache/queue/ChannelCreationQueue.js';
 import './utils/api/Khronos/KhronosInstances.js';
 import './utils/cache/RedisPubSubManager.js';
 import './lib/startup/cache.js';

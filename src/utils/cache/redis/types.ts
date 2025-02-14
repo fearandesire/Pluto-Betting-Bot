@@ -2,7 +2,7 @@ import type { ChannelCreationPayload } from './schemas.js';
 
 // Define all available Redis channels
 export enum RedisChannel {
-	CHANNEL_CREATION = 'channel.creation',
+	CHANNEL_CREATION = 'channel-sample',
 	USER_UPDATE = 'user.update',
 	GUILD_UPDATE = 'guild.update',
 	BET_PLACED = 'bet.placed',

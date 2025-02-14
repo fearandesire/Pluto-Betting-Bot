@@ -59,6 +59,7 @@
 		"accounting": "^0.4.1",
 		"axios": "^1.7.7",
 		"body-parser": "^1.20.3",
+		"bullmq": "^5.40.4",
 		"color": "^4.2.3",
 		"color-convert": "^2.0.1",
 		"colorette": "^2.0.20",
@@ -132,13 +133,18 @@
 			"^@/(.*)$": "<rootDir>/src/$1",
 			"^lib/(.*)$": "<rootDir>/lib/$1"
 		},
-		"moduleFileExtensions": ["ts", "js"],
+		"moduleFileExtensions": [
+			"ts",
+			"js"
+		],
 		"rootDir": "src",
 		"testRegex": ".*\\.spec\\.ts$",
 		"transform": {
 			"^.+\\.(t|j)s$": "ts-jest"
 		},
-		"collectCoverageFrom": ["**/*.(t|j)s"],
+		"collectCoverageFrom": [
+			"**/*.(t|j)s"
+		],
 		"coverageDirectory": "../coverage",
 		"testEnvironment": "node"
 	}

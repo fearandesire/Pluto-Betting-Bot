@@ -99,9 +99,9 @@ export const channelCreationEventSchema = z.object({
 	channel: channelsAggregatedSchema.describe(
 		'Enriched channel data including match odds and team information',
 	),
-	eligibleGuilds: z
-		.array(eligibleGuildData)
-		.describe('List of Discord guilds eligible for receiving this channel'),
+	guild: eligibleGuildData.describe(
+		'Single Discord Guild data that is eligible for the channel to be created',
+	),
 	metadata: z
 		.object({
 			publishedAt: z
