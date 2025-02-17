@@ -8,7 +8,7 @@ import { WinstonLogger } from '../../../logging/WinstonLogger.js';
 export function createApiKeyAuthMiddleware() {
 	return async (ctx: Context, next: Next) => {
 		// Skip authentication for admin routes
-		if (ctx.path.startsWith('/admin')) {
+		if (ctx.path.startsWith('/api/pluto/admin')) {
 			return next();
 		}
 

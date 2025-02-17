@@ -10,7 +10,7 @@ export function createLoggingMiddleware() {
 		const [, method = '', path = '', status = '', time = ''] = args;
 
 		// Skip logging for /admin paths
-		if (path.startsWith('/admin')) {
+		if (path.startsWith('/api/pluto/admin')) {
 			return;
 		}
 
