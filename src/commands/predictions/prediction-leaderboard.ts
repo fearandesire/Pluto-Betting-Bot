@@ -4,7 +4,7 @@ import { EmbedBuilder, type Message } from 'discord.js';
 import _ from 'lodash';
 import embedColors from '../../lib/colorsConfig.js';
 import type { GetSeasonYearSportEnum } from '../../openapi/khronos/apis/CalendarApi.js';
-import { LeaderboardControllerGetLeaderboardTimeFrameEnum } from '../../openapi/khronos/apis/LeaderboardApi.js';
+import { LeaderboardControllerGetLeaderboardV1TimeFrameEnum } from '../../openapi/khronos/apis/LeaderboardApi.js';
 import type { LeaderboardResponseDto } from '../../openapi/khronos/models/index.js';
 import CalendarWrapper from '../../utils/api/Khronos/calendar/calendar-wrapper.js';
 import GuildWrapper from '../../utils/api/Khronos/guild/guild-wrapper.js';
@@ -110,7 +110,7 @@ export class UserCommand extends Command {
 				guildId,
 				weekNumber,
 				seasonYear: currentYear,
-				timeFrame: LeaderboardControllerGetLeaderboardTimeFrameEnum.Weekly,
+				timeFrame: LeaderboardControllerGetLeaderboardV1TimeFrameEnum.Weekly,
 			});
 
 			if (!leaderboard || _.isEmpty(leaderboard.entries)) {
@@ -167,7 +167,7 @@ export class UserCommand extends Command {
 			const guildId = interaction.guildId;
 			const leaderboardMonthly = await new LeaderboardWrapper().getLeaderboard({
 				guildId,
-				timeFrame: LeaderboardControllerGetLeaderboardTimeFrameEnum.Monthly,
+				timeFrame: LeaderboardControllerGetLeaderboardV1TimeFrameEnum.Monthly,
 			});
 
 			// ? Invalid Strings
@@ -211,7 +211,7 @@ export class UserCommand extends Command {
 			const leaderboard = await leaderboardWrapper.getLeaderboard({
 				guildId,
 				seasonYear: year,
-				timeFrame: LeaderboardControllerGetLeaderboardTimeFrameEnum.Seasonal,
+				timeFrame: LeaderboardControllerGetLeaderboardV1TimeFrameEnum.Seasonal,
 			});
 
 			if (!leaderboard || _.isEmpty(leaderboard.entries)) {
@@ -263,7 +263,7 @@ export class UserCommand extends Command {
 			const leaderboardWrapper = new LeaderboardWrapper();
 			const leaderboard = await leaderboardWrapper.getLeaderboard({
 				guildId,
-				timeFrame: LeaderboardControllerGetLeaderboardTimeFrameEnum.AllTime,
+				timeFrame: LeaderboardControllerGetLeaderboardV1TimeFrameEnum.AllTime,
 			});
 
 			if (!leaderboard || _.isEmpty(leaderboard.entries)) {

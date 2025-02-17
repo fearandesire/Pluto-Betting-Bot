@@ -1,6 +1,6 @@
 import {
 	LeaderboardApi,
-	type LeaderboardControllerGetLeaderboardRequest,
+	type LeaderboardControllerGetLeaderboardV1Request,
 } from '../../../../openapi/khronos/apis/LeaderboardApi.js';
 import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js';
 
@@ -14,8 +14,8 @@ export default class LeaderboardWrapper {
 	/**
 	 * @summary Retrieve leaderboard data based upon provided data
 	 */
-	async getLeaderboard(params: LeaderboardControllerGetLeaderboardRequest) {
-		return await this.leaderboardsApi.leaderboardControllerGetLeaderboard(
+	async getLeaderboard(params: LeaderboardControllerGetLeaderboardV1Request) {
+		return await this.leaderboardsApi.leaderboardControllerGetLeaderboardV1(
 			params,
 		);
 	}
