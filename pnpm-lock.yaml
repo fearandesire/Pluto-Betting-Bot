@@ -90,8 +90,8 @@ importers:
         specifier: ^1.20.3
         version: 1.20.3
       bullmq:
-        specifier: ^5.40.4
-        version: 5.40.4
+        specifier: ^5.41.2
+        version: 5.41.2
       color:
         specifier: ^5.0.0
         version: 5.0.0
@@ -531,6 +531,7 @@ packages:
   '@biomejs/cli-win32-x64@1.9.4':
     resolution: {integrity: sha512-8Y5wMhVIPaWe6jw2H+KlEm4wP/f7EW3810ZLmDlrEEy5KvBsb9ECEfu/kMWD484ijfQ8+nIi0giMgu9g1UAuuA==}
     engines: {node: '>=14.21.3'}
+    cpu: [x64]
     os: [win32]
 
   '@bull-board/api@6.7.7':
@@ -2293,8 +2294,8 @@ packages:
   buffer@5.7.1:
     resolution: {integrity: sha512-EHcyIPBQ4BSGlvjB16k5KgAJ27CIsHY/2JBmCRReo48y9rQ3MaUzWX3KVlBa4U7MyX02HdVj0K7C3WaB3ju7FQ==}
 
-  bullmq@5.40.4:
-    resolution: {integrity: sha512-MaIOhc31ZbVi9HbY0VAalsXoywelzEPNr6dojoKSMCXDnEVTQ27LkT5LA0Mlpr7ZunMLfpH94SLYrWNsPMsQrg==}
+  bullmq@5.41.2:
+    resolution: {integrity: sha512-wqsUIHW2Td86mTKTepqQpKLLUtP4gmX89bUO1YL2fAorxwj3da1GYtroGZMCg/zgB/+zMRsbylL6DHyMUWX7fA==}
 
   bundle-name@4.1.0:
     resolution: {integrity: sha512-tjwM5exMg6BGRI+kNmTntNsvdZS1X8BFYS6tnJ2hdH0kVxM6/eVZ2xy+FqStSWvYmtfFMDLIxurorHwDKfDz5Q==}
@@ -8415,7 +8416,7 @@ snapshots:
       base64-js: 1.5.1
       ieee754: 1.2.1
 
-  bullmq@5.40.4:
+  bullmq@5.41.2:
     dependencies:
       cron-parser: 4.9.0
       ioredis: 5.5.0
@@ -12695,7 +12696,7 @@ snapshots:
       is-npm: 6.0.0
       latest-version: 9.0.0
       pupa: 3.1.0
-      semver: 7.7.1
+      semver: 7.6.3
       xdg-basedir: 5.1.0
 
   uri-js@4.4.1:
