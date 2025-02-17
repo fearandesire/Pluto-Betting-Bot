@@ -13,7 +13,7 @@ import { AuthRateLimit } from './authRateLimit.js';
  */
 export function setupBullBoard(app: Application) {
 	const serverAdapter = new KoaAdapter();
-	serverAdapter.setBasePath('/admin/queues');
+	serverAdapter.setBasePath('/api/pluto/admin/queues');
 
 	// Create the Bull Board instance
 	createBullBoard({
@@ -26,7 +26,7 @@ export function setupBullBoard(app: Application) {
 
 	// Add rate limiting and authentication middleware for Bull Board routes
 	app.use(async (ctx, next) => {
-		if (!ctx.path.startsWith('/admin/queues')) {
+		if (!ctx.path.startsWith('/api/pluto/admin/queues')) {
 			return next();
 		}
 
