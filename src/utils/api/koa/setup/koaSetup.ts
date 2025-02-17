@@ -26,13 +26,14 @@ export async function setupKoaApp(): Promise<Koa> {
 	// Add standard middleware
 	app.use(cors());
 	app.use(bodyParser());
-	app.use(pageNotFound);
 
 	// Setup Bull Board
 	setupBullBoard(app);
 
 	// Add error handling middleware
 	app.use(createErrorHandler());
+
+	app.use(pageNotFound);
 
 	return app;
 }
