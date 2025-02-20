@@ -5,7 +5,6 @@ import {
 	AttachmentBuilder,
 	type CategoryChannelResolvable,
 	ChannelType,
-	type ColorResolvable,
 	EmbedBuilder,
 	type Guild,
 	type GuildBasedChannel,
@@ -13,40 +12,19 @@ import {
 	type TextChannel,
 } from 'discord.js';
 import _ from 'lodash';
-import { resolveTeam } from 'resolve-team';
+import { teamResolver } from 'resolve-team';
 import { SapDiscClient } from '../../../index.js';
 import type { SportsServing } from '../../api/common/interfaces/kh-pluto/kh-pluto.interface.js';
-import {
-	type ChannelMetadata,
-	type IChannelAggregated,
-	type IncomingChannelData,
-	type ScheduledChannelsGuildData,
-	incomingChannelDataSchema,
-} from '../../api/routes/channels/createchannels.interface.js';
 import { findEmoji } from '../../bot_res/findEmoji.js';
+import {
+	type ChannelAggregated,
+	type CreateChannelAndSendEmbed,
+	type GuildEligibility,
+	type IncomingChannelData,
+	type PrepareMatchEmbed,
+	incomingChannelDataSchema,
+} from '../../cache/data/schemas.js';
 import StringUtils from '../../common/string-utils.js';
-
-interface IPrepareMatchEmbed {
-	favored: string;
-	favoredTeamClr: ColorResolvable;
-	home_team: string;
-	homeTeamShortName: string;
-	away_team: string;
-	awayTeamShortName: string;
-	bettingChanId: string;
-	header: string;
-	sport: SportsServing;
-	records?: ChannelMetadata['records'];
-}
-
-interface ICreateChannelAndSendEmbed {
-	channel: IChannelAggregated;
-	guild: ScheduledChannelsGuildData;
-	metadata: {
-		favoredTeamInfo: any;
-		matchImg: Buffer | null;
-	} & ChannelMetadata;
-}
 
 /**
  * Handle interactions between Pluto API & Discord user interface/interactions
@@ -82,9 +60,23 @@ export default class ChannelManager {
 	}
 
 	private async processChannel(
-		channel: IChannelAggregated,
-		guilds: ScheduledChannelsGuildData[],
+		channel: ChannelAggregated,
+		guilds: GuildEligibility[],
 	) {
+		// Early check for channel existence in each guild
+		for (const guild of guilds) {
+			const locatedGuild = await SapDiscClient.guilds.cache.get(guild.guildId);
+			if (!locatedGuild) continue;
+
+			// Check if channel already exists and skip if it does
+			const existingChannel = locatedGuild.channels.cache.find(
+				(GC) => GC.name.toLowerCase() === channel.channelname.toLowerCase(),
+			);
+			if (existingChannel) {
+				return;
+			}
+		}
+
 		const parsedSport = await StringUtils.sportKeyTransform(
 			channel.sport,
 		).toLowerCase();
@@ -92,7 +84,7 @@ export default class ChannelManager {
 
 		const { sport, matchOdds, metadata } = channel;
 		const { favored } = matchOdds;
-		const favoredTeamInfo = await resolveTeam(favored, {
+		const favoredTeamInfo = await teamResolver.resolve(favored, {
 			sport: parsedSport,
 			full: true,
 		});
@@ -120,8 +112,8 @@ export default class ChannelManager {
 	 * @throws {Error} If no channels data is received.
 	 */
 	async validateAndParseChannels(body: {
-		channels: IChannelAggregated[];
-		guilds: ScheduledChannelsGuildData[];
+		channels: ChannelAggregated[];
+		guilds: GuildEligibility[];
 	}) {
 		// Zod Validation
 		await incomingChannelDataSchema.parse(body);
@@ -142,28 +134,15 @@ export default class ChannelManager {
 	/**
 	 * Creates a channel and sends an embed message to it.
 	 * @async
-	 * @param {Object} channel - Channel data.
-	 * @param {Object} configRow - Category data.
-	 * @param {Array} bettingChanRows - Array of betting channel data.
-	 * @param {Object} favoredTeamInfo - Resolved team information.
-	 * @param {Buffer} matchImg - The image for the match
+	 * @param {CreateChannelAndSendEmbed} data - The data containing channel, guild and metadata information
 	 */
-	async createChannelAndSendEmbed(data: ICreateChannelAndSendEmbed) {
+	async createChannelAndSendEmbed(data: CreateChannelAndSendEmbed) {
 		const { channel, guild, metadata } = data;
 		const locatedGuild = (await SapDiscClient.guilds.cache.get(
 			guild.guildId,
 		)) as Guild;
 
 		if (!locatedGuild) return null;
-
-		// Prevent creating duplicate channels
-		if (
-			await locatedGuild.channels.cache.find(
-				(GC) => GC.name.toLowerCase() === channel.channelname.toLowerCase(),
-			)
-		) {
-			return;
-		}
 
 		const guildsGameCategory = await locatedGuild.channels.cache.get(
 			`${guild.gameCategoryId}`,
@@ -228,7 +207,12 @@ export default class ChannelManager {
 		await gameChan.send(messageOptions);
 	}
 
-	async prepMatchEmbed(args: IPrepareMatchEmbed) {
+	/**
+	 * Prepares the match embed with team information and betting details
+	 * @async
+	 * @param {PrepareMatchEmbed} args - The arguments for preparing the match embed
+	 */
+	async prepMatchEmbed(args: PrepareMatchEmbed) {
 		const embedClr = args.favoredTeamClr;
 		const teamEmoji = (await findEmoji(args.favored)) ?? '';
 		const matchVersus = `${args.awayTeamShortName} @ ${args.homeTeamShortName}`;

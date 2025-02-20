@@ -1,7 +1,7 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
 import { InteractionContextType } from 'discord.js';
-import { resolveTeam } from 'resolve-team';
+import { teamResolver } from 'resolve-team';
 import { BetslipManager } from '../../utils/api/Khronos/bets/BetslipsManager.js';
 import BetslipWrapper from '../../utils/api/Khronos/bets/betslip-wrapper.js';
 import { BetsCacheService } from '../../utils/api/common/bets/BetsCacheService.js';
@@ -75,7 +75,7 @@ export class UserCommand extends Command {
 	}
 
 	private async identifyTeam(team: string) {
-		const teamInfo = await resolveTeam(team);
+		const teamInfo = await teamResolver.resolve(team);
 		return teamInfo;
 	}
 }

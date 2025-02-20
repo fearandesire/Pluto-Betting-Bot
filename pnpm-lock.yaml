@@ -180,8 +180,8 @@ importers:
         specifier: ^2.11.2
         version: 2.11.2(puppeteer-extra@3.3.6(puppeteer-core@24.2.1)(puppeteer@24.2.1(typescript@5.7.3)))
       resolve-team:
-        specifier: ^1.8.6
-        version: 1.8.6
+        specifier: ^2.0.4
+        version: 2.0.4
       uuid:
         specifier: ^11.0.5
         version: 11.0.5
@@ -531,7 +531,6 @@ packages:
   '@biomejs/cli-win32-x64@1.9.4':
     resolution: {integrity: sha512-8Y5wMhVIPaWe6jw2H+KlEm4wP/f7EW3810ZLmDlrEEy5KvBsb9ECEfu/kMWD484ijfQ8+nIi0giMgu9g1UAuuA==}
     engines: {node: '>=14.21.3'}
-    cpu: [x64]
     os: [win32]
 
   '@bull-board/api@6.7.7':
@@ -3281,8 +3280,8 @@ packages:
   functions-have-names@1.2.3:
     resolution: {integrity: sha512-xckBUXyTIqT97tq2x2AMb+g163b5JFysYk0x4qxNFwbfQkmNZoiRHb6sPzI9/QV33WeuvVYBUIiD4NzNIyqaRQ==}
 
-  fuse.js@7.0.0:
-    resolution: {integrity: sha512-14F4hBIxqKvD4Zz/XjDc3y94mNZN6pRv3U13Udo0lNLCWRBUsrMv2xwcF/y/Z5sV6+FQW+/ow68cHpm4sunt8Q==}
+  fuse.js@7.1.0:
+    resolution: {integrity: sha512-trLf4SzuuUxfusZADLINj+dE8clK1frKdmqiJNb1Es75fmI5oY6X2mxLVUciLLjxqw/xr72Dhy+lER6dGd02FQ==}
     engines: {node: '>=10'}
 
   gensync@1.0.0-beta.2:
@@ -5278,8 +5277,8 @@ packages:
     resolution: {integrity: sha512-i1xevIst/Qa+nA9olDxLWnLk8YZbi8R/7JPbCMcgyWaFR6bKWaexgJgEB5oc2PKMjYdrHynyz0NY+if+H98t1w==}
     engines: {node: '>= 0.8'}
 
-  resolve-team@1.8.6:
-    resolution: {integrity: sha512-4wqYPDrcQS+Y+oPZIjPdAuoerUUR05M+nckLwpk3RgkGpE+WOttCNjczVv02nmlhxVdY4deE4rJWQzKbm0ZXOw==}
+  resolve-team@2.0.4:
+    resolution: {integrity: sha512-VIW4T2pjVoGy0T53Dm0GW7YB3gp6DSgX8JwI0kXyj5nafUohiWi6I6J7sx0tgSJJA6vdEApR0P3lBDqhoMUAEw==}
 
   resolve.exports@2.0.2:
     resolution: {integrity: sha512-X2UW6Nw3n/aMgDVy+0rSqgHlv39WZAlZrXCdnbyEiKm17DSqHX4MmQMaST3FbeWR5FTuRcUwYAziZajji0Y7mg==}
@@ -9612,7 +9611,7 @@ snapshots:
 
   functions-have-names@1.2.3: {}
 
-  fuse.js@7.0.0: {}
+  fuse.js@7.1.0: {}
 
   gensync@1.0.0-beta.2: {}
 
@@ -11934,9 +11933,9 @@ snapshots:
       http-errors: 1.6.3
       path-is-absolute: 1.0.1
 
-  resolve-team@1.8.6:
+  resolve-team@2.0.4:
     dependencies:
-      fuse.js: 7.0.0
+      fuse.js: 7.1.0
 
   resolve.exports@2.0.2: {}
 

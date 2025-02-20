@@ -1,5 +1,5 @@
 import type { Match } from '@kh-openapi';
-import { resolveTeam } from 'resolve-team';
+import { teamResolver } from 'resolve-team';
 import type { CacheManager } from '../../../cache/cache-manager.js';
 import MatchApiWrapper from '../../Khronos/matches/matchApiWrapper.js';
 
@@ -36,7 +36,7 @@ export default class MatchCacheService {
 	}
 
 	async matchesByTeam(team: string) {
-		const resolvedTeamName = await resolveTeam(team, { full: false });
+		const resolvedTeamName = await teamResolver.resolve(team, { full: false });
 		if (!resolvedTeamName) {
 			throw new Error('Unable to identify the sports team you specified');
 		}

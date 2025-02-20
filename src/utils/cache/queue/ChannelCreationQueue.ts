@@ -85,7 +85,6 @@ export class ChannelCreationQueue {
 				}
 			},
 		);
-
 		this.worker.on(
 			'failed',
 			(job: Job<ChannelCreationJobData>, error: Error) => {

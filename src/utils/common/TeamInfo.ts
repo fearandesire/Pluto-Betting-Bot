@@ -1,6 +1,6 @@
 import { container } from '@sapphire/framework';
 import type { ColorResolvable, EmojiResolvable, GuildEmoji } from 'discord.js';
-import { resolveTeam } from 'resolve-team';
+import { teamResolver } from 'resolve-team';
 import { findEmoji } from '../bot_res/findEmoji.js';
 import StringUtils from './string-utils.js';
 
@@ -23,7 +23,7 @@ export default class TeamInfo {
 	 * @returns The color of the team
 	 */
 	static async getTeamColor(teamName: string) {
-		const team = await resolveTeam(teamName, { full: true });
+		const team = await teamResolver.resolve(teamName, { full: true });
 		const res = team?.colors[0] ?? '#0099ff';
 		return res as ColorResolvable;
 	}

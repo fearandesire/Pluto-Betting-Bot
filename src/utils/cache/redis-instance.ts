@@ -8,7 +8,7 @@ WinstonLogger.info({
 	source: 'startup:redis',
 });
 
-const MAX_RETRY_ATTEMPTS = 2; // Set the maximum number of retry attempts
+const MAX_RETRY_ATTEMPTS = 3; // Set the maximum number of retry attempts
 // @ts-ignore
 const redisCache = new Redis({
 	host: R_HOST,

@@ -92,7 +92,7 @@
 		"puppeteer-extra": "^3.3.6",
 		"puppeteer-extra-plugin-recaptcha": "^3.6.8",
 		"puppeteer-extra-plugin-stealth": "^2.11.2",
-		"resolve-team": "^1.8.6",
+		"resolve-team": "^2.0.4",
 		"uuid": "^11.0.5",
 		"winston": "^3.17.0",
 		"winston-console-format": "^1.0.8",
