@@ -12,14 +12,14 @@ importers:
         specifier: ^1.3.1
         version: 1.3.1
       '@bull-board/api':
-        specifier: ^6.7.7
-        version: 6.7.7(@bull-board/ui@6.7.7)
+        specifier: ^6.7.9
+        version: 6.7.9(@bull-board/ui@6.7.9)
       '@bull-board/koa':
         specifier: ^6.7.7
         version: 6.7.7(@babel/core@7.25.2)(@types/koa@2.15.0)(lodash@4.17.21)
       '@bull-board/ui':
-        specifier: ^6.7.7
-        version: 6.7.7
+        specifier: ^6.7.9
+        version: 6.7.9
       '@favware/colorette-spinner':
         specifier: ^1.0.1
         version: 1.0.1
@@ -531,6 +531,7 @@ packages:
   '@biomejs/cli-win32-x64@1.9.4':
     resolution: {integrity: sha512-8Y5wMhVIPaWe6jw2H+KlEm4wP/f7EW3810ZLmDlrEEy5KvBsb9ECEfu/kMWD484ijfQ8+nIi0giMgu9g1UAuuA==}
     engines: {node: '>=14.21.3'}
+    cpu: [x64]
     os: [win32]
 
   '@bull-board/api@6.7.7':
@@ -538,11 +539,19 @@ packages:
     peerDependencies:
       '@bull-board/ui': 6.7.7
 
+  '@bull-board/api@6.7.9':
+    resolution: {integrity: sha512-wgUoaOq7JmY0udhQ+AyMrRdFRpGCtaQJpSgM/QLkAqKRpRpVz5yHFJK9uI6iV+uNvGJkUWE6hNsn3xamzcMy5A==}
+    peerDependencies:
+      '@bull-board/ui': 6.7.9
+
   '@bull-board/koa@6.7.7':
     resolution: {integrity: sha512-2/mPq/Se/nJ38H7wpXdkW+YdIHGlcVuj/NasQixnrdph3QPz9Ygko8RXBk8Hhln9BpPmiZlf3EBnGvlweNYNtg==}
 
   '@bull-board/ui@6.7.7':
     resolution: {integrity: sha512-QU3OkaJVIUt1SpRRV/XxPSTD9tmJcwBWi1oa4ND+qGWQigQ2H1PYfpQCNFOlyW8qCkBwkSDn8pLwlyGbppWqJg==}
+
+  '@bull-board/ui@6.7.9':
+    resolution: {integrity: sha512-41a6rr04wu5uVCtnozqYaAhxUMlJZ3Mu4UwbEmGEvwrkTplKb3TKc8uvP3x0KgKUcIl7WU34Wr9N3lHciAUosQ==}
 
   '@colors/colors@1.6.0':
     resolution: {integrity: sha512-Ir+AOibqzrIsL6ajt3Rz3LskB7OiMVHqltZmspbW/TJuTVuyOMirVqAkjfY6JISiLHgyNqicAC8AyHHGzNd/dA==}
@@ -3344,8 +3353,8 @@ packages:
     resolution: {integrity: sha512-E1b1lFFLvLgak2whF2xDBcOy6NLVGZBqqjJjsIhvopKfWWEi64pLVTWWehV8KlLerZkfNTA95sTe2OdJKm1OzQ==}
     engines: {node: '>= 14'}
 
-  giget@1.2.4:
-    resolution: {integrity: sha512-Wv+daGyispVoA31TrWAVR+aAdP7roubTPEM/8JzRnqXhLbdJH0T9eQyXVFF8fjk3WKTsctII6QcyxILYgNp2DA==}
+  giget@1.2.5:
+    resolution: {integrity: sha512-r1ekGw/Bgpi3HLV3h1MRBIlSAdHoIMklpaQ3OQLFcRw9PwAj2rqigvIbg+dBUI51OxVI2jsEtDywDBjSiuf7Ug==}
     hasBin: true
 
   git-up@8.0.0:
@@ -4624,8 +4633,8 @@ packages:
   numeral@2.0.6:
     resolution: {integrity: sha512-qaKRmtYPZ5qdw4jWJD6bxEf1FJEqllJrwxCLIm0sQU/A7v2/czigzOb+C2uSiFsa9lBUzeH7M1oK+Q+OLxL3kA==}
 
-  nypm@0.5.2:
-    resolution: {integrity: sha512-AHzvnyUJYSrrphPhRWWZNcoZfArGNp3Vrc4pm/ZurO74tYNTgAPrEyBQEKy+qioqmWlPXwvMZCG2wOaHlPG0Pw==}
+  nypm@0.5.4:
+    resolution: {integrity: sha512-X0SNNrZiGU8/e/zAB7sCTtdxWTMSIO73q+xuKgglm2Yvzwlo8UoC5FNySQFCvl84uPaeADkqHUZUkWy4aH4xOA==}
     engines: {node: ^14.16.0 || >=16.10.0}
     hasBin: true
 
@@ -6522,6 +6531,11 @@ snapshots:
       '@bull-board/ui': 6.7.7
       redis-info: 3.1.0
 
+  '@bull-board/api@6.7.9(@bull-board/ui@6.7.9)':
+    dependencies:
+      '@bull-board/ui': 6.7.9
+      redis-info: 3.1.0
+
   '@bull-board/koa@6.7.7(@babel/core@7.25.2)(@types/koa@2.15.0)(lodash@4.17.21)':
     dependencies:
       '@bull-board/api': 6.7.7(@bull-board/ui@6.7.7)
@@ -6587,6 +6601,10 @@ snapshots:
   '@bull-board/ui@6.7.7':
     dependencies:
       '@bull-board/api': 6.7.7(@bull-board/ui@6.7.7)
+
+  '@bull-board/ui@6.7.9':
+    dependencies:
+      '@bull-board/api': 6.7.9(@bull-board/ui@6.7.9)
 
   '@colors/colors@1.6.0': {}
 
@@ -8441,7 +8459,7 @@ snapshots:
       confbox: 0.1.8
       defu: 6.1.4
       dotenv: 16.4.7
-      giget: 1.2.4
+      giget: 1.2.5
       jiti: 1.21.7
       mlly: 1.7.4
       ohash: 1.1.4
@@ -9678,14 +9696,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  giget@1.2.4:
+  giget@1.2.5:
     dependencies:
       citty: 0.1.6
       consola: 3.4.0
       defu: 6.1.4
       node-fetch-native: 1.6.6
-      nypm: 0.5.2
-      ohash: 1.1.4
+      nypm: 0.5.4
       pathe: 2.0.3
       tar: 6.2.1
 
@@ -11186,7 +11203,7 @@ snapshots:
 
   numeral@2.0.6: {}
 
-  nypm@0.5.2:
+  nypm@0.5.4:
     dependencies:
       citty: 0.1.6
       consola: 3.4.0
