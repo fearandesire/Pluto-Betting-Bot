@@ -15,8 +15,8 @@ importers:
         specifier: ^6.7.9
         version: 6.7.9(@bull-board/ui@6.7.9)
       '@bull-board/koa':
-        specifier: ^6.7.7
-        version: 6.7.7(@babel/core@7.25.2)(@types/koa@2.15.0)(lodash@4.17.21)
+        specifier: ^6.7.9
+        version: 6.7.9(@babel/core@7.25.2)(@types/koa@2.15.0)(lodash@4.17.21)
       '@bull-board/ui':
         specifier: ^6.7.9
         version: 6.7.9
@@ -534,21 +534,13 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@bull-board/api@6.7.7':
-    resolution: {integrity: sha512-jSBe+aeNs41T/BUJNutKSM17hJigDLoOaAzUZyFwT63/Yt00hiqQo90THXmDi3vGdXtTruGlkrC9OhVxBKo1eQ==}
-    peerDependencies:
-      '@bull-board/ui': 6.7.7
-
   '@bull-board/api@6.7.9':
     resolution: {integrity: sha512-wgUoaOq7JmY0udhQ+AyMrRdFRpGCtaQJpSgM/QLkAqKRpRpVz5yHFJK9uI6iV+uNvGJkUWE6hNsn3xamzcMy5A==}
     peerDependencies:
       '@bull-board/ui': 6.7.9
 
-  '@bull-board/koa@6.7.7':
-    resolution: {integrity: sha512-2/mPq/Se/nJ38H7wpXdkW+YdIHGlcVuj/NasQixnrdph3QPz9Ygko8RXBk8Hhln9BpPmiZlf3EBnGvlweNYNtg==}
-
-  '@bull-board/ui@6.7.7':
-    resolution: {integrity: sha512-QU3OkaJVIUt1SpRRV/XxPSTD9tmJcwBWi1oa4ND+qGWQigQ2H1PYfpQCNFOlyW8qCkBwkSDn8pLwlyGbppWqJg==}
+  '@bull-board/koa@6.7.9':
+    resolution: {integrity: sha512-VVQDTG8ca/83Q40v7zHqLyvb5th55DFZPbB1NtZcayYMtb742TASrfJy+tvzGqnHVMgh+cfKv4eeV4ObUxHGtA==}
 
   '@bull-board/ui@6.7.9':
     resolution: {integrity: sha512-41a6rr04wu5uVCtnozqYaAhxUMlJZ3Mu4UwbEmGEvwrkTplKb3TKc8uvP3x0KgKUcIl7WU34Wr9N3lHciAUosQ==}
@@ -4069,10 +4061,6 @@ packages:
     resolution: {integrity: sha512-UqyYyH5YEXaJrf9S8E23GoJFQZXkBVJ9zYYMPGz919MSX1KuvAcycIuS0ci150HCoPf4XQVhQ84Qf8xRPWxFaQ==}
     engines: {node: '>= 7.6.0'}
 
-  koa@2.15.3:
-    resolution: {integrity: sha512-j/8tY9j5t+GVMLeioLaxweJiKUayFhlGqNTzf2ZGwL0ZCQijd2RLHK0SLW5Tsko8YyyqCZC2cojIb0/s62qTAg==}
-    engines: {node: ^4.8.4 || ^6.10.1 || ^7.10.1 || >= 8.1.4}
-
   koa@2.15.4:
     resolution: {integrity: sha512-7fNBIdrU2PEgLljXoPWoyY4r1e+ToWCmzS/wwMPbUNs7X+5MMET1ObhJBlUkF5uZG9B6QhM2zS1TsH6adegkiQ==}
     engines: {node: ^4.8.4 || ^6.10.1 || ^7.10.1 || >= 8.1.4}
@@ -6438,24 +6426,19 @@ snapshots:
 
   '@biomejs/cli-win32-x64@1.9.4': {}
 
-  '@bull-board/api@6.7.7(@bull-board/ui@6.7.7)':
-    dependencies:
-      '@bull-board/ui': 6.7.7
-      redis-info: 3.1.0
-
   '@bull-board/api@6.7.9(@bull-board/ui@6.7.9)':
     dependencies:
       '@bull-board/ui': 6.7.9
       redis-info: 3.1.0
 
-  '@bull-board/koa@6.7.7(@babel/core@7.25.2)(@types/koa@2.15.0)(lodash@4.17.21)':
+  '@bull-board/koa@6.7.9(@babel/core@7.25.2)(@types/koa@2.15.0)(lodash@4.17.21)':
     dependencies:
-      '@bull-board/api': 6.7.7(@bull-board/ui@6.7.7)
-      '@bull-board/ui': 6.7.7
-      '@koa/bodyparser': 5.1.1(koa@2.15.3)
+      '@bull-board/api': 6.7.9(@bull-board/ui@6.7.9)
+      '@bull-board/ui': 6.7.9
+      '@koa/bodyparser': 5.1.1(koa@2.15.4)
       '@ladjs/koa-views': 9.0.0(@babel/core@7.25.2)(@types/koa@2.15.0)(ejs@3.1.10)(lodash@4.17.21)
       ejs: 3.1.10
-      koa: 2.15.3
+      koa: 2.15.4
       koa-mount: 4.0.0
       koa-router: 13.0.1
       koa-static: 5.0.0
@@ -6509,10 +6492,6 @@ snapshots:
       - velocityjs
       - walrus
       - whiskers
-
-  '@bull-board/ui@6.7.7':
-    dependencies:
-      '@bull-board/api': 6.7.7(@bull-board/ui@6.7.7)
 
   '@bull-board/ui@6.7.9':
     dependencies:
@@ -7032,10 +7011,10 @@ snapshots:
       systeminformation: 5.25.11
       tslib: 2.7.0
 
-  '@koa/bodyparser@5.1.1(koa@2.15.3)':
+  '@koa/bodyparser@5.1.1(koa@2.15.4)':
     dependencies:
       co-body: 6.2.0
-      koa: 2.15.3
+      koa: 2.15.4
       lodash.merge: 4.6.2
       type-is: 1.6.18
 
@@ -10586,34 +10565,6 @@ snapshots:
     dependencies:
       debug: 3.2.7
       koa-send: 5.0.1
-    transitivePeerDependencies:
-      - supports-color
-
-  koa@2.15.3:
-    dependencies:
-      accepts: 1.3.8
-      cache-content-type: 1.0.1
-      content-disposition: 0.5.4
-      content-type: 1.0.5
-      cookies: 0.9.1
-      debug: 4.4.0(supports-color@8.1.1)
-      delegates: 1.0.0
-      depd: 2.0.0
-      destroy: 1.2.0
-      encodeurl: 1.0.2
-      escape-html: 1.0.3
-      fresh: 0.5.2
-      http-assert: 1.5.0
-      http-errors: 1.8.1
-      is-generator-function: 1.1.0
-      koa-compose: 4.1.0
-      koa-convert: 2.0.0
-      on-finished: 2.4.1
-      only: 0.0.2
-      parseurl: 1.3.3
-      statuses: 1.5.0
-      type-is: 1.6.18
-      vary: 1.1.2
     transitivePeerDependencies:
       - supports-color
 
