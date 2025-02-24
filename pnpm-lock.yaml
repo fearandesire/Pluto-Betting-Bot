@@ -12,14 +12,14 @@ importers:
         specifier: ^1.3.1
         version: 1.3.1
       '@bull-board/api':
-        specifier: ^6.7.7
-        version: 6.7.7(@bull-board/ui@6.7.7)
+        specifier: ^6.7.9
+        version: 6.7.9(@bull-board/ui@6.7.9)
       '@bull-board/koa':
         specifier: ^6.7.7
         version: 6.7.7(@babel/core@7.25.2)(@types/koa@2.15.0)(lodash@4.17.21)
       '@bull-board/ui':
-        specifier: ^6.7.7
-        version: 6.7.7
+        specifier: ^6.7.9
+        version: 6.7.9
       '@favware/colorette-spinner':
         specifier: ^1.0.1
         version: 1.0.1
@@ -539,11 +539,19 @@ packages:
     peerDependencies:
       '@bull-board/ui': 6.7.7
 
+  '@bull-board/api@6.7.9':
+    resolution: {integrity: sha512-wgUoaOq7JmY0udhQ+AyMrRdFRpGCtaQJpSgM/QLkAqKRpRpVz5yHFJK9uI6iV+uNvGJkUWE6hNsn3xamzcMy5A==}
+    peerDependencies:
+      '@bull-board/ui': 6.7.9
+
   '@bull-board/koa@6.7.7':
     resolution: {integrity: sha512-2/mPq/Se/nJ38H7wpXdkW+YdIHGlcVuj/NasQixnrdph3QPz9Ygko8RXBk8Hhln9BpPmiZlf3EBnGvlweNYNtg==}
 
   '@bull-board/ui@6.7.7':
     resolution: {integrity: sha512-QU3OkaJVIUt1SpRRV/XxPSTD9tmJcwBWi1oa4ND+qGWQigQ2H1PYfpQCNFOlyW8qCkBwkSDn8pLwlyGbppWqJg==}
+
+  '@bull-board/ui@6.7.9':
+    resolution: {integrity: sha512-41a6rr04wu5uVCtnozqYaAhxUMlJZ3Mu4UwbEmGEvwrkTplKb3TKc8uvP3x0KgKUcIl7WU34Wr9N3lHciAUosQ==}
 
   '@colors/colors@1.6.0':
     resolution: {integrity: sha512-Ir+AOibqzrIsL6ajt3Rz3LskB7OiMVHqltZmspbW/TJuTVuyOMirVqAkjfY6JISiLHgyNqicAC8AyHHGzNd/dA==}
@@ -6523,6 +6531,11 @@ snapshots:
       '@bull-board/ui': 6.7.7
       redis-info: 3.1.0
 
+  '@bull-board/api@6.7.9(@bull-board/ui@6.7.9)':
+    dependencies:
+      '@bull-board/ui': 6.7.9
+      redis-info: 3.1.0
+
   '@bull-board/koa@6.7.7(@babel/core@7.25.2)(@types/koa@2.15.0)(lodash@4.17.21)':
     dependencies:
       '@bull-board/api': 6.7.7(@bull-board/ui@6.7.7)
@@ -6588,6 +6601,10 @@ snapshots:
   '@bull-board/ui@6.7.7':
     dependencies:
       '@bull-board/api': 6.7.7(@bull-board/ui@6.7.7)
+
+  '@bull-board/ui@6.7.9':
+    dependencies:
+      '@bull-board/api': 6.7.9(@bull-board/ui@6.7.9)
 
   '@colors/colors@1.6.0': {}
 
