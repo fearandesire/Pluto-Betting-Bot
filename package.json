@@ -80,7 +80,7 @@
 		"koa-bodyparser": "^4.4.1",
 		"koa-logger": "^3.2.1",
 		"koa-router": "^13.0.1",
-		"lefthook": "^1.11.0",
+		"lefthook": "^1.11.2",
 		"lodash": "^4.17.21",
 		"module-alias": "^2.2.3",
 		"numeral": "^2.0.6",
