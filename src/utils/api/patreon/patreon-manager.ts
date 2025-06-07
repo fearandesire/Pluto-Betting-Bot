@@ -1,6 +1,6 @@
 import { AxiosError } from 'axios';
 import type { IApiError } from '../../../lib/interfaces/errors/api-errors.js';
-import { patreonApiInstance } from './PatreonInstance.js';
+import { patreonApiInstance } from './patreon-instance.js';
 import { type IPatreonReadUser, nonPatreonMemberMsg } from './interfaces.js';
 export default class PatreonManager {
 	readonly nonMemberMsg = nonPatreonMemberMsg;

@@ -2,11 +2,11 @@ import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
 import { InteractionContextType } from 'discord.js';
 import { ApiModules } from '../../lib/interfaces/api/api.interface.js';
-import { ApiErrorHandler } from '../../utils/api/Khronos/error-handling/ApiErrorHandler.js';
+import { ApiErrorHandler } from '../../utils/api/Khronos/error-handling/api-error-handler.js';
 import GuildWrapper from '../../utils/api/Khronos/guild/guild-wrapper.js';
-import MatchApiWrapper from '../../utils/api/Khronos/matches/matchApiWrapper.js';
+import MatchApiWrapper from '../../utils/api/Khronos/matches/match-api-wrapper.js';
 import { ErrorEmbeds } from '../../utils/common/errors/global.js';
-import { prepareAndFormat } from '../../utils/matches/OddsProcessing.js';
+import { prepareAndFormat } from '../../utils/matches/odds-processing.js';
 
 @ApplyOptions<Command.Options>({
 	description: '🔎 View current matches & odds',

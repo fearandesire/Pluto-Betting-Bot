@@ -1,7 +1,7 @@
 import { type CommandInteraction, EmbedBuilder } from 'discord.js';
-import embedColors from '../../../../lib/colorsConfig.js';
+import embedColors from '../../../../lib/colors-config.js';
 import { ApiModules } from '../../../../lib/interfaces/api/api.interface.js';
-import { ApiErrorHandler } from '../error-handling/ApiErrorHandler.js';
+import { ApiErrorHandler } from '../error-handling/api-error-handler.js';
 import type AccountsWrapper from './accounts-wrapper.js';
 
 export default class AccountManager {

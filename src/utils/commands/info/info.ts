@@ -1,5 +1,5 @@
 import { helpfooter } from '@pluto-config';
-import embedColors from '../../../lib/colorsConfig.js';
+import embedColors from '../../../lib/colors-config.js';
 import { plutoDocsUrl } from '../../../lib/configs/constants.js';
 import { patreonUrl } from '../../../utils/api/patreon/interfaces.js';
 import { APP_VERSION } from '../../../utils/scripts/pkg-version.js';

@@ -1,7 +1,7 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Subcommand } from '@sapphire/plugin-subcommands';
 import { Colors } from 'discord.js';
-import { helpfooter } from '../../lib/PlutoConfig.js';
+import { helpfooter } from '../../lib/pluto-config.js';
 import StatsWraps from '../../utils/api/Khronos/stats/stats-wrapper.js';
 
 @ApplyOptions<Subcommand.Options>({

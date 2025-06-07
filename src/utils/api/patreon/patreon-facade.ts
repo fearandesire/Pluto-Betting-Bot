@@ -1,5 +1,5 @@
 import type { IApiError } from '../../../lib/interfaces/errors/api-errors.js';
-import PatreonManager from './PatreonManager.js';
+import PatreonManager from './patreon-manager.js';
 import { type IPatreonReadUser, PatreonTiers } from './interfaces.js';
 export default class PatreonFacade {
 	static readonly patreonManager = new PatreonManager();

@@ -7,7 +7,7 @@ import {
 	PredictionApi,
 	type RemovePredictionRequest,
 } from '../../../../openapi/khronos/index.js';
-import { KH_API_CONFIG } from '../KhronosInstances.js';
+import { KH_API_CONFIG } from '../khronos-instances.js';
 
 export default class PredictionApiWrapper {
 	private predictionApi: PredictionApi;

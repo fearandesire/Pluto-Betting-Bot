@@ -1,4 +1,4 @@
-import MatchCacheService from '../../utils/api/routes/cache/MatchCacheService.js';
+import MatchCacheService from '../../utils/api/routes/cache/match-cache-service.js';
 import { CacheManager } from '../../utils/cache/cache-manager.js';
 
 /**

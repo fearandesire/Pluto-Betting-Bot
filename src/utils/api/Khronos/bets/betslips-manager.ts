@@ -16,19 +16,19 @@ import {
 	type GuildEmoji,
 } from 'discord.js';
 import _ from 'lodash';
-import embedColors from '../../../../lib/colorsConfig.js';
+import embedColors from '../../../../lib/colors-config.js';
 import { ApiModules } from '../../../../lib/interfaces/api/api.interface.js';
 import type { IAPIBetslipPayload } from '../../../../lib/interfaces/api/bets/betslips.interfaces.js';
 import { isApiError } from '../../../../lib/interfaces/errors/api-errors.js';
-import { findEmoji } from '../../../bot_res/findEmoji.js';
+import { findEmoji } from '../../../bot_res/find-emoji.js';
 import { ErrorEmbeds } from '../../../common/errors/global.js';
 import StringUtils from '../../../common/string-utils.js';
-import GuildUtils from '../../../guilds/GuildUtils.js';
-import type { BetsCacheService } from '../../common/bets/BetsCacheService.js';
+import GuildUtils from '../../../guilds/guild-utils.js';
+import type { BetsCacheService } from '../../common/bets/bets-cache-service.js';
 import type { IMatchInfoArgs } from '../../common/interfaces/kh-pluto/kh-pluto.interface.js';
 import MoneyFormatter from '../../common/money-formatting/money-format.js';
-import PatreonFacade from '../../patreon/Patreon-Facade.js';
-import { ApiErrorHandler } from '../error-handling/ApiErrorHandler.js';
+import PatreonFacade from '../../patreon/patreon-facade.js';
+import { ApiErrorHandler } from '../error-handling/api-error-handler.js';
 import GuildWrapper from '../guild/guild-wrapper.js';
 import BetslipWrapper from './betslip-wrapper.js';
 

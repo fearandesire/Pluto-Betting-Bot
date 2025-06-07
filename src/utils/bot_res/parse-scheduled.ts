@@ -2,7 +2,7 @@ import { helpfooter } from '@pluto-config';
 import { format } from 'date-fns';
 import { EmbedBuilder } from 'discord.js';
 import _ from 'lodash';
-import embedColors from '../../lib/colorsConfig.js';
+import embedColors from '../../lib/colors-config.js';
 import type {
 	IMatchupsGrouped,
 	IOddsField,

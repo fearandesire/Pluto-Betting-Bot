@@ -1,7 +1,7 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
 import { InteractionContextType } from 'discord.js';
-import BetslipDataManager from '../../utils/api/Khronos/bets/BetslipDataManager.js';
+import BetslipDataManager from '../../utils/api/Khronos/bets/betslip-data-manager.js';
 import BetslipWrapper from '../../utils/api/Khronos/bets/betslip-wrapper.js';
 import { ErrorEmbeds } from '../../utils/common/errors/global.js';
 

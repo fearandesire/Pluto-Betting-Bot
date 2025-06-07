@@ -15,7 +15,7 @@ import _ from 'lodash';
 import { teamResolver } from 'resolve-team';
 import { SapDiscClient } from '../../../index.js';
 import type { SportsServing } from '../../api/common/interfaces/kh-pluto/kh-pluto.interface.js';
-import { findEmoji } from '../../bot_res/findEmoji.js';
+import { findEmoji } from '../../bot_res/find-emoji.js';
 import {
 	type ChannelAggregated,
 	type CreateChannelAndSendEmbed,

@@ -1,7 +1,7 @@
 import { SapDiscClient } from '../../../index.js';
-import { DateManager } from '../../common/DateManager.js';
-import PropEmbedManager from '../../guilds/prop-embeds/PropEmbedManager.js';
-import { WinstonLogger } from '../../logging/WinstonLogger.js';
+import { DateManager } from '../../common/date-manager.js';
+import PropEmbedManager from '../../guilds/prop-embeds/prop-embed-manager.js';
+import { WinstonLogger } from '../../logging/winston-logger.js';
 import {
 	type PropOptions,
 	PropOptionsSchema,

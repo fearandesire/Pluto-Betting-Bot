@@ -1,6 +1,6 @@
 import { helpfooter } from '@pluto-config';
 import { EmbedBuilder } from 'discord.js';
-import embedColors from '../../../lib/colorsConfig.js';
+import embedColors from '../../../lib/colors-config.js';
 import { nonPatreonMemberMsg } from '../../api/patreon/interfaces.js';
 
 /**

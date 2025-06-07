@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { fromZodError } from 'zod-validation-error';
-import { ValidationError } from '../../../utils/errors/ValidationError.js';
-import { WinstonLogger } from '../../logging/WinstonLogger.js';
+import { ValidationError } from '../../../utils/errors/validation-error.js';
+import { WinstonLogger } from '../../logging/winston-logger.js';
 import {
 	PropArraySchema,
 	type PropEmbedsIncoming,

@@ -1,7 +1,7 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
 import { EmbedBuilder } from 'discord.js';
-import embedColors from '../../lib/colorsConfig.js';
+import embedColors from '../../lib/colors-config.js';
 import { PatreonInformation } from '../../utils/api/patreon/interfaces.js';
 
 @ApplyOptions<Command.Options>({

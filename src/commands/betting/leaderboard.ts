@@ -4,7 +4,7 @@ import { InteractionContextType } from 'discord.js';
 import {
 	AccountManager,
 	AccountsWrapper,
-} from '../../utils/api/requests/accounts/AccountManager.js';
+} from '../../utils/api/requests/accounts/account-manager.js';
 
 @ApplyOptions<Command.Options>({
 	description: '📊 View the current betting leaderboard',

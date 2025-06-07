@@ -1,8 +1,8 @@
 import type { Match } from '@kh-openapi';
 import { helpfooter } from '@pluto-config';
 import _ from 'lodash';
-import parseScheduledGames from '../bot_res/parseScheduled.js';
-import { formatOdds } from './formatOdds.js';
+import parseScheduledGames from '../bot_res/parse-scheduled.js';
+import { formatOdds } from './format-odds.js';
 import type { IOddsField } from './matchups.interface.js';
 
 export async function prepareAndFormat(matchups: Match[], thumbnail: string) {

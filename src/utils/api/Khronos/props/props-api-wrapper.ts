@@ -8,8 +8,8 @@ import {
 	PropsApi,
 	type SetPropResultRequest,
 } from '@kh-openapi';
-import { WinstonLogger } from '../../../logging/WinstonLogger.js';
-import { KH_API_CONFIG } from '../KhronosInstances.js';
+import { WinstonLogger } from '../../../logging/winston-logger.js';
+import { KH_API_CONFIG } from '../khronos-instances.js';
 
 /**
  * Wrapper for the Props Controller in Khronos

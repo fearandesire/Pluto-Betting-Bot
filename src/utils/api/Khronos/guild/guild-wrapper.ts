@@ -7,13 +7,13 @@ import { container } from '@sapphire/framework';
 import { isAxiosError } from 'axios';
 import type { Channel } from 'discord.js';
 import { DiscordConfigEnums } from '../../common/interfaces/kh-pluto/kh-pluto.interface.js';
-import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js';
+import { type IKH_API_CONFIG, KH_API_CONFIG } from '../khronos-instances.js';
 
 export default class GuildWrapper {
 	static getLogChannel(
 		guildId: string,
 	):
-		| import('discord.js').TextChannel
+		|import('discord.js').TextChannel
 		| PromiseLike<import('discord.js').TextChannel> {
 		throw new Error('Method not implemented.');
 	}

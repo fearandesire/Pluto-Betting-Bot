@@ -20,8 +20,8 @@
 		"dev": "pnpm build && node --loader esm-module-alias/loader --no-warnings ./dist/index.js",
 		"watch": "tsc --watch ./src/index.ts",
 		"ts-dev": "tsx ./src/index.ts",
-		"gen-api": "openapi-generator-cli generate -i ./Khronos-Swagger-Spec-v1.json -g typescript-fetch -o ./src/openapi/khronos -c openapi.config.json",
-		"post-api-fix": "node ./src/utils/scripts/addJsExtension.js",
+		"gen-api": "openapi-generator-cli generate -i ./khronos-swagger-spec-v1.json -g typescript-fetch -o ./src/openapi/khronos -c openapi.config.json",
+		"post-api-fix": "node ./src/utils/scripts/add-js-extension.js",
 		"ci-gen-api": "rimraf ./src/openapi && pnpm gen-api && pnpm post-api-fix",
 		"dvault": "npx dotenv-vault@latest",
 		"dvault-prod": "npx dotenv-vault@latest push production",
@@ -30,9 +30,9 @@
 	},
 	"aliases": {
 		"@khronos-index": "./dist/openapi/khronos/index.js",
-		"@pluto-core-config": "./dist/lib/PlutoConfig.js",
+		"@pluto-core-config": "./dist/lib/pluto-config.js",
 		"@kh-openapi": "./dist/openapi/khronos/index.js",
-		"@pluto-config": "./dist/lib/PlutoConfig.js"
+		"@pluto-config": "./dist/lib/pluto-config.js"
 	},
 	"dependencies": {
 		"@axiomhq/winston": "^1.3.1",

@@ -1,6 +1,6 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
-import AccountManager from '../../utils/api/Khronos/accounts/AccountManager.js';
+import AccountManager from '../../utils/api/Khronos/accounts/account-manager.js';
 import AccountsWrapper from '../../utils/api/Khronos/accounts/accounts-wrapper.js';
 
 @ApplyOptions<Command.Options>({

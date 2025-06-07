@@ -5,7 +5,7 @@ import {
 import type { ButtonInteraction } from 'discord.js';
 import { EmbedBuilder } from 'discord.js';
 import _ from 'lodash';
-import embedColors from '../lib/colorsConfig.js';
+import embedColors from '../lib/colors-config.js';
 import { ApiModules } from '../lib/interfaces/api/api.interface.js';
 import type { ICreateBetslipFull } from '../lib/interfaces/api/bets/betslips.interfaces.js';
 import { btnIds } from '../lib/interfaces/interaction-handlers/interaction-handlers.interface.js';
@@ -14,14 +14,14 @@ import {
 	parsePropButtonId,
 } from '../lib/interfaces/props/prop-buttons.interface.js';
 import type { Match } from '../openapi/khronos/models/Match.js';
-import { BetslipManager } from '../utils/api/Khronos/bets/BetslipsManager.js';
+import { BetslipManager } from '../utils/api/Khronos/bets/betslips-manager.js';
 import BetslipWrapper from '../utils/api/Khronos/bets/betslip-wrapper.js';
-import { ApiErrorHandler } from '../utils/api/Khronos/error-handling/ApiErrorHandler.js';
-import MatchApiWrapper from '../utils/api/Khronos/matches/matchApiWrapper.js';
-import PredictionApiWrapper from '../utils/api/Khronos/prediction/predictionApiWrapper.js';
-import { BetsCacheService } from '../utils/api/common/bets/BetsCacheService.js';
+import { ApiErrorHandler } from '../utils/api/Khronos/error-handling/api-error-handler.js';
+import MatchApiWrapper from '../utils/api/Khronos/matches/match-api-wrapper.js';
+import PredictionApiWrapper from '../utils/api/Khronos/prediction/prediction-api-wrapper.js';
+import { BetsCacheService } from '../utils/api/common/bets/bets-cache-service.js';
 import { patreonFooter } from '../utils/api/patreon/interfaces.js';
-import MatchCacheService from '../utils/api/routes/cache/MatchCacheService.js';
+import MatchCacheService from '../utils/api/routes/cache/match-cache-service.js';
 import { CacheManager } from '../utils/cache/cache-manager.js';
 import { ErrorEmbeds } from '../utils/common/errors/global.js';
 

@@ -13,11 +13,11 @@ import {
 	MarketKeyTranslations,
 	type PropZod,
 } from '../../api/common/interfaces/index.js';
-import { DateManager } from '../../common/DateManager.js';
-import TeamInfo from '../../common/TeamInfo.js';
+import { DateManager } from '../../common/date-manager.js';
+import TeamInfo from '../../common/team-info.js';
 import StringUtils from '../../common/string-utils.js';
-import { WinstonLogger } from '../../logging/WinstonLogger.js';
-import GuildUtils from '../GuildUtils.js';
+import { WinstonLogger } from '../../logging/winston-logger.js';
+import GuildUtils from '../guild-utils.js';
 
 interface AggregateDetailsParams {
 	home: {

@@ -7,20 +7,20 @@ import {
 import type { CommandInteraction, GuildMember } from 'discord.js';
 import _ from 'lodash';
 import { SapDiscClient } from '../../../../index.js';
-import { supportMessage } from '../../../../lib/PlutoConfig.js';
+import { supportMessage } from '../../../../lib/pluto-config.js';
 import { ApiModules } from '../../../../lib/interfaces/api/api.interface.js';
 import { ErrorEmbeds } from '../../../common/errors/global.js';
 import PaginationUtilities from '../../../embeds/pagination-utilities.js';
 import EmbedsSuccess from '../../../embeds/template/success-template.js';
-import GuildUtils from '../../../guilds/GuildUtils.js';
+import GuildUtils from '../../../guilds/guild-utils.js';
 import {
 	type IKH_API_CONFIG,
 	KH_API_CONFIG,
-} from '../../Khronos/KhronosInstances.js';
-import { ApiErrorHandler } from '../../Khronos/error-handling/ApiErrorHandler.js';
+} from '../../Khronos/khronos-instances.js';
+import { ApiErrorHandler } from '../../Khronos/error-handling/api-error-handler.js';
 import { plutoWelcomeMsg } from '../../common/interfaces/kh-pluto/kh-pluto.interface.js';
 import MoneyFormatter from '../../common/money-formatting/money-format.js';
-import PatreonFacade from '../../patreon/Patreon-Facade.js';
+import PatreonFacade from '../../patreon/patreon-facade.js';
 
 export class AccountsWrapper {
 	private accountsApi: AccountsApi;

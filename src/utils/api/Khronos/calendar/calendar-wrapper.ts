@@ -1,6 +1,6 @@
 import { CalendarApi, type GetSeasonYearRequest } from '@kh-openapi';
 import { isAxiosError } from 'axios';
-import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js';
+import { type IKH_API_CONFIG, KH_API_CONFIG } from '../khronos-instances.js';
 
 export default class CalendarWrapper {
 	private calendarApi: CalendarApi;

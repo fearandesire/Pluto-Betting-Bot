@@ -1,5 +1,5 @@
 import { MatchesApi, type MatchesForSportRequest } from '@kh-openapi';
-import { KH_API_CONFIG } from '../KhronosInstances.js';
+import { KH_API_CONFIG } from '../khronos-instances.js';
 
 export default class MatchApiWrapper {
 	private matchesApi: MatchesApi;

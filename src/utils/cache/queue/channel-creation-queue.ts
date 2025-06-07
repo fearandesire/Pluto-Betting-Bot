@@ -1,6 +1,6 @@
 import { type Job, Queue, Worker } from 'bullmq';
-import ChannelManager from '../../guilds/channels/ChannelManager.js';
-import { WinstonLogger } from '../../logging/WinstonLogger.js';
+import ChannelManager from '../../guilds/channels/channel-manager.js';
+import { WinstonLogger } from '../../logging/winston-logger.js';
 import { REDIS_CONFIG } from '../data/config.js';
 import type { ChannelCreationPayload } from '../data/schemas.js';
 import { channelCreationEventSchema } from '../data/schemas.js';

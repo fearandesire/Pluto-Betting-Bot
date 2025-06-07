@@ -1,4 +1,4 @@
-import { KH_API_CONFIG } from '../KhronosInstances.js';
+import { KH_API_CONFIG } from '../khronos-instances.js';
 
 import {
 	type GetOverallH2hBettingStatsRequest,

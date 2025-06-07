@@ -5,7 +5,7 @@ import {
 	InteractionContextType,
 	PermissionFlagsBits,
 } from 'discord.js';
-import embedColors from '../../lib/colorsConfig.js';
+import embedColors from '../../lib/colors-config.js';
 import { DiscordConfigSettingTypeEnum } from '../../openapi/khronos/models/DiscordConfig.js';
 import GuildConfigWrapper from '../../utils/api/Khronos/guild/guild-config.wrapper.js';
 import GuildWrapper from '../../utils/api/Khronos/guild/guild-wrapper.js';

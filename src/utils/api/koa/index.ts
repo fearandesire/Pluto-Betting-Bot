@@ -4,13 +4,13 @@
  *
  */
 
-import { WinstonLogger } from '../../logging/WinstonLogger.js';
+import { WinstonLogger } from '../../logging/winston-logger.js';
 import { matchCache } from '../routes/cache/match-cache.js';
 import ChannelsRoutes from '../routes/channels/channels-router.js';
 import NotificationRouter from '../routes/notifications/notifications.controller.js';
 import PropsRouter from '../routes/props/props-router.js';
 import ScheduleRouter from '../routes/schedule/schedule.js';
-import { setupKoaApp } from './setup/koaSetup.js';
+import { setupKoaApp } from './setup/koa-setup.js';
 
 const app = await setupKoaApp();
 

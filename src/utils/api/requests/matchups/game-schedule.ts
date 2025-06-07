@@ -1,6 +1,6 @@
 import { type ColorResolvable, EmbedBuilder, TextChannel } from 'discord.js';
-import embedColors from '../../../../lib/colorsConfig.js';
-import GuildUtils from '../../../guilds/GuildUtils.js';
+import embedColors from '../../../../lib/colors-config.js';
+import GuildUtils from '../../../guilds/guild-utils.js';
 import { AxiosKhronosInstance } from '../../common/axios-config.js';
 import { OutgoingEndpoints } from '../../common/endpoints.js';
 import type {

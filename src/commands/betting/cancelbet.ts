@@ -1,9 +1,9 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
 import { InteractionContextType } from 'discord.js';
-import { BetslipManager } from '../../utils/api/Khronos/bets/BetslipsManager.js';
+import { BetslipManager } from '../../utils/api/Khronos/bets/betslips-manager.js';
 import BetslipWrapper from '../../utils/api/Khronos/bets/betslip-wrapper.js';
-import { BetsCacheService } from '../../utils/api/common/bets/BetsCacheService.js';
+import { BetsCacheService } from '../../utils/api/common/bets/bets-cache-service.js';
 import { CacheManager } from '../../utils/cache/cache-manager.js';
 
 @ApplyOptions<Command.Options>({

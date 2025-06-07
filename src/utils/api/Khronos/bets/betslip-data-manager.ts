@@ -1,7 +1,7 @@
 import type { PlacedBetslip } from '@kh-openapi';
 import { helpfooter } from '@pluto-config';
 import { type CommandInteraction, EmbedBuilder, type Guild } from 'discord.js';
-import embedColors from '../../../../lib/colorsConfig.js';
+import embedColors from '../../../../lib/colors-config.js';
 import type BetslipWrapper from './betslip-wrapper.js';
 
 export default class BetslipDataManager {

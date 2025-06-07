@@ -4,7 +4,7 @@ import {
 	fromError,
 	isZodErrorLike,
 } from 'zod-validation-error';
-import { WinstonLogger } from '../../../logging/WinstonLogger.js';
+import { WinstonLogger } from '../../../logging/winston-logger.js';
 
 const customMsgBuilder = createMessageBuilder({
 	includePath: true,

@@ -6,11 +6,11 @@ import type { StringSelectMenuInteraction } from 'discord.js';
 import type { ButtonInteraction } from 'discord.js';
 import { isPendingBetslip } from '../lib/interfaces/api/bets/betslips-identify.js';
 import { selectMenuIds } from '../lib/interfaces/interaction-handlers/interaction-handlers.interface.js';
-import { BetslipManager } from '../utils/api/Khronos/bets/BetslipsManager.js';
+import { BetslipManager } from '../utils/api/Khronos/bets/betslips-manager.js';
 import BetslipWrapper from '../utils/api/Khronos/bets/betslip-wrapper.js';
-import BetUtils from '../utils/api/common/bets/BetUtils.js';
-import { BetsCacheService } from '../utils/api/common/bets/BetsCacheService.js';
-import MatchCacheService from '../utils/api/routes/cache/MatchCacheService.js';
+import BetUtils from '../utils/api/common/bets/bet-utils.js';
+import { BetsCacheService } from '../utils/api/common/bets/bets-cache-service.js';
+import MatchCacheService from '../utils/api/routes/cache/match-cache-service.js';
 import { CacheManager } from '../utils/cache/cache-manager.js';
 import { ErrorEmbeds } from '../utils/common/errors/global.js';
 

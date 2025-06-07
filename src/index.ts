@@ -11,7 +11,7 @@ import {
 } from '@sapphire/framework';
 import { GatewayIntentBits, Partials } from 'discord.js';
 import '@sapphire/plugin-hmr/register';
-import { WinstonLogger } from './utils/logging/WinstonLogger.js';
+import { WinstonLogger } from './utils/logging/winston-logger.js';
 const SapDiscClient = new SapphireClient({
 	caseInsensitiveCommands: true,
 	shards: 'auto',

@@ -4,10 +4,10 @@ import {
 	EmbedBuilder,
 	type TextChannel,
 } from 'discord.js';
-import embedColors from '../../lib/colorsConfig.js';
+import embedColors from '../../lib/colors-config.js';
 import { isErr } from '../../lib/configs/constants.js';
 import GuildWrapper from '../api/Khronos/guild/guild-wrapper.js';
-import { LogType } from './AppLog.interface.js';
+import { LogType } from './app-log.interface.js';
 
 interface LogParams {
 	guildId: string;

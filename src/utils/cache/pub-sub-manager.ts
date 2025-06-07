@@ -1,5 +1,5 @@
 import { Redis } from 'ioredis';
-import { WinstonLogger } from '../logging/WinstonLogger.js';
+import { WinstonLogger } from '../logging/winston-logger.js';
 import { RedisChannel } from './data/types.js';
 import type { ChannelPayloadMap } from './data/types.js';
 const { R_HOST, R_PORT, R_PASS } = process.env;

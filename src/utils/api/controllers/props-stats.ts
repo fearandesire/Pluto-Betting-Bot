@@ -1,8 +1,8 @@
 import { container } from '@sapphire/framework';
 import type { EmbedData, Guild, TextBasedChannel } from 'discord.js';
 import { EmbedBuilder, bold, underline } from 'discord.js';
-import ClientTools from '../../bot_res/ClientTools.js';
-import TeamInfo, { type GetTeamInfoResponse } from '../../common/TeamInfo.js';
+import ClientTools from '../../bot_res/client-tools.js';
+import TeamInfo, { type GetTeamInfoResponse } from '../../common/team-info.js';
 import type {
 	H2HPropStats,
 	NonH2HPropStats,

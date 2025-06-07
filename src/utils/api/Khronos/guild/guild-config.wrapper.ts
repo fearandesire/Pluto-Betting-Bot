@@ -1,5 +1,5 @@
 import { type CreateConfigDto, DiscordConfigApi } from '@khronos-index';
-import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js';
+import { type IKH_API_CONFIG, KH_API_CONFIG } from '../khronos-instances.js';
 
 export default class GuildConfigWrapper {
 	private discordConfigApi: DiscordConfigApi;

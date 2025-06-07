@@ -6,8 +6,8 @@
 import Router from 'koa-router';
 import _ from 'lodash';
 import type { IncomingChannelData } from '../../../cache/data/schemas.js';
-import ChannelManager from '../../../guilds/channels/ChannelManager.js';
-import { WinstonLogger } from '../../../logging/WinstonLogger.js';
+import ChannelManager from '../../../guilds/channels/channel-manager.js';
+import { WinstonLogger } from '../../../logging/winston-logger.js';
 
 const ChannelsRoutes = new Router();
 

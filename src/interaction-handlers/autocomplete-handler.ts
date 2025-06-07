@@ -5,8 +5,8 @@ import {
 } from '@sapphire/framework';
 import type { AutocompleteInteraction } from 'discord.js';
 import GuildWrapper from '../utils/api/Khronos/guild/guild-wrapper.js';
-import MatchApiWrapper from '../utils/api/Khronos/matches/matchApiWrapper.js';
-import MatchCacheService from '../utils/api/routes/cache/MatchCacheService.js';
+import MatchApiWrapper from '../utils/api/Khronos/matches/match-api-wrapper.js';
+import MatchCacheService from '../utils/api/routes/cache/match-cache-service.js';
 import { CacheManager } from '../utils/cache/cache-manager.js';
 import StringUtils from '../utils/common/string-utils.js'; // Import StringUtils
 export class AutocompleteHandler extends InteractionHandler {

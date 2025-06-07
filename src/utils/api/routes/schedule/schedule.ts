@@ -5,7 +5,7 @@ import {
 	type IMatchupAggregated,
 	SportsServing,
 } from '../../common/interfaces/kh-pluto/kh-pluto.interface.js';
-import GameSchedule from '../../requests/matchups/GameSchedule.js';
+import GameSchedule from '../../requests/matchups/game-schedule.js';
 
 /**
  * Responsible for incoming requests to post the daily schedule

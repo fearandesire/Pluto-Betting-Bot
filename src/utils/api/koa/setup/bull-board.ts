@@ -4,9 +4,9 @@ import { KoaAdapter } from '@bull-board/koa';
 import type Application from 'koa';
 import auth from 'koa-basic-auth';
 import env from '../../../../lib/startup/env.js';
-import { channelCreationQueue } from '../../../cache/queue/ChannelCreationQueue.js';
-import { channelDeletionQueue } from '../../../cache/queue/ChannelDeletionQueue.js';
-import { AuthRateLimit } from './authRateLimit.js';
+import { channelCreationQueue } from '../../../cache/queue/channel-creation-queue.js';
+import { channelDeletionQueue } from '../../../cache/queue/channel-deletion-queue.js';
+import { AuthRateLimit } from './auth-rate-limit.js';
 
 /**
  * Sets up Bull Board with the application

@@ -4,16 +4,16 @@ import { Command } from '@sapphire/framework';
 import { EmbedBuilder, InteractionContextType } from 'discord.js';
 import type { User } from 'discord.js';
 import _ from 'lodash';
-import embedColors from '../../lib/colorsConfig.js';
+import embedColors from '../../lib/colors-config.js';
 import {
 	type AllUserPredictionsDto,
 	GetAllPredictionsFilteredStatusEnum,
 } from '../../openapi/khronos/index.js';
-import PredictionApiWrapper from '../../utils/api/Khronos/prediction/predictionApiWrapper.js';
-import PropsApiWrapper from '../../utils/api/Khronos/props/propsApiWrapper.js';
+import PredictionApiWrapper from '../../utils/api/Khronos/prediction/prediction-api-wrapper.js';
+import PropsApiWrapper from '../../utils/api/Khronos/props/props-api-wrapper.js';
 import { MarketKeyAbbreviations } from '../../utils/api/common/interfaces/market-abbreviations.js';
-import { DateManager } from '../../utils/common/DateManager.js';
-import TeamInfo from '../../utils/common/TeamInfo.js';
+import { DateManager } from '../../utils/common/date-manager.js';
+import TeamInfo from '../../utils/common/team-info.js';
 
 @ApplyOptions<Command.Options>({
 	description: 'View your prediction history',
