@@ -1,85 +1,81 @@
-import { WinstonTransport as AxiomTransport } from '@axiomhq/winston';
-import winston from 'winston';
-import DailyRotateFile from 'winston-daily-rotate-file';
-import env from '../../lib/startup/env.js';
-const isProduction = env.NODE_ENV === 'production';
-const { AXIOM_DATASET, AXIOM_API_TOKEN, AXIOM_ORG_ID } = env;
-import { consoleFormat } from 'winston-console-format';
+import * as winston from 'winston'
+import 'winston-transport'
+import { fullFormat } from 'winston-error-format'
+import env  from '#lib/startup/env.js'
+import { createConsoleTransport } from './transports/consoleTransport.js'
+import { createLokiTransport } from './transports/lokiTransport.js'
 
-// Core Winston Config
-const coreWinstonConfig = {
-	format: winston.format.combine(
+/**
+ * Creates the base logger format for the main logger instance
+ * @returns Winston format combination for base logging
+ *
+ * Integrates winston-error-format's fullFormat to ensure error objects are logged with all properties, including nested errors and stack traces.
+ */
+const createBaseFormat = () => {
+	return winston.format.combine(
 		winston.format.timestamp(),
-		winston.format.errors({ stack: true }),
-		winston.format.metadata({
-			fillExcept: ['message', 'level', 'timestamp', 'stack'],
-		}),
+		fullFormat(),
 		winston.format.json(),
-	),
-};
-
-// Shared Config between Winston Transports
-const baseWinstonConfig = {
-	...coreWinstonConfig,
-	datePattern: 'YYYY-MM-DD',
-	zippedArchive: false,
-	maxFiles: '14d',
-	maxSize: '80MB',
-};
-
-const winstonConsoleConfig = {
-	format: winston.format.combine(
-		winston.format.colorize({ all: true }),
-		winston.format.timestamp({ format: 'MM/DD HH:mm:ss' }),
-		winston.format.padLevels(),
-		consoleFormat({
-			showMeta: true,
-			inspectOptions: {
-				depth: 4,
-				colors: true,
-				maxArrayLength: 10,
-				breakLength: 120,
-				compact: Number.POSITIVE_INFINITY,
-			},
-		}),
-	),
-};
-
-const createDailyRotateFileTransport = (level: string, filename: string) => {
-	return new DailyRotateFile({
-		level,
-		filename: `logs/%DATE%-${filename}.log`,
-		...baseWinstonConfig,
-	});
-};
-
-const consoleTransport = new winston.transports.Console({
-	...winstonConsoleConfig,
-});
-
-const transports: winston.transport[] = [
-	createDailyRotateFileTransport('error', 'error'),
-	createDailyRotateFileTransport('info', 'standard'),
-	consoleTransport,
-];
-
-if (!isProduction) {
-	transports.push(createDailyRotateFileTransport('debug', 'debug'));
+	)
 }
 
-const axiomTransport = new AxiomTransport({
-	dataset: AXIOM_DATASET,
-	token: AXIOM_API_TOKEN,
-	orgId: AXIOM_ORG_ID,
-	...coreWinstonConfig,
-});
+/**
+ * Creates all configured transports, filtering out any that are null
+ * @param serviceName - The service name to use for logging identification
+ */
+const createTransports = (serviceName: string) => {
+	const transports = [
+		createConsoleTransport(),
+		createLokiTransport({ serviceName }),
+	]
 
-// Create and export the Winston logger instance
-export const WinstonLogger = winston.createLogger({
-	defaultMeta: {
-		source_application: `PLUTO_${env.NODE_ENV.toUpperCase()}`,
-		environment: env.NODE_ENV,
-	},
-	transports: [axiomTransport, ...transports],
-	exitOnError: false,
-});
+	// Filter out null transports and ensure type safety
+	return transports.filter(
+		(transport): transport is NonNullable<typeof transport> =>
+			transport !== null,
+	)
+}
+
+/**
+ * Configuration interface for creating a Winston logger
+ */
+export interface LoggerConfig {
+	/** Service name for logging identification */
+	readonly serviceName?: string
+	/** Application name */
+	readonly appName?: string
+	/** Log level override */
+	readonly logLevel?: string
+	/** Environment override */
+	readonly environment?: string
+}
+
+/**
+ * Creates a Winston logger instance with configurable service name and settings
+ * @param config - Configuration options for the logger
+ * @returns Configured Winston logger instance
+ */
+export const createLogger = (config: LoggerConfig = {}) => {
+	const serviceName = config.serviceName!
+	const appName = config.appName || serviceName
+	const logLevel = config.logLevel || env.logLevel || 'info'
+	const environment = config.environment || env.NODE_ENV
+
+	return winston.createLogger({
+		level: logLevel,
+		format: createBaseFormat(),
+		defaultMeta: {
+			environment,
+			app: appName,
+			service: serviceName,
+		},
+		transports: createTransports(serviceName),
+	})
+}
+
+/**
+ * Default logger instance using DEXTER-CORE as service name
+ * For plug-in-able usage, prefer using createLogger() with custom service name
+ */
+export const logger = createLogger()
+ 

@@ -22,7 +22,8 @@
 		"paths": {
 			"@khronos-index": ["./src/openapi/khronos/index.ts"],
 			"@kh-openapi": ["./src/openapi/khronos/index.ts"],
-			"@pluto-config": ["./src/lib/PlutoConfig.ts"]
+			"@pluto-config": ["./src/lib/PlutoConfig.ts"],
+			"#lib/*": ["./src/lib/*"]
 		},
 		"outDir": "./dist",
 		"rootDir": "./src",

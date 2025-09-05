@@ -1,0 +1,3 @@
+setup:
+  - project: pluto-backend
+    config: dev_personal
