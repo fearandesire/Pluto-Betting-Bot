@@ -4,7 +4,6 @@
  *
  */
 
-import { WinstonLogger } from '../../logging/WinstonLogger.js';
 import { matchCache } from '../routes/cache/match-cache.js';
 import ChannelsRoutes from '../routes/channels/channels-router.js';
 import NotificationRouter from '../routes/notifications/notifications.controller.js';
@@ -23,9 +22,6 @@ app.use(PropsRouter.routes()).use(PropsRouter.allowedMethods());
 const { apiPort, apiURL } = process.env;
 
 app.listen(apiPort, async () => {
-	WinstonLogger.info(
-		`API running at ${apiURL}:${apiPort}/\nBull Board running at ${apiURL}:${apiPort}/admin/queues`,
-	);
 });
 
 export { app };
