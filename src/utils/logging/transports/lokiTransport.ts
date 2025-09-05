@@ -1,6 +1,6 @@
 import winston from 'winston'
 import LokiTransport from 'winston-loki'
-import { env } from '#lib/core/env-config.js'
+import env  from '#lib/startup/env.js'
 import {
 	createHttpTransportErrorHandler,
 	type HttpTransportBaseConfig,

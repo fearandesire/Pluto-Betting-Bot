@@ -31,6 +31,9 @@ const envSchema = z.object({
 	BULL_BOARD_USERNAME: z.string(),
 	BULL_BOARD_PASSWORD: z.string(),
 	API_KEY: z.string(),
+	LOKI_URL: z.string().url(),
+	LOKI_USER: z.string(),
+	LOKI_PASS: z.string(),
 });
 
 // Parse and validate the environment variables

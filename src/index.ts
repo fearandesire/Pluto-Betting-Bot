@@ -11,7 +11,7 @@ import {
 } from '@sapphire/framework';
 import { GatewayIntentBits, Partials } from 'discord.js';
 import '@sapphire/plugin-hmr/register';
-import { WinstonLogger } from './utils/logging/WinstonLogger.js';
+import { logger }  from './utils/logging/WinstonLogger.js';
 const SapDiscClient = new SapphireClient({
 	caseInsensitiveCommands: true,
 	shards: 'auto',
@@ -38,17 +38,16 @@ ApplicationCommandRegistries.setDefaultBehaviorWhenNotIdentical(
 	RegisterBehavior.BulkOverwrite,
 );
 
-WinstonLogger.info({
+logger.info({
 	message: 'Pluto is starting up',
 });
 const login = async () => {
 	try {
 		await SapDiscClient.login(process.env.TOKEN);
-		WinstonLogger.info({
-			message: 'Pluto is up and running!',
-		});
+		logger.info(  'Pluto is up and running!',
+		);
 	} catch (error) {
-		WinstonLogger.error({
+		logger.error({
 			message: 'Failed to login',
 		});
 		SapDiscClient.logger.fatal(error);

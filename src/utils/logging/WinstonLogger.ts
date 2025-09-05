@@ -77,5 +77,8 @@ export const createLogger = (config: LoggerConfig = {}) => {
  * Default logger instance using DEXTER-CORE as service name
  * For plug-in-able usage, prefer using createLogger() with custom service name
  */
-export const logger = createLogger()
+export const logger = createLogger({
+	serviceName: 'PLUTO-DISCORD',
+	appName: 'PLUTO-DISCORD',
+})
  
