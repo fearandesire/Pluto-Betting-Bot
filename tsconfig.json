@@ -8,7 +8,7 @@
 		"strict": true,
 		"skipLibCheck": true,
 		"resolveJsonModule": true,
-		"noUnusedParameters": false,
+		"noUnusedParameters": false,		
 		"noUnusedLocals": false,
 		"isolatedModules": true,
 		"forceConsistentCasingInFileNames": true,
