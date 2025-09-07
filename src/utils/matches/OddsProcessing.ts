@@ -5,7 +5,7 @@ import parseScheduledGames from '../bot_res/parseScheduled.js';
 import { formatOdds } from './formatOdds.js';
 import type { IOddsField } from './matchups.interface.js';
 
-export async function prepareAndFormat(matchups: Match[], thumbnail: string) {
+export async function prepareAndFormat(matchups: Match[], thumbnail: string, guildId?: string) {
 	const oddsFields: IOddsField[] = [];
 	for await (const match of Object.values(matchups)) {
 		const hTeam = `${match.home_team}`;
@@ -43,6 +43,7 @@ export async function prepareAndFormat(matchups: Match[], thumbnail: string) {
 			text: `\`${count}\` upcoming matches | ${await helpfooter()}`,
 		},
 		thumbnail,
+		guildId,
 	};
 
 	return await parseScheduledGames(sortedOddsFields, options);

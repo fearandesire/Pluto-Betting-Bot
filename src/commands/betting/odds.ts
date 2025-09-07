@@ -41,7 +41,7 @@ export class UserCommand extends Command {
 				guildId,
 			});
 			const { matches } = matchupsForGuild;
-			const oddsEmbed = await prepareAndFormat(matches, embedThumbnail);
+			const oddsEmbed = await prepareAndFormat(matches, embedThumbnail, guildId);
 			if (!oddsEmbed) {
 				const errEmb = await ErrorEmbeds.invalidRequest(
 					'No Odds are currently posted.',

@@ -16,6 +16,7 @@ import type {
  * @param {boolean} options.includeOdds - Whether to include odds information in the output.
  * @param {string} options.thumbnail - URL of the thumbnail image for the embed.
  * @param {string} options.footer - Footer text for the embed.
+ * @param {string} options.guildId - Guild ID for server-specific customizations.
  * @returns {EmbedBuilder} - Discord Embed with the games formatted and scheduled.
  */
 export default async function parseScheduledGames(
@@ -24,9 +25,10 @@ export default async function parseScheduledGames(
 		includeOdds: boolean;
 		thumbnail: string;
 		footer: { text: string; iconURL?: string };
+		guildId?: string;
 	},
 ) {
-	const { includeOdds, thumbnail } = options;
+	const { includeOdds, thumbnail, guildId } = options;
 
 	// Set initial title and color based on whether odds are included
 	const title = includeOdds ? 'Odds 🎲' : 'Scheduled Games';
@@ -72,16 +74,26 @@ export default async function parseScheduledGames(
 		}),
 	);
 
-	const description =
-		'Use /bet to place bets on any of these matches\nFor teams with multiple games this week, specify your desired match using the `match` field.';
+	const DISABLE_DESCRIPTION_GUILD_ID = '498070362962264067';
+	const shouldShowDescription = guildId !== DISABLE_DESCRIPTION_GUILD_ID;
+	
+	const description = shouldShowDescription 
+		? 'Use /bet to place bets on any of these matches\nFor teams with multiple games this week, specify your desired match using the `match` field.'
+		: undefined;
+	
 	// Construct and return the embed
-	return new EmbedBuilder()
+	const embed = new EmbedBuilder()
 		.setTitle(title)
-		.setDescription(description)
 		.setColor(embColor)
 		.setFooter({ text: await helpfooter('core') })
 		.setThumbnail(thumbnail)
 		.addFields(fields);
+	
+	if (description) {
+		embed.setDescription(description);
+	}
+	
+	return embed;
 }
 
 /**
