@@ -1,6 +1,6 @@
 import type { Context, Next } from 'koa';
 import env from '../../../../lib/startup/env.js';
-import { WinstonLogger } from '../../../logging/WinstonLogger.js';
+import { logger } from '../../../logging/WinstonLogger.js';
 
 /**
  * Creates and returns the API key authentication middleware
@@ -21,7 +21,7 @@ export function createApiKeyAuthMiddleware() {
 				code: 'MISSING_API_KEY',
 				message: 'API key is required',
 			};
-			WinstonLogger.warn('Request rejected due to missing API key', {
+			logger.warn('Request rejected due to missing API key', {
 				path: ctx.path,
 				method: ctx.method,
 				reqId: ctx.state.reqId,
@@ -36,7 +36,7 @@ export function createApiKeyAuthMiddleware() {
 				code: 'INVALID_API_KEY',
 				message: 'Invalid API key',
 			};
-			WinstonLogger.warn('Request rejected due to invalid API key', {
+			logger.warn('Request rejected due to invalid API key', {
 				path: ctx.path,
 				method: ctx.method,
 				reqId: ctx.state.reqId,

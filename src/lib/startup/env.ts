@@ -1,10 +1,5 @@
-import dotenv from 'dotenv';
 import { z } from 'zod';
 
-// Load environment variables
-dotenv.config({
-	path: '.env',
-});
 
 // Define the schema for our environment variables
 const envSchema = z.object({
@@ -31,9 +26,10 @@ const envSchema = z.object({
 	BULL_BOARD_USERNAME: z.string(),
 	BULL_BOARD_PASSWORD: z.string(),
 	API_KEY: z.string(),
-	LOKI_URL: z.string().url(),
+	LOKI_URL: z.string(),
 	LOKI_USER: z.string(),
 	LOKI_PASS: z.string(),
+	TEST_DOPPLER: z.string().optional()
 });
 
 // Parse and validate the environment variables
@@ -61,6 +57,10 @@ const env = envSchema.parse({
 	BULL_BOARD_USERNAME: process.env.BULL_BOARD_USERNAME,
 	BULL_BOARD_PASSWORD: process.env.BULL_BOARD_PASSWORD,
 	API_KEY: process.env.API_KEY,
+	LOKI_URL: process.env.LOKI_URL,
+	LOKI_USER: process.env.LOKI_USER,
+	LOKI_PASS: process.env.LOKI_PASS,
+	TEST_DOPPLER: process.env.TEST_DOPPLER,
 });
 
 export default env;

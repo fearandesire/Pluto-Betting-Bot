@@ -1,3 +1,4 @@
+// tsconfig.json (Corrected)
 {
 	"extends": [
 		"@sapphire/ts-config",
@@ -5,10 +6,14 @@
 		"@sapphire/ts-config/decorators"
 	],
 	"compilerOptions": {
+		// --- ADDED FOR MODERN ESM SUPPORT ---
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
+		// ------------------------------------
 		"strict": true,
 		"skipLibCheck": true,
 		"resolveJsonModule": true,
-		"noUnusedParameters": false,		
+		"noUnusedParameters": false,
 		"noUnusedLocals": false,
 		"isolatedModules": true,
 		"forceConsistentCasingInFileNames": true,

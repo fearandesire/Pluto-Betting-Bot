@@ -22,7 +22,7 @@ PropsRouter.post('/props/stats/post-start', async (ctx) => {
 	};
 	return;
 	/* 	try {
-		WinstonLogger.info({
+		logger.info({
 			message: 'Received request to process Props post-start stats',
 		});
 		const result = await propsController.processPostStart(

@@ -1,3 +1,4 @@
+import { createLokiTransport } from './../../../logging/transports/lokiTransport.js';
 import cors from '@koa/cors';
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
@@ -5,8 +6,8 @@ import { pageNotFound } from '../../requests/middleware.js';
 import { createApiKeyAuthMiddleware } from './apiKeyAuth.js';
 import { setupBullBoard } from './bullBoard.js';
 import { createErrorHandler } from './errorHandler.js';
-import { createLoggingMiddleware } from './logging.js';
 import { createRequestIdMiddleware } from './requestId.js';
+import { logger } from 'koa2-winston';
 
 /**
  * Sets up and configures the Koa application with all middleware and plugins
@@ -18,7 +19,16 @@ export async function setupKoaApp(): Promise<Koa> {
 	app.use(createRequestIdMiddleware());
 
 	// Add logging middleware
-	app.use(createLoggingMiddleware());
+	app.use(
+		logger({
+			transports: createLokiTransport({
+				serviceName: 'PLUTO-DISCORD',
+				customLabels: {
+					api: true
+				},
+			}),
+		}),
+	);	 
 
 	// Add API key authentication middleware
 	app.use(createApiKeyAuthMiddleware());

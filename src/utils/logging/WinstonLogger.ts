@@ -23,10 +23,10 @@ const createBaseFormat = () => {
  * Creates all configured transports, filtering out any that are null
  * @param serviceName - The service name to use for logging identification
  */
-const createTransports = (serviceName: string) => {
+const createTransports = (serviceName: string, customLabels: Record<string, string> = {}) => {
 	const transports = [
 		createConsoleTransport(),
-		createLokiTransport({ serviceName }),
+		createLokiTransport({ serviceName, customLabels }),
 	]
 
 	// Filter out null transports and ensure type safety
@@ -48,6 +48,8 @@ export interface LoggerConfig {
 	readonly logLevel?: string
 	/** Environment override */
 	readonly environment?: string
+	/** Custom labels to add to Loki transport */
+	readonly customLabels?: Record<string, string>
 }
 
 /**
@@ -58,7 +60,7 @@ export interface LoggerConfig {
 export const createLogger = (config: LoggerConfig = {}) => {
 	const serviceName = config.serviceName!
 	const appName = config.appName || serviceName
-	const logLevel = config.logLevel || env.logLevel || 'info'
+	const logLevel = 'info'
 	const environment = config.environment || env.NODE_ENV
 
 	return winston.createLogger({
@@ -66,19 +68,19 @@ export const createLogger = (config: LoggerConfig = {}) => {
 		format: createBaseFormat(),
 		defaultMeta: {
 			environment,
-			app: appName,
 			service: serviceName,
 		},
-		transports: createTransports(serviceName),
+		transports: createTransports(serviceName, config.customLabels),
 	})
 }
 
+
 /**
- * Default logger instance using DEXTER-CORE as service name
+ * Default logger instance using PLUTO-DISCORD as service name
+ * Automatically detects and labels HTTP logs when used with koa2-winston
  * For plug-in-able usage, prefer using createLogger() with custom service name
  */
 export const logger = createLogger({
 	serviceName: 'PLUTO-DISCORD',
 	appName: 'PLUTO-DISCORD',
 })
- 

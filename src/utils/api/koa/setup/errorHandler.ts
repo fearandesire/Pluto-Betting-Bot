@@ -4,7 +4,7 @@ import {
 	fromError,
 	isZodErrorLike,
 } from 'zod-validation-error';
-import { WinstonLogger } from '../../../logging/WinstonLogger.js';
+import { logger } from '../../../logging/WinstonLogger.js';
 
 const customMsgBuilder = createMessageBuilder({
 	includePath: true,
@@ -28,7 +28,7 @@ async function handleZodError(
 	const zodError = await fromError(err, {
 		messageBuilder: customMsgBuilder,
 	});
-	WinstonLogger.error('Validation Error', {
+	logger.error('Validation Error', {
 		error: {
 			message: zodError.message,
 			type: 'VALIDATION_ERROR',

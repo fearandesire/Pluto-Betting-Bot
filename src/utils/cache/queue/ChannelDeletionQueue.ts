@@ -1,6 +1,6 @@
 import { type Job, Queue, Worker } from 'bullmq';
 import ChannelManager from '../../guilds/channels/ChannelManager.js';
-import { WinstonLogger } from '../../logging/WinstonLogger.js';
+import { logger } from '../../logging/WinstonLogger.js';
 import { REDIS_CONFIG } from '../data/config.js';
 import type {
 	ChannelDeletionJobData,
@@ -49,7 +49,7 @@ export class ChannelDeletionQueue {
 
 		this.setupWorkerEvents();
 
-		WinstonLogger.info({
+		logger.info({
 			message: 'Channel deletion BullMQ initialized',
 			source: 'ChannelDeletionQueue:constructor',
 		});
@@ -61,7 +61,7 @@ export class ChannelDeletionQueue {
 			async (job: Job<ChannelDeletionJobData, ChannelDeletionResult>) => {
 				const result = await job.returnvalue;
 				if (result.success) {
-					WinstonLogger.info({
+					logger.info({
 						message: 'Channel deletion successful',
 						source: 'ChannelDeletionQueue:worker',
 						data: {
@@ -76,7 +76,7 @@ export class ChannelDeletionQueue {
 		this.worker.on(
 			'failed',
 			(job: Job<ChannelDeletionJobData>, error: Error) => {
-				WinstonLogger.error({
+				logger.error({
 					message: 'Channel deletion failed',
 					source: 'ChannelDeletionQueue:worker',
 					data: {
@@ -108,7 +108,7 @@ export class ChannelDeletionQueue {
 				error instanceof Error ? error.message : String(error);
 
 			if (job.attemptsMade + 1 >= ChannelDeletionQueue.MAX_ATTEMPTS) {
-				WinstonLogger.error({
+				logger.error({
 					message: `Channel deletion complete failure - Max attempts reached | Channel: ${channelName}`,
 					source: 'ChannelDeletionQueue:worker',
 					data: {

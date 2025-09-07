@@ -33,7 +33,7 @@ export const createConsoleTransport = () => {
 			winston.format.padLevels(),
 			consoleFormat({
 				showMeta: true,
-				metaStrip: ['timestamp', 'service'],
+				metaStrip: ['timestamp', 'service', 'environment'],
 				inspectOptions: {
 					depth: Number.POSITIVE_INFINITY,
 					colors: true,

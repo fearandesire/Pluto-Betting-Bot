@@ -16,7 +16,7 @@ import {
 import { DateManager } from '../../common/DateManager.js';
 import TeamInfo from '../../common/TeamInfo.js';
 import StringUtils from '../../common/string-utils.js';
-import { WinstonLogger } from '../../logging/WinstonLogger.js';
+import { logger } from '../../logging/WinstonLogger.js';
 import GuildUtils from '../GuildUtils.js';
 
 interface AggregateDetailsParams {
@@ -187,7 +187,7 @@ export default class PropEmbedManager {
 	) {
 		let totalEmbedsCreated = 0;
 
-		await WinstonLogger.info('Starting prop embed creation process', {
+		await logger.info('Starting prop embed creation process', {
 			totalProps: props.length,
 			totalGuildChannels: guildChannels.length,
 			source: this.createEmbeds.name,
@@ -197,7 +197,7 @@ export default class PropEmbedManager {
 		const propsBySport = _.groupBy(props, 'sport_title');
 		const guildsBySport = _.groupBy(guildChannels, 'sport');
 
-		await WinstonLogger.info('Iterating through props & guilds by sport', {
+		await logger.info('Iterating through props & guilds by sport', {
 			propsBySportLength: Object.keys(propsBySport).length,
 			guildsBySportLength: Object.keys(guildsBySport).length,
 			propsBySport,
@@ -210,7 +210,7 @@ export default class PropEmbedManager {
 			const sportGuilds = guildsBySport[sport] || [];
 			const sportProps = propsBySport[sport] || [];
 
-			await WinstonLogger.info(`Processing props for sport: ${sport}`, {
+			await logger.info(`Processing props for sport: ${sport}`, {
 				sport,
 				propsCount: sportProps.length,
 				guildsCount: sportGuilds.length,
@@ -219,7 +219,7 @@ export default class PropEmbedManager {
 
 			// ? Skip empty entries
 			if (!sportProps.length || !sportGuilds.length) {
-				await WinstonLogger.info('Skipping sport due to no props or guilds', {
+				await logger.info('Skipping sport due to no props or guilds', {
 					sport,
 					sportPropsLength: sportProps.length,
 					sportGuildsLength: sportGuilds.length,
@@ -230,7 +230,7 @@ export default class PropEmbedManager {
 
 			// For each guild that follows this sport
 			for (const { guild_id, channel_id } of sportGuilds) {
-				await WinstonLogger.info('Processing guild', {
+				await logger.info('Processing guild', {
 					guild_id,
 					channel_id,
 					sport,
@@ -241,7 +241,7 @@ export default class PropEmbedManager {
 				const guild = await guildUtils.getGuild(guild_id);
 
 				if (!guild) {
-					await WinstonLogger.info('Skipping guild due to not found', {
+					await logger.info('Skipping guild due to not found', {
 						guild_id,
 						source: this.createEmbeds.name,
 					});
@@ -250,7 +250,7 @@ export default class PropEmbedManager {
 
 				const channel = await guild.channels.fetch(channel_id);
 				if (!channel?.isTextBased()) {
-					await WinstonLogger.info(
+					await logger.info(
 						'Skipping channel due to not being text based',
 						{
 							channel_id,
@@ -263,7 +263,7 @@ export default class PropEmbedManager {
 				// Create all embeds for this sport's props
 				const embeds = await Promise.all(
 					sportProps.map(async (prop) => {
-						await WinstonLogger.info('Creating embed for prop', {
+						await logger.info('Creating embed for prop', {
 							prop_id: prop.id,
 							home_team: prop.home_team,
 							away_team: prop.away_team,
@@ -316,7 +316,7 @@ export default class PropEmbedManager {
 					}),
 				);
 
-				await WinstonLogger.info('Created embeds batch for guild', {
+				await logger.info('Created embeds batch for guild', {
 					guild_id,
 					channel_id,
 					embedsCount: embeds.length,
@@ -329,14 +329,14 @@ export default class PropEmbedManager {
 						await channel.send({ embeds: [embed], components: [row] });
 						totalEmbedsCreated++;
 
-						await WinstonLogger.info('Successfully sent embed to channel', {
+						await logger.info('Successfully sent embed to channel', {
 							guild_id,
 							channel_id,
 							currentTotal: totalEmbedsCreated,
 							source: this.createEmbeds.name,
 						});
 					} catch (error) {
-						await WinstonLogger.error('Failed to send embed to channel', {
+						await logger.error('Failed to send embed to channel', {
 							guild_id,
 							channel_id,
 							error: error instanceof Error ? error.message : 'Unknown error',
@@ -347,7 +347,7 @@ export default class PropEmbedManager {
 			}
 		}
 
-		await WinstonLogger.info('Completed prop embed creation process', {
+		await logger.info('Completed prop embed creation process', {
 			totalEmbedsCreated,
 			totalProps: props.length,
 			totalGuildChannels: guildChannels.length,
@@ -359,7 +359,7 @@ export default class PropEmbedManager {
 		prop: PropZod,
 		{ home, away }: AggregateDetailsParams,
 	) {
-		await WinstonLogger.info('Creating single embed', {
+		await logger.info('Creating single embed', {
 			prop_id: prop.id,
 			home_team: prop.home_team,
 			away_team: prop.away_team,

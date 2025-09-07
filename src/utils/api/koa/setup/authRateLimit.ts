@@ -1,6 +1,6 @@
 import type { Context } from 'koa';
 import redisCache from '../../../cache/redis-instance.js';
-import { WinstonLogger } from '../../../logging/WinstonLogger.js';
+import { logger } from '../../../logging/WinstonLogger.js';
 
 const MAX_FAILED_ATTEMPTS = 5;
 const BAN_DURATION = 60 * 60; // 1 hour in seconds
@@ -59,7 +59,7 @@ export class AuthRateLimit {
 		// Ban IP if it exceeds max attempts
 		if (attempts >= MAX_FAILED_ATTEMPTS) {
 			await redisCache.setex(banKey, BAN_DURATION, '1');
-			WinstonLogger.warn({
+			logger.warn({
 				message: 'IP banned due to too many failed authentication attempts',
 				ip,
 				attempts,

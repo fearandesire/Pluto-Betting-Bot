@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { fromZodError } from 'zod-validation-error';
 import { ValidationError } from '../../../utils/errors/ValidationError.js';
-import { WinstonLogger } from '../../logging/WinstonLogger.js';
+import { logger } from '../../logging/WinstonLogger.js';
 import {
 	PropArraySchema,
 	type PropEmbedsIncoming,
@@ -82,7 +82,7 @@ export class PropsController {
 		body: ReqBodyPropsEmbedsData,
 	): Promise<{ success: boolean; message: string; details?: unknown }> {
 		try {
-			WinstonLogger.info({
+			logger.info({
 				message: 'Processing props embeds generation request',
 				metadata: {
 					source: this.processPropsForPredictionEmbeds.name,
@@ -112,7 +112,7 @@ export class PropsController {
 					? error.message
 					: 'Validation failed due to an unknown error';
 
-			WinstonLogger.error({
+			logger.error({
 				message: errorMessage,
 				metadata: {
 					source: this.processPropsForPredictionEmbeds.name,

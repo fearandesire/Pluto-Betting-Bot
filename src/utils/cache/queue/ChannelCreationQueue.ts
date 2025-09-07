@@ -1,6 +1,6 @@
 import { type Job, Queue, Worker } from 'bullmq';
 import ChannelManager from '../../guilds/channels/ChannelManager.js';
-import { WinstonLogger } from '../../logging/WinstonLogger.js';
+import { logger } from '../../logging/WinstonLogger.js';
 import { REDIS_CONFIG } from '../data/config.js';
 import type { ChannelCreationPayload } from '../data/schemas.js';
 import { channelCreationEventSchema } from '../data/schemas.js';
@@ -60,7 +60,7 @@ export class ChannelCreationQueue {
 
 		this.setupWorkerEvents();
 
-		WinstonLogger.info({
+		logger.info({
 			message: 'Channel creation BullMQ initialized',
 			source: 'ChannelCreationBullMQ:constructor',
 		});
@@ -73,7 +73,7 @@ export class ChannelCreationQueue {
 				const result = await job.returnvalue;
 				if (result.success) {
 					// Aggregate logging as per documentation
-					WinstonLogger.info({
+					logger.info({
 						message: 'Channel creation successful',
 						source: 'ChannelCreationQueue:worker',
 						data: {
@@ -89,7 +89,7 @@ export class ChannelCreationQueue {
 			'failed',
 			(job: Job<ChannelCreationJobData>, error: Error) => {
 				// Aggregate error logging as per documentation
-				WinstonLogger.error({
+				logger.error({
 					message: 'Channel creation failed',
 					source: 'ChannelCreationQueue:worker',
 					data: {
@@ -111,7 +111,7 @@ export class ChannelCreationQueue {
 		const { success, error } = channelCreationEventSchema.safeParse(job.data);
 		if (!success) {
 			// Remove the job from queue for invalid data
-			WinstonLogger.error({
+			logger.error({
 				message: 'Invalid job data received -- removing from queue',
 				source: 'ChannelCreationQueue:processJob',
 			});
@@ -142,7 +142,7 @@ export class ChannelCreationQueue {
 				error instanceof Error ? error.message : String(error);
 
 			if (job.attemptsMade + 1 >= ChannelCreationQueue.MAX_ATTEMPTS) {
-				WinstonLogger.error({
+				logger.error({
 					message: `Channel creation complete failure - Max attempts reached | Guild: ${guild.guildId} | Channel: ${channel.id}`,
 					source: 'ChannelCreationQueue:worker',
 					data: {

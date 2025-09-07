@@ -20,20 +20,27 @@ interface LokiConfig extends HttpTransportBaseConfig {
 	readonly serviceName?: string
 	/** Labels to attach to all logs */
 	readonly labels?: Record<string, string>
+	/** Additional custom labels to merge with default labels */
+	/**
+	 * Additional custom labels to merge with default labels.
+	 * Each label value can be a string, boolean, object, or array.
+	 */
+	readonly customLabels?: Record<string, string | boolean | object | any[]>
 }
 
 /**
  * Creates default configuration for Loki transport
  * @param serviceName - Optional service name override
+ * @param customLabels - Additional custom labels to merge
  * @returns Default Loki configuration or null if credentials are missing
  */
-const createDefaultConfig = (serviceName = 'DEXTER-CORE'): LokiConfig | null => {
+const createDefaultConfig = (serviceName = 'PLUTO-DISCORD', customLabels: Record<string, string | boolean | object | any[]> = {}): LokiConfig | null => {
 	const host = env.LOKI_URL
 	const user = env.LOKI_USER
 	const password = env.LOKI_PASS
 
 	if (!host || !user || !password) {
-		console.error('[DEXTER] ERROR: Loki credentials are not configured')
+		console.error('[PLUTO] ERROR: Loki credentials are not configured')
 		return null
 	}
 
@@ -47,6 +54,9 @@ const createDefaultConfig = (serviceName = 'DEXTER-CORE'): LokiConfig | null => 
 			app: serviceName,
 			service: serviceName,
 			environment: env.NODE_ENV,
+			component: 'api', // Identifies this as API-related logs
+			log_type: 'application', // Distinguishes from system logs
+			...customLabels, // Merge any custom labels
 		},
 	}
 }
@@ -57,8 +67,9 @@ const createDefaultConfig = (serviceName = 'DEXTER-CORE'): LokiConfig | null => 
  * @returns Configured Loki transport or null if credentials are missing
  */
 export const createLokiTransport = (config: Partial<LokiConfig> = {}) => {
-	const serviceName = config.serviceName || 'DEXTER-CORE'
-	const defaultConfig = createDefaultConfig(serviceName)
+	const serviceName = config.serviceName || 'PLUTO-DISCORD'
+	const customLabels = config.customLabels || {}
+	const defaultConfig = createDefaultConfig(serviceName, customLabels)
 
 	if (!defaultConfig) {
 		// Return null if Loki credentials are not configured

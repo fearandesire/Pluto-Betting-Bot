@@ -1,5 +1,5 @@
 import { Redis } from 'ioredis';
-import { WinstonLogger } from '../logging/WinstonLogger.js';
+import { logger } from '../logging/WinstonLogger.js';
 import { RedisChannel } from './data/types.js';
 import type { ChannelPayloadMap } from './data/types.js';
 const { R_HOST, R_PORT, R_PASS } = process.env;
@@ -20,7 +20,7 @@ export class RedisPubSubManager {
 				return delay;
 			},
 			reconnectOnError: (err: Error) => {
-				WinstonLogger.error({
+				logger.error({
 					message: `Redis reconnection error: ${err.message}`,
 					source: 'RedisPubSubManager:reconnectOnError',
 				});
@@ -33,7 +33,7 @@ export class RedisPubSubManager {
 
 		this.initializeErrorHandling();
 		this.init().catch((err) => {
-			WinstonLogger.error({
+			logger.error({
 				message: `Failed to initialize RedisPubSubManager: ${err.message}`,
 				source: 'RedisPubSubManager:constructor',
 			});
@@ -42,14 +42,14 @@ export class RedisPubSubManager {
 
 	private initializeErrorHandling(): void {
 		this.subscriber.on('error', (err) => {
-			WinstonLogger.error({
+			logger.error({
 				message: `Redis Subscriber Error: ${err.message}`,
 				source: 'RedisPubSubManager:subscriber',
 			});
 		});
 
 		this.publisher.on('error', (err) => {
-			WinstonLogger.error({
+			logger.error({
 				message: `Redis Publisher Error: ${err.message}`,
 				source: 'RedisPubSubManager:publisher',
 			});
@@ -82,13 +82,13 @@ export class RedisPubSubManager {
 							case RedisChannel.CHANNEL_CREATION:
 								break;
 							default:
-								WinstonLogger.warn({
+								logger.warn({
 									message: `Received message for unknown channel: ${channel}`,
 									source: 'RedisPubSubManager:pmessage',
 								});
 						}
 					} catch (error) {
-						WinstonLogger.error({
+						logger.error({
 							message: `Error handling message on channel ${channel}: ${error}`,
 							source: 'RedisPubSubManager:pmessage',
 							data: { channel, error },
@@ -98,12 +98,12 @@ export class RedisPubSubManager {
 			);
 
 			this.isInitialized = true;
-			WinstonLogger.info({
+			logger.info({
 				message: `Successfully subscribed to channels: ${channels.join(', ')}`,
 				source: 'RedisPubSubManager:initialize',
 			});
 		} catch (error) {
-			WinstonLogger.error({
+			logger.error({
 				message: `Failed to initialize Redis PubSub: ${error}`,
 				source: 'RedisPubSubManager:init',
 			});
@@ -123,13 +123,13 @@ export class RedisPubSubManager {
 			const stringifiedPayload = JSON.stringify(payload);
 			const result = await this.publisher.publish(channel, stringifiedPayload);
 
-			WinstonLogger.debug({
+			logger.debug({
 				message: `Published message to channel: ${channel} (received by ${result} subscribers)`,
 				source: 'RedisPubSubManager:publish',
 				data: { channel, subscribers: result },
 			});
 		} catch (error) {
-			WinstonLogger.error({
+			logger.error({
 				message: `Failed to publish to channel ${channel}: ${error}`,
 				source: 'RedisPubSubManager:publish',
 				data: { channel, error },

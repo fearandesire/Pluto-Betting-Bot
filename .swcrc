@@ -1,0 +1,28 @@
+{
+  "jsc": {
+    "parser": {
+      "syntax": "typescript",
+      "decorators": true,
+      "dynamicImport": true
+    },
+    "target": "es2021",
+    "loose": false,
+    "externalHelpers": false,
+    "keepClassNames": true,
+    "preserveAllComments": true,
+    "transform": {
+      "decoratorMetadata": true,
+      "legacyDecorator": true
+    }
+  },
+  "module": {
+    "type": "es6",
+    "strict": true,
+    "strictMode": true,
+    "lazy": false,
+    "noInterop": false
+  },
+  "minify": false,
+  "sourceMaps": true,
+  "inlineSourcesContent": true
+}

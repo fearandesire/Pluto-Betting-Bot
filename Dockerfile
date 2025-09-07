@@ -4,6 +4,16 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN npm install -g pnpm
 
+# Install Doppler
+RUN apt-get update && apt-get install -y apt-transport-https ca-certificates curl gnupg && \
+    curl -sLf --retry 3 --tlsv1.2 --proto "=https" 'https://packages.doppler.com/public/cli/gpg.DE2A7741A397C129.key' | gpg --dearmor -o /usr/share/keyrings/doppler-archive-keyring.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/doppler-archive-keyring.gpg] https://packages.doppler.com/public/cli/deb/debian any-version main" | tee /etc/apt/sources.list.d/doppler-cli.list && \
+    apt-get update && \
+    apt-get -y install doppler
+    
+# Fetch and view secrets using "printenv". Testing purposes only!
+# Replace "printenv" with the command used to start your app, e.g. "npm", "start"
+CMD ["doppler", "run", "--", "printenv"]
 
 # OpenAPI generation stage
 FROM base AS openapi-generator

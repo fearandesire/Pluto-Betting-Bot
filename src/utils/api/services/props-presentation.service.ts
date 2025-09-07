@@ -1,7 +1,7 @@
 import { SapDiscClient } from '../../../index.js';
 import { DateManager } from '../../common/DateManager.js';
 import PropEmbedManager from '../../guilds/prop-embeds/PropEmbedManager.js';
-import { WinstonLogger } from '../../logging/WinstonLogger.js';
+import { logger } from '../../logging/WinstonLogger.js';
 import {
 	type PropOptions,
 	PropOptionsSchema,
@@ -69,13 +69,13 @@ export class PropsPresentation {
 
 		const dateManager = new DateManager<PropZod>(daysAhead);
 		const propsWithinDateRange = dateManager.filterByDateRange(props);
-		await WinstonLogger.info('Props filtered by date range', {
+		await logger.info('Props filtered by date range', {
 			propsWithinDateRangeLength: propsWithinDateRange?.length || 0,
 			source: this.processAndCreateEmbeds.name,
 		});
 
 		const uniqueProps = this.selectRandomPropPerEvent(propsWithinDateRange);
-		await WinstonLogger.info('Unique props selected', {
+		await logger.info('Unique props selected', {
 			uniquePropsLength: uniqueProps?.length || 0,
 			source: this.processAndCreateEmbeds.name,
 		});
@@ -92,7 +92,7 @@ export class PropsPresentation {
 			);
 			guildProps.set(channel.guild_id, filteredProps);
 
-			await WinstonLogger.info('Props filtered by preferred teams for guild', {
+			await logger.info('Props filtered by preferred teams for guild', {
 				guildId: channel.guild_id,
 				preferredTeams: channel.preferred_teams,
 				filteredPropsLength: filteredProps.length,

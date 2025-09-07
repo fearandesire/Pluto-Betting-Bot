@@ -1,9 +1,9 @@
 import { default as Redis } from 'ioredis'; // Issue from https://github.com/redis/ioredis/issues/1624
-import { WinstonLogger } from '../logging/WinstonLogger.js';
+import { logger } from '../logging/WinstonLogger.js';
 
 const { R_HOST, R_PORT, R_PASS, R_DB } = process.env;
 
-WinstonLogger.info({
+logger.info({
 	message: `Connecting to Redis: ${R_HOST}:${R_PORT}`,
 	source: 'startup:redis',
 });
@@ -25,7 +25,7 @@ const redisCache = new Redis({
 });
 
 redisCache.on('error', (err) => {
-	WinstonLogger.error({
+	logger.error({
 		message: err,
 		source: 'startup:redis',
 	});

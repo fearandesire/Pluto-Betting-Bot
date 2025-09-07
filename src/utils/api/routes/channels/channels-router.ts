@@ -7,7 +7,7 @@ import Router from 'koa-router';
 import _ from 'lodash';
 import type { IncomingChannelData } from '../../../cache/data/schemas.js';
 import ChannelManager from '../../../guilds/channels/ChannelManager.js';
-import { WinstonLogger } from '../../../logging/WinstonLogger.js';
+import { logger } from '../../../logging/WinstonLogger.js';
 
 const ChannelsRoutes = new Router();
 
@@ -17,7 +17,7 @@ const ChannelsRoutes = new Router();
  */
 ChannelsRoutes.post('/channels/create', async (ctx: any) => {
 	const channelManager = new ChannelManager();
-	WinstonLogger.info('Received request to create channels', {
+	logger.info('Received request to create channels', {
 		body: ctx.request.body,
 	});
 	await channelManager.validateAndParseChannels(ctx.request.body);
@@ -28,7 +28,7 @@ ChannelsRoutes.post('/channels/create', async (ctx: any) => {
 			guilds,
 		});
 	} catch (err) {
-		WinstonLogger.error('Error creating channels', {
+		logger.error('Error creating channels', {
 			error: err,
 		});
 		throw err;
