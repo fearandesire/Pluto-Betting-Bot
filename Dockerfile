@@ -10,10 +10,7 @@ RUN apt-get update && apt-get install -y apt-transport-https ca-certificates cur
     echo "deb [signed-by=/usr/share/keyrings/doppler-archive-keyring.gpg] https://packages.doppler.com/public/cli/deb/debian any-version main" | tee /etc/apt/sources.list.d/doppler-cli.list && \
     apt-get update && \
     apt-get -y install doppler
-    
-# Fetch and view secrets using "printenv". Testing purposes only!
-# Replace "printenv" with the command used to start your app, e.g. "npm", "start"
-CMD ["doppler", "run", "--", "printenv"]
+
 
 # OpenAPI generation stage
 FROM base AS openapi-generator
@@ -66,4 +63,5 @@ COPY --from=builder /app/assets ./assets
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --force
 
 EXPOSE 2090
-CMD ["pnpm", "start"]
+
+CMD ["doppler", "run", "--", "pnpm", "start"]

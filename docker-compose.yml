@@ -3,8 +3,6 @@ services:
     image: ghcr.io/fearandesire/pluto-betting-bot:latest
     build:
       context: .
-    env_file:
-      - .env
     volumes:
       - ./Khronos-Swagger-Spec-v1.json:/app/Khronos-Swagger-Spec-v1.json
     ports:
@@ -14,6 +12,8 @@ services:
       - redis-net
     restart: always
     container_name: pluto_api
+    environment:
+      - DOPPLER_TOKEN=${PLUTO_DOPPER_TOKEN}
 
 networks:
   webnet:

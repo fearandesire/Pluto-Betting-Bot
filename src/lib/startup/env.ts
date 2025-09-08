@@ -13,9 +13,9 @@ const envSchema = z.object({
 	R_PORT: z.number().int().positive(),
 	R_DB: z.number().int().nonnegative(),
 	R_PASS: z.string(),
-	apiPort: z.number().int().positive(),
-	apiURL: z.string().url(),
-	logLevel: z.enum(['Trace', 'Debug', 'Info', 'Warn', 'Error', 'Fatal']),
+	API_PORT: z.number().int().positive(),
+	API_URL: z.string().url(),
+	LOG_LEVEL: z.enum(['Trace', 'Debug', 'Info', 'Warn', 'Error', 'Fatal']),
 	DEV_SERVER_ID: z.string(),
 	PATREON_API_URL: z.string().url(),
 	KH_PLUTO_CLIENT_KEY: z.string(),
@@ -29,7 +29,6 @@ const envSchema = z.object({
 	LOKI_URL: z.string(),
 	LOKI_USER: z.string(),
 	LOKI_PASS: z.string(),
-	TEST_DOPPLER: z.string().optional()
 });
 
 // Parse and validate the environment variables
@@ -44,9 +43,9 @@ const env = envSchema.parse({
 	R_PORT: Number.parseInt(process.env.R_PORT || '6379', 10),
 	R_DB: Number.parseInt(process.env.R_DB || '0', 10),
 	R_PASS: process.env.R_PASS,
-	apiPort: Number.parseInt(process.env.apiPort || '2090', 10),
-	apiURL: process.env.apiURL,
-	logLevel: process.env.logLevel,
+	API_PORT: Number.parseInt(process.env.APIPORT || '2090', 10),
+	API_URL: process.env.APIURL,
+	LOG_LEVEL: process.env.LOGLEVEL,
 	DEV_SERVER_ID: process.env.DEV_SERVER_ID,
 	PATREON_API_URL: process.env.PATREON_API_URL,
 	KH_PLUTO_CLIENT_KEY: process.env.KH_PLUTO_CLIENT_KEY,
@@ -60,7 +59,6 @@ const env = envSchema.parse({
 	LOKI_URL: process.env.LOKI_URL,
 	LOKI_USER: process.env.LOKI_USER,
 	LOKI_PASS: process.env.LOKI_PASS,
-	TEST_DOPPLER: process.env.TEST_DOPPLER,
 });
 
 export default env;

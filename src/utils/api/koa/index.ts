@@ -10,6 +10,7 @@ import NotificationRouter from '../routes/notifications/notifications.controller
 import PropsRouter from '../routes/props/props-router.js';
 import ScheduleRouter from '../routes/schedule/schedule.js';
 import { setupKoaApp } from './setup/koaSetup.js';
+import env from '#lib/startup/env.js';
 
 const app = await setupKoaApp();
 
@@ -19,9 +20,7 @@ app.use(matchCache.routes()).use(matchCache.allowedMethods());
 app.use(ScheduleRouter.routes()).use(ScheduleRouter.allowedMethods());
 app.use(PropsRouter.routes()).use(PropsRouter.allowedMethods());
 
-const { apiPort, apiURL } = process.env;
 
-app.listen(apiPort, async () => {
-});
+app.listen(env.API_PORT);
 
 export { app };
