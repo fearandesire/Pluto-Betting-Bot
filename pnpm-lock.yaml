@@ -138,8 +138,8 @@ importers:
         specifier: ^4.4.1
         version: 4.4.1
       koa-logger:
-        specifier: ^3.2.1
-        version: 3.2.1
+        specifier: ^4.0.0
+        version: 4.0.0
       koa-router:
         specifier: ^13.0.1
         version: 13.1.1
@@ -4594,9 +4594,9 @@ packages:
     resolution: {integrity: sha512-asOvN6bFlSnxewce2e/DK3p4tltyfC4VM7ZwuTuepI7dEQVcvpyFuBcEARu1+Hxg8DIwytce2n7jrZtRlPrARA==}
     engines: {node: '>= 10'}
 
-  koa-logger@3.2.1:
-    resolution: {integrity: sha512-MjlznhLLKy9+kG8nAXKJLM0/ClsQp/Or2vI3a5rbSQmgl8IJBQO0KI5FA70BvW+hqjtxjp49SpH2E7okS6NmHg==}
-    engines: {node: '>= 7.6.0'}
+  koa-logger@4.0.0:
+    resolution: {integrity: sha512-LP3ocZPpSINyw2LBSIOpHksrYTlr5DKRB9ogk2PFEsF6vZJE2G//0TsjmL7Ph0O/KI4QU/yZJpRC5BelR+2oJA==}
+    engines: {node: '>= 18'}
 
   koa-mount@4.2.0:
     resolution: {integrity: sha512-2iHQc7vbA9qLeVq5gKAYh3m5DOMMlMfIKjW/REPAS18Mf63daCJHHVXY9nbu7ivrnYn5PiPC4CE523Tf5qvjeQ==}
@@ -11459,11 +11459,12 @@ snapshots:
       co: 4.6.0
       koa-compose: 4.1.0
 
-  koa-logger@3.2.1:
+  koa-logger@4.0.0:
     dependencies:
       bytes: 3.1.2
-      chalk: 2.4.2
+      chalk: 4.1.2
       humanize-number: 0.0.2
+      on-finished: 2.4.1
       passthrough-counter: 1.0.0
 
   koa-mount@4.2.0:
