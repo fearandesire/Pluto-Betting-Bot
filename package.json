@@ -107,7 +107,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.2.4",
-		"@biomejs/cli-win32-x64": "^1.9.4",
+		"@biomejs/cli-win32-x64": "^2.2.4",
 		"@sapphire/cli": "^1.9.3",
 		"@sapphire/prettier-config": "^2.0.0",
 		"@sapphire/ts-config": "^5.0.1",
