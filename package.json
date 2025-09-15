@@ -58,7 +58,7 @@
 		"@sapphire/ratelimits": "^2.4.11",
 		"@sapphire/time-utilities": "^1.7.14",
 		"@sapphire/utilities": "^3.18.2",
-		"@skyra/env-utilities": "^1.3.0",
+		"@skyra/env-utilities": "^2.0.1",
 		"@types/uuid": "^10.0.0",
 		"accounting": "^0.4.1",
 		"axios": "^1.12.0",
