@@ -90,7 +90,7 @@
 		"pg-monitor": "^2.1.0",
 		"pg-promise": "^11.10.2",
 		"pkg-dir": "^9.0.0",
-		"puppeteer": "^24.21.0",
+		"puppeteer": "^24.22.0",
 		"puppeteer-extra": "^3.3.6",
 		"puppeteer-extra-plugin-recaptcha": "^3.6.8",
 		"puppeteer-extra-plugin-stealth": "^2.11.2",
