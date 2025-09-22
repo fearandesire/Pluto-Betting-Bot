@@ -117,8 +117,8 @@ importers:
         specifier: ^14.18.0
         version: 14.22.1
       dotenv:
-        specifier: 16.4.7
-        version: 16.4.7
+        specifier: 17.2.2
+        version: 17.2.2
       dotenv-vault:
         specifier: 1.27.0
         version: 1.27.0(@swc/core@1.13.5)(@types/node@24.4.0)(typescript@5.9.2)
@@ -3359,12 +3359,12 @@ packages:
     engines: {node: '>=16'}
     hasBin: true
 
-  dotenv@16.4.7:
-    resolution: {integrity: sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==}
-    engines: {node: '>=12'}
-
   dotenv@16.6.1:
     resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
+    engines: {node: '>=12'}
+
+  dotenv@17.2.2:
+    resolution: {integrity: sha512-Sf2LSQP+bOlhKWWyhFsn0UsfdK/kCWRv1iuA2gXAwt3dyNabr6QSj00I2V10pidqz69soatm9ZwZvpQMTIOd5Q==}
     engines: {node: '>=12'}
 
   dunder-proto@1.0.1:
@@ -9290,7 +9290,7 @@ snapshots:
       chokidar: 3.6.0
       confbox: 0.1.8
       defu: 6.1.4
-      dotenv: 16.4.7
+      dotenv: 16.6.1
       giget: 1.2.5
       jiti: 1.21.7
       mlly: 1.8.0
@@ -9856,7 +9856,7 @@ snapshots:
       '@oclif/plugin-warn-if-update-available': 2.1.1(@swc/core@1.13.5)(@types/node@24.4.0)(typescript@5.9.2)
       axios: 1.12.2
       chalk: 4.1.2
-      dotenv: 16.4.7
+      dotenv: 16.6.1
     transitivePeerDependencies:
       - '@swc/core'
       - '@swc/wasm'
@@ -9865,9 +9865,9 @@ snapshots:
       - supports-color
       - typescript
 
-  dotenv@16.4.7: {}
-
   dotenv@16.6.1: {}
+
+  dotenv@17.2.2: {}
 
   dunder-proto@1.0.1:
     dependencies:
@@ -12647,7 +12647,7 @@ snapshots:
       chalk: 5.6.0
       changelogen: 0.5.7
       defu: 6.1.4
-      dotenv: 16.4.7
+      dotenv: 16.6.1
       execa: 8.0.1
       pathe: 1.1.2
       release-it: 19.0.4(@types/node@24.4.0)
