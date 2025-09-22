@@ -165,8 +165,8 @@ importers:
         specifier: ^2.1.0
         version: 2.1.0
       pg-promise:
-        specifier: ^11.10.2
-        version: 11.15.0(pg-query-stream@4.10.3(pg@8.16.3))
+        specifier: ^12.1.3
+        version: 12.1.3(pg-query-stream@4.10.3(pg@8.16.3))
       pkg-dir:
         specifier: ^9.0.0
         version: 9.0.0
@@ -5643,8 +5643,8 @@ packages:
     peerDependencies:
       pg: '>=8.0'
 
-  pg-promise@11.15.0:
-    resolution: {integrity: sha512-EUXpXn90yPVPKxQH4qqUAEVcApd2tp/JdR3wG6LzBUgaXTUYqwmuXG4vFhhZTCctzhfzRA20EbORb9H4aAgUHA==}
+  pg-promise@12.1.3:
+    resolution: {integrity: sha512-sxPvKSpe5GSUIEzbUcDM/ZBu/g1HamtyPKBX3QPA6t5gQOI04gnpNrotW3RnRLJPewhIxFcPKK85vztXMkAUzw==}
     engines: {node: '>=16.0'}
     peerDependencies:
       pg-query-stream: 4.10.3
@@ -6305,9 +6305,9 @@ packages:
   spdx-license-ids@3.0.22:
     resolution: {integrity: sha512-4PRT4nh1EImPbt2jASOKHX7PB7I+e4IWNLvkKFDxNhJlfjbYlleYQh285Z/3mPTHSAK/AvdMmw5BNNuYH8ShgQ==}
 
-  spex@3.4.1:
-    resolution: {integrity: sha512-Br0Mu3S+c70kr4keXF+6K4B8ohR+aJjI9s7SbdsI3hliE1Riz4z+FQk7FQL+r7X1t90KPkpuKwQyITpCIQN9mg==}
-    engines: {node: '>=14.0.0'}
+  spex@4.0.2:
+    resolution: {integrity: sha512-/8VnouFOkRlkfj/sDN6GYnRKCutBHjUndkg6oAgv374VvjYQRzzR2gTEXRsmFmgd1SrbI8W948iTDnkEkUieCw==}
+    engines: {node: '>=16.0.0'}
 
   split2@4.2.0:
     resolution: {integrity: sha512-UcjcJOWknrNkF6PLX83qcHM6KHgVKNkV62Y8a5uYDVv9ydGQVwAHMKqHdJje1VTWpljG0WYpCDhrCdAOYH4TWg==}
@@ -12709,13 +12709,13 @@ snapshots:
     dependencies:
       pg: 8.16.3
 
-  pg-promise@11.15.0(pg-query-stream@4.10.3(pg@8.16.3)):
+  pg-promise@12.1.3(pg-query-stream@4.10.3(pg@8.16.3)):
     dependencies:
       assert-options: 0.8.3
       pg: 8.16.3
       pg-minify: 1.8.0
       pg-query-stream: 4.10.3(pg@8.16.3)
-      spex: 3.4.1
+      spex: 4.0.2
     transitivePeerDependencies:
       - pg-native
 
@@ -13518,7 +13518,7 @@ snapshots:
 
   spdx-license-ids@3.0.22: {}
 
-  spex@3.4.1: {}
+  spex@4.0.2: {}
 
   split2@4.2.0: {}
 
