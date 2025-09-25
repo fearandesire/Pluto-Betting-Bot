@@ -13,7 +13,7 @@ services:
     restart: always
     container_name: pluto_api
     environment:
-      - DOPPLER_TOKEN=${PLUTO_DOPPER_TOKEN}
+      - DOPPLER_TOKEN=${PLUTO_DOPPLER_TOKEN}
 
 networks:
   webnet:
