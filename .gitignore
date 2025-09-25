@@ -79,3 +79,5 @@ src/utils/bot_res/img-pup.ts
 .cursor
 
 .cursorignore
+
+docs/internal
