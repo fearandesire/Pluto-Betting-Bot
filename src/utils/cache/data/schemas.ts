@@ -1,6 +1,6 @@
 import type { ColorResolvable } from 'discord.js';
 import { z } from 'zod';
-import type { SportsServing } from '../../api/common/interfaces/index.js';
+import type { SportsServing } from '@pluto-khronos/types';
 
 const channelDeletionJobDataSchema = z.object({
 	channelName: z.string(),
