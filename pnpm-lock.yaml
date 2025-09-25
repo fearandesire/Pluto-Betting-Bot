@@ -544,7 +544,6 @@ packages:
   '@biomejs/cli-win32-x64@2.2.4':
     resolution: {integrity: sha512-3Y4V4zVRarVh/B/eSHczR4LYoSVyv3Dfuvm3cWs5w/HScccS0+Wt/lHOcDTRYeHjQmMYVC3rIRWqyN2EI52+zg==}
     engines: {node: '>=14.21.3'}
-    cpu: [x64]
     os: [win32]
 
   '@borewit/text-codec@0.1.1':

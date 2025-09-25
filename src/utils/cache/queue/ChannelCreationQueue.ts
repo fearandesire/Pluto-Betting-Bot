@@ -1,15 +1,9 @@
-import { type Job, Queue, Worker } from "bullmq";
+import { type Job, Queue, Worker, QueueEvents } from "bullmq";
 import ChannelManager from "../../guilds/channels/ChannelManager.js";
 import { logger } from "../../logging/WinstonLogger.js";
 import { REDIS_CONFIG } from "../data/config.js";
-import type { ChannelCreationPayload } from "../data/schemas.js";
-import { channelCreationEventSchema } from "../data/schemas.js";
-interface ChannelCreationJobData {
-  channel: ChannelCreationPayload["channel"];
-  guild: ChannelCreationPayload["guild"];
-  metadata: ChannelCreationPayload["metadata"];
-  jobId?: string;
-}
+import type { ChannelCreationEvent } from "@pluto-khronos/types";
+import { channelCreationEventSchema } from "@pluto-khronos/types";
 
 interface ChannelCreationResult {
   success: boolean;
@@ -19,162 +13,147 @@ interface ChannelCreationResult {
 }
 
 export class ChannelCreationQueue {
-  public queue: Queue<ChannelCreationJobData, ChannelCreationResult>;
-  private worker: Worker<ChannelCreationJobData, ChannelCreationResult>;
+  public queue: Queue<ChannelCreationEvent, ChannelCreationResult>;
+  private worker: Worker<ChannelCreationEvent, ChannelCreationResult>;
+  private queueEvents: QueueEvents;
   private static readonly MAX_ATTEMPTS = 3;
-  private static readonly BACKOFF_DELAY = 1000; // 1 second initial delay
+  private static readonly BACKOFF_DELAY = 1000;
+  // lock duration must exceed expected processing time
+  private static readonly LOCK_DURATION = 5 * 60 * 1000; // 5 minutes
 
   constructor() {
     const connection = REDIS_CONFIG;
 
-    // Initialize queue with proper naming as per documentation
-    this.queue = new Queue<ChannelCreationJobData, ChannelCreationResult>(
+    // centralize defaults here
+    this.queue = new Queue<ChannelCreationEvent, ChannelCreationResult>(
       "channel-creation",
       {
         connection,
         defaultJobOptions: {
           attempts: ChannelCreationQueue.MAX_ATTEMPTS,
-          backoff: {
-            type: "exponential",
-            delay: ChannelCreationQueue.BACKOFF_DELAY,
-          },
-          // Add job cleanup configuration
-          removeOnComplete: {
-            age: 24 * 3600, // Keep completed jobs for 24 hours
-            count: 1000, // Keep last 1000 completed jobs
-          },
-          removeOnFail: {
-            age: 7 * 24 * 3600, // Keep failed jobs for 7 days
-            count: 5000, // Keep last 5000 failed jobs
-          },
+          backoff: { type: "exponential", delay: ChannelCreationQueue.BACKOFF_DELAY },
+          removeOnComplete: { age: 24 * 3600, count: 1000 },
+          removeOnFail: { age: 7 * 24 * 3600, count: 5000 },
         },
       },
     );
 
-    // Initialize worker with proper concurrency
-    this.worker = new Worker<ChannelCreationJobData, ChannelCreationResult>(
+
+    // QueueEvents for lifecycle visibility
+    this.queueEvents = new QueueEvents("channel-creation", { connection });
+
+    // Worker with explicit lockDuration
+    this.worker = new Worker<ChannelCreationEvent, ChannelCreationResult>(
       "channel-creation",
       async (job) => this.processJob(job),
-      { connection, concurrency: 15 },
+      {
+        connection,
+        concurrency: 15,
+        lockDuration: ChannelCreationQueue.LOCK_DURATION,
+      },
     );
 
     this.setupWorkerEvents();
+    this.setupQueueEvents();
 
-    logger.info({
-      message: "Channel creation BullMQ initialized",
-      source: "ChannelCreationBullMQ:constructor",
-    });
+    logger.info({ message: "Channel creation BullMQ initialized", source: "ChannelCreationBullMQ:constructor" });
   }
 
   private setupWorkerEvents(): void {
-    this.worker.on(
-      "completed",
-      async (job: Job<ChannelCreationJobData, ChannelCreationResult>) => {
-        const result = await job.returnvalue;
-        if (result.success) {
-          // Aggregate logging as per documentation
-          logger.info({
-            message: "Channel creation successful",
-            source: "ChannelCreationQueue:worker",
-            data: {
-              channelId: job.data.channel.id,
-              guildId: job.data.guild.guildId,
-              jobId: job.data.jobId,
-            },
-          });
-        }
-      },
-    );
-    this.worker.on(
-      "failed",
-      (job: Job<ChannelCreationJobData> | undefined, error: Error) => {
-        // Handle case where job might be undefined
-        if (!job) {
-          logger.error({
-            message: "Channel creation failed - job undefined",
-            source: "ChannelCreationQueue:worker",
-            data: {
-              error: error.message,
-            },
-          });
-          return;
-        }
-        // Aggregate error logging as per documentation
-        logger.error({
-          message: "Channel creation failed",
-          source: "ChannelCreationQueue:worker",
-          data: {
-            error: error.message,
-            attempts: job.attemptsMade,
-            channelId: job.data.channel.id,
-            guildId: job.data.guild.guildId,
-            jobId: job.data.jobId,
-          },
-        });
-      },
-    );
+    this.worker.on("active", (job) => {
+      logger.info({
+        message: "Job active",
+        source: "ChannelCreationQueue:worker",
+        data: { jobId: job.id, jobName: job.name, channelId: job.data?.channel?.id, guildId: job.data?.guild?.guildId, attemptsMade: job.attemptsMade },
+      });
+    });
+
+    this.worker.on("completed", async (job: Job<ChannelCreationEvent, ChannelCreationResult>) => {
+      const result = job.returnvalue;
+      logger.info({
+        message: "Job completed",
+        source: "ChannelCreationQueue:worker",
+        data: { jobId: job.id, jobName: job.name, result, channelId: job.data.channel.id, guildId: job.data.guild.guildId },
+      });
+    });
+
+    this.worker.on("failed", (job: Job<ChannelCreationEvent> | undefined, err: Error) => {
+      if (!job) {
+        logger.error({ message: "Channel creation failed - job undefined", source: "ChannelCreationQueue:worker", data: { error: err?.message } });
+        return;
+      }
+      logger.error({
+        message: "Job failed",
+        source: "ChannelCreationQueue:worker",
+        data: { jobId: job.id, jobName: job.name, error: err?.message, attemptsMade: job.attemptsMade, channelId: job.data?.channel?.id, guildId: job.data?.guild?.guildId },
+      });
+    });
+
+    this.worker.on("error", (err) => {
+      logger.error({ message: "Worker error", source: "ChannelCreationQueue:worker", data: { error: err?.message, stack: err?.stack } });
+    });
   }
 
-  private async processJob(
-    job: Job<ChannelCreationJobData>,
-  ): Promise<ChannelCreationResult> {
-    // Validate job data with Zod
-    const { success, error } = channelCreationEventSchema.safeParse(job.data);
-    if (!success) {
+  private setupQueueEvents(): void {
+    this.queueEvents.on("stalled", ({ jobId }) => {
+      logger.warn({ message: "Job stalled", source: "ChannelCreationQueue:queueEvents", data: { jobId } });
+    });
+    this.queueEvents.on("waiting", ({ jobId }) => {
+      logger.debug({ message: "Job waiting", source: "ChannelCreationQueue:queueEvents", data: { jobId } });
+    });
+    this.queueEvents.on("delayed", ({ jobId, delay }) => {
+      logger.debug({ message: "Job delayed", source: "ChannelCreationQueue:queueEvents", data: { jobId, delay } });
+    });
+    this.queueEvents.on("failed", ({ jobId, failedReason }) => {
+      logger.warn({ message: "Job failed (queueEvents)", source: "ChannelCreationQueue:queueEvents", data: { jobId, failedReason } });
+    });
+    this.queueEvents.on("completed", ({ jobId }) => {
+      logger.debug({ message: "Job completed (queueEvents)", source: "ChannelCreationQueue:queueEvents", data: { jobId } });
+    });
+  }
+
+  private async processJob(job: Job<ChannelCreationEvent>): Promise<ChannelCreationResult> {
+    const validation = channelCreationEventSchema.safeParse(job.data);
+    if (!validation.success) {
       logger.error({
         message: "Invalid job data received",
         source: "ChannelCreationQueue:processJob",
-        data: {
-          jobId: job.id,
-          validationError: error.message,
-          channelId: job.data.channel?.id,
-          guildId: job.data.guild?.guildId,
-        },
+        data: { jobId: job.id, validationError: validation.error.message },
       });
-      // Don't try to remove the job - let it fail naturally
-      throw new Error(`Invalid job data: ${error.message}`);
+      throw new Error(`Invalid job data: ${validation.error.message}`);
     }
 
-    const { channel, guild } = job.data;
+    const { channel, guild } = validation.data;
 
     try {
       const channelManager = new ChannelManager();
-      await channelManager.processChannels({
-        channels: [channel],
-        guilds: [guild],
-      });
-      return {
-        success: true,
-        guildId: guild.guildId,
-        channelId: channel.id,
-      };
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
 
-      // Check if this is the last attempt
+      // Idempotency check inside ChannelManager.processChannels
+      await channelManager.processChannels({ channels: [channel], guilds: [guild] });
+
+      return { success: true, guildId: guild.guildId, channelId: channel.id };
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+
+      // Log final attempt explicitly
       if (job.attemptsMade >= ChannelCreationQueue.MAX_ATTEMPTS) {
         logger.error({
-          message: `Channel creation complete failure - Max attempts reached | Guild: ${guild.guildId} | Channel: ${channel.id}`,
+          message: "Max attempts reached for channel creation",
           source: "ChannelCreationQueue:processJob",
-          data: {
-            error: errorMessage,
-            attemptsMade: job.attemptsMade,
-            maxAttempts: ChannelCreationQueue.MAX_ATTEMPTS,
-          },
+          data: { jobId: job.id, attemptsMade: job.attemptsMade, maxAttempts: ChannelCreationQueue.MAX_ATTEMPTS, error: errorMessage },
         });
       }
 
-      // Re-throw the error to let BullMQ handle retry logic
+      // rethrow to let BullMQ handle retry/backoff
       throw new Error(errorMessage);
     }
   }
 
   public async close(): Promise<void> {
-    await this.queue.close();
     await this.worker.close();
+    await this.queueEvents.close();
+    await this.queue.close();
   }
 }
 
-// Export singleton instance
 export const channelCreationQueue = new ChannelCreationQueue();

@@ -59,7 +59,6 @@ export interface LoggerConfig {
  */
 export const createLogger = (config: LoggerConfig = {}) => {
 	const serviceName = config.serviceName!
-	const appName = config.appName || serviceName
 	const logLevel = 'info'
 	const environment = config.environment || env.NODE_ENV
 
