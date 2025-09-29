@@ -77,7 +77,7 @@
 		"dotenv": "17.2.2",
 		"dotenv-vault": "1.27.0",
 		"esm-module-alias": "^2.2.1",
-		"ioredis": "^5.5.0",
+		"ioredis": "^5.8.0",
 		"koa": "^2.16.0",
 		"koa-basic-auth": "^4.0.0",
 		"koa-bodyparser": "^4.4.1",
