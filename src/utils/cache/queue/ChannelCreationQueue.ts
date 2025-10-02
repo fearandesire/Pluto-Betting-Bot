@@ -32,8 +32,11 @@ export class ChannelCreationQueue {
         defaultJobOptions: {
           attempts: ChannelCreationQueue.MAX_ATTEMPTS,
           backoff: { type: "exponential", delay: ChannelCreationQueue.BACKOFF_DELAY },
-          removeOnComplete: { age: 24 * 3600, count: 1000 },
-          removeOnFail: { age: 7 * 24 * 3600, count: 5000 },
+          // Keep completed jobs for 24 hours for BullBoard visibility
+          // age in seconds, count limits total jobs kept
+          removeOnComplete: { age: 24 * 60 * 60, count: 5000 },
+          // Keep failed jobs for 7 days for debugging
+          removeOnFail: { age: 7 * 24 * 60 * 60, count: 10000 },
         },
       },
     );

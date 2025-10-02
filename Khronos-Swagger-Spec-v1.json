@@ -755,6 +755,144 @@
         ]
       }
     },
+    "/api/khronos/v1/channels/scheduled/today": {
+      "get": {
+        "description": "Shows pending, scheduled, and created channels with time estimates for observability",
+        "operationId": "GameChannelController_getScheduledForToday_v1",
+        "parameters": [
+          {
+            "name": "date",
+            "required": false,
+            "in": "query",
+            "description": "Date to query (format: 'YYYY-MM-DD' or 'today'). Defaults to today.",
+            "schema": {
+              "example": "today",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved channels with status and timing information"
+          }
+        },
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ],
+        "summary": "Get all channels scheduled for a specific date",
+        "tags": [
+          "Channels"
+        ]
+      }
+    },
+    "/api/khronos/v1/channels/status": {
+      "get": {
+        "description": "Dashboard view showing summary statistics, upcoming channels, and recent failures",
+        "operationId": "GameChannelController_getChannelStatus_v1",
+        "parameters": [
+          {
+            "name": "timeframe",
+            "required": false,
+            "in": "query",
+            "description": "Time window to analyze (e.g., \"24h\", \"48h\", \"7d\")",
+            "schema": {
+              "example": "24h",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved system status and health metrics"
+          }
+        },
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ],
+        "summary": "Get channel system status and health metrics",
+        "tags": [
+          "Channels"
+        ]
+      }
+    },
+    "/api/khronos/v1/channels/history": {
+      "get": {
+        "description": "Shows success/failure statistics and detailed history with optional filters",
+        "operationId": "GameChannelController_getCreationHistory_v1",
+        "parameters": [
+          {
+            "name": "startDate",
+            "required": true,
+            "in": "query",
+            "description": "Start date for history query (ISO 8601 format)",
+            "schema": {
+              "example": "2025-10-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "required": true,
+            "in": "query",
+            "description": "End date for history query (ISO 8601 format)",
+            "schema": {
+              "example": "2025-10-02",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sport",
+            "required": false,
+            "in": "query",
+            "description": "Filter by sport (e.g., \"nba\", \"nfl\")",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Filter by status",
+            "schema": {
+              "enum": [
+                "queued",
+                "success",
+                "failed"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "guildId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by Discord guild ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved historical data with statistics and log entries"
+          }
+        },
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ],
+        "summary": "Get historical channel creation data",
+        "tags": [
+          "Channels"
+        ]
+      }
+    },
     "/api/khronos/v1/guilds": {
       "get": {
         "operationId": "getAllGuilds",
@@ -1140,7 +1278,14 @@
             "description": "Game status updated successfully"
           },
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal server error"
@@ -2740,450 +2885,73 @@
         ]
       }
     },
-    "/api/khronos/v1/props": {
+    "/api/khronos/v1/outcomes/event/{sport}/{eventId}": {
       "get": {
-        "operationId": "findAllProps",
-        "parameters": [
-          {
-            "name": "withinOneWeek",
-            "required": false,
-            "in": "query",
-            "description": "If true, returns props from the last week and future. Defaults to false.",
-            "schema": {
-              "type": "boolean"
-            }
-          },
-          {
-            "name": "withActivePredictions",
-            "required": false,
-            "in": "query",
-            "description": "If true, returns only props with active predictions. Defaults to false.",
-            "schema": {
-              "type": "boolean"
-            }
-          },
-          {
-            "name": "upcoming",
-            "required": false,
-            "in": "query",
-            "description": "If true, returns only upcoming props. Defaults to false.",
-            "schema": {
-              "type": "boolean"
-            }
-          },
-          {
-            "name": "guildId",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Return all props based on the specified criteria.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Prop"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get all props",
-        "tags": [
-          "Props"
-        ]
-      }
-    },
-    "/api/khronos/v1/props/{id}": {
-      "get": {
-        "operationId": "findOneProp",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "withPredictions",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "boolean"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Return the prop.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Prop"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Prop not found."
-          }
-        },
-        "summary": "Get a prop by id",
-        "tags": [
-          "Props"
-        ]
-      },
-      "delete": {
-        "operationId": "removeProp",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The prop has been successfully deleted."
-          },
-          "404": {
-            "description": "Prop not found."
-          }
-        },
-        "summary": "Delete a prop",
-        "tags": [
-          "Props"
-        ]
-      }
-    },
-    "/api/khronos/v1/props/update/{id}": {
-      "patch": {
-        "operationId": "updateProp",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdatePropDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "The prop has been successfully updated.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Prop"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request."
-          },
-          "404": {
-            "description": "Prop not found."
-          }
-        },
-        "summary": "Update a prop",
-        "tags": [
-          "Props"
-        ]
-      }
-    },
-    "/api/khronos/v1/props/result": {
-      "patch": {
-        "operationId": "setPropResult",
-        "parameters": [
-          {
-            "name": "override",
-            "required": false,
-            "in": "query",
-            "description": "If true, bypasses certain restrictions, such as the game the prop is from needing to be completed first. Used in development. Use with caution.",
-            "schema": {
-              "type": "boolean"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdatePropResultDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Prop result updated and predictions closed successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UpdatePropResultResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid prop state (not started, or already finished), no predictions for the prop, or invalid winner for h2h market"
-          },
-          "404": {
-            "description": "Prop with the provided ID was not found or some processing predictions were not found"
-          }
-        },
-        "summary": "Update prop result and close predictions",
-        "tags": [
-          "Props"
-        ]
-      }
-    },
-    "/api/khronos/v1/props/manual/checkresult/{matchid}": {
-      "post": {
-        "operationId": "PropsController_checkForPropResult_v1",
-        "parameters": [
-          {
-            "name": "matchid",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Props"
-        ]
-      }
-    },
-    "/api/khronos/v1/props/manual/send/{guildId}": {
-      "get": {
-        "operationId": "manualSendProps",
-        "parameters": [
-          {
-            "name": "guildId",
-            "required": true,
-            "in": "path",
-            "description": "The ID of the guild to send props to",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Props sent to Pluto successfully."
-          }
-        },
-        "summary": "Manually send props to Pluto",
-        "tags": [
-          "Props"
-        ]
-      }
-    },
-    "/api/khronos/v1/props/event/{id}": {
-      "get": {
-        "operationId": "getPropsForEvent",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Props for the specified event.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Prop"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get props for a specific event",
-        "tags": [
-          "Props"
-        ]
-      }
-    },
-    "/api/khronos/v1/props/search": {
-      "get": {
-        "operationId": "findPropsByDescription",
-        "parameters": [
-          {
-            "name": "description",
-            "required": true,
-            "in": "query",
-            "description": "The description to search for",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Returns an array of props that match the given description.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Prop"
-                  }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "No matching props found."
-          }
-        },
-        "summary": "Find props by description",
-        "tags": [
-          "Props"
-        ]
-      }
-    },
-    "/api/khronos/v1/props/{id}/stats": {
-      "get": {
-        "description": "Retrieves aggregated statistics about predictions made for a specific prop",
-        "operationId": "getPropStats",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The ID of the prop to get statistics for",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Returns aggregated prediction statistics for the prop",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PredictionStatsDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Prop not found"
-          }
-        },
-        "summary": "Get prediction statistics for a prop",
-        "tags": [
-          "Props"
-        ]
-      }
-    },
-    "/api/khronos/v1/props/{id}/reset": {
-      "patch": {
-        "description": "Resets the specified prop and all its associated predictions back to pending status",
-        "operationId": "resetPropAndPredictions",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The ID of the prop to reset",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The prop and its predictions have been successfully reset to pending status.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Prop"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Prop not found"
-          }
-        },
-        "summary": "Reset a prop and its predictions to pending status",
-        "tags": [
-          "Props"
-        ]
-      }
-    },
-    "/api/khronos/v1/week-manager/getCurrentWeek": {
-      "get": {
-        "operationId": "getCurrentWeek",
+        "description": "Retrieves all betting outcomes from Goracle for a specific event across all bookmakers and markets",
+        "operationId": "getOutcomesForEvent",
         "parameters": [
           {
             "name": "sport",
             "required": true,
-            "in": "query",
-            "description": "The sport to get the current week for (e.g., \"nfl\" or \"nba\")",
+            "in": "path",
+            "description": "Sport key (e.g., basketball_nba, americanfootball_nfl)",
             "schema": {
+              "example": "basketball_nba",
+              "type": "string"
+            }
+          },
+          {
+            "name": "eventId",
+            "required": true,
+            "in": "path",
+            "description": "Event ID from Goracle",
+            "schema": {
+              "example": "123e4567-e89b-12d3-a456-426614174000",
               "type": "string"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Returns the current week number",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "number"
-                }
-              }
-            }
+            "description": "List of all available outcomes for the event"
+          },
+          "404": {
+            "description": "Event not found"
           }
         },
-        "summary": "Get the current week number for a sport",
+        "summary": "Get all available outcomes for an event",
         "tags": [
-          "Week Manager"
+          "Outcomes"
+        ]
+      }
+    },
+    "/api/khronos/v1/outcomes/{outcomeUuid}": {
+      "get": {
+        "description": "Retrieves specific outcome details using composite UUID (eventId:bookmakerKey:marketKey:outcomeName)",
+        "operationId": "getOutcomeByUuid",
+        "parameters": [
+          {
+            "name": "outcomeUuid",
+            "required": true,
+            "in": "path",
+            "description": "Composite outcome UUID",
+            "schema": {
+              "example": "123e4567-e89b-12d3-a456-426614174000:fanduel:h2h:Los Angeles Lakers",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Outcome details with event context"
+          },
+          "404": {
+            "description": "Outcome not found"
+          }
+        },
+        "summary": "Get outcome details by UUID",
+        "tags": [
+          "Outcomes"
         ]
       }
     },
@@ -3230,10 +2998,10 @@
             }
           },
           {
-            "name": "prop_id",
+            "name": "event_id",
             "required": false,
             "in": "query",
-            "description": "Prop ID to filter predictions",
+            "description": "Event ID to filter predictions",
             "schema": {
               "type": "string"
             }
@@ -3256,14 +3024,11 @@
         ],
         "responses": {
           "200": {
-            "description": "Returns all predictions grouped by prop based on the provided filters",
+            "description": "Returns all predictions grouped by event based on the provided filters",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PropPredictionsDto"
-                  }
+                  "$ref": "#/components/schemas/EventPredictionsDto"
                 }
               }
             }
@@ -3272,7 +3037,7 @@
             "description": "No predictions found based on the provided filters"
           }
         },
-        "summary": "Get predictions based on the provided filters. For instance, all predictions for a prop with options to filter by status.",
+        "summary": "Get predictions based on the provided filters. For instance, all predictions for an event with options to filter by status.",
         "tags": [
           "Prediction"
         ]
@@ -3346,7 +3111,7 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "description": "Prop ID - Which we will use to find the prediction the user has placed on it",
+            "description": "Event ID - Which we will use to find the prediction the user has placed on it",
             "schema": {
               "type": "string"
             }
@@ -3417,7 +3182,7 @@
         "operationId": "getPredictionsCount",
         "parameters": [
           {
-            "name": "prop_id",
+            "name": "event_id",
             "required": true,
             "in": "query",
             "schema": {
@@ -3577,6 +3342,38 @@
         "summary": "Get leaderboard",
         "tags": [
           "Leaderboard"
+        ]
+      }
+    },
+    "/api/khronos/v1/week-manager/getCurrentWeek": {
+      "get": {
+        "operationId": "getCurrentWeek",
+        "parameters": [
+          {
+            "name": "sport",
+            "required": true,
+            "in": "query",
+            "description": "The sport to get the current week for (e.g., \"nfl\" or \"nba\")",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the current week number",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get the current week number for a sport",
+        "tags": [
+          "Week Manager"
         ]
       }
     },
@@ -4034,6 +3831,57 @@
           "Betting Leaderboard"
         ]
       }
+    },
+    "/api/khronos/v1/webhooks/goracle/outcome-settled": {
+      "post": {
+        "description": "Webhook endpoint for Goracle to notify Khronos when an outcome has been settled. Processes predictions asynchronously. Requires X-API-Key header for authentication.",
+        "operationId": "WebhooksController_handleOutcomeSettled_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OutcomeSettledWebhookDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook accepted and queued for processing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "accepted"
+                    },
+                    "correlation_id": {
+                      "type": "string",
+                      "example": "123e4567-e89b-12d3-a456-426614174000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload structure"
+          }
+        },
+        "security": [
+          {
+            "X-API-Key": []
+          }
+        ],
+        "summary": "Receive outcome settlement from Goracle",
+        "tags": [
+          "Webhooks"
+        ]
+      }
     }
   },
   "info": {
@@ -4099,6 +3947,10 @@
             "format": "date-time",
             "type": "string"
           },
+          "scheduledAt": {
+            "format": "date-time",
+            "type": "string"
+          },
           "created": {
             "type": "boolean"
           }
@@ -4109,6 +3961,7 @@
           "channelname",
           "crontime",
           "gametime",
+          "scheduledAt",
           "created"
         ]
       },
@@ -4604,6 +4457,10 @@
             "format": "date-time",
             "type": "string"
           },
+          "scheduledAt": {
+            "format": "date-time",
+            "type": "string"
+          },
           "created": {
             "type": "boolean"
           }
@@ -4614,6 +4471,7 @@
           "channelname",
           "crontime",
           "gametime",
+          "scheduledAt",
           "created"
         ]
       },
@@ -5566,6 +5424,252 @@
           "bookmakers"
         ]
       },
+      "CreatePredictionDto": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "description": "User ID",
+            "example": "771235938474576"
+          },
+          "outcome_uuid": {
+            "type": "string",
+            "description": "Outcome UUID from Goracle (composite key format: eventId:bookmakerKey:marketKey:outcomeName)",
+            "example": "123e4567-e89b-12d3-a456-426614174000:fanduel:h2h:Lakers"
+          },
+          "choice": {
+            "type": "string",
+            "description": "Who or what the user is betting/predicting on",
+            "example": "Jayson Tatum"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "completed",
+              "error"
+            ],
+            "type": "string",
+            "description": "Status of the prediction",
+            "example": "pending"
+          },
+          "guild_id": {
+            "type": "string",
+            "description": "Discord Guild ID",
+            "example": "987654321128397129"
+          },
+          "sport": {
+            "type": "string",
+            "description": "Sport key for Goracle queries",
+            "example": "basketball_nba"
+          }
+        },
+        "required": [
+          "user_id",
+          "outcome_uuid",
+          "choice",
+          "status",
+          "guild_id",
+          "sport"
+        ]
+      },
+      "PredictionDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique identifier for the prediction",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "user_id": {
+            "type": "string",
+            "description": "User ID",
+            "example": "user123"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Creation timestamp",
+            "example": "2023-04-15T10:30:00Z"
+          },
+          "outcome_uuid": {
+            "type": "string",
+            "description": "Outcome UUID from Goracle",
+            "example": "123e4567-e89b-12d3-a456-426614174000:fanduel:h2h:Lakers"
+          },
+          "event_id": {
+            "type": "string",
+            "description": "Event ID from Goracle",
+            "example": "event789"
+          },
+          "sport": {
+            "type": "string",
+            "description": "Sport key",
+            "example": "basketball_nba"
+          },
+          "choice": {
+            "type": "string",
+            "description": "User's choice",
+            "example": "Option A"
+          },
+          "is_correct": {
+            "type": "boolean",
+            "description": "Whether the prediction is correct",
+            "example": true,
+            "nullable": true
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "completed",
+              "error"
+            ],
+            "type": "string",
+            "description": "Status of the prediction",
+            "example": "pending"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Last update timestamp",
+            "example": "2023-04-15T11:45:00Z"
+          },
+          "guild_id": {
+            "type": "string",
+            "description": "Guild ID",
+            "example": "guild789"
+          },
+          "market_key": {
+            "type": "string",
+            "description": "Market key",
+            "example": "h2h"
+          },
+          "bookmaker_key": {
+            "type": "string",
+            "description": "Bookmaker key",
+            "example": "fanduel"
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "created_at",
+          "outcome_uuid",
+          "event_id",
+          "sport",
+          "choice",
+          "status",
+          "updated_at",
+          "guild_id",
+          "market_key",
+          "bookmaker_key"
+        ]
+      },
+      "EventPredictionsDto": {
+        "type": "object",
+        "properties": {
+          "event_context": {
+            "type": "object",
+            "nullable": true,
+            "description": "Event context data from Goracle"
+          },
+          "predictions": {
+            "nullable": true,
+            "description": "Array of predictions for this event",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PredictionDTO"
+            }
+          }
+        },
+        "required": [
+          "event_context",
+          "predictions"
+        ]
+      },
+      "Prediction": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the prediction"
+          },
+          "user_id": {
+            "type": "string",
+            "description": "User ID"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Creation timestamp"
+          },
+          "outcome_uuid": {
+            "type": "string",
+            "description": "Outcome UUID from Goracle (composite key)"
+          },
+          "event_id": {
+            "type": "string",
+            "description": "Event ID from Goracle"
+          },
+          "market_key": {
+            "type": "string",
+            "description": "Market key (e.g., h2h, totals, player_points)"
+          },
+          "bookmaker_key": {
+            "type": "string",
+            "description": "Bookmaker key (e.g., fanduel, draftkings)"
+          },
+          "choice": {
+            "type": "string",
+            "description": "User's choice"
+          },
+          "is_correct": {
+            "type": "boolean",
+            "description": "Whether the prediction is correct"
+          },
+          "status": {
+            "type": "string",
+            "description": "Status of the prediction"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Last update timestamp"
+          },
+          "guild_id": {
+            "type": "string",
+            "description": "Guild ID"
+          },
+          "sport": {
+            "type": "string",
+            "description": "Sport key (e.g., basketball_nba, americanfootball_nfl)"
+          },
+          "processed_predictions": {
+            "description": "Processed predictions",
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProcessedPredictions"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "created_at",
+          "outcome_uuid",
+          "event_id",
+          "market_key",
+          "bookmaker_key",
+          "choice",
+          "is_correct",
+          "status",
+          "updated_at",
+          "guild_id",
+          "sport",
+          "processed_predictions"
+        ]
+      },
       "ProcessedPredictions": {
         "type": "object",
         "properties": {
@@ -5629,771 +5733,6 @@
           "prediction"
         ]
       },
-      "Prediction": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique identifier for the prediction"
-          },
-          "user_id": {
-            "type": "string",
-            "description": "User ID"
-          },
-          "created_at": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Creation timestamp"
-          },
-          "prop_id": {
-            "type": "string",
-            "description": "ID of the associated prop"
-          },
-          "choice": {
-            "type": "string",
-            "description": "User's choice"
-          },
-          "is_correct": {
-            "type": "boolean",
-            "description": "Whether the prediction is correct"
-          },
-          "status": {
-            "type": "string",
-            "description": "Status of the prediction"
-          },
-          "updated_at": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Last update timestamp"
-          },
-          "guild_id": {
-            "type": "string",
-            "description": "Guild ID"
-          },
-          "processed_predictions": {
-            "description": "Processed predictions",
-            "nullable": true,
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ProcessedPredictions"
-            }
-          },
-          "prop": {
-            "$ref": "#/components/schemas/Prop"
-          },
-          "market_key": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "user_id",
-          "created_at",
-          "prop_id",
-          "choice",
-          "is_correct",
-          "status",
-          "updated_at",
-          "guild_id",
-          "processed_predictions",
-          "prop",
-          "market_key"
-        ]
-      },
-      "Prop": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique identifier for the prop"
-          },
-          "event_id": {
-            "type": "string",
-            "description": "Events ID associated with the prop"
-          },
-          "sport_key": {
-            "type": "string",
-            "description": "Sport key, e.g., americanfootball_nfl"
-          },
-          "sport_title": {
-            "type": "string",
-            "description": "Sport title, e.g., NFL, NBA"
-          },
-          "commence_time": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Commencement time of the event"
-          },
-          "home_team": {
-            "type": "string",
-            "description": "Home team name"
-          },
-          "away_team": {
-            "type": "string",
-            "description": "Away team name"
-          },
-          "bookmaker_key": {
-            "type": "string",
-            "description": "Bookmaker key, e.g., fanduel"
-          },
-          "bookmaker_title": {
-            "type": "string",
-            "description": "Bookmaker title, e.g., FanDuel"
-          },
-          "last_update": {
-            "format": "date-time",
-            "type": "string",
-            "description": "The last update time of the prop details in ISO 8601 format. Provided by The Odds API."
-          },
-          "market_key": {
-            "description": "Market key type, e.g., h2h, totals",
-            "enum": [
-              "h2h",
-              "totals",
-              "player_pass_tds",
-              "player_pass_yds",
-              "player_pass_completions",
-              "player_pass_attempts",
-              "player_pass_interceptions",
-              "player_pass_longest_completion",
-              "player_rush_yds",
-              "player_rush_attempts",
-              "player_rush_longest",
-              "player_receptions",
-              "player_reception_yds",
-              "player_reception_longest",
-              "player_kicking_points",
-              "player_field_goals",
-              "player_tackles_assists",
-              "player_1st_td",
-              "player_last_td",
-              "player_anytime_td",
-              "player_pass_tds_alternate",
-              "player_pass_yds_alternate",
-              "player_rush_yds_alternate",
-              "player_rush_reception_yds_alternate",
-              "player_reception_yds_alternate",
-              "player_receptions_alternate",
-              "player_points",
-              "player_rebounds",
-              "player_assists",
-              "player_threes",
-              "player_blocks",
-              "player_steals",
-              "player_blocks_steals",
-              "player_turnovers",
-              "player_points_rebounds_assists",
-              "player_points_rebounds",
-              "player_points_assists",
-              "player_rebounds_assists",
-              "player_first_basket",
-              "player_double_double",
-              "player_triple_double",
-              "player_points_alternate",
-              "player_rebounds_alternate",
-              "player_assists_alternate",
-              "player_blocks_alternate",
-              "player_steals_alternate",
-              "player_threes_alternate",
-              "player_points_assists_alternate",
-              "player_points_rebounds_alternate",
-              "player_rebounds_assists_alternate",
-              "player_points_rebounds_assists_alternate"
-            ],
-            "type": "string"
-          },
-          "price": {
-            "type": "number",
-            "description": "Price of the prop. E.g -140",
-            "example": -140
-          },
-          "point": {
-            "type": "number",
-            "description": "Point value, e.g., 40.5",
-            "nullable": true
-          },
-          "status": {
-            "enum": [
-              "pending",
-              "completed",
-              "error"
-            ],
-            "type": "string",
-            "description": "Status of the prop"
-          },
-          "created_at": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Creation timestamp"
-          },
-          "result": {
-            "type": "string",
-            "description": "Result of the prop",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "description": "The player involved in the prop. If not a player prop, this will be null.",
-            "nullable": true
-          },
-          "event": {
-            "$ref": "#/components/schemas/Events"
-          },
-          "updated_at": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "predictions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Prediction"
-            }
-          }
-        },
-        "required": [
-          "id",
-          "event_id",
-          "sport_key",
-          "sport_title",
-          "commence_time",
-          "home_team",
-          "away_team",
-          "bookmaker_key",
-          "bookmaker_title",
-          "last_update",
-          "market_key",
-          "price",
-          "point",
-          "status",
-          "created_at",
-          "result",
-          "description",
-          "event",
-          "updated_at"
-        ]
-      },
-      "Events": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "example": "123e4567-e89b-12d3-a456-426614174000",
-            "description": "Unique identifier for the event, provided by the incoming request"
-          },
-          "espn_id": {
-            "type": "string",
-            "example": "401547689",
-            "description": "ESPN unique identifier for the event"
-          },
-          "sport_key": {
-            "type": "string",
-            "example": "americanfootball_nfl",
-            "description": "Key identifying the sport"
-          },
-          "sport_title": {
-            "type": "string",
-            "example": "NFL",
-            "description": "Title of the sport"
-          },
-          "commence_time": {
-            "format": "date-time",
-            "type": "string",
-            "example": "2024-09-06T00:20:00Z",
-            "description": "Timestamp when the event is scheduled to start"
-          },
-          "home_team": {
-            "type": "string",
-            "example": "Kansas City Chiefs",
-            "description": "Name of the home team"
-          },
-          "away_team": {
-            "type": "string",
-            "example": "Baltimore Ravens",
-            "description": "Name of the away team"
-          },
-          "props": {
-            "description": "List of props associated with this event",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Prop"
-            }
-          },
-          "created_at": {
-            "format": "date-time",
-            "type": "string",
-            "example": "2024-08-27T21:27:19Z",
-            "description": "Timestamp of when the event was created"
-          },
-          "updated_at": {
-            "format": "date-time",
-            "type": "string",
-            "example": "2024-08-27T21:27:19Z",
-            "description": "Timestamp of when the event was last updated"
-          }
-        },
-        "required": [
-          "id",
-          "sport_key",
-          "sport_title",
-          "commence_time",
-          "home_team",
-          "away_team",
-          "props",
-          "created_at",
-          "updated_at"
-        ]
-      },
-      "UpdatePropDto": {
-        "type": "object",
-        "properties": {
-          "event_id": {
-            "type": "string",
-            "description": "Unique identifier for the event. This is provided by the source of the props (The-Odds API)",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "sport_key": {
-            "type": "string",
-            "description": "Key of the sport",
-            "example": "americanfootball_nfl"
-          },
-          "sport_title": {
-            "type": "string",
-            "description": "Title of the sport",
-            "example": "nfl"
-          },
-          "commence_time": {
-            "format": "date-time",
-            "type": "string",
-            "description": "The commencement time of the event"
-          },
-          "home_team": {
-            "type": "string",
-            "description": "The name of the home team"
-          },
-          "away_team": {
-            "type": "string",
-            "description": "The name of the away team"
-          },
-          "bookmaker_key": {
-            "type": "string",
-            "description": "The key of the bookmaker"
-          },
-          "bookmaker_title": {
-            "type": "string",
-            "description": "The title of the bookmaker"
-          },
-          "last_update": {
-            "format": "date-time",
-            "type": "string",
-            "description": "The last update time"
-          },
-          "market_key": {
-            "enum": [
-              "h2h",
-              "totals",
-              "player_pass_tds",
-              "player_pass_yds",
-              "player_pass_completions",
-              "player_pass_attempts",
-              "player_pass_interceptions",
-              "player_pass_longest_completion",
-              "player_rush_yds",
-              "player_rush_attempts",
-              "player_rush_longest",
-              "player_receptions",
-              "player_reception_yds",
-              "player_reception_longest",
-              "player_kicking_points",
-              "player_field_goals",
-              "player_tackles_assists",
-              "player_1st_td",
-              "player_last_td",
-              "player_anytime_td",
-              "player_pass_tds_alternate",
-              "player_pass_yds_alternate",
-              "player_rush_yds_alternate",
-              "player_rush_reception_yds_alternate",
-              "player_reception_yds_alternate",
-              "player_receptions_alternate",
-              "player_points",
-              "player_rebounds",
-              "player_assists",
-              "player_threes",
-              "player_blocks",
-              "player_steals",
-              "player_blocks_steals",
-              "player_turnovers",
-              "player_points_rebounds_assists",
-              "player_points_rebounds",
-              "player_points_assists",
-              "player_rebounds_assists",
-              "player_first_basket",
-              "player_double_double",
-              "player_triple_double",
-              "player_points_alternate",
-              "player_rebounds_alternate",
-              "player_assists_alternate",
-              "player_blocks_alternate",
-              "player_steals_alternate",
-              "player_threes_alternate",
-              "player_points_assists_alternate",
-              "player_points_rebounds_alternate",
-              "player_rebounds_assists_alternate",
-              "player_points_rebounds_assists_alternate"
-            ],
-            "type": "string",
-            "description": "The key of the betting market"
-          },
-          "price": {
-            "type": "number",
-            "description": "The price of the bet"
-          },
-          "point": {
-            "type": "number",
-            "description": "The point value of the bet, if applicable"
-          },
-          "status": {
-            "enum": [
-              "pending",
-              "completed",
-              "error"
-            ],
-            "type": "string",
-            "description": "The status of the prop",
-            "nullable": true
-          },
-          "result": {
-            "type": "string",
-            "description": "The result of the prop/event. The winner goes here.",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "description": "The player involved in the prop.",
-            "example": "Jayson Tatum",
-            "nullable": true
-          }
-        }
-      },
-      "UpdatePropResultDto": {
-        "type": "object",
-        "properties": {
-          "propId": {
-            "type": "string",
-            "format": "uuid",
-            "description": "The ID of the prop/match",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "winner": {
-            "type": "string",
-            "description": "The winner of the match/or the correct choice",
-            "example": "Team A"
-          },
-          "status": {
-            "enum": [
-              "pending",
-              "completed",
-              "error"
-            ],
-            "type": "string",
-            "description": "The new status of the prop",
-            "example": "completed"
-          },
-          "user_id": {
-            "type": "string",
-            "description": "The ID of the user who is updating the prop result. Included for logging purposes.",
-            "example": "1232131313"
-          }
-        },
-        "required": [
-          "propId",
-          "winner",
-          "status",
-          "user_id"
-        ]
-      },
-      "UpdatePropResultResponseDto": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string",
-            "description": "Message indicating the result of the prop update",
-            "example": "Prop result updated and predictions closed successfully"
-          },
-          "total_predictions_count": {
-            "type": "number",
-            "description": "Total number of predictions",
-            "example": 10
-          },
-          "correct_predictions_count": {
-            "type": "number",
-            "description": "Number of correct predictions",
-            "example": 5
-          },
-          "incorrect_predictions_count": {
-            "type": "number",
-            "description": "Number of incorrect predictions",
-            "example": 5
-          }
-        },
-        "required": [
-          "message",
-          "total_predictions_count",
-          "correct_predictions_count",
-          "incorrect_predictions_count"
-        ]
-      },
-      "ProcessedPredictionsDto": {
-        "type": "object",
-        "properties": {
-          "total_predictions": {
-            "type": "number",
-            "description": "Total number of predictions made",
-            "example": 100,
-            "minimum": 0
-          },
-          "percentages": {
-            "type": "object",
-            "description": "Percentage distribution of predictions",
-            "example": {
-              "over": 60,
-              "under": 40
-            },
-            "additionalProperties": {
-              "type": "number",
-              "minimum": 0,
-              "maximum": 100
-            }
-          },
-          "tallies": {
-            "type": "object",
-            "description": "Raw count of predictions by category",
-            "example": {
-              "over": 60,
-              "under": 40
-            },
-            "additionalProperties": {
-              "type": "number",
-              "minimum": 0
-            }
-          }
-        },
-        "required": [
-          "total_predictions",
-          "percentages",
-          "tallies"
-        ]
-      },
-      "PredictionStatsDto": {
-        "type": "object",
-        "properties": {
-          "prop_id": {
-            "type": "string",
-            "description": "Unique identifier of the prop",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "home_team": {
-            "type": "string",
-            "description": "Name of the home team",
-            "example": "Los Angeles Lakers"
-          },
-          "away_team": {
-            "type": "string",
-            "description": "Name of the away team",
-            "example": "Golden State Warriors"
-          },
-          "stats": {
-            "description": "Detailed prediction statistics",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ProcessedPredictionsDto"
-              }
-            ]
-          },
-          "betting_on_label": {
-            "type": "string",
-            "description": "Human-readable label for the betting option",
-            "example": "Over 215.5 points"
-          },
-          "description": {
-            "type": "string",
-            "nullable": true,
-            "description": "Additional description of the prediction",
-            "example": "Total points scored in the game"
-          },
-          "sport": {
-            "type": "string",
-            "description": "The sport category",
-            "example": "NBA",
-            "enum": [
-              "NBA",
-              "NFL",
-              "MLB",
-              "NHL"
-            ]
-          }
-        },
-        "required": [
-          "prop_id",
-          "home_team",
-          "away_team",
-          "stats",
-          "betting_on_label",
-          "description",
-          "sport"
-        ]
-      },
-      "CreatePredictionDto": {
-        "type": "object",
-        "properties": {
-          "user_id": {
-            "type": "string",
-            "description": "User ID",
-            "example": "771235938474576"
-          },
-          "prop_id": {
-            "type": "string",
-            "format": "uuid",
-            "description": "Prop ID",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "choice": {
-            "type": "string",
-            "description": "Who or what the user is betting/predicting on",
-            "example": "Jayson Tatum"
-          },
-          "status": {
-            "enum": [
-              "pending",
-              "completed",
-              "error"
-            ],
-            "type": "string",
-            "description": "Status of the prediction",
-            "example": "pending"
-          },
-          "guild_id": {
-            "type": "string",
-            "description": "Discord Guild ID",
-            "example": "987654321128397129"
-          }
-        },
-        "required": [
-          "user_id",
-          "prop_id",
-          "choice",
-          "status",
-          "guild_id"
-        ]
-      },
-      "PredictionDTO": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "description": "Unique identifier for the prediction",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "user_id": {
-            "type": "string",
-            "description": "User ID",
-            "example": "user123"
-          },
-          "created_at": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Creation timestamp",
-            "example": "2023-04-15T10:30:00Z"
-          },
-          "prop_id": {
-            "type": "string",
-            "description": "ID of the associated prop",
-            "example": "prop456"
-          },
-          "choice": {
-            "type": "string",
-            "description": "User's choice",
-            "example": "Option A"
-          },
-          "is_correct": {
-            "type": "boolean",
-            "description": "Whether the prediction is correct",
-            "example": true,
-            "nullable": true
-          },
-          "status": {
-            "enum": [
-              "pending",
-              "completed",
-              "error"
-            ],
-            "type": "string",
-            "description": "Status of the prediction",
-            "example": "pending"
-          },
-          "updated_at": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Last update timestamp",
-            "example": "2023-04-15T11:45:00Z"
-          },
-          "guild_id": {
-            "type": "string",
-            "description": "Guild ID",
-            "example": "guild789"
-          },
-          "market_key": {
-            "type": "string",
-            "description": "Market key",
-            "example": "market123"
-          },
-          "prop": {
-            "description": "Prop data",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Prop"
-              }
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "user_id",
-          "created_at",
-          "prop_id",
-          "choice",
-          "status",
-          "updated_at",
-          "guild_id",
-          "market_key"
-        ]
-      },
-      "PropPredictionsDto": {
-        "type": "object",
-        "properties": {
-          "prop": {
-            "description": "The prop data",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Prop"
-              }
-            ]
-          },
-          "predictions": {
-            "nullable": true,
-            "description": "Array of predictions for this prop",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/PredictionDTO"
-            }
-          }
-        },
-        "required": [
-          "prop",
-          "predictions"
-        ]
-      },
       "AllUserPredictionsDto": {
         "type": "object",
         "properties": {
@@ -6410,9 +5749,21 @@
             "type": "string",
             "description": "Creation timestamp"
           },
-          "prop_id": {
+          "outcome_uuid": {
             "type": "string",
-            "description": "ID of the associated prop"
+            "description": "Outcome UUID from Goracle (composite key)"
+          },
+          "event_id": {
+            "type": "string",
+            "description": "Event ID from Goracle"
+          },
+          "market_key": {
+            "type": "string",
+            "description": "Market key (e.g., h2h, totals, player_points)"
+          },
+          "bookmaker_key": {
+            "type": "string",
+            "description": "Bookmaker key (e.g., fanduel, draftkings)"
           },
           "choice": {
             "type": "string",
@@ -6434,6 +5785,10 @@
           "guild_id": {
             "type": "string",
             "description": "Guild ID"
+          },
+          "sport": {
+            "type": "string",
+            "description": "Sport key (e.g., basketball_nba, americanfootball_nfl)"
           },
           "processed_predictions": {
             "description": "Processed predictions",
@@ -6452,28 +5807,24 @@
             "type": "string",
             "description": "Optional description of the prediction",
             "example": "Prediction for the final score"
-          },
-          "prop": {
-            "$ref": "#/components/schemas/Prop"
-          },
-          "market_key": {
-            "type": "string"
           }
         },
         "required": [
           "id",
           "user_id",
           "created_at",
-          "prop_id",
+          "outcome_uuid",
+          "event_id",
+          "market_key",
+          "bookmaker_key",
           "choice",
           "is_correct",
           "status",
           "updated_at",
           "guild_id",
+          "sport",
           "processed_predictions",
-          "match_string",
-          "prop",
-          "market_key"
+          "match_string"
         ]
       },
       "UpdatePredictionDto": {
@@ -6496,10 +5847,20 @@
             "description": "Creation timestamp",
             "example": "2023-04-15T10:30:00Z"
           },
-          "prop_id": {
+          "outcome_uuid": {
             "type": "string",
-            "description": "ID of the associated prop",
-            "example": "prop456"
+            "description": "Outcome UUID from Goracle",
+            "example": "123e4567-e89b-12d3-a456-426614174000:fanduel:h2h:Lakers"
+          },
+          "event_id": {
+            "type": "string",
+            "description": "Event ID from Goracle",
+            "example": "event789"
+          },
+          "sport": {
+            "type": "string",
+            "description": "Sport key",
+            "example": "basketball_nba"
           },
           "choice": {
             "type": "string",
@@ -6536,15 +5897,12 @@
           "market_key": {
             "type": "string",
             "description": "Market key",
-            "example": "market123"
+            "example": "h2h"
           },
-          "prop": {
-            "description": "Prop data",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Prop"
-              }
-            ]
+          "bookmaker_key": {
+            "type": "string",
+            "description": "Bookmaker key",
+            "example": "fanduel"
           }
         }
       },
@@ -6960,6 +6318,60 @@
           "last_bet_at",
           "created_at",
           "updated_at"
+        ]
+      },
+      "OutcomeSettledWebhookDto": {
+        "type": "object",
+        "properties": {
+          "outcome_uuid": {
+            "type": "string",
+            "description": "Unique identifier for the outcome in Goracle",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "event_id": {
+            "type": "string",
+            "description": "Event ID from Goracle",
+            "example": "abc123xyz"
+          },
+          "market_key": {
+            "type": "string",
+            "description": "Market key (e.g., h2h, totals, player_points)",
+            "example": "player_points"
+          },
+          "bookmaker_key": {
+            "type": "string",
+            "description": "Bookmaker key (e.g., fanduel, draftkings)",
+            "example": "fanduel"
+          },
+          "result": {
+            "type": "string",
+            "description": "Result of the outcome (team name, over/under, etc.)",
+            "example": "Lakers"
+          },
+          "actual_value": {
+            "type": "number",
+            "description": "Actual statistical value for player props",
+            "example": 28.5
+          },
+          "correlation_id": {
+            "type": "string",
+            "description": "Correlation ID for tracking webhook across systems",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "completed_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Timestamp when the outcome was completed",
+            "example": "2024-01-15T20:30:00Z"
+          }
+        },
+        "required": [
+          "outcome_uuid",
+          "event_id",
+          "market_key",
+          "bookmaker_key",
+          "result",
+          "completed_at"
         ]
       }
     }

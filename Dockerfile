@@ -33,7 +33,7 @@ RUN pnpm ci-gen-api
 
 # Build stage
 # ? Uses data compiled from the base stage
-FROM base AS builder 
+FROM base AS builder
 WORKDIR /app
 
 # Copy package.json and pnpm-lock.yaml
