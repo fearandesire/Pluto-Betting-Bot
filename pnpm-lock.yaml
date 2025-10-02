@@ -36,8 +36,8 @@ importers:
         specifier: ^2.24.0
         version: 2.24.0(@types/node@24.4.0)
       '@pluto-khronos/types':
-        specifier: ^0.2.0
-        version: 0.2.0(discord.js@14.22.1)
+        specifier: ^0.2.1
+        version: 0.2.1(discord.js@14.22.1)
       '@sapphire/decorators':
         specifier: ^6.1.1
         version: 6.2.0
@@ -547,7 +547,6 @@ packages:
   '@biomejs/cli-win32-x64@2.2.4':
     resolution: {integrity: sha512-3Y4V4zVRarVh/B/eSHczR4LYoSVyv3Dfuvm3cWs5w/HScccS0+Wt/lHOcDTRYeHjQmMYVC3rIRWqyN2EI52+zg==}
     engines: {node: '>=14.21.3'}
-    cpu: [x64]
     os: [win32]
 
   '@borewit/text-codec@0.1.1':
@@ -1700,8 +1699,8 @@ packages:
     resolution: {integrity: sha512-QNqXyfVS2wm9hweSYD2O7F0G06uurj9kZ96TRQE5Y9hU7+tgdZwIkbAKc5Ocy1HxEY2kuDQa6cQ1WRs/O5LFKA==}
     engines: {node: ^12.20.0 || ^14.18.0 || >=16.0.0}
 
-  '@pluto-khronos/types@0.2.0':
-    resolution: {integrity: sha512-uXZh87IeEk/c8XFZz3X5qa9ZeE5x+V71xemSXkkLP5UiYYnVpnIno3RCQQyetzkilF6fOdlwGMW6R2axbJugpw==}
+  '@pluto-khronos/types@0.2.1':
+    resolution: {integrity: sha512-3KJi1uYcn8L3OAS78H+1aeSzRS96D+xg3o/nQznhEqGjM6lxYqy3V5lgilnNg9unSVeU8/ca2bZmMV2mX6W9HA==}
     peerDependencies:
       discord.js: ^14.0.0
 
@@ -8203,7 +8202,7 @@ snapshots:
 
   '@pkgr/core@0.2.9': {}
 
-  '@pluto-khronos/types@0.2.0(discord.js@14.22.1)':
+  '@pluto-khronos/types@0.2.1(discord.js@14.22.1)':
     dependencies:
       discord.js: 14.22.1
       resolve-team: 2.0.4
