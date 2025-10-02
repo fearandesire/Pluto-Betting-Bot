@@ -45,7 +45,7 @@ const env = envSchema.parse({
 	R_PASS: process.env.R_PASS,
 	API_PORT: Number.parseInt(process.env.APIPORT || '2090', 10),
 	API_URL: process.env.API_URL,
-	LOG_LEVEL: "Info",
+	LOG_LEVEL: process.env.LOG_LEVEL || "Info",
 	DEV_SERVER_ID: process.env.DEV_SERVER_ID,
 	PATREON_API_URL: process.env.PATREON_API_URL,
 	KH_PLUTO_CLIENT_KEY: process.env.KH_PLUTO_CLIENT_KEY,
