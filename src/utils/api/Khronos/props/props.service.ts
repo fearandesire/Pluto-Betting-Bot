@@ -18,7 +18,7 @@ export default class PropsRepoService {
 		id: string;
 	}) {
 		try {
-			return await this.propsApi.getPropById(args.id);
+			return await this.propsApi.getPropByUuid(args.id);
 		} catch (error) {
 			console.error(error);
 			return new ApiErrorHandler().handle(

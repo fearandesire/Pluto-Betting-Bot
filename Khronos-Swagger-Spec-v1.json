@@ -3994,6 +3994,41 @@
         ]
       }
     },
+    "/api/khronos/v1/props/{outcomeUuid}": {
+      "get": {
+        "description": "Returns a prop (outcome) from Goracle by its UUID. Used to fetch prop details including sport information.",
+        "operationId": "PropsController_getPropByUuid_v1",
+        "parameters": [
+          {
+            "name": "outcomeUuid",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Prop retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PropDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Prop not found"
+          }
+        },
+        "summary": "Get a prop by outcome UUID",
+        "tags": [
+          "Props"
+        ]
+      }
+    },
     "/api/khronos/v1/props/result": {
       "post": {
         "description": "Allows staff to manually set the result of a prop (outcome), triggering prediction processing and leaderboard updates. The propId is the outcome_uuid from Goracle.",
