@@ -10,6 +10,8 @@ import PropsApiWrapper from '../../utils/api/Khronos/props/propsApiWrapper.js';
 import { MarketKeyAbbreviations } from '../../utils/api/common/interfaces/market-abbreviations.js';
 import { DateManager } from '../../utils/common/DateManager.js';
 import TeamInfo from '../../utils/common/TeamInfo.js';
+import type { AllUserPredictionsDto } from '../../openapi/khronos/models/AllUserPredictionsDto.js';
+import { GetAllPredictionsFilteredStatusEnum } from '../../openapi/khronos/apis/PredictionApi.js';
 
 @ApplyOptions<Command.Options>({
 	description: 'View your prediction history',
@@ -38,11 +40,11 @@ export class UserCommand extends Command {
 							.addChoices(
 								{
 									name: 'Pending',
-									value: PredictionStatus.PENDING,
+									value: GetAllPredictionsFilteredStatusEnum.Pending,
 								},
 								{
 									name: 'Completed',
-									value: PredictionStatus.Completed,
+									value: GetAllPredictionsFilteredStatusEnum.Completed,
 								},
 							),
 					),
