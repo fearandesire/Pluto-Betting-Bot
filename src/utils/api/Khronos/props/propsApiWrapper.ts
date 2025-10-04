@@ -1,18 +1,14 @@
-import {
-	type FindAllPropsRequest,
-	type FindOnePropRequest,
-	type FindPropsByDescriptionRequest,
-	type GetPropsForEventRequest,
-	type ManualSendPropsRequest,
-	type Prop,
-	PropsApi,
-	type SetPropResultRequest,
-} from '@kh-openapi';
+import { PropsApi, type PropDto } from '@kh-openapi';
+import type {
+	SetPropResultDto,
+	SetPropResultResponseDto,
+} from '../../../../commands/props/types/prop-result.types.js';
 import { logger } from '../../../logging/WinstonLogger.js';
 import { KH_API_CONFIG } from '../KhronosInstances.js';
 
 /**
  * Wrapper for the Props Controller in Khronos
+ * Note: After API streamlining, only random props and result setting are available
  */
 export default class PropsApiWrapper {
 	private propsApi: PropsApi;
@@ -22,60 +18,91 @@ export default class PropsApiWrapper {
 	}
 
 	/**
-	 * Get all props
-	 * @param params - Optional parameters for finding props
-	 * @returns A promise that resolves to the raw response from the API
+	 * Get random props for a sport
+	 * @param sport - Sport key (nba, nfl, etc.)
+	 * @param count - Number of random props to return
 	 */
-	async getAll(params: FindAllPropsRequest) {
-		const response = await this.propsApi.findAllProps(params);
+	async getRandomProps(sport: 'nba' | 'nfl', count?: number): Promise<PropDto[]> {
+		const response = await this.propsApi.propsControllerGetRandomPropsV1({
+			sport,
+			count,
+		});
 		await logger.info({
-			message: `Retrieved ${response.length} props`,
+			message: `Retrieved ${response.length} random props for ${sport}`,
 			metadata: {
-				source: `${this.constructor.name}.${this.getAll.name}`,
+				source: `${this.constructor.name}.${this.getRandomProps.name}`,
+				sport,
+				count: response.length,
 			},
 		});
 		return response;
 	}
 
 	/**
-	 * Get a prop by id
+	 * Get a single random prop
+	 * @param sport - Sport key (nba, nfl, etc.)
 	 */
-	async getPropById(id: string): Promise<Prop> {
-		const params: FindOnePropRequest = { id, withPredictions: false };
-		return await this.propsApi.findOneProp(params);
+	async getRandomProp(sport: 'nba' | 'nfl'): Promise<PropDto> {
+		return await this.propsApi.propsControllerGetRandomPropV1({ sport });
 	}
 
 	/**
-	 * Get props by event id
-	 * @param eventId - The id of the event to get props for
-	 * @returns A promise that resolves to the raw response from the API
+	 * Get a prop by outcome UUID
+	 * @param outcomeUuid - The UUID of the outcome/prop
+	 * @returns Prop details with event context including sport information
+	 * @note This requires regenerating the OpenAPI client after adding the endpoint to Khronos
 	 */
-	async getPropsByEventId(eventId: string) {
-		const params: GetPropsForEventRequest = { id: eventId };
-		return await this.propsApi.getPropsForEvent(params);
-	}
+	async getPropByUuid(outcomeUuid: string): Promise<PropDto> {
+		// TODO: Once OpenAPI is regenerated, use: this.propsApi.propsControllerGetPropByUuid({ outcomeUuid })
+		// For now, make direct HTTP call
+		const response = await fetch(
+			`${KH_API_CONFIG.basePath}/api/khronos/v1/props/${outcomeUuid}`,
+			{
+				method: 'GET',
+				headers: KH_API_CONFIG.headers || {},
+			},
+		);
 
-	/**
-	 * Generate all prop embeds to be sent to the configured Guild's Props Channel / Predictions / Accuracy Channel
-	 */
-	async generateAllPropEmbeds(args: ManualSendPropsRequest) {
-		await this.propsApi.manualSendProps(args);
+		if (!response.ok) {
+			const error = await response.json().catch(() => ({
+				message: response.statusText,
+			}));
+			throw new Error(error.message || 'Failed to fetch prop by UUID');
+		}
+
+		const prop = await response.json();
+		await logger.info({
+			message: `Retrieved prop by UUID: ${outcomeUuid}`,
+			metadata: {
+				source: `${this.constructor.name}.${this.getPropByUuid.name}`,
+				outcomeUuid,
+				sport: prop.event_context?.sport_title,
+			},
+		});
+
+		return prop;
 	}
 
 	/**
 	 * Set the result of a prop
-	 * @param params - The parameters for setting the prop result
-	 * @returns A promise that resolves to the raw response from the API
+	 * @param dto - The parameters for setting the prop result
+	 * @returns A promise that resolves to the response with prediction statistics
 	 */
-	async setResult(params: SetPropResultRequest) {
-		return await this.propsApi.setPropResult(params);
-	}
+	async setResult(dto: SetPropResultDto): Promise<SetPropResultResponseDto> {
+		const result = await this.propsApi.propsControllerSetPropResultV1({
+			setPropResultDto: dto,
+		});
 
-	async getPropsByPlayer(params: FindPropsByDescriptionRequest) {
-		return await this.propsApi.findPropsByDescription(params);
-	}
+		await logger.info({
+			message: `Set prop result for ${dto.propId}`,
+			metadata: {
+				source: `${this.constructor.name}.${this.setResult.name}`,
+				propId: dto.propId,
+				winner: dto.winner,
+				totalProcessed: result.total_predictions_count,
+			},
+		});
 
-	async getStatsProps() {
-		// Add none
+		return result;
 	}
 }

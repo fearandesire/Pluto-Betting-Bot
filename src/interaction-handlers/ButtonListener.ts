@@ -19,6 +19,7 @@ import BetslipWrapper from '../utils/api/Khronos/bets/betslip-wrapper.js';
 import { ApiErrorHandler } from '../utils/api/Khronos/error-handling/ApiErrorHandler.js';
 import MatchApiWrapper from '../utils/api/Khronos/matches/matchApiWrapper.js';
 import PredictionApiWrapper from '../utils/api/Khronos/prediction/predictionApiWrapper.js';
+import PropsApiWrapper from '../utils/api/Khronos/props/propsApiWrapper.js';
 import { BetsCacheService } from '../utils/api/common/bets/BetsCacheService.js';
 import { patreonFooter } from '../utils/api/patreon/interfaces.js';
 import MatchCacheService from '../utils/api/routes/cache/MatchCacheService.js';
@@ -218,13 +219,18 @@ export class ButtonHandler extends InteractionHandler {
 					// Restore the space - replace _
 					const sanitizedChoice = payload.action.replace(/_/g, ' ');
 
+					// Fetch prop to get sport information
+					const propsApi = new PropsApiWrapper();
+					const prop = await propsApi.getPropByUuid(payload.propId);
+
 					await predictionApi.createPrediction({
 						createPredictionDto: {
 							user_id: interaction.user.id,
-							prop_id: payload.propId,
+							outcome_uuid: payload.propId,
 							choice: sanitizedChoice,
 							status: 'pending',
 							guild_id: interaction.guildId!,
+							sport: prop.event_context.sport_title,
 						},
 					});
 

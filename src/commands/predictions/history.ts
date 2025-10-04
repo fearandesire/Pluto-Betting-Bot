@@ -5,10 +5,6 @@ import { EmbedBuilder, InteractionContextType } from 'discord.js';
 import type { User } from 'discord.js';
 import _ from 'lodash';
 import embedColors from '../../lib/colorsConfig.js';
-import {
-	type AllUserPredictionsDto,
-	GetAllPredictionsFilteredStatusEnum,
-} from '../../openapi/khronos/index.js';
 import PredictionApiWrapper from '../../utils/api/Khronos/prediction/predictionApiWrapper.js';
 import PropsApiWrapper from '../../utils/api/Khronos/props/propsApiWrapper.js';
 import { MarketKeyAbbreviations } from '../../utils/api/common/interfaces/market-abbreviations.js';
@@ -42,11 +38,11 @@ export class UserCommand extends Command {
 							.addChoices(
 								{
 									name: 'Pending',
-									value: GetAllPredictionsFilteredStatusEnum.Pending,
+									value: PredictionStatus.PENDING,
 								},
 								{
 									name: 'Completed',
-									value: GetAllPredictionsFilteredStatusEnum.Completed,
+									value: PredictionStatus.Completed,
 								},
 							),
 					),
@@ -153,7 +149,7 @@ export class UserCommand extends Command {
 		const parsedChoice = this.parseChoice(prediction.choice);
 		// Get Prop via ID within the prediction
 		const propApiWrapper = new PropsApiWrapper();
-		const prop = await propApiWrapper.getPropById(prediction.prop_id);
+		const prop = await propApiWrapper.getPropByUuid(prediction.outcome_uuid);
 		// type of prop
 		const { market_key, point } = prop;
 		let parsedMarketKey = MarketKeyAbbreviations[market_key] || market_key;

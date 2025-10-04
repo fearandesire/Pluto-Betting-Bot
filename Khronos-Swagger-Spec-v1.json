@@ -3882,6 +3882,166 @@
           "Webhooks"
         ]
       }
+    },
+    "/api/khronos/v1/props/random": {
+      "get": {
+        "description": "Returns random props (outcomes) from Goracle for a specific sport. Used by Pluto to display daily props.",
+        "operationId": "PropsController_getRandomProps_v1",
+        "parameters": [
+          {
+            "name": "sport",
+            "required": true,
+            "in": "query",
+            "description": "Sport key (nba or nfl)",
+            "schema": {
+              "example": "nba",
+              "type": "string",
+              "enum": [
+                "nba",
+                "nfl"
+              ]
+            }
+          },
+          {
+            "name": "count",
+            "required": false,
+            "in": "query",
+            "description": "Number of random props to return",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 1,
+              "example": 5,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Random props retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PropDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters"
+          }
+        },
+        "summary": "Get random props for betting",
+        "tags": [
+          "Props"
+        ]
+      }
+    },
+    "/api/khronos/v1/props/random/single": {
+      "get": {
+        "description": "Returns a single random prop. Used by admins to swap individual props.",
+        "operationId": "PropsController_getRandomProp_v1",
+        "parameters": [
+          {
+            "name": "sport",
+            "required": true,
+            "in": "query",
+            "description": "Sport key (nba or nfl)",
+            "schema": {
+              "example": "nba",
+              "type": "string",
+              "enum": [
+                "nba",
+                "nfl"
+              ]
+            }
+          },
+          {
+            "name": "count",
+            "required": false,
+            "in": "query",
+            "description": "Number of random props to return",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 1,
+              "example": 5,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Random prop retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PropDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters"
+          }
+        },
+        "summary": "Get a single random prop",
+        "tags": [
+          "Props"
+        ]
+      }
+    },
+    "/api/khronos/v1/props/result": {
+      "post": {
+        "description": "Allows staff to manually set the result of a prop (outcome), triggering prediction processing and leaderboard updates. The propId is the outcome_uuid from Goracle.",
+        "operationId": "PropsController_setPropResult_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPropResultDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Prop result set successfully, predictions processed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetPropResultResponseDto"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetPropResultResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters"
+          },
+          "404": {
+            "description": "Outcome not found in Goracle"
+          }
+        },
+        "summary": "Manually set prop result",
+        "tags": [
+          "Props"
+        ]
+      }
     }
   },
   "info": {
@@ -6372,6 +6532,150 @@
           "bookmaker_key",
           "result",
           "completed_at"
+        ]
+      },
+      "PropEventContextDto": {
+        "type": "object",
+        "properties": {
+          "home_team": {
+            "type": "string",
+            "description": "Home team name"
+          },
+          "away_team": {
+            "type": "string",
+            "description": "Away team name"
+          },
+          "commence_time": {
+            "type": "string",
+            "description": "Game commence time (ISO 8601)"
+          },
+          "sport_title": {
+            "type": "string",
+            "description": "Sport title"
+          }
+        },
+        "required": [
+          "home_team",
+          "away_team",
+          "commence_time",
+          "sport_title"
+        ]
+      },
+      "PropDto": {
+        "type": "object",
+        "properties": {
+          "outcome_uuid": {
+            "type": "string",
+            "description": "Outcome UUID for placing predictions"
+          },
+          "event_id": {
+            "type": "string",
+            "description": "Event ID"
+          },
+          "event_context": {
+            "description": "Event context",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PropEventContextDto"
+              }
+            ]
+          },
+          "market_key": {
+            "type": "string",
+            "description": "Market key (e.g., player_points, h2h)"
+          },
+          "bookmaker_key": {
+            "type": "string",
+            "description": "Bookmaker key (e.g., fanduel, draftkings)"
+          },
+          "name": {
+            "type": "string",
+            "description": "Prop name (e.g., LeBron James Over 25.5 Points)"
+          },
+          "description": {
+            "type": "string",
+            "description": "Prop description"
+          },
+          "price": {
+            "type": "number",
+            "description": "Odds price (decimal format)"
+          },
+          "point": {
+            "type": "number",
+            "description": "Point value (e.g., 25.5 for over/under)"
+          },
+          "position": {
+            "type": "string",
+            "description": "Position (for h2h: home/away/draw)"
+          }
+        },
+        "required": [
+          "outcome_uuid",
+          "event_id",
+          "event_context",
+          "market_key",
+          "bookmaker_key",
+          "name",
+          "price"
+        ]
+      },
+      "SetPropResultDto": {
+        "type": "object",
+        "properties": {
+          "propId": {
+            "type": "string",
+            "description": "The outcome UUID (propId) from Goracle",
+            "example": "bf856d2b-73a7-4da2-9bff-aeab2e56bd94"
+          },
+          "winner": {
+            "type": "string",
+            "description": "The winning result/choice for the prop",
+            "example": "Over"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "completed"
+            ],
+            "description": "Status of the prop after setting result",
+            "example": "completed"
+          },
+          "user_id": {
+            "type": "string",
+            "description": "Discord user ID of the admin setting the result",
+            "example": "208016830491525120"
+          }
+        },
+        "required": [
+          "propId",
+          "winner",
+          "status",
+          "user_id"
+        ]
+      },
+      "SetPropResultResponseDto": {
+        "type": "object",
+        "properties": {
+          "correct_predictions_count": {
+            "type": "number",
+            "description": "Number of correct predictions",
+            "example": 15
+          },
+          "incorrect_predictions_count": {
+            "type": "number",
+            "description": "Number of incorrect predictions",
+            "example": 8
+          },
+          "total_predictions_count": {
+            "type": "number",
+            "description": "Total number of predictions processed",
+            "example": 23
+          }
+        },
+        "required": [
+          "correct_predictions_count",
+          "incorrect_predictions_count",
+          "total_predictions_count"
         ]
       }
     }

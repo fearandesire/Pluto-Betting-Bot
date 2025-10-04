@@ -3,9 +3,6 @@ import { Subcommand } from '@sapphire/plugin-subcommands';
 import { EmbedBuilder, PermissionFlagsBits } from 'discord.js';
 import embedColors from '../../lib/colorsConfig.js';
 import { ApiModules } from '../../lib/interfaces/api/api.interface.js';
-import type { Prop } from '../../openapi/khronos/models/Prop.js';
-import type { UpdatePropResultDto } from '../../openapi/khronos/models/UpdatePropResultDto.js';
-import type { UpdatePropResultResponseDto } from '../../openapi/khronos/models/index.js';
 import { ApiErrorHandler } from '../../utils/api/Khronos/error-handling/ApiErrorHandler.js';
 import PropsApiWrapper from '../../utils/api/Khronos/props/propsApiWrapper.js';
 import { MarketKeyTranslations } from '../../utils/api/common/interfaces/market-translations.js';
@@ -14,6 +11,11 @@ import TeamInfo from '../../utils/common/TeamInfo.js';
 import StringUtils from '../../utils/common/string-utils.js';
 import { LogType } from '../../utils/logging/AppLog.interface.js';
 import AppLog from '../../utils/logging/AppLog.js';
+import { PropResultStatus } from './types/prop-result.types.js';
+import type {
+	Prop,
+	SetPropResultResponseDto,
+} from './types/prop-result.types.js';
 
 export class UserCommand extends Subcommand {
 	public constructor(
@@ -71,7 +73,15 @@ export class UserCommand extends Subcommand {
 							.addSubcommand((subcommand) =>
 								subcommand
 									.setName('all')
-									.setDescription('Generate all prop embeds'),
+									.setDescription('Generate prop embeds')
+									.addIntegerOption((option) =>
+										option
+											.setName('count')
+											.setDescription('Number of props to generate (default: 10)')
+											.setRequired(false)
+											.setMinValue(1)
+											.setMaxValue(50),
+									),
 							),
 					)
 					.addSubcommandGroup((group) =>
@@ -129,13 +139,10 @@ export class UserCommand extends Subcommand {
 			await interaction.deferReply();
 
 			const response = await propsApi.setResult({
-				updatePropResultDto: {
-					propId,
-					winner: result,
-					status: 'completed' as UpdatePropResultDto['status'],
-					user_id: interaction.user.id,
-				},
-				override: false,
+				propId,
+				winner: result,
+				status: PropResultStatus.COMPLETED,
+				user_id: interaction.user.id,
 			});
 
 			const embed = this.createResultEmbed(response);
@@ -154,7 +161,7 @@ export class UserCommand extends Subcommand {
 	}
 
 	private createResultEmbed(
-		response: UpdatePropResultResponseDto,
+		response: SetPropResultResponseDto,
 	): EmbedBuilder {
 		const embed = new EmbedBuilder()
 			.setTitle('Prop Result Updated')
@@ -184,42 +191,65 @@ export class UserCommand extends Subcommand {
 		interaction: Subcommand.ChatInputCommandInteraction,
 	) {
 		await interaction.deferReply();
-		await interaction.editReply({
-			content: 'Generating prop embeds, please wait...',
-		});
-		await new PropsApiWrapper().generateAllPropEmbeds({
-			guildId: interaction.guildId,
-		});
+		
+		const count = interaction.options.getInteger('count') || 10;
+		const propsApi = new PropsApiWrapper();
 
-		await interaction.editReply({
-			content: 'Prop Embeds populated successfully',
-		});
+		try {
+			await interaction.editReply({
+				content: `Generating ${count} prop${count > 1 ? 's' : ''}, please wait...`,
+			});
 
-		await AppLog.log({
-			guildId: interaction.guildId,
-			description: `${interaction.user.username} generated all prop embeds`,
-			type: LogType.Info,
-		});
+			// TODO: Determine sport dynamically or add sport parameter
+			// For now, defaulting to NBA
+			const props = await propsApi.getRandomProps('nba', count);
+
+			const embed = new EmbedBuilder()
+				.setTitle('Props Generated')
+				.setDescription(`Successfully generated ${props.length} random prop${props.length > 1 ? 's' : ''}`)
+				.setColor(embedColors.PlutoGreen)
+				.addFields(
+					props.slice(0, 25).map((prop) => ({
+						name: `${prop.name}`,
+						value: `**Market:** ${prop.market_key}\n**Price:** ${prop.price}\n**ID:** \`${prop.outcome_uuid}\``,
+						inline: true,
+					})),
+				)
+				.setTimestamp();
+
+			await interaction.editReply({
+				content: '',
+				embeds: [embed],
+			});
+
+			await AppLog.log({
+				guildId: interaction.guildId,
+				description: `${interaction.user.username} generated ${props.length} prop embeds`,
+				type: LogType.Info,
+			});
+		} catch (error) {
+			this.container.logger.error(error);
+			return new ApiErrorHandler().handle(interaction, error, ApiModules.props);
+		}
 	}
 
 	private async viewActiveProps(
 		interaction: Subcommand.ChatInputCommandInteraction,
 	) {
-		const propsApi = new PropsApiWrapper();
-
 		try {
-			const props: Prop[] = await propsApi.getAll({
-				guildId: interaction.guildId,
-				withActivePredictions: true,
+			// TODO: Implement endpoint to fetch props with active predictions
+			// For now, inform the user that this feature needs backend support
+			await interaction.editReply({
+				content:
+					'This feature requires an endpoint to fetch props with active predictions. ' +
+					'Please use the prediction history commands to view your active predictions.',
 			});
 
-			return this.sendPropsEmbed(
-				interaction,
-				props,
-				'Active Props',
-				'Displaying props with active predictions',
-				{ isViewingActiveProps: true },
-			);
+			await AppLog.log({
+				guildId: interaction.guildId,
+				description: `${interaction.user.username} attempted to view active props (not yet implemented)`,
+				type: LogType.Info,
+			});
 		} catch (error) {
 			this.container.logger.error(error);
 			return new ApiErrorHandler().handle(interaction, error, ApiModules.props);
@@ -261,12 +291,12 @@ export class UserCommand extends Subcommand {
 				return paginatedMsg.run(interaction);
 			}
 
-			const firstProp = props[0];
-			const date = new DateManager().toDiscordUnix(firstProp.commence_time);
+		const firstProp = props[0];
+		const date = new DateManager().toDiscordUnix(firstProp.event_context.commence_time);
 
-			templateEmbed.setDescription(
-				`${description}\n\n**Event Information**\n🆔 **Event ID:** \`${firstProp.event_id}\`\n🗓️ **Date:** ${date}\n${firstProp.home_team} vs ${firstProp.away_team}`,
-			);
+		templateEmbed.setDescription(
+			`${description}\n\n**Event Information**\n🆔 **Event ID:** \`${firstProp.event_id}\`\n🗓️ **Date:** ${date}\n${firstProp.event_context.home_team} vs ${firstProp.event_context.away_team}`,
+		);
 
 			const formattedProps = await Promise.all(
 				props.map((prop) => this.formatPropField(prop)),
@@ -284,17 +314,15 @@ export class UserCommand extends Subcommand {
 		prop: Prop,
 	): Promise<{ name: string; value: string; inline: boolean }> {
 		const {
-			home_team,
-			away_team,
+			event_context,
 			market_key,
 			description,
 			point,
-			id,
-			commence_time,
+			outcome_uuid,
 		} = prop;
 
-		const homeTeam = await TeamInfo.resolveTeamIdentifier(home_team);
-		const awayTeam = await TeamInfo.resolveTeamIdentifier(away_team);
+		const homeTeam = await TeamInfo.resolveTeamIdentifier(event_context.home_team);
+		const awayTeam = await TeamInfo.resolveTeamIdentifier(event_context.away_team);
 		const matchup = `${homeTeam} vs. ${awayTeam}`;
 
 		const translatedKey = StringUtils.toTitleCase(
@@ -312,7 +340,7 @@ export class UserCommand extends Subcommand {
 			title = `${matchup} - ${translatedKey}`;
 		}
 
-		const details = [`**Prop ID:** \`${id}\``];
+		const details = [`**Prop ID:** \`${outcome_uuid}\``];
 
 		if (
 			point !== null &&
@@ -322,7 +350,7 @@ export class UserCommand extends Subcommand {
 			details.push(`**Over/Under:** ${point}`);
 		}
 
-		const date = new DateManager().toDiscordUnix(commence_time);
+		const date = new DateManager().toDiscordUnix(event_context.commence_time);
 		details.push(`**Date:** ${date}`);
 
 		return {
