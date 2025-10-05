@@ -3219,6 +3219,42 @@
         ]
       }
     },
+    "/api/khronos/v1/prediction/active-outcomes": {
+      "get": {
+        "description": "Returns a list of unique outcome UUIDs that have pending predictions. Used to see which props need results set.",
+        "operationId": "getActiveOutcomes",
+        "parameters": [
+          {
+            "name": "guild_id",
+            "required": false,
+            "in": "query",
+            "description": "Optional guild ID to filter outcomes",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of outcomes with active predictions retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActiveOutcomesResponseDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        },
+        "summary": "Get all outcomes (props) that have active predictions",
+        "tags": [
+          "Prediction"
+        ]
+      }
+    },
     "/api/khronos/v1/leaderboard/init-weeks/{sport}": {
       "post": {
         "operationId": "LeaderboardController_initializeWeeks_v1",
@@ -6118,6 +6154,76 @@
         "required": [
           "total",
           "unique_users"
+        ]
+      },
+      "ActiveOutcomeDto": {
+        "type": "object",
+        "properties": {
+          "outcome_uuid": {
+            "type": "string",
+            "description": "Outcome UUID (prop ID)"
+          },
+          "event_id": {
+            "type": "string",
+            "description": "Event ID"
+          },
+          "market_key": {
+            "type": "string",
+            "description": "Market key (e.g., player_points, h2h)"
+          },
+          "home_team": {
+            "type": "string",
+            "description": "Home team name"
+          },
+          "away_team": {
+            "type": "string",
+            "description": "Away team name"
+          },
+          "commence_time": {
+            "type": "string",
+            "description": "Game commence time (ISO 8601)"
+          },
+          "description": {
+            "type": "string",
+            "description": "Prop description (e.g., player name for player props)"
+          },
+          "point": {
+            "type": "number",
+            "description": "Point value (e.g., 25.5 for over/under)"
+          },
+          "prediction_count": {
+            "type": "number",
+            "description": "Total number of pending predictions on this outcome"
+          }
+        },
+        "required": [
+          "outcome_uuid",
+          "event_id",
+          "market_key",
+          "home_team",
+          "away_team",
+          "commence_time",
+          "prediction_count"
+        ]
+      },
+      "ActiveOutcomesResponseDto": {
+        "type": "object",
+        "properties": {
+          "outcomes": {
+            "description": "List of outcomes with active predictions",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActiveOutcomeDto"
+            }
+          },
+          "total_outcomes": {
+            "type": "number",
+            "description": "Total number of unique outcomes with active predictions"
+          }
+        },
+        "required": [
+          "outcomes",
+          "total_outcomes"
         ]
       },
       "LeaderboardDto": {
