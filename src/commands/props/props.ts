@@ -14,6 +14,7 @@ import { LogType } from "../../utils/logging/AppLog.interface.js";
 import AppLog from "../../utils/logging/AppLog.js";
 import { SetPropResultResponseDto, PropDto } from "@khronos-index";
 import { PropPostingHandler } from "../../utils/props/PropPostingHandler.js";
+import PredictionApiWrapper from "../../utils/api/Khronos/prediction/predictionApiWrapper.js";
 
 export class UserCommand extends Subcommand {
   public constructor(
@@ -312,17 +313,84 @@ export class UserCommand extends Subcommand {
     interaction: Subcommand.ChatInputCommandInteraction,
   ) {
     try {
-      // TODO: Implement endpoint to fetch props with active predictions
-      // For now, inform the user that this feature needs backend support
-      await interaction.editReply({
-        content:
-          "This feature requires an endpoint to fetch props with active predictions. " +
-          "Please use the prediction history commands to view your active predictions.",
+      const predictionApi = new PredictionApiWrapper();
+
+      // Fetch active outcomes from Khronos
+      const data = await predictionApi.getActiveOutcomes({
+        guildId: interaction.guildId,
       });
+
+      // Check if there are any active outcomes
+      if (
+        !data.outcomes ||
+        data.outcomes.length === 0 ||
+        data.total_outcomes === 0
+      ) {
+        await interaction.editReply({
+          content: "No active predictions found. All props have been settled!",
+        });
+        return;
+      }
+
+      // Build embed with outcome list
+      const embed = new EmbedBuilder()
+        .setTitle("Active Props - Pending Results")
+        .setDescription(
+          `Found **${data.total_outcomes}** outcome${data.total_outcomes !== 1 ? "s" : ""} with active predictions.\nUse \`/props manage setresult\` to settle these props.`,
+        )
+        .setColor(embedColors.PlutoBlue)
+        .setTimestamp();
+
+      // Format each outcome into a field
+      const fields = data.outcomes.map((outcome: any) => {
+        const matchup = `${outcome.home_team} vs ${outcome.away_team}`;
+        const date = new DateManager().toDiscordUnix(outcome.commence_time);
+
+        // Build description parts
+        const parts = [
+          `**Matchup:** ${matchup}`,
+          `**Market:** ${StringUtils.toTitleCase(outcome.market_key.replace(/_/g, " "))}`,
+        ];
+
+        if (outcome.description) {
+          parts.push(`**Player:** ${outcome.description}`);
+        }
+
+        if (outcome.point !== null && outcome.point !== undefined) {
+          parts.push(`**Line:** ${outcome.point}`);
+        }
+
+        parts.push(
+          `**Date:** ${date}`,
+          `**Predictions:** ${outcome.prediction_count}`,
+        );
+
+        return {
+          name: `🎯 ${outcome.outcome_uuid}`,
+          value: parts.join("\n"),
+          inline: false,
+        };
+      });
+
+      // Split into multiple embeds if too many fields (Discord limit is 25 fields per embed)
+      if (fields.length <= 25) {
+        embed.addFields(fields);
+        await interaction.editReply({ embeds: [embed] });
+      } else {
+        // Use paginated message for many outcomes
+        const paginatedMsg = new PaginatedMessageEmbedFields({
+          template: { embeds: [embed] },
+        })
+          .setItems(fields)
+          .setItemsPerPage(10)
+          .make();
+
+        return paginatedMsg.run(interaction);
+      }
 
       await AppLog.log({
         guildId: interaction.guildId,
-        description: `${interaction.user.username} attempted to view active props (not yet implemented)`,
+        description: `${interaction.user.username} viewed ${data.total_outcomes} active prop outcomes`,
         type: LogType.Info,
       });
     } catch (error) {
