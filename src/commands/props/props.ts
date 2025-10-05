@@ -13,7 +13,7 @@ import StringUtils from "../../utils/common/string-utils.js";
 import { LogType } from "../../utils/logging/AppLog.interface.js";
 import AppLog from "../../utils/logging/AppLog.js";
 import { SetPropResultResponseDto, PropDto } from "@khronos-index";
-import { PropPostingHandler } from "./handlers/PropPostingHandler.js";
+import { PropPostingHandler } from "../../utils/props/PropPostingHandler.js";
 
 export class UserCommand extends Subcommand {
   public constructor(
@@ -194,14 +194,14 @@ export class UserCommand extends Subcommand {
 
   /**
    * Generates random props and posts them to the guild's prediction channel
-   * 
+   *
    * This command:
    * - Fetches random props from Khronos based on guild's sport
    * - Filters out h2h markets (not suitable for Over/Under predictions)
    * - Creates interactive embeds with Over/Under buttons
    * - Posts each prop to the configured prediction channel
    * - Reports back with posting statistics
-   * 
+   *
    * @param interaction - Discord command interaction
    */
   private async generateProps(
@@ -291,15 +291,19 @@ export class UserCommand extends Subcommand {
       });
     } catch (error) {
       this.container.logger.error(error);
-      
+
       // Check if error is due to missing prediction channel config
-      if (error instanceof Error && error.message.includes("Prediction channel not configured")) {
+      if (
+        error instanceof Error &&
+        error.message.includes("Prediction channel not configured")
+      ) {
         await interaction.editReply({
-          content: "❌ This guild does not have a prediction channel configured. Please set one up using the guild configuration commands.",
+          content:
+            "❌ This guild does not have a prediction channel configured. Please set one up using the guild configuration commands.",
         });
         return;
       }
-      
+
       return new ApiErrorHandler().handle(interaction, error, ApiModules.props);
     }
   }

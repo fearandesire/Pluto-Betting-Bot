@@ -2927,16 +2927,16 @@
     },
     "/api/khronos/v1/outcomes/{outcomeUuid}": {
       "get": {
-        "description": "Retrieves specific outcome details using composite UUID (eventId:bookmakerKey:marketKey:outcomeName)",
+        "description": "Retrieves specific outcome details using outcome UUID from Goracle",
         "operationId": "getOutcomeByUuid",
         "parameters": [
           {
             "name": "outcomeUuid",
             "required": true,
             "in": "path",
-            "description": "Composite outcome UUID",
+            "description": "Outcome UUID from Goracle",
             "schema": {
-              "example": "123e4567-e89b-12d3-a456-426614174000:fanduel:h2h:Los Angeles Lakers",
+              "example": "0c1c46e3-4730-4efb-af21-a5f220c81509",
               "type": "string"
             }
           }
@@ -5629,8 +5629,8 @@
           },
           "outcome_uuid": {
             "type": "string",
-            "description": "Outcome UUID from Goracle (composite key format: eventId:bookmakerKey:marketKey:outcomeName)",
-            "example": "123e4567-e89b-12d3-a456-426614174000:fanduel:h2h:Lakers"
+            "description": "Outcome UUID from Goracle",
+            "example": "0c1c46e3-4730-4efb-af21-a5f220c81509"
           },
           "choice": {
             "type": "string",
@@ -5800,7 +5800,7 @@
           },
           "outcome_uuid": {
             "type": "string",
-            "description": "Outcome UUID from Goracle (composite key)"
+            "description": "Outcome UUID from Goracle"
           },
           "event_id": {
             "type": "string",
@@ -5946,7 +5946,7 @@
           },
           "outcome_uuid": {
             "type": "string",
-            "description": "Outcome UUID from Goracle (composite key)"
+            "description": "Outcome UUID from Goracle"
           },
           "event_id": {
             "type": "string",
@@ -6711,6 +6711,31 @@
           "correct_predictions_count",
           "incorrect_predictions_count",
           "total_predictions_count"
+        ]
+      },
+      "GetRandomPropsDto": {
+        "type": "object",
+        "properties": {
+          "sport": {
+            "type": "string",
+            "enum": [
+              "nba",
+              "nfl"
+            ],
+            "description": "Sport key (nba or nfl)",
+            "example": "nba"
+          },
+          "count": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 50,
+            "description": "Number of random props to return",
+            "example": 5,
+            "default": 1
+          }
+        },
+        "required": [
+          "sport"
         ]
       }
     }
