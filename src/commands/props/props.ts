@@ -13,10 +13,8 @@ import StringUtils from "../../utils/common/string-utils.js";
 import { LogType } from "../../utils/logging/AppLog.interface.js";
 import AppLog from "../../utils/logging/AppLog.js";
 import { PropResultStatus } from "./types/prop-result.types.js";
-import type {
-  Prop,
-  SetPropResultResponseDto,
-} from "./types/prop-result.types.js";
+import { SetPropResultResponseDto, PropDto } from "@khronos-index";
+import { PropPostingHandler } from "./handlers/PropPostingHandler.js";
 
 export class UserCommand extends Subcommand {
   public constructor(
@@ -144,7 +142,6 @@ export class UserCommand extends Subcommand {
     }
 
     const propsApi = new PropsApiWrapper();
-    const guildWrapper = new GuildWrapper();
 
     try {
       await interaction.deferReply();
@@ -196,6 +193,18 @@ export class UserCommand extends Subcommand {
     return embed;
   }
 
+  /**
+   * Generates random props and posts them to the guild's prediction channel
+   * 
+   * This command:
+   * - Fetches random props from Khronos based on guild's sport
+   * - Filters out h2h markets (not suitable for Over/Under predictions)
+   * - Creates interactive embeds with Over/Under buttons
+   * - Posts each prop to the configured prediction channel
+   * - Reports back with posting statistics
+   * 
+   * @param interaction - Discord command interaction
+   */
   private async generateProps(
     interaction: Subcommand.ChatInputCommandInteraction,
   ) {
@@ -203,31 +212,71 @@ export class UserCommand extends Subcommand {
 
     const count = interaction.options.getInteger("count") || 10;
     const propsApi = new PropsApiWrapper();
+    const guildWrapper = new GuildWrapper();
 
     try {
       await interaction.editReply({
         content: `Generating ${count} prop${count > 1 ? "s" : ""}, please wait...`,
       });
 
+      // Get guild information to determine sport
+      const guild = await guildWrapper.getGuild(interaction.guildId);
 
-      // Get guild information to include context in the result
-      const guild = await new GuildWrapper().getGuild(interaction.guildId);
+      // Fetch random props from Khronos
+      const props = await propsApi.getRandomProps(
+        guild.sport as "nba" | "nfl",
+        count,
+      );
 
+      // Post props to prediction channel
+      const postingHandler = new PropPostingHandler();
+      const result = await postingHandler.postPropsToChannel(
+        interaction.guildId,
+        props,
+      );
 
-      const props = await propsApi.getRandomProps(guild.sport as "nba" | "nfl", count);
+      // Get prediction channel for mention in response
+      const predictionChannel = await guildWrapper.getPredictionChannel(
+        interaction.guildId,
+      );
+
+      // Build success message
+      const responseLines: string[] = [
+        `✅ Successfully posted **${result.posted}** prop${result.posted !== 1 ? "s" : ""} to ${predictionChannel}`,
+      ];
+
+      if (result.filtered > 0) {
+        responseLines.push(
+          `🔽 Filtered out **${result.filtered}** h2h market${result.filtered !== 1 ? "s" : ""}`,
+        );
+      }
+
+      if (result.failed > 0) {
+        responseLines.push(
+          `❌ Failed to post **${result.failed}** prop${result.failed !== 1 ? "s" : ""}`,
+        );
+      }
 
       const embed = new EmbedBuilder()
-        .setTitle("Props Generated")
-        .setDescription(
-          `Successfully generated ${props.length} random prop${props.length > 1 ? "s" : ""}`,
-        )
+        .setTitle("Props Posted")
+        .setDescription(responseLines.join("\n"))
         .setColor(embedColors.PlutoGreen)
         .addFields(
-          props.slice(0, 25).map((prop) => ({
-            name: `${prop.name}`,
-            value: `**Market:** ${prop.market_key}\n**Price:** ${prop.price}\n**ID:** \`${prop.outcome_uuid}\``,
+          {
+            name: "Total Generated",
+            value: result.total.toString(),
             inline: true,
-          })),
+          },
+          {
+            name: "Posted",
+            value: result.posted.toString(),
+            inline: true,
+          },
+          {
+            name: "Filtered",
+            value: result.filtered.toString(),
+            inline: true,
+          },
         )
         .setTimestamp();
 
@@ -238,11 +287,20 @@ export class UserCommand extends Subcommand {
 
       await AppLog.log({
         guildId: interaction.guildId,
-        description: `${interaction.user.username} generated ${props.length} prop embeds`,
+        description: `${interaction.user.username} posted ${result.posted} prop embeds to prediction channel`,
         type: LogType.Info,
       });
     } catch (error) {
       this.container.logger.error(error);
+      
+      // Check if error is due to missing prediction channel config
+      if (error instanceof Error && error.message.includes("Prediction channel not configured")) {
+        await interaction.editReply({
+          content: "❌ This guild does not have a prediction channel configured. Please set one up using the guild configuration commands.",
+        });
+        return;
+      }
+      
       return new ApiErrorHandler().handle(interaction, error, ApiModules.props);
     }
   }
@@ -272,7 +330,7 @@ export class UserCommand extends Subcommand {
 
   private async sendPropsEmbed(
     interaction: Subcommand.ChatInputCommandInteraction,
-    props: Prop[],
+    props: PropDto[],
     title: string,
     description: string,
     options?: PropEmbedOptions,
@@ -327,7 +385,7 @@ export class UserCommand extends Subcommand {
   }
 
   private async formatPropField(
-    prop: Prop,
+    prop: PropDto,
   ): Promise<{ name: string; value: string; inline: boolean }> {
     const { event_context, market_key, description, point, outcome_uuid } =
       prop;

@@ -78,6 +78,7 @@ export default class PropsApiWrapper {
 				outcomeUuid,
 				sport: prop.event_context?.sport_title,
 			},
+			raw: prop
 		});
 
 		return prop;
