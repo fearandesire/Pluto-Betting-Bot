@@ -1,8 +1,4 @@
-import { PropsApi, type PropDto } from '@kh-openapi';
-import type {
-	SetPropResultDto,
-	SetPropResultResponseDto,
-} from '../../../../commands/props/types/prop-result.types.js';
+import { PropsApi, type PropDto, type SetPropResultDto, type SetPropResultResponseDto } from '@kh-openapi';
 import { logger } from '../../../logging/WinstonLogger.js';
 import { KH_API_CONFIG } from '../KhronosInstances.js';
 

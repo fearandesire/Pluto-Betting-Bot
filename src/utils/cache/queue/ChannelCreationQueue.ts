@@ -139,7 +139,7 @@ export class ChannelCreationQueue {
         data: { 
           jobId: job.id, 
           validationError: validation.error.message,
-          zodErrors: JSON.stringify(validation.error.errors, null, 2),
+          zodErrors: JSON.stringify(validation.error.issues, null, 2),
           receivedData: JSON.stringify(job.data, null, 2),
         },
       });
@@ -148,11 +148,16 @@ export class ChannelCreationQueue {
 
     const { channel, guild } = validation.data;
 
+    // Ensure gametime is present (schema validation guarantees this, but TypeScript doesn't infer it correctly due to looseObject)
+    if (!channel.gametime) {
+      throw new Error(`Channel ${channel.id} is missing required gametime field`);
+    }
+
     try {
       const channelManager = new ChannelManager();
 
       // Idempotency check inside ChannelManager.processChannels
-      await channelManager.processChannels({ channels: [channel], guilds: [guild] });
+      await channelManager.processChannels({ channels: [channel as Required<typeof channel>], guilds: [guild] });
 
       return { success: true, guildId: guild.guildId, channelId: channel.id };
     } catch (err) {
