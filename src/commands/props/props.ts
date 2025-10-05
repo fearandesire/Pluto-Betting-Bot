@@ -12,7 +12,6 @@ import TeamInfo from "../../utils/common/TeamInfo.js";
 import StringUtils from "../../utils/common/string-utils.js";
 import { LogType } from "../../utils/logging/AppLog.interface.js";
 import AppLog from "../../utils/logging/AppLog.js";
-import { PropResultStatus } from "./types/prop-result.types.js";
 import { SetPropResultResponseDto, PropDto } from "@khronos-index";
 import { PropPostingHandler } from "./handlers/PropPostingHandler.js";
 
@@ -149,7 +148,7 @@ export class UserCommand extends Subcommand {
       const response = await propsApi.setResult({
         propId,
         winner: result,
-        status: PropResultStatus.COMPLETED,
+        status: "completed",
         user_id: interaction.user.id,
       });
 

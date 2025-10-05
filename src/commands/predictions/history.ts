@@ -148,14 +148,22 @@ export class UserCommand extends Command {
 		const parsedMatchString = await this.parseMatchString(
 			prediction.match_string,
 		);
-		const parsedChoice = this.parseChoice(prediction.choice);
+		
 		// Get Prop via ID within the prediction
 		const propApiWrapper = new PropsApiWrapper();
 		const prop = await propApiWrapper.getPropByUuid(prediction.outcome_uuid);
-		// type of prop
-		const { market_key, point } = prop;
-		let parsedMarketKey = MarketKeyAbbreviations[market_key] || market_key;
-		parsedMarketKey = _.startCase(parsedMarketKey);
+		
+		// Format the choice with point and market
+		const formattedChoice = this.formatPredictionChoice(
+			prediction.choice,
+			prop.point,
+			prop.market_key,
+		);
+		
+		// Format date
+		const date = new DateManager().toMMDDYYYY(prediction.created_at);
+		
+		// Format outcome status
 		const outcomeStr = (emoji: string) => {
 			if (emoji === '⏳') {
 				return 'Pending ⏳';
@@ -168,18 +176,46 @@ export class UserCommand extends Command {
 			}
 			return emoji;
 		};
-		const date = new DateManager().toMMDDYYYY(prediction.created_at);
-		let value = `**Date**: ${date}\n**Status**: ${outcomeStr(outcomeEmoji)}\n**Choice**: \`${parsedChoice} ${point ? `${point}` : ''}\`\n**Market**: ${parsedMarketKey} `;
 
+		// Build Prop Details section
+		let propDetailsValue = `**Choice:** ${formattedChoice}`;
 		if (prediction.description && prediction.description.trim() !== '') {
-			value += `\n**Player:** ${prediction.description}`;
+			propDetailsValue = `**Prop:** ${prediction.description}\n${propDetailsValue}`;
 		}
 
+		// Build Event Details section
+		const eventDetailsValue = `**Match:** ${parsedMatchString}\n**Date:** ${date}`;
+
+		// Combine sections with status
+		const value = `**Status:** ${outcomeStr(outcomeEmoji)}\n\n**Prop Details**\n${propDetailsValue}\n\n**Event Details**\n${eventDetailsValue}`;
+
 		return {
-			name: `${parsedMatchString}`,
+			name: `Prediction #${prediction.id.slice(-8)}`,
 			value: value,
 			inline: false,
 		};
+	}
+
+	/**
+	 * Formats a prediction choice with point and market information
+	 * @param choice - The user's choice (e.g., "over", "under")
+	 * @param point - The point value (e.g., 15.5)
+	 * @param marketKey - The market key (e.g., "player_reception_yds")
+	 * @returns Formatted choice string (e.g., "OVER 15.5 Reception Yards")
+	 */
+	private formatPredictionChoice(
+		choice: string,
+		point: number | undefined,
+		marketKey: string,
+	): string {
+		const upperChoice = choice.toUpperCase();
+		let marketName = _.startCase(marketKey.replace('player_', ''));
+
+		if (point) {
+			return `${upperChoice} ${point} ${marketName}`;
+		}
+
+		return `${upperChoice} ${marketName}`;
 	}
 
 	private getOutcomeEmoji(prediction: AllUserPredictionsDto): string {

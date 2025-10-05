@@ -25,6 +25,9 @@ import { patreonFooter } from '../utils/api/patreon/interfaces.js';
 import MatchCacheService from '../utils/api/routes/cache/MatchCacheService.js';
 import { CacheManager } from '../utils/cache/cache-manager.js';
 import { ErrorEmbeds } from '../utils/common/errors/global.js';
+import { MarketKeyAbbreviations } from '../utils/api/common/interfaces/market-abbreviations.js';
+import { DateManager } from '../utils/common/DateManager.js';
+import TeamInfo from '../utils/common/TeamInfo.js';
 
 /**
  * @module ButtonListener
@@ -234,17 +237,45 @@ export class ButtonHandler extends InteractionHandler {
 						},
 					});
 
+					// Format the choice with point and market
+					const formattedChoice = this.formatPredictionChoice(
+						sanitizedChoice,
+						prop.point,
+						prop.market_key,
+						prop.description,
+					);
+
+					// Format match string
+					const matchString = await this.formatMatchString(
+						prop.event_context.away_team,
+						prop.event_context.home_team,
+					);
+
+					// Format date
+					const formattedDate = new DateManager().toMMDDYYYY(
+						prop.event_context.commence_time,
+					);
+
 					const predictionEmbed = new EmbedBuilder()
 						.setColor(embedColors.PlutoGreen)
-						.setTitle('Prediction Stored')
+						.setTitle('Prediction Placed')
 						.setDescription(
 							'Your prediction has been recorded.\nView your predictions with `/history`',
 						)
-						.addFields({
-							name: 'Prediction',
-							value: `\`${_.startCase(sanitizedChoice)}\``,
-							inline: true,
-						})
+						.addFields(
+							{
+								name: 'Prop Details',
+								value: prop.description
+									? `**Prop:** ${prop.description}\n**Choice:** ${formattedChoice}`
+									: `**Choice:** ${formattedChoice}`,
+								inline: false,
+							},
+							{
+								name: 'Event Details',
+								value: `**Match:** ${matchString}\n**Date:** ${formattedDate}`,
+								inline: false,
+							},
+						)
 						.setTimestamp();
 
 					await interaction.editReply({
@@ -273,6 +304,50 @@ export class ButtonHandler extends InteractionHandler {
 				);
 			}
 		}
+	}
+
+	/**
+	 * Formats a prediction choice with point and market information
+	 * @param choice - The user's choice (e.g., "over", "under")
+	 * @param point - The point value (e.g., 15.5)
+	 * @param marketKey - The market key (e.g., "player_reception_yds")
+	 * @param description - Optional prop description
+	 * @returns Formatted choice string (e.g., "OVER 15.5 Reception Yards")
+	 */
+	private formatPredictionChoice(
+		choice: string,
+		point: number | undefined,
+		marketKey: string,
+		description?: string,
+	): string {
+		const upperChoice = choice.toUpperCase();
+		const abbreviation = MarketKeyAbbreviations[marketKey];
+		let marketName = abbreviation
+			? _.startCase(marketKey.replace('player_', ''))
+			: _.startCase(marketKey);
+
+		if (point) {
+			return `${upperChoice} ${point} ${marketName}`;
+		}
+
+		return `${upperChoice} ${marketName}`;
+	}
+
+	/**
+	 * Formats the match string with team identifiers
+	 * @param awayTeam - Away team name
+	 * @param homeTeam - Home team name
+	 * @returns Formatted match string (e.g., "LAL vs. BOS")
+	 */
+	private async formatMatchString(
+		awayTeam: string,
+		homeTeam: string,
+	): Promise<string> {
+		const result = await TeamInfo.resolveTeamIdentifier({
+			away_team: awayTeam,
+			home_team: homeTeam,
+		});
+		return `${result.away_team} vs. ${result.home_team}`;
 	}
 }
 

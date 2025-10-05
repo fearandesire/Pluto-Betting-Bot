@@ -116,12 +116,32 @@ export class ChannelCreationQueue {
   }
 
   private async processJob(job: Job<ChannelCreationEvent>): Promise<ChannelCreationResult> {
+    logger.debug({
+      message: "Channel creation job received - full payload",
+      source: "ChannelCreationQueue:processJob",
+      data: { 
+        jobId: job.id, 
+        jobName: job.name,
+        fullPayload: JSON.stringify(job.data, null, 2),
+        rawData: job.data,
+        channelGametime: job.data?.channel?.gametime,
+        gametimeType: typeof job.data?.channel?.gametime,
+        metadataPublishedAt: job.data?.metadata?.publishedAt,
+        publishedAtType: typeof job.data?.metadata?.publishedAt,
+      },
+    });
+
     const validation = channelCreationEventSchema.safeParse(job.data);
     if (!validation.success) {
       logger.error({
         message: "Invalid job data received",
         source: "ChannelCreationQueue:processJob",
-        data: { jobId: job.id, validationError: validation.error.message },
+        data: { 
+          jobId: job.id, 
+          validationError: validation.error.message,
+          zodErrors: JSON.stringify(validation.error.errors, null, 2),
+          receivedData: JSON.stringify(job.data, null, 2),
+        },
       });
       throw new Error(`Invalid job data: ${validation.error.message}`);
     }
