@@ -149,9 +149,6 @@ export class UserCommand extends Subcommand {
     try {
       await interaction.deferReply();
 
-      // Get guild information to include context in the result
-      const guild = await guildWrapper.getGuild(interaction.guildId);
-
       const response = await propsApi.setResult({
         propId,
         winner: result,
@@ -212,7 +209,12 @@ export class UserCommand extends Subcommand {
         content: `Generating ${count} prop${count > 1 ? "s" : ""}, please wait...`,
       });
 
-      const props = await propsApi.getRandomProps("nba", count);
+
+      // Get guild information to include context in the result
+      const guild = await new GuildWrapper().getGuild(interaction.guildId);
+
+
+      const props = await propsApi.getRandomProps(guild.sport as "nba" | "nfl", count);
 
       const embed = new EmbedBuilder()
         .setTitle("Props Generated")
