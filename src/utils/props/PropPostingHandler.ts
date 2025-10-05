@@ -6,10 +6,10 @@ import {
 	ButtonStyle,
 	EmbedBuilder,
 } from 'discord.js';
-import embedColors from '../../../lib/colorsConfig.js';
-import { MarketKeyTranslations } from '../../../utils/api/common/interfaces/market-translations.js';
-import GuildWrapper from '../../../utils/api/Khronos/guild/guild-wrapper.js';
-import StringUtils from '../../../utils/common/string-utils.js';
+import { MarketKeyTranslations } from '../api/common/interfaces/market-translations.js';
+import GuildWrapper from '../api/Khronos/guild/guild-wrapper.js';
+import embedColors from '#lib/colorsConfig.js';
+import StringUtils from '../common/string-utils.js';
 
 /**
  * Result object returned after posting props to channel
