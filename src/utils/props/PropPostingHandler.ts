@@ -8,8 +8,8 @@ import {
 } from 'discord.js';
 import { MarketKeyTranslations } from '../api/common/interfaces/market-translations.js';
 import GuildWrapper from '../api/Khronos/guild/guild-wrapper.js';
-import embedColors from '#lib/colorsConfig.js';
 import StringUtils from '../common/string-utils.js';
+import TeamInfo from '../common/TeamInfo.js';
 
 /**
  * Result object returned after posting props to channel
@@ -90,10 +90,10 @@ export class PropPostingHandler {
 			total: props.length,
 		};
 
-		// Post each prop individually
+		// 1 Embed:1 Prop
 		for (const prop of validProps) {
 			try {
-				const embed = this.createPropEmbed(prop);
+				const embed = await this.createPropEmbed(prop);
 				const buttons = this.createPropButtons(prop);
 
 				await this.guildWrapper.sendToPredictionChannel(guildId, {
@@ -128,7 +128,7 @@ export class PropPostingHandler {
 	 * @returns Discord embed builder
 	 * @private
 	 */
-	private createPropEmbed(prop: PropDto): EmbedBuilder {
+	private async createPropEmbed(prop: PropDto): Promise<EmbedBuilder> {
 		const {
 			description,
 			market_key,
@@ -153,8 +153,17 @@ export class PropPostingHandler {
 			descriptionLines.push(`**Over/Under:** ${point}`);
 		}
 
+
+		// shortening the team names for display reasons
+		const teamInfo = async (teamName: string) => {
+			const teamInfo = await new TeamInfo().getTeamInfo(teamName);
+			return teamInfo
+		};
+
+		const [homeTeamInfo, awayTeamInfo] = await Promise.all([teamInfo(event_context.home_team), teamInfo(event_context.away_team)]);
+
 		descriptionLines.push(
-			`**Matchup:** ${event_context.home_team} vs ${event_context.away_team}`,
+			`**Match:** ${homeTeamInfo.resolvedTeamData.abbrev} vs ${awayTeamInfo.resolvedTeamData.abbrev}`,
 		);
 		descriptionLines.push(`**Game Time:** ${gameTime}`);
 
@@ -166,10 +175,7 @@ export class PropPostingHandler {
 		const embed = new EmbedBuilder()
 			.setTitle(`${description} - ${marketName}`)
 			.setDescription(descriptionLines.join('\n'))
-			.setColor(embedColors.PlutoBlue)
-			.setFooter({
-				text: `via ${StringUtils.toTitleCase(bookmaker_key)}`,
-			})
+			.setColor(homeTeamInfo.color)
 			.setTimestamp();
 
 		return embed;
@@ -193,11 +199,13 @@ export class PropPostingHandler {
 		const overButton = new ButtonBuilder()
 			.setCustomId(`prop_over_${prop.outcome_uuid}`)
 			.setLabel('Over')
+			.setEmoji('⬆️')
 			.setStyle(ButtonStyle.Primary);
 
 		const underButton = new ButtonBuilder()
 			.setCustomId(`prop_under_${prop.outcome_uuid}`)
 			.setLabel('Under')
+			.setEmoji('⬇️')
 			.setStyle(ButtonStyle.Primary);
 
 		return new ActionRowBuilder<ButtonBuilder>().addComponents(

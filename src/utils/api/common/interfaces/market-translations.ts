@@ -9,6 +9,7 @@ export enum MarketKeyTranslations {
 	player_reception_yds = 'reception yards',
 	h2h = 'head to head',
 	totals = 'totals',
+	team_totals = 'team totals',
 	player_receptions = 'player receptions',
 	player_rush_attempts = 'rush attempts',
 	player_rush_longest = 'rush longest',

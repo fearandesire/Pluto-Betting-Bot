@@ -1,6 +1,6 @@
 import { container } from '@sapphire/framework';
 import type { ColorResolvable, EmojiResolvable, GuildEmoji } from 'discord.js';
-import { teamResolver } from 'resolve-team';
+import { teamResolver, type Team } from 'resolve-team';
 import { findEmoji } from '../bot_res/findEmoji.js';
 import StringUtils from './string-utils.js';
 
@@ -14,6 +14,8 @@ export interface GetTeamInfoResponse {
 	fullName: string;
 	combinedString: string;
 	color: number;
+
+	resolvedTeamData: Team;
 }
 
 export default class TeamInfo {
@@ -108,7 +110,8 @@ export default class TeamInfo {
 		const emoji = container.client.emojis.cache.find(
 			(emoji) => emoji.name?.toLowerCase() === shortName.toLowerCase(),
 		);
-		const hexColor = (await TeamInfo.getTeamColor(teamName)) as string;
+		const teamData = await teamResolver.resolve(teamName, { full: true });
+		const hexColor = teamData?.colors[0] ?? '#0099ff';
 		const parsedHex = Number.parseInt(hexColor.slice(1), 16);
 		return {
 			emoji: emoji || shortName,
@@ -116,6 +119,7 @@ export default class TeamInfo {
 			fullName: teamName,
 			combinedString: `${emoji || shortName} ${shortName}`,
 			color: parsedHex,
+			resolvedTeamData: teamData,
 		};
 	}
 }
