@@ -67,6 +67,7 @@ export class PropPostingHandler {
 	 * 
 	 * @param guildId - Discord guild ID
 	 * @param props - Array of props from Khronos API
+	 * @param sport - Sport type ('nfl' or 'nba') for appropriate emoji
 	 * @param options - Optional configuration (e.g., filtering preferences)
 	 * @returns Result object with posting statistics
 	 * @throws Error if prediction channel not configured or posting fails
@@ -74,6 +75,7 @@ export class PropPostingHandler {
 	async postPropsToChannel(
 		guildId: string,
 		props: PropDto[],
+		sport: 'nfl' | 'nba',
 		options?: PostingOptions,
 	): Promise<PostingResult> {
 		const filterH2H = options?.filterH2H ?? true;
@@ -93,7 +95,7 @@ export class PropPostingHandler {
 		// 1 Embed:1 Prop
 		for (const prop of validProps) {
 			try {
-				const embed = await this.createPropEmbed(prop);
+				const embed = await this.createPropEmbed(prop, sport);
 				const buttons = this.createPropButtons(prop);
 
 				await this.guildWrapper.sendToPredictionChannel(guildId, {
@@ -118,23 +120,26 @@ export class PropPostingHandler {
 	 * Creates a formatted embed for a prop
 	 * 
 	 * Embed structure:
-	 * - Title: Player name + Market type (e.g., "Tony Pollard - Rush Yards")
-	 * - Description: Line value, matchup, and game time
-	 * - Color: Pluto Blue
-	 * - Footer: Bookmaker attribution
+	 * - Title: Clear statement of what's being predicted
+	 * - Description: Line value, matchup, and game time with prominent Over/Under display
+	 * - Color: Team color
 	 * - Timestamp: Current time
 	 * 
+	 * For totals/team_totals: Uses team name from `name` field
+	 * For player props: Uses player name from `description` field
+	 * 
 	 * @param prop - Prop data from API
+	 * @param sport - Sport type ('nfl' or 'nba') for appropriate emoji
 	 * @returns Discord embed builder
 	 * @private
 	 */
-	private async createPropEmbed(prop: PropDto): Promise<EmbedBuilder> {
+	private async createPropEmbed(prop: PropDto, sport: 'nfl' | 'nba'): Promise<EmbedBuilder> {
 		const {
 			description,
+			name,
 			market_key,
 			point,
 			event_context,
-			bookmaker_key,
 			price,
 		} = prop;
 
@@ -146,34 +151,73 @@ export class PropPostingHandler {
 		// Format the commence time (e.g., "Sun, 8:06 PM")
 		const gameTime = format(new Date(event_context.commence_time), 'EEE, h:mm a');
 
-		// Build description with line, matchup, and time
-		const descriptionLines: string[] = [];
-
-		if (point !== null && point !== undefined) {
-			descriptionLines.push(`**Over/Under:** ${point}`);
-		}
-
-
-		// shortening the team names for display reasons
+		// Get team info for both teams
 		const teamInfo = async (teamName: string) => {
 			const teamInfo = await new TeamInfo().getTeamInfo(teamName);
-			return teamInfo
+			return teamInfo;
 		};
 
-		const [homeTeamInfo, awayTeamInfo] = await Promise.all([teamInfo(event_context.home_team), teamInfo(event_context.away_team)]);
+		const [homeTeamInfo, awayTeamInfo] = await Promise.all([
+			teamInfo(event_context.home_team),
+			teamInfo(event_context.away_team),
+		]);
 
+		// Determine the subject (player or team name)
+		// For totals/team_totals, use the `name` field; for player props, use `description`
+		const isTotalsMarket = market_key === 'totals' || market_key === 'team_totals';
+		const subject = isTotalsMarket ? name : description;
+
+		// Build a clear, explicit title
+		let title: string;
+		if (isTotalsMarket && market_key === 'team_totals') {
+			// e.g., "JAX Total Points"
+			title = `${subject} ${marketName}`;
+		} else if (isTotalsMarket) {
+			// e.g., "Game Total Points"
+			title = `${homeTeamInfo.resolvedTeamData.abbrev} vs ${awayTeamInfo.resolvedTeamData.abbrev} - ${marketName}`;
+		} else {
+			// Player props: e.g., "Patrick Mahomes - Passing Touchdowns"
+			title = `${subject} - ${marketName}`;
+		}
+
+		// Build description with prominent Over/Under line and explicit prop statement
+		const descriptionLines: string[] = [];
+
+		// Make the line very prominent and clear
+		if (point !== null && point !== undefined) {
+			descriptionLines.push(`# 🎯 Over/Under: ${point}`);
+		}
+
+		// Explicitly state what they're betting on
+		let propStatement: string;
+		if (isTotalsMarket && market_key === 'team_totals') {
+			propStatement = `**Prop:** ${subject} ${marketName}`;
+		} else if (isTotalsMarket) {
+			propStatement = `**Prop:** Total Points - ${homeTeamInfo.resolvedTeamData.abbrev} vs ${awayTeamInfo.resolvedTeamData.abbrev}`;
+		} else {
+			propStatement = `**Prop:** ${subject} ${marketName}`;
+		}
+		descriptionLines.push(propStatement);
+
+		// Add separation line between prop details and match info
+		descriptionLines.push(''); // Empty line for visual separation
+		descriptionLines.push('─────────────────────'); // Separator
+		descriptionLines.push(''); // Empty line after separator
+
+		// Match information section
+		const sportEmoji = sport === 'nfl' ? '🏈' : '🏀';
 		descriptionLines.push(
-			`**Match:** ${homeTeamInfo.resolvedTeamData.abbrev} vs ${awayTeamInfo.resolvedTeamData.abbrev}`,
+			`${sportEmoji} **Match:** ${homeTeamInfo.resolvedTeamData.abbrev} vs ${awayTeamInfo.resolvedTeamData.abbrev}`,
 		);
-		descriptionLines.push(`**Game Time:** ${gameTime}`);
+		descriptionLines.push(`⏰ **Game Time:** ${gameTime}`);
 
 		// Add odds if available
 		if (price) {
-			descriptionLines.push(`**Odds:** ${price > 0 ? '+' : ''}${price}`);
+			descriptionLines.push(`💰 **Odds:** ${price > 0 ? '+' : ''}${price}`);
 		}
 
 		const embed = new EmbedBuilder()
-			.setTitle(`${description} ‖ ${marketName}`)
+			.setTitle(title)
 			.setDescription(descriptionLines.join('\n'))
 			.setColor(homeTeamInfo.color)
 			.setTimestamp();

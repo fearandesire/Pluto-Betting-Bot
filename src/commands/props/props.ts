@@ -1,20 +1,21 @@
+import { PropDto, SetPropResultResponseDto } from "@khronos-index";
 import { PaginatedMessageEmbedFields } from "@sapphire/discord.js-utilities";
 import { Subcommand } from "@sapphire/plugin-subcommands";
 import { EmbedBuilder, PermissionFlagsBits } from "discord.js";
 import embedColors from "../../lib/colorsConfig.js";
 import { ApiModules } from "../../lib/interfaces/api/api.interface.js";
 import { ApiErrorHandler } from "../../utils/api/Khronos/error-handling/ApiErrorHandler.js";
-import PropsApiWrapper from "../../utils/api/Khronos/props/propsApiWrapper.js";
 import GuildWrapper from "../../utils/api/Khronos/guild/guild-wrapper.js";
+import PredictionApiWrapper from "../../utils/api/Khronos/prediction/predictionApiWrapper.js";
+import PropsApiWrapper from "../../utils/api/Khronos/props/propsApiWrapper.js";
 import { MarketKeyTranslations } from "../../utils/api/common/interfaces/market-translations.js";
 import { DateManager } from "../../utils/common/DateManager.js";
 import TeamInfo from "../../utils/common/TeamInfo.js";
 import StringUtils from "../../utils/common/string-utils.js";
 import { LogType } from "../../utils/logging/AppLog.interface.js";
 import AppLog from "../../utils/logging/AppLog.js";
-import { SetPropResultResponseDto, PropDto } from "@khronos-index";
+import { logger } from "../../utils/logging/WinstonLogger.js";
 import { PropPostingHandler } from "../../utils/props/PropPostingHandler.js";
-import PredictionApiWrapper from "../../utils/api/Khronos/prediction/predictionApiWrapper.js";
 
 export class UserCommand extends Subcommand {
   public constructor(
@@ -228,11 +229,21 @@ export class UserCommand extends Subcommand {
         count,
       );
 
+      // Log how many random props we received from Khronos
+      logger.info('Random props received from Khronos API', {
+        guildId: interaction.guildId,
+        sport: guild.sport,
+        requestedCount: count,
+        receivedCount: props.length,
+        propIds: props.map(p => p.outcome_uuid),
+      });
+
       // Post props to prediction channel
       const postingHandler = new PropPostingHandler();
       const result = await postingHandler.postPropsToChannel(
         interaction.guildId,
         props,
+        guild.sport as "nba" | "nfl",
       );
 
       // Get prediction channel for mention in response
