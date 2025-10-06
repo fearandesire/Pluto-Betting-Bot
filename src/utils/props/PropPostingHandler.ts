@@ -173,7 +173,7 @@ export class PropPostingHandler {
 		}
 
 		const embed = new EmbedBuilder()
-			.setTitle(`${description} - ${marketName}`)
+			.setTitle(`${description} ‖ ${marketName}`)
 			.setDescription(descriptionLines.join('\n'))
 			.setColor(homeTeamInfo.color)
 			.setTimestamp();
