@@ -3886,6 +3886,51 @@
         ]
       }
     },
+    "/api/khronos/v1/webhooks/health": {
+      "get": {
+        "description": "Simple endpoint for Goracle to verify it can reach Khronos and authenticate. Used on startup to test connectivity.",
+        "operationId": "WebhooksController_healthCheck_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Webhook endpoint is healthy and accessible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "service": {
+                      "type": "string",
+                      "example": "khronos-webhooks"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "example": "2024-01-15T12:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed"
+          }
+        },
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ],
+        "summary": "Health check for webhook connectivity",
+        "tags": [
+          "Webhooks"
+        ]
+      }
+    },
     "/api/khronos/v1/props/random": {
       "get": {
         "description": "Returns random props (outcomes) from Goracle for a specific sport. Used by Pluto to display daily props.",
@@ -6699,12 +6744,42 @@
           "sport_title"
         ]
       },
+      "PropOutcomeDetailDto": {
+        "type": "object",
+        "properties": {
+          "outcome_uuid": {
+            "type": "string",
+            "description": "Outcome UUID"
+          },
+          "name": {
+            "type": "string",
+            "description": "Outcome name (e.g., Over, Under, Yes, No)"
+          },
+          "price": {
+            "type": "number",
+            "description": "Odds price (decimal format)"
+          },
+          "point": {
+            "type": "number",
+            "description": "Point value (e.g., 25.5 for over/under)"
+          },
+          "position": {
+            "type": "string",
+            "description": "Position (for h2h: home/away/draw)"
+          }
+        },
+        "required": [
+          "outcome_uuid",
+          "name",
+          "price"
+        ]
+      },
       "PropDto": {
         "type": "object",
         "properties": {
           "outcome_uuid": {
             "type": "string",
-            "description": "Outcome UUID for placing predictions"
+            "description": "Outcome UUID for placing predictions (primary outcome)"
           },
           "event_id": {
             "type": "string",
@@ -6736,7 +6811,7 @@
           },
           "price": {
             "type": "number",
-            "description": "Odds price (decimal format)"
+            "description": "Odds price (decimal format) - primary outcome price"
           },
           "point": {
             "type": "number",
@@ -6745,6 +6820,13 @@
           "position": {
             "type": "string",
             "description": "Position (for h2h: home/away/draw)"
+          },
+          "outcomes": {
+            "description": "All possible outcomes for this market (Over/Under, Yes/No, etc.)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PropOutcomeDetailDto"
+            }
           }
         },
         "required": [
@@ -6754,7 +6836,8 @@
           "market_key",
           "bookmaker_key",
           "name",
-          "price"
+          "price",
+          "outcomes"
         ]
       },
       "SetPropResultDto": {
