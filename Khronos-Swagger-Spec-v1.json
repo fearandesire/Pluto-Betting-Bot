@@ -1269,39 +1269,6 @@
         ]
       }
     },
-    "/api/khronos/v1/score/update": {
-      "post": {
-        "operationId": "updateScore",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Game status updated successfully"
-          },
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "security": [
-          {
-            "x-api-key": []
-          }
-        ],
-        "summary": "Update game status and scores",
-        "tags": [
-          "score"
-        ]
-      }
-    },
     "/api/khronos/v1/betslips": {
       "get": {
         "operationId": "getAllBetslips",
@@ -3870,7 +3837,7 @@
     },
     "/api/khronos/v1/webhooks/goracle/outcome-settled": {
       "post": {
-        "description": "Webhook endpoint for Goracle to notify Khronos when an outcome has been settled. Processes predictions asynchronously. Requires X-API-Key header for authentication.",
+        "description": "Webhook endpoint for Goracle to notify Khronos when an outcome has been settled. Processes predictions asynchronously. Uses standard x-api-key authentication.",
         "operationId": "WebhooksController_handleOutcomeSettled_v1",
         "parameters": [],
         "requestBody": {
@@ -3910,7 +3877,7 @@
         },
         "security": [
           {
-            "X-API-Key": []
+            "x-api-key": []
           }
         ],
         "summary": "Receive outcome settlement from Goracle",
@@ -6631,13 +6598,13 @@
           },
           "event_id": {
             "type": "string",
-            "description": "Event ID from Goracle",
+            "description": "Event ID from Goracle - corresponds 1:1 with our database match IDs",
             "example": "abc123xyz"
           },
           "market_key": {
             "type": "string",
             "description": "Market key (e.g., h2h, totals, player_points)",
-            "example": "player_points"
+            "example": "h2h"
           },
           "bookmaker_key": {
             "type": "string",
@@ -6646,12 +6613,12 @@
           },
           "result": {
             "type": "string",
-            "description": "Result of the outcome (team name, over/under, etc.)",
-            "example": "Lakers"
+            "description": "Outcome-specific result indicating if this particular outcome won, lost, pushed, or was cancelled. Values: \"win\", \"loss\", \"push\", \"cancelled\"",
+            "example": "Los Angeles Lakers"
           },
           "actual_value": {
             "type": "number",
-            "description": "Actual statistical value for player props",
+            "description": "The actual numeric value that determined the result. Examples: Final score for moneyline (108), Total points for Over/Under (215.5), Point differential for spread (7), Total touchdowns, etc. Primarily used for player props.",
             "example": 28.5
           },
           "correlation_id": {
@@ -6664,6 +6631,31 @@
             "type": "string",
             "description": "Timestamp when the outcome was completed",
             "example": "2024-01-15T20:30:00Z"
+          },
+          "home_team": {
+            "type": "string",
+            "description": "Home team name",
+            "example": "Los Angeles Lakers"
+          },
+          "away_team": {
+            "type": "string",
+            "description": "Away team name",
+            "example": "Boston Celtics"
+          },
+          "home_score": {
+            "type": "number",
+            "description": "Final home team score",
+            "example": 108
+          },
+          "away_score": {
+            "type": "number",
+            "description": "Final away team score",
+            "example": 102
+          },
+          "winner": {
+            "type": "string",
+            "description": "The winning team name (e.g., \"Los Angeles Lakers\") or \"Draw\" for ties",
+            "example": "Los Angeles Lakers"
           }
         },
         "required": [
@@ -6672,7 +6664,12 @@
           "market_key",
           "bookmaker_key",
           "result",
-          "completed_at"
+          "completed_at",
+          "home_team",
+          "away_team",
+          "home_score",
+          "away_score",
+          "winner"
         ]
       },
       "PropEventContextDto": {

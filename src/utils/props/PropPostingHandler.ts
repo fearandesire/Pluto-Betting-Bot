@@ -185,29 +185,27 @@ export class PropPostingHandler {
 
 		// Make the line very prominent and clear
 		if (point !== null && point !== undefined) {
-			descriptionLines.push(`# 🎯 Over/Under: ${point}`);
+			descriptionLines.push(`## 🎯 Over/Under: ${point}`);
 		}
 
 		// Explicitly state what they're betting on
 		let propStatement: string;
 		if (isTotalsMarket && market_key === 'team_totals') {
-			propStatement = `**Prop:** ${subject} ${marketName}`;
+			propStatement = `## **Prop:** ${subject} ${marketName}`;
 		} else if (isTotalsMarket) {
-			propStatement = `**Prop:** Total Points - ${homeTeamInfo.resolvedTeamData.abbrev} vs ${awayTeamInfo.resolvedTeamData.abbrev}`;
+			propStatement = `## **Prop:** Total Points - ${homeTeamInfo.resolvedTeamData.abbrev} vs. ${awayTeamInfo.resolvedTeamData.abbrev}`;
 		} else {
-			propStatement = `**Prop:** ${subject} ${marketName}`;
+			propStatement = `## **Prop:** ${subject} | ${marketName}`;
 		}
 		descriptionLines.push(propStatement);
 
 		// Add separation line between prop details and match info
 		descriptionLines.push(''); // Empty line for visual separation
-		descriptionLines.push('─────────────────────'); // Separator
-		descriptionLines.push(''); // Empty line after separator
 
 		// Match information section
 		const sportEmoji = sport === 'nfl' ? '🏈' : '🏀';
 		descriptionLines.push(
-			`${sportEmoji} **Match:** ${homeTeamInfo.resolvedTeamData.abbrev} vs ${awayTeamInfo.resolvedTeamData.abbrev}`,
+			`${sportEmoji} **Match:** ${homeTeamInfo.resolvedTeamData.abbrev} vs. ${awayTeamInfo.resolvedTeamData.abbrev}`,
 		);
 		descriptionLines.push(`⏰ **Game Time:** ${gameTime}`);
 
