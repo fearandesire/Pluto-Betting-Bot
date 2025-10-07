@@ -199,6 +199,17 @@ export class PropPostingHandler {
 		}
 		descriptionLines.push(propStatement);
 
+		// Add odds for all outcomes if available (Over/Under, Yes/No)
+		if (prop.outcomes && prop.outcomes.length > 0) {
+			descriptionLines.push(''); // Empty line for visual separation
+			descriptionLines.push('**📊 Odds:**');
+			
+			for (const outcome of prop.outcomes) {
+				const oddsDisplay = outcome.price > 0 ? `+${outcome.price}` : outcome.price;
+				descriptionLines.push(`• **${outcome.name}**: ${oddsDisplay}`);
+			}
+		}
+
 		// Add separation line between prop details and match info
 		descriptionLines.push(''); // Empty line for visual separation
 
@@ -208,11 +219,6 @@ export class PropPostingHandler {
 			`${sportEmoji} **Match:** ${homeTeamInfo.resolvedTeamData.abbrev} vs. ${awayTeamInfo.resolvedTeamData.abbrev}`,
 		);
 		descriptionLines.push(`⏰ **Game Time:** ${gameTime}`);
-
-		// Add odds if available
-		if (price) {
-			descriptionLines.push(`💰 **Odds:** ${price > 0 ? '+' : ''}${price}`);
-		}
 
 		const embed = new EmbedBuilder()
 			.setTitle(title)
@@ -224,36 +230,61 @@ export class PropPostingHandler {
 	}
 
 	/**
-	 * Creates Over/Under buttons for a prop
+	 * Creates buttons for all possible outcomes (Over/Under, Yes/No, etc.)
 	 * 
 	 * Button format:
-	 * - Custom ID: `prop_over_{outcome_uuid}` and `prop_under_{outcome_uuid}`
-	 * - Labels: "Over" and "Under"
+	 * - Custom ID: `prop_{outcomeName}_{outcome_uuid}`
+	 * - Labels: Outcome names (e.g., "Over", "Under", "Yes", "No")
 	 * - Style: Primary (blue)
+	 * - Emojis: Dynamic based on outcome name
 	 * 
 	 * These custom IDs are parsed by ButtonListener to handle predictions.
+	 * Falls back to legacy Over/Under format if outcomes array is empty.
 	 * 
 	 * @param prop - Prop data from API
-	 * @returns ActionRow containing both buttons
+	 * @returns ActionRow containing buttons for all outcomes
 	 * @private
 	 */
 	private createPropButtons(prop: PropDto): ActionRowBuilder<ButtonBuilder> {
-		const overButton = new ButtonBuilder()
-			.setCustomId(`prop_over_${prop.outcome_uuid}`)
-			.setLabel('Over')
-			.setEmoji('⬆️')
-			.setStyle(ButtonStyle.Primary);
+		const buttons: ButtonBuilder[] = [];
 
-		const underButton = new ButtonBuilder()
-			.setCustomId(`prop_under_${prop.outcome_uuid}`)
-			.setLabel('Under')
-			.setEmoji('⬇️')
-			.setStyle(ButtonStyle.Primary);
+		// Use outcomes array if available
+		if (prop.outcomes && prop.outcomes.length > 0) {
+			for (const outcome of prop.outcomes) {
+				// Determine emoji based on outcome name
+				let emoji = '🎯';
+				const outcomeLower = outcome.name.toLowerCase();
+				if (outcomeLower === 'over') emoji = '⬆️';
+				else if (outcomeLower === 'under') emoji = '⬇️';
+				else if (outcomeLower === 'yes') emoji = '✅';
+				else if (outcomeLower === 'no') emoji = '❌';
 
-		return new ActionRowBuilder<ButtonBuilder>().addComponents(
-			overButton,
-			underButton,
-		);
+				const button = new ButtonBuilder()
+					.setCustomId(`prop_${outcomeLower}_${outcome.outcome_uuid}`)
+					.setLabel(outcome.name)
+					.setEmoji(emoji)
+					.setStyle(ButtonStyle.Primary);
+
+				buttons.push(button);
+			}
+		} else {
+			// Fallback to legacy Over/Under format for backwards compatibility
+			const overButton = new ButtonBuilder()
+				.setCustomId(`prop_over_${prop.outcome_uuid}`)
+				.setLabel('Over')
+				.setEmoji('⬆️')
+				.setStyle(ButtonStyle.Primary);
+
+			const underButton = new ButtonBuilder()
+				.setCustomId(`prop_under_${prop.outcome_uuid}`)
+				.setLabel('Under')
+				.setEmoji('⬇️')
+				.setStyle(ButtonStyle.Primary);
+
+			buttons.push(overButton, underButton);
+		}
+
+		return new ActionRowBuilder<ButtonBuilder>().addComponents(...buttons);
 	}
 }
 
