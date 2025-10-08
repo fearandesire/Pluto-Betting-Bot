@@ -134,25 +134,32 @@ export class PropPostingHandler {
       new TeamInfo().getTeamInfo(prop.away_team),
     ]);
 
-    const title = `${prop.description} - ${marketName}`;
+    const title = `${prop.description}`;
 
     const descriptionLines = [
-      `## 🎯 Over/Under: ${prop.point}`,
-      `## **Prop:** ${prop.description} | ${marketName}`,
+      `**${marketName}** • O/U ${prop.point}`,
       "",
-      "**📊 Options:**",
-      `• **Over ${prop.point}**: ${prop.over.price > 0 ? "+" : ""}${prop.over.price}`,
-      `• **Under ${prop.point}**: ${prop.under.price > 0 ? "+" : ""}${prop.under.price}`,
-      "",
-      `${sportEmoji} **Match:** ${homeTeamInfo.resolvedTeamData.abbrev} vs. ${awayTeamInfo.resolvedTeamData.abbrev}`,
-      `⏰ **Game Time:** ${gameTime}`,
+      `Over ${prop.point}: **${prop.over.price > 0 ? "+" : ""}${prop.over.price}** • Under ${prop.point}: **${prop.under.price > 0 ? "+" : ""}${prop.under.price}**`,
     ];
 
     return new EmbedBuilder()
       .setTitle(title)
       .setDescription(descriptionLines.join("\n"))
+      .addFields(
+        {
+          name: "Match",
+          value: `${sportEmoji} ${homeTeamInfo.resolvedTeamData.abbrev} vs. ${awayTeamInfo.resolvedTeamData.abbrev}`,
+          inline: true,
+        },
+        {
+          name: "Game Time",
+          value: `⏰ ${gameTime}`,
+          inline: true,
+        },
+      )
       .setColor(homeTeamInfo.color)
-      .setTimestamp();
+      .setTimestamp()
+      .setFooter({ text: "Powered by Khronos" });
   }
 
   /**
@@ -168,7 +175,9 @@ export class PropPostingHandler {
    * @returns ActionRow containing Over and Under buttons
    * @private
    */
-  private createPropButtons(prop: ProcessedPropDto): ActionRowBuilder<ButtonBuilder> {
+  private createPropButtons(
+    prop: ProcessedPropDto,
+  ): ActionRowBuilder<ButtonBuilder> {
     const overButton = new ButtonBuilder()
       .setCustomId(`prop_${prop.over.outcome_uuid}`)
       .setLabel(`Over ${prop.point}`)
