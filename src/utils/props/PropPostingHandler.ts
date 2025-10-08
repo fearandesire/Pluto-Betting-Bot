@@ -1,3 +1,4 @@
+import type { ProcessedPropDto } from "@kh-openapi";
 import { format } from "date-fns";
 import {
   ActionRowBuilder,
@@ -9,7 +10,6 @@ import { MarketKeyTranslations } from "../api/common/interfaces/market-translati
 import GuildWrapper from "../api/Khronos/guild/guild-wrapper.js";
 import StringUtils from "../common/string-utils.js";
 import TeamInfo from "../common/TeamInfo.js";
-import type { PropPair } from "./PropPairingService.js";
 
 /**
  * Result object returned after posting props to channel
@@ -33,13 +33,13 @@ export interface PostingResult {
  * - Generating Over/Under button interactions
  * - Posting to guild's configured prediction channel
  *
- * Note: Prop filtering is now handled by Khronos. This handler expects pre-filtered player props only.
+ * Note: Props are pre-paired and filtered by Khronos. Each ProcessedPropDto contains both over and under.
  *
  * @example
  * ```typescript
  * const handler = new PropPostingHandler();
- * const pairingService = new PropPairingService();
- * const pairs = pairingService.groupIntoPairs(processedProps);
+ * const propsApi = new PropsApiWrapper();
+ * const pairs = await propsApi.getProcessedProps('nfl', 10);
  * const result = await handler.postPropsToChannel(guildId, pairs, 'nfl');
  * console.log(`Posted ${result.posted} player props`);
  * ```
@@ -59,28 +59,28 @@ export class PropPostingHandler {
    * - Two buttons: Over and Under
    *
    * @param guildId - Discord guild ID
-   * @param pairs - Array of prop pairs (over/under) from PropPairingService
+   * @param props - Array of paired props from Khronos (each contains over and under)
    * @param sport - Sport type ('nfl' or 'nba') for appropriate emoji
    * @returns Result object with posting statistics
    * @throws Error if prediction channel not configured or posting fails
    */
   async postPropsToChannel(
     guildId: string,
-    pairs: PropPair[],
+    props: ProcessedPropDto[],
     sport: "nfl" | "nba",
   ): Promise<PostingResult> {
     const result: PostingResult = {
       posted: 0,
       filtered: 0,
       failed: 0,
-      total: pairs.length,
+      total: props.length,
     };
 
     // 1 Embed:1 Pair
-    for (const pair of pairs) {
+    for (const prop of props) {
       try {
-        const embed = await this.createPropEmbed(pair, sport);
-        const buttons = this.createPropButtons(pair);
+        const embed = await this.createPropEmbed(prop, sport);
+        const buttons = this.createPropButtons(prop);
 
         await this.guildWrapper.sendToPredictionChannel(guildId, {
           embeds: [embed],
@@ -90,11 +90,11 @@ export class PropPostingHandler {
         result.posted++;
       } catch (error) {
         console.error("Failed to post prop pair", {
-          event_id: pair.event_id,
-          market_key: pair.market_key,
-          outcome_name: pair.outcome_name,
-          over_uuid: pair.over.outcome_uuid,
-          under_uuid: pair.under.outcome_uuid,
+          event_id: prop.event_id,
+          market_key: prop.market_key,
+          description: prop.description,
+          over_uuid: prop.over.outcome_uuid,
+          under_uuid: prop.under.outcome_uuid,
           error,
         });
         result.failed++;
@@ -113,36 +113,36 @@ export class PropPostingHandler {
    * - Color: Team color
    * - Timestamp: Current time
    *
-   * @param pair - Prop pair data (over/under)
+   * @param prop - Paired prop data from Khronos (contains both over and under)
    * @param sport - Sport type ('nfl' or 'nba') for appropriate emoji
    * @returns Discord embed builder
    * @private
    */
   private async createPropEmbed(
-    pair: PropPair,
+    prop: ProcessedPropDto,
     sport: "nfl" | "nba",
   ): Promise<EmbedBuilder> {
     const sportEmoji = sport === "nfl" ? "🏈" : "🏀";
     const marketTranslation =
-      MarketKeyTranslations[pair.market_key] || pair.market_key;
+      MarketKeyTranslations[prop.market_key] || prop.market_key;
     const marketName = StringUtils.toTitleCase(marketTranslation);
 
-    const gameTime = format(new Date(pair.commence_time), "EEE, h:mm a");
+    const gameTime = format(new Date(prop.commence_time), "EEE, h:mm a");
 
     const [homeTeamInfo, awayTeamInfo] = await Promise.all([
-      new TeamInfo().getTeamInfo(pair.home_team),
-      new TeamInfo().getTeamInfo(pair.away_team),
+      new TeamInfo().getTeamInfo(prop.home_team),
+      new TeamInfo().getTeamInfo(prop.away_team),
     ]);
 
-    const title = `${pair.outcome_name} - ${marketName}`;
+    const title = `${prop.description} - ${marketName}`;
 
     const descriptionLines = [
-      `## 🎯 Over/Under: ${pair.point}`,
-      `## **Prop:** ${pair.outcome_name} | ${marketName}`,
+      `## 🎯 Over/Under: ${prop.point}`,
+      `## **Prop:** ${prop.description} | ${marketName}`,
       "",
       "**📊 Options:**",
-      `• **Over ${pair.point}**: ${pair.over.price > 0 ? "+" : ""}${pair.over.price}`,
-      `• **Under ${pair.point}**: ${pair.under.price > 0 ? "+" : ""}${pair.under.price}`,
+      `• **Over ${prop.point}**: ${prop.over.price > 0 ? "+" : ""}${prop.over.price}`,
+      `• **Under ${prop.point}**: ${prop.under.price > 0 ? "+" : ""}${prop.under.price}`,
       "",
       `${sportEmoji} **Match:** ${homeTeamInfo.resolvedTeamData.abbrev} vs. ${awayTeamInfo.resolvedTeamData.abbrev}`,
       `⏰ **Game Time:** ${gameTime}`,
@@ -164,20 +164,20 @@ export class PropPostingHandler {
    * - Style: Success (green) for Over, Danger (red) for Under
    * - Emojis: ⬆️ for Over, ⬇️ for Under
    *
-   * @param pair - Prop pair data (over/under)
+   * @param prop - Paired prop data from Khronos (contains both over and under)
    * @returns ActionRow containing Over and Under buttons
    * @private
    */
-  private createPropButtons(pair: PropPair): ActionRowBuilder<ButtonBuilder> {
+  private createPropButtons(prop: ProcessedPropDto): ActionRowBuilder<ButtonBuilder> {
     const overButton = new ButtonBuilder()
-      .setCustomId(`prop_${pair.over.outcome_uuid}`)
-      .setLabel(`Over ${pair.point}`)
+      .setCustomId(`prop_${prop.over.outcome_uuid}`)
+      .setLabel(`Over ${prop.point}`)
       .setEmoji("⬆️")
       .setStyle(ButtonStyle.Success);
 
     const underButton = new ButtonBuilder()
-      .setCustomId(`prop_${pair.under.outcome_uuid}`)
-      .setLabel(`Under ${pair.point}`)
+      .setCustomId(`prop_${prop.under.outcome_uuid}`)
+      .setLabel(`Under ${prop.point}`)
       .setEmoji("⬇️")
       .setStyle(ButtonStyle.Danger);
 

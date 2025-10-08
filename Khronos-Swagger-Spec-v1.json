@@ -4042,6 +4042,63 @@
         ]
       }
     },
+    "/api/khronos/v1/props/random/processed": {
+      "get": {
+        "description": "Returns paired player props (over/under) ready for client consumption. Excludes h2h, spreads, totals, team_totals, and anytime touchdown markets. Each object contains BOTH over and under outcomes in a denormalized structure. Khronos applies filtering (minimum odds -150 American, complete pairs only). No pairing logic needed on client side - each prop is self-contained.",
+        "operationId": "PropsController_getProcessedProps_v1",
+        "parameters": [
+          {
+            "name": "sport",
+            "required": true,
+            "in": "query",
+            "description": "Sport key (nba or nfl)",
+            "schema": {
+              "example": "nba",
+              "type": "string",
+              "enum": [
+                "nba",
+                "nfl"
+              ]
+            }
+          },
+          {
+            "name": "count",
+            "required": false,
+            "in": "query",
+            "description": "Number of random props to return",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 1,
+              "example": 5,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Processed props retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProcessedPropDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters"
+          }
+        },
+        "summary": "Get paired player props ready for predictions",
+        "tags": [
+          "Props"
+        ]
+      }
+    },
     "/api/khronos/v1/props/{outcomeUuid}": {
       "get": {
         "description": "Returns a prop (outcome) from Goracle by its UUID. Used to fetch prop details including sport information.",
@@ -6749,11 +6806,15 @@
         "properties": {
           "outcome_uuid": {
             "type": "string",
-            "description": "Outcome UUID"
+            "description": "Outcome UUID for placing predictions"
           },
           "name": {
             "type": "string",
-            "description": "Outcome name (e.g., Over, Under, Yes, No)"
+            "description": "Outcome name (e.g., Over, Under, Yes, No, team name for spreads)"
+          },
+          "description": {
+            "type": "string",
+            "description": "Outcome description (e.g., player name for player props)"
           },
           "price": {
             "type": "number",
@@ -6777,16 +6838,12 @@
       "PropDto": {
         "type": "object",
         "properties": {
-          "outcome_uuid": {
-            "type": "string",
-            "description": "Outcome UUID for placing predictions (primary outcome)"
-          },
           "event_id": {
             "type": "string",
             "description": "Event ID"
           },
           "event_context": {
-            "description": "Event context",
+            "description": "Event context (teams, time, sport)",
             "allOf": [
               {
                 "$ref": "#/components/schemas/PropEventContextDto"
@@ -6795,34 +6852,14 @@
           },
           "market_key": {
             "type": "string",
-            "description": "Market key (e.g., player_points, h2h)"
+            "description": "Market key (e.g., player_pass_tds, spreads, totals)"
           },
           "bookmaker_key": {
             "type": "string",
-            "description": "Bookmaker key (e.g., fanduel, draftkings)"
-          },
-          "name": {
-            "type": "string",
-            "description": "Prop name (e.g., LeBron James Over 25.5 Points)"
-          },
-          "description": {
-            "type": "string",
-            "description": "Prop description"
-          },
-          "price": {
-            "type": "number",
-            "description": "Odds price (decimal format) - primary outcome price"
-          },
-          "point": {
-            "type": "number",
-            "description": "Point value (e.g., 25.5 for over/under)"
-          },
-          "position": {
-            "type": "string",
-            "description": "Position (for h2h: home/away/draw)"
+            "description": "Bookmaker key (e.g., draftkings)"
           },
           "outcomes": {
-            "description": "All possible outcomes for this market (Over/Under, Yes/No, etc.)",
+            "description": "All possible outcomes for this market (Over/Under, Yes/No, team options for spreads, etc.)",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/PropOutcomeDetailDto"
@@ -6830,14 +6867,103 @@
           }
         },
         "required": [
-          "outcome_uuid",
           "event_id",
           "event_context",
           "market_key",
           "bookmaker_key",
-          "name",
-          "price",
           "outcomes"
+        ]
+      },
+      "PropOutcomeSideDto": {
+        "type": "object",
+        "properties": {
+          "outcome_uuid": {
+            "type": "string",
+            "description": "Outcome UUID for placing predictions"
+          },
+          "outcome_name": {
+            "type": "string",
+            "description": "Outcome name (e.g., \"Over\", \"Under\")"
+          },
+          "price": {
+            "type": "number",
+            "description": "Odds price (American format)"
+          }
+        },
+        "required": [
+          "outcome_uuid",
+          "outcome_name",
+          "price"
+        ]
+      },
+      "ProcessedPropDto": {
+        "type": "object",
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "description": "Event ID"
+          },
+          "commence_time": {
+            "type": "string",
+            "description": "Game commence time (ISO 8601)"
+          },
+          "home_team": {
+            "type": "string",
+            "description": "Home team name"
+          },
+          "away_team": {
+            "type": "string",
+            "description": "Away team name"
+          },
+          "sport_title": {
+            "type": "string",
+            "description": "Sport title (e.g., \"NBA\", \"NFL\")"
+          },
+          "market_key": {
+            "type": "string",
+            "description": "Market key (e.g., player_pass_tds, player_rush_yds)"
+          },
+          "bookmaker_key": {
+            "type": "string",
+            "description": "Bookmaker key (e.g., draftkings)"
+          },
+          "description": {
+            "type": "string",
+            "description": "Player name or outcome description"
+          },
+          "point": {
+            "type": "number",
+            "description": "Point value (e.g., 250.5 for over/under)"
+          },
+          "over": {
+            "description": "Over outcome details",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PropOutcomeSideDto"
+              }
+            ]
+          },
+          "under": {
+            "description": "Under outcome details",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PropOutcomeSideDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "event_id",
+          "commence_time",
+          "home_team",
+          "away_team",
+          "sport_title",
+          "market_key",
+          "bookmaker_key",
+          "description",
+          "point",
+          "over",
+          "under"
         ]
       },
       "SetPropResultDto": {

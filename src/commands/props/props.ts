@@ -1,8 +1,4 @@
-import type {
-  PropDto,
-  PropOutcomeDetailDto,
-  SetPropResultResponseDto,
-} from "@kh-openapi";
+import type { SetPropResultResponseDto } from "@kh-openapi";
 import { PaginatedMessageEmbedFields } from "@sapphire/discord.js-utilities";
 import { Subcommand } from "@sapphire/plugin-subcommands";
 import { EmbedBuilder, PermissionFlagsBits } from "discord.js";
@@ -12,9 +8,7 @@ import { ApiErrorHandler } from "../../utils/api/Khronos/error-handling/ApiError
 import GuildWrapper from "../../utils/api/Khronos/guild/guild-wrapper.js";
 import PredictionApiWrapper from "../../utils/api/Khronos/prediction/predictionApiWrapper.js";
 import PropsApiWrapper from "../../utils/api/Khronos/props/propsApiWrapper.js";
-import { MarketKeyTranslations } from "../../utils/api/common/interfaces/market-translations.js";
 import { DateManager } from "../../utils/common/DateManager.js";
-import TeamInfo from "../../utils/common/TeamInfo.js";
 import StringUtils from "../../utils/common/string-utils.js";
 import { LogType } from "../../utils/logging/AppLog.interface.js";
 import AppLog from "../../utils/logging/AppLog.js";
@@ -41,7 +35,6 @@ export class UserCommand extends Subcommand {
           type: "group",
           entries: [
             { name: "all", chatInputRun: "generateAll" },
-            { name: "prop_embed", chatInputRun: "generatePropEmbed" },
           ],
         },
         {
@@ -202,8 +195,7 @@ export class UserCommand extends Subcommand {
    * Generates random player props and posts them to the guild's prediction channel
    *
    * This command:
-   * - Fetches processed player props from Khronos (already filtered to player props only)
-   * - Pairs over/under outcomes together
+   * - Fetches paired player props from Khronos (already filtered and paired)
    * - Creates interactive embeds with Over/Under buttons
    * - Posts each prop pair to the configured prediction channel
    * - Reports back with posting statistics
@@ -227,37 +219,26 @@ export class UserCommand extends Subcommand {
       // Get guild information to determine sport
       const guild = await guildWrapper.getGuild(interaction.guildId);
 
-      // Fetch processed props from Khronos (already filtered to player props)
-      const processedProps = await propsApi.getProcessedProps(
+      // Fetch paired props from Khronos (already filtered and paired with over/under)
+      const pairedProps = await propsApi.getProcessedProps(
         guild.sport as "nba" | "nfl",
         count,
       );
 
-      logger.info("Processed player props received from Khronos", {
+      logger.info("Paired player props received from Khronos", {
         guildId: interaction.guildId,
         sport: guild.sport,
         requestedCount: count,
-        receivedCount: processedProps.length,
-        outcomeUuids: processedProps.map((p) => p.outcome_uuid),
-      });
-
-      // Group into pairs
-      const { PropPairingService } = await import(
-        "../../utils/props/PropPairingService.js"
-      );
-      const pairingService = new PropPairingService();
-      const propPairs = pairingService.groupIntoPairs(processedProps);
-
-      logger.info("Props grouped into pairs", {
-        guildId: interaction.guildId,
-        pairCount: propPairs.length,
+        receivedPairs: pairedProps.length,
+        overUuids: pairedProps.map((p) => p.over.outcome_uuid),
+        underUuids: pairedProps.map((p) => p.under.outcome_uuid),
       });
 
       // Post props to prediction channel
       const postingHandler = new PropPostingHandler();
       const result = await postingHandler.postPropsToChannel(
         interaction.guildId,
-        propPairs,
+        pairedProps,
         guild.sport as "nba" | "nfl",
       );
 
@@ -418,125 +399,4 @@ export class UserCommand extends Subcommand {
       return new ApiErrorHandler().handle(interaction, error, ApiModules.props);
     }
   }
-
-  private async sendPropsEmbed(
-    interaction: Subcommand.ChatInputCommandInteraction,
-    props: PropDto[],
-    title: string,
-    description: string,
-    options?: PropEmbedOptions,
-  ) {
-    try {
-      if (props.length === 0) {
-        return interaction.editReply({
-          content: "No props were found matching the search criteria.",
-        });
-      }
-
-      const templateEmbed = new EmbedBuilder()
-        .setTitle(title)
-        .setDescription(description)
-        .setColor(embedColors.PlutoBlue)
-        .setTimestamp();
-
-      if (options?.isViewingActiveProps) {
-        const formattedProps = await Promise.all(
-          props.map((prop) => this.formatPropField(prop)),
-        );
-
-        const paginatedMsg = new PaginatedMessageEmbedFields({
-          template: { embeds: [templateEmbed] },
-        })
-          .setItems(formattedProps)
-          .setItemsPerPage(15)
-          .make();
-
-        return paginatedMsg.run(interaction);
-      }
-
-      const firstProp = props[0];
-      const date = new DateManager().toDiscordUnix(
-        firstProp.event_context.commence_time,
-      );
-
-      templateEmbed.setDescription(
-        `${description}\n\n**Event Information**\n🆔 **Event ID:** \`${firstProp.event_id}\`\n🗓️ **Date:** ${date}\n${firstProp.event_context.home_team} vs ${firstProp.event_context.away_team}`,
-      );
-
-      const formattedProps = await Promise.all(
-        props.map((prop) => this.formatPropField(prop)),
-      );
-
-      templateEmbed.addFields(formattedProps);
-      return interaction.editReply({ embeds: [templateEmbed] });
-    } catch (error) {
-      this.container.logger.error(error);
-      return new ApiErrorHandler().handle(interaction, error, ApiModules.props);
-    }
-  }
-
-  private async formatPropField(
-    prop: PropDto,
-  ): Promise<{ name: string; value: string; inline: boolean }> {
-    const { event_context, market_key, outcomes } = prop;
-
-    // Get the first outcome for display (props typically have Over/Under or similar pairs)
-    const firstOutcome: PropOutcomeDetailDto | undefined = outcomes?.[0];
-    if (!firstOutcome) {
-      throw new Error(
-        `No outcomes found for prop with event_id: ${prop.event_id}`,
-      );
-    }
-
-    const description = firstOutcome.description;
-    const point = firstOutcome.point;
-    const outcome_uuid = firstOutcome.outcome_uuid;
-
-    const homeTeam = await TeamInfo.resolveTeamIdentifier(
-      event_context.home_team,
-    );
-    const awayTeam = await TeamInfo.resolveTeamIdentifier(
-      event_context.away_team,
-    );
-    const matchup = `${homeTeam} vs. ${awayTeam}`;
-
-    const translatedKey = StringUtils.toTitleCase(
-      MarketKeyTranslations[market_key],
-    );
-
-    let title: string;
-    if (description) {
-      title = `${description} - ${translatedKey}`;
-    } else if (market_key.toLowerCase() === "h2h") {
-      title = `${matchup} - H2H`;
-    } else if (market_key.toLowerCase().includes("total")) {
-      title = `${matchup} - Totals`;
-    } else {
-      title = `${matchup} - ${translatedKey}`;
-    }
-
-    const details = [`**Prop ID:** \`${outcome_uuid}\``];
-
-    if (
-      point !== null &&
-      point !== undefined &&
-      market_key.toLowerCase() !== "h2h" &&
-      !market_key.toLowerCase().includes("total")
-    ) {
-      details.push(`**Over/Under:** ${point}`);
-    }
-
-    const date = new DateManager().toDiscordUnix(event_context.commence_time);
-    details.push(`**Date:** ${date}`);
-
-    return {
-      name: title,
-      value: details.join("\n"),
-      inline: true,
-    };
-  }
-}
-
-interface PropEmbedOptions {
-  isViewingActiveProps?: boolean;
 }
