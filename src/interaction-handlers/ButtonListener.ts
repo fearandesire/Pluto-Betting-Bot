@@ -21,13 +21,13 @@ import MatchApiWrapper from "../utils/api/Khronos/matches/matchApiWrapper.js";
 import PredictionApiWrapper from "../utils/api/Khronos/prediction/predictionApiWrapper.js";
 import PropsApiWrapper from "../utils/api/Khronos/props/propsApiWrapper.js";
 import { BetsCacheService } from "../utils/api/common/bets/BetsCacheService.js";
+import { MarketKeyAbbreviations } from "../utils/api/common/interfaces/market-abbreviations.js";
 import { patreonFooter } from "../utils/api/patreon/interfaces.js";
 import MatchCacheService from "../utils/api/routes/cache/MatchCacheService.js";
 import { CacheManager } from "../utils/cache/cache-manager.js";
-import { ErrorEmbeds } from "../utils/common/errors/global.js";
-import { MarketKeyAbbreviations } from "../utils/api/common/interfaces/market-abbreviations.js";
 import { DateManager } from "../utils/common/DateManager.js";
 import TeamInfo from "../utils/common/TeamInfo.js";
+import { ErrorEmbeds } from "../utils/common/errors/global.js";
 
 /**
  * @module ButtonListener
@@ -222,14 +222,41 @@ export class ButtonHandler extends InteractionHandler {
           // Restore the space - replace _
           const sanitizedChoice = payload.action.replace(/_/g, " ");
 
-          // Fetch prop to get sport information
+          // Fetch prop to get sport information and outcomes
           const propsApi = new PropsApiWrapper();
           const prop = await propsApi.getPropByUuid(payload.propId);
+
+          // Find the matching outcome based on the user's choice
+          // Match by: outcome_uuid (primary), name, or description
+          const matchedOutcome = prop.outcomes.find(
+            (outcome) =>
+              outcome.outcome_uuid === payload.propId ||
+              outcome.name.toLowerCase() === sanitizedChoice.toLowerCase() ||
+              (outcome.description &&
+                outcome.description.toLowerCase() ===
+                  sanitizedChoice.toLowerCase()),
+          );
+
+          if (!matchedOutcome) {
+            console.error({
+              method: this.constructor.name,
+              message: "Could not find matching outcome for user's choice",
+              data: {
+                propId: payload.propId,
+                sanitizedChoice,
+                availableOutcomes: prop.outcomes.map((o) => o.name),
+              },
+            });
+            return interaction.editReply({
+              content:
+                "An error occurred while processing your prediction. Please try again.",
+            });
+          }
 
           await predictionApi.createPrediction({
             createPredictionDto: {
               user_id: interaction.user.id,
-              outcome_uuid: payload.propId,
+              outcome_uuid: matchedOutcome.outcome_uuid,
               choice: sanitizedChoice,
               status: "pending",
               guild_id: interaction.guildId!,
@@ -237,12 +264,12 @@ export class ButtonHandler extends InteractionHandler {
             },
           });
 
-          // Format the choice with point and market
+          // Format the choice with point and market from the matched outcome
           const formattedChoice = this.formatPredictionChoice(
             sanitizedChoice,
-            prop.point,
+            matchedOutcome.point,
             prop.market_key,
-            prop.description,
+            matchedOutcome.description,
           );
 
           // Format match string
@@ -258,7 +285,9 @@ export class ButtonHandler extends InteractionHandler {
 
           // For spreads, use market name as the prop description
           const propDescription =
-            prop.market_key === "spreads" ? "Point Spread" : prop.description;
+            prop.market_key === "spreads"
+              ? "Point Spread"
+              : matchedOutcome.description;
 
           const predictionEmbed = new EmbedBuilder()
             .setColor(embedColors.PlutoGreen)

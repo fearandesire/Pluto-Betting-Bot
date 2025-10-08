@@ -1,4 +1,8 @@
-import { PropDto, SetPropResultResponseDto } from "@khronos-index";
+import type {
+  PropDto,
+  PropOutcomeDetailDto,
+  SetPropResultResponseDto,
+} from "@kh-openapi";
 import { PaginatedMessageEmbedFields } from "@sapphire/discord.js-utilities";
 import { Subcommand } from "@sapphire/plugin-subcommands";
 import { EmbedBuilder, PermissionFlagsBits } from "discord.js";
@@ -230,12 +234,12 @@ export class UserCommand extends Subcommand {
       );
 
       // Log how many random props we received from Khronos
-      logger.info('Random props received from Khronos API', {
+      logger.info("Random props received from Khronos API", {
         guildId: interaction.guildId,
         sport: guild.sport,
         requestedCount: count,
         receivedCount: props.length,
-        propIds: props.map(p => p.outcome_uuid),
+        propIds: props.map((p) => p.outcomes.map((o) => o.outcome_uuid)).flat(),
       });
 
       // Post props to prediction channel
@@ -469,8 +473,19 @@ export class UserCommand extends Subcommand {
   private async formatPropField(
     prop: PropDto,
   ): Promise<{ name: string; value: string; inline: boolean }> {
-    const { event_context, market_key, description, point, outcome_uuid } =
-      prop;
+    const { event_context, market_key, outcomes } = prop;
+
+    // Get the first outcome for display (props typically have Over/Under or similar pairs)
+    const firstOutcome: PropOutcomeDetailDto | undefined = outcomes?.[0];
+    if (!firstOutcome) {
+      throw new Error(
+        `No outcomes found for prop with event_id: ${prop.event_id}`,
+      );
+    }
+
+    const description = firstOutcome.description;
+    const point = firstOutcome.point;
+    const outcome_uuid = firstOutcome.outcome_uuid;
 
     const homeTeam = await TeamInfo.resolveTeamIdentifier(
       event_context.home_team,
@@ -499,6 +514,7 @@ export class UserCommand extends Subcommand {
 
     if (
       point !== null &&
+      point !== undefined &&
       market_key.toLowerCase() !== "h2h" &&
       !market_key.toLowerCase().includes("total")
     ) {

@@ -106,7 +106,14 @@ export class PropPostingHandler {
         result.posted++;
       } catch (error) {
         console.error("Failed to post prop", {
-          propId: prop.outcome_uuid,
+          event_id: prop.event_id,
+          market_key: prop.market_key,
+          outcomes: prop.outcomes?.map(o => ({
+            outcome_uuid: o.outcome_uuid,
+            name: o.name,
+            price: o.price,
+            point: o.point,
+          })),
           error,
         });
         result.failed++;
@@ -137,7 +144,7 @@ export class PropPostingHandler {
     prop: PropDto,
     sport: "nfl" | "nba",
   ): Promise<EmbedBuilder> {
-    const { description, name, market_key, point, event_context, price } = prop;
+    const { market_key, event_context, outcomes } = prop;
 
     // Get translated market name (e.g., "rush yards" -> "Rush Yards")
     const marketTranslation =
@@ -166,8 +173,14 @@ export class PropPostingHandler {
       market_key === "totals" || market_key === "team_totals";
     const isSpreadsMarket = market_key === "spreads";
 
-    // For totals/team_totals, use `name` field; for player props, use `description`; for spreads, use `name`
-    const subject = isTotalsMarket || isSpreadsMarket ? name : description;
+    // Extract point value from outcomes (should be same for all outcomes except spreads)
+    const point = outcomes[0]?.point;
+    
+    // For player props, get description from the first outcome
+    const description = outcomes[0]?.description;
+
+    // For totals/team_totals, use first outcome name; for player props, use description; for spreads, use team names
+    const subject = isTotalsMarket || isSpreadsMarket ? outcomes[0]?.name : description;
 
     // Build a clear, explicit title
     let title: string;
@@ -210,11 +223,11 @@ export class PropPostingHandler {
     descriptionLines.push(propStatement);
 
     // Add odds for all outcomes
-    if (prop.outcomes && prop.outcomes.length > 0) {
+    if (outcomes && outcomes.length > 0) {
       descriptionLines.push(""); // Empty line for visual separation
       descriptionLines.push("**📊 Options:**");
 
-      for (const outcome of prop.outcomes) {
+      for (const outcome of outcomes) {
         const oddsDisplay =
           outcome.price > 0 ? `+${outcome.price}` : outcome.price;
 
@@ -274,58 +287,79 @@ export class PropPostingHandler {
     const buttons: ButtonBuilder[] = [];
     const isSpreadsMarket = prop.market_key === "spreads";
 
-    // Use outcomes array if available
-    if (prop.outcomes && prop.outcomes.length > 0) {
-      for (const outcome of prop.outcomes) {
-        // Determine emoji and label based on outcome type
-        let emoji = "🎯";
-        let label = outcome.name;
-
-        const outcomeLower = outcome.name.toLowerCase();
-
-        if (isSpreadsMarket) {
-          // For spreads, show team name with spread value
-          if (outcome.point !== null && outcome.point !== undefined) {
-            const spreadDisplay =
-              outcome.point > 0 ? `+${outcome.point}` : outcome.point;
-            label = `${outcome.name} ${spreadDisplay}`;
-          }
-          // Use shield emoji for spreads
-          emoji = "🛡️";
-        } else {
-          // Standard emoji logic for other markets
-          if (outcomeLower === "over") emoji = "⬆️";
-          else if (outcomeLower === "under") emoji = "⬇️";
-          else if (outcomeLower === "yes") emoji = "✅";
-          else if (outcomeLower === "no") emoji = "❌";
-        }
-
-        // Create custom ID - sanitize outcome name for spreads (replace spaces with underscores)
-        const sanitizedName = outcomeLower.replace(/\s+/g, "_");
-        const button = new ButtonBuilder()
-          .setCustomId(`prop_${sanitizedName}_${outcome.outcome_uuid}`)
-          .setLabel(label)
-          .setEmoji(emoji)
-          .setStyle(ButtonStyle.Primary);
-
-        buttons.push(button);
-      }
-    } else {
-      // Fallback to legacy Over/Under format for backwards compatibility
-      const overButton = new ButtonBuilder()
-        .setCustomId(`prop_over_${prop.outcome_uuid}`)
-        .setLabel("Over")
-        .setEmoji("⬆️")
-        .setStyle(ButtonStyle.Primary);
-
-      const underButton = new ButtonBuilder()
-        .setCustomId(`prop_under_${prop.outcome_uuid}`)
-        .setLabel("Under")
-        .setEmoji("⬇️")
-        .setStyle(ButtonStyle.Primary);
-
-      buttons.push(overButton, underButton);
+    // Defensive check: ensure outcomes array exists and has data
+    if (!prop.outcomes || prop.outcomes.length === 0) {
+      console.error("No outcomes available for prop", {
+        market_key: prop.market_key,
+        event_id: prop.event_id,
+        outcomes: prop.outcomes,
+      });
+      throw new Error("Cannot create buttons: no outcomes available");
     }
+
+    // Log button creation for observability
+    console.log("Creating prop buttons", {
+      market_key: prop.market_key,
+      event_id: prop.event_id,
+      outcomes_count: prop.outcomes.length,
+      outcome_names: prop.outcomes.map((o) => o.name),
+      outcome_uuids: prop.outcomes.map((o) => o.outcome_uuid),
+    });
+
+    // Defensive check: filter out duplicate outcomes by UUID
+    const seenUUIDs = new Set<string>();
+    const uniqueOutcomes = prop.outcomes.filter((outcome) => {
+      if (seenUUIDs.has(outcome.outcome_uuid)) {
+        console.warn("Duplicate outcome UUID detected and filtered", {
+          uuid: outcome.outcome_uuid,
+          name: outcome.name,
+          market_key: prop.market_key,
+        });
+        return false;
+      }
+      seenUUIDs.add(outcome.outcome_uuid);
+      return true;
+    });
+
+    for (const outcome of uniqueOutcomes) {
+      // Determine emoji and label based on outcome type
+      let emoji = "🎯";
+      let label = outcome.name;
+
+      const outcomeLower = outcome.name.toLowerCase();
+
+      if (isSpreadsMarket) {
+        // For spreads, show team name with spread value
+        if (outcome.point !== null && outcome.point !== undefined) {
+          const spreadDisplay =
+            outcome.point > 0 ? `+${outcome.point}` : outcome.point;
+          label = `${outcome.name} ${spreadDisplay}`;
+        }
+        // Use shield emoji for spreads
+        emoji = "🛡️";
+      } else {
+        // Standard emoji logic for other markets
+        if (outcomeLower === "over") emoji = "⬆️";
+        else if (outcomeLower === "under") emoji = "⬇️";
+        else if (outcomeLower === "yes") emoji = "✅";
+        else if (outcomeLower === "no") emoji = "❌";
+      }
+
+      // Create custom ID - sanitize outcome name for spreads (replace spaces with underscores)
+      const sanitizedName = outcomeLower.replace(/\s+/g, "_");
+      const button = new ButtonBuilder()
+        .setCustomId(`prop_${sanitizedName}_${outcome.outcome_uuid}`)
+        .setLabel(label)
+        .setEmoji(emoji)
+        .setStyle(ButtonStyle.Primary);
+
+      buttons.push(button);
+    }
+
+    console.log(`Created ${buttons.length} buttons for prop`, {
+      market_key: prop.market_key,
+      button_count: buttons.length,
+    });
 
     return new ActionRowBuilder<ButtonBuilder>().addComponents(...buttons);
   }
