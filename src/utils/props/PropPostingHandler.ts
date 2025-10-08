@@ -10,6 +10,7 @@ import { MarketKeyTranslations } from "../api/common/interfaces/market-translati
 import GuildWrapper from "../api/Khronos/guild/guild-wrapper.js";
 import StringUtils from "../common/string-utils.js";
 import TeamInfo from "../common/TeamInfo.js";
+import { logger } from '../logging/WinstonLogger.js';
 
 /**
  * Result object returned after posting props to channel
@@ -89,7 +90,7 @@ export class PropPostingHandler {
 
         result.posted++;
       } catch (error) {
-        console.error("Failed to post prop pair", {
+        logger.error("Failed to post prop pair", {
           event_id: prop.event_id,
           market_key: prop.market_key,
           description: prop.description,
@@ -137,9 +138,9 @@ export class PropPostingHandler {
     const title = `${prop.description}`;
 
     const descriptionLines = [
-      `**${marketName}** • O/U ${prop.point}`,
+      `**${marketName}** • O/U **\`${prop.point}\`**`,
       "",
-      `Over ${prop.point}: **${prop.over.price > 0 ? "+" : ""}${prop.over.price}** • Under ${prop.point}: **${prop.under.price > 0 ? "+" : ""}${prop.under.price}**`,
+      `*Over \`${prop.point}\`*: **${prop.over.price > 0 ? "+" : ""}${prop.over.price}** • *Under \`${prop.point}\`*: **${prop.under.price > 0 ? "+" : ""}${prop.under.price}**`,
     ];
 
     return new EmbedBuilder()
@@ -159,7 +160,6 @@ export class PropPostingHandler {
       )
       .setColor(homeTeamInfo.color)
       .setTimestamp()
-      .setFooter({ text: "Powered by Khronos" });
   }
 
   /**

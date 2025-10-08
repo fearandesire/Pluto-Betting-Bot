@@ -150,10 +150,15 @@ export class ButtonHandler extends InteractionHandler {
   public async run(interaction: ButtonInteraction, payload: ButtonPayload) {
     if ("hasFailed" in payload && payload.hasFailed) {
       const errMsg = payload.errMsg;
-      await interaction.editReply({
+      const errEmbed = await interaction.editReply({
         embeds: [await ErrorEmbeds.internalErr(errMsg)],
         components: [],
       });
+      // delete after 10 secs
+      // todo: add queue for this
+      setTimeout(() => {
+        errEmbed.delete().catch(console.error);
+      }, 10000);
       return;
     }
 
