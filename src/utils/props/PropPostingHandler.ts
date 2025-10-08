@@ -36,7 +36,7 @@ export interface PostingResult {
  * Note: Props are pre-paired and filtered by Khronos. Each ProcessedPropDto contains both over and under.
  *
  * @example
- * ```typescript
+ * ```ts
  * const handler = new PropPostingHandler();
  * const propsApi = new PropsApiWrapper();
  * const pairs = await propsApi.getProcessedProps('nfl', 10);
@@ -180,13 +180,13 @@ export class PropPostingHandler {
   ): ActionRowBuilder<ButtonBuilder> {
     const overButton = new ButtonBuilder()
       .setCustomId(`prop_${prop.over.outcome_uuid}`)
-      .setLabel(`Over ${prop.point}`)
+      .setLabel(`Over`)
       .setEmoji("⬆️")
       .setStyle(ButtonStyle.Success);
 
     const underButton = new ButtonBuilder()
       .setCustomId(`prop_${prop.under.outcome_uuid}`)
-      .setLabel(`Under ${prop.point}`)
+      .setLabel(`Under`)
       .setEmoji("⬇️")
       .setStyle(ButtonStyle.Danger);
 
