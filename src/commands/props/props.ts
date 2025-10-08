@@ -199,13 +199,13 @@ export class UserCommand extends Subcommand {
   }
 
   /**
-   * Generates random props and posts them to the guild's prediction channel
+   * Generates random player props and posts them to the guild's prediction channel
    *
    * This command:
-   * - Fetches random props from Khronos based on guild's sport
-   * - Filters out h2h markets (not suitable for Over/Under predictions)
+   * - Fetches processed player props from Khronos (already filtered to player props only)
+   * - Pairs over/under outcomes together
    * - Creates interactive embeds with Over/Under buttons
-   * - Posts each prop to the configured prediction channel
+   * - Posts each prop pair to the configured prediction channel
    * - Reports back with posting statistics
    *
    * @param interaction - Discord command interaction
@@ -221,32 +221,43 @@ export class UserCommand extends Subcommand {
 
     try {
       await interaction.editReply({
-        content: `Generating ${count} prop${count > 1 ? "s" : ""}, please wait...`,
+        content: `Generating ${count} player prop${count > 1 ? "s" : ""}, please wait...`,
       });
 
       // Get guild information to determine sport
       const guild = await guildWrapper.getGuild(interaction.guildId);
 
-      // Fetch random props from Khronos
-      const props = await propsApi.getRandomProps(
+      // Fetch processed props from Khronos (already filtered to player props)
+      const processedProps = await propsApi.getProcessedProps(
         guild.sport as "nba" | "nfl",
         count,
       );
 
-      // Log how many random props we received from Khronos
-      logger.info("Random props received from Khronos API", {
+      logger.info("Processed player props received from Khronos", {
         guildId: interaction.guildId,
         sport: guild.sport,
         requestedCount: count,
-        receivedCount: props.length,
-        propIds: props.map((p) => p.outcomes.map((o) => o.outcome_uuid)).flat(),
+        receivedCount: processedProps.length,
+        outcomeUuids: processedProps.map((p) => p.outcome_uuid),
+      });
+
+      // Group into pairs
+      const { PropPairingService } = await import(
+        "../../utils/props/PropPairingService.js"
+      );
+      const pairingService = new PropPairingService();
+      const propPairs = pairingService.groupIntoPairs(processedProps);
+
+      logger.info("Props grouped into pairs", {
+        guildId: interaction.guildId,
+        pairCount: propPairs.length,
       });
 
       // Post props to prediction channel
       const postingHandler = new PropPostingHandler();
       const result = await postingHandler.postPropsToChannel(
         interaction.guildId,
-        props,
+        propPairs,
         guild.sport as "nba" | "nfl",
       );
 
@@ -257,14 +268,8 @@ export class UserCommand extends Subcommand {
 
       // Build success message
       const responseLines: string[] = [
-        `✅ Successfully posted **${result.posted}** prop${result.posted !== 1 ? "s" : ""} to ${predictionChannel}`,
+        `✅ Successfully posted **${result.posted}** player prop${result.posted !== 1 ? "s" : ""} to ${predictionChannel}`,
       ];
-
-      if (result.filtered > 0) {
-        responseLines.push(
-          `🔽 Filtered out **${result.filtered}** h2h market${result.filtered !== 1 ? "s" : ""}`,
-        );
-      }
 
       if (result.failed > 0) {
         responseLines.push(
@@ -273,12 +278,12 @@ export class UserCommand extends Subcommand {
       }
 
       const embed = new EmbedBuilder()
-        .setTitle("Props Posted")
+        .setTitle("Player Props Posted")
         .setDescription(responseLines.join("\n"))
         .setColor(embedColors.PlutoGreen)
         .addFields(
           {
-            name: "Total Generated",
+            name: "Total Pairs",
             value: result.total.toString(),
             inline: true,
           },
@@ -288,8 +293,8 @@ export class UserCommand extends Subcommand {
             inline: true,
           },
           {
-            name: "Filtered",
-            value: result.filtered.toString(),
+            name: "Failed",
+            value: result.failed.toString(),
             inline: true,
           },
         )
@@ -302,7 +307,7 @@ export class UserCommand extends Subcommand {
 
       await AppLog.log({
         guildId: interaction.guildId,
-        description: `${interaction.user.username} posted ${result.posted} prop embeds to prediction channel`,
+        description: `${interaction.user.username} posted ${result.posted} player prop embeds to prediction channel`,
         type: LogType.Info,
       });
     } catch (error) {

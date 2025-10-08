@@ -9,10 +9,6 @@ import embedColors from "../lib/colorsConfig.js";
 import { ApiModules } from "../lib/interfaces/api/api.interface.js";
 import type { ICreateBetslipFull } from "../lib/interfaces/api/bets/betslips.interfaces.js";
 import { btnIds } from "../lib/interfaces/interaction-handlers/interaction-handlers.interface.js";
-import {
-  type ParsedPropButton,
-  parsePropButtonId,
-} from "../lib/interfaces/props/prop-buttons.interface.js";
 import type { Match } from "../openapi/khronos/models/Match.js";
 import { BetslipManager } from "../utils/api/Khronos/bets/BetslipsManager.js";
 import BetslipWrapper from "../utils/api/Khronos/bets/betslip-wrapper.js";
@@ -56,9 +52,9 @@ export class ButtonHandler extends InteractionHandler {
     // ? Handle prop buttons
     if (_.startsWith(interaction.customId, "prop_")) {
       await interaction.deferReply({ ephemeral: true });
-      // ? Parse the prop button pressed for data / action
-      const parsedButton = parsePropButtonId(interaction.customId);
-      return parsedButton ? this.some(parsedButton) : this.none();
+      // ? Extract outcome UUID from button ID (format: prop_{uuid})
+      const outcomeUuid = interaction.customId.replace("prop_", "");
+      return this.some({ outcomeUuid });
     }
 
     // Handle matchup buttons
@@ -194,142 +190,107 @@ export class ButtonHandler extends InteractionHandler {
           opponent: matchOpponent,
         });
       }
-    } else if ("action" in payload) {
+    } else if ("outcomeUuid" in payload) {
       // ? Handle A Prediction
       const predictionApi = new PredictionApiWrapper();
 
       try {
-        // ? Prioritize handling a cancel
-        if (payload.action.toLowerCase() === "cancel") {
-          try {
-            await predictionApi.deletePrediction({
-              userId: interaction.user.id,
-              id: payload.propId,
-            });
-            return interaction.editReply({
-              content: "Your prediction has been cancelled.",
-            });
-          } catch (error: unknown) {
-            return new ApiErrorHandler().handle(
-              interaction,
-              error,
-              ApiModules.predictions,
-            );
-          }
-        } else {
-          // ? Creating a prediction
-          // NOTE: Must sanitize the choice
-          // Restore the space - replace _
-          const sanitizedChoice = payload.action.replace(/_/g, " ");
+        // Fetch prop to get sport and outcome details
+        const propsApi = new PropsApiWrapper();
+        const prop = await propsApi.getPropByUuid(payload.outcomeUuid);
 
-          // Fetch prop to get sport information and outcomes
-          const propsApi = new PropsApiWrapper();
-          const prop = await propsApi.getPropByUuid(payload.propId);
+        // Find the specific outcome
+        const matchedOutcome = prop.outcomes.find(
+          (o) => o.outcome_uuid === payload.outcomeUuid,
+        );
 
-          // Find the matching outcome based on the user's choice
-          // Match by: outcome_uuid (primary), name, or description
-          const matchedOutcome = prop.outcomes.find(
-            (outcome) =>
-              outcome.outcome_uuid === payload.propId ||
-              outcome.name.toLowerCase() === sanitizedChoice.toLowerCase() ||
-              (outcome.description &&
-                outcome.description.toLowerCase() ===
-                  sanitizedChoice.toLowerCase()),
-          );
-
-          if (!matchedOutcome) {
-            console.error({
-              method: this.constructor.name,
-              message: "Could not find matching outcome for user's choice",
-              data: {
-                propId: payload.propId,
-                sanitizedChoice,
-                availableOutcomes: prop.outcomes.map((o) => o.name),
-              },
-            });
-            return interaction.editReply({
-              content:
-                "An error occurred while processing your prediction. Please try again.",
-            });
-          }
-
-          await predictionApi.createPrediction({
-            createPredictionDto: {
-              user_id: interaction.user.id,
-              outcome_uuid: matchedOutcome.outcome_uuid,
-              choice: sanitizedChoice,
-              status: "pending",
-              guild_id: interaction.guildId!,
-              sport: prop.event_context.sport_title,
+        if (!matchedOutcome) {
+          console.error({
+            method: this.constructor.name,
+            message: "Could not find matching outcome",
+            data: {
+              outcomeUuid: payload.outcomeUuid,
+              availableOutcomes: prop.outcomes.map((o) => o.outcome_uuid),
             },
           });
-
-          // Format the choice with point and market from the matched outcome
-          const formattedChoice = this.formatPredictionChoice(
-            sanitizedChoice,
-            matchedOutcome.point,
-            prop.market_key,
-            matchedOutcome.description,
-          );
-
-          // Format match string
-          const matchString = await this.formatMatchString(
-            prop.event_context.away_team,
-            prop.event_context.home_team,
-          );
-
-          // Format date
-          const formattedDate = new DateManager().toMMDDYYYY(
-            prop.event_context.commence_time,
-          );
-
-          // For spreads, use market name as the prop description
-          const propDescription =
-            prop.market_key === "spreads"
-              ? "Point Spread"
-              : matchedOutcome.description;
-
-          const predictionEmbed = new EmbedBuilder()
-            .setColor(embedColors.PlutoGreen)
-            .setTitle("Prediction Placed")
-            .setDescription(
-              "Your prediction has been recorded.\nView your predictions with `/history`",
-            )
-            .addFields(
-              {
-                name: "Prop Details",
-                value: propDescription
-                  ? `**Prop:** ${propDescription}\n**Choice:** ${formattedChoice}`
-                  : `**Choice:** ${formattedChoice}`,
-                inline: false,
-              },
-              {
-                name: "Event Details",
-                value: `**Match:** ${matchString}\n**Date:** ${formattedDate}`,
-                inline: false,
-              },
-            )
-            .setTimestamp();
-
-          await interaction.editReply({
-            content: "",
-            embeds: [predictionEmbed],
+          return interaction.editReply({
+            content:
+              "An error occurred while processing your prediction. Please try again.",
           });
-
-          // Delete the ephemeral message after 10 seconds
-          setTimeout(() => {
-            interaction.deleteReply().catch(console.error);
-          }, 10000);
         }
+
+        await predictionApi.createPrediction({
+          createPredictionDto: {
+            user_id: interaction.user.id,
+            outcome_uuid: matchedOutcome.outcome_uuid,
+            choice: matchedOutcome.name, // "Over" or "Under"
+            status: "pending",
+            guild_id: interaction.guildId!,
+            sport: prop.event_context.sport_title,
+          },
+        });
+
+        // Format the choice with point and market from the matched outcome
+        const formattedChoice = this.formatPredictionChoice(
+          matchedOutcome.name,
+          matchedOutcome.point,
+          prop.market_key,
+          matchedOutcome.description,
+        );
+
+        // Format match string
+        const matchString = await this.formatMatchString(
+          prop.event_context.away_team,
+          prop.event_context.home_team,
+        );
+
+        // Format date
+        const formattedDate = new DateManager().toMMDDYYYY(
+          prop.event_context.commence_time,
+        );
+
+        // Use description for player props
+        const propDescription = matchedOutcome.description;
+
+        const predictionEmbed = new EmbedBuilder()
+          .setColor(embedColors.PlutoGreen)
+          .setTitle("Prediction Placed")
+          .setDescription(
+            "Your prediction has been recorded.\nView your predictions with `/history`",
+          )
+          .addFields(
+            {
+              name: "Prop Details",
+              value: propDescription
+                ? `**Prop:** ${propDescription}\n**Choice:** ${formattedChoice}`
+                : `**Choice:** ${formattedChoice}`,
+              inline: false,
+            },
+            {
+              name: "Event Details",
+              value: `**Match:** ${matchString}\n**Date:** ${formattedDate}`,
+              inline: false,
+            },
+          )
+          .setTimestamp();
+
+        await interaction.editReply({
+          content: "",
+          embeds: [predictionEmbed],
+        });
+
+        // Delete the ephemeral message after 10 seconds
+        setTimeout(() => {
+          interaction.deleteReply().catch(console.error);
+        }, 10000);
       } catch (error: unknown) {
         console.error({
           method: this.constructor.name,
-          message: "Error occured regarding predictions",
+          message: "Error occurred regarding predictions",
           data: {
             error,
           },
         });
-        // ? NOTE: Embed titles may say 'Prediction Error' - but since this is catch-all scope, it could be prop related as well.
         return new ApiErrorHandler().handle(
           interaction,
           error,
@@ -404,8 +365,8 @@ interface ConfirmPayload {
   matchData: Match;
 }
 
-interface PropPayload extends ParsedPropButton {
-  action: "over" | "under" | "cancel";
+interface PropPayload {
+  outcomeUuid: string;
 }
 
 type ButtonPayload = FailedPayload | ConfirmPayload | PropPayload;

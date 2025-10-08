@@ -1,4 +1,10 @@
-import { PropsApi, type PropDto, type SetPropResultDto, type SetPropResultResponseDto } from '@kh-openapi';
+import {
+    PropsApi,
+    type ProcessedPropDto,
+    type PropDto,
+    type SetPropResultDto,
+    type SetPropResultResponseDto,
+} from '@kh-openapi';
 import { logger } from '../../../logging/WinstonLogger.js';
 import { KH_API_CONFIG } from '../KhronosInstances.js';
 
@@ -40,6 +46,35 @@ export default class PropsApiWrapper {
 	 */
 	async getRandomProp(sport: 'nba' | 'nfl'): Promise<PropDto> {
 		return await this.propsApi.propsControllerGetRandomPropV1({ sport });
+	}
+
+	/**
+	 * Get processed player props (paired over/under) from Khronos
+	 * Returns flat array of props already filtered to player props only with complete over/under pairs
+	 * @param sport - Sport type ('nba' or 'nfl')
+	 * @param count - Number of prop PAIRS to fetch
+	 * @returns Flat array of processed props (both over and under for each pair)
+	 */
+	async getProcessedProps(
+		sport: 'nba' | 'nfl',
+		count: number,
+	): Promise<ProcessedPropDto[]> {
+		const response = await this.propsApi.propsControllerGetProcessedPropsV1({
+			sport,
+			count,
+		});
+
+		await logger.info({
+			message: `Retrieved ${response.length} processed player prop outcomes for ${sport}`,
+			metadata: {
+				source: `${this.constructor.name}.${this.getProcessedProps.name}`,
+				sport,
+				outcomes_count: response.length,
+				pairs_count: response.length / 2, // Each pair = 2 outcomes
+			},
+		});
+
+		return response;
 	}
 
 	/**
