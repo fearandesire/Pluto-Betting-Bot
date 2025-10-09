@@ -1,16 +1,17 @@
-import "./lib/startup/env.js";
-import "./utils/cache/queue/ChannelCreationQueue.js";
-import "./utils/api/Khronos/KhronosInstances.js";
-import "./lib/startup/cache.js";
-import "./utils/api/koa/index.js";
 import {
   ApplicationCommandRegistries,
   LogLevel,
   RegisterBehavior,
   SapphireClient,
 } from "@sapphire/framework";
-import { GatewayIntentBits, Partials } from "discord.js";
 import "@sapphire/plugin-hmr/register";
+import { GatewayIntentBits, Partials } from "discord.js";
+import "./lib/startup/cache.js";
+import "./lib/startup/env.js";
+import "./utils/api/Khronos/KhronosInstances.js";
+import "./utils/api/koa/index.js";
+import "./utils/cache/queue/ChannelCreationQueue.js";
+import "./utils/cron/index.js";
 import { logger } from "./utils/logging/WinstonLogger.js";
 const SapDiscClient = new SapphireClient({
   caseInsensitiveCommands: true,

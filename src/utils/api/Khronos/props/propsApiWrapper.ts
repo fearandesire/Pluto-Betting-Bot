@@ -77,41 +77,48 @@ export default class PropsApiWrapper {
 	}
 
 	/**
+	 * Get ALL available props for a sport (no count limit)
+	 * Used for caching all available props
+	 * @param sport - Sport key (nba, nfl, etc.)
+	 * @returns All available props for the sport (flat array of outcomes)
+	 */
+	async getAvailableProps(sport: 'nba' | 'nfl'): Promise<PropDto[]> {
+		const response = await this.propsApi.propsControllerGetAvailablePropsV1({
+			sport,
+		});
+
+		await logger.info({
+			message: `Retrieved ${response.length} available props for ${sport}`,
+			metadata: {
+				source: `${this.constructor.name}.${this.getAvailableProps.name}`,
+				sport,
+				count: response.length,
+			},
+		});
+
+		return response;
+	}
+
+	/**
 	 * Get a prop by outcome UUID
 	 * @param outcomeUuid - The UUID of the outcome/prop
 	 * @returns Prop details with event context including sport information
-	 * @note This requires regenerating the OpenAPI client after adding the endpoint to Khronos
 	 */
 	async getPropByUuid(outcomeUuid: string): Promise<PropDto> {
-		// TODO: Once OpenAPI is regenerated, use: this.propsApi.propsControllerGetPropByUuid({ outcomeUuid })
-		// For now, make direct HTTP call
-		const response = await fetch(
-			`${KH_API_CONFIG.basePath}/api/khronos/v1/props/${outcomeUuid}`,
-			{
-				method: 'GET',
-				headers: KH_API_CONFIG.headers || {},
-			},
-		);
+		const response = await this.propsApi.propsControllerGetPropByUuidV1({
+			outcomeUuid,
+		});
 
-		if (!response.ok) {
-			const error = await response.json().catch(() => ({
-				message: response.statusText,
-			}));
-			throw new Error(error.message || 'Failed to fetch prop by UUID');
-		}
-
-		const prop = await response.json();
 		await logger.info({
 			message: `Retrieved prop by UUID: ${outcomeUuid}`,
 			metadata: {
 				source: `${this.constructor.name}.${this.getPropByUuid.name}`,
 				outcomeUuid,
-				sport: prop.event_context?.sport_title,
+				sport: response.event_context?.sport_title,
 			},
-			raw: prop
 		});
 
-		return prop;
+		return response;
 	}
 
 	/**

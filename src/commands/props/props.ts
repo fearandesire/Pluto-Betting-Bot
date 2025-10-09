@@ -95,13 +95,18 @@ export class UserCommand extends Subcommand {
                     option
                       .setName("prop_id")
                       .setDescription("The ID of the prop")
-                      .setRequired(true),
+                      .setRequired(true)
+                      .setAutocomplete(true),
                   )
                   .addStringOption((option) =>
                     option
                       .setName("result")
                       .setDescription("The result of the prop")
-                      .setRequired(true),
+                      .setRequired(true)
+                      .addChoices(
+                        { name: "Over", value: "Over" },
+                        { name: "Under", value: "Under" },
+                      ),
                   ),
               ),
           ),
@@ -316,17 +321,31 @@ export class UserCommand extends Subcommand {
     try {
       const predictionApi = new PredictionApiWrapper();
 
-      // Fetch active outcomes from Khronos
-      const data = await predictionApi.getActiveOutcomes({
+      // Fetch active outcomes grouped by date and game from Khronos
+      const dateGroups = await predictionApi.getActiveOutcomesGrouped({
         guildId: interaction.guildId,
       });
 
       // Check if there are any active outcomes
-      if (
-        !data.outcomes ||
-        data.outcomes.length === 0 ||
-        data.total_outcomes === 0
-      ) {
+      if (!dateGroups || dateGroups.length === 0) {
+        await interaction.editReply({
+          content: "No active predictions found. All props have been settled!",
+        });
+        return;
+      }
+
+      // Count total outcomes across all dates and games
+      const totalOutcomes = dateGroups.reduce(
+        (dateAcc, dateGroup) =>
+          dateAcc +
+          dateGroup.games.reduce(
+            (gameAcc, game) => gameAcc + game.props.length,
+            0,
+          ),
+        0,
+      );
+
+      if (totalOutcomes === 0) {
         await interaction.editReply({
           content: "No active predictions found. All props have been settled!",
         });
@@ -337,41 +356,69 @@ export class UserCommand extends Subcommand {
       const embed = new EmbedBuilder()
         .setTitle("Active Props - Pending Results")
         .setDescription(
-          `Found **${data.total_outcomes}** outcome${data.total_outcomes !== 1 ? "s" : ""} with active predictions.\nUse \`/props manage setresult\` to settle these props.`,
+          `Found **${totalOutcomes}** outcome${totalOutcomes !== 1 ? "s" : ""} with active predictions across **${dateGroups.length}** date${dateGroups.length !== 1 ? "s" : ""}.\nUse \`/props manage setresult\` to settle these props.`,
         )
         .setColor(embedColors.PlutoBlue)
         .setTimestamp();
 
-      // Format each outcome into a field
-      const fields = data.outcomes.map((outcome: any) => {
-        const matchup = `${outcome.home_team} vs ${outcome.away_team}`;
-        const date = new DateManager().toDiscordUnix(outcome.commence_time);
+      // Format each outcome into a field, organized by date and game
+      const fields: Array<{ name: string; value: string; inline: boolean }> = [];
 
-        // Build description parts
-        const parts = [
-          `**Matchup:** ${matchup}`,
-          `**Market:** ${StringUtils.toTitleCase(outcome.market_key.replace(/_/g, " "))}`,
-        ];
+      for (const dateGroup of dateGroups) {
+        // Add date header
+        const dateObj = new Date(dateGroup.date);
+        const formattedDate = dateObj.toLocaleDateString("en-US", {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        });
 
-        if (outcome.description) {
-          parts.push(`**Player:** ${outcome.description}`);
-        }
-
-        if (outcome.point !== null && outcome.point !== undefined) {
-          parts.push(`**Line:** ${outcome.point}`);
-        }
-
-        parts.push(
-          `**Date:** ${date}`,
-          `**Predictions:** ${outcome.prediction_count}`,
-        );
-
-        return {
-          name: `🎯 ${outcome.outcome_uuid}`,
-          value: parts.join("\n"),
+        fields.push({
+          name: `\u200B\n📅 ${formattedDate}`,
+          value: "\u200B",
           inline: false,
-        };
-      });
+        });
+
+        // Add games and props for this date
+        for (const game of dateGroup.games) {
+          const gameTime = new DateManager().toDiscordUnix(game.commence_time);
+          const gameTotalPredictions = game.props.reduce(
+            (sum, prop) => sum + prop.prediction_count,
+            0,
+          );
+
+          // Add game header
+          fields.push({
+            name: `🏀 ${game.matchup}`,
+            value: `Time: ${gameTime} • ${gameTotalPredictions} prediction${gameTotalPredictions !== 1 ? "s" : ""}`,
+            inline: false,
+          });
+
+          // Add each prop for this game
+          for (const prop of game.props) {
+            const propParts: string[] = [
+              `**Market:** ${StringUtils.toTitleCase(prop.market_key.replace(/_/g, " "))}`,
+            ];
+
+            if (prop.description) {
+              propParts.push(`**Player:** ${prop.description}`);
+            }
+
+            if (prop.point !== null && prop.point !== undefined) {
+              propParts.push(`**Line:** ${prop.point}`);
+            }
+
+            propParts.push(`**Predictions:** ${prop.prediction_count}`);
+
+            fields.push({
+              name: `  └ 🎯 ${prop.outcome_uuid}`,
+              value: `  ${propParts.join(" • ")}`,
+              inline: false,
+            });
+          }
+        }
+      }
 
       // Split into multiple embeds if too many fields (Discord limit is 25 fields per embed)
       if (fields.length <= 25) {
@@ -391,7 +438,7 @@ export class UserCommand extends Subcommand {
 
       await AppLog.log({
         guildId: interaction.guildId,
-        description: `${interaction.user.username} viewed ${data.total_outcomes} active prop outcomes`,
+        description: `${interaction.user.username} viewed ${totalOutcomes} active prop outcomes across ${dateGroups.length} date(s)`,
         type: LogType.Info,
       });
     } catch (error) {

@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import type { Redis } from 'ioredis';
+import type { ChainableCommander, Redis } from 'ioredis';
 import redisCache from './redis-instance.js';
 
 export class CacheManager {
@@ -57,6 +57,59 @@ export class CacheManager {
 	async clear() {
 		await this.cache.flushall();
 		return true;
+	}
+
+	// ============================================================================
+	// Extended Redis Operations for Prop Caching
+	// ============================================================================
+
+	/**
+	 * Create a Redis pipeline for batched operations
+	 */
+	pipeline(): ChainableCommander {
+		return this.cache.pipeline();
+	}
+
+	/**
+	 * Set a field in a Redis hash
+	 */
+	async hset(key: string, field: string, value: string): Promise<number> {
+		return this.cache.hset(key, field, value);
+	}
+
+	/**
+	 * Get all fields and values from a Redis hash
+	 */
+	async hgetall(key: string): Promise<Record<string, string>> {
+		return this.cache.hgetall(key);
+	}
+
+	/**
+	 * Delete one or more keys
+	 */
+	async del(...keys: string[]): Promise<number> {
+		return this.cache.del(...keys);
+	}
+
+	/**
+	 * Add members to a Redis set
+	 */
+	async sadd(key: string, ...members: string[]): Promise<number> {
+		return this.cache.sadd(key, ...members);
+	}
+
+	/**
+	 * Get all members of a Redis set
+	 */
+	async smembers(key: string): Promise<string[]> {
+		return this.cache.smembers(key);
+	}
+
+	/**
+	 * Set a key's time to live in seconds
+	 */
+	async expire(key: string, seconds: number): Promise<number> {
+		return this.cache.expire(key, seconds);
 	}
 }
 

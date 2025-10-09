@@ -1,19 +1,18 @@
+import type { DateGroupDto } from 'src/openapi/khronos/models/DateGroupDto.js';
 import {
 	type AllUserPredictionsDto,
 	type CreatePredictionRequest,
+	type GetActiveOutcomesRequest,
 	type GetAllPredictionsFilteredRequest,
 	type GetPredictionByIdRequest,
 	type GetPredictionsForUserRequest,
 	PredictionApi,
 	type RemovePredictionRequest,
-	type ActiveOutcomesResponseDto,
-	type GetActiveOutcomesRequest,
 } from '../../../../openapi/khronos/index.js';
 import { KH_API_CONFIG } from '../KhronosInstances.js';
-import { logger } from '../../../logging/WinstonLogger.js';
 
 // Re-export generated types for convenience
-export type { ActiveOutcomesResponseDto, GetActiveOutcomesRequest };
+export type { GetActiveOutcomesRequest };
 
 export default class PredictionApiWrapper {
 	private predictionApi: PredictionApi;
@@ -65,22 +64,17 @@ export default class PredictionApiWrapper {
 	}
 
 	/**
-	 * Get all outcomes (props) that have active predictions
+	 * Get active outcomes grouped by date and game
 	 * @param params - Request parameters with optional guild_id
-	 * @returns List of outcomes with pending predictions
+	 * @returns Array of date groups, each containing games with their props
 	 */
-	async getActiveOutcomes(params: GetActiveOutcomesRequest = {}): Promise<ActiveOutcomesResponseDto> {
-		const response = await this.predictionApi.getActiveOutcomes(params);
-
-		await logger.info({
-			message: `Retrieved ${response.total_outcomes} outcomes with active predictions`,
-			metadata: {
-				source: `${this.constructor.name}.${this.getActiveOutcomes.name}`,
-				guildId: params.guildId,
-				total_outcomes: response.total_outcomes,
-			},
-		});
-
-		return response;
+	async getActiveOutcomesGrouped(params: GetActiveOutcomesRequest = {}): Promise<DateGroupDto[]> {
+		try {
+			const response = await this.predictionApi.getActiveOutcomes(params);
+			return response;
+		} catch (error) {
+			console.error('Error fetching active outcomes grouped by date and game:', error);
+			throw error;
+		}
 	}
 }
