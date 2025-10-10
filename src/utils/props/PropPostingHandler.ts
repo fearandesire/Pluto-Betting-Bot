@@ -138,7 +138,7 @@ export class PropPostingHandler {
     const title = `🎯 Accuracy Challenge`;
 
     const descriptionLines = [
-      `### **${prop.description}** • ${marketName} • O/U **\`${prop.point}\`**\n`,  
+      `### **${prop.description}** • O/U **\`${prop.point}\`** ${marketName}\n`,  
       `**Market:** ${marketName}`,
       `**Over**: ${prop.over.price > 0 ? "+" : ""}${prop.over.price}\n**Under**: ${prop.under.price > 0 ? "+" : ""}${prop.under.price}`,
     ];
