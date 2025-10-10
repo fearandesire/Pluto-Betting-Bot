@@ -59,17 +59,27 @@ export default class PropsApiWrapper {
 		sport: 'nba' | 'nfl',
 		count: number,
 	): Promise<ProcessedPropDto[]> {
+		await logger.info({
+			message: `🔄 Calling Khronos /props/random/processed - requesting ${count} pairs for ${sport}`,
+			metadata: {
+				source: `${this.constructor.name}.${this.getProcessedProps.name}`,
+				sport,
+				requested_count: count,
+			},
+		});
+
 		const response = await this.propsApi.propsControllerGetProcessedPropsV1({
 			sport,
 			count,
 		});
 
 		await logger.info({
-			message: `Retrieved ${response.length} processed player prop pairs for ${sport}`,
+			message: `✅ Khronos returned ${response.length} processed prop pairs for ${sport}`,
 			metadata: {
 				source: `${this.constructor.name}.${this.getProcessedProps.name}`,
 				sport,
-				pairs_count: response.length, // Each item is a complete pair
+				requested_count: count,
+				received_count: response.length,
 			},
 		});
 

@@ -224,13 +224,19 @@ export class UserCommand extends Subcommand {
       // Get guild information to determine sport
       const guild = await guildWrapper.getGuild(interaction.guildId);
 
+      logger.info(`📤 Requesting ${count} prop pairs from Khronos`, {
+        guildId: interaction.guildId,
+        sport: guild.sport,
+        requestedCount: count,
+      });
+
       // Fetch paired props from Khronos (already filtered and paired with over/under)
       const pairedProps = await propsApi.getProcessedProps(
         guild.sport as "nba" | "nfl",
         count,
       );
 
-      logger.info("Paired player props received from Khronos", {
+      logger.info(`📥 Received ${pairedProps.length} prop pairs from Khronos`, {
         guildId: interaction.guildId,
         sport: guild.sport,
         requestedCount: count,

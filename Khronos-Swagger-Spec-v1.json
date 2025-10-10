@@ -3010,6 +3010,124 @@
         ]
       }
     },
+    "/api/khronos/v1/prediction/count": {
+      "get": {
+        "operationId": "getPredictionsCount",
+        "parameters": [
+          {
+            "name": "event_id",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Predictions count found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PredictionsCountDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No predictions found for the given status."
+          }
+        },
+        "summary": "Get the count of predictions and unique users for a given status of a prediction. E.g all pending or all completed",
+        "tags": [
+          "Prediction"
+        ]
+      }
+    },
+    "/api/khronos/v1/prediction/active-outcomes": {
+      "get": {
+        "description": "Returns active props organized by date, then by game, with props sorted by prediction count DESC.",
+        "operationId": "getActiveOutcomes",
+        "parameters": [
+          {
+            "name": "guild_id",
+            "required": false,
+            "in": "query",
+            "description": "Optional guild ID to filter outcomes",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Grouped outcomes retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DateGroupDto"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        },
+        "summary": "Get active outcomes grouped by date and game",
+        "tags": [
+          "Prediction"
+        ]
+      }
+    },
+    "/api/khronos/v1/prediction/user/{user_id}": {
+      "get": {
+        "operationId": "getPredictionsForUser",
+        "parameters": [
+          {
+            "name": "user_id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Predictions found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AllUserPredictionsDto"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No predictions found for the user."
+          }
+        },
+        "summary": "Get all predictions for a user",
+        "tags": [
+          "Prediction"
+        ]
+      }
+    },
     "/api/khronos/v1/prediction/{id}": {
       "get": {
         "operationId": "getPredictionById",
@@ -3102,121 +3220,6 @@
           }
         },
         "summary": "Remove a prediction",
-        "tags": [
-          "Prediction"
-        ]
-      }
-    },
-    "/api/khronos/v1/prediction/user/{user_id}": {
-      "get": {
-        "operationId": "getPredictionsForUser",
-        "parameters": [
-          {
-            "name": "user_id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Predictions found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AllUserPredictionsDto"
-                  }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "No predictions found for the user."
-          }
-        },
-        "summary": "Get all predictions for a user",
-        "tags": [
-          "Prediction"
-        ]
-      }
-    },
-    "/api/khronos/v1/prediction/count": {
-      "get": {
-        "operationId": "getPredictionsCount",
-        "parameters": [
-          {
-            "name": "event_id",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "status",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Predictions count found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PredictionsCountDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "No predictions found for the given status."
-          }
-        },
-        "summary": "Get the count of predictions and unique users for a given status of a prediction. E.g all pending or all completed",
-        "tags": [
-          "Prediction"
-        ]
-      }
-    },
-    "/api/khronos/v1/prediction/active-outcomes": {
-      "get": {
-        "description": "Returns a list of unique outcome UUIDs that have pending predictions. Used to see which props need results set.",
-        "operationId": "getActiveOutcomes",
-        "parameters": [
-          {
-            "name": "guild_id",
-            "required": false,
-            "in": "query",
-            "description": "Optional guild ID to filter outcomes",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "List of outcomes with active predictions retrieved successfully.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ActiveOutcomesResponseDto"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error."
-          }
-        },
-        "summary": "Get all outcomes (props) that have active predictions",
         "tags": [
           "Prediction"
         ]
@@ -4044,7 +4047,7 @@
     },
     "/api/khronos/v1/props/random/processed": {
       "get": {
-        "description": "Returns paired player props (over/under) ready for client consumption. Excludes h2h, spreads, totals, team_totals, and anytime touchdown markets. Each object contains BOTH over and under outcomes in a denormalized structure. Khronos applies filtering (minimum odds -150 American, complete pairs only). No pairing logic needed on client side - each prop is self-contained.",
+        "description": "Returns paired player props (over/under) ready for client consumption. Goracle returns all available outcomes; Khronos applies comprehensive filtering: Excludes h2h, spreads, totals, team_totals, and anytime touchdown markets. Groups outcomes into Over/Under pairs. Applies minimum odds filter (>= -150 American odds). Limits to 1-2 props per event for variety. Each returned object contains both over and under outcomes in a denormalized structure. No pairing logic needed on client side - each prop is self-contained.",
         "operationId": "PropsController_getProcessedProps_v1",
         "parameters": [
           {
@@ -4094,6 +4097,44 @@
           }
         },
         "summary": "Get paired player props ready for predictions",
+        "tags": [
+          "Props"
+        ]
+      }
+    },
+    "/api/khronos/v1/props/available/{sport}": {
+      "get": {
+        "description": "Returns ALL available props for caching purposes. No random sampling, no count limit. Used by Pluto to cache all available props for autocomplete functionality.",
+        "operationId": "PropsController_getAvailableProps_v1",
+        "parameters": [
+          {
+            "name": "sport",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "All available props retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PropDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid sport parameter"
+          }
+        },
+        "summary": "Get all available props for a sport (no count limit)",
         "tags": [
           "Props"
         ]
@@ -5739,8 +5780,8 @@
           },
           "choice": {
             "type": "string",
-            "description": "Who or what the user is betting/predicting on",
-            "example": "Jayson Tatum"
+            "description": "(Optional) Who or what the user is betting/predicting on. If not provided, will be derived from Goracle outcome data.",
+            "example": "Over"
           },
           "status": {
             "enum": [
@@ -5766,7 +5807,6 @@
         "required": [
           "user_id",
           "outcome_uuid",
-          "choice",
           "status",
           "guild_id",
           "sport"
@@ -5885,6 +5925,121 @@
         "required": [
           "event_context",
           "predictions"
+        ]
+      },
+      "PredictionsCountDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number",
+            "description": "Total number of predictions",
+            "example": 100
+          },
+          "unique_users": {
+            "type": "number",
+            "description": "Total number of unique users",
+            "example": 50
+          }
+        },
+        "required": [
+          "total",
+          "unique_users"
+        ]
+      },
+      "ActiveOutcomePropDto": {
+        "type": "object",
+        "properties": {
+          "outcome_uuid": {
+            "type": "string",
+            "description": "Outcome UUID (prop ID)"
+          },
+          "market_key": {
+            "type": "string",
+            "description": "Market key (e.g., player_points, h2h)"
+          },
+          "description": {
+            "type": "string",
+            "description": "Prop description (e.g., player name for player props)"
+          },
+          "point": {
+            "type": "number",
+            "description": "Point value (e.g., 25.5 for over/under)"
+          },
+          "prediction_count": {
+            "type": "number",
+            "description": "Total number of pending predictions on this prop"
+          }
+        },
+        "required": [
+          "outcome_uuid",
+          "market_key",
+          "prediction_count"
+        ]
+      },
+      "GameDto": {
+        "type": "object",
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "description": "Event ID"
+          },
+          "matchup": {
+            "type": "string",
+            "description": "Matchup string (e.g., \"BOS vs LAL\")"
+          },
+          "home_team": {
+            "type": "string",
+            "description": "Home team name"
+          },
+          "away_team": {
+            "type": "string",
+            "description": "Away team name"
+          },
+          "commence_time": {
+            "type": "string",
+            "description": "Game commence time (ISO 8601)"
+          },
+          "sport_title": {
+            "type": "string",
+            "description": "Sport title (e.g., NBA, NFL)"
+          },
+          "props": {
+            "description": "List of props for this game, sorted by prediction count DESC",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActiveOutcomePropDto"
+            }
+          }
+        },
+        "required": [
+          "event_id",
+          "matchup",
+          "home_team",
+          "away_team",
+          "commence_time",
+          "sport_title",
+          "props"
+        ]
+      },
+      "DateGroupDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "Date in YYYY-MM-DD format",
+            "example": "2025-10-09"
+          },
+          "games": {
+            "description": "List of games on this date, sorted by total prediction count DESC",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GameDto"
+            }
+          }
+        },
+        "required": [
+          "date",
+          "games"
         ]
       },
       "Prediction": {
@@ -6205,95 +6360,6 @@
             "example": "fanduel"
           }
         }
-      },
-      "PredictionsCountDto": {
-        "type": "object",
-        "properties": {
-          "total": {
-            "type": "number",
-            "description": "Total number of predictions",
-            "example": 100
-          },
-          "unique_users": {
-            "type": "number",
-            "description": "Total number of unique users",
-            "example": 50
-          }
-        },
-        "required": [
-          "total",
-          "unique_users"
-        ]
-      },
-      "ActiveOutcomeDto": {
-        "type": "object",
-        "properties": {
-          "outcome_uuid": {
-            "type": "string",
-            "description": "Outcome UUID (prop ID)"
-          },
-          "event_id": {
-            "type": "string",
-            "description": "Event ID"
-          },
-          "market_key": {
-            "type": "string",
-            "description": "Market key (e.g., player_points, h2h)"
-          },
-          "home_team": {
-            "type": "string",
-            "description": "Home team name"
-          },
-          "away_team": {
-            "type": "string",
-            "description": "Away team name"
-          },
-          "commence_time": {
-            "type": "string",
-            "description": "Game commence time (ISO 8601)"
-          },
-          "description": {
-            "type": "string",
-            "description": "Prop description (e.g., player name for player props)"
-          },
-          "point": {
-            "type": "number",
-            "description": "Point value (e.g., 25.5 for over/under)"
-          },
-          "prediction_count": {
-            "type": "number",
-            "description": "Total number of pending predictions on this outcome"
-          }
-        },
-        "required": [
-          "outcome_uuid",
-          "event_id",
-          "market_key",
-          "home_team",
-          "away_team",
-          "commence_time",
-          "prediction_count"
-        ]
-      },
-      "ActiveOutcomesResponseDto": {
-        "type": "object",
-        "properties": {
-          "outcomes": {
-            "description": "List of outcomes with active predictions",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ActiveOutcomeDto"
-            }
-          },
-          "total_outcomes": {
-            "type": "number",
-            "description": "Total number of unique outcomes with active predictions"
-          }
-        },
-        "required": [
-          "outcomes",
-          "total_outcomes"
-        ]
       },
       "LeaderboardDto": {
         "type": "object",
