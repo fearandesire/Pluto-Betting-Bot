@@ -135,12 +135,12 @@ export class PropPostingHandler {
       new TeamInfo().getTeamInfo(prop.away_team),
     ]);
 
-    const title = `${prop.description}`;
+    const title = `🎯 Accuracy Challenge`;
 
     const descriptionLines = [
-      `**${marketName}** • O/U **\`${prop.point}\`**`,
-      "",
-      `*Over \`${prop.point}\`*: **${prop.over.price > 0 ? "+" : ""}${prop.over.price}** • *Under \`${prop.point}\`*: **${prop.under.price > 0 ? "+" : ""}${prop.under.price}**`,
+      `### **${prop.description}** • ${marketName} • O/U **\`${prop.point}\`**\n`,  
+      `**Market:** ${marketName}`,
+      `**Over**: ${prop.over.price > 0 ? "+" : ""}${prop.over.price}\n**Under**: ${prop.under.price > 0 ? "+" : ""}${prop.under.price}`,
     ];
 
     return new EmbedBuilder()
