@@ -254,9 +254,6 @@ export class ButtonHandler extends InteractionHandler {
           prop.event_context.commence_time,
         );
 
-        // Use description for player props
-        const propDescription = matchedOutcome.description;
-
         const predictionEmbed = new EmbedBuilder()
           .setColor(embedColors.PlutoGreen)
           .setTitle("Prediction Placed")
@@ -265,10 +262,8 @@ export class ButtonHandler extends InteractionHandler {
           )
           .addFields(
             {
-              name: "Prop Details",
-              value: propDescription
-                ? `**Prop:** ${propDescription}\n**Choice:** ${formattedChoice}`
-                : `**Choice:** ${formattedChoice}`,
+              name: "Your Prediction",
+              value: formattedChoice,
               inline: false,
             },
             {
@@ -310,8 +305,8 @@ export class ButtonHandler extends InteractionHandler {
    * @param choice - The user's choice (e.g., "over", "under", "philadelphia eagles")
    * @param point - The point value (e.g., 15.5, -7.0)
    * @param marketKey - The market key (e.g., "player_reception_yds", "spreads")
-   * @param description - Optional prop description
-   * @returns Formatted choice string (e.g., "OVER 15.5 Reception Yards", "Philadelphia Eagles -7.0")
+   * @param description - Optional prop description (e.g., player name)
+   * @returns Formatted choice string (e.g., "Patrick Mahomes OVER 15.5 Reception Yards", "Philadelphia Eagles -7.0")
    */
   private formatPredictionChoice(
     choice: string,
@@ -335,11 +330,20 @@ export class ButtonHandler extends InteractionHandler {
       ? _.startCase(marketKey.replace("player_", ""))
       : _.startCase(marketKey);
 
-    if (point) {
-      return `${upperChoice} ${point} ${marketName}`;
+    // Build the formatted string with player name if available
+    let formattedString = "";
+    
+    if (description) {
+      formattedString = `**${description}** `;
     }
 
-    return `${upperChoice} ${marketName}`;
+    if (point !== undefined && point !== null) {
+      formattedString += `${upperChoice} \`${point}\` ${marketName}`;
+    } else {
+      formattedString += `${upperChoice} ${marketName}`;
+    }
+
+    return formattedString;
   }
 
   /**
