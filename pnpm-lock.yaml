@@ -283,8 +283,8 @@ importers:
         specifier: ^4.1.5
         version: 4.1.5
       pkgroll:
-        specifier: ^2.17.0
-        version: 2.17.0(typescript@5.9.3)
+        specifier: ^2.18.1
+        version: 2.18.1(typescript@5.9.3)
       prettier:
         specifier: ^3.5.3
         version: 3.6.2
@@ -296,7 +296,7 @@ importers:
         version: 19.0.4(@types/node@24.7.0)
       release-it-changelogen:
         specifier: ^0.1.0
-        version: 0.1.0(changelogen@0.5.7)(release-it@19.0.4(@types/node@24.7.0))(semver@7.7.2)
+        version: 0.1.0(changelogen@0.5.7)(release-it@19.0.4(@types/node@24.7.0))(semver@7.7.3)
       rimraf:
         specifier: ^6.0.1
         version: 6.0.1
@@ -1785,8 +1785,8 @@ packages:
       rollup:
         optional: true
 
-  '@rollup/plugin-node-resolve@16.0.2':
-    resolution: {integrity: sha512-tCtHJ2BlhSoK4cCs25NMXfV7EALKr0jyasmqVCq3y9cBrKdmJhtsy1iTz36Xhk/O+pDJbzawxF4K6ZblqCnITQ==}
+  '@rollup/plugin-node-resolve@16.0.3':
+    resolution: {integrity: sha512-lUYM3UBGuM93CnMPG1YocWu7X802BrNF3jW2zny5gQyLQgRFJhV1Sq0Zi74+dh/6NBx1DxFC4b4GXg9wUCG5Qg==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       rollup: ^2.78.0||^3.0.0||^4.0.0
@@ -5449,8 +5449,8 @@ packages:
   pkg-types@2.3.0:
     resolution: {integrity: sha512-SIqCzDRg0s9npO5XQ3tNZioRY1uK06lA41ynBC1YmFTmnY6FjUjVt6s4LoADmwoig1qqD0oK8h1p/8mlMx8Oig==}
 
-  pkgroll@2.17.0:
-    resolution: {integrity: sha512-vvUBECeJlXDH+gbad/RaKpsENZUc6J6HUaLke0uu3dcywBCilDR/Xwf4k+23qjgTWrC4gbadZCoJTaaX+5qvAA==}
+  pkgroll@2.18.1:
+    resolution: {integrity: sha512-5fXXV3Bvc0zvD3kwmPrqwJJ84kIB3RUV3VC9RHkQa2bcRLj4s2W/J0PkVL57VzlLlG+BeE09lFp0wr1ULBGQuQ==}
     engines: {node: '>=18'}
     hasBin: true
     peerDependencies:
@@ -5897,6 +5897,11 @@ packages:
 
   semver@7.7.2:
     resolution: {integrity: sha512-RF0Fw+rO5AMf9MAyaRXI4AV0Ulj5lMHqVxxdSgiVbixSCXoEmmX/jk0CuJw4+3SqroYO9VoUh+HcuJivvtJemA==}
+    engines: {node: '>=10'}
+    hasBin: true
+
+  semver@7.7.3:
+    resolution: {integrity: sha512-SdsKMrI9TdgjdweUSR9MweHA4EJ8YxHn8DFaDisvhVlUOe4BF1tLD7GAj0lIqWVl+dPb/rExr0Btby5loQm20Q==}
     engines: {node: '>=10'}
     hasBin: true
 
@@ -8283,7 +8288,7 @@ snapshots:
     optionalDependencies:
       rollup: 4.52.4
 
-  '@rollup/plugin-node-resolve@16.0.2(rollup@4.52.4)':
+  '@rollup/plugin-node-resolve@16.0.3(rollup@4.52.4)':
     dependencies:
       '@rollup/pluginutils': 5.3.0(rollup@4.52.4)
       '@types/resolve': 1.20.2
@@ -8843,7 +8848,7 @@ snapshots:
       globby: 11.1.0
       is-glob: 4.0.3
       minimatch: 9.0.3
-      semver: 7.7.2
+      semver: 7.7.3
       ts-api-utils: 1.4.3(typescript@5.9.3)
     optionalDependencies:
       typescript: 5.9.3
@@ -9471,7 +9476,7 @@ snapshots:
       pathe: 1.1.2
       pkg-types: 1.3.1
       scule: 1.3.0
-      semver: 7.7.2
+      semver: 7.7.3
       std-env: 3.9.0
       yaml: 2.8.1
     transitivePeerDependencies:
@@ -9914,7 +9919,7 @@ snapshots:
       '@one-ini/wasm': 0.1.1
       commander: 10.0.1
       minimatch: 9.0.1
-      semver: 7.7.2
+      semver: 7.7.3
 
   ee-first@1.1.1: {}
 
@@ -11762,7 +11767,7 @@ snapshots:
 
   make-dir@4.0.0:
     dependencies:
-      semver: 7.7.2
+      semver: 7.7.3
 
   make-error@1.3.6: {}
 
@@ -12330,14 +12335,14 @@ snapshots:
       exsolve: 1.0.7
       pathe: 2.0.3
 
-  pkgroll@2.17.0(typescript@5.9.3):
+  pkgroll@2.18.1(typescript@5.9.3):
     dependencies:
       '@rollup/plugin-alias': 5.1.1(rollup@4.52.4)
       '@rollup/plugin-commonjs': 28.0.6(rollup@4.52.4)
       '@rollup/plugin-dynamic-import-vars': 2.1.5(rollup@4.52.4)
       '@rollup/plugin-inject': 5.0.5(rollup@4.52.4)
       '@rollup/plugin-json': 6.1.0(rollup@4.52.4)
-      '@rollup/plugin-node-resolve': 16.0.2(rollup@4.52.4)
+      '@rollup/plugin-node-resolve': 16.0.3(rollup@4.52.4)
       '@rollup/pluginutils': 5.3.0(rollup@4.52.4)
       cjs-module-lexer: 2.1.0
       esbuild: 0.25.10
@@ -12672,7 +12677,7 @@ snapshots:
       gopd: 1.2.0
       set-function-name: 2.0.2
 
-  release-it-changelogen@0.1.0(changelogen@0.5.7)(release-it@19.0.4(@types/node@24.7.0))(semver@7.7.2):
+  release-it-changelogen@0.1.0(changelogen@0.5.7)(release-it@19.0.4(@types/node@24.7.0))(semver@7.7.3):
     dependencies:
       chalk: 5.6.0
       changelogen: 0.5.7
@@ -12681,7 +12686,7 @@ snapshots:
       execa: 8.0.1
       pathe: 1.1.2
       release-it: 19.0.4(@types/node@24.7.0)
-      semver: 7.7.2
+      semver: 7.7.3
       yargs-parser: 21.1.1
 
   release-it@19.0.4(@types/node@24.7.0):
@@ -12873,6 +12878,8 @@ snapshots:
   semver@6.3.1: {}
 
   semver@7.7.2: {}
+
+  semver@7.7.3: {}
 
   set-error-class@3.0.1:
     dependencies:
@@ -13584,7 +13591,7 @@ snapshots:
       espree: 9.6.1
       esquery: 1.6.0
       lodash: 4.17.21
-      semver: 7.7.2
+      semver: 7.7.3
     transitivePeerDependencies:
       - supports-color
 
