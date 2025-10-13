@@ -33,8 +33,8 @@ importers:
         specifier: ^14.0.0
         version: 14.0.0
       '@openapitools/openapi-generator-cli':
-        specifier: ^2.24.0
-        version: 2.24.0(@types/node@24.7.0)
+        specifier: ^2.25.0
+        version: 2.25.0(@types/node@24.7.0)
       '@pluto-khronos/types':
         specifier: ^0.2.2
         version: 0.2.2(discord.js@14.22.1)
@@ -296,7 +296,7 @@ importers:
         version: 19.0.4(@types/node@24.7.0)
       release-it-changelogen:
         specifier: ^0.1.0
-        version: 0.1.0(changelogen@0.5.7)(release-it@19.0.4(@types/node@24.7.0))(semver@7.7.2)
+        version: 0.1.0(changelogen@0.5.7)(release-it@19.0.4(@types/node@24.7.0))(semver@7.7.3)
       rimraf:
         specifier: ^6.0.1
         version: 6.0.1
@@ -1683,8 +1683,8 @@ packages:
   '@one-ini/wasm@0.1.1':
     resolution: {integrity: sha512-XuySG1E38YScSJoMlqovLru4KTUNSjgVTIjyh7qMX6aNN5HY5Ct5LhRJdxO79JtTzKfzV/bnWpz+zquYrISsvw==}
 
-  '@openapitools/openapi-generator-cli@2.24.0':
-    resolution: {integrity: sha512-VS0sfW46oe/hQq7g1YZU1cJJebAQIwKhKqjsDY1/QFmcJMXYfe339yjMDTv02kMbsx621cSH46HIdvmW+i+7mg==}
+  '@openapitools/openapi-generator-cli@2.25.0':
+    resolution: {integrity: sha512-u/3VAbF8c68AXBgm8nBAdDPLPW/KgrtHz28yemf92zNB0iDZFGdRUX2W80Lzf177g6ctYLz0GIPHCOU0LTJegQ==}
     engines: {node: '>=16'}
     hasBin: true
 
@@ -5900,6 +5900,11 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
+  semver@7.7.3:
+    resolution: {integrity: sha512-SdsKMrI9TdgjdweUSR9MweHA4EJ8YxHn8DFaDisvhVlUOe4BF1tLD7GAj0lIqWVl+dPb/rExr0Btby5loQm20Q==}
+    engines: {node: '>=10'}
+    hasBin: true
+
   set-error-class@3.0.1:
     resolution: {integrity: sha512-VEsI0yEUMEnXmSkhfj+EwzNC1om7zGy2IdymNyi4FfGzmoxvXXIB1Nv09+DfRgsd7fS+u+FwTqCTSRhhNMcx8w==}
     engines: {node: '>=18.18.0'}
@@ -8163,7 +8168,7 @@ snapshots:
 
   '@one-ini/wasm@0.1.1': {}
 
-  '@openapitools/openapi-generator-cli@2.24.0(@types/node@24.7.0)':
+  '@openapitools/openapi-generator-cli@2.25.0(@types/node@24.7.0)':
     dependencies:
       '@nestjs/axios': 4.0.1(@nestjs/common@11.1.6(reflect-metadata@0.2.2)(rxjs@7.8.2))(axios@1.12.2)(rxjs@7.8.2)
       '@nestjs/common': 11.1.6(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -8843,7 +8848,7 @@ snapshots:
       globby: 11.1.0
       is-glob: 4.0.3
       minimatch: 9.0.3
-      semver: 7.7.2
+      semver: 7.7.3
       ts-api-utils: 1.4.3(typescript@5.9.3)
     optionalDependencies:
       typescript: 5.9.3
@@ -9471,7 +9476,7 @@ snapshots:
       pathe: 1.1.2
       pkg-types: 1.3.1
       scule: 1.3.0
-      semver: 7.7.2
+      semver: 7.7.3
       std-env: 3.9.0
       yaml: 2.8.1
     transitivePeerDependencies:
@@ -9914,7 +9919,7 @@ snapshots:
       '@one-ini/wasm': 0.1.1
       commander: 10.0.1
       minimatch: 9.0.1
-      semver: 7.7.2
+      semver: 7.7.3
 
   ee-first@1.1.1: {}
 
@@ -11762,7 +11767,7 @@ snapshots:
 
   make-dir@4.0.0:
     dependencies:
-      semver: 7.7.2
+      semver: 7.7.3
 
   make-error@1.3.6: {}
 
@@ -12672,7 +12677,7 @@ snapshots:
       gopd: 1.2.0
       set-function-name: 2.0.2
 
-  release-it-changelogen@0.1.0(changelogen@0.5.7)(release-it@19.0.4(@types/node@24.7.0))(semver@7.7.2):
+  release-it-changelogen@0.1.0(changelogen@0.5.7)(release-it@19.0.4(@types/node@24.7.0))(semver@7.7.3):
     dependencies:
       chalk: 5.6.0
       changelogen: 0.5.7
@@ -12681,7 +12686,7 @@ snapshots:
       execa: 8.0.1
       pathe: 1.1.2
       release-it: 19.0.4(@types/node@24.7.0)
-      semver: 7.7.2
+      semver: 7.7.3
       yargs-parser: 21.1.1
 
   release-it@19.0.4(@types/node@24.7.0):
@@ -12873,6 +12878,8 @@ snapshots:
   semver@6.3.1: {}
 
   semver@7.7.2: {}
+
+  semver@7.7.3: {}
 
   set-error-class@3.0.1:
     dependencies:
@@ -13584,7 +13591,7 @@ snapshots:
       espree: 9.6.1
       esquery: 1.6.0
       lodash: 4.17.21
-      semver: 7.7.2
+      semver: 7.7.3
     transitivePeerDependencies:
       - supports-color
 
