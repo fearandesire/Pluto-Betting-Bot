@@ -1269,6 +1269,69 @@
         ]
       }
     },
+    "/api/khronos/v1/score/settle/{matchid}": {
+      "post": {
+        "description": "Manually marks a match as complete with provided scores and closes all associated bets. Use for matches stuck in \"open\" state due to webhook failures or missed events.",
+        "operationId": "manualSettleMatch",
+        "parameters": [
+          {
+            "name": "matchid",
+            "required": true,
+            "in": "path",
+            "description": "Match ID to settle",
+            "schema": {
+              "example": "550e8400-e29b-41d4-a716-446655440000",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Match settlement data with final scores",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManualSettleMatchDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Match settled successfully and bets closed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualSettleMatchResponseDto"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualSettleMatchResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input, match not found, match already complete, or tie game"
+          }
+        },
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ],
+        "summary": "Manually settle a match and close bets",
+        "tags": [
+          "score"
+        ]
+      }
+    },
     "/api/khronos/v1/betslips": {
       "get": {
         "operationId": "getAllBetslips",
@@ -3128,6 +3191,44 @@
         ]
       }
     },
+    "/api/khronos/v1/prediction/user/{user_id}/active": {
+      "get": {
+        "operationId": "getActivePredictionsForUser",
+        "parameters": [
+          {
+            "name": "user_id",
+            "required": true,
+            "in": "path",
+            "description": "Discord user ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Active predictions found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AllUserPredictionsDto"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No active predictions found for the user."
+          }
+        },
+        "summary": "Get all active (pending) predictions for a user",
+        "tags": [
+          "Prediction"
+        ]
+      }
+    },
     "/api/khronos/v1/prediction/{id}": {
       "get": {
         "operationId": "getPredictionById",
@@ -3220,6 +3321,46 @@
           }
         },
         "summary": "Remove a prediction",
+        "tags": [
+          "Prediction"
+        ]
+      }
+    },
+    "/api/khronos/v1/prediction/by-id/{prediction_id}": {
+      "delete": {
+        "operationId": "removePredictionById",
+        "parameters": [
+          {
+            "name": "prediction_id",
+            "required": true,
+            "in": "path",
+            "description": "The unique prediction ID to delete",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "user_id",
+            "required": true,
+            "in": "query",
+            "description": "Discord user ID (for authorization)",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Prediction removed successfully."
+          },
+          "400": {
+            "description": "Bad Request: Event has already started."
+          },
+          "404": {
+            "description": "Prediction not found."
+          }
+        },
+        "summary": "Remove a prediction by prediction ID",
         "tags": [
           "Prediction"
         ]
@@ -4142,7 +4283,7 @@
     },
     "/api/khronos/v1/props/{outcomeUuid}": {
       "get": {
-        "description": "Returns a prop (outcome) from Goracle by its UUID. Used to fetch prop details including sport information.",
+        "description": "Returns a prop (outcome) from Goracle by its UUID. Used to fetch prop details including sport information. Response will contain basic event information related to the prop, along with every related outcome.",
         "operationId": "PropsController_getPropByUuid_v1",
         "parameters": [
           {
@@ -4866,6 +5007,117 @@
           "guild_name",
           "date_joined",
           "sport"
+        ]
+      },
+      "ManualSettleMatchDto": {
+        "type": "object",
+        "properties": {
+          "homeScore": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Home team final score",
+            "example": 108
+          },
+          "awayScore": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Away team final score",
+            "example": 95
+          },
+          "adminUserId": {
+            "type": "string",
+            "description": "Optional admin user ID for audit trail",
+            "example": "123456789"
+          }
+        },
+        "required": [
+          "homeScore",
+          "awayScore"
+        ]
+      },
+      "ManualSettleMatchResultDto": {
+        "type": "object",
+        "properties": {
+          "matchId": {
+            "type": "string",
+            "description": "Match ID",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "winner": {
+            "type": "string",
+            "description": "Winning team name",
+            "example": "Los Angeles Lakers"
+          },
+          "loser": {
+            "type": "string",
+            "description": "Losing team name",
+            "example": "Golden State Warriors"
+          },
+          "homeScore": {
+            "type": "number",
+            "description": "Home team final score",
+            "example": 108
+          },
+          "awayScore": {
+            "type": "number",
+            "description": "Away team final score",
+            "example": 95
+          },
+          "betsProcessed": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "number"
+              },
+              "winners": {
+                "type": "number"
+              },
+              "losers": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "total",
+              "winners",
+              "losers"
+            ]
+          }
+        },
+        "required": [
+          "matchId",
+          "winner",
+          "loser",
+          "homeScore",
+          "awayScore",
+          "betsProcessed"
+        ]
+      },
+      "ManualSettleMatchResponseDto": {
+        "type": "object",
+        "properties": {
+          "statusCode": {
+            "type": "number",
+            "description": "HTTP status code",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "description": "Response message",
+            "example": "Match settled successfully"
+          },
+          "result": {
+            "description": "Settlement result details",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ManualSettleMatchResultDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "statusCode",
+          "message",
+          "result"
         ]
       },
       "PlacedBetslip": {
@@ -6880,7 +7132,7 @@
           },
           "description": {
             "type": "string",
-            "description": "Outcome description (e.g., player name for player props)"
+            "description": "Outcome description - typically the player name for player props (e.g., \"Patrick Mahomes\"). Null for team markets like spreads/totals."
           },
           "price": {
             "type": "number",
@@ -6925,7 +7177,7 @@
             "description": "Bookmaker key (e.g., draftkings)"
           },
           "outcomes": {
-            "description": "All possible outcomes for this market (Over/Under, Yes/No, team options for spreads, etc.)",
+            "description": "All possible outcomes for this market (Over/Under, Yes/No, team options for spreads, etc.). Each outcome is a bettable \"prop\". For player props, all outcomes share the same player name in their description field.",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/PropOutcomeDetailDto"

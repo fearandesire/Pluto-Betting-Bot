@@ -258,7 +258,7 @@ export class ButtonHandler extends InteractionHandler {
           .setColor(embedColors.PlutoGreen)
           .setTitle("Prediction Placed")
           .setDescription(
-            "Your prediction has been recorded.\nView your predictions with `/history`",
+            "Your prediction has been recorded.\nView your predictions with `/predictions history`",
           )
           .addFields(
             {

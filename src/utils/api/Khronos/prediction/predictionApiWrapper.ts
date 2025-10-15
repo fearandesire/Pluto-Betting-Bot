@@ -1,14 +1,16 @@
-import type { DateGroupDto } from 'src/openapi/khronos/models/DateGroupDto.js';
+import type { DateGroupDto } from '@kh-openapi';
 import {
+	PredictionApi,
 	type AllUserPredictionsDto,
 	type CreatePredictionRequest,
 	type GetActiveOutcomesRequest,
+	type GetActivePredictionsForUserRequest,
 	type GetAllPredictionsFilteredRequest,
 	type GetPredictionByIdRequest,
 	type GetPredictionsForUserRequest,
-	PredictionApi,
+	type RemovePredictionByIdRequest,
 	type RemovePredictionRequest,
-} from '../../../../openapi/khronos/index.js';
+} from '@kh-openapi';
 import { KH_API_CONFIG } from '../KhronosInstances.js';
 
 // Re-export generated types for convenience
@@ -61,6 +63,36 @@ export default class PredictionApiWrapper {
 	): Promise<AllUserPredictionsDto[]> {
 		const response = await this.predictionApi.getPredictionsForUser(params);
 		return response;
+	}
+
+	/**
+	 * Get active (pending) predictions for a user
+	 * @param params - Request parameters with userId
+	 * @returns Array of active predictions for the user
+	 */
+	async getActivePredictionsForUser(
+		params: GetActivePredictionsForUserRequest,
+	): Promise<AllUserPredictionsDto[]> {
+		try {
+			const response = await this.predictionApi.getActivePredictionsForUser(params);
+			return response;
+		} catch (error) {
+			console.error('Error fetching active predictions for user:', error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Delete a prediction by its prediction ID
+	 * @param params - Request parameters with predictionId and userId
+	 */
+	async deletePredictionById(params: RemovePredictionByIdRequest): Promise<void> {
+		try {
+			await this.predictionApi.removePredictionById(params);
+		} catch (error) {
+			console.error('Error deleting prediction by ID:', error);
+			throw error;
+		}
 	}
 
 	/**
