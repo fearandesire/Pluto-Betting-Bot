@@ -74,7 +74,7 @@
 		"date-fns-tz": "^3.2.0",
 		"discord-api-types": "^0.38.26",
 		"discord.js": "^14.23.2",
-		"dotenv": "17.2.2",
+		"dotenv": "17.2.3",
 		"dotenv-vault": "1.27.0",
 		"esm-module-alias": "^2.2.1",
 		"ioredis": "^5.8.1",
