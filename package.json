@@ -83,7 +83,7 @@
 		"koa-bodyparser": "^4.4.1",
 		"koa-logger": "^4.0.0",
 		"koa2-winston": "^3.2.1",
-		"lefthook": "^1.13.5",
+		"lefthook": "^2.0.0",
 		"lodash": "^4.17.21",
 		"module-alias": "^2.2.3",
 		"numeral": "^2.0.6",
