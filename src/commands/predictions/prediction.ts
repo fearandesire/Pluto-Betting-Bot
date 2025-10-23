@@ -242,7 +242,7 @@ export class UserCommand extends Subcommand {
       return emoji;
     };
 
-    const propDescription = prediction.description || outcome?.description;
+    const propDescription = outcome?.description;
     let propDetailsValue = `**Choice:** ${formattedChoice}`;
     if (propDescription && propDescription.trim() !== "") {
       propDetailsValue = `**Prop:** ${propDescription}\n${propDetailsValue}`;

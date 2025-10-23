@@ -221,8 +221,8 @@ export class AdminPredictionsHandler {
 
     // Build Prop Details section
     let propDetailsValue = `**Choice:** ${formattedChoice}`;
-    if (prediction.description && prediction.description.trim() !== "") {
-      propDetailsValue = `**Prop:** ${prediction.description}\n${propDetailsValue}`;
+    if (outcome?.description && outcome.description.trim() !== "") {
+      propDetailsValue = `**Prop:** ${outcome.description}\n${propDetailsValue}`;
     }
 
     // Build Event Details section
