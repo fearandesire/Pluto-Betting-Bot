@@ -327,8 +327,8 @@ export class ButtonHandler extends InteractionHandler {
     const upperChoice = choice.toUpperCase();
     const abbreviation = MarketKeyAbbreviations[marketKey];
     const marketName = abbreviation
-      ? _.startCase(marketKey.replace("player_", ""))
-      : _.startCase(marketKey);
+      ? abbreviation
+      : _.startCase(marketKey.replace("player_", ""));
 
     // Build the formatted string with player name if available
     let formattedString = "";
