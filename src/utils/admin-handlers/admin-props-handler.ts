@@ -194,12 +194,10 @@ export class AdminPropsHandler {
     try {
       const predictionApi = new PredictionApiWrapper();
 
-      // Fetch active outcomes grouped by date and game from Khronos
       const dateGroups = await predictionApi.getActiveOutcomesGrouped({
         guildId: interaction.guildId,
       });
 
-      // Check if there are any active outcomes
       if (!dateGroups || dateGroups.length === 0) {
         await interaction.editReply({
           content: "No active predictions found. All props have been settled!",
@@ -207,7 +205,6 @@ export class AdminPropsHandler {
         return;
       }
 
-      // Count total outcomes across all dates and games
       const totalOutcomes = dateGroups.reduce(
         (dateAcc, dateGroup) =>
           dateAcc +
@@ -225,7 +222,6 @@ export class AdminPropsHandler {
         return;
       }
 
-      // Build embed with outcome list
       const embed = new EmbedBuilder()
         .setTitle("Active Props - Pending Results")
         .setDescription(
@@ -234,12 +230,10 @@ export class AdminPropsHandler {
         .setColor(embedColors.PlutoBlue)
         .setTimestamp();
 
-      // Format each outcome into a field, organized by date and game
       const fields: Array<{ name: string; value: string; inline: boolean }> =
         [];
 
       for (const dateGroup of dateGroups) {
-        // Add date header
         const dateObj = new Date(dateGroup.date);
         const formattedDate = dateObj.toLocaleDateString("en-US", {
           weekday: "short",
@@ -262,14 +256,12 @@ export class AdminPropsHandler {
             0,
           );
 
-          // Add game header
           fields.push({
-            name: `🏀 ${game.matchup}`,
+            name: `🎯 ${game.matchup}`,
             value: `Time: ${gameTime} • ${gameTotalPredictions} prediction${gameTotalPredictions !== 1 ? "s" : ""}`,
             inline: false,
           });
 
-          // Add each prop for this game
           for (const prop of game.props) {
             const propParts: string[] = [
               `**Market:** ${StringUtils.toTitleCase(prop.market_key.replace(/_/g, " "))}`,
@@ -294,12 +286,10 @@ export class AdminPropsHandler {
         }
       }
 
-      // Split into multiple embeds if too many fields (Discord limit is 25 fields per embed)
       if (fields.length <= 25) {
         embed.addFields(fields);
         await interaction.editReply({ embeds: [embed] });
       } else {
-        // Use paginated message for many outcomes
         const paginatedMsg = new PaginatedMessageEmbedFields({
           template: { embeds: [embed] },
         })

@@ -87,17 +87,29 @@ export class UserCommand extends Subcommand {
         });
       }
 
+      // Apply status filter if provided
+      const filteredPredictions = status
+        ? usersPredictions.filter((p) => p.status === status)
+        : usersPredictions;
+
+      if (filteredPredictions.length === 0) {
+        return interaction.editReply({
+          content: `You have no ${status?.toLowerCase() || ""} predictions.`,
+        });
+      }
+
       const descStr = status ? `Filtered by: \`${status}\`` : null;
+
+      const formattedPredictions = await Promise.all(
+        filteredPredictions.map((prediction) =>
+          this.createPredictionField(prediction),
+        ),
+      );
+
       const templateEmbed = new EmbedBuilder()
         .setTitle("Your Prediction History")
         .setDescription(descStr)
         .setColor(embedColors.PlutoBlue);
-
-      const formattedPredictions = await Promise.all(
-        usersPredictions.map((prediction) =>
-          this.createPredictionField(prediction),
-        ),
-      );
 
       const paginatedMsg = new PaginatedMessageEmbedFields({
         template: { embeds: [templateEmbed] },

@@ -36,8 +36,8 @@ importers:
         specifier: ^2.24.0
         version: 2.24.0(@types/node@24.7.0)
       '@pluto-khronos/types':
-        specifier: ^0.2.2
-        version: 0.2.2(discord.js@14.22.1)
+        specifier: ^0.2.4
+        version: 0.2.4(discord.js@14.22.1)
       '@sapphire/decorators':
         specifier: ^6.1.1
         version: 6.2.0
@@ -296,7 +296,7 @@ importers:
         version: 19.0.4(@types/node@24.7.0)
       release-it-changelogen:
         specifier: ^0.1.0
-        version: 0.1.0(changelogen@0.5.7)(release-it@19.0.4(@types/node@24.7.0))(semver@7.7.2)
+        version: 0.1.0(changelogen@0.5.7)(release-it@19.0.4(@types/node@24.7.0))(semver@7.7.3)
       rimraf:
         specifier: ^6.0.1
         version: 6.0.1
@@ -547,7 +547,6 @@ packages:
   '@biomejs/cli-win32-x64@2.2.4':
     resolution: {integrity: sha512-3Y4V4zVRarVh/B/eSHczR4LYoSVyv3Dfuvm3cWs5w/HScccS0+Wt/lHOcDTRYeHjQmMYVC3rIRWqyN2EI52+zg==}
     engines: {node: '>=14.21.3'}
-    cpu: [x64]
     os: [win32]
 
   '@borewit/text-codec@0.1.1':
@@ -1700,8 +1699,8 @@ packages:
     resolution: {integrity: sha512-QNqXyfVS2wm9hweSYD2O7F0G06uurj9kZ96TRQE5Y9hU7+tgdZwIkbAKc5Ocy1HxEY2kuDQa6cQ1WRs/O5LFKA==}
     engines: {node: ^12.20.0 || ^14.18.0 || >=16.0.0}
 
-  '@pluto-khronos/types@0.2.2':
-    resolution: {integrity: sha512-C+QDistIs9Dq6pvholGg8H3MlBNVsdEkCx9eFkqE+qGm+iikynP2xQBnt0m5YhiCrguw527SObExQwViTSZOsg==}
+  '@pluto-khronos/types@0.2.4':
+    resolution: {integrity: sha512-sAOngSpuZgE1w7GPmpI08kya1VGrIC15KnYjxZVuPDNhR/k+lxzk3qxcy95sAy0AufQnUOI26SwlQkUp8/I03A==}
     peerDependencies:
       discord.js: ^14.0.0
 
@@ -5900,6 +5899,11 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
+  semver@7.7.3:
+    resolution: {integrity: sha512-SdsKMrI9TdgjdweUSR9MweHA4EJ8YxHn8DFaDisvhVlUOe4BF1tLD7GAj0lIqWVl+dPb/rExr0Btby5loQm20Q==}
+    engines: {node: '>=10'}
+    hasBin: true
+
   set-error-class@3.0.1:
     resolution: {integrity: sha512-VEsI0yEUMEnXmSkhfj+EwzNC1om7zGy2IdymNyi4FfGzmoxvXXIB1Nv09+DfRgsd7fS+u+FwTqCTSRhhNMcx8w==}
     engines: {node: '>=18.18.0'}
@@ -6067,8 +6071,8 @@ packages:
     resolution: {integrity: sha512-DvEy55V3DB7uknRo+4iOGT5fP1slR8wQohVdknigZPMpMstaKJQWhwiYBACJE3Ul2pTnATihhBYnRhZQHGBiRw==}
     engines: {node: '>= 0.8'}
 
-  std-env@3.9.0:
-    resolution: {integrity: sha512-UGvjygr6F6tpH7o2qyqR6QYpwraIjKSdtzyBdyytFOHmPZY917kwdwLG0RbOjWOnKmnm3PeHjaoLLMie7kPLQw==}
+  std-env@3.10.0:
+    resolution: {integrity: sha512-5GS12FdOZNliM5mAOxFRg7Ir0pWz8MdpYm6AY6VPkGpbA7ZzmbzNcBJQ0GPvvyWgcY7QAhCgf9Uy89I03faLkg==}
 
   stdin-discarder@0.2.2:
     resolution: {integrity: sha512-UhDfHmA92YAlNnCfhmq0VeNL5bDbiZGg7sZ2IvPsXubGkiNa9EC+tUTsjBRsYUAz87btI6/1wf4XoVvQ3uRnmQ==}
@@ -8200,7 +8204,7 @@ snapshots:
 
   '@pkgr/core@0.2.9': {}
 
-  '@pluto-khronos/types@0.2.2(discord.js@14.22.1)':
+  '@pluto-khronos/types@0.2.4(discord.js@14.22.1)':
     dependencies:
       discord.js: 14.22.1
       resolve-team: 2.0.4
@@ -8843,7 +8847,7 @@ snapshots:
       globby: 11.1.0
       is-glob: 4.0.3
       minimatch: 9.0.3
-      semver: 7.7.2
+      semver: 7.7.3
       ts-api-utils: 1.4.3(typescript@5.9.3)
     optionalDependencies:
       typescript: 5.9.3
@@ -9471,8 +9475,8 @@ snapshots:
       pathe: 1.1.2
       pkg-types: 1.3.1
       scule: 1.3.0
-      semver: 7.7.2
-      std-env: 3.9.0
+      semver: 7.7.3
+      std-env: 3.10.0
       yaml: 2.8.1
     transitivePeerDependencies:
       - magicast
@@ -12672,7 +12676,7 @@ snapshots:
       gopd: 1.2.0
       set-function-name: 2.0.2
 
-  release-it-changelogen@0.1.0(changelogen@0.5.7)(release-it@19.0.4(@types/node@24.7.0))(semver@7.7.2):
+  release-it-changelogen@0.1.0(changelogen@0.5.7)(release-it@19.0.4(@types/node@24.7.0))(semver@7.7.3):
     dependencies:
       chalk: 5.6.0
       changelogen: 0.5.7
@@ -12681,7 +12685,7 @@ snapshots:
       execa: 8.0.1
       pathe: 1.1.2
       release-it: 19.0.4(@types/node@24.7.0)
-      semver: 7.7.2
+      semver: 7.7.3
       yargs-parser: 21.1.1
 
   release-it@19.0.4(@types/node@24.7.0):
@@ -12874,6 +12878,8 @@ snapshots:
 
   semver@7.7.2: {}
 
+  semver@7.7.3: {}
+
   set-error-class@3.0.1:
     dependencies:
       normalize-exception: 4.0.1
@@ -13061,7 +13067,7 @@ snapshots:
 
   statuses@2.0.2: {}
 
-  std-env@3.9.0: {}
+  std-env@3.10.0: {}
 
   stdin-discarder@0.2.2: {}
 
@@ -13584,7 +13590,7 @@ snapshots:
       espree: 9.6.1
       esquery: 1.6.0
       lodash: 4.17.21
-      semver: 7.7.2
+      semver: 7.7.3
     transitivePeerDependencies:
       - supports-color
 
