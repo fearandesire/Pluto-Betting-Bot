@@ -326,7 +326,7 @@ export class ButtonHandler extends InteractionHandler {
     // Standard handling for other markets (over/under, yes/no)
     const upperChoice = choice.toUpperCase();
     const abbreviation = MarketKeyAbbreviations[marketKey];
-    let marketName = abbreviation
+    const marketName = abbreviation
       ? _.startCase(marketKey.replace("player_", ""))
       : _.startCase(marketKey);
 

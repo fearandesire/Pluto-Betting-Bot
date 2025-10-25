@@ -60,7 +60,7 @@ export class PropsAutocompleteFormatter {
 	 */
 	static toAutocompleteChoices(props: CachedProp[]): AutocompleteChoice[] {
 		return props.map((prop) => ({
-			name: this.formatPropName(prop),
+			name: PropsAutocompleteFormatter.formatPropName(prop),
 			value: prop.outcome_uuid,
 		}));
 	}

@@ -176,7 +176,7 @@ export class UserCommand extends Subcommand {
           : "0.0";
 
       const embed = new EmbedBuilder()
-        .setTitle(`📊 Prediction Statistics`)
+        .setTitle('📊 Prediction Statistics')
         .setColor(embedColors.PlutoBlue)
         .setDescription(`Stats for ${user.username}`)
         .addFields(
@@ -280,7 +280,7 @@ export class UserCommand extends Subcommand {
     marketKey: string,
   ): string {
     const upperChoice = choice.toUpperCase();
-    let marketName = _.startCase(marketKey.replace("player_", ""));
+    const marketName = _.startCase(marketKey.replace("player_", ""));
 
     if (point) {
       return `${upperChoice} ${point} ${marketName}`;

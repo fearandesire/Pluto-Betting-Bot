@@ -51,7 +51,6 @@ export default class NotificationService {
 				} = formattedAmounts;
 				const displayResult: DisplayResultWon = {
 					...winner.result,
-					outcome: 'won',
 					displayBetAmount,
 					displayPayout,
 					displayProfit,
@@ -73,7 +72,6 @@ export default class NotificationService {
 			for (const loser of data.losers!) {
 				const displayResult: DisplayResultLost = {
 					...loser.result,
-					outcome: 'lost',
 					displayBetAmount: MoneyFormatter.toUSD(loser.result.betAmount),
 				};
 
@@ -91,7 +89,6 @@ export default class NotificationService {
 			for (const push of data.pushes!) {
 				const displayResult: DisplayResultPush = {
 					...push.result,
-					outcome: 'push',
 					displayBetAmount: MoneyFormatter.toUSD(push.result.betAmount),
 				};
 
@@ -105,18 +102,8 @@ export default class NotificationService {
 		}
 	}
 
-	        async notifyUser(betData: DisplayBetNotification) {
-                const { userId, betId, result, displayResult } = betData;       
-                const client = container.client;
-
-                if (!client || typeof client.users?.send !== 'function') {
-                        logger.error({
-                                method: this.notifyUser.name,
-                                message: 'Discord client is not available or invalid',
-                                error: 'container.client is undefined or missing users.send method',
-                        });
-                        return;
-                }
+	async notifyUser(betData: DisplayBetNotification) {
+		const { userId, betId, result, displayResult } = betData;
 
 		switch (result.outcome) {
 			case 'won': {

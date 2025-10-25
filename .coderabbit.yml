@@ -1,0 +1,227 @@
+language: "en-US"
+tone_instructions: "Be direct and technical. Focus on actionable feedback for Discord.js v14+ and API best practices."
+early_access: true
+
+reviews:
+  profile: "assertive"
+  request_changes_workflow: true
+  high_level_summary: true
+  high_level_summary_placeholder: "@coderabbitai summary"
+  auto_title_placeholder: "@coderabbitai"
+  poem: false
+  collapse_walkthrough: true
+  changed_files_summary: true
+  sequence_diagrams: true
+  
+  path_filters:
+    - "src/**/*.ts"
+    - "test/**/*.ts"
+    - "!dist/**"
+    - "!node_modules/**"
+    - "!**/*.spec.ts"
+  
+  path_instructions:
+    - path: "**/commands/**/*.ts"
+      instructions: |
+        - Verify commands use Sapphire's Command class and proper registration
+        - Check that chatInputRun/messageRun methods exist and handle errors gracefully
+        - Ensure interaction.deferReply() is called within 3 seconds for long-running operations
+        - Validate proper use of interaction.reply() vs interaction.editReply() vs interaction.followUp()
+        - Check for proper permission checks using requiredUserPermissions and requiredClientPermissions
+        - Verify command options use proper Discord.js v14 ApplicationCommandOptionType enum
+        - Flag commands that don't handle interaction.replied or interaction.deferred states
+        - Ensure ephemeral responses (ephemeral: true) are used for error messages and sensitive data
+        - Validate autocomplete handlers return results within 3 seconds
+        - Check that commands don't perform heavy computation - offload to BullMQ jobs instead
+    
+    - path: "**/listeners/**/*.ts"
+      instructions: |
+        - Verify listeners extend Sapphire's Listener class
+        - Check proper event name usage from Discord.js Events enum (not string literals)
+        - Ensure error handling doesn't crash the bot (wrap in try/catch)
+        - Validate listeners don't block the event loop - use BullMQ for heavy processing
+        - Check for proper use of once vs on for event registration
+        - Flag listeners that mutate Discord.js objects directly - use API methods instead
+        - Ensure interactionCreate listeners validate interaction types before handling
+        - Verify messageCreate listeners ignore bots unless explicitly needed
+        - Check that ready listener is used for one-time initialization, not recurring tasks
+    
+    - path: "**/preconditions/**/*.ts"
+      instructions: |
+        - Verify preconditions extend Sapphire's Precondition class
+        - Check that run method returns proper Result type (ok() or err())
+        - Ensure preconditions are stateless and don't modify interaction state
+        - Validate error messages are user-friendly and actionable
+        - Check for proper permission checks using interaction.memberPermissions
+        - Flag preconditions that perform async operations without proper error handling
+        - Verify cooldown preconditions use appropriate bucket strategies
+    
+    - path: "**/interactions/**/*.ts"
+      instructions: |
+        - Verify proper interaction type guards (isButton, isSelectMenu, isModalSubmit)
+        - Check that customId parsing is safe and validates expected format
+        - Ensure interactions respond within 3 seconds (reply, deferReply, or deferUpdate)
+        - Validate proper use of interaction.update() for component updates
+        - Check for proper error handling when interactions expire (10-second modal timeout)
+        - Flag interactions that don't check interaction.replied before responding
+        - Ensure button/select menu handlers validate user permissions before executing actions
+        - Verify modal submit handlers validate and sanitize input fields
+    
+    - path: "**/routes/**/*.ts"
+      instructions: |
+        - Verify Koa routes use proper HTTP methods (ctx.method checks)
+        - Check that all endpoints validate input using Zod schemas
+        - Ensure proper HTTP status codes (200/201 for success, 400/401/404/422/500 for errors)
+        - Validate proper use of ctx.body for responses and ctx.request.body for input
+        - Check for authentication/authorization middleware where required
+        - Flag routes that don't handle errors with try/catch - use Koa error middleware
+        - Ensure rate limiting is applied to public endpoints
+        - Verify CORS configuration is secure (don't use '*' in production)
+        - Check that endpoints return consistent JSON structure
+        - Validate proper logging of requests and errors
+    
+    - path: "**/middleware/**/*.ts"
+      instructions: |
+        - Verify Koa middleware follows async (ctx, next) => pattern
+        - Check that middleware calls await next() unless terminating the request
+        - Ensure error handling middleware is registered first in the chain
+        - Validate middleware doesn't mutate request body without validation
+        - Check for proper timing/logging middleware placement
+        - Flag middleware that performs heavy computation - offload to workers
+        - Ensure authentication middleware sets ctx.state.user consistently
+    
+    - path: "**/embeds/**/*.ts"
+      instructions: |
+        - Verify embeds use EmbedBuilder from Discord.js v14 (not MessageEmbed)
+        - Check embed field limits (title: 256, description: 4096, field name: 256, field value: 1024)
+        - Ensure embed color is set using proper hex number format (not string)
+        - Validate timestamp is set using Date object or ISO string
+        - Check for proper footer text and icon URL validation
+        - Flag embeds with more than 25 fields (Discord limit)
+        - Ensure thumbnail and image URLs are valid and accessible
+        - Verify author fields include proper name and optional icon/url
+    
+    - path: "**/utils/**/*.ts"
+      instructions: |
+        - Verify utility functions are pure and side-effect free where possible
+        - Check for proper TypeScript typing (avoid 'any' unless absolutely necessary)
+        - Ensure Discord.js object validation before accessing properties
+        - Validate proper error handling and meaningful error messages
+        - Check for proper null/undefined handling with optional chaining
+        - Flag utils that perform API calls - use service layer instead
+        - Ensure constants are properly typed and exported
+    
+    - path: "**/services/**/*.ts"
+      instructions: |
+        - Verify services encapsulate business logic properly
+        - Check for proper error handling and propagation
+        - Ensure async operations are properly awaited
+        - Validate services don't hold Discord.js client state - use dependency injection
+        - Check for proper logging using structured logging (not console.log)
+        - Flag services that directly manipulate DOM or Discord.js caches
+        - Ensure database operations use transactions where appropriate
+        - Verify services are testable with mockable dependencies
+    
+    - path: "**/types/**/*.ts"
+      instructions: |
+        - Verify proper TypeScript type definitions (no 'any' unless documented why)
+        - Check for proper use of interfaces vs types
+        - Ensure Discord.js types are properly extended, not redefined
+        - Validate generic types are constrained appropriately
+        - Check for proper discriminated unions for different interaction types
+        - Flag overly complex types that should be simplified
+    
+    - path: "**/api/**/*.ts"
+      instructions: |
+        - Verify proper HTTP client configuration (timeouts, retries)
+        - Check for proper error handling of network failures
+        - Ensure rate limiting respects Discord API limits (50 req/s global, per-route limits)
+        - Validate proper use of Discord REST API vs Discord.js client methods
+        - Check that API responses are properly typed
+        - Flag API calls that don't implement exponential backoff for rate limits
+        - Ensure proper handling of 429 (rate limit) responses
+    
+    - path: "**/*.ts"
+      instructions: |
+        BULLMQ JOB PATTERNS (when Worker, Queue, or job processing is detected):
+        - Verify BullMQ jobs extend proper Worker class
+        - Check that job processors handle failures gracefully with proper error types
+        - Ensure jobs implement idempotency for retry scenarios
+        - Validate proper use of job.progress() for long-running tasks
+        - Check for proper job cleanup in completed/failed handlers
+        - Flag jobs that don't set reasonable timeout values
+        - Ensure jobs log errors with sufficient context for debugging
+        - Verify jobs validate input data before processing
+        - Check that jobs don't hold Discord.js client references - use API calls instead
+        
+        ZOD VALIDATION (when z.object, z.string, or Zod schemas are detected):
+        - Verify Zod schemas properly define all required fields
+        - Check that validation errors include helpful messages using .describe() or custom error maps
+        - Ensure schemas handle edge cases (empty strings, null, undefined) with .optional(), .nullable(), .nullish()
+        - Validate Discord.js specific constraints (ID formats use z.string().regex() for snowflakes, mention patterns)
+        - Check for proper sanitization using .trim(), .toLowerCase() where appropriate
+        - Flag schemas that don't use .strict() when unexpected fields should be rejected
+        - Ensure proper use of z.infer<typeof schema> for type extraction
+        - Verify schema composition uses z.union(), z.intersection(), or z.discriminatedUnion() appropriately
+
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    drafts: false
+  
+  finishing_touches:
+    docstrings:
+      enabled: false
+    unit_tests:
+      enabled: true
+  
+  pre_merge_checks:
+    title:
+      mode: "warning"
+    issue_assessment:
+      mode: "warning"
+  
+  tools:
+    eslint:
+      enabled: true
+    gitleaks:
+      enabled: true
+    github-checks:
+      enabled: true
+      timeout_ms: 90000
+
+  auto_apply_labels: true
+  labeling_instructions:
+    - label: "bug"
+      instructions: "Apply when the PR fixes a defect, crash, incorrect behavior, or Discord API interaction issue"
+    - label: "feature"
+      instructions: "Apply when the PR introduces new commands, interactions, API endpoints, or major functionality"
+    - label: "performance"
+      instructions: "Apply when the PR improves response times, reduces memory usage, or optimizes job processing"
+    - label: "discord-api"
+      instructions: "Apply when the PR involves Discord.js API changes, interaction handling, or bot behavior"
+
+chat:
+  auto_reply: true
+  art: false
+
+knowledge_base:
+  opt_out: false
+  learnings:
+    scope: "global"
+  pull_requests:
+    scope: "auto"
+  code_guidelines:
+    enabled: true
+
+code_generation:
+  docstrings:
+    language: "en-US"
+  unit_tests:
+    path_instructions:
+      - path: "**/commands/**/*.ts"
+        instructions: "Generate tests that mock Discord.js interactions. Test command execution, permission checks, and error scenarios."
+      - path: "**/routes/**/*.ts"
+        instructions: "Generate integration tests with mocked Koa context. Test all HTTP status codes and Zod validation errors."
+      - path: "**/*.ts"
+        instructions: "For BullMQ jobs: Generate tests that mock job data. Test successful processing, retries, and failure scenarios."

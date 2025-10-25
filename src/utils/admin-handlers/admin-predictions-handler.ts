@@ -247,7 +247,7 @@ export class AdminPredictionsHandler {
     marketKey: string,
   ): string {
     const upperChoice = choice.toUpperCase();
-    let marketName = _.startCase(marketKey.replace("player_", ""));
+    const marketName = _.startCase(marketKey.replace("player_", ""));
 
     if (point) {
       return `${upperChoice} ${point} ${marketName}`;
