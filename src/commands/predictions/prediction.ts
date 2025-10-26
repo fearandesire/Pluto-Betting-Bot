@@ -1,7 +1,7 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { PaginatedMessageEmbedFields } from "@sapphire/discord.js-utilities";
 import { Subcommand } from "@sapphire/plugin-subcommands";
-import { EmbedBuilder, InteractionContextType } from "discord.js";
+import { EmbedBuilder, InteractionContextType, PermissionFlagsBits } from "discord.js";
 import _ from "lodash";
 import embedColors from "../../lib/colorsConfig.js";
 import { GetAllPredictionsFilteredStatusEnum } from "../../openapi/khronos/apis/PredictionApi.js";
@@ -15,8 +15,12 @@ import TeamInfo from "../../utils/common/TeamInfo.js";
  * User-facing prediction command for viewing personal prediction history and stats
  */
 @ApplyOptions<Subcommand.Options>({
-  name: "predictions",
+  name: "prediction",
   description: "View your predictions",
+  requiredClientPermissions: [
+    PermissionFlagsBits.SendMessages,
+    PermissionFlagsBits.EmbedLinks
+  ],
   subcommands: [
     { name: "history", chatInputRun: "handleHistory" },
     { name: "stats", chatInputRun: "handleStats" },
@@ -66,7 +70,7 @@ export class UserCommand extends Subcommand {
   public async handleHistory(
     interaction: Subcommand.ChatInputCommandInteraction,
   ) {
-    await interaction.deferReply();
+    await interaction.deferReply({ ephemeral: true });
 
     const user = interaction.user;
     const status = interaction.options.getString(
@@ -133,7 +137,7 @@ export class UserCommand extends Subcommand {
   public async handleStats(
     interaction: Subcommand.ChatInputCommandInteraction,
   ) {
-    await interaction.deferReply();
+    await interaction.deferReply({ ephemeral: true });
 
     const user = interaction.user;
 
@@ -282,7 +286,7 @@ export class UserCommand extends Subcommand {
     const upperChoice = choice.toUpperCase();
     const marketName = _.startCase(marketKey.replace("player_", ""));
 
-    if (point) {
+    if (point !== null && point !== undefined) {
       return `${upperChoice} ${point} ${marketName}`;
     }
 

@@ -1,5 +1,5 @@
 import Router from "@koa/router";
-import { logger } from 'src/utils/logging/WinstonLogger.js';
+import { logger } from '../../../logging/WinstonLogger.js';
 import { validateNotifyBetUsers } from "./notification-utils.js";
 import NotificationService from "./notifications.service.js";
 

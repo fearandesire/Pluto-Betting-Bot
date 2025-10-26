@@ -22,7 +22,7 @@ export class AdminPredictionsHandler {
   public async handleView(
     interaction: Subcommand.ChatInputCommandInteraction,
   ): Promise<void> {
-    await interaction.deferReply();
+    await interaction.deferReply({ ephemeral: true });
 
     const user = interaction.options.getUser("user", true);
 
@@ -77,7 +77,7 @@ export class AdminPredictionsHandler {
   public async handleDelete(
     interaction: Subcommand.ChatInputCommandInteraction,
   ): Promise<void> {
-    await interaction.deferReply();
+    await interaction.deferReply({ ephemeral: true });
 
     const user = interaction.options.getUser("user", true);
     const predictionIdInput = interaction.options.getString(
@@ -249,7 +249,7 @@ export class AdminPredictionsHandler {
     const upperChoice = choice.toUpperCase();
     const marketName = _.startCase(marketKey.replace("player_", ""));
 
-    if (point) {
+    if (point !== null && point !== undefined) {
       return `${upperChoice} ${point} ${marketName}`;
     }
 

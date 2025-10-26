@@ -294,7 +294,7 @@ export class AdminPropsHandler {
           template: { embeds: [embed] },
         })
           .setItems(fields)
-          .setItemsPerPage(10)
+          .setItemsPerPage(5)
           .make();
 
         await paginatedMsg.run(interaction);

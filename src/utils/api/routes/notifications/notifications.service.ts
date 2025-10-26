@@ -1,8 +1,8 @@
 // Import interfaces and potentially the Discord client type
 import { container } from '@sapphire/framework';
 import { EmbedBuilder } from 'discord.js';
-import { logger } from 'src/utils/logging/WinstonLogger.js';
 import logClr from '../../../bot_res/ColorConsole.js';
+import { logger } from '../../../logging/WinstonLogger.js';
 import MoneyFormatter from '../../common/money-formatting/money-format.js';
 import type {
 	DisplayBetNotification,
@@ -24,7 +24,7 @@ export default class NotificationService {
 		const hasPushes = data.pushes && data.pushes.length > 0;
 
 		if (!hasWinners && !hasLosers && !hasPushes) {
-			console.info('No notifications to process');
+			logger.info('No notifications to process');
 			return;
 		}
 
@@ -32,7 +32,7 @@ export default class NotificationService {
 		if (hasWinners) {
 			for (const winner of data.winners!) {
 				if (!winner.result.oldBalance || !winner.result.newBalance) {
-					console.error({
+					logger.error({
 						method: this.processBetResults.name,
 						message: `Missing balance data for user ${winner.userId}`,
 					});
@@ -133,7 +133,7 @@ export default class NotificationService {
 					.setTimestamp()
 					.setFooter({
 						text: `Pluto | Bet ID: ${betId}`,
-					}				);
+					});
 
 				await this.sendEmbed(userId, betId, embed);
 				break;
