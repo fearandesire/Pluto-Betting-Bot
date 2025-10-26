@@ -1,7 +1,7 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { PaginatedMessageEmbedFields } from "@sapphire/discord.js-utilities";
 import { Subcommand } from "@sapphire/plugin-subcommands";
-import { EmbedBuilder, InteractionContextType } from "discord.js";
+import { EmbedBuilder, InteractionContextType, PermissionFlagsBits } from "discord.js";
 import _ from "lodash";
 import embedColors from "../../lib/colorsConfig.js";
 import { GetAllPredictionsFilteredStatusEnum } from "../../openapi/khronos/apis/PredictionApi.js";
@@ -15,8 +15,12 @@ import TeamInfo from "../../utils/common/TeamInfo.js";
  * User-facing prediction command for viewing personal prediction history and stats
  */
 @ApplyOptions<Subcommand.Options>({
-  name: "predictions",
+  name: "prediction",
   description: "View your predictions",
+  requiredClientPermissions: [
+    PermissionFlagsBits.SendMessages,
+    PermissionFlagsBits.EmbedLinks
+  ],
   subcommands: [
     { name: "history", chatInputRun: "handleHistory" },
     { name: "stats", chatInputRun: "handleStats" },
@@ -66,7 +70,7 @@ export class UserCommand extends Subcommand {
   public async handleHistory(
     interaction: Subcommand.ChatInputCommandInteraction,
   ) {
-    await interaction.deferReply();
+    await interaction.deferReply({ ephemeral: true });
 
     const user = interaction.user;
     const status = interaction.options.getString(
@@ -87,17 +91,29 @@ export class UserCommand extends Subcommand {
         });
       }
 
+      // Apply status filter if provided
+      const filteredPredictions = status
+        ? usersPredictions.filter((p) => p.status === status)
+        : usersPredictions;
+
+      if (filteredPredictions.length === 0) {
+        return interaction.editReply({
+          content: `You have no ${status?.toLowerCase() || ""} predictions.`,
+        });
+      }
+
       const descStr = status ? `Filtered by: \`${status}\`` : null;
+
+      const formattedPredictions = await Promise.all(
+        filteredPredictions.map((prediction) =>
+          this.createPredictionField(prediction),
+        ),
+      );
+
       const templateEmbed = new EmbedBuilder()
         .setTitle("Your Prediction History")
         .setDescription(descStr)
         .setColor(embedColors.PlutoBlue);
-
-      const formattedPredictions = await Promise.all(
-        usersPredictions.map((prediction) =>
-          this.createPredictionField(prediction),
-        ),
-      );
 
       const paginatedMsg = new PaginatedMessageEmbedFields({
         template: { embeds: [templateEmbed] },
@@ -121,7 +137,7 @@ export class UserCommand extends Subcommand {
   public async handleStats(
     interaction: Subcommand.ChatInputCommandInteraction,
   ) {
-    await interaction.deferReply();
+    await interaction.deferReply({ ephemeral: true });
 
     const user = interaction.user;
 
@@ -164,7 +180,7 @@ export class UserCommand extends Subcommand {
           : "0.0";
 
       const embed = new EmbedBuilder()
-        .setTitle(`📊 Prediction Statistics`)
+        .setTitle('📊 Prediction Statistics')
         .setColor(embedColors.PlutoBlue)
         .setDescription(`Stats for ${user.username}`)
         .addFields(
@@ -242,7 +258,7 @@ export class UserCommand extends Subcommand {
       return emoji;
     };
 
-    const propDescription = prediction.description || outcome?.description;
+    const propDescription = outcome?.description;
     let propDetailsValue = `**Choice:** ${formattedChoice}`;
     if (propDescription && propDescription.trim() !== "") {
       propDetailsValue = `**Prop:** ${propDescription}\n${propDetailsValue}`;
@@ -268,9 +284,9 @@ export class UserCommand extends Subcommand {
     marketKey: string,
   ): string {
     const upperChoice = choice.toUpperCase();
-    let marketName = _.startCase(marketKey.replace("player_", ""));
+    const marketName = _.startCase(marketKey.replace("player_", ""));
 
-    if (point) {
+    if (point !== null && point !== undefined) {
       return `${upperChoice} ${point} ${marketName}`;
     }
 

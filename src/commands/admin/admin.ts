@@ -17,6 +17,10 @@ import { AdminPropsHandler } from "../../utils/admin-handlers/admin-props-handle
 @ApplyOptions<Subcommand.Options>({
   name: "admin",
   description: "Admin commands for managing predictions and props",
+  requiredClientPermissions: [
+    PermissionFlagsBits.SendMessages,
+    PermissionFlagsBits.EmbedLinks
+  ],
   subcommands: [
     {
       name: "predictions",

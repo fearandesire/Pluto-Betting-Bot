@@ -1,39 +1,52 @@
 import Router from "@koa/router";
-import _ from "lodash";
-import { SapDiscClient } from "../../../../index.js";
-import { isNotifyBetUsers } from "./notification-utils.js";
+import { logger } from '../../../logging/WinstonLogger.js';
+import { validateNotifyBetUsers } from "./notification-utils.js";
 import NotificationService from "./notifications.service.js";
 
 const NotificationRouter = new Router();
 
 NotificationRouter.post("/notifications/bets/results", async (ctx) => {
-  const NotificationData = ctx.request.body || {};
+  const rawPayload = ctx.request.body || {};
   console.debug({
     method: "NotificationRouter",
     message: "Notification data received.",
-    data: NotificationData,
+    data: rawPayload,
   });
-  // Check if the NotificationData is empty or if it fails validation
-  if (_.isEmpty(NotificationData) || !isNotifyBetUsers(NotificationData)) {
+
+  const validatedData = validateNotifyBetUsers(rawPayload);
+
+  if (!validatedData) {
     console.debug({
       method: "NotificationRouter",
-      message: "Invalid or no notification data was received.",
-      data: NotificationData,
+      message: "Invalid notification data was received.",
+      data: rawPayload,
     });
     ctx.body = {
       success: false,
-      error: "Invalid or no notification data was received.",
+      error: "Invalid notification data. Failed Zod validation.",
     };
-    return; // Make sure to exit the function here
+    ctx.status = 400;
+    return;
   }
-  // Proceed with processing as the data is valid
-  await new NotificationService().processBetResults(
-    NotificationData,
-    SapDiscClient,
-  );
-  ctx.body = {
-    success: true,
-  };
+
+  try {
+    await new NotificationService().processBetResults(validatedData);
+    ctx.body = {
+      success: true,
+    };
+  } catch (error) {
+    logger.error({
+      method: "NotificationRouter",
+      message: "CRITICAL: Failed to process bet result notifications",
+      error: error instanceof Error ? error.message : error,
+      critical: true,
+    });
+    ctx.body = {
+      success: false,
+      error: "Failed to process notifications",
+    };
+    ctx.status = 500;
+  }
 });
 
 export default NotificationRouter;

@@ -22,7 +22,7 @@ export class AdminPredictionsHandler {
   public async handleView(
     interaction: Subcommand.ChatInputCommandInteraction,
   ): Promise<void> {
-    await interaction.deferReply();
+    await interaction.deferReply({ ephemeral: true });
 
     const user = interaction.options.getUser("user", true);
 
@@ -77,7 +77,7 @@ export class AdminPredictionsHandler {
   public async handleDelete(
     interaction: Subcommand.ChatInputCommandInteraction,
   ): Promise<void> {
-    await interaction.deferReply();
+    await interaction.deferReply({ ephemeral: true });
 
     const user = interaction.options.getUser("user", true);
     const predictionIdInput = interaction.options.getString(
@@ -221,8 +221,8 @@ export class AdminPredictionsHandler {
 
     // Build Prop Details section
     let propDetailsValue = `**Choice:** ${formattedChoice}`;
-    if (prediction.description && prediction.description.trim() !== "") {
-      propDetailsValue = `**Prop:** ${prediction.description}\n${propDetailsValue}`;
+    if (outcome?.description && outcome.description.trim() !== "") {
+      propDetailsValue = `**Prop:** ${outcome.description}\n${propDetailsValue}`;
     }
 
     // Build Event Details section
@@ -247,9 +247,9 @@ export class AdminPredictionsHandler {
     marketKey: string,
   ): string {
     const upperChoice = choice.toUpperCase();
-    let marketName = _.startCase(marketKey.replace("player_", ""));
+    const marketName = _.startCase(marketKey.replace("player_", ""));
 
-    if (point) {
+    if (point !== null && point !== undefined) {
       return `${upperChoice} ${point} ${marketName}`;
     }
 
