@@ -5,7 +5,7 @@ import {
 } from '@kh-openapi';
 import { container } from '@sapphire/framework';
 import { isAxiosError } from 'axios';
-import type { Channel, TextChannel, Message, MessageCreateOptions } from 'discord.js';
+import type { TextChannel, Message, MessageCreateOptions } from 'discord.js';
 import { DiscordConfigEnums } from '../../common/interfaces/kh-pluto/kh-pluto.interface.js';
 import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js';
 

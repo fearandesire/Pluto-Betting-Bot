@@ -135,7 +135,7 @@ export class PropPostingHandler {
       new TeamInfo().getTeamInfo(prop.away_team),
     ]);
 
-    const title = `🎯 Accuracy Challenge`;
+    const title = '🎯 Accuracy Challenge';
 
     const descriptionLines = [
       `### **${prop.description}** • O/U **\`${prop.point}\`** ${marketName}\n`,  
@@ -180,13 +180,13 @@ export class PropPostingHandler {
   ): ActionRowBuilder<ButtonBuilder> {
     const overButton = new ButtonBuilder()
       .setCustomId(`prop_${prop.over.outcome_uuid}`)
-      .setLabel(`Over`)
+      .setLabel('Over')
       .setEmoji("⬆️")
       .setStyle(ButtonStyle.Success);
 
     const underButton = new ButtonBuilder()
       .setCustomId(`prop_${prop.under.outcome_uuid}`)
-      .setLabel(`Under`)
+      .setLabel('Under')
       .setEmoji("⬇️")
       .setStyle(ButtonStyle.Danger);
 

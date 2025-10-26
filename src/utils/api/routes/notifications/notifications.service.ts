@@ -1,13 +1,16 @@
 // Import interfaces and potentially the Discord client type
-import type { SapphireClient } from '@sapphire/framework';
-import { type ColorResolvable, EmbedBuilder } from 'discord.js';
+import { container } from '@sapphire/framework';
+import { EmbedBuilder } from 'discord.js';
 import logClr from '../../../bot_res/ColorConsole.js';
+import { logger } from '../../../logging/WinstonLogger.js';
 import MoneyFormatter from '../../common/money-formatting/money-format.js';
 import type {
 	DisplayBetNotification,
 	DisplayBetNotificationLost,
+	DisplayBetNotificationPush,
 	DisplayBetNotificationWon,
 	DisplayResultLost,
+	DisplayResultPush,
 	DisplayResultWon,
 	NotifyBetUsers,
 } from './notifications.interface.js';
@@ -15,17 +18,21 @@ import type {
 export default class NotificationService {
 	async processBetResults(
 		data: NotifyBetUsers,
-		client: SapphireClient,
 	): Promise<void> {
-		if (!data || (data.winners.length === 0 && data.losers.length === 0)) {
-			console.info('No notifications to process');
+		const hasWinners = data.winners && data.winners.length > 0;
+		const hasLosers = data.losers && data.losers.length > 0;
+		const hasPushes = data.pushes && data.pushes.length > 0;
+
+		if (!hasWinners && !hasLosers && !hasPushes) {
+			logger.info('No notifications to process');
 			return;
 		}
 
-		if (data.winners.length > 0) {
-			for (const winner of data.winners) {
+		// Process winners (only if not null and has items)
+		if (hasWinners) {
+			for (const winner of data.winners!) {
 				if (!winner.result.oldBalance || !winner.result.newBalance) {
-					console.error({
+					logger.error({
 						method: this.processBetResults.name,
 						message: `Missing balance data for user ${winner.userId}`,
 					});
@@ -42,8 +49,6 @@ export default class NotificationService {
 					payout: displayPayout,
 					profit: displayProfit,
 				} = formattedAmounts;
-				// Now, instead of overwriting the original numeric properties,
-				// we add them to a new displayResult object
 				const displayResult: DisplayResultWon = {
 					...winner.result,
 					displayBetAmount,
@@ -58,12 +63,13 @@ export default class NotificationService {
 				};
 
 				// Use displayWinner for user notifications
-				await this.notifyUser(displayWinner, client); // Make sure notifyUser can handle DisplayBetNotificationWon
+				await this.notifyUser(displayWinner);
 			}
 		}
 
-		if (data.losers.length > 0) {
-			for (const loser of data.losers) {
+		// Process losers (only if not null and has items)
+		if (hasLosers) {
+			for (const loser of data.losers!) {
 				const displayResult: DisplayResultLost = {
 					...loser.result,
 					displayBetAmount: MoneyFormatter.toUSD(loser.result.betAmount),
@@ -74,88 +80,131 @@ export default class NotificationService {
 					displayResult,
 				};
 
-				// Use displayLoser for user notifications
-				await this.notifyUser(displayLoser, client); // Make sure notifyUser can handle DisplayBetNotificationLost
+				await this.notifyUser(displayLoser);
+			}
+		}
+
+		// Process pushes (only if present and has items)
+		if (hasPushes) {
+			for (const push of data.pushes!) {
+				const displayResult: DisplayResultPush = {
+					...push.result,
+					displayBetAmount: MoneyFormatter.toUSD(push.result.betAmount),
+				};
+
+				const displayPush: DisplayBetNotificationPush = {
+					...push,
+					displayResult,
+				};
+
+				await this.notifyUser(displayPush);
 			}
 		}
 	}
 
-	async notifyUser(betData: DisplayBetNotification, client: SapphireClient) {
+	async notifyUser(betData: DisplayBetNotification) {
 		const { userId, betId, result, displayResult } = betData;
 
-		const color: ColorResolvable = '#57f287';
+		switch (result.outcome) {
+			case 'won': {
+				const {
+					team,
+					displayBetAmount,
+					displayPayout,
+					displayProfit,
+					displayNewBalance,
+					displayOldBalance,
+				} = displayResult as DisplayResultWon;
 
-		if ('profit' in result && 'displayProfit' in displayResult) {
-			const {
-				team,
-				displayBetAmount,
-				displayPayout,
-				displayProfit,
-				displayNewBalance,
-				displayOldBalance,
-			} = {
-				...displayResult,
-			};
+				const embed = new EmbedBuilder()
+					.setTitle('🎉 Bet Won! 🎉')
+					.setColor('#57f287')
+					.addFields(
+						{ name: '🎯 Team Selected', value: team, inline: true },
+						{ name: '💰 Bet Amount', value: displayBetAmount, inline: true },
+						{ name: '💫 Profit', value: displayProfit, inline: true },
+						{ name: '🏆 Total Payout', value: displayPayout, inline: false },
+						{
+							name: '📊 Balance Update',
+							value: `${displayOldBalance} → ${displayNewBalance}`,
+							inline: false,
+						},
+					)
+					.setTimestamp()
+					.setFooter({
+						text: `Pluto | Bet ID: ${betId}`,
+					});
 
-			const embed = new EmbedBuilder()
-				.setTitle('🎉 Bet Won! 🎉')
-				.setColor(color)
-				.addFields(
-					{ name: '🎯 Team Selected', value: team, inline: true },
-					{ name: '💰 Bet Amount', value: displayBetAmount, inline: true },
-					{ name: '💫 Profit', value: displayProfit, inline: true },
-					{ name: '🏆 Total Payout', value: displayPayout, inline: false },
-					{
-						name: '📊 Balance Update',
-						value: `${displayOldBalance} → ${displayNewBalance}`,
-						inline: false,
-					},
-				)
-				.setTimestamp()
-				.setFooter({
-					text: `Pluto | Bet ID: ${betId}`,
-				});
-
-			try {
-				await client.users.send(userId, {
-					embeds: [embed],
-				});
-			} catch (err) {
-				logClr({
-					text: `Failed to DM ${userId} | Bet ID: ${betId}\nAccount Privacy issue, Bot blocked, or no longer in the server.`,
-					color: 'red',
-					status: 'error',
-				});
+				await this.sendEmbed(userId, betId, embed);
+				break;
 			}
-		} else if ('betAmount' in result) {
-			const { team, displayBetAmount } = {
-				team: result.team,
-				displayBetAmount: displayResult.displayBetAmount,
-			};
 
-			const embed = new EmbedBuilder()
-				.setTitle('❌ Bet Lost')
-				.setColor('#ff6961')
-				.addFields(
-					{ name: '🎯 Team Selected', value: team, inline: true },
-					{ name: '💸 Lost', value: displayBetAmount, inline: true },
-				)
-				.setTimestamp()
-				.setFooter({
-					text: `Pluto | Bet ID: ${betId}`,
-				});
+			case 'push': {
+				const { team, displayBetAmount } = displayResult as DisplayResultPush;
 
-			try {
-				await client.users.send(userId, {
-					embeds: [embed],
-				});
-			} catch (err) {
-				logClr({
-					text: `Failed to DM ${userId} | Bet ID: ${betId}\nAccount Privacy issue, Bot blocked, or no longer in the server.`,
-					color: 'red',
-					status: 'error',
-				});
+				const embed = new EmbedBuilder()
+					.setTitle('🔄 Bet Refunded - Tie Game')
+					.setColor('#ffa500')
+					.addFields(
+						{ name: '🎯 Team Selected', value: team, inline: true },
+						{ name: '💵 Refunded Amount', value: displayBetAmount, inline: true },
+						{
+							name: 'ℹ️ Reason',
+							value: 'The match ended in a tie. Your bet has been refunded.',
+							inline: false,
+						},
+					)
+					.setTimestamp()
+					.setFooter({
+						text: `Pluto | Bet ID: ${betId}`,
+					});
+
+				await this.sendEmbed(userId, betId, embed);
+				break;
 			}
+
+			case 'lost': {
+				const { team, displayBetAmount } = displayResult as DisplayResultLost;
+
+				const embed = new EmbedBuilder()
+					.setTitle('❌ Bet Lost')
+					.setColor('#ff6961')
+					.addFields(
+						{ name: '🎯 Team Selected', value: team, inline: true },
+						{ name: '💸 Lost', value: displayBetAmount, inline: true },
+					)
+					.setTimestamp()
+					.setFooter({
+						text: `Pluto | Bet ID: ${betId}`,
+					});
+
+				await this.sendEmbed(userId, betId, embed);
+				break;
+			}
+		}
+	}
+
+	private async sendEmbed(userId: string, betId: number, embed: EmbedBuilder): Promise<void> {
+		const client = container.client;
+
+		if (!client) {
+			logger.error({
+				method: this.sendEmbed.name,
+				message: 'Discord client not available',
+				userId,
+				betId,
+			});
+			return;
+		}
+
+		try {
+			await client.users.send(userId, { embeds: [embed] });
+		} catch (err) {
+			logClr({
+				text: `Failed to DM ${userId} | Bet ID: ${betId}\nAccount Privacy issue, Bot blocked, or no longer in the server.`,
+				color: 'red',
+				status: 'error',
+			});
 		}
 	}
 }
