@@ -8,6 +8,9 @@ import type { IOddsField } from './matchups.interface.js';
 export async function prepareAndFormat(matchups: Match[], thumbnail: string, guildId?: string) {
 	const oddsFields: IOddsField[] = [];
 	for await (const match of Object.values(matchups)) {
+		if (match.complete === true) {
+			continue;
+		}
 		const hTeam = `${match.home_team}`;
 		const aTeam = `${match.away_team}`;
 		const hOdds = match.home_team_odds;
