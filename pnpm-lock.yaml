@@ -1289,8 +1289,8 @@ packages:
   '@messageformat/parser@5.1.1':
     resolution: {integrity: sha512-3p0YRGCcTUCYvBKLIxtDDyrJ0YijGIwrTRu1DT8gIviIDZru8H23+FkY6MJBzM1n9n20CiM4VeDYuBsrrwnLjg==}
 
-  '@messageformat/runtime@3.0.1':
-    resolution: {integrity: sha512-6RU5ol2lDtO8bD9Yxe6CZkl0DArdv0qkuoZC+ZwowU+cdRlVE1157wjCmlA5Rsf1Xc/brACnsZa5PZpEDfTFFg==}
+  '@messageformat/runtime@3.0.2':
+    resolution: {integrity: sha512-dkIPDCjXcfhSHgNE1/qV6TeczQZR59Yx0xXeafVKgK3QVWoxc38ljwpksUpnzCGvN151KUbCJTDZVmahtf1YZw==}
 
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.3':
     resolution: {integrity: sha512-QZHtlVgbAdy2zAqNA9Gu1UpIuI8Xvsd1v8ic6B2pZmeFnFcMWiPLfWXh7TVw4eGEZ/C9TH281KwhVoeQUKbyjw==}
@@ -4582,6 +4582,7 @@ packages:
   keygrip@1.1.0:
     resolution: {integrity: sha512-iYSchDJ+liQ8iwbSI2QqsQOvqv58eJCEanyJPJi+Khyu8smkcKSFUCbPwzFcL7YVtZ6eONjqRX/38caJ7QjRAQ==}
     engines: {node: '>= 0.6'}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
@@ -5163,8 +5164,8 @@ packages:
     resolution: {integrity: sha512-nK28WOo+QIjBkDduTINE4JkF/UJJKyf2EJxvJKfblDpyg0Q+pkOHNTL0Qwy6NP6FhE/EnzV73BxxqcJaXY9anw==}
     engines: {node: '>= 0.4'}
 
-  ofetch@1.4.1:
-    resolution: {integrity: sha512-QZj2DfGplQAr2oj9KzceK9Hwz6Whxazmn85yYeVuS3u9XTMOGMRx0kO95MQ+vLsj/S/NwBDMMLU5hpxvI6Tklw==}
+  ofetch@1.5.0:
+    resolution: {integrity: sha512-A7llJ7eZyziA5xq9//3ZurA8OhFqtS99K5/V1sLBJ5j137CM/OAjlbA/TEJXBuOWwOfLqih+oH5U3ran4za1FQ==}
 
   ohash@1.1.6:
     resolution: {integrity: sha512-TBu7PtV8YkAZn0tSxobKY2n2aAQva936lhRrj6957aDaCf9IEtqsKbgMzXE/F/sjqYOwmrukeORHNLe5glk7Cg==}
@@ -7740,7 +7741,7 @@ snapshots:
       '@messageformat/date-skeleton': 1.1.0
       '@messageformat/number-skeleton': 1.2.0
       '@messageformat/parser': 5.1.1
-      '@messageformat/runtime': 3.0.1
+      '@messageformat/runtime': 3.0.2
       make-plural: 7.4.0
       safe-identifier: 0.4.2
 
@@ -7752,7 +7753,7 @@ snapshots:
     dependencies:
       moo: 0.5.2
 
-  '@messageformat/runtime@3.0.1':
+  '@messageformat/runtime@3.0.2':
     dependencies:
       make-plural: 7.4.0
 
@@ -9486,7 +9487,7 @@ snapshots:
       convert-gitmoji: 0.1.5
       mri: 1.2.0
       node-fetch-native: 1.6.7
-      ofetch: 1.4.1
+      ofetch: 1.5.0
       open: 10.2.0
       pathe: 1.1.2
       pkg-types: 1.3.1
@@ -12001,7 +12002,7 @@ snapshots:
       has-symbols: 1.1.0
       object-keys: 1.1.1
 
-  ofetch@1.4.1:
+  ofetch@1.5.0:
     dependencies:
       destr: 2.0.5
       node-fetch-native: 1.6.7
