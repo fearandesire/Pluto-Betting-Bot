@@ -8,6 +8,7 @@ import { BetsCacheService } from '../../utils/api/common/bets/BetsCacheService.j
 import BettingValidation from '../../utils/betting/betting-validation.js';
 import { CacheManager } from '../../utils/cache/cache-manager.js';
 import { ErrorEmbeds } from '../../utils/common/errors/global.js';
+import env from '../../lib/startup/env.js';
 
 @ApplyOptions<Command.Options>({
 	description: '🎲 Place a bet on a match',
@@ -50,6 +51,12 @@ export class UserCommand extends Command {
 		interaction: Command.ChatInputCommandInteraction,
 	) {
 		await interaction.deferReply();
+		
+		if (env.MAINTENANCE_MODE) {
+			const errEmbed = await ErrorEmbeds.maintenanceMode();
+			return interaction.editReply({ embeds: [errEmbed] });
+		}
+
 		let team = interaction.options.getString('team', true);
 		const amount = interaction.options.getInteger('amount', true);
 		const validator = new BettingValidation();

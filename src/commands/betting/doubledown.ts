@@ -3,6 +3,7 @@ import { Command } from '@sapphire/framework';
 import { EmbedBuilder, InteractionContextType } from 'discord.js';
 import embedColors from '../../lib/colorsConfig.js';
 import { ApiModules } from '../../lib/interfaces/api/api.interface.js';
+import env from '../../lib/startup/env.js';
 import { BetslipManager } from '../../utils/api/Khronos/bets/BetslipsManager.js';
 import BetslipWrapper from '../../utils/api/Khronos/bets/betslip-wrapper.js';
 import { ApiErrorHandler } from '../../utils/api/Khronos/error-handling/ApiErrorHandler.js';
@@ -40,6 +41,12 @@ export class UserCommand extends Command {
 		interaction: Command.ChatInputCommandInteraction,
 	) {
 		await interaction.deferReply();
+		
+		if (env.MAINTENANCE_MODE) {
+			const errEmbed = await ErrorEmbeds.maintenanceMode();
+			return interaction.editReply({ embeds: [errEmbed] });
+		}
+
 		// Ensure user is Patreon member
 		const isMember = await PatreonFacade.memberDetails(interaction.user.id);
 		if (!isMember || isApiError(isMember)) {

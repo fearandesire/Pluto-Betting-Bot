@@ -5,6 +5,8 @@ import { BetslipManager } from '../../utils/api/Khronos/bets/BetslipsManager.js'
 import BetslipWrapper from '../../utils/api/Khronos/bets/betslip-wrapper.js';
 import { BetsCacheService } from '../../utils/api/common/bets/BetsCacheService.js';
 import { CacheManager } from '../../utils/cache/cache-manager.js';
+import { ErrorEmbeds } from '../../utils/common/errors/global.js';
+import env from '../../lib/startup/env.js';
 
 @ApplyOptions<Command.Options>({
 	description:
@@ -30,6 +32,12 @@ export class UserCommand extends Command {
 		interaction: Command.ChatInputCommandInteraction,
 	) {
 		await interaction.deferReply();
+		
+		if (env.MAINTENANCE_MODE) {
+			const errEmbed = await ErrorEmbeds.maintenanceMode();
+			return interaction.editReply({ embeds: [errEmbed] });
+		}
+
 		const userid = interaction.user.id;
 		const betId = interaction.options.getInteger('betid')!;
 		return new BetslipManager(

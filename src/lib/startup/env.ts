@@ -29,6 +29,7 @@ const envSchema = z.object({
 	LOKI_URL: z.string(),
 	LOKI_USER: z.string(),
 	LOKI_PASS: z.string(),
+	MAINTENANCE_MODE: z.boolean(),
 });
 
 // Parse and validate the environment variables
@@ -59,6 +60,7 @@ const env = envSchema.parse({
 	LOKI_URL: process.env.LOKI_URL,
 	LOKI_USER: process.env.LOKI_USER,
 	LOKI_PASS: process.env.LOKI_PASS,
+	MAINTENANCE_MODE: process.env.MAINTENANCE_MODE === 'true',
 });
 
 export default env;

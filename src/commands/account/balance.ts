@@ -5,6 +5,8 @@ import {
 	AccountManager,
 	AccountsWrapper,
 } from '../../utils/api/requests/accounts/AccountManager.js';
+import { ErrorEmbeds } from '../../utils/common/errors/global.js';
+import env from '../../lib/startup/env.js';
 
 @ApplyOptions<Command.Options>({
 	description: '🏦 View the balance of a user',
@@ -31,6 +33,12 @@ export class UserCommand extends Command {
 		interaction: Command.ChatInputCommandInteraction,
 	) {
 		await interaction.deferReply();
+		
+		if (env.MAINTENANCE_MODE) {
+			const errEmbed = await ErrorEmbeds.maintenanceMode();
+			return interaction.editReply({ embeds: [errEmbed] });
+		}
+
 		const targetUser = interaction.options.getUser('user') ?? interaction.user;
 		const targetId = targetUser.id;
 		return new AccountManager(new AccountsWrapper()).getBalance(

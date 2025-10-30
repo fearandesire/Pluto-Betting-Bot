@@ -5,6 +5,8 @@ import {
 	AccountManager,
 	AccountsWrapper,
 } from '../../utils/api/requests/accounts/AccountManager.js';
+import { ErrorEmbeds } from '../../utils/common/errors/global.js';
+import env from '../../lib/startup/env.js';
 
 @ApplyOptions<Command.Options>({
 	description: '📊 View the current betting leaderboard',
@@ -23,6 +25,12 @@ export class UserCommand extends Command {
 		interaction: Command.ChatInputCommandInteraction,
 	) {
 		await interaction.deferReply({ ephemeral: false });
+		
+		if (env.MAINTENANCE_MODE) {
+			const errEmbed = await ErrorEmbeds.maintenanceMode();
+			return interaction.editReply({ embeds: [errEmbed] });
+		}
+
 		return new AccountManager(new AccountsWrapper()).getLeaderboardData(
 			interaction,
 		);

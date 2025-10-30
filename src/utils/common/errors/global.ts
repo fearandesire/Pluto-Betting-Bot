@@ -57,4 +57,11 @@ export class ErrorEmbeds {
 	static unknownErr(description: string) {
 		return ErrorEmbeds.createErrorEmbed('Unknown Error', description);
 	}
+
+	static maintenanceMode() {
+		return ErrorEmbeds.createErrorEmbed(
+			'🚧 Maintenance Mode',
+			'Pluto is currently undergoing large updates. This feature is unavailable. Please check back soon as it\'s under maintenance.',
+		);
+	}
 }
