@@ -2,6 +2,7 @@ import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
 import { InteractionContextType } from 'discord.js';
 import { ApiModules } from '../../lib/interfaces/api/api.interface.js';
+import env from '../../lib/startup/env.js';
 import { ApiErrorHandler } from '../../utils/api/Khronos/error-handling/ApiErrorHandler.js';
 import GuildWrapper from '../../utils/api/Khronos/guild/guild-wrapper.js';
 import MatchApiWrapper from '../../utils/api/Khronos/matches/matchApiWrapper.js';
@@ -25,6 +26,12 @@ export class UserCommand extends Command {
 		interaction: Command.ChatInputCommandInteraction,
 	) {
 		await interaction.deferReply();
+		
+		if (env.MAINTENANCE_MODE) {
+			const errEmbed = await ErrorEmbeds.maintenanceMode();
+			return interaction.editReply({ embeds: [errEmbed] });
+		}
+
 		const guildId = interaction.guild!.id;
 		const embedThumbnail = interaction.guild!.iconURL({ extension: 'jpg' });
 		if (!embedThumbnail)
