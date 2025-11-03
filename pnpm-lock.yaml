@@ -15,8 +15,8 @@ importers:
         specifier: ^6.14.0
         version: 6.14.0(@bull-board/ui@6.14.0)
       '@bull-board/koa':
-        specifier: ^6.7.10
-        version: 6.12.7(@babel/core@7.28.4)(@types/koa@3.0.1)(handlebars@4.7.8)(lodash@4.17.21)
+        specifier: ^6.14.0
+        version: 6.14.0(@babel/core@7.28.4)(@types/koa@3.0.1)(handlebars@4.7.8)(lodash@4.17.21)
       '@bull-board/ui':
         specifier: ^6.14.0
         version: 6.14.0
@@ -563,21 +563,13 @@ packages:
   '@borewit/text-codec@0.1.1':
     resolution: {integrity: sha512-5L/uBxmjaCIX5h8Z+uu+kA9BQLkc/Wl06UGR5ajNRxu+/XjonB5i8JpgFMrPj3LXTCPA0pv8yxUvbUi+QthGGA==}
 
-  '@bull-board/api@6.12.7':
-    resolution: {integrity: sha512-mI/akvhI937/IPB9+l2NN18Vd+RivCoNLIJ3h3ZxNrp3xetjX5R90l/wuHt5SG837sLkChgMhRVA2mJAiGypJA==}
-    peerDependencies:
-      '@bull-board/ui': 6.12.7
-
   '@bull-board/api@6.14.0':
     resolution: {integrity: sha512-oMDwXwoPn0RsdZ3Y68/bOErZ/qGZE5H97vgE/Pc8Uul/OHajlvajKW4NV+ZGTix82liUfH9CkjYx7PpwvBWhxg==}
     peerDependencies:
       '@bull-board/ui': 6.14.0
 
-  '@bull-board/koa@6.12.7':
-    resolution: {integrity: sha512-hamx3lHxmJVksfqb7VYPVMu4JlC5PbbGD6sby4aLm0xvikhHACOHFzQUM0IBHjcD1vnXAAQMUwEkIMkTg/651w==}
-
-  '@bull-board/ui@6.12.7':
-    resolution: {integrity: sha512-EJvS84Ob661ASIjGH58RpKLb7upPM+kS9I7PdezS67Dtab1V8cq10E+Sb2WIvXVLaGgQU8eITiLBjgWze2uWsg==}
+  '@bull-board/koa@6.14.0':
+    resolution: {integrity: sha512-EQ/BXQiwSsSOphDE/ZkMIi+XXpZ+NL416XtWwaXd2r9aNYz8TxNUIqaj/kHGNjYthAmP9WA3xl5bzo0DVweeCA==}
 
   '@bull-board/ui@6.14.0':
     resolution: {integrity: sha512-5yqfS9CwWR8DBxpReIbqv/VSPFM/zT4KZ75keyApMiejasRC2joaHqEzYWlMCjkMycbNNCvlQNlTbl+C3dE/dg==}
@@ -6996,20 +6988,15 @@ snapshots:
 
   '@borewit/text-codec@0.1.1': {}
 
-  '@bull-board/api@6.12.7(@bull-board/ui@6.12.7)':
-    dependencies:
-      '@bull-board/ui': 6.12.7
-      redis-info: 3.1.0
-
   '@bull-board/api@6.14.0(@bull-board/ui@6.14.0)':
     dependencies:
       '@bull-board/ui': 6.14.0
       redis-info: 3.1.0
 
-  '@bull-board/koa@6.12.7(@babel/core@7.28.4)(@types/koa@3.0.1)(handlebars@4.7.8)(lodash@4.17.21)':
+  '@bull-board/koa@6.14.0(@babel/core@7.28.4)(@types/koa@3.0.1)(handlebars@4.7.8)(lodash@4.17.21)':
     dependencies:
-      '@bull-board/api': 6.12.7(@bull-board/ui@6.12.7)
-      '@bull-board/ui': 6.12.7
+      '@bull-board/api': 6.14.0(@bull-board/ui@6.14.0)
+      '@bull-board/ui': 6.14.0
       '@koa/bodyparser': 5.1.2(koa@3.1.1)
       '@ladjs/koa-views': 9.0.0(@babel/core@7.28.4)(@types/koa@3.0.1)(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)
       ejs: 3.1.10
@@ -7067,10 +7054,6 @@ snapshots:
       - velocityjs
       - walrus
       - whiskers
-
-  '@bull-board/ui@6.12.7':
-    dependencies:
-      '@bull-board/api': 6.12.7(@bull-board/ui@6.12.7)
 
   '@bull-board/ui@6.14.0':
     dependencies:
