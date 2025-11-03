@@ -37,7 +37,7 @@ importers:
         version: 2.25.0(@types/node@24.9.1)
       '@pluto-khronos/types':
         specifier: ^0.2.4
-        version: 0.2.4(discord.js@14.24.0)
+        version: 0.2.4(discord.js@14.24.2)
       '@sapphire/decorators':
         specifier: ^6.1.1
         version: 6.2.0
@@ -120,8 +120,8 @@ importers:
         specifier: ^0.38.31
         version: 0.38.31
       discord.js:
-        specifier: ^14.24.0
-        version: 14.24.0
+        specifier: ^14.24.2
+        version: 14.24.2
       dotenv:
         specifier: 17.2.2
         version: 17.2.2
@@ -3381,8 +3381,8 @@ packages:
   discord-api-types@0.38.31:
     resolution: {integrity: sha512-kC94ANsk8ackj8ENTuO8joTNEL0KtymVhHy9dyEC/s4QAZ7GCx40dYEzQaadyo8w+oP0X8QydE/nzAWRylTGtQ==}
 
-  discord.js@14.24.0:
-    resolution: {integrity: sha512-KNq/ekT8bsmT3ZAfVre8cPbl+DfVYSdlLnDmGZPoz7Cw21LYeWHllRA9MivqNq5b1GPGAxGvyUN1vxbTb/PQWw==}
+  discord.js@14.24.2:
+    resolution: {integrity: sha512-VMEDbmguRdX/EeMaTsf9Mb0IQA90WdYF2cn4QDfslQFXgQ6LFtmlPn0FSotnS0kcFbFp+JBSIxtnF+bnAHG/hQ==}
     engines: {node: '>=18'}
 
   dlv@1.1.3:
@@ -5172,8 +5172,8 @@ packages:
     resolution: {integrity: sha512-nK28WOo+QIjBkDduTINE4JkF/UJJKyf2EJxvJKfblDpyg0Q+pkOHNTL0Qwy6NP6FhE/EnzV73BxxqcJaXY9anw==}
     engines: {node: '>= 0.4'}
 
-  ofetch@1.5.0:
-    resolution: {integrity: sha512-A7llJ7eZyziA5xq9//3ZurA8OhFqtS99K5/V1sLBJ5j137CM/OAjlbA/TEJXBuOWwOfLqih+oH5U3ran4za1FQ==}
+  ofetch@1.5.1:
+    resolution: {integrity: sha512-2W4oUZlVaqAPAil6FUg/difl6YhqhUR7x2eZY4bQCko22UXg3hptq9KLQdqFClV+Wu85UX7hNtdGTngi/1BxcA==}
 
   ohash@1.1.6:
     resolution: {integrity: sha512-TBu7PtV8YkAZn0tSxobKY2n2aAQva936lhRrj6957aDaCf9IEtqsKbgMzXE/F/sjqYOwmrukeORHNLe5glk7Cg==}
@@ -8226,9 +8226,9 @@ snapshots:
 
   '@pkgr/core@0.2.9': {}
 
-  '@pluto-khronos/types@0.2.4(discord.js@14.24.0)':
+  '@pluto-khronos/types@0.2.4(discord.js@14.24.2)':
     dependencies:
-      discord.js: 14.24.0
+      discord.js: 14.24.2
       resolve-team: 2.0.4
       zod: 4.1.11
 
@@ -9504,7 +9504,7 @@ snapshots:
       convert-gitmoji: 0.1.5
       mri: 1.2.0
       node-fetch-native: 1.6.7
-      ofetch: 1.5.0
+      ofetch: 1.5.1
       open: 10.2.0
       pathe: 1.1.2
       pkg-types: 1.3.1
@@ -9869,7 +9869,7 @@ snapshots:
 
   discord-api-types@0.38.31: {}
 
-  discord.js@14.24.0:
+  discord.js@14.24.2:
     dependencies:
       '@discordjs/builders': 1.13.0
       '@discordjs/collection': 1.5.3
@@ -12019,7 +12019,7 @@ snapshots:
       has-symbols: 1.1.0
       object-keys: 1.1.1
 
-  ofetch@1.5.0:
+  ofetch@1.5.1:
     dependencies:
       destr: 2.0.5
       node-fetch-native: 1.6.7
