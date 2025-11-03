@@ -107,7 +107,7 @@
 		"zod-validation-error": "^4.0.2"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "2.3.1",
+		"@biomejs/biome": "2.3.3",
 		"@biomejs/cli-win32-x64": "^2.3.2",
 		"@sapphire/cli": "^1.9.3",
 		"@sapphire/prettier-config": "^2.0.0",
