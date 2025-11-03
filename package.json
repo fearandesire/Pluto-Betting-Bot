@@ -117,7 +117,7 @@
 		"@types/color": "^4.2.0",
 		"@types/jest": "^30.0.0",
 		"@types/koa": "^3.0.1",
-		"@types/koa-basic-auth": "^2.0.6",
+		"@types/koa-basic-auth": "^2.0.7",
 		"@types/koa-bodyparser": "^4.3.13",
 		"@types/koa-logger": "^3.1.5",
 		"@types/koa__cors": "^5.0.1",

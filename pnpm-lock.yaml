@@ -247,8 +247,8 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       '@types/koa-basic-auth':
-        specifier: ^2.0.6
-        version: 2.0.6
+        specifier: ^2.0.7
+        version: 2.0.7
       '@types/koa-bodyparser':
         specifier: ^4.3.13
         version: 4.3.13
@@ -2274,8 +2274,8 @@ packages:
   '@types/keygrip@1.0.6':
     resolution: {integrity: sha512-lZuNAY9xeJt7Bx4t4dx0rYCDqGPW8RXhQZK1td7d4H6E9zYbLoOtjBvfwdTKpsyxQI/2jv+armjX/RW+ZNpXOQ==}
 
-  '@types/koa-basic-auth@2.0.6':
-    resolution: {integrity: sha512-1/FdT3KiHIkVf+TxYiPPey0wnPBzuts6lz/Obskgo9ZY485J02+uI6STnD114L2iG+Wi5MBqU7EYNphKdKwZWQ==}
+  '@types/koa-basic-auth@2.0.7':
+    resolution: {integrity: sha512-iCzNlVkrYlyYM/KaI7dz/6UWJue9I2QFVhn4CNT5Xj1iQ9ALHWhRl8hlLe0Ifmki346hGA46V52mhd9Ky+5lsA==}
 
   '@types/koa-bodyparser@4.3.13':
     resolution: {integrity: sha512-yW9afsDnV1ymnhMBfAlzsKZ45sYnvIlTRS+eF5MUZOQ8ePIIj3ajwi+9b4a0vdyYvh6uJKYibU8R1zrUIpCmCA==}
@@ -8738,7 +8738,7 @@ snapshots:
 
   '@types/keygrip@1.0.6': {}
 
-  '@types/koa-basic-auth@2.0.6':
+  '@types/koa-basic-auth@2.0.7':
     dependencies:
       '@types/koa': 3.0.1
 
