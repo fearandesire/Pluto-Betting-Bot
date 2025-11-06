@@ -4,7 +4,7 @@ services:
     build:
       context: .
     volumes:
-      - ./Khronos-Swagger-Spec-v1.json:/app/Khronos-Swagger-Spec-v1.json
+    - ./spec/khronos-swagger-spec-v1.json:/app/spec/khronos-swagger-spec-v1.json
     ports:
       - 2090:2090
     networks:

@@ -1,50 +1,84 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.2.3/schema.json",
-	"vcs": {
-		"enabled": true,
-		"clientKind": "git",
-		"useIgnoreFile": true
-	},
-	"files": {
-		"ignoreUnknown": false,
-		"ignore": [
-			"node_modules/**/*",
-			"dist/**/*",
-			"src/openapi/**/*",
-			"Khronos-Swagger-Spec-v1.json"
-		]
-	},
+	"$schema": "https://biomejs.dev/schemas/2.3.3/schema.json",
 	"formatter": {
 		"enabled": true,
-		"indentStyle": "tab"
-	},
-	"organizeImports": {
-		"enabled": true
+		"formatWithErrors": true,
+		"indentStyle": "tab",
+		"indentWidth": 4,
+		"lineEnding": "lf",
+		"lineWidth": 80,
+		"attributePosition": "auto"
 	},
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"recommended": true,
-			"suspicious": {
-				"noExplicitAny": "off"
-			},
-			"style": {
-				"noNonNullAssertion": "off"
-			},
-			"security": {
-				"noGlobalEval": "off"
-			},
+			"recommended": false,
 			"complexity": {
-				"noStaticOnlyClass": "off"
+				"noBannedTypes": "error",
+				"noUselessThisAlias": "error",
+				"noUselessTypeConstraint": "error",
+				"useArrowFunction": "off"
 			},
 			"correctness": {
-				"noUnusedImports": "error"
+				"noPrecisionLoss": "error",
+				"noUnusedVariables": "error"
+			},
+			"style": {
+				"noNamespace": "error",
+				"useAsConstAssertion": "error",
+				"useBlockStatements": "off"
+			},
+			"suspicious": {
+				"noExplicitAny": "off",
+				"noExtraNonNullAssertion": "error",
+				"noMisleadingInstantiator": "error",
+				"noUnsafeDeclarationMerging": "error"
 			}
 		}
 	},
 	"javascript": {
 		"formatter": {
-			"quoteStyle": "single"
+			"jsxQuoteStyle": "double",
+			"quoteProperties": "asNeeded",
+			"trailingCommas": "all",
+			"semicolons": "asNeeded",
+			"arrowParentheses": "always",
+			"bracketSpacing": true,
+			"bracketSameLine": false,
+			"quoteStyle": "single",
+			"attributePosition": "auto"
+		},
+		"parser": {
+			"unsafeParameterDecoratorsEnabled": true
 		}
+	},
+	"files": {
+		"ignoreUnknown": true,
+		"includes": [
+			"src/**/*.ts",
+			"!*.env.d.ts",
+			"!src/env.d.ts",
+			"!package.json",
+			"!node_modules/**",
+			"!build/**",
+			"!dist/**",
+			"!coverage/**",
+			"!*.min.js",
+			"!*.bundle.js",
+			"!.vscode/**",
+			"!.git/**",
+			"!.github/**",
+			"!public/**",
+			"!tmp/**",
+			"!vendor/**",
+			"!src/openapi/**",
+			"!spec/*.spec.json",
+			"!spec/**"
+		]
+	},
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true
 	}
 }

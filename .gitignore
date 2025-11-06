@@ -83,6 +83,5 @@ src/utils/bot_res/img-pup.ts
 docs/internal
 scripts/internal
 
-
-.cursor/rules/kluster-code-verify.mdc
-.kluster
+# spec/**/*
+.frolic-session.json
