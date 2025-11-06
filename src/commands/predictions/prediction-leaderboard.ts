@@ -3,11 +3,7 @@ import { Command } from '@sapphire/framework';
 import { EmbedBuilder, type Message } from 'discord.js';
 import _ from 'lodash';
 import embedColors from '../../lib/colorsConfig.js';
-import type { GetSeasonYearSportEnum } from '../../openapi/khronos/apis/CalendarApi.js';
-import { LeaderboardControllerGetLeaderboardV1TimeFrameEnum } from '../../openapi/khronos/apis/LeaderboardApi.js';
-import type { LeaderboardResponseDto } from '../../openapi/khronos/models/index.js';
-import CalendarWrapper from '../../utils/api/Khronos/calendar/calendar-wrapper.js';
-import GuildWrapper from '../../utils/api/Khronos/guild/guild-wrapper.js';
+import type { SimpleLeaderboardResponseDto } from '../../openapi/khronos/models/index.js';
 import LeaderboardWrapper from '../../utils/api/Khronos/leaderboard/leaderboard-wrapper.js';
 import ClientTools from '../../utils/bot_res/ClientTools.js';
 import Pagination from '../../utils/embeds/pagination.js';
@@ -22,44 +18,7 @@ export class UserCommand extends Command {
 				builder
 					.setName('accuracy_leaderboard')
 					.setDescription(this.description)
-					.setContexts([0])
-					.addSubcommand((subcommand) =>
-						subcommand
-							.setName('weekly')
-							.setDescription('View the weekly leaderboard')
-							.addIntegerOption((option) =>
-								option
-									.setName('week_number')
-									.setDescription('The week number to view.')
-									.setMinValue(1)
-									.setRequired(false),
-							),
-					)
-					.addSubcommand((subcommand) =>
-						subcommand
-							.setName('monthly')
-							.setDescription('View the monthly leaderboard (prior month)'),
-					)
-					.addSubcommand((subcommand) =>
-						subcommand
-							.setName('seasonal')
-							.setDescription('View the seasonal leaderboard')
-							.addIntegerOption((option) =>
-								option
-									.setName('year')
-									.setDescription(
-										'Season ending year (e.g. 2024 for the 2023-2024 season)',
-									)
-									.setMinValue(2000)
-									.setMaxValue(9999)
-									.setRequired(false),
-							),
-					)
-					.addSubcommand((subcommand) =>
-						subcommand
-							.setName('all_time')
-							.setDescription('View the all-time leaderboard'),
-					),
+					.setContexts([0]),
 			{
 				idHints: ['1297933995123933225'],
 			},
@@ -70,189 +29,7 @@ export class UserCommand extends Command {
 		interaction: Command.ChatInputCommandInteraction,
 	) {
 		await interaction.deferReply();
-		const subcommand = interaction.options.getSubcommand();
-		// ? Retrieve guild for sport
-		const { sport } = await new GuildWrapper().getGuild(interaction.guildId);
-		switch (subcommand) {
-			case 'weekly':
-				await this.handleWeeklyLeaderboard(interaction, sport);
-				break;
-			case 'monthly':
-				await this.handleMonthlyLeaderboard(interaction);
-				break;
-			case 'seasonal':
-				await this.handleSeasonalLeaderboard(interaction);
-				break;
-			case 'all_time':
-				await this.handleAllTimeLeaderboard(interaction);
-				break;
-			default:
-				await interaction.editReply({
-					content: 'Invalid subcommand.',
-				});
-		}
-	}
 
-	private async handleWeeklyLeaderboard(
-		interaction: Command.ChatInputCommandInteraction,
-		sport: string,
-	) {
-		const weekNumber =
-			interaction.options.getInteger('week_number', false) ?? null;
-		const guildId = interaction.guildId;
-		const currentYear = await new CalendarWrapper().getSeasonYear({
-			sport: sport as GetSeasonYearSportEnum,
-		});
-
-		try {
-			const leaderboardWrapper = new LeaderboardWrapper();
-			const leaderboard = await leaderboardWrapper.getLeaderboard({
-				guildId,
-				weekNumber,
-				seasonYear: currentYear,
-				timeFrame: LeaderboardControllerGetLeaderboardV1TimeFrameEnum.Weekly,
-			});
-
-			if (!leaderboard || _.isEmpty(leaderboard.entries)) {
-				return interaction.editReply({
-					content:
-						'No leaderboard data found for the specified week. Please try again with a different week number.',
-				});
-			}
-
-			const thumbnail = interaction.guild?.iconURL({ extension: 'png' });
-			const parsedLeaderboard = await this.parseLeaderboardData(leaderboard);
-
-			if (!parsedLeaderboard || _.isEmpty(parsedLeaderboard)) {
-				return interaction.editReply({
-					content:
-						'Unable to process leaderboard data. Please try again later.',
-				});
-			}
-
-			const weeklyTitle = weekNumber
-				? `Week ${weekNumber}`
-				: `Week ${leaderboard?.current_week}`;
-			const embed = await this.createLeaderboardEmbed({
-				leaderboardData: parsedLeaderboard,
-				type: 'weekly',
-				title: weeklyTitle,
-				metadata: { thumbnail, currentWeek: leaderboard?.current_week },
-			});
-			const pagination = new Pagination();
-			const components = pagination.createPaginationButtons(
-				1,
-				Math.ceil(parsedLeaderboard.length / 20),
-			);
-
-			const reply = await interaction.editReply({
-				embeds: [embed],
-				components,
-			});
-
-			await this.handlePagination(interaction, reply, parsedLeaderboard);
-		} catch (error) {
-			this.container.logger.error(error);
-			return interaction.editReply({
-				content: 'An error occurred while fetching the leaderboard.',
-			});
-		}
-	}
-
-	private async handleMonthlyLeaderboard(
-		interaction: Command.ChatInputCommandInteraction,
-	) {
-		try {
-			// ? Prep for query
-			const guildId = interaction.guildId;
-			const leaderboardMonthly = await new LeaderboardWrapper().getLeaderboard({
-				guildId,
-				timeFrame: LeaderboardControllerGetLeaderboardV1TimeFrameEnum.Monthly,
-			});
-
-			// ? Invalid Strings
-			const noContent =
-				'There were no entries to populate a monthly leaderboard from the prior month.';
-
-			if (!leaderboardMonthly || leaderboardMonthly.entries.length === 0) {
-				return interaction.editReply({
-					content: noContent,
-				});
-			}
-			const parsedLeaderboard =
-				await this.parseLeaderboardData(leaderboardMonthly);
-			const embed = await this.createLeaderboardEmbed({
-				leaderboardData: parsedLeaderboard,
-				type: 'monthly',
-			});
-
-			const reply = await interaction.editReply({ embeds: [embed] });
-			await this.handlePagination(interaction, reply, parsedLeaderboard);
-		} catch (error) {
-			this.container.logger.error(error);
-			return interaction.editReply({
-				content: 'An error occurred while fetching the leaderboard.',
-			});
-		}
-	}
-
-	private async handleSeasonalLeaderboard(
-		interaction: Command.ChatInputCommandInteraction,
-	) {
-		try {
-			const guildId = interaction.guildId;
-			const { sport } = await new GuildWrapper().getGuild(guildId);
-			const defaultYear = await new CalendarWrapper().getSeasonYear({
-				sport: sport as GetSeasonYearSportEnum,
-			});
-			const year = interaction.options.getInteger('year') ?? defaultYear;
-
-			const leaderboardWrapper = new LeaderboardWrapper();
-			const leaderboard = await leaderboardWrapper.getLeaderboard({
-				guildId,
-				seasonYear: year,
-				timeFrame: LeaderboardControllerGetLeaderboardV1TimeFrameEnum.Seasonal,
-			});
-
-			if (!leaderboard || _.isEmpty(leaderboard.entries)) {
-				return interaction.editReply({
-					content: `No leaderboard data found for the ${year} season.`,
-				});
-			}
-
-			const thumbnail = interaction.guild?.iconURL({ extension: 'png' });
-			const parsedLeaderboard = await this.parseLeaderboardData(leaderboard);
-
-			const embed = await this.createLeaderboardEmbed({
-				leaderboardData: parsedLeaderboard,
-				type: 'seasonal',
-				title: `Season ${year}`,
-				metadata: { thumbnail },
-			});
-
-			const pagination = new Pagination();
-			const components = pagination.createPaginationButtons(
-				1,
-				Math.ceil(parsedLeaderboard.length / 20),
-			);
-
-			const reply = await interaction.editReply({
-				embeds: [embed],
-				components,
-			});
-
-			await this.handlePagination(interaction, reply, parsedLeaderboard);
-		} catch (error) {
-			this.container.logger.error(error);
-			return interaction.editReply({
-				content: 'An error occurred while fetching the seasonal leaderboard.',
-			});
-		}
-	}
-
-	private async handleAllTimeLeaderboard(
-		interaction: Command.ChatInputCommandInteraction,
-	) {
 		try {
 			const guildId = interaction.guildId;
 
@@ -263,12 +40,11 @@ export class UserCommand extends Command {
 			const leaderboardWrapper = new LeaderboardWrapper();
 			const leaderboard = await leaderboardWrapper.getLeaderboard({
 				guildId,
-				timeFrame: LeaderboardControllerGetLeaderboardV1TimeFrameEnum.AllTime,
 			});
 
 			if (!leaderboard || _.isEmpty(leaderboard.entries)) {
 				return interaction.editReply({
-					content: 'No all-time leaderboard data found.',
+					content: 'No leaderboard data found.',
 				});
 			}
 
@@ -281,11 +57,10 @@ export class UserCommand extends Command {
 			});
 
 			const thumbnail = interaction.guild?.iconURL({ extension: 'png' });
-			const parsedLeaderboard = await this.parseLeaderboardData(leaderboard);
+			const parsedLeaderboard = this.parseLeaderboardData(leaderboard);
 
 			const embed = await this.createLeaderboardEmbed({
 				leaderboardData: parsedLeaderboard,
-				type: 'allTime',
 				currentPage: 1,
 				metadata: { thumbnail },
 			});
@@ -311,44 +86,37 @@ export class UserCommand extends Command {
 			}
 			this.container.logger.error(error);
 			return interaction.editReply({
-				content: 'An error occurred while fetching the all-time leaderboard.',
+				content: 'An error occurred while fetching the leaderboard.',
 			});
 		}
 	}
 
 	private parseLeaderboardData(
-		leaderboardData: LeaderboardResponseDto,
+		leaderboardData: SimpleLeaderboardResponseDto,
 	): ParsedLeaderboardEntry[] {
 		if (!leaderboardData.entries || leaderboardData.entries.length === 0) {
 			return [];
 		}
 
-		const groupedByUser = _.groupBy(leaderboardData.entries, 'user_id');
+		// Entries are already aggregated and sorted by the backend
+		// Calculate score using the formula: (correct * 10) + (incorrect * -2)
+		// Default values from ScoringService as per prediction-system.md
+		const CORRECT_POINTS = 10;
+		const INCORRECT_PENALTY = -2;
 
-		const parsedData = Object.values(groupedByUser).map((userEntries) => {
-			return userEntries.reduce(
-				(acc, entry) => ({
-					userId: entry.user_id,
-					score: acc.score + entry.score,
-					correctPredictions:
-						acc.correctPredictions + entry.correct_predictions,
-					incorrectPredictions:
-						acc.incorrectPredictions + entry.incorrect_predictions,
-				}),
-				{
-					userId: userEntries[0].user_id,
-					score: 0,
-					correctPredictions: 0,
-					incorrectPredictions: 0,
-				},
-			);
+		return leaderboardData.entries.map((entry, index) => {
+			const score =
+				entry.correct_predictions * CORRECT_POINTS +
+				entry.incorrect_predictions * INCORRECT_PENALTY;
+
+			return {
+				userId: entry.user_id,
+				score,
+				correctPredictions: entry.correct_predictions,
+				incorrectPredictions: entry.incorrect_predictions,
+				position: index + 1,
+			};
 		});
-
-		const sortedData = parsedData.sort((a, b) => b.score - a.score);
-		return sortedData.map((entry, index) => ({
-			...entry,
-			position: index + 1,
-		}));
 	}
 
 	async createLeaderboardEmbed(
@@ -359,7 +127,7 @@ export class UserCommand extends Command {
 			params.leaderboardData.length === 0 ||
 			_.isEmpty(params.leaderboardData)
 		) {
-			throw new EmptyDataException(`the ${params.type} leaderboard`);
+			throw new EmptyDataException('the leaderboard');
 		}
 
 		const currentPage = params.currentPage || 1;
@@ -388,7 +156,7 @@ export class UserCommand extends Command {
 
 		const embed = new EmbedBuilder()
 			.setTitle(
-				`${await this.parseLeaderboardTitle(params.type)} Leaderboard ${params?.title ? `| ${params.title}` : ''}`,
+				`Accuracy Leaderboard${params?.title ? ` | ${params.title}` : ''}`,
 			)
 			.setColor(embedColors.PlutoBlue)
 			.setDescription(descriptionLines.join('\n'))
@@ -401,12 +169,6 @@ export class UserCommand extends Command {
 		}
 
 		return embed;
-	}
-
-	private async parseLeaderboardTitle(
-		type: 'weekly' | 'monthly' | 'seasonal' | 'allTime',
-	) {
-		return type.charAt(0).toUpperCase() + type.slice(1);
 	}
 
 	private async getMember(userId: string) {
@@ -455,7 +217,6 @@ export class UserCommand extends Command {
 			const newEmbed = await this.createLeaderboardEmbed({
 				leaderboardData: leaderboard,
 				currentPage,
-				type: 'weekly',
 			});
 			const pagination = new Pagination();
 			const newComponents = pagination.createPaginationButtons(
@@ -495,10 +256,8 @@ class CreateLeaderboardEmbedParams {
 	leaderboardData: ParsedLeaderboardEntry[];
 	currentPage?: number = 1;
 	title?: string;
-	type: 'weekly' | 'monthly' | 'seasonal' | 'allTime';
 	metadata?: {
 		thumbnail?: string;
-		currentWeek?: number;
 	};
 }
 

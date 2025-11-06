@@ -1,4 +1,4 @@
-import type { Match } from '@kh-openapi';
+import type { MatchResponseDto } from '@kh-openapi';
 
 export default class BetUtils {
 	static calculateProfitAndPayout(
@@ -23,15 +23,18 @@ export default class BetUtils {
 
 	static async getOddsForTeam(
 		team: string,
-		match: Match,
+		match: MatchResponseDto,
 	): Promise<{ selectedTeam: string; selectedOdds: number }> {
-		const { home_team, away_team, home_team_odds, away_team_odds } = match;
+		const { home_team, away_team, odds } = match;
+		const homeOdds = odds?.home_price;
+		const awayOdds = odds?.away_price;
+		
 		return team === home_team
-			? { selectedTeam: home_team, selectedOdds: Number(home_team_odds) }
-			: { selectedTeam: away_team, selectedOdds: Number(away_team_odds) };
+			? { selectedTeam: home_team ?? '', selectedOdds: Number(homeOdds) }
+			: { selectedTeam: away_team ?? '', selectedOdds: Number(awayOdds) };
 	}
 
-	static async identifyOpponent(match: Match, selectedTeam: string) {
+	static async identifyOpponent(match: MatchResponseDto, selectedTeam: string) {
 		if (match.home_team === selectedTeam) {
 			return match.away_team;
 		}

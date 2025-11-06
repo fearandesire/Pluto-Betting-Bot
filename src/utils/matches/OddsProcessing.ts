@@ -1,22 +1,38 @@
-import type { Match } from '@kh-openapi';
+import type { MatchResponseDto } from '@kh-openapi';
 import { helpfooter } from '@pluto-config';
+import { format, parseISO } from 'date-fns';
 import _ from 'lodash';
 import parseScheduledGames from '../bot_res/parseScheduled.js';
+import { DateManager } from '../common/DateManager.js';
 import { formatOdds } from './formatOdds.js';
 import type { IOddsField } from './matchups.interface.js';
 
-export async function prepareAndFormat(matchups: Match[], thumbnail: string, guildId?: string) {
+export async function prepareAndFormat(matchups: MatchResponseDto[], thumbnail: string, guildId?: string) {
 	const oddsFields: IOddsField[] = [];
+	const dateManager = new DateManager();
+	
 	for await (const match of Object.values(matchups)) {
-		if (match.complete === true) {
+		if (match.status === 'complete') {
 			continue;
 		}
 		const hTeam = `${match.home_team}`;
 		const aTeam = `${match.away_team}`;
-		const hOdds = match.home_team_odds;
-		const aOdds = match.away_team_odds;
+		const hOdds = match.odds?.home_price;
+		const aOdds = match.odds?.away_price;
 		const { homeOdds, awayOdds } = await formatOdds(hOdds, aOdds);
-		const parsedStart = match.legiblestart.split(', ')[1];
+		
+		// Parse commence_time to get date and time components
+		let parsedStart = '';
+		let legiblestart = '';
+		let dateofmatchup = '';
+		
+		if (match.commence_time) {
+			const matchDate = parseISO(match.commence_time);
+			dateofmatchup = dateManager.toMMDDYYYY(matchDate);
+			legiblestart = format(matchDate, 'EEEE, h:mm a'); // e.g., "Monday, 7:00 PM"
+			parsedStart = legiblestart.split(', ')[1] || format(matchDate, 'h:mm a');
+		}
+		
 		oddsFields.push({
 			teams: {
 				home_team: {
@@ -29,9 +45,9 @@ export async function prepareAndFormat(matchups: Match[], thumbnail: string, gui
 				},
 			},
 			dates: {
-				mdy: match.dateofmatchup,
+				mdy: dateofmatchup,
 				start: parsedStart,
-				legible: match.legiblestart,
+				legible: legiblestart,
 			},
 		});
 	}
