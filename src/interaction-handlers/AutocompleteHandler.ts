@@ -1,7 +1,7 @@
-import type { MatchResponseDto } from "@kh-openapi";
+import type { MatchDetailDto } from "@kh-openapi";
 import {
-  InteractionHandler,
-  InteractionHandlerTypes,
+    InteractionHandler,
+    InteractionHandlerTypes,
 } from "@sapphire/framework";
 import type { AutocompleteInteraction } from "discord.js";
 import GuildWrapper from "../utils/api/Khronos/guild/guild-wrapper.js";
@@ -17,13 +17,15 @@ export class AutocompleteHandler extends InteractionHandler {
   public constructor(
     ctx: InteractionHandler.LoaderContext,
     options: InteractionHandler.Options,
+    matchCacheService?: MatchCacheService,
+    stringUtils?: StringUtils,
   ) {
     super(ctx, {
       ...options,
       interactionHandlerType: InteractionHandlerTypes.Autocomplete,
     });
-    this.matchCacheService = new MatchCacheService(new CacheManager());
-    this.stringUtils = new StringUtils();
+    this.matchCacheService = matchCacheService ?? new MatchCacheService(new CacheManager());
+    this.stringUtils = stringUtils ?? new StringUtils();
   }
 
   public override async run(
@@ -47,7 +49,7 @@ export class AutocompleteHandler extends InteractionHandler {
     if (!matches) return this.none();
 
     // Filter matches by sport
-    const sportFilteredMatches = matches.filter((match: MatchResponseDto) =>
+    const sportFilteredMatches = matches.filter((match: MatchDetailDto) =>
       match.sport?.includes(guildData.sport),
     );
 
@@ -56,7 +58,7 @@ export class AutocompleteHandler extends InteractionHandler {
     switch (focusedOption.name) {
       case "match": {
         const currentInput = focusedOption.value as string;
-        const searchResult = sportFilteredMatches.filter((match: MatchResponseDto) => {
+        const searchResult = sportFilteredMatches.filter((match: MatchDetailDto) => {
           const homeTeam = match.home_team?.toLowerCase() ?? "";
           const awayTeam = match.away_team?.toLowerCase() ?? "";
           return (
@@ -64,17 +66,26 @@ export class AutocompleteHandler extends InteractionHandler {
             awayTeam.includes(currentInput.toLowerCase())
           );
         });
+        
+        // Filter out matches with missing essential fields before mapping
+        const validMatches = searchResult.filter((match: MatchDetailDto) => 
+          match.commence_time && 
+          match.id && 
+          match.home_team && 
+          match.away_team
+        );
+        
         return this.some(
-          searchResult.map((match: MatchResponseDto) => ({
-            name: `${this.stringUtils.getShortName(match.away_team ?? "")} @ ${this.stringUtils.getShortName(match.home_team ?? "")} | ${new DateManager().toMMDDYYYY(match.commence_time ?? "")}`,
-            value: match.id ?? "",
+          validMatches.map((match: MatchDetailDto) => ({
+            name: `${this.stringUtils.getShortName(match.away_team!)} @ ${this.stringUtils.getShortName(match.home_team!)} | ${new DateManager().toMMDDYYYY(match.commence_time!)}`,
+            value: match.id!,
           })),
         );
       }
       case "team": {
         const matchSelection = interaction.options.getString("match", true);
         const selectedMatch = sportFilteredMatches.find(
-          (match: MatchResponseDto) => match.id === matchSelection,
+          (match: MatchDetailDto) => match.id === matchSelection,
         );
 
         if (selectedMatch) {
@@ -95,7 +106,7 @@ export class AutocompleteHandler extends InteractionHandler {
     }
   }
 
-  private async matchRetrieval(): Promise<MatchResponseDto[] | null> {
+  private async matchRetrieval(): Promise<MatchDetailDto[] | null> {
     try {
       const cachedMatches = await this.matchCacheService.getMatches();
       if (cachedMatches) return cachedMatches;

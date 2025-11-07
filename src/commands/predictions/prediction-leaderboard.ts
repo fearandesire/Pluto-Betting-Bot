@@ -1,8 +1,9 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
-import { EmbedBuilder, type Message } from 'discord.js';
+import { EmbedBuilder, InteractionContextType, type Message } from 'discord.js';
 import _ from 'lodash';
 import embedColors from '../../lib/colorsConfig.js';
+import { LEADERBOARD_SCORING } from '../../lib/scoring-constants.js';
 import type { SimpleLeaderboardResponseDto } from '../../openapi/khronos/models/index.js';
 import LeaderboardWrapper from '../../utils/api/Khronos/leaderboard/leaderboard-wrapper.js';
 import ClientTools from '../../utils/bot_res/ClientTools.js';
@@ -18,7 +19,7 @@ export class UserCommand extends Command {
 				builder
 					.setName('accuracy_leaderboard')
 					.setDescription(this.description)
-					.setContexts([0]),
+					.setContexts([InteractionContextType.Guild]),
 			{
 				idHints: ['1297933995123933225'],
 			},
@@ -101,13 +102,10 @@ export class UserCommand extends Command {
 		// Entries are already aggregated and sorted by the backend
 		// Calculate score using the formula: (correct * 10) + (incorrect * -2)
 		// Default values from ScoringService as per prediction-system.md
-		const CORRECT_POINTS = 10;
-		const INCORRECT_PENALTY = -2;
-
 		return leaderboardData.entries.map((entry, index) => {
 			const score =
-				entry.correct_predictions * CORRECT_POINTS +
-				entry.incorrect_predictions * INCORRECT_PENALTY;
+				entry.correct_predictions * LEADERBOARD_SCORING.CORRECT_POINTS +
+				entry.incorrect_predictions * LEADERBOARD_SCORING.INCORRECT_PENALTY;
 
 			return {
 				userId: entry.user_id,

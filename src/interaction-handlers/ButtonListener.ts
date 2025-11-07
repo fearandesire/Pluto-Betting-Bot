@@ -25,6 +25,8 @@ import { ErrorEmbeds } from "../utils/common/errors/global.js";
  * @module ButtonListener
  */
 export class ButtonHandler extends InteractionHandler {
+  private betsCacheService: BetsCacheService;
+
   public constructor(
     ctx: InteractionHandler.LoaderContext,
     options: InteractionHandler.Options,
@@ -33,6 +35,7 @@ export class ButtonHandler extends InteractionHandler {
       ...options,
       interactionHandlerType: InteractionHandlerTypes.Button,
     });
+    this.betsCacheService = new BetsCacheService(new CacheManager());
   }
 
   /**
@@ -72,9 +75,7 @@ export class ButtonHandler extends InteractionHandler {
           components: [],
         });
         try {
-          const cachedBet = await new BetsCacheService(
-            new CacheManager(),
-          ).getUserBet(interaction.user.id);
+          const cachedBet = await this.betsCacheService.getUserBet(interaction.user.id);
           
           if (!cachedBet) {
             console.error({
@@ -153,13 +154,11 @@ export class ButtonHandler extends InteractionHandler {
         const { betslip } = payload;
         
         // Sanitize and place the bet - all data is already in the cached betslip
-        const sanitizedBetslip = await new BetsCacheService(
-          new CacheManager(),
-        ).sanitize(betslip);
+        const sanitizedBetslip = await this.betsCacheService.sanitize(betslip);
         
         return new BetslipManager(
           new BetslipWrapper(),
-          new BetsCacheService(new CacheManager()),
+          this.betsCacheService,
         ).placeBet(interaction, sanitizedBetslip, {
           dateofmatchup: betslip.dateofmatchup,
           opponent: betslip.opponent,

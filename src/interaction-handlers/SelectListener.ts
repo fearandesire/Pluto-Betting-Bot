@@ -1,16 +1,19 @@
+import type {
+    BetslipWithAggregationDTO
+} from '@kh-openapi';
 import {
-	InteractionHandler,
-	InteractionHandlerTypes,
+    InteractionHandler,
+    InteractionHandlerTypes,
 } from '@sapphire/framework';
 import type {
-	ButtonInteraction,
-	StringSelectMenuInteraction,
+    ButtonInteraction,
+    StringSelectMenuInteraction,
 } from 'discord.js';
 import { selectMenuIds } from '../lib/interfaces/interaction-handlers/interaction-handlers.interface.js';
-import { BetslipManager } from '../utils/api/Khronos/bets/BetslipsManager.js';
-import BetslipWrapper from '../utils/api/Khronos/bets/betslip-wrapper.js';
-import BetUtils from '../utils/api/common/bets/BetUtils.js';
 import { BetsCacheService } from '../utils/api/common/bets/BetsCacheService.js';
+import BetUtils from '../utils/api/common/bets/BetUtils.js';
+import BetslipWrapper from '../utils/api/Khronos/bets/betslip-wrapper.js';
+import { BetslipManager } from '../utils/api/Khronos/bets/BetslipsManager.js';
 import MatchCacheService from '../utils/api/routes/cache/MatchCacheService.js';
 import { CacheManager } from '../utils/cache/cache-manager.js';
 import { ErrorEmbeds } from '../utils/common/errors/global.js';
@@ -128,8 +131,23 @@ export class MenuHandler extends InteractionHandler {
 		}
 		const { betslip, dateofmatchup, opponent, payData } = payload;
 		
-		// Convert CachedBetData to BetslipWithAggregationDTO format for presentBetWithPay
-		const betslipForPresentation = {
+		// Fetch match details from cache (already MatchDetailDto)
+		const matchCacheService = new MatchCacheService(new CacheManager());
+		const matchDetails = await matchCacheService.getMatch(betslip.matchup_id);
+		
+		if (!matchDetails) {
+			await interaction.editReply({
+				embeds: [
+					await ErrorEmbeds.internalErr(
+						'Due to an internal error, the match data is not available. Please try again later.',
+					),
+				],
+			});
+			return;
+		}
+		
+		// matchDetails is already MatchDetailDto from cache, use directly
+		const betslipForPresentation: BetslipWithAggregationDTO = {
 			userid: betslip.userid,
 			team: betslip.team,
 			amount: betslip.amount,
@@ -137,16 +155,14 @@ export class MenuHandler extends InteractionHandler {
 			payout: betslip.payout,
 			opponent: betslip.opponent,
 			dateofmatchup: betslip.dateofmatchup,
-			match: {
-				id: betslip.matchup_id,
-			},
+			match: matchDetails,
 		};
 		
 		return new BetslipManager(
 			new BetslipWrapper(),
 			new BetsCacheService(new CacheManager()),
 		).presentBetWithPay(interaction, {
-			betslip: betslipForPresentation as any,
+			betslip: betslipForPresentation,
 			payData,
 			matchInfo: {
 				dateofmatchup,

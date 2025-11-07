@@ -1,4 +1,4 @@
-import type { MatchResponseDto } from '@kh-openapi';
+import type { MatchDetailDto } from '@kh-openapi';
 import { teamResolver } from 'resolve-team';
 import type { CacheManager } from '../../../cache/cache-manager.js';
 import MatchApiWrapper from '../../Khronos/matches/matchApiWrapper.js';
@@ -11,7 +11,7 @@ export default class MatchCacheService {
 		return data;
 	}
 
-	async cacheMatches(matches: MatchResponseDto[]) {
+	async cacheMatches(matches: MatchDetailDto[]) {
 		await this.cache.set('matches', matches, 86400);
 		console.log({
 			method: this.cacheMatches.name,
@@ -23,12 +23,12 @@ export default class MatchCacheService {
 		return await this.cache.get('matches');
 	}
 
-	async getMatch(matchid: string): Promise<MatchResponseDto | null> {
+	async getMatch(matchid: string): Promise<MatchDetailDto | null> {
 		const allMatches = await this.getMatches();
 		if (!allMatches) {
 			return null;
 		}
-		const match = allMatches.find((match: MatchResponseDto) => match.id === matchid);
+		const match = allMatches.find((match: MatchDetailDto) => match.id === matchid);
 		if (!match) {
 			return null;
 		}
@@ -45,7 +45,7 @@ export default class MatchCacheService {
 		if (!matchCache) {
 			throw new Error('Unable to retrieve stored matches at this time.');
 		}
-		const matches = matchCache.filter((match: MatchResponseDto) => {
+		const matches = matchCache.filter((match: MatchDetailDto) => {
 			return (
 				match.home_team === resolvedTeamName ||
 				match.away_team === resolvedTeamName

@@ -1,4 +1,4 @@
-import type { MatchResponseDto } from '@kh-openapi';
+import type { MatchDetailDto } from '@kh-openapi';
 import { AxiosKhronosInstance } from '../common/axios-config.js';
 import { OutgoingEndpoints } from '../common/endpoints.js';
 import type { KH_ValidConfigType } from '../common/interfaces/kh-pluto/kh-pluto.interface.js';
@@ -38,7 +38,7 @@ export default class KhronosManager {
 	 */
 	async fetchOddsForGuild(guildId: string): Promise<
 		| {
-				matches: MatchResponseDto[];
+				matches: MatchDetailDto[];
 		  }
 		| false
 	> {

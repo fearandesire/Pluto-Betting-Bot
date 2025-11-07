@@ -1,4 +1,4 @@
-import type { MatchResponseDto } from '@kh-openapi';
+import type { MatchDetailDto } from '@kh-openapi';
 import { helpfooter } from '@pluto-config';
 import { format, parseISO } from 'date-fns';
 import _ from 'lodash';
@@ -7,18 +7,18 @@ import { DateManager } from '../common/DateManager.js';
 import { formatOdds } from './formatOdds.js';
 import type { IOddsField } from './matchups.interface.js';
 
-export async function prepareAndFormat(matchups: MatchResponseDto[], thumbnail: string, guildId?: string) {
+export async function prepareAndFormat(matchups: MatchDetailDto[], thumbnail: string, guildId?: string) {
 	const oddsFields: IOddsField[] = [];
 	const dateManager = new DateManager();
 	
 	for await (const match of Object.values(matchups)) {
-		if (match.status === 'complete') {
+		if (match.status === 'completed') {
 			continue;
 		}
 		const hTeam = `${match.home_team}`;
 		const aTeam = `${match.away_team}`;
-		const hOdds = match.odds?.home_price;
-		const aOdds = match.odds?.away_price;
+		const hOdds = match.home_team_odds;
+		const aOdds = match.away_team_odds;
 		const { homeOdds, awayOdds } = await formatOdds(hOdds, aOdds);
 		
 		// Parse commence_time to get date and time components
