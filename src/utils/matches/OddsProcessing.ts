@@ -44,7 +44,7 @@ export async function prepareAndFormat(matchups: MatchDetailDto[], thumbnail: st
 						: format(matchDate, 'h:mm a');
 				}
 			} catch {
-				// Invalid date format - use empty strings as fallback
+				
 				parsedStart = '';
 				legiblestart = '';
 				dateofmatchup = '';

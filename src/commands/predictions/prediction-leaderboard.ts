@@ -154,7 +154,7 @@ export class UserCommand extends Command {
 
 		const embed = new EmbedBuilder()
 			.setTitle(
-				`Accuracy Leaderboard${params?.title ? ` | ${params.title}` : ''}`,
+				`Accuracy Leaderboard${params.title ? ` | ${params.title}` : ''}`,
 			)
 			.setColor(embedColors.PlutoBlue)
 			.setDescription(descriptionLines.join('\n'))
