@@ -105,7 +105,6 @@ export class MenuHandler extends InteractionHandler {
 				})
 			: 'TBD';
 		
-		// Update cached bet with match-specific data
 		await betsCacheService.updateUserBet(interaction.user.id, {
 			matchup_id: matchDetails.id,
 			opponent,
@@ -131,7 +130,6 @@ export class MenuHandler extends InteractionHandler {
 		}
 		const { betslip, dateofmatchup, opponent, payData } = payload;
 		
-		// Fetch match details from cache (already MatchDetailDto)
 		const matchCacheService = new MatchCacheService(new CacheManager());
 		const matchDetails = await matchCacheService.getMatch(betslip.matchup_id);
 		
@@ -146,7 +144,6 @@ export class MenuHandler extends InteractionHandler {
 			return;
 		}
 		
-		// matchDetails is already MatchDetailDto from cache, use directly
 		const betslipForPresentation: BetslipWithAggregationDTO = {
 			userid: betslip.userid,
 			team: betslip.team,

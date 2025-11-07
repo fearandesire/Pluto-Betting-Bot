@@ -11,7 +11,7 @@ export async function prepareAndFormat(matchups: MatchDetailDto[], thumbnail: st
 	const oddsFields: IOddsField[] = [];
 	const dateManager = new DateManager();
 	
-	for await (const match of Object.values(matchups)) {
+	for (const match of matchups) {
 		if (match.status === 'completed') {
 			continue;
 		}
