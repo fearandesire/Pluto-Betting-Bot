@@ -35,7 +35,6 @@ export class AutocompleteHandler extends InteractionHandler {
     return interaction.respond(result);
   }
 
-  // @ts-ignore - Weird TS Error
   public override async parse(interaction: AutocompleteInteraction) {
     if (interaction?.commandName !== "bet") return this.none();
     const focusedOption = interaction.options.getFocused(true);
