@@ -1,3 +1,4 @@
+import { helpfooter } from "@pluto-config";
 import {
   InteractionHandler,
   InteractionHandlerTypes,
@@ -8,18 +9,17 @@ import _ from "lodash";
 import embedColors from "../lib/colorsConfig.js";
 import { ApiModules } from "../lib/interfaces/api/api.interface.js";
 import { btnIds } from "../lib/interfaces/interaction-handlers/interaction-handlers.interface.js";
-import { BetslipManager } from "../utils/api/Khronos/bets/BetslipsManager.js";
+import { BetsCacheService, type CachedBetData } from "../utils/api/common/bets/BetsCacheService.js";
+import { MarketKeyAbbreviations } from "../utils/api/common/interfaces/market-abbreviations.js";
 import BetslipWrapper from "../utils/api/Khronos/bets/betslip-wrapper.js";
+import { BetslipManager } from "../utils/api/Khronos/bets/BetslipsManager.js";
 import { ApiErrorHandler } from "../utils/api/Khronos/error-handling/ApiErrorHandler.js";
 import PredictionApiWrapper from "../utils/api/Khronos/prediction/predictionApiWrapper.js";
 import PropsApiWrapper from "../utils/api/Khronos/props/propsApiWrapper.js";
-import { BetsCacheService, type CachedBetData } from "../utils/api/common/bets/BetsCacheService.js";
-import { MarketKeyAbbreviations } from "../utils/api/common/interfaces/market-abbreviations.js";
-import { patreonFooter } from "../utils/api/patreon/interfaces.js";
 import { CacheManager } from "../utils/cache/cache-manager.js";
 import { DateManager } from "../utils/common/DateManager.js";
-import TeamInfo from "../utils/common/TeamInfo.js";
 import { ErrorEmbeds } from "../utils/common/errors/global.js";
+import TeamInfo from "../utils/common/TeamInfo.js";
 
 /**
  * @module ButtonListener
@@ -142,7 +142,9 @@ export class ButtonHandler extends InteractionHandler {
         .setDescription("Your bet has been successfully cancelled.")
         .setColor(embedColors.PlutoRed)
         .setThumbnail(interaction.user.displayAvatarURL())
-        .setFooter(patreonFooter);
+        .setFooter({
+          text: await helpfooter('betting'),
+        });
       await interaction.editReply({
         embeds: [cancelEmbed],
         components: [],
