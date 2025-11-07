@@ -1,4 +1,5 @@
 import type { MatchDetailDto } from '@kh-openapi';
+import { container } from '@sapphire/framework';
 import { AxiosKhronosInstance } from '../common/axios-config.js';
 import { OutgoingEndpoints } from '../common/endpoints.js';
 import type { KH_ValidConfigType } from '../common/interfaces/kh-pluto/kh-pluto.interface.js';
@@ -26,7 +27,7 @@ export default class KhronosManager {
 			});
 			return response.data;
 		} catch (err) {
-			console.error(err);
+			container.logger.error('Failed to fetch config by type', { type, error: err });
 			return false;
 		}
 	}
@@ -56,7 +57,7 @@ export default class KhronosManager {
 				matches,
 			};
 		} catch (err) {
-			console.error(err);
+			container.logger.error('Failed to fetch odds for guild', { guildId, error: err });
 			return false;
 		}
 	}
