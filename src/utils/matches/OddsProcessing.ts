@@ -1,22 +1,56 @@
-import type { Match } from '@kh-openapi';
+import type { MatchDetailDto } from '@kh-openapi';
 import { helpfooter } from '@pluto-config';
+import { format, isValid, parseISO } from 'date-fns';
 import _ from 'lodash';
 import parseScheduledGames from '../bot_res/parseScheduled.js';
+import { DateManager } from '../common/DateManager.js';
 import { formatOdds } from './formatOdds.js';
 import type { IOddsField } from './matchups.interface.js';
 
-export async function prepareAndFormat(matchups: Match[], thumbnail: string, guildId?: string) {
+export async function prepareAndFormat(matchups: MatchDetailDto[], thumbnail: string, guildId?: string) {
 	const oddsFields: IOddsField[] = [];
-	for await (const match of Object.values(matchups)) {
-		if (match.complete === true) {
+	const dateManager = new DateManager();
+	
+	for (const match of matchups) {
+		if (match.status === 'completed') {
 			continue;
 		}
 		const hTeam = `${match.home_team}`;
 		const aTeam = `${match.away_team}`;
 		const hOdds = match.home_team_odds;
 		const aOdds = match.away_team_odds;
+		
+		// Skip matches with missing odds
+		if (hOdds == null || aOdds == null) {
+			continue;
+		}
+		
 		const { homeOdds, awayOdds } = await formatOdds(hOdds, aOdds);
-		const parsedStart = match.legiblestart.split(', ')[1];
+		
+		// Parse commence_time to get date and time components
+		let parsedStart = '';
+		let legiblestart = '';
+		let dateofmatchup = '';
+		
+		if (match.commence_time) {
+			try {
+				const matchDate = parseISO(match.commence_time);
+				if (isValid(matchDate)) {
+					dateofmatchup = dateManager.toMMDDYYYY(matchDate);
+					legiblestart = format(matchDate, 'EEEE, h:mm a'); // e.g., "Monday, 7:00 PM"
+					const commaIndex = legiblestart.indexOf(', ');
+					parsedStart = commaIndex !== -1 
+						? legiblestart.slice(commaIndex + 2) 
+						: format(matchDate, 'h:mm a');
+				}
+			} catch {
+				
+				parsedStart = '';
+				legiblestart = '';
+				dateofmatchup = '';
+			}
+		}
+		
 		oddsFields.push({
 			teams: {
 				home_team: {
@@ -29,9 +63,9 @@ export async function prepareAndFormat(matchups: Match[], thumbnail: string, gui
 				},
 			},
 			dates: {
-				mdy: match.dateofmatchup,
+				mdy: dateofmatchup,
 				start: parsedStart,
-				legible: match.legiblestart,
+				legible: legiblestart,
 			},
 		});
 	}

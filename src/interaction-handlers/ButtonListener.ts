@@ -1,3 +1,4 @@
+import { helpfooter } from "@pluto-config";
 import {
   InteractionHandler,
   InteractionHandlerTypes,
@@ -7,28 +8,25 @@ import { EmbedBuilder } from "discord.js";
 import _ from "lodash";
 import embedColors from "../lib/colorsConfig.js";
 import { ApiModules } from "../lib/interfaces/api/api.interface.js";
-import type { ICreateBetslipFull } from "../lib/interfaces/api/bets/betslips.interfaces.js";
 import { btnIds } from "../lib/interfaces/interaction-handlers/interaction-handlers.interface.js";
-import type { Match } from "../openapi/khronos/models/Match.js";
-import { BetslipManager } from "../utils/api/Khronos/bets/BetslipsManager.js";
+import { BetsCacheService, type CachedBetData } from "../utils/api/common/bets/BetsCacheService.js";
+import { MarketKeyAbbreviations } from "../utils/api/common/interfaces/market-abbreviations.js";
 import BetslipWrapper from "../utils/api/Khronos/bets/betslip-wrapper.js";
+import { BetslipManager } from "../utils/api/Khronos/bets/BetslipsManager.js";
 import { ApiErrorHandler } from "../utils/api/Khronos/error-handling/ApiErrorHandler.js";
-import MatchApiWrapper from "../utils/api/Khronos/matches/matchApiWrapper.js";
 import PredictionApiWrapper from "../utils/api/Khronos/prediction/predictionApiWrapper.js";
 import PropsApiWrapper from "../utils/api/Khronos/props/propsApiWrapper.js";
-import { BetsCacheService } from "../utils/api/common/bets/BetsCacheService.js";
-import { MarketKeyAbbreviations } from "../utils/api/common/interfaces/market-abbreviations.js";
-import { patreonFooter } from "../utils/api/patreon/interfaces.js";
-import MatchCacheService from "../utils/api/routes/cache/MatchCacheService.js";
 import { CacheManager } from "../utils/cache/cache-manager.js";
 import { DateManager } from "../utils/common/DateManager.js";
-import TeamInfo from "../utils/common/TeamInfo.js";
 import { ErrorEmbeds } from "../utils/common/errors/global.js";
+import TeamInfo from "../utils/common/TeamInfo.js";
 
 /**
  * @module ButtonListener
  */
 export class ButtonHandler extends InteractionHandler {
+  private betsCacheService: BetsCacheService;
+
   public constructor(
     ctx: InteractionHandler.LoaderContext,
     options: InteractionHandler.Options,
@@ -37,6 +35,7 @@ export class ButtonHandler extends InteractionHandler {
       ...options,
       interactionHandlerType: InteractionHandlerTypes.Button,
     });
+    this.betsCacheService = new BetsCacheService(new CacheManager());
   }
 
   /**
@@ -76,9 +75,8 @@ export class ButtonHandler extends InteractionHandler {
           components: [],
         });
         try {
-          const cachedBet = await new BetsCacheService(
-            new CacheManager(),
-          ).getUserBet(interaction.user.id);
+          const cachedBet = await this.betsCacheService.getUserBet(interaction.user.id);
+          
           if (!cachedBet) {
             console.error({
               method: this.constructor.name,
@@ -93,41 +91,14 @@ export class ButtonHandler extends InteractionHandler {
               errMsg: errMsg,
             });
           }
-          const matchId = cachedBet.match.id;
-          let locatedMatch: Match | null = await new MatchCacheService(
-            new CacheManager(),
-          ).getMatch(matchId);
 
-          // If the match is not found in cache, attempt to locate it via API
-          if (!locatedMatch) {
-            const matchesApi = new MatchApiWrapper();
-            const { matches } = await matchesApi.getAllMatches();
-            locatedMatch =
-              matches.find((match: Match) => match.id === matchId) ?? null;
-
-            if (!locatedMatch) {
-              console.error({
-                method: this.constructor.name,
-                message: "Match not found after API fetch",
-                data: {
-                  matchup_id: matchId,
-                },
-              });
-              return this.some({
-                hasFailed: true,
-                errMsg: "Unable to locate match data.",
-              });
-            }
-          }
-          // Continue processing with the found match
-          const matchDetails = locatedMatch;
+          // All necessary data is now in the cached bet - no need to fetch match separately
           return this.some({
             betslip: cachedBet,
-            matchData: matchDetails,
           });
         } catch (error) {
           const errMsg =
-            "An error occurred when collecting betslip or match data.";
+            "An error occurred when collecting betslip data.";
           console.error({
             trace: this.constructor.name,
             message: errMsg,
@@ -171,7 +142,9 @@ export class ButtonHandler extends InteractionHandler {
         .setDescription("Your bet has been successfully cancelled.")
         .setColor(embedColors.PlutoRed)
         .setThumbnail(interaction.user.displayAvatarURL())
-        .setFooter(patreonFooter);
+        .setFooter({
+          text: await helpfooter('betting'),
+        });
       await interaction.editReply({
         embeds: [cancelEmbed],
         components: [],
@@ -179,20 +152,18 @@ export class ButtonHandler extends InteractionHandler {
     }
     // ? Handle Confirming A Betslip
     else if (interaction.customId === btnIds.matchup_btn_confirm) {
-      if ("betslip" in payload && "matchData" in payload) {
-        const { betslip, matchData } = payload;
-        const matchOpponent = betslip.opponent;
-
-        const { dateofmatchup } = matchData;
-        const sanitizedBetslip = await new BetsCacheService(
-          new CacheManager(),
-        ).sanitize(betslip);
+      if ("betslip" in payload) {
+        const { betslip } = payload;
+        
+        // Sanitize and place the bet - all data is already in the cached betslip
+        const sanitizedBetslip = await this.betsCacheService.sanitize(betslip);
+        
         return new BetslipManager(
           new BetslipWrapper(),
-          new BetsCacheService(new CacheManager()),
+          this.betsCacheService,
         ).placeBet(interaction, sanitizedBetslip, {
-          dateofmatchup,
-          opponent: matchOpponent,
+          dateofmatchup: betslip.dateofmatchup,
+          opponent: betslip.opponent,
         });
       }
     } else if ("outcomeUuid" in payload) {
@@ -370,8 +341,7 @@ interface FailedPayload {
 }
 
 interface ConfirmPayload {
-  betslip: ICreateBetslipFull;
-  matchData: Match;
+  betslip: CachedBetData;
 }
 
 interface PropPayload {

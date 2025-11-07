@@ -6,6 +6,7 @@ import type {
 	PlacedBetslip,
 } from '@kh-openapi';
 import { helpfooter, supportMessage } from '@pluto-config';
+import { format } from 'date-fns';
 import {
 	ActionRowBuilder,
 	ButtonBuilder,
@@ -14,6 +15,7 @@ import {
 	type CommandInteraction,
 	EmbedBuilder,
 	type GuildEmoji,
+	type StringSelectMenuInteraction,
 } from 'discord.js';
 import _ from 'lodash';
 import embedColors from '../../../../lib/colorsConfig.js';
@@ -204,11 +206,13 @@ export class BetslipManager {
 		});
 
 		const formattedBetData = this.formatBetStr(betAmount, payout, profit);
-		// Bet is placed, just need to inform the user
+		const formattedDate = this.formatMatchDate(apiInfo.dateofmatchup);
+		
+		// Use team strings that already have emoji fallback logic applied
 		const successEmbed = new EmbedBuilder()
 			.setTitle('Bet confirmed!')
 			.setDescription(
-				`## ${teamDetails.betOnTeamEmoji} *vs.* ${teamDetails.opponentEmoji}\n**${teamDetails.chosenTeamShort}** | **${apiInfo.dateofmatchup}**\n${formattedBetData}`,
+				`## ${teamDetails.betOnTeam} *vs.* ${teamDetails.opponent}\n**${teamDetails.chosenTeamShort}** | **${formattedDate}**\n${formattedBetData}`,
 			)
 			.setColor(embedColors.success)
 			.setThumbnail(embedImg)
@@ -224,6 +228,38 @@ export class BetslipManager {
 		const b = '**';
 		const formattedBetData = `${b}${betAmount}${b} -> ${b}${payout}${b}\n${b}Profit:${b} ${b}${profit}${b}`;
 		return formattedBetData;
+	}
+
+	/**
+	 * Formats a date string to MM/DD/YY format
+	 * Handles both ISO date strings and already-formatted dates
+	 */
+	private formatMatchDate(dateInput: string | undefined, betslip?: BetslipWithAggregationDTO): string {
+		// Try to get commence_time from betslip.match if available
+		if (betslip?.match?.commence_time) {
+			const date = new Date(betslip.match.commence_time);
+			return format(date, 'MM/dd/yy');
+		}
+		
+		// If dateInput is an ISO date string (contains 'T' or matches ISO pattern), format it
+		if (dateInput) {
+			try {
+				// Check if it's an ISO date string
+				if (dateInput.includes('T') || /^\d{4}-\d{2}-\d{2}/.test(dateInput)) {
+					const date = new Date(dateInput);
+					return format(date, 'MM/dd/yy');
+				}
+				// If it's already formatted, try to parse and reformat to ensure MM/DD/YY
+				const parsedDate = new Date(dateInput);
+				if (!isNaN(parsedDate.getTime())) {
+					return format(parsedDate, 'MM/dd/yy');
+				}
+			} catch {
+				// If parsing fails, return as-is
+			}
+		}
+		
+		return dateInput || 'TBD';
 	}
 
 	async cancelBet(
@@ -281,7 +317,7 @@ export class BetslipManager {
 	 * @param betData
 	 */
 	async presentBetWithPay(
-		interaction: CommandInteraction | ButtonInteraction,
+		interaction: CommandInteraction | ButtonInteraction | StringSelectMenuInteraction,
 		betData: {
 			betslip: BetslipWithAggregationDTO;
 			payData: { payout: number; profit: number };
@@ -306,11 +342,12 @@ export class BetslipManager {
 		const formattedBetData = this.formatBetStr(betAmount, payout, profit);
 		// uppercase the first letter of users team choice with lodash
 		const usersTeamUpper = _.upperFirst(usersTeam);
+		const formattedDate = this.formatMatchDate(dateofmatchup, betslip);
 
 		const embed = new EmbedBuilder()
 			.setTitle('Pending Betslip')
 			.setDescription(
-				`## ${chosenTeamStr} *vs.* ${oppTeamStr}\n**${usersTeamUpper}** | **${dateofmatchup}**\n${formattedBetData}\n*Confirm your bet via the buttons below*`,
+				`## ${chosenTeamStr} *vs.* ${oppTeamStr}\n**${usersTeamUpper}** | **${formattedDate}**\n${formattedBetData}\n*Confirm your bet via the buttons below*`,
 			)
 			.setThumbnail(interaction.user.displayAvatarURL())
 			.setColor(embedColors.PlutoYellow)

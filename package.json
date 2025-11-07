@@ -21,7 +21,7 @@
 		"dev": "pnpm build && pnpm start",
 		"watch": "swc src -d dist --strip-leading-paths --watch",
 		"ts-dev": "tsx ./src/index.ts",
-		"gen-api": "openapi-generator-cli generate -i ./Khronos-Swagger-Spec-v1.json -g typescript-fetch -o ./src/openapi/khronos -c openapi.config.json",
+		"gen-api": "openapi-generator-cli generate -i ./spec/khronos-swagger-spec-v1.json -g typescript-fetch -o ./src/openapi/khronos -c openapi.config.json",
 		"post-api-fix": "node ./src/utils/scripts/addJsExtension.js",
 		"ci-gen-api": "rimraf ./src/openapi && pnpm gen-api && pnpm post-api-fix",
 		"dvault": "npx dotenv-vault@latest",

@@ -22,4 +22,4 @@ backups
 pnpm-debug.log
 
 !assets/*
-!Khronos-Swagger-Spec-v1.json
+!spec/khronos-swagger-spec-v1.json

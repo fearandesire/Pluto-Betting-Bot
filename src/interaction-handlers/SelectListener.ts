@@ -1,15 +1,20 @@
+import type {
+    BetslipWithAggregationDTO,
+	MatchDetailDto,
+} from '@kh-openapi';
 import {
-	InteractionHandler,
-	InteractionHandlerTypes,
+    InteractionHandler,
+    InteractionHandlerTypes,
 } from '@sapphire/framework';
-import type { StringSelectMenuInteraction } from 'discord.js';
-import type { ButtonInteraction } from 'discord.js';
-import { isPendingBetslip } from '../lib/interfaces/api/bets/betslips-identify.js';
+import type {
+    ButtonInteraction,
+    StringSelectMenuInteraction,
+} from 'discord.js';
 import { selectMenuIds } from '../lib/interfaces/interaction-handlers/interaction-handlers.interface.js';
-import { BetslipManager } from '../utils/api/Khronos/bets/BetslipsManager.js';
-import BetslipWrapper from '../utils/api/Khronos/bets/betslip-wrapper.js';
-import BetUtils from '../utils/api/common/bets/BetUtils.js';
 import { BetsCacheService } from '../utils/api/common/bets/BetsCacheService.js';
+import BetUtils from '../utils/api/common/bets/BetUtils.js';
+import BetslipWrapper from '../utils/api/Khronos/bets/betslip-wrapper.js';
+import { BetslipManager } from '../utils/api/Khronos/bets/BetslipsManager.js';
 import MatchCacheService from '../utils/api/routes/cache/MatchCacheService.js';
 import { CacheManager } from '../utils/cache/cache-manager.js';
 import { ErrorEmbeds } from '../utils/common/errors/global.js';
@@ -63,7 +68,7 @@ export class MenuHandler extends InteractionHandler {
 		const betsCacheService = new BetsCacheService(new CacheManager());
 		// Retrieve user's cached bet
 		const cachedBet = await betsCacheService.getUserBet(interaction.user.id);
-		if (!cachedBet || !isPendingBetslip(cachedBet)) {
+		if (!cachedBet) {
 			await interaction.editReply({
 				embeds: [
 					await ErrorEmbeds.internalErr(
@@ -83,33 +88,79 @@ export class MenuHandler extends InteractionHandler {
 			cachedBet.amount,
 			selectedOdds,
 		);
-		await betsCacheService.cacheUserBet(interaction.user.id, {
-			...cachedBet,
-			profit,
-			payout,
-		});
+		
+		// Identify opponent
 		const opponent = await BetUtils.identifyOpponent(
 			matchDetails,
 			cachedBet.team,
 		);
+		
+		// Format commence_time to a readable date string
+		const formattedDate = matchDetails.commence_time
+			? new Date(matchDetails.commence_time).toLocaleDateString('en-US', {
+					month: 'short',
+					day: 'numeric',
+					hour: 'numeric',
+					minute: '2-digit',
+					timeZoneName: 'short',
+				})
+			: 'TBD';
+		
+		await betsCacheService.updateUserBet(interaction.user.id, {
+			matchup_id: matchDetails.id,
+			opponent,
+			dateofmatchup: formattedDate,
+			profit,
+			payout,
+		});
+		
+		// Get updated cached bet for payload
+		const updatedBet = await betsCacheService.getUserBet(interaction.user.id);
+		
 		return this.some({
-			betslip: cachedBet,
+			betslip: updatedBet,
 			payData: { payout, profit },
-			dateofmatchup: matchDetails.dateofmatchup,
+			dateofmatchup: formattedDate,
 			opponent,
 		});
 	}
 
-	public async run(interaction: ButtonInteraction, payload: any) {
+	public async run(interaction: StringSelectMenuInteraction, payload: any) {
 		if (interaction.customId !== selectMenuIds.matchup_select_team) {
 			return;
 		}
 		const { betslip, dateofmatchup, opponent, payData } = payload;
+		
+		const matchCacheService = new MatchCacheService(new CacheManager());
+		const matchDetails = await matchCacheService.getMatch(betslip.matchup_id);
+		
+		if (!matchDetails) {
+			await interaction.editReply({
+				embeds: [
+					await ErrorEmbeds.internalErr(
+						'Due to an internal error, the match data is not available. Please try again later.',
+					),
+				],
+			});
+			return;
+		}
+		
+		const betslipForPresentation: BetslipWithAggregationDTO = {
+			userid: betslip.userid,
+			team: betslip.team,
+			amount: betslip.amount,
+			profit: betslip.profit,
+			payout: betslip.payout,
+			opponent: betslip.opponent,
+			dateofmatchup: betslip.dateofmatchup,
+			match: matchDetails,
+		};
+		
 		return new BetslipManager(
 			new BetslipWrapper(),
 			new BetsCacheService(new CacheManager()),
 		).presentBetWithPay(interaction, {
-			betslip,
+			betslip: betslipForPresentation,
 			payData,
 			matchInfo: {
 				dateofmatchup,
