@@ -14,6 +14,7 @@ import {
 	type CommandInteraction,
 	EmbedBuilder,
 	type GuildEmoji,
+	type StringSelectMenuInteraction,
 } from 'discord.js';
 import _ from 'lodash';
 import embedColors from '../../../../lib/colorsConfig.js';
@@ -281,7 +282,7 @@ export class BetslipManager {
 	 * @param betData
 	 */
 	async presentBetWithPay(
-		interaction: CommandInteraction | ButtonInteraction,
+		interaction: CommandInteraction | ButtonInteraction | StringSelectMenuInteraction,
 		betData: {
 			betslip: BetslipWithAggregationDTO;
 			payData: { payout: number; profit: number };

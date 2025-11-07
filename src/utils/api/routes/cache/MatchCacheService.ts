@@ -19,7 +19,7 @@ export default class MatchCacheService {
 		});
 	}
 
-	async getMatches() {
+	async getMatches(): Promise<MatchDetailDto[] | null> {
 		return await this.cache.get('matches');
 	}
 

@@ -1,5 +1,6 @@
 import type {
-    BetslipWithAggregationDTO
+    BetslipWithAggregationDTO,
+	MatchDetailDto,
 } from '@kh-openapi';
 import {
     InteractionHandler,
@@ -124,7 +125,7 @@ export class MenuHandler extends InteractionHandler {
 		});
 	}
 
-	public async run(interaction: ButtonInteraction, payload: any) {
+	public async run(interaction: StringSelectMenuInteraction, payload: any) {
 		if (interaction.customId !== selectMenuIds.matchup_select_team) {
 			return;
 		}
