@@ -126,8 +126,14 @@ export class AdminPredictionsHandler {
 			})
 
 			// Format the prediction details for confirmation
+			// Fetch prop to get event_context as fallback for malformed match_string
+			const propApiWrapper = new PropsApiWrapper()
+			const prop = await propApiWrapper.getPropByUuid(
+				matchedPrediction.outcome_uuid,
+			)
 			const parsedMatchString = await this.parseMatchString(
 				matchedPrediction.match_string,
+				prop.event_context,
 			)
 			const date = new DateManager().toMMDDYYYY(
 				matchedPrediction.created_at,
@@ -202,10 +208,6 @@ export class AdminPredictionsHandler {
 	private async createPredictionField(
 		prediction: AllUserPredictionsDto,
 	): Promise<{ name: string; value: string; inline: boolean }> {
-		const parsedMatchString = await this.parseMatchString(
-			prediction.match_string,
-		)
-
 		// Get Prop via ID within the prediction
 		const propApiWrapper = new PropsApiWrapper()
 		const prop = await propApiWrapper.getPropByUuid(prediction.outcome_uuid)
@@ -213,6 +215,12 @@ export class AdminPredictionsHandler {
 		// Find the specific outcome that matches the prediction
 		const outcome = prop.outcomes.find(
 			(o) => o.outcome_uuid === prediction.outcome_uuid,
+		)
+
+		// Parse match string with fallback to event_context if match_string is malformed
+		const parsedMatchString = await this.parseMatchString(
+			prediction.match_string,
+			prop.event_context,
 		)
 
 		// Format the choice with point and market
@@ -264,9 +272,48 @@ export class AdminPredictionsHandler {
 
 	/**
 	 * Parse and format match string with team identifiers
+	 * @param matchString - The match string to parse (e.g., "Team A vs. Team B")
+	 * @param fallbackContext - Optional fallback event context if match_string is malformed
 	 */
-	private async parseMatchString(matchString: string): Promise<string> {
-		const [awayTeam, homeTeam] = matchString.split(' vs. ')
+	private async parseMatchString(
+		matchString: string | null | undefined,
+		fallbackContext?: {
+			away_team: string
+			home_team: string
+		},
+	): Promise<string> {
+		// Validate match_string exists and contains the expected separator
+		if (!matchString || !matchString.includes(' vs. ')) {
+			// Use fallback if available
+			if (fallbackContext) {
+				const result = await TeamInfo.resolveTeamIdentifier({
+					away_team: fallbackContext.away_team,
+					home_team: fallbackContext.home_team,
+				})
+				return `${result.away_team} vs. ${result.home_team}`
+			}
+			// If no fallback, return original string or a safe default
+			return matchString || 'Unknown Match'
+		}
+
+		const parts = matchString.split(' vs. ')
+		const awayTeam = parts[0]?.trim()
+		const homeTeam = parts[1]?.trim()
+
+		// Validate that both teams were extracted correctly
+		if (!awayTeam || !homeTeam) {
+			// Use fallback if available
+			if (fallbackContext) {
+				const result = await TeamInfo.resolveTeamIdentifier({
+					away_team: fallbackContext.away_team,
+					home_team: fallbackContext.home_team,
+				})
+				return `${result.away_team} vs. ${result.home_team}`
+			}
+			// If no fallback, return original string
+			return matchString
+		}
+
 		const result = await TeamInfo.resolveTeamIdentifier({
 			away_team: awayTeam,
 			home_team: homeTeam,
