@@ -27,6 +27,20 @@ export class ActivePropsService {
 	}
 
 	/**
+	 * Validate if a string is a valid UUID format (with or without dashes)
+	 * Accepts both standard UUID format (with dashes) and normalized format (without dashes)
+	 */
+	private isValidUUID(uuid: string): boolean {
+		if (!uuid || typeof uuid !== 'string') return false
+		// UUID regex: accepts both formats
+		// Standard: 8-4-4-4-12 hex digits
+		// Normalized: 32 hex digits (no dashes)
+		const uuidRegex =
+			/^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i
+		return uuidRegex.test(uuid)
+	}
+
+	/**
 	 * Fetch active outcomes from Khronos and cache all outcomes from outcome_uuids array
 	 *
 	 * Cache all outcomes from outcome_uuids array. Each outcome belongs to a prop (identified by market_id).
@@ -43,8 +57,37 @@ export class ActivePropsService {
 				})
 			const apiDuration = Date.now() - apiStartTime
 
+			// Debug: Log API response structure to verify data format
+			if (dateGroups.length > 0 && dateGroups[0].games.length > 0) {
+				const firstGame = dateGroups[0].games[0]
+				const firstProp = firstGame.props?.[0]
+				if (firstProp) {
+					logger.debug('API response structure check', {
+						guildId,
+						sampleProp: {
+							outcome_uuid: firstProp.outcome_uuid,
+							outcome_uuid_type: typeof firstProp.outcome_uuid,
+							outcome_uuid_length: firstProp.outcome_uuid?.length,
+							outcome_uuids: firstProp.outcome_uuids,
+							outcome_uuids_count: firstProp.outcome_uuids?.length,
+							description: firstProp.description,
+							market_key: firstProp.market_key,
+							market_id: firstProp.market_id,
+						},
+					})
+				}
+			}
+
 			// Extract full outcome metadata from nested structure: DateGroup[] -> Game[] -> Prop[]
 			const cachedOutcomes: CachedProp[] = []
+			const invalidUuids: Array<{
+				outcome_uuid: string
+				outcome_uuid_type?: string
+				outcome_uuid_length?: number
+				prop_description?: string
+				market_key?: string
+				market_id?: number | null
+			}> = []
 
 			for (const dateGroup of dateGroups) {
 				for (const game of dateGroup.games) {
@@ -63,6 +106,29 @@ export class ActivePropsService {
 
 						// Cache each outcome individually (they share the same market_id/prop)
 						for (const outcomeUuid of outcomeUuids) {
+							// Validate UUID format before caching
+							if (!this.isValidUUID(outcomeUuid)) {
+								invalidUuids.push({
+									outcome_uuid: outcomeUuid,
+									outcome_uuid_type: typeof outcomeUuid,
+									outcome_uuid_length: outcomeUuid?.length,
+									prop_description: prop.description,
+									market_key: prop.market_key,
+									market_id: marketId,
+								})
+								logger.warn('Invalid UUID format in API response', {
+									outcome_uuid: outcomeUuid,
+									outcome_uuid_type: typeof outcomeUuid,
+									outcome_uuid_length: outcomeUuid?.length,
+									description: prop.description,
+									market_key: prop.market_key,
+									market_id: marketId,
+									guildId,
+									context: 'ActivePropsService.refreshActiveProps',
+								})
+								continue
+							}
+
 							cachedOutcomes.push({
 								outcome_uuid: outcomeUuid,
 								market_id: marketId, // Groups outcomes into prop pairs
@@ -78,25 +144,54 @@ export class ActivePropsService {
 				}
 			}
 
+			if (invalidUuids.length > 0) {
+				logger.error('Invalid UUIDs filtered from active props cache', {
+					guildId,
+					invalid_count: invalidUuids.length,
+					total_outcomes: cachedOutcomes.length,
+					invalid_uuids: invalidUuids,
+					context: 'ActivePropsService.refreshActiveProps',
+				})
+			}
+
 			// Update cache with full outcome metadata (guild-scoped)
 			const cacheStartTime = Date.now()
 			await this.cacheService.cacheActiveProps(guildId, cachedOutcomes)
 			const cacheDuration = Date.now() - cacheStartTime
 
-			// Log performance metrics
+			// Log performance metrics and data quality
 			logger.info('Active outcomes refreshed', {
 				guildId,
 				outcomesCount: cachedOutcomes.length,
+				invalidUuidsFiltered: invalidUuids.length,
 				apiDuration: `${apiDuration}ms`,
 				cacheDuration: `${cacheDuration}ms`,
 				totalDuration: `${apiDuration + cacheDuration}ms`,
+				context: 'ActivePropsService.refreshActiveProps',
 			})
+
+			// Debug: Log sample cached outcomes to verify structure
+			if (cachedOutcomes.length > 0) {
+				logger.debug('Sample cached outcomes structure', {
+					guildId,
+					sampleOutcomes: cachedOutcomes.slice(0, 2).map((outcome) => ({
+						outcome_uuid: outcome.outcome_uuid,
+						outcome_uuid_type: typeof outcome.outcome_uuid,
+						outcome_uuid_length: outcome.outcome_uuid?.length,
+						market_id: outcome.market_id,
+						description: outcome.description,
+						market_key: outcome.market_key,
+					})),
+				})
+			}
 
 			return cachedOutcomes
 		} catch (error) {
 			logger.error('Failed to refresh active outcomes', {
 				guildId,
 				error: error instanceof Error ? error.message : String(error),
+				stack: error instanceof Error ? error.stack : undefined,
+				context: 'ActivePropsService.refreshActiveProps',
 			})
 			throw new Error(
 				`Failed to refresh active outcomes for guild ${guildId}: ${error instanceof Error ? error.message : String(error)}`,

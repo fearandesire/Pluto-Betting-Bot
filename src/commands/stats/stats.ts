@@ -116,7 +116,10 @@ export class UserCommand extends Subcommand {
 
 			await interaction.editReply({ embeds: [embed] })
 		} catch (error) {
-			this.container.logger.error(error)
+			this.container.logger.error('Failed to fetch h2h stats', {
+				userId: interaction.user.id,
+				error,
+			})
 			return await interaction.editReply({
 				content: 'An error occurred while fetching your stats.',
 			})

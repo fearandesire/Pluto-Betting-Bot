@@ -145,6 +145,20 @@ export class AdminPropsHandler {
 	}
 
 	/**
+	 * Validate if a string is a valid UUID format (with or without dashes)
+	 * Accepts both standard UUID format (with dashes) and normalized format (without dashes)
+	 */
+	private isValidUUID(uuid: string): boolean {
+		if (!uuid || typeof uuid !== 'string') return false
+		// UUID regex: accepts both formats
+		// Standard: 8-4-4-4-12 hex digits
+		// Normalized: 32 hex digits (no dashes)
+		const uuidRegex =
+			/^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i
+		return uuidRegex.test(uuid)
+	}
+
+	/**
 	 * Handle /admin props setresult <prop_id> <result>
 	 * Set the result of a specific prop
 	 */
@@ -162,16 +176,68 @@ export class AdminPropsHandler {
 			return
 		}
 
+		// Validate propId is a valid UUID format before sending to API
+		if (!this.isValidUUID(propId)) {
+			logger.error('Invalid UUID format received from autocomplete', {
+				propId,
+				propIdType: typeof propId,
+				propIdLength: propId?.length,
+				user_id: interaction.user.id,
+				user_username: interaction.user.username,
+				guild_id: interaction.guildId,
+				result,
+				context: 'AdminPropsHandler.handleSetresult',
+			})
+			await interaction.reply({
+				content: `❌ Invalid prop ID format. Expected UUID, received: \`${propId.substring(0, 50)}${propId.length > 50 ? '...' : ''}\`\n\nPlease try selecting the prop again from the autocomplete menu.`,
+				ephemeral: true,
+			})
+			return
+		}
+
+		// Debug: Log valid UUID before API call
+		logger.debug('Valid UUID received from autocomplete', {
+			propId,
+			propIdLength: propId.length,
+			hasDashes: propId.includes('-'),
+			user_id: interaction.user.id,
+			guild_id: interaction.guildId,
+		})
+
 		const propsApi = new PropsApiWrapper()
 
 		try {
 			await interaction.deferReply()
 
+			logger.info('Setting prop result', {
+				propId,
+				propIdLength: propId.length,
+				hasDashes: propId.includes('-'),
+				winner: result,
+				user_id: interaction.user.id,
+				user_username: interaction.user.username,
+				guild_id: interaction.guildId,
+				context: 'AdminPropsHandler.handleSetresult',
+			})
+
+			const apiStartTime = Date.now()
 			const response = await propsApi.setResult({
 				propId,
 				winner: result,
 				status: 'completed',
 				user_id: interaction.user.id,
+			})
+			const apiDuration = Date.now() - apiStartTime
+
+			logger.info('Prop result set successfully', {
+				propId,
+				winner: result,
+				correct_predictions: response.correct_predictions_count,
+				incorrect_predictions: response.incorrect_predictions_count,
+				total_predictions: response.total_predictions_count,
+				apiDuration: `${apiDuration}ms`,
+				user_id: interaction.user.id,
+				guild_id: interaction.guildId,
 			})
 
 			const embed = this.createResultEmbed(response)
@@ -184,6 +250,17 @@ export class AdminPropsHandler {
 
 			await interaction.editReply({ embeds: [embed] })
 		} catch (error) {
+			logger.error('Failed to set prop result', {
+				propId,
+				propIdType: typeof propId,
+				propIdLength: propId?.length,
+				winner: result,
+				user_id: interaction.user.id,
+				guild_id: interaction.guildId,
+				error: error instanceof Error ? error.message : String(error),
+				stack: error instanceof Error ? error.stack : undefined,
+				context: 'AdminPropsHandler.handleSetresult',
+			})
 			container.logger.error(error)
 			await new ApiErrorHandler().handle(
 				interaction,

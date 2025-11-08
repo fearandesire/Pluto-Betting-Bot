@@ -3,6 +3,7 @@
 // ============================================================================
 
 import StringUtils from '../common/string-utils.js'
+import { logger } from '../logging/WinstonLogger.js'
 import type { CachedProp } from './PropCacheService.js'
 
 /**
@@ -18,6 +19,20 @@ export interface AutocompleteChoice {
  * Handles truncation, filtering, and readable formatting
  */
 export class PropsAutocompleteFormatter {
+	/**
+	 * Validate if a string is a valid UUID format (with or without dashes)
+	 * Accepts both standard UUID format (with dashes) and normalized format (without dashes)
+	 */
+	private static isValidUUID(uuid: string): boolean {
+		if (!uuid || typeof uuid !== 'string') return false
+		// UUID regex: accepts both formats
+		// Standard: 8-4-4-4-12 hex digits
+		// Normalized: 32 hex digits (no dashes)
+		const uuidRegex =
+			/^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i
+		return uuidRegex.test(uuid)
+	}
+
 	/**
 	 * Format a prop into a readable autocomplete string
 	 * Max length: 100 chars (Discord limit)
@@ -57,12 +72,73 @@ export class PropsAutocompleteFormatter {
 
 	/**
 	 * Convert props to autocomplete choices
+	 * Validates that outcome_uuid is a valid UUID format before using as value
 	 */
 	static toAutocompleteChoices(props: CachedProp[]): AutocompleteChoice[] {
-		return props.map((prop) => ({
-			name: PropsAutocompleteFormatter.formatPropName(prop),
-			value: prop.outcome_uuid,
-		}))
+		const choices: AutocompleteChoice[] = []
+		const invalidProps: Array<{ prop: CachedProp; outcome_uuid: string }> = []
+
+		for (const prop of props) {
+			// Validate UUID format
+			if (!this.isValidUUID(prop.outcome_uuid)) {
+				invalidProps.push({
+					prop,
+					outcome_uuid: prop.outcome_uuid,
+				})
+				logger.warn('Invalid UUID format in cached prop', {
+					outcome_uuid: prop.outcome_uuid,
+					outcome_uuid_type: typeof prop.outcome_uuid,
+					outcome_uuid_length: prop.outcome_uuid?.length,
+					description: prop.description,
+					market_key: prop.market_key,
+					market_id: prop.market_id,
+					formatted_name: this.formatPropName(prop),
+					context: 'PropsAutocompleteFormatter.toAutocompleteChoices',
+				})
+				continue
+			}
+
+			const formattedName = this.formatPropName(prop)
+			choices.push({
+				name: formattedName,
+				value: prop.outcome_uuid,
+			})
+
+			// Debug: Log transformation for first few props
+			if (choices.length <= 3) {
+				logger.debug('Prop to autocomplete choice transformation', {
+					prop: {
+						outcome_uuid: prop.outcome_uuid,
+						description: prop.description,
+						market_key: prop.market_key,
+					},
+					choice: {
+						name: formattedName.substring(0, 50),
+						value: prop.outcome_uuid,
+					},
+				})
+			}
+		}
+
+		if (invalidProps.length > 0) {
+			logger.error('Props with invalid UUIDs filtered from autocomplete', {
+				invalid_count: invalidProps.length,
+				total_props: props.length,
+				valid_choices_count: choices.length,
+				invalid_props: invalidProps.map((p) => ({
+					outcome_uuid: p.outcome_uuid,
+					outcome_uuid_type: typeof p.outcome_uuid,
+					outcome_uuid_length: p.outcome_uuid?.length,
+					formatted_name: this.formatPropName(p.prop),
+					description: p.prop.description,
+					market_key: p.prop.market_key,
+					market_id: p.prop.market_id,
+				})),
+				context: 'PropsAutocompleteFormatter.toAutocompleteChoices',
+			})
+		}
+
+		return choices
 	}
 
 	/**
@@ -102,3 +178,4 @@ export class PropsAutocompleteFormatter {
 		})
 	}
 }
+
