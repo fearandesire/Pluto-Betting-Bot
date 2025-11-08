@@ -6,6 +6,7 @@ import { Events, Listener } from '@sapphire/framework'
 import type { AutocompleteInteraction } from 'discord.js'
 import PredictionApiWrapper from '../utils/api/Khronos/prediction/predictionApiWrapper.js'
 import { CacheManager } from '../utils/cache/cache-manager.js'
+import { UUID_REGEX } from '../utils/common/uuid-validation.js'
 import { ActivePropsService } from '../utils/props/ActivePropsService.js'
 import { PropsCacheService } from '../utils/props/PropCacheService.js'
 import { PropsAutocompleteFormatter } from '../utils/props/PropsAutocompleteFormatter.js'
@@ -133,10 +134,7 @@ export class PropsAutocompleteListener extends Listener {
 					value: choice.value,
 					valueLength: choice.value.length,
 					valueType: typeof choice.value,
-					isValidUUID:
-						/^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i.test(
-							choice.value,
-						),
+					isValidUUID: UUID_REGEX.test(choice.value),
 					originalOutcomeUuid: originalProp?.outcome_uuid,
 					originalOutcomeUuidType: typeof originalProp?.outcome_uuid,
 				}
@@ -155,10 +153,7 @@ export class PropsAutocompleteListener extends Listener {
 
 			// Validate all choices have valid UUIDs as values
 			const invalidChoices = choices.filter(
-				(choice) =>
-					!/^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i.test(
-						choice.value,
-					),
+				(choice) => !UUID_REGEX.test(choice.value),
 			)
 
 			if (invalidChoices.length > 0) {

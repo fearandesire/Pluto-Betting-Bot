@@ -1,5 +1,5 @@
 import { ApplyOptions } from '@sapphire/decorators'
-import { PaginatedMessageEmbedFields } from '@sapphire/discord.js-utilities'
+import { PaginatedFieldMessageEmbed } from '@sapphire/discord.js-utilities'
 import { Subcommand } from '@sapphire/plugin-subcommands'
 import {
 	EmbedBuilder,
@@ -12,7 +12,6 @@ import { GetAllPredictionsFilteredStatusEnum } from '../../openapi/khronos/apis/
 import type { AllUserPredictionsDto } from '../../openapi/khronos/models/AllUserPredictionsDto.js'
 import PredictionApiWrapper from '../../utils/api/Khronos/prediction/predictionApiWrapper.js'
 import PropsApiWrapper from '../../utils/api/Khronos/props/propsApiWrapper.js'
-import { DateManager } from '../../utils/common/DateManager.js'
 import TeamInfo from '../../utils/common/TeamInfo.js'
 
 /**
@@ -44,19 +43,17 @@ export class UserCommand extends Subcommand {
 							.setDescription('View your prediction history')
 							.addStringOption((option) =>
 								option
-									.setName('status')
-									.setDescription(
-										'[Optional] Filter predictions by status',
-									)
-									.setRequired(false)
+									.setName('view')
+									.setDescription('Which predictions to view')
+									.setRequired(true)
 									.addChoices(
 										{
-											name: 'Pending',
-											value: GetAllPredictionsFilteredStatusEnum.Pending,
+											name: '⏳ Pending',
+											value: 'pending',
 										},
 										{
-											name: 'Completed',
-											value: GetAllPredictionsFilteredStatusEnum.Completed,
+											name: '✅ Completed',
+											value: 'completed',
 										},
 									),
 							),
@@ -78,10 +75,10 @@ export class UserCommand extends Subcommand {
 	) {
 		await interaction.deferReply({ ephemeral: true })
 
+		const view = interaction.options.getString('view', true) as
+			| 'pending'
+			| 'completed'
 		const user = interaction.user
-		const status = interaction.options.getString(
-			'status',
-		) as GetAllPredictionsFilteredStatusEnum | null
 
 		try {
 			const predictionApiWrapper = new PredictionApiWrapper()
@@ -96,43 +93,16 @@ export class UserCommand extends Subcommand {
 				})
 			}
 
-			// Apply status filter if provided
-			const filteredPredictions = status
-				? usersPredictions.filter((p) => p.status === status)
-				: usersPredictions
-
-			if (filteredPredictions.length === 0) {
-				return interaction.editReply({
-					content: `You have no ${status?.toLowerCase() || ''} predictions.`,
-				})
+			switch (view) {
+				case 'pending':
+					return this.showPendingView(interaction, usersPredictions)
+				case 'completed':
+					return this.showCompletedView(interaction, usersPredictions)
 			}
-
-			const descStr = status ? `Filtered by: \`${status}\`` : null
-
-			const formattedPredictions = await Promise.all(
-				filteredPredictions.map((prediction) =>
-					this.createPredictionField(prediction),
-				),
-			)
-
-			const templateEmbed = new EmbedBuilder()
-				.setTitle('Your Prediction History')
-				.setDescription(descStr)
-				.setColor(embedColors.PlutoBlue)
-
-			const paginatedMsg = new PaginatedMessageEmbedFields({
-				template: { embeds: [templateEmbed] },
-			})
-				.setItems(formattedPredictions)
-				.setItemsPerPage(10)
-				.make()
-
-			await paginatedMsg.run(interaction)
 		} catch (error) {
 			this.container.logger.error(error)
 			return interaction.editReply({
-				content:
-					'An error occurred while fetching your prediction history.',
+				content: 'An error occurred while fetching your predictions.',
 			})
 		}
 	}
@@ -229,56 +199,166 @@ export class UserCommand extends Subcommand {
 		}
 	}
 
-	private async createPredictionField(
-		prediction: AllUserPredictionsDto,
-	): Promise<{ name: string; value: string; inline: boolean }> {
-		const outcomeEmoji = this.getOutcomeEmoji(prediction)
-		const parsedMatchString = await this.parseMatchString(
-			prediction.match_string,
+	/**
+	 * Show pending predictions view with detailed format
+	 */
+	private async showPendingView(
+		interaction: Subcommand.ChatInputCommandInteraction,
+		predictions: AllUserPredictionsDto[],
+	) {
+		const pending = predictions.filter(
+			(p) => p.status === GetAllPredictionsFilteredStatusEnum.Pending,
 		)
 
-		const propApiWrapper = new PropsApiWrapper()
-		const prop = await propApiWrapper.getPropByUuid(prediction.outcome_uuid)
-
-		const outcome = prop.outcomes.find(
-			(o) => o.outcome_uuid === prediction.outcome_uuid,
-		)
-
-		const formattedChoice = this.formatPredictionChoice(
-			prediction.choice,
-			outcome?.point,
-			prop.market_key,
-		)
-
-		const date = new DateManager().toMMDDYYYY(prediction.created_at)
-
-		const outcomeStr = (emoji: string) => {
-			if (emoji === '⏳') {
-				return 'Pending ⏳'
-			}
-			if (emoji === '✅') {
-				return 'Correct ✅'
-			}
-			if (emoji === '❌') {
-				return 'Incorrect ❌'
-			}
-			return emoji
+		if (pending.length === 0) {
+			return interaction.editReply({
+				content: 'You have no pending predictions.',
+			})
 		}
 
-		const propDescription = outcome?.description
-		let propDetailsValue = `**Choice:** ${formattedChoice}`
-		if (propDescription && propDescription.trim() !== '') {
-			propDetailsValue = `**Prop:** ${propDescription}\n${propDetailsValue}`
+		type FormattedPrediction = {
+			formattedText: string
 		}
 
-		const eventDetailsValue = `**Match:** ${parsedMatchString}\n**Date:** ${date}`
+		const formattedPredictions = await Promise.all(
+			pending.map(async (p): Promise<FormattedPrediction> => {
+				const outcome = await this.getOutcomeDetails(p.outcome_uuid)
+				const formattedText = this.formatPredictionCompact(
+					p,
+					outcome,
+					null,
+				)
 
-		const value = `**Status:** ${outcomeStr(outcomeEmoji)}\n\n**Prop Details**\n${propDetailsValue}\n\n**Event Details**\n${eventDetailsValue}`
+				return {
+					formattedText,
+				}
+			}),
+		)
 
-		return {
-			name: `Prediction #${prediction.id.slice(-8)}`,
-			value: value,
-			inline: false,
+		const templateEmbed = new EmbedBuilder()
+			.setTitle('⏳ Your Pending Predictions')
+			.setDescription(
+				`You have ${pending.length} active prediction${
+					pending.length !== 1 ? 's' : ''
+				}`,
+			)
+			.setColor(embedColors.PlutoYellow)
+
+		const paginatedMsg =
+			new PaginatedFieldMessageEmbed<FormattedPrediction>()
+				.setTitleField('\u200B')
+				.setTemplate(templateEmbed)
+				.setItems(formattedPredictions)
+				.setItemsPerPage(5)
+				.formatItems((item) => item.formattedText)
+				.make()
+
+		return paginatedMsg.run(interaction)
+	}
+
+	/**
+	 * Show completed predictions view with compact format
+	 */
+	private async showCompletedView(
+		interaction: Subcommand.ChatInputCommandInteraction,
+		predictions: AllUserPredictionsDto[],
+	) {
+		const completed = predictions.filter(
+			(p) => p.status !== GetAllPredictionsFilteredStatusEnum.Pending,
+		)
+
+		if (completed.length === 0) {
+			return interaction.editReply({
+				content: 'You have no completed predictions yet.',
+			})
+		}
+
+		const correct = completed.filter(
+			(p) =>
+				p.status === GetAllPredictionsFilteredStatusEnum.Completed &&
+				p.is_correct === true,
+		).length
+		const incorrect = completed.length - correct
+
+		type FormattedCompletedPrediction = {
+			formattedText: string
+		}
+
+		const formattedPredictions = await Promise.all(
+			completed.map(async (p): Promise<FormattedCompletedPrediction> => {
+				// Determine if prediction is correct (only for Completed status)
+				let isCorrect: boolean | null = null
+				if (
+					p.status === GetAllPredictionsFilteredStatusEnum.Completed
+				) {
+					isCorrect = p.is_correct === true
+				}
+				const outcome = await this.getOutcomeDetails(p.outcome_uuid)
+				const formattedText = this.formatPredictionCompact(
+					p,
+					outcome,
+					isCorrect,
+				)
+
+				return {
+					formattedText,
+				}
+			}),
+		)
+
+		const templateEmbed = new EmbedBuilder()
+			.setTitle('📊 Your Completed Predictions')
+			.setDescription(`${correct} correct • ${incorrect} incorrect`)
+			.setColor(embedColors.PlutoBlue)
+
+		const paginatedMsg =
+			new PaginatedFieldMessageEmbed<FormattedCompletedPrediction>()
+				.setTitleField('\u200B')
+				.setTemplate(templateEmbed)
+				.setItems(formattedPredictions)
+				.setItemsPerPage(8)
+				.formatItems((item) => item.formattedText)
+				.make()
+
+		return paginatedMsg.run(interaction)
+	}
+
+	/**
+	 * Get outcome details from prop API
+	 */
+	private async getOutcomeDetails(outcomeUuid: string): Promise<{
+		name: string
+		description?: string
+		point: number
+		market_key: string
+		event_context: {
+			home_team: string
+			away_team: string
+		}
+	} | null> {
+		try {
+			const propApiWrapper = new PropsApiWrapper()
+			const prop = await propApiWrapper.getPropByUuid(outcomeUuid)
+
+			const outcome = prop.outcomes.find(
+				(o) => o.outcome_uuid === outcomeUuid,
+			)
+
+			if (!outcome) return null
+
+			return {
+				name: outcome.name,
+				description: outcome.description,
+				point: outcome.point,
+				market_key: prop.market_key,
+				event_context: prop.event_context,
+			}
+		} catch (error) {
+			this.container.logger.error(
+				'Failed to fetch outcome details:',
+				error,
+			)
+			return null
 		}
 	}
 
@@ -300,16 +380,74 @@ export class UserCommand extends Subcommand {
 		return `${upperChoice} ${marketName}`
 	}
 
-	private getOutcomeEmoji(prediction: AllUserPredictionsDto): string {
-		if (
-			prediction.status !== GetAllPredictionsFilteredStatusEnum.Completed
-		) {
-			return '⏳'
+	/**
+	 * Format prediction in compact view format
+	 * Player format: **✅ Player Name** (Team)\nProp Type • **PICK Line**\n*<t:TIMESTAMP:d>*
+	 * Team format: **✅ Team Name**\nProp Type • **PICK Line**\n*<t:TIMESTAMP:d>*
+	 */
+	private formatPredictionCompact(
+		prediction: AllUserPredictionsDto,
+		outcome: {
+			name: string
+			description?: string
+			point: number
+			market_key: string
+			event_context: {
+				home_team: string
+				away_team: string
+			}
+		} | null,
+		isCorrect: boolean | null,
+	): string {
+		if (!outcome) {
+			return 'Unknown prediction'
 		}
-		if (prediction.is_correct === null) {
-			return '⏳'
+
+		const result =
+			isCorrect === true ? '✅' : isCorrect === false ? '❌' : '⏳'
+		const isPlayerPrediction =
+			outcome.description && outcome.description.trim() !== ''
+
+		let entityLine: string
+		if (isPlayerPrediction) {
+			const playerName = outcome.description!
+			let teamName: string
+			if (prediction.match_string) {
+				const [awayTeam] = prediction.match_string.split(' vs. ')
+				teamName = TeamInfo.getTeamShortName(
+					awayTeam || outcome.event_context.away_team,
+				)
+			} else {
+				teamName = TeamInfo.getTeamShortName(
+					outcome.event_context.away_team,
+				)
+			}
+			entityLine = `**${result} ${playerName}** (${teamName})`
+		} else {
+			const teamName = TeamInfo.getTeamShortName(outcome.name)
+			entityLine = `**${result} ${teamName}**`
 		}
-		return prediction?.is_correct ? '✅' : '❌'
+
+		const propType = _.startCase(
+			outcome.market_key.replace('player_', '').replace('_', ' '),
+		)
+
+		const pick = prediction.choice.toUpperCase()
+		const line =
+			outcome.point !== null && outcome.point !== undefined
+				? outcome.point.toString()
+				: ''
+
+		const timestamp = Math.floor(
+			new Date(prediction.created_at).getTime() / 1000,
+		)
+		const formattedDate = `<t:${timestamp}:d>`
+
+		const propLine = line
+			? `${propType} • **${pick} ${line}**`
+			: `${propType} • **${pick}**`
+
+		return `${entityLine}\n${propLine}\n*${formattedDate}*`
 	}
 
 	private async parseMatchString(matchString: string) {

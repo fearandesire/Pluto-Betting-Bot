@@ -11,6 +11,7 @@ import PredictionApiWrapper from '../api/Khronos/prediction/predictionApiWrapper
 import PropsApiWrapper from '../api/Khronos/props/propsApiWrapper.js'
 import { DateManager } from '../common/DateManager.js'
 import StringUtils from '../common/string-utils.js'
+import { isValidUUID } from '../common/uuid-validation.js'
 import { LogType } from '../logging/AppLog.interface.js'
 import AppLog from '../logging/AppLog.js'
 import { logger } from '../logging/WinstonLogger.js'
@@ -145,20 +146,6 @@ export class AdminPropsHandler {
 	}
 
 	/**
-	 * Validate if a string is a valid UUID format (with or without dashes)
-	 * Accepts both standard UUID format (with dashes) and normalized format (without dashes)
-	 */
-	private isValidUUID(uuid: string): boolean {
-		if (!uuid || typeof uuid !== 'string') return false
-		// UUID regex: accepts both formats
-		// Standard: 8-4-4-4-12 hex digits
-		// Normalized: 32 hex digits (no dashes)
-		const uuidRegex =
-			/^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i
-		return uuidRegex.test(uuid)
-	}
-
-	/**
 	 * Handle /admin props setresult <prop_id> <result>
 	 * Set the result of a specific prop
 	 */
@@ -177,7 +164,7 @@ export class AdminPropsHandler {
 		}
 
 		// Validate propId is a valid UUID format before sending to API
-		if (!this.isValidUUID(propId)) {
+		if (!isValidUUID(propId)) {
 			logger.error('Invalid UUID format received from autocomplete', {
 				propId,
 				propIdType: typeof propId,

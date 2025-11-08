@@ -3,6 +3,7 @@
 // ============================================================================
 
 import StringUtils from '../common/string-utils.js'
+import { isValidUUID } from '../common/uuid-validation.js'
 import { logger } from '../logging/WinstonLogger.js'
 import type { CachedProp } from './PropCacheService.js'
 
@@ -19,20 +20,6 @@ export interface AutocompleteChoice {
  * Handles truncation, filtering, and readable formatting
  */
 export class PropsAutocompleteFormatter {
-	/**
-	 * Validate if a string is a valid UUID format (with or without dashes)
-	 * Accepts both standard UUID format (with dashes) and normalized format (without dashes)
-	 */
-	private static isValidUUID(uuid: string): boolean {
-		if (!uuid || typeof uuid !== 'string') return false
-		// UUID regex: accepts both formats
-		// Standard: 8-4-4-4-12 hex digits
-		// Normalized: 32 hex digits (no dashes)
-		const uuidRegex =
-			/^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i
-		return uuidRegex.test(uuid)
-	}
-
 	/**
 	 * Format a prop into a readable autocomplete string
 	 * Max length: 100 chars (Discord limit)
@@ -81,7 +68,7 @@ export class PropsAutocompleteFormatter {
 
 		for (const prop of props) {
 			// Validate UUID format
-			if (!this.isValidUUID(prop.outcome_uuid)) {
+			if (!isValidUUID(prop.outcome_uuid)) {
 				invalidProps.push({
 					prop,
 					outcome_uuid: prop.outcome_uuid,

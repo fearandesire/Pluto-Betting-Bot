@@ -4,6 +4,7 @@
 
 import type { DateGroupDto } from '@kh-openapi'
 import type PredictionApiWrapper from '../api/Khronos/prediction/predictionApiWrapper.js'
+import { isValidUUID } from '../common/uuid-validation.js'
 import { logger } from '../logging/WinstonLogger.js'
 import type { CachedProp, PropsCacheService } from './PropCacheService.js'
 
@@ -24,20 +25,6 @@ export class ActivePropsService {
 	) {
 		this.predictionApi = predictionApi
 		this.cacheService = cacheService
-	}
-
-	/**
-	 * Validate if a string is a valid UUID format (with or without dashes)
-	 * Accepts both standard UUID format (with dashes) and normalized format (without dashes)
-	 */
-	private isValidUUID(uuid: string): boolean {
-		if (!uuid || typeof uuid !== 'string') return false
-		// UUID regex: accepts both formats
-		// Standard: 8-4-4-4-12 hex digits
-		// Normalized: 32 hex digits (no dashes)
-		const uuidRegex =
-			/^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i
-		return uuidRegex.test(uuid)
 	}
 
 	/**
@@ -108,7 +95,7 @@ export class ActivePropsService {
 						// Cache each outcome individually (they share the same market_id/prop)
 						for (const outcomeUuid of outcomeUuids) {
 							// Validate UUID format before caching
-							if (!this.isValidUUID(outcomeUuid)) {
+							if (!isValidUUID(outcomeUuid)) {
 								invalidUuids.push({
 									outcome_uuid: outcomeUuid,
 									outcome_uuid_type: typeof outcomeUuid,
