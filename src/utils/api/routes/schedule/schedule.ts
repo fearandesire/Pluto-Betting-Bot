@@ -44,7 +44,7 @@ ScheduleRouter.post('/schedule/daily/all', async (ctx) => {
 		ctx.status = 200
 	} catch (err) {
 		console.error(err)
-		ctx.body = err
+		ctx.body = { message: 'An internal server error occurred.' };
 	}
 })
 
