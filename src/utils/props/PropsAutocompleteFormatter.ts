@@ -76,7 +76,8 @@ export class PropsAutocompleteFormatter {
 	 */
 	static toAutocompleteChoices(props: CachedProp[]): AutocompleteChoice[] {
 		const choices: AutocompleteChoice[] = []
-		const invalidProps: Array<{ prop: CachedProp; outcome_uuid: string }> = []
+		const invalidProps: Array<{ prop: CachedProp; outcome_uuid: string }> =
+			[]
 
 		for (const prop of props) {
 			// Validate UUID format
@@ -121,21 +122,24 @@ export class PropsAutocompleteFormatter {
 		}
 
 		if (invalidProps.length > 0) {
-			logger.error('Props with invalid UUIDs filtered from autocomplete', {
-				invalid_count: invalidProps.length,
-				total_props: props.length,
-				valid_choices_count: choices.length,
-				invalid_props: invalidProps.map((p) => ({
-					outcome_uuid: p.outcome_uuid,
-					outcome_uuid_type: typeof p.outcome_uuid,
-					outcome_uuid_length: p.outcome_uuid?.length,
-					formatted_name: this.formatPropName(p.prop),
-					description: p.prop.description,
-					market_key: p.prop.market_key,
-					market_id: p.prop.market_id,
-				})),
-				context: 'PropsAutocompleteFormatter.toAutocompleteChoices',
-			})
+			logger.error(
+				'Props with invalid UUIDs filtered from autocomplete',
+				{
+					invalid_count: invalidProps.length,
+					total_props: props.length,
+					valid_choices_count: choices.length,
+					invalid_props: invalidProps.map((p) => ({
+						outcome_uuid: p.outcome_uuid,
+						outcome_uuid_type: typeof p.outcome_uuid,
+						outcome_uuid_length: p.outcome_uuid?.length,
+						formatted_name: this.formatPropName(p.prop),
+						description: p.prop.description,
+						market_key: p.prop.market_key,
+						market_id: p.prop.market_id,
+					})),
+					context: 'PropsAutocompleteFormatter.toAutocompleteChoices',
+				},
+			)
 		}
 
 		return choices
@@ -178,4 +182,3 @@ export class PropsAutocompleteFormatter {
 		})
 	}
 }
-

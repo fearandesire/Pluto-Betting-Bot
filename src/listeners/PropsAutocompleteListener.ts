@@ -133,9 +133,10 @@ export class PropsAutocompleteListener extends Listener {
 					value: choice.value,
 					valueLength: choice.value.length,
 					valueType: typeof choice.value,
-					isValidUUID: /^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i.test(
-						choice.value,
-					),
+					isValidUUID:
+						/^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i.test(
+							choice.value,
+						),
 					originalOutcomeUuid: originalProp?.outcome_uuid,
 					originalOutcomeUuidType: typeof originalProp?.outcome_uuid,
 				}
@@ -175,7 +176,8 @@ export class PropsAutocompleteListener extends Listener {
 								valueType: typeof c.value,
 								valueLength: c.value.length,
 								originalOutcomeUuid: originalProp?.outcome_uuid,
-								originalOutcomeUuidType: typeof originalProp?.outcome_uuid,
+								originalOutcomeUuidType:
+									typeof originalProp?.outcome_uuid,
 							}
 						}),
 						context: 'PropsAutocompleteListener.run',

@@ -69,7 +69,8 @@ export class ActivePropsService {
 							outcome_uuid_type: typeof firstProp.outcome_uuid,
 							outcome_uuid_length: firstProp.outcome_uuid?.length,
 							outcome_uuids: firstProp.outcome_uuids,
-							outcome_uuids_count: firstProp.outcome_uuids?.length,
+							outcome_uuids_count:
+								firstProp.outcome_uuids?.length,
 							description: firstProp.description,
 							market_key: firstProp.market_key,
 							market_id: firstProp.market_id,
@@ -116,16 +117,21 @@ export class ActivePropsService {
 									market_key: prop.market_key,
 									market_id: marketId,
 								})
-								logger.warn('Invalid UUID format in API response', {
-									outcome_uuid: outcomeUuid,
-									outcome_uuid_type: typeof outcomeUuid,
-									outcome_uuid_length: outcomeUuid?.length,
-									description: prop.description,
-									market_key: prop.market_key,
-									market_id: marketId,
-									guildId,
-									context: 'ActivePropsService.refreshActiveProps',
-								})
+								logger.warn(
+									'Invalid UUID format in API response',
+									{
+										outcome_uuid: outcomeUuid,
+										outcome_uuid_type: typeof outcomeUuid,
+										outcome_uuid_length:
+											outcomeUuid?.length,
+										description: prop.description,
+										market_key: prop.market_key,
+										market_id: marketId,
+										guildId,
+										context:
+											'ActivePropsService.refreshActiveProps',
+									},
+								)
 								continue
 							}
 
@@ -174,14 +180,16 @@ export class ActivePropsService {
 			if (cachedOutcomes.length > 0) {
 				logger.debug('Sample cached outcomes structure', {
 					guildId,
-					sampleOutcomes: cachedOutcomes.slice(0, 2).map((outcome) => ({
-						outcome_uuid: outcome.outcome_uuid,
-						outcome_uuid_type: typeof outcome.outcome_uuid,
-						outcome_uuid_length: outcome.outcome_uuid?.length,
-						market_id: outcome.market_id,
-						description: outcome.description,
-						market_key: outcome.market_key,
-					})),
+					sampleOutcomes: cachedOutcomes
+						.slice(0, 2)
+						.map((outcome) => ({
+							outcome_uuid: outcome.outcome_uuid,
+							outcome_uuid_type: typeof outcome.outcome_uuid,
+							outcome_uuid_length: outcome.outcome_uuid?.length,
+							market_id: outcome.market_id,
+							description: outcome.description,
+							market_key: outcome.market_key,
+						})),
 				})
 			}
 
