@@ -7,6 +7,7 @@ import {
 	type InitBetslipRequest,
 	type PlaceBetslipRequest,
 	type PlacedBetslip,
+	type PlacedBetslipDto,
 } from '@kh-openapi'
 import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js'
 
@@ -21,7 +22,7 @@ export default class BetslipWrapper {
 		return await this.betslipApi.initBetslip(payload)
 	}
 
-	async finalize(payload: PlaceBetslipRequest) {
+	async finalize(payload: PlaceBetslipRequest): Promise<PlacedBetslipDto> {
 		return await this.betslipApi.placeBetslip(payload)
 	}
 

@@ -48,7 +48,6 @@ export class ButtonHandler extends InteractionHandler {
 	 *   - Passes data to run > BetslipManager.placeBet
 	 * @param interaction
 	 */
-	// @ts-ignore - Weird TS Error
 	public override async parse(interaction: ButtonInteraction) {
 		// ? Handle prop buttons
 		if (_.startsWith(interaction.customId, 'prop_')) {

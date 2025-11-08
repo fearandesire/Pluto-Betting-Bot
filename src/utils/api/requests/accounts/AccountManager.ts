@@ -13,6 +13,7 @@ import { ErrorEmbeds } from '../../../common/errors/global.js'
 import PaginationUtilities from '../../../embeds/pagination-utilities.js'
 import EmbedsSuccess from '../../../embeds/template/success-template.js'
 import GuildUtils from '../../../guilds/GuildUtils.js'
+import { handleNewUser } from '../../common/handleNewUser.js'
 import { plutoWelcomeMsg } from '../../common/interfaces/kh-pluto/kh-pluto.interface.js'
 import MoneyFormatter from '../../common/money-formatting/money-format.js'
 import { ApiErrorHandler } from '../../Khronos/error-handling/ApiErrorHandler.js'
@@ -113,6 +114,7 @@ export class AccountManager {
 	async fetchProfile(interaction: CommandInteraction, targetId: string) {
 		try {
 			const res = await this.accountsWrapper.getProfile(targetId)
+			handleNewUser(res)
 			const { balance, level, tier, userid, isNewUser } = res
 			if (interaction.guild) {
 				const guildUtils = new GuildUtils()

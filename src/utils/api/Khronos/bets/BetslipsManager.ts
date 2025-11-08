@@ -4,6 +4,7 @@ import type {
 	InitBetslipRespDTO,
 	PlaceBetDto,
 	PlacedBetslip,
+	PlacedBetslipDto,
 } from '@kh-openapi'
 import { helpfooter, supportMessage } from '@pluto-config'
 import { format } from 'date-fns'
@@ -27,6 +28,7 @@ import { ErrorEmbeds } from '../../../common/errors/global.js'
 import StringUtils from '../../../common/string-utils.js'
 import GuildUtils from '../../../guilds/GuildUtils.js'
 import type { BetsCacheService } from '../../common/bets/BetsCacheService.js'
+import { handleNewUser } from '../../common/handleNewUser.js'
 import type { IMatchInfoArgs } from '../../common/interfaces/kh-pluto/kh-pluto.interface.js'
 import MoneyFormatter from '../../common/money-formatting/money-format.js'
 import PatreonFacade from '../../patreon/Patreon-Facade.js'
@@ -86,6 +88,7 @@ export class BetslipManager {
 			}
 			if (response.statusCode === 201) {
 				const { betslip }: InitBetslipRespDTO = response
+				handleNewUser(response)
 				const cacheBetData = {
 					...betslip,
 					guild_id,
@@ -136,8 +139,9 @@ export class BetslipManager {
 			const response = await this.betslipInstance.finalize({
 				placeBetDto: betDetails,
 			})
-			if (response.statusCode <= 400 && response.statusCode >= 200) {
+			if (response.statusCode >= 200 && response.statusCode < 300) {
 				const { betslip } = response
+				handleNewUser(response)
 
 				const guildUtils = new GuildUtils()
 				const chosenTeamEmoji =
@@ -386,6 +390,11 @@ export class BetslipManager {
 	}
 
 	async doubleDown(userId: string, betId: number): Promise<DoubleDownDto> {
-		return this.betslipInstance.doubleDown({ userId, betId })
+		const response = await this.betslipInstance.doubleDown({
+			userId,
+			betId,
+		})
+		handleNewUser(response)
+		return response
 	}
 }
