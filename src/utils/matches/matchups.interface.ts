@@ -1,22 +1,22 @@
 export interface IMatchTeam {
-	name: string;
-	odds: string;
+	name: string
+	odds: string
 }
 
 export interface IMatchupTeamOdds {
-	home_team: IMatchTeam;
-	away_team: IMatchTeam;
+	home_team: IMatchTeam
+	away_team: IMatchTeam
 }
 
 export interface IOddsField {
-	teams: IMatchupTeamOdds;
+	teams: IMatchupTeamOdds
 	dates: {
-		mdy: string;
-		start: string;
-		legible: string;
-	};
+		mdy: string
+		start: string
+		legible: string
+	}
 }
 
 export interface IMatchupsGrouped {
-	[key: string]: IOddsField[];
+	[key: string]: IOddsField[]
 }

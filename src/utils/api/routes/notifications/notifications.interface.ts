@@ -1,77 +1,77 @@
 export interface NotifyBetUsers {
-	winners?: BetNotificationWon[];
-	losers?: BetNotificationLost[];
-	pushes?: BetNotificationPush[];
+	winners?: BetNotificationWon[]
+	losers?: BetNotificationLost[]
+	pushes?: BetNotificationPush[]
 }
 
 export interface ResultWon {
-	outcome: 'won';
-	team: string;
-	betAmount: number;
-	payout: number;
-	profit: number;
-	newBalance: number;
-	oldBalance: number;
+	outcome: 'won'
+	team: string
+	betAmount: number
+	payout: number
+	profit: number
+	newBalance: number
+	oldBalance: number
 }
 
 export interface ResultLost {
-	outcome: 'lost';
-	team: string;
-	betAmount: number;
+	outcome: 'lost'
+	team: string
+	betAmount: number
 }
 
 export interface ResultPush {
-	outcome: 'push';
-	team: string;
-	betAmount: number;
+	outcome: 'push'
+	team: string
+	betAmount: number
 }
 
 export interface BetNotificationBase {
-	userId: string;
-	betId: number;
+	userId: string
+	betId: number
 }
 
 export interface BetNotificationWon extends BetNotificationBase {
-	result: ResultWon;
+	result: ResultWon
 }
 
 export interface BetNotificationLost extends BetNotificationBase {
-	result: ResultLost;
+	result: ResultLost
 }
 
 export interface BetNotificationPush extends BetNotificationBase {
-	result: ResultPush;
+	result: ResultPush
 }
 
 export interface DisplayResultWon extends ResultWon {
-	displayBetAmount: string;
-	displayPayout: string;
-	displayProfit: string;
-	displayNewBalance: string;
-	displayOldBalance: string;
+	displayBetAmount: string
+	displayPayout: string
+	displayProfit: string
+	displayNewBalance: string
+	displayOldBalance: string
 }
 
 export interface DisplayResultLost extends ResultLost {
-	displayBetAmount: string;
+	displayBetAmount: string
 }
 
 export interface DisplayResultPush extends ResultPush {
-	displayBetAmount: string;
+	displayBetAmount: string
 }
 
 export interface DisplayBetNotificationWon extends BetNotificationWon {
-	displayResult: DisplayResultWon;
+	displayResult: DisplayResultWon
 }
 
 export interface DisplayBetNotificationLost extends BetNotificationLost {
-	displayResult: DisplayResultLost;
+	displayResult: DisplayResultLost
 }
 
 export interface DisplayBetNotificationPush extends BetNotificationPush {
-	displayResult: DisplayResultPush;
+	displayResult: DisplayResultPush
 }
 
 export type DisplayBetNotification =
 	| DisplayBetNotificationWon
 	| DisplayBetNotificationLost
-	| DisplayBetNotificationPush;
+	| DisplayBetNotificationPush

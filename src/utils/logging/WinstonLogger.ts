@@ -1,7 +1,7 @@
 import * as winston from 'winston'
 import 'winston-transport'
 import { fullFormat } from 'winston-error-format'
-import env  from '#lib/startup/env.js'
+import env from '#lib/startup/env.js'
 import { createConsoleTransport } from './transports/consoleTransport.js'
 import { createLokiTransport } from './transports/lokiTransport.js'
 
@@ -23,7 +23,10 @@ const createBaseFormat = () => {
  * Creates all configured transports, filtering out any that are null
  * @param serviceName - The service name to use for logging identification
  */
-const createTransports = (serviceName: string, customLabels: Record<string, string> = {}) => {
+const createTransports = (
+	serviceName: string,
+	customLabels: Record<string, string> = {},
+) => {
 	const transports = [
 		createConsoleTransport(),
 		createLokiTransport({ serviceName, customLabels }),
@@ -72,7 +75,6 @@ export const createLogger = (config: LoggerConfig = {}) => {
 		transports: createTransports(serviceName, config.customLabels),
 	})
 }
-
 
 /**
  * Default logger instance using PLUTO-DISCORD as service name

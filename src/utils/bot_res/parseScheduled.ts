@@ -1,12 +1,12 @@
-import { helpfooter } from '@pluto-config';
-import { format } from 'date-fns';
-import { EmbedBuilder } from 'discord.js';
-import _ from 'lodash';
-import embedColors from '../../lib/colorsConfig.js';
+import { helpfooter } from '@pluto-config'
+import { format } from 'date-fns'
+import { EmbedBuilder } from 'discord.js'
+import _ from 'lodash'
+import embedColors from '../../lib/colorsConfig.js'
 import type {
 	IMatchupsGrouped,
 	IOddsField,
-} from '../matches/matchups.interface.js';
+} from '../matches/matchups.interface.js'
 
 /**
  * Parses data of games to be displayed in a schedule.
@@ -22,78 +22,78 @@ import type {
 export default async function parseScheduledGames(
 	scheduledArr: IOddsField[],
 	options: {
-		includeOdds: boolean;
-		thumbnail: string;
-		footer: { text: string; iconURL?: string };
-		guildId?: string;
+		includeOdds: boolean
+		thumbnail: string
+		footer: { text: string; iconURL?: string }
+		guildId?: string
 	},
 ) {
-	const { includeOdds, thumbnail, guildId } = options;
+	const { includeOdds, thumbnail, guildId } = options
 
 	// Set initial title and color based on whether odds are included
-	const title = includeOdds ? 'Odds 🎲' : 'Scheduled Games';
+	const title = includeOdds ? 'Odds 🎲' : 'Scheduled Games'
 	const embColor = includeOdds
 		? embedColors.PlutoBlue
-		: embedColors.PlutoYellow;
+		: embedColors.PlutoYellow
 
 	if (_.isEmpty(scheduledArr)) {
 		const description = includeOdds
 			? 'There are no odds currently stored right now.'
-			: 'No games are scheduled for the day.';
+			: 'No games are scheduled for the day.'
 		return new EmbedBuilder()
 			.setTitle(title)
 			.setColor(embedColors.PlutoRed)
 			.setDescription(description)
 			.setFooter({ text: await helpfooter('core') })
-			.setThumbnail(thumbnail);
+			.setThumbnail(thumbnail)
 	}
 
 	// Group and sort the games by actual date
-	const groupedGames: IMatchupsGrouped = {};
+	const groupedGames: IMatchupsGrouped = {}
 	for (const match of scheduledArr) {
-		const date = match.dates.mdy;
+		const date = match.dates.mdy
 		if (!groupedGames[date]) {
-			groupedGames[date] = [];
+			groupedGames[date] = []
 		}
-		groupedGames[date].push(match);
+		groupedGames[date].push(match)
 	}
 
 	const sortedDates = Object.keys(groupedGames).sort(
 		(a, b) => new Date(a).getTime() - new Date(b).getTime(),
-	);
+	)
 
 	const fields = await Promise.all(
 		sortedDates.map(async (date) => {
 			const gamesList = await Promise.all(
 				groupedGames[date].map(await createMatchStr()),
-			);
+			)
 			return {
 				name: format(new Date(date), 'PP'), // Format date as 'MM/DD/YYYY'
 				value: gamesList.join('\n'),
-			};
+			}
 		}),
-	);
+	)
 
-	const DISABLE_DESCRIPTION_GUILD_ID = '498070362962264067';
-	const shouldShowDescription = guildId !== DISABLE_DESCRIPTION_GUILD_ID;
-	
-	const description = shouldShowDescription 
+	const DISABLE_DESCRIPTION_GUILD_ID = '498070362962264067'
+	const shouldShowDescription = guildId !== DISABLE_DESCRIPTION_GUILD_ID
+
+	const description = shouldShowDescription
 		? 'Use /bet to place bets on any of these matches\nFor teams with multiple games this week, specify your desired match using the `match` field.'
-		: undefined;
-	
+		: undefined
+
 	// Construct and return the embed
 	const embed = new EmbedBuilder()
 		.setTitle(title)
 		.setColor(embColor)
 		.setFooter({ text: await helpfooter('core') })
 		.setThumbnail(thumbnail)
-		.addFields(fields);
-	
+		.addFields(fields)
+
 	if (description) {
-		embed.setDescription(description);
+		embed.setDescription(description)
 	}
-	
-	return embed;
+
+	return embed
 }
 
 /**
@@ -105,33 +105,33 @@ async function createMatchStr(): Promise<
 	(game: IOddsField) => Promise<string>
 > {
 	return async (game: IOddsField): Promise<string> => {
-		const { teams } = game;
-		const aTeam = shortNameParse(teams.away_team.name);
-		const hTeam = shortNameParse(teams.home_team.name);
+		const { teams } = game
+		const aTeam = shortNameParse(teams.away_team.name)
+		const hTeam = shortNameParse(teams.home_team.name)
 
 		// Parse odds, considering the '+' and '-' signs
 		const parseOdds = (odds: string): number => {
 			if (odds.startsWith('+')) {
-				return Number.parseFloat(odds.substring(1));
+				return Number.parseFloat(odds.substring(1))
 			}
-			return Number.parseFloat(odds);
-		};
+			return Number.parseFloat(odds)
+		}
 
-		const awayOdds = parseOdds(teams.away_team.odds);
-		const homeOdds = parseOdds(teams.home_team.odds);
+		const awayOdds = parseOdds(teams.away_team.odds)
+		const homeOdds = parseOdds(teams.home_team.odds)
 
-		const isAwayTeamFavored = awayOdds < homeOdds;
+		const isAwayTeamFavored = awayOdds < homeOdds
 
 		const awayTeamStr = isAwayTeamFavored
 			? `${aTeam} **\`(${teams.away_team.odds})\`**`
-			: `${aTeam} \`(${teams.away_team.odds})\``;
+			: `${aTeam} \`(${teams.away_team.odds})\``
 
 		const homeTeamStr = isAwayTeamFavored
 			? `${hTeam} \`(${teams.home_team.odds})\``
-			: `${hTeam} **\`(${teams.home_team.odds})\`**`;
+			: `${hTeam} **\`(${teams.home_team.odds})\`**`
 
-		return `${awayTeamStr} @ ${homeTeamStr}`;
-	};
+		return `${awayTeamStr} @ ${homeTeamStr}`
+	}
 }
 
 /**
@@ -140,6 +140,6 @@ async function createMatchStr(): Promise<
  * @returns {string} - Short name of the team.
  */
 function shortNameParse(name: string): string {
-	const nameParts = name.split(' ');
-	return nameParts.length > 0 ? nameParts[nameParts.length - 1] : '';
+	const nameParts = name.split(' ')
+	return nameParts.length > 0 ? nameParts[nameParts.length - 1] : ''
 }

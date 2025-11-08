@@ -1,4 +1,4 @@
-import { logger } from '../../../logging/WinstonLogger.js';
+import { logger } from '../../../logging/WinstonLogger.js'
 
 /**
  * Creates and returns the logging middleware
@@ -6,15 +6,15 @@ import { logger } from '../../../logging/WinstonLogger.js';
  */
 export function createLoggingMiddleware() {
 	return (str: string, args: any[]) => {
-		const [, method = '', path = '', status = '', time = ''] = args;
+		const [, method = '', path = '', status = '', time = ''] = args
 
 		// Skip logging for /admin paths
 		if (path.startsWith('/api/pluto/admin')) {
-			return;
+			return
 		}
 
-		const duration = typeof time === 'number' ? time : 0;
-		const statusCode = Number.parseInt(status);
+		const duration = typeof time === 'number' ? time : 0
+		const statusCode = Number.parseInt(status)
 		const logData = {
 			context: 'http',
 			method,
@@ -33,12 +33,12 @@ export function createLoggingMiddleware() {
 			route_type: path.startsWith('/api/pluto/') ? 'pluto' : 'external',
 			// Request classification
 			request_type: 'http_request',
-		};
+		}
 
 		if ((statusCode >= 200 && statusCode < 300) || !statusCode) {
-			logger.info(`${method} ${path} ${status} ${duration}ms`, logData);
+			logger.info(`${method} ${path} ${status} ${duration}ms`, logData)
 		} else {
-			logger.error(`${method} ${path} ${status} ${duration}ms`, logData);
+			logger.error(`${method} ${path} ${status} ${duration}ms`, logData)
 		}
-	};
+	}
 }

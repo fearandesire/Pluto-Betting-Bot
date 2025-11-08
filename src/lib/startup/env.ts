@@ -1,5 +1,4 @@
-import { z } from 'zod';
-
+import { z } from 'zod'
 
 // Define the schema for our environment variables
 const envSchema = z.object({
@@ -30,7 +29,7 @@ const envSchema = z.object({
 	LOKI_USER: z.string(),
 	LOKI_PASS: z.string(),
 	MAINTENANCE_MODE: z.boolean(),
-});
+})
 
 // Parse and validate the environment variables
 const env = envSchema.parse({
@@ -46,7 +45,7 @@ const env = envSchema.parse({
 	R_PASS: process.env.R_PASS,
 	API_PORT: Number.parseInt(process.env.APIPORT || '2090', 10),
 	API_URL: process.env.API_URL,
-	LOG_LEVEL: process.env.LOG_LEVEL || "Info",
+	LOG_LEVEL: process.env.LOG_LEVEL || 'Info',
 	DEV_SERVER_ID: process.env.DEV_SERVER_ID,
 	PATREON_API_URL: process.env.PATREON_API_URL,
 	KH_PLUTO_CLIENT_KEY: process.env.KH_PLUTO_CLIENT_KEY,
@@ -61,6 +60,6 @@ const env = envSchema.parse({
 	LOKI_USER: process.env.LOKI_USER,
 	LOKI_PASS: process.env.LOKI_PASS,
 	MAINTENANCE_MODE: process.env.MAINTENANCE_MODE === 'true',
-});
+})
 
-export default env;
+export default env

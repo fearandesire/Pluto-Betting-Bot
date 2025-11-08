@@ -1,4 +1,4 @@
-import type { ColorResolvable } from 'discord.js';
+import type { ColorResolvable } from 'discord.js'
 
 const embedColors: Record<string, ColorResolvable> = {
 	// Pluto
@@ -46,6 +46,6 @@ const embedColors: Record<string, ColorResolvable> = {
 	NotQuiteBlack: '#23272a',
 	Blurple: '#5865f2',
 	Fuchsia: '#eb459e',
-};
+}
 
-export default embedColors;
+export default embedColors

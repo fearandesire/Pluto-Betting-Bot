@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js'
 
 /**
  * @description - Utility class for creating & managing pagination buttons for Discord Embeds
@@ -36,8 +36,8 @@ export default class Pagination {
 				.setLabel('Last')
 				.setStyle(ButtonStyle.Primary)
 				.setDisabled(currentPage === totalPages),
-		);
+		)
 
-		return [row];
+		return [row]
 	}
 }

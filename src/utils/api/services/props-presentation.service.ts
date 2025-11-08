@@ -1,21 +1,21 @@
-import { SapDiscClient } from '../../../index.js';
-import { DateManager } from '../../common/DateManager.js';
-import PropEmbedManager from '../../guilds/prop-embeds/PropEmbedManager.js';
-import { logger } from '../../logging/WinstonLogger.js';
+import { SapDiscClient } from '../../../index.js'
+import { DateManager } from '../../common/DateManager.js'
+import PropEmbedManager from '../../guilds/prop-embeds/PropEmbedManager.js'
+import { logger } from '../../logging/WinstonLogger.js'
 import {
 	type PropOptions,
 	PropOptionsSchema,
 	type PropZod,
-} from '../common/interfaces/index.js';
+} from '../common/interfaces/index.js'
 
 /**
  * Service for processing and managing props.
  */
 export class PropsPresentation {
-	private defaultFilteredMarketKeys = ['totals', 'h2h'];
+	private defaultFilteredMarketKeys = ['totals', 'h2h']
 	private defaultOptions = {
 		daysAhead: 7,
-	};
+	}
 
 	/**
 	 * Initializes a new instance of the PropsService class.
@@ -33,12 +33,12 @@ export class PropsPresentation {
 	): PropZod[] {
 		// If no preferred teams, return all props
 		if (!preferredTeams) {
-			return props;
+			return props
 		}
 
 		const preferredTeamsArray = preferredTeams
 			.split(',')
-			.map((team) => team.trim());
+			.map((team) => team.trim())
 
 		// Return props that have either home_team or away_team in preferred teams
 		return props.filter((prop) =>
@@ -47,7 +47,7 @@ export class PropsPresentation {
 					prop.home_team.toLowerCase().includes(team.toLowerCase()) ||
 					prop.away_team.toLowerCase().includes(team.toLowerCase()),
 			),
-		);
+		)
 	}
 
 	/**
@@ -63,47 +63,47 @@ export class PropsPresentation {
 		options: PropOptions = {},
 	): Promise<void> {
 		// Validate options
-		const validatedOptions = PropOptionsSchema.parse(options);
+		const validatedOptions = PropOptionsSchema.parse(options)
 		const daysAhead =
-			validatedOptions.daysAhead ?? this.defaultOptions.daysAhead;
+			validatedOptions.daysAhead ?? this.defaultOptions.daysAhead
 
-		const dateManager = new DateManager<PropZod>(daysAhead);
-		const propsWithinDateRange = dateManager.filterByDateRange(props);
+		const dateManager = new DateManager<PropZod>(daysAhead)
+		const propsWithinDateRange = dateManager.filterByDateRange(props)
 		await logger.info('Props filtered by date range', {
 			propsWithinDateRangeLength: propsWithinDateRange?.length || 0,
 			source: this.processAndCreateEmbeds.name,
-		});
+		})
 
-		const uniqueProps = this.selectRandomPropPerEvent(propsWithinDateRange);
+		const uniqueProps = this.selectRandomPropPerEvent(propsWithinDateRange)
 		await logger.info('Unique props selected', {
 			uniquePropsLength: uniqueProps?.length || 0,
 			source: this.processAndCreateEmbeds.name,
-		});
+		})
 
-		const embedManager = new PropEmbedManager(SapDiscClient);
+		const embedManager = new PropEmbedManager(SapDiscClient)
 
 		// Group props by guild based on preferred teams
-		const guildProps = new Map<string, PropZod[]>();
+		const guildProps = new Map<string, PropZod[]>()
 
 		for (const channel of guildChannels) {
 			const filteredProps = this.filterPropsByPreferredTeams(
 				uniqueProps,
 				channel.preferred_teams,
-			);
-			guildProps.set(channel.guild_id, filteredProps);
+			)
+			guildProps.set(channel.guild_id, filteredProps)
 
 			await logger.info('Props filtered by preferred teams for guild', {
 				guildId: channel.guild_id,
 				preferredTeams: channel.preferred_teams,
 				filteredPropsLength: filteredProps.length,
 				source: this.processAndCreateEmbeds.name,
-			});
+			})
 		}
 
 		// Create embeds for each guild with their filtered props
 		for (const channel of guildChannels) {
-			const guildFilteredProps = guildProps.get(channel.guild_id) || [];
-			await embedManager.createEmbeds(guildFilteredProps, [channel]);
+			const guildFilteredProps = guildProps.get(channel.guild_id) || []
+			await embedManager.createEmbeds(guildFilteredProps, [channel])
 		}
 	}
 
@@ -115,21 +115,22 @@ export class PropsPresentation {
 	 * @returns {PropZod[]} Array of unique props, one per event.
 	 */
 	private selectRandomPropPerEvent(props: PropZod[]): PropZod[] {
-		const eventMap = new Map<string, PropZod[]>();
+		const eventMap = new Map<string, PropZod[]>()
 
 		// Group props by event_id
 		for (const prop of props) {
-			if (!prop.event_id) continue;
+			if (!prop.event_id) continue
 			if (!eventMap.has(prop.event_id)) {
-				eventMap.set(prop.event_id, []);
+				eventMap.set(prop.event_id, [])
 			}
-			eventMap.get(prop.event_id)?.push(prop);
+			eventMap.get(prop.event_id)?.push(prop)
 		}
 
 		// Randomly select one prop per event
 		return Array.from(eventMap.values()).map(
-			(eventProps) => eventProps[Math.floor(Math.random() * eventProps.length)],
-		);
+			(eventProps) =>
+				eventProps[Math.floor(Math.random() * eventProps.length)],
+		)
 	}
 
 	/**
@@ -145,16 +146,16 @@ export class PropsPresentation {
 		const filteredProps = props.filter((prop) => {
 			// Only filter out market keys for NFL props
 			if (prop.sport_title?.toLowerCase() === 'nfl') {
-				return !marketKeysToFilter.includes(prop.market_key);
+				return !marketKeysToFilter.includes(prop.market_key)
 			}
 			// Keep all props from other sports
-			return true;
-		});
+			return true
+		})
 
 		if (filteredProps.length === 0) {
-			return [];
+			return []
 		}
 
-		return filteredProps;
+		return filteredProps
 	}
 }

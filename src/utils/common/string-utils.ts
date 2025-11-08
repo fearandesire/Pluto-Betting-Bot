@@ -1,11 +1,11 @@
-import _ from 'lodash';
+import _ from 'lodash'
 
 export default class StringUtils {
 	getShortName(name: string): string {
 		if (name.includes(' ')) {
-			return _.last(_.split(name, ' ')) || name;
+			return _.last(_.split(name, ' ')) || name
 		}
-		return name;
+		return name
 	}
 
 	/**
@@ -16,14 +16,15 @@ export default class StringUtils {
 	 * @param sport - The sport key string to transform
 	 */
 	static sportKeyTransform(sport: string): string {
-		const lowercaseSport = sport.toLowerCase();
+		const lowercaseSport = sport.toLowerCase()
 		const sportMap: Record<string, string> = {
 			nba: 'nba',
 			nfl: 'nfl',
-		};
+		}
 		return (
-			Object.keys(sportMap).find((key) => lowercaseSport.includes(key)) || sport
-		);
+			Object.keys(sportMap).find((key) => lowercaseSport.includes(key)) ||
+			sport
+		)
 	}
 
 	static standardizeString(input: string): string {
@@ -33,7 +34,7 @@ export default class StringUtils {
 			.trim()
 			.split(' ')
 			.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-			.join(' ');
+			.join(' ')
 	}
 
 	/**
@@ -47,8 +48,8 @@ export default class StringUtils {
 			.toLowerCase()
 			.split(' ')
 			.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-			.join(' ');
+			.join(' ')
 	}
 
-	static transform;
+	static transform
 }

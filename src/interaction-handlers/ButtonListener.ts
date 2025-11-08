@@ -1,351 +1,359 @@
-import { helpfooter } from "@pluto-config";
+import { helpfooter } from '@pluto-config'
 import {
-  InteractionHandler,
-  InteractionHandlerTypes,
-} from "@sapphire/framework";
-import type { ButtonInteraction } from "discord.js";
-import { EmbedBuilder } from "discord.js";
-import _ from "lodash";
-import embedColors from "../lib/colorsConfig.js";
-import { ApiModules } from "../lib/interfaces/api/api.interface.js";
-import { btnIds } from "../lib/interfaces/interaction-handlers/interaction-handlers.interface.js";
-import { BetsCacheService, type CachedBetData } from "../utils/api/common/bets/BetsCacheService.js";
-import { MarketKeyAbbreviations } from "../utils/api/common/interfaces/market-abbreviations.js";
-import BetslipWrapper from "../utils/api/Khronos/bets/betslip-wrapper.js";
-import { BetslipManager } from "../utils/api/Khronos/bets/BetslipsManager.js";
-import { ApiErrorHandler } from "../utils/api/Khronos/error-handling/ApiErrorHandler.js";
-import PredictionApiWrapper from "../utils/api/Khronos/prediction/predictionApiWrapper.js";
-import PropsApiWrapper from "../utils/api/Khronos/props/propsApiWrapper.js";
-import { CacheManager } from "../utils/cache/cache-manager.js";
-import { DateManager } from "../utils/common/DateManager.js";
-import { ErrorEmbeds } from "../utils/common/errors/global.js";
-import TeamInfo from "../utils/common/TeamInfo.js";
+	InteractionHandler,
+	InteractionHandlerTypes,
+} from '@sapphire/framework'
+import type { ButtonInteraction } from 'discord.js'
+import { EmbedBuilder } from 'discord.js'
+import _ from 'lodash'
+import embedColors from '../lib/colorsConfig.js'
+import { ApiModules } from '../lib/interfaces/api/api.interface.js'
+import { btnIds } from '../lib/interfaces/interaction-handlers/interaction-handlers.interface.js'
+import {
+	BetsCacheService,
+	type CachedBetData,
+} from '../utils/api/common/bets/BetsCacheService.js'
+import { MarketKeyAbbreviations } from '../utils/api/common/interfaces/market-abbreviations.js'
+import { BetslipManager } from '../utils/api/Khronos/bets/BetslipsManager.js'
+import BetslipWrapper from '../utils/api/Khronos/bets/betslip-wrapper.js'
+import { ApiErrorHandler } from '../utils/api/Khronos/error-handling/ApiErrorHandler.js'
+import PredictionApiWrapper from '../utils/api/Khronos/prediction/predictionApiWrapper.js'
+import PropsApiWrapper from '../utils/api/Khronos/props/propsApiWrapper.js'
+import { CacheManager } from '../utils/cache/cache-manager.js'
+import { DateManager } from '../utils/common/DateManager.js'
+import { ErrorEmbeds } from '../utils/common/errors/global.js'
+import TeamInfo from '../utils/common/TeamInfo.js'
 
 /**
  * @module ButtonListener
  */
 export class ButtonHandler extends InteractionHandler {
-  private betsCacheService: BetsCacheService;
+	private betsCacheService: BetsCacheService
 
-  public constructor(
-    ctx: InteractionHandler.LoaderContext,
-    options: InteractionHandler.Options,
-  ) {
-    super(ctx, {
-      ...options,
-      interactionHandlerType: InteractionHandlerTypes.Button,
-    });
-    this.betsCacheService = new BetsCacheService(new CacheManager());
-  }
+	public constructor(
+		ctx: InteractionHandler.LoaderContext,
+		options: InteractionHandler.Options,
+	) {
+		super(ctx, {
+			...options,
+			interactionHandlerType: InteractionHandlerTypes.Button,
+		})
+		this.betsCacheService = new BetsCacheService(new CacheManager())
+	}
 
-  /**
-   * @summary Button Event Listener - collects & parses necessary data before processing
-   *
-   * Bet Handling:
-   * - 'Confirm Bet' - Collects data for the bet and matchup in cache
-   *   - Passes data to run > BetslipManager.placeBet
-   * @param interaction
-   */
-  // @ts-ignore - Weird TS Error
-  public override async parse(interaction: ButtonInteraction) {
-    // ? Handle prop buttons
-    if (_.startsWith(interaction.customId, "prop_")) {
-      await interaction.deferReply({ ephemeral: true });
-      // ? Extract outcome UUID from button ID (format: prop_{uuid})
-      const outcomeUuid = interaction.customId.replace("prop_", "");
-      return this.some({ outcomeUuid });
-    }
+	/**
+	 * @summary Button Event Listener - collects & parses necessary data before processing
+	 *
+	 * Bet Handling:
+	 * - 'Confirm Bet' - Collects data for the bet and matchup in cache
+	 *   - Passes data to run > BetslipManager.placeBet
+	 * @param interaction
+	 */
+	// @ts-ignore - Weird TS Error
+	public override async parse(interaction: ButtonInteraction) {
+		// ? Handle prop buttons
+		if (_.startsWith(interaction.customId, 'prop_')) {
+			await interaction.deferReply({ ephemeral: true })
+			// ? Extract outcome UUID from button ID (format: prop_{uuid})
+			const outcomeUuid = interaction.customId.replace('prop_', '')
+			return this.some({ outcomeUuid })
+		}
 
-    // Handle matchup buttons
-    if (_.startsWith(interaction.customId, "matchup")) {
-      // Cancel button
-      if (interaction.customId === btnIds.matchup_btn_cancel) {
-        await interaction.update({
-          components: [],
-        });
-        return this.some({
-          hasFailed: false,
-        });
-      }
+		// Handle matchup buttons
+		if (_.startsWith(interaction.customId, 'matchup')) {
+			// Cancel button
+			if (interaction.customId === btnIds.matchup_btn_cancel) {
+				await interaction.update({
+					components: [],
+				})
+				return this.some({
+					hasFailed: false,
+				})
+			}
 
-      // Confirm button
-      if (interaction.customId === btnIds.matchup_btn_confirm) {
-        await interaction.deferUpdate();
-        await interaction.editReply({
-          components: [],
-        });
-        try {
-          const cachedBet = await this.betsCacheService.getUserBet(interaction.user.id);
-          
-          if (!cachedBet) {
-            console.error({
-              method: this.constructor.name,
-              message: "Cached bet not found",
-              data: {
-                userId: interaction.user.id,
-              },
-            });
-            const errMsg = "Unable to locate your bet data.";
-            return this.some({
-              hasFailed: true,
-              errMsg: errMsg,
-            });
-          }
+			// Confirm button
+			if (interaction.customId === btnIds.matchup_btn_confirm) {
+				await interaction.deferUpdate()
+				await interaction.editReply({
+					components: [],
+				})
+				try {
+					const cachedBet = await this.betsCacheService.getUserBet(
+						interaction.user.id,
+					)
 
-          // All necessary data is now in the cached bet - no need to fetch match separately
-          return this.some({
-            betslip: cachedBet,
-          });
-        } catch (error) {
-          const errMsg =
-            "An error occurred when collecting betslip data.";
-          console.error({
-            trace: this.constructor.name,
-            message: errMsg,
-            data: {
-              error,
-            },
-          });
-          return this.some({
-            hasFailed: true,
-            errMsg: errMsg,
-          });
-        }
-      }
-    }
+					if (!cachedBet) {
+						console.error({
+							method: this.constructor.name,
+							message: 'Cached bet not found',
+							data: {
+								userId: interaction.user.id,
+							},
+						})
+						const errMsg = 'Unable to locate your bet data.'
+						return this.some({
+							hasFailed: true,
+							errMsg: errMsg,
+						})
+					}
 
-    // If we reach here, it means we didn't handle the button
-    return this.none();
-  }
+					// All necessary data is now in the cached bet - no need to fetch match separately
+					return this.some({
+						betslip: cachedBet,
+					})
+				} catch (error) {
+					const errMsg =
+						'An error occurred when collecting betslip data.'
+					console.error({
+						trace: this.constructor.name,
+						message: errMsg,
+						data: {
+							error,
+						},
+					})
+					return this.some({
+						hasFailed: true,
+						errMsg: errMsg,
+					})
+				}
+			}
+		}
 
-  public async run(interaction: ButtonInteraction, payload: ButtonPayload) {
-    if ("hasFailed" in payload && payload.hasFailed) {
-      const errMsg = payload.errMsg;
-      const errEmbed = await interaction.editReply({
-        embeds: [await ErrorEmbeds.internalErr(errMsg)],
-        components: [],
-      });
-      // delete after 10 secs
-      // todo: add queue for this
-      setTimeout(() => {
-        errEmbed.delete().catch(console.error);
-      }, 10000);
-      return;
-    }
+		// If we reach here, it means we didn't handle the button
+		return this.none()
+	}
 
-    // ? Handle Cancelling A Betslip
-    if (interaction.customId === btnIds.matchup_btn_cancel) {
-      const betslipWrapper = new BetslipWrapper();
-      await betslipWrapper.clearPending(interaction.user.id);
-      const cancelEmbed = new EmbedBuilder()
-        .setTitle("Bet Canceled")
-        .setDescription("Your bet has been successfully cancelled.")
-        .setColor(embedColors.PlutoRed)
-        .setThumbnail(interaction.user.displayAvatarURL())
-        .setFooter({
-          text: await helpfooter('betting'),
-        });
-      await interaction.editReply({
-        embeds: [cancelEmbed],
-        components: [],
-      });
-    }
-    // ? Handle Confirming A Betslip
-    else if (interaction.customId === btnIds.matchup_btn_confirm) {
-      if ("betslip" in payload) {
-        const { betslip } = payload;
-        
-        // Sanitize and place the bet - all data is already in the cached betslip
-        const sanitizedBetslip = await this.betsCacheService.sanitize(betslip);
-        
-        return new BetslipManager(
-          new BetslipWrapper(),
-          this.betsCacheService,
-        ).placeBet(interaction, sanitizedBetslip, {
-          dateofmatchup: betslip.dateofmatchup,
-          opponent: betslip.opponent,
-        });
-      }
-    } else if ("outcomeUuid" in payload) {
-      // ? Handle A Prediction
-      const predictionApi = new PredictionApiWrapper();
+	public async run(interaction: ButtonInteraction, payload: ButtonPayload) {
+		if ('hasFailed' in payload && payload.hasFailed) {
+			const errMsg = payload.errMsg
+			const errEmbed = await interaction.editReply({
+				embeds: [await ErrorEmbeds.internalErr(errMsg)],
+				components: [],
+			})
+			// delete after 10 secs
+			// todo: add queue for this
+			setTimeout(() => {
+				errEmbed.delete().catch(console.error)
+			}, 10000)
+			return
+		}
 
-      try {
-        // Fetch prop to get sport and outcome details
-        const propsApi = new PropsApiWrapper();
-        const prop = await propsApi.getPropByUuid(payload.outcomeUuid);
+		// ? Handle Cancelling A Betslip
+		if (interaction.customId === btnIds.matchup_btn_cancel) {
+			const betslipWrapper = new BetslipWrapper()
+			await betslipWrapper.clearPending(interaction.user.id)
+			const cancelEmbed = new EmbedBuilder()
+				.setTitle('Bet Canceled')
+				.setDescription('Your bet has been successfully cancelled.')
+				.setColor(embedColors.PlutoRed)
+				.setThumbnail(interaction.user.displayAvatarURL())
+				.setFooter({
+					text: await helpfooter('betting'),
+				})
+			await interaction.editReply({
+				embeds: [cancelEmbed],
+				components: [],
+			})
+		}
+		// ? Handle Confirming A Betslip
+		else if (interaction.customId === btnIds.matchup_btn_confirm) {
+			if ('betslip' in payload) {
+				const { betslip } = payload
 
-        // Find the specific outcome
-        const matchedOutcome = prop.outcomes.find(
-          (o) => o.outcome_uuid === payload.outcomeUuid,
-        );
+				// Sanitize and place the bet - all data is already in the cached betslip
+				const sanitizedBetslip =
+					await this.betsCacheService.sanitize(betslip)
 
-        if (!matchedOutcome) {
-          console.error({
-            method: this.constructor.name,
-            message: "Could not find matching outcome",
-            data: {
-              outcomeUuid: payload.outcomeUuid,
-              availableOutcomes: prop.outcomes.map((o) => o.outcome_uuid),
-            },
-          });
-          return interaction.editReply({
-            content:
-              "An error occurred while processing your prediction. Please try again.",
-          });
-        }
+				return new BetslipManager(
+					new BetslipWrapper(),
+					this.betsCacheService,
+				).placeBet(interaction, sanitizedBetslip, {
+					dateofmatchup: betslip.dateofmatchup,
+					opponent: betslip.opponent,
+				})
+			}
+		} else if ('outcomeUuid' in payload) {
+			// ? Handle A Prediction
+			const predictionApi = new PredictionApiWrapper()
 
-        await predictionApi.createPrediction({
-          createPredictionDto: {
-            user_id: interaction.user.id,
-            outcome_uuid: matchedOutcome.outcome_uuid,
-            choice: matchedOutcome.name, // "Over" or "Under"
-            status: "pending",
-            guild_id: interaction.guildId!,
-            sport: prop.event_context.sport_title,
-          },
-        });
+			try {
+				// Fetch prop to get sport and outcome details
+				const propsApi = new PropsApiWrapper()
+				const prop = await propsApi.getPropByUuid(payload.outcomeUuid)
 
-        // Format the choice with point and market from the matched outcome
-        const formattedChoice = this.formatPredictionChoice(
-          matchedOutcome.name,
-          matchedOutcome.point,
-          prop.market_key,
-          matchedOutcome.description,
-        );
+				// Find the specific outcome
+				const matchedOutcome = prop.outcomes.find(
+					(o) => o.outcome_uuid === payload.outcomeUuid,
+				)
 
-        // Format match string
-        const matchString = await this.formatMatchString(
-          prop.event_context.away_team,
-          prop.event_context.home_team,
-        );
+				if (!matchedOutcome) {
+					console.error({
+						method: this.constructor.name,
+						message: 'Could not find matching outcome',
+						data: {
+							outcomeUuid: payload.outcomeUuid,
+							availableOutcomes: prop.outcomes.map(
+								(o) => o.outcome_uuid,
+							),
+						},
+					})
+					return interaction.editReply({
+						content:
+							'An error occurred while processing your prediction. Please try again.',
+					})
+				}
 
-        // Format date
-        const formattedDate = new DateManager().toMMDDYYYY(
-          prop.event_context.commence_time,
-        );
+				await predictionApi.createPrediction({
+					createPredictionDto: {
+						user_id: interaction.user.id,
+						outcome_uuid: matchedOutcome.outcome_uuid,
+						choice: matchedOutcome.name, // "Over" or "Under"
+						status: 'pending',
+						guild_id: interaction.guildId!,
+						sport: prop.event_context.sport_title,
+					},
+				})
 
-        const predictionEmbed = new EmbedBuilder()
-          .setColor(embedColors.PlutoGreen)
-          .setTitle("Prediction Placed")
-          .setDescription(
-            "Your prediction has been recorded.\nView your predictions with `/predictions history`",
-          )
-          .addFields(
-            {
-              name: "Your Prediction",
-              value: formattedChoice,
-              inline: false,
-            },
-            {
-              name: "Event Details",
-              value: `**Match:** ${matchString}\n**Date:** ${formattedDate}`,
-              inline: false,
-            },
-          )
-          .setTimestamp();
+				// Format the choice with point and market from the matched outcome
+				const formattedChoice = this.formatPredictionChoice(
+					matchedOutcome.name,
+					matchedOutcome.point,
+					prop.market_key,
+					matchedOutcome.description,
+				)
 
-        await interaction.editReply({
-          content: "",
-          embeds: [predictionEmbed],
-        });
+				// Format match string
+				const matchString = await this.formatMatchString(
+					prop.event_context.away_team,
+					prop.event_context.home_team,
+				)
 
-        // Delete the ephemeral message after 10 seconds
-        setTimeout(() => {
-          interaction.deleteReply().catch(console.error);
-        }, 10000);
-      } catch (error: unknown) {
-        console.error({
-          method: this.constructor.name,
-          message: "Error occurred regarding predictions",
-          data: {
-            error,
-          },
-        });
-        return new ApiErrorHandler().handle(
-          interaction,
-          error,
-          ApiModules.predictions,
-        );
-      }
-    }
-  }
+				// Format date
+				const formattedDate = new DateManager().toMMDDYYYY(
+					prop.event_context.commence_time,
+				)
 
-  /**
-   * Formats a prediction choice with point and market information
-   * @param choice - The user's choice (e.g., "over", "under", "philadelphia eagles")
-   * @param point - The point value (e.g., 15.5, -7.0)
-   * @param marketKey - The market key (e.g., "player_reception_yds", "spreads")
-   * @param description - Optional prop description (e.g., player name)
-   * @returns Formatted choice string (e.g., "Patrick Mahomes OVER 15.5 Reception Yards", "Philadelphia Eagles -7.0")
-   */
-  private formatPredictionChoice(
-    choice: string,
-    point: number | undefined,
-    marketKey: string,
-    description?: string,
-  ): string {
-    // Handle spreads market specially - choice is team name
-    if (marketKey === "spreads") {
-      if (point !== undefined && point !== null) {
-        const spreadDisplay = point > 0 ? `+${point}` : point;
-        return `${_.startCase(choice)} ${spreadDisplay}`;
-      }
-      return _.startCase(choice);
-    }
+				const predictionEmbed = new EmbedBuilder()
+					.setColor(embedColors.PlutoGreen)
+					.setTitle('Prediction Placed')
+					.setDescription(
+						'Your prediction has been recorded.\nView your predictions with `/predictions history`',
+					)
+					.addFields(
+						{
+							name: 'Your Prediction',
+							value: formattedChoice,
+							inline: false,
+						},
+						{
+							name: 'Event Details',
+							value: `**Match:** ${matchString}\n**Date:** ${formattedDate}`,
+							inline: false,
+						},
+					)
+					.setTimestamp()
 
-    // Standard handling for other markets (over/under, yes/no)
-    const upperChoice = choice.toUpperCase();
-    const abbreviation = MarketKeyAbbreviations[marketKey];
-    const marketName = abbreviation
-      ? abbreviation
-      : _.startCase(marketKey.replace("player_", ""));
+				await interaction.editReply({
+					content: '',
+					embeds: [predictionEmbed],
+				})
 
-    // Build the formatted string with player name if available
-    let formattedString = "";
-    
-    if (description) {
-      formattedString = `**${description}** `;
-    }
+				// Delete the ephemeral message after 10 seconds
+				setTimeout(() => {
+					interaction.deleteReply().catch(console.error)
+				}, 10000)
+			} catch (error: unknown) {
+				console.error({
+					method: this.constructor.name,
+					message: 'Error occurred regarding predictions',
+					data: {
+						error,
+					},
+				})
+				return new ApiErrorHandler().handle(
+					interaction,
+					error,
+					ApiModules.predictions,
+				)
+			}
+		}
+	}
 
-    if (point !== undefined && point !== null) {
-      formattedString += `${upperChoice} \`${point}\` ${marketName}`;
-    } else {
-      formattedString += `${upperChoice} ${marketName}`;
-    }
+	/**
+	 * Formats a prediction choice with point and market information
+	 * @param choice - The user's choice (e.g., "over", "under", "philadelphia eagles")
+	 * @param point - The point value (e.g., 15.5, -7.0)
+	 * @param marketKey - The market key (e.g., "player_reception_yds", "spreads")
+	 * @param description - Optional prop description (e.g., player name)
+	 * @returns Formatted choice string (e.g., "Patrick Mahomes OVER 15.5 Reception Yards", "Philadelphia Eagles -7.0")
+	 */
+	private formatPredictionChoice(
+		choice: string,
+		point: number | undefined,
+		marketKey: string,
+		description?: string,
+	): string {
+		// Handle spreads market specially - choice is team name
+		if (marketKey === 'spreads') {
+			if (point !== undefined && point !== null) {
+				const spreadDisplay = point > 0 ? `+${point}` : point
+				return `${_.startCase(choice)} ${spreadDisplay}`
+			}
+			return _.startCase(choice)
+		}
 
-    return formattedString;
-  }
+		// Standard handling for other markets (over/under, yes/no)
+		const upperChoice = choice.toUpperCase()
+		const abbreviation = MarketKeyAbbreviations[marketKey]
+		const marketName = abbreviation
+			? abbreviation
+			: _.startCase(marketKey.replace('player_', ''))
 
-  /**
-   * Formats the match string with team identifiers
-   * @param awayTeam - Away team name
-   * @param homeTeam - Home team name
-   * @returns Formatted match string (e.g., "LAL vs. BOS")
-   */
-  private async formatMatchString(
-    awayTeam: string,
-    homeTeam: string,
-  ): Promise<string> {
-    const result = await TeamInfo.resolveTeamIdentifier({
-      away_team: awayTeam,
-      home_team: homeTeam,
-    });
-    return `${result.away_team} vs. ${result.home_team}`;
-  }
+		// Build the formatted string with player name if available
+		let formattedString = ''
+
+		if (description) {
+			formattedString = `**${description}** `
+		}
+
+		if (point !== undefined && point !== null) {
+			formattedString += `${upperChoice} \`${point}\` ${marketName}`
+		} else {
+			formattedString += `${upperChoice} ${marketName}`
+		}
+
+		return formattedString
+	}
+
+	/**
+	 * Formats the match string with team identifiers
+	 * @param awayTeam - Away team name
+	 * @param homeTeam - Home team name
+	 * @returns Formatted match string (e.g., "LAL vs. BOS")
+	 */
+	private async formatMatchString(
+		awayTeam: string,
+		homeTeam: string,
+	): Promise<string> {
+		const result = await TeamInfo.resolveTeamIdentifier({
+			away_team: awayTeam,
+			home_team: homeTeam,
+		})
+		return `${result.away_team} vs. ${result.home_team}`
+	}
 }
 
 interface FailedPayload {
-  hasFailed: true;
-  errMsg: string;
+	hasFailed: true
+	errMsg: string
 }
 
 interface ConfirmPayload {
-  betslip: CachedBetData;
+	betslip: CachedBetData
 }
 
 interface PropPayload {
-  outcomeUuid: string;
+	outcomeUuid: string
 }
 
-type ButtonPayload = FailedPayload | ConfirmPayload | PropPayload;
+type ButtonPayload = FailedPayload | ConfirmPayload | PropPayload

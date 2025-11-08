@@ -1,5 +1,5 @@
-import { ResponseError } from '@khronos-index';
-import { ApiHttpErrorTypes } from '../../../../lib/interfaces/api/api.interface.js';
+import { ResponseError } from '@khronos-index'
+import { ApiHttpErrorTypes } from '../../../../lib/interfaces/api/api.interface.js'
 
 /**
  * Represents an error response from the Khronos API
@@ -22,26 +22,26 @@ import { ApiHttpErrorTypes } from '../../../../lib/interfaces/api/api.interface.
  * ```
  */
 export interface KhronosApiError {
-	exception: string;
-	message: string;
-	details?: Record<string, unknown>;
-	response?: Response;
+	exception: string
+	message: string
+	details?: Record<string, unknown>
+	response?: Response
 }
 
 /**
  * Type guard to check if an unknown error matches the KhronosApiError shape
  */
 export function isKhronosApiError(error: unknown): error is KhronosApiError {
-	if (!error || typeof error !== 'object') return false;
+	if (!error || typeof error !== 'object') return false
 
-	const errorObj = error as Record<string, unknown>;
+	const errorObj = error as Record<string, unknown>
 
 	return (
 		'exception' in errorObj &&
 		typeof errorObj.exception === 'string' &&
 		'message' in errorObj &&
 		typeof errorObj.message === 'string'
-	);
+	)
 }
 
 /**
@@ -55,19 +55,19 @@ export async function toKhronosApiError(
 	try {
 		// Handle ResponseError from API
 		if (error instanceof ResponseError) {
-			const errorData = await error.response.json();
+			const errorData = await error.response.json()
 
 			// Check if parsed response is a valid KhronosApiError
 			if (isKhronosApiError(errorData)) {
 				return {
 					...errorData,
-				};
+				}
 			}
 		}
 
 		// Handle pre-parsed KhronosApiError instances
 		if (isKhronosApiError(error)) {
-			return error;
+			return error
 		}
 
 		// Create a default internal error for all other cases
@@ -77,9 +77,11 @@ export async function toKhronosApiError(
 			details: {
 				originalError: error,
 				errorType:
-					error instanceof Error ? error.constructor.name : typeof error,
+					error instanceof Error
+						? error.constructor.name
+						: typeof error,
 			},
-		};
+		}
 	} catch (conversionError) {
 		// Handle errors during conversion process
 		return {
@@ -89,6 +91,6 @@ export async function toKhronosApiError(
 				originalError: error,
 				conversionError,
 			},
-		};
+		}
 	}
 }

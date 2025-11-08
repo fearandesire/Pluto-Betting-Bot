@@ -1,21 +1,21 @@
-import { container } from '@sapphire/framework';
-import type { ColorResolvable, EmojiResolvable, GuildEmoji } from 'discord.js';
-import { teamResolver, type Team } from 'resolve-team';
-import { findEmoji } from '../bot_res/findEmoji.js';
-import StringUtils from './string-utils.js';
+import { container } from '@sapphire/framework'
+import type { ColorResolvable, EmojiResolvable, GuildEmoji } from 'discord.js'
+import { type Team, teamResolver } from 'resolve-team'
+import { findEmoji } from '../bot_res/findEmoji.js'
+import StringUtils from './string-utils.js'
 
 interface TeamShortNameOrEmojiOptions {
-	nameWithEmoji?: boolean;
+	nameWithEmoji?: boolean
 }
 
 export interface GetTeamInfoResponse {
-	emoji: string | GuildEmoji | EmojiResolvable;
-	shortName: string;
-	fullName: string;
-	combinedString: string;
-	color: number;
+	emoji: string | GuildEmoji | EmojiResolvable
+	shortName: string
+	fullName: string
+	combinedString: string
+	color: number
 
-	resolvedTeamData: Team;
+	resolvedTeamData: Team
 }
 
 export default class TeamInfo {
@@ -25,14 +25,14 @@ export default class TeamInfo {
 	 * @returns The color of the team
 	 */
 	static async getTeamColor(teamName: string) {
-		const team = await teamResolver.resolve(teamName, { full: true });
-		const res = team?.colors[0] ?? '#0099ff';
-		return res as ColorResolvable;
+		const team = await teamResolver.resolve(teamName, { full: true })
+		const res = team?.colors[0] ?? '#0099ff'
+		return res as ColorResolvable
 	}
 
 	static getTeamShortName(teamName: string): string {
-		const nameParts = teamName.split(' ');
-		return nameParts[nameParts.length - 1];
+		const nameParts = teamName.split(' ')
+		return nameParts[nameParts.length - 1]
 	}
 
 	/**
@@ -47,35 +47,35 @@ export default class TeamInfo {
 	static async resolveTeamIdentifier(
 		teamName: string,
 		options?: TeamShortNameOrEmojiOptions,
-	): Promise<string>;
+	): Promise<string>
 
 	static async resolveTeamIdentifier(
 		teams: {
-			away_team: string;
-			home_team: string;
+			away_team: string
+			home_team: string
 		},
 		options?: TeamShortNameOrEmojiOptions,
-	): Promise<{ away_team: string; home_team: string }>;
+	): Promise<{ away_team: string; home_team: string }>
 
 	static async resolveTeamIdentifier(
 		teamName: string | { away_team: string; home_team: string },
 		options?: TeamShortNameOrEmojiOptions,
 	): Promise<string | { away_team: string; home_team: string }> {
 		if (typeof teamName === 'string') {
-			const teamShortName = TeamInfo.getTeamShortName(teamName);
-			const teamEmoji = await findEmoji(teamShortName);
+			const teamShortName = TeamInfo.getTeamShortName(teamName)
+			const teamEmoji = await findEmoji(teamShortName)
 
 			if (options?.nameWithEmoji) {
-				return `${teamEmoji} ${teamShortName}`;
+				return `${teamEmoji} ${teamShortName}`
 			}
-			return teamEmoji || teamShortName;
+			return teamEmoji || teamShortName
 		}
 
-		const { away_team, home_team } = teamName;
-		const awayTeamShortName = TeamInfo.getTeamShortName(away_team);
-		const homeTeamShortName = TeamInfo.getTeamShortName(home_team);
-		const awayTeamEmoji = await findEmoji(awayTeamShortName);
-		const homeTeamEmoji = await findEmoji(homeTeamShortName);
+		const { away_team, home_team } = teamName
+		const awayTeamShortName = TeamInfo.getTeamShortName(away_team)
+		const homeTeamShortName = TeamInfo.getTeamShortName(home_team)
+		const awayTeamEmoji = await findEmoji(awayTeamShortName)
+		const homeTeamEmoji = await findEmoji(homeTeamShortName)
 
 		// Both teams must have found an emoji, otherwise we return the short name
 		if (awayTeamEmoji && homeTeamEmoji) {
@@ -84,18 +84,18 @@ export default class TeamInfo {
 				return {
 					away_team: `${awayTeamEmoji} ${awayTeamShortName}`,
 					home_team: `${homeTeamEmoji} ${homeTeamShortName}`,
-				};
+				}
 			}
 			return {
 				away_team: awayTeamEmoji,
 				home_team: homeTeamEmoji,
-			};
+			}
 		}
 
 		return {
 			away_team: awayTeamShortName,
 			home_team: homeTeamShortName,
-		};
+		}
 	}
 
 	/**
@@ -106,13 +106,13 @@ export default class TeamInfo {
 	 * This method assumes the full team name is provided.
 	 */
 	public async getTeamInfo(teamName: string): Promise<GetTeamInfoResponse> {
-		const shortName = new StringUtils().getShortName(teamName);
+		const shortName = new StringUtils().getShortName(teamName)
 		const emoji = container.client.emojis.cache.find(
 			(emoji) => emoji.name?.toLowerCase() === shortName.toLowerCase(),
-		);
-		const teamData = await teamResolver.resolve(teamName, { full: true });
-		const hexColor = teamData?.colors[0] ?? '#0099ff';
-		const parsedHex = Number.parseInt(hexColor.slice(1), 16);
+		)
+		const teamData = await teamResolver.resolve(teamName, { full: true })
+		const hexColor = teamData?.colors[0] ?? '#0099ff'
+		const parsedHex = Number.parseInt(hexColor.slice(1), 16)
 		return {
 			emoji: emoji || shortName,
 			shortName,
@@ -120,6 +120,6 @@ export default class TeamInfo {
 			combinedString: `${emoji || shortName} ${shortName}`,
 			color: parsedHex,
 			resolvedTeamData: teamData,
-		};
+		}
 	}
 }

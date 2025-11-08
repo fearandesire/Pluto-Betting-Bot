@@ -2,23 +2,23 @@ import {
 	type GetGuildsBySportAndConfigTypeRequest,
 	type Guild,
 	GuildsApi,
-} from '@kh-openapi';
-import { container } from '@sapphire/framework';
-import { isAxiosError } from 'axios';
-import type { TextChannel, Message, MessageCreateOptions } from 'discord.js';
-import { DiscordConfigEnums } from '../../common/interfaces/kh-pluto/kh-pluto.interface.js';
-import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js';
+} from '@kh-openapi'
+import { container } from '@sapphire/framework'
+import { isAxiosError } from 'axios'
+import type { Message, MessageCreateOptions, TextChannel } from 'discord.js'
+import { DiscordConfigEnums } from '../../common/interfaces/kh-pluto/kh-pluto.interface.js'
+import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js'
 
 /**
  * Wrapper class for guild-related operations
  * Provides utilities to fetch guild data, configurations, and send messages to configured channels
  */
 export default class GuildWrapper {
-	private guildsApi: GuildsApi;
-	private readonly khConfig: IKH_API_CONFIG = KH_API_CONFIG;
-	
+	private guildsApi: GuildsApi
+	private readonly khConfig: IKH_API_CONFIG = KH_API_CONFIG
+
 	constructor() {
-		this.guildsApi = new GuildsApi(this.khConfig);
+		this.guildsApi = new GuildsApi(this.khConfig)
 	}
 	/**
 	 * Fetches guild data from Khronos API
@@ -30,20 +30,26 @@ export default class GuildWrapper {
 		try {
 			return await this.guildsApi.getGuildById({
 				id: guildId,
-			});
+			})
 		} catch (error) {
 			if (isAxiosError(error)) {
-				console.error('Error making API request to retrieve guild data.', {
-					guildId,
-					error: error.response?.data,
-				});
+				console.error(
+					'Error making API request to retrieve guild data.',
+					{
+						guildId,
+						error: error.response?.data,
+					},
+				)
 			} else {
-				console.error('Error making API request to retrieve guild data.', {
-					guildId,
-					error,
-				});
+				console.error(
+					'Error making API request to retrieve guild data.',
+					{
+						guildId,
+						error,
+					},
+				)
 			}
-			throw error;
+			throw error
 		}
 	}
 
@@ -54,23 +60,25 @@ export default class GuildWrapper {
 	 * @throws Error if guild has no configuration or log channel not found
 	 */
 	async getLogChannel(guildId: string): Promise<TextChannel> {
-		const guild = await this.getGuild(guildId);
+		const guild = await this.getGuild(guildId)
 		if (!guild.config || guild?.config.length === 0) {
-			throw new Error('Guild does not have any configuration set');
+			throw new Error('Guild does not have any configuration set')
 		}
 		const logChanConfig = guild.config.find(
 			(config) => config.setting_type === DiscordConfigEnums.LOGS_CHAN,
-		);
-		
+		)
+
 		if (!logChanConfig) {
-			throw new Error(`Log channel not configured for guild ${guildId}`);
+			throw new Error(`Log channel not configured for guild ${guildId}`)
 		}
-		
-		const logChannel = container.client.channels.cache.get(logChanConfig.setting_value) as TextChannel;
+
+		const logChannel = container.client.channels.cache.get(
+			logChanConfig.setting_value,
+		) as TextChannel
 		if (!logChannel) {
-			throw new Error(`Log channel not found for guild ${guildId}`);
+			throw new Error(`Log channel not found for guild ${guildId}`)
 		}
-		return logChannel;
+		return logChannel
 	}
 
 	/**
@@ -80,24 +88,29 @@ export default class GuildWrapper {
 	 * @throws Error if guild has no configuration or prediction channel not configured
 	 */
 	async getPredictionChannel(guildId: string): Promise<TextChannel> {
-		const guild = await this.getGuild(guildId);
+		const guild = await this.getGuild(guildId)
 		if (!guild.config || guild?.config.length === 0) {
-			throw new Error('Guild does not have any configuration set');
+			throw new Error('Guild does not have any configuration set')
 		}
-		
+
 		const predictionChanConfig = guild.config.find(
-			(config) => config.setting_type === DiscordConfigEnums.PREDICTIONS_CHAN,
-		);
-		
+			(config) =>
+				config.setting_type === DiscordConfigEnums.PREDICTIONS_CHAN,
+		)
+
 		if (!predictionChanConfig) {
-			throw new Error(`Prediction channel not configured for guild ${guildId}`);
+			throw new Error(
+				`Prediction channel not configured for guild ${guildId}`,
+			)
 		}
-		
-		const predictionChannel = container.client.channels.cache.get(predictionChanConfig.setting_value) as TextChannel;
+
+		const predictionChannel = container.client.channels.cache.get(
+			predictionChanConfig.setting_value,
+		) as TextChannel
 		if (!predictionChannel) {
-			throw new Error(`Prediction channel not found for guild ${guildId}`);
+			throw new Error(`Prediction channel not found for guild ${guildId}`)
 		}
-		return predictionChannel;
+		return predictionChannel
 	}
 
 	/**
@@ -118,8 +131,8 @@ export default class GuildWrapper {
 		guildId: string,
 		options: MessageCreateOptions,
 	): Promise<Message> {
-		const predictionChannel = await this.getPredictionChannel(guildId);
-		return await predictionChannel.send(options);
+		const predictionChannel = await this.getPredictionChannel(guildId)
+		return await predictionChannel.send(options)
 	}
 
 	/**
@@ -139,8 +152,8 @@ export default class GuildWrapper {
 		guildId: string,
 		options: MessageCreateOptions,
 	): Promise<Message> {
-		const logChannel = await this.getLogChannel(guildId);
-		return await logChannel.send(options);
+		const logChannel = await this.getLogChannel(guildId)
+		return await logChannel.send(options)
 	}
 
 	/**
@@ -151,7 +164,8 @@ export default class GuildWrapper {
 	async getGuildsForSportWithConfig(
 		params: GetGuildsBySportAndConfigTypeRequest,
 	): Promise<Guild[]> {
-		const guilds = await this.guildsApi.getGuildsBySportAndConfigType(params);
-		return guilds;
+		const guilds =
+			await this.guildsApi.getGuildsBySportAndConfigType(params)
+		return guilds
 	}
 }

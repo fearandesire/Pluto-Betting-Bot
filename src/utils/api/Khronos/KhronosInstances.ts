@@ -1,4 +1,4 @@
-import env from '../../../lib/startup/env.js';
+import env from '../../../lib/startup/env.js'
 /**
  * @module KhronosApi
  * @readonly
@@ -13,23 +13,23 @@ import {
 	DiscordConfigApi,
 	GuildsApi,
 	MatchesApi,
-} from '../../../openapi/khronos/index.js';
+} from '../../../openapi/khronos/index.js'
 
 export const KH_API_CONFIG = new Configuration({
 	basePath: `${env.KH_API_URL}`,
 	headers: {
 		'x-api-key': `${env.KH_PLUTO_CLIENT_KEY}`,
 	},
-});
+})
 
-export const AccountsInstance = new AccountsApi(KH_API_CONFIG);
+export const AccountsInstance = new AccountsApi(KH_API_CONFIG)
 
-export const BetslipsInstance = new BetslipsApi(KH_API_CONFIG);
+export const BetslipsInstance = new BetslipsApi(KH_API_CONFIG)
 
-export const ConfigInstance = new DiscordConfigApi(KH_API_CONFIG);
+export const ConfigInstance = new DiscordConfigApi(KH_API_CONFIG)
 
-export const MatchesInstance = new MatchesApi(KH_API_CONFIG);
+export const MatchesInstance = new MatchesApi(KH_API_CONFIG)
 
-export const GuildsInstance = new GuildsApi(KH_API_CONFIG);
+export const GuildsInstance = new GuildsApi(KH_API_CONFIG)
 
-export type IKH_API_CONFIG = Configuration;
+export type IKH_API_CONFIG = Configuration

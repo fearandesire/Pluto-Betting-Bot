@@ -1,18 +1,18 @@
-import { z } from 'zod';
+import { z } from 'zod'
 
 export const SportKeysSchema = z.enum([
 	'basketball_nba',
 	'americanfootball_nfl',
-]);
+])
 
-export const SupportedSportsSchema = z.enum(['nfl', 'nba']);
+export const SupportedSportsSchema = z.enum(['nfl', 'nba'])
 
 export const SportKeysEnumSchema = z.object({
 	nfl: z.literal('americanfootball_nfl'),
 	nba: z.literal('basketball_nba'),
-});
+})
 
-export const MainBettingMarketSchema = z.enum(['h2h', 'totals']);
+export const MainBettingMarketSchema = z.enum(['h2h', 'totals'])
 
 export const NFLPlayerPropMarketSchema = z.enum([
 	'player_pass_tds',
@@ -33,7 +33,7 @@ export const NFLPlayerPropMarketSchema = z.enum([
 	'player_1st_td',
 	'player_last_td',
 	'player_anytime_td',
-]);
+])
 
 export const NFLAlternatePlayerPropMarketSchema = z.enum([
 	'player_pass_tds_alternate',
@@ -42,7 +42,7 @@ export const NFLAlternatePlayerPropMarketSchema = z.enum([
 	'player_rush_reception_yds_alternate',
 	'player_reception_yds_alternate',
 	'player_receptions_alternate',
-]);
+])
 
 export const BasketballPlayerPropMarketSchema = z.enum([
 	'player_points',
@@ -60,7 +60,7 @@ export const BasketballPlayerPropMarketSchema = z.enum([
 	'player_first_basket',
 	'player_double_double',
 	'player_triple_double',
-]);
+])
 
 export const NBAAlternatePlayerPropMarketSchema = z.enum([
 	'player_points_alternate',
@@ -73,7 +73,7 @@ export const NBAAlternatePlayerPropMarketSchema = z.enum([
 	'player_points_rebounds_alternate',
 	'player_rebounds_assists_alternate',
 	'player_points_rebounds_assists_alternate',
-]);
+])
 
 export const BettingMarketSchema = z.enum([
 	'h2h',
@@ -127,7 +127,7 @@ export const BettingMarketSchema = z.enum([
 	'player_points_rebounds_alternate',
 	'player_rebounds_assists_alternate',
 	'player_points_rebounds_assists_alternate',
-]);
+])
 
 export const BettingMarketSchemaNonH2h = z.enum([
 	'player_pass_tds',
@@ -179,15 +179,15 @@ export const BettingMarketSchemaNonH2h = z.enum([
 	'player_points_rebounds_alternate',
 	'player_rebounds_assists_alternate',
 	'player_points_rebounds_assists_alternate',
-]);
+])
 
 export const OutcomeSchema = z.object({
 	name: z.string(),
 	price: z.number(),
 	point: z.number().optional(),
-});
+})
 
 export const MarketDataSchema = z.object({
 	key: BettingMarketSchema,
 	outcomes: z.array(OutcomeSchema),
-});
+})

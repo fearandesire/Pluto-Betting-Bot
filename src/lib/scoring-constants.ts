@@ -5,5 +5,4 @@
 export const LEADERBOARD_SCORING = {
 	CORRECT_POINTS: 10,
 	INCORRECT_PENALTY: -2,
-} as const;
-
+} as const

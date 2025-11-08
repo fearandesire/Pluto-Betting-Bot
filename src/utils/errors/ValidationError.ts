@@ -4,9 +4,9 @@ export class ValidationError extends Error {
 		public readonly details: unknown,
 		public readonly source: string,
 	) {
-		super(message);
-		this.name = 'ValidationError';
-		this.details = details;
-		this.source = source;
+		super(message)
+		this.name = 'ValidationError'
+		this.details = details
+		this.source = source
 	}
 }

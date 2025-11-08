@@ -1,23 +1,17 @@
-import type {
-    BetslipWithAggregationDTO,
-	MatchDetailDto,
-} from '@kh-openapi';
+import type { BetslipWithAggregationDTO, MatchDetailDto } from '@kh-openapi'
 import {
-    InteractionHandler,
-    InteractionHandlerTypes,
-} from '@sapphire/framework';
-import type {
-    ButtonInteraction,
-    StringSelectMenuInteraction,
-} from 'discord.js';
-import { selectMenuIds } from '../lib/interfaces/interaction-handlers/interaction-handlers.interface.js';
-import { BetsCacheService } from '../utils/api/common/bets/BetsCacheService.js';
-import BetUtils from '../utils/api/common/bets/BetUtils.js';
-import BetslipWrapper from '../utils/api/Khronos/bets/betslip-wrapper.js';
-import { BetslipManager } from '../utils/api/Khronos/bets/BetslipsManager.js';
-import MatchCacheService from '../utils/api/routes/cache/MatchCacheService.js';
-import { CacheManager } from '../utils/cache/cache-manager.js';
-import { ErrorEmbeds } from '../utils/common/errors/global.js';
+	InteractionHandler,
+	InteractionHandlerTypes,
+} from '@sapphire/framework'
+import type { ButtonInteraction, StringSelectMenuInteraction } from 'discord.js'
+import { selectMenuIds } from '../lib/interfaces/interaction-handlers/interaction-handlers.interface.js'
+import { BetsCacheService } from '../utils/api/common/bets/BetsCacheService.js'
+import BetUtils from '../utils/api/common/bets/BetUtils.js'
+import { BetslipManager } from '../utils/api/Khronos/bets/BetslipsManager.js'
+import BetslipWrapper from '../utils/api/Khronos/bets/betslip-wrapper.js'
+import MatchCacheService from '../utils/api/routes/cache/MatchCacheService.js'
+import { CacheManager } from '../utils/cache/cache-manager.js'
+import { ErrorEmbeds } from '../utils/common/errors/global.js'
 
 export class MenuHandler extends InteractionHandler {
 	public constructor(
@@ -27,7 +21,7 @@ export class MenuHandler extends InteractionHandler {
 		super(ctx, {
 			...options,
 			interactionHandlerType: InteractionHandlerTypes.SelectMenu,
-		});
+		})
 	}
 
 	/**
@@ -44,16 +38,16 @@ export class MenuHandler extends InteractionHandler {
 	 * @param interaction
 	 */
 	public override async parse(interaction: StringSelectMenuInteraction) {
-		const allSelectMenuIds = Object.values(selectMenuIds);
+		const allSelectMenuIds = Object.values(selectMenuIds)
 		if (!allSelectMenuIds.includes(interaction.customId as selectMenuIds)) {
-			return this.none();
+			return this.none()
 		}
-		await interaction.deferReply();
-		const selectedMatchId = interaction.values[0];
+		await interaction.deferReply()
+		const selectedMatchId = interaction.values[0]
 		// Get match details
 		const matchDetails = await new MatchCacheService(
 			new CacheManager(),
-		).getMatch(selectedMatchId);
+		).getMatch(selectedMatchId)
 
 		if (!matchDetails) {
 			await interaction.editReply({
@@ -62,12 +56,12 @@ export class MenuHandler extends InteractionHandler {
 						'Due to an internal error, the match data selected is not available. Please try again later.',
 					),
 				],
-			});
-			return this.none();
+			})
+			return this.none()
 		}
-		const betsCacheService = new BetsCacheService(new CacheManager());
+		const betsCacheService = new BetsCacheService(new CacheManager())
 		// Retrieve user's cached bet
-		const cachedBet = await betsCacheService.getUserBet(interaction.user.id);
+		const cachedBet = await betsCacheService.getUserBet(interaction.user.id)
 		if (!cachedBet) {
 			await interaction.editReply({
 				embeds: [
@@ -75,26 +69,26 @@ export class MenuHandler extends InteractionHandler {
 						'Due to an internal error, your initial bet data was not found. Please try again later.',
 					),
 				],
-			});
-			return this.none();
+			})
+			return this.none()
 		}
 		// Collect odds for the selected team
 		const { selectedOdds } = await BetUtils.getOddsForTeam(
 			cachedBet.team,
 			matchDetails,
-		);
+		)
 		// Calculate Odds for the match based on the team
 		const { profit, payout } = BetUtils.calculateProfitAndPayout(
 			cachedBet.amount,
 			selectedOdds,
-		);
-		
+		)
+
 		// Identify opponent
 		const opponent = await BetUtils.identifyOpponent(
 			matchDetails,
 			cachedBet.team,
-		);
-		
+		)
+
 		// Format commence_time to a readable date string
 		const formattedDate = matchDetails.commence_time
 			? new Date(matchDetails.commence_time).toLocaleDateString('en-US', {
@@ -104,36 +98,40 @@ export class MenuHandler extends InteractionHandler {
 					minute: '2-digit',
 					timeZoneName: 'short',
 				})
-			: 'TBD';
-		
+			: 'TBD'
+
 		await betsCacheService.updateUserBet(interaction.user.id, {
 			matchup_id: matchDetails.id,
 			opponent,
 			dateofmatchup: formattedDate,
 			profit,
 			payout,
-		});
-		
+		})
+
 		// Get updated cached bet for payload
-		const updatedBet = await betsCacheService.getUserBet(interaction.user.id);
-		
+		const updatedBet = await betsCacheService.getUserBet(
+			interaction.user.id,
+		)
+
 		return this.some({
 			betslip: updatedBet,
 			payData: { payout, profit },
 			dateofmatchup: formattedDate,
 			opponent,
-		});
+		})
 	}
 
 	public async run(interaction: StringSelectMenuInteraction, payload: any) {
 		if (interaction.customId !== selectMenuIds.matchup_select_team) {
-			return;
+			return
 		}
-		const { betslip, dateofmatchup, opponent, payData } = payload;
-		
-		const matchCacheService = new MatchCacheService(new CacheManager());
-		const matchDetails = await matchCacheService.getMatch(betslip.matchup_id);
-		
+		const { betslip, dateofmatchup, opponent, payData } = payload
+
+		const matchCacheService = new MatchCacheService(new CacheManager())
+		const matchDetails = await matchCacheService.getMatch(
+			betslip.matchup_id,
+		)
+
 		if (!matchDetails) {
 			await interaction.editReply({
 				embeds: [
@@ -141,10 +139,10 @@ export class MenuHandler extends InteractionHandler {
 						'Due to an internal error, the match data is not available. Please try again later.',
 					),
 				],
-			});
-			return;
+			})
+			return
 		}
-		
+
 		const betslipForPresentation: BetslipWithAggregationDTO = {
 			userid: betslip.userid,
 			team: betslip.team,
@@ -154,8 +152,8 @@ export class MenuHandler extends InteractionHandler {
 			opponent: betslip.opponent,
 			dateofmatchup: betslip.dateofmatchup,
 			match: matchDetails,
-		};
-		
+		}
+
 		return new BetslipManager(
 			new BetslipWrapper(),
 			new BetsCacheService(new CacheManager()),
@@ -166,6 +164,6 @@ export class MenuHandler extends InteractionHandler {
 				dateofmatchup,
 				opponent,
 			},
-		});
+		})
 	}
 }

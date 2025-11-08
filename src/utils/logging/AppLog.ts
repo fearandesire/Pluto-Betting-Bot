@@ -1,18 +1,18 @@
-import { container } from '@sapphire/framework';
+import { container } from '@sapphire/framework'
 import {
 	type ColorResolvable,
 	EmbedBuilder,
 	type TextChannel,
-} from 'discord.js';
-import embedColors from '../../lib/colorsConfig.js';
-import { isErr } from '../../lib/configs/constants.js';
-import GuildWrapper from '../api/Khronos/guild/guild-wrapper.js';
-import { LogType } from './AppLog.interface.js';
+} from 'discord.js'
+import embedColors from '../../lib/colorsConfig.js'
+import { isErr } from '../../lib/configs/constants.js'
+import GuildWrapper from '../api/Khronos/guild/guild-wrapper.js'
+import { LogType } from './AppLog.interface.js'
 
 interface LogParams {
-	guildId: string;
-	description: string;
-	type: LogType;
+	guildId: string
+	description: string
+	type: LogType
 }
 
 const logTypeColors: Record<LogType, ColorResolvable> = {
@@ -20,7 +20,7 @@ const logTypeColors: Record<LogType, ColorResolvable> = {
 	[LogType.Info]: embedColors.info,
 	[LogType.Warning]: embedColors.warning,
 	[LogType.Success]: embedColors.success,
-};
+}
 
 /**
  * @summary Logs a message to the specified guild's log channel.
@@ -36,22 +36,24 @@ export default class AppLog {
 		try {
 			const logChannel = (await new GuildWrapper().getLogChannel(
 				params.guildId,
-			)) as TextChannel;
+			)) as TextChannel
 			if (!logChannel) {
-				console.error(`Log channel not found for guild ${params.guildId}`);
-				return;
+				console.error(
+					`Log channel not found for guild ${params.guildId}`,
+				)
+				return
 			}
 
 			const appAvatar =
 				container.client.user?.avatarURL() ??
 				container.client.user?.defaultAvatarURL ??
-				null;
+				null
 
 			const logMetadata = {
 				avatar: appAvatar,
 				author: 'Pluto',
-			};
-			const { avatar, author } = logMetadata;
+			}
+			const { avatar, author } = logMetadata
 
 			const embed = new EmbedBuilder()
 				.setDescription(params.description)
@@ -60,19 +62,19 @@ export default class AppLog {
 					name: author,
 					iconURL: avatar,
 				})
-				.setTimestamp();
+				.setTimestamp()
 
-			await logChannel.send({ embeds: [embed] });
+			await logChannel.send({ embeds: [embed] })
 		} catch (error: unknown) {
-			const ensuredError = isErr(error);
+			const ensuredError = isErr(error)
 			console.error(
 				`Failed to send log for guild ${params.guildId}:`,
 				ensuredError,
-			);
+			)
 			console.error(
 				`%c${ensuredError.message}`,
 				`color: ${logTypeColors[params.type]}`,
-			);
+			)
 		}
 	}
 }

@@ -1,6 +1,6 @@
 import winston from 'winston'
 import LokiTransport from 'winston-loki'
-import env  from '#lib/startup/env.js'
+import env from '#lib/startup/env.js'
 import {
 	createHttpTransportErrorHandler,
 	type HttpTransportBaseConfig,
@@ -34,7 +34,10 @@ interface LokiConfig extends HttpTransportBaseConfig {
  * @param customLabels - Additional custom labels to merge
  * @returns Default Loki configuration or null if credentials are missing
  */
-const createDefaultConfig = (serviceName = 'PLUTO-DISCORD', customLabels: Record<string, string | boolean | object | any[]> = {}): LokiConfig | null => {
+const createDefaultConfig = (
+	serviceName = 'PLUTO-DISCORD',
+	customLabels: Record<string, string | boolean | object | any[]> = {},
+): LokiConfig | null => {
 	const host = env.LOKI_URL
 	const user = env.LOKI_USER
 	const password = env.LOKI_PASS

@@ -1,7 +1,7 @@
 // Base interface for API responses
 export interface IApiResponse {
-	statusCode: number;
-	message?: string;
+	statusCode: number
+	message?: string
 }
 
 export enum ApiHttpErrorTypes {

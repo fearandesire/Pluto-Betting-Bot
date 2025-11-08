@@ -2,13 +2,13 @@
 // Redis Cache Service - Isolated prop caching logic
 // ============================================================================
 
-import { z } from 'zod';
-import type { CacheManager } from '../cache/cache-manager.js';
-import { logger } from '../logging/WinstonLogger.js';
+import { z } from 'zod'
+import type { CacheManager } from '../cache/cache-manager.js'
+import { logger } from '../logging/WinstonLogger.js'
 
 /**
  * Zod schema for validating CachedProp objects
- * 
+ *
  * Note: We cache outcomes (individual Over/Under), not props (pairs).
  * Multiple outcomes share the same market_id (they belong to the same prop).
  */
@@ -29,12 +29,12 @@ export const CachedPropSchema = z.object({
 	away_team: z.string(),
 	/** ISO timestamp of when the game commences */
 	commence_time: z.string(),
-});
+})
 
 /**
  * Represents a cached outcome (individual Over/Under), not a prop pair.
  * Multiple outcomes share the same market_id (they belong to the same prop).
- * 
+ *
  * Props are identified by market_id - a prop pair (Over/Under) shares the same market_id.
  *
  * @example
@@ -51,11 +51,11 @@ export const CachedPropSchema = z.object({
  * };
  * ```
  */
-export type CachedProp = z.infer<typeof CachedPropSchema>;
+export type CachedProp = z.infer<typeof CachedPropSchema>
 
 /**
  * Service for caching outcomes (individual Over/Under) in Redis
- * 
+ *
  * Note: We cache outcomes, not props. Multiple outcomes share the same market_id (same prop).
  * Props are identified by market_id - a prop pair (Over/Under) shares the same market_id.
  *
@@ -111,13 +111,13 @@ export type CachedProp = z.infer<typeof CachedPropSchema>;
  * ```
  */
 export class PropsCacheService {
-	private cache: CacheManager;
-	private readonly ALL_PROPS_KEY = 'props:all';
-	private readonly ACTIVE_PROPS_KEY = 'props:active';
-	private readonly CACHE_TTL = 3600; // 1 hour
+	private cache: CacheManager
+	private readonly ALL_PROPS_KEY = 'props:all'
+	private readonly ACTIVE_PROPS_KEY = 'props:active'
+	private readonly CACHE_TTL = 3600 // 1 hour
 
 	constructor(cache: CacheManager) {
-		this.cache = cache;
+		this.cache = cache
 	}
 
 	/**
@@ -152,18 +152,22 @@ export class PropsCacheService {
 	 * ```
 	 */
 	async cacheAllProps(props: CachedProp[]): Promise<void> {
-		const pipeline = this.cache.pipeline();
+		const pipeline = this.cache.pipeline()
 
 		// Clear existing data
-		pipeline.del(this.ALL_PROPS_KEY);
+		pipeline.del(this.ALL_PROPS_KEY)
 
 		// Store each prop as a hash with the outcome_uuid as the field
 		for (const prop of props) {
-			pipeline.hset(this.ALL_PROPS_KEY, prop.outcome_uuid, JSON.stringify(prop));
+			pipeline.hset(
+				this.ALL_PROPS_KEY,
+				prop.outcome_uuid,
+				JSON.stringify(prop),
+			)
 		}
 
-		pipeline.expire(this.ALL_PROPS_KEY, this.CACHE_TTL);
-		await pipeline.exec();
+		pipeline.expire(this.ALL_PROPS_KEY, this.CACHE_TTL)
+		await pipeline.exec()
 	}
 
 	/**
@@ -198,8 +202,8 @@ export class PropsCacheService {
 	 * ```
 	 */
 	async getAllProps(): Promise<CachedProp[]> {
-		const data = await this.cache.hgetall(this.ALL_PROPS_KEY);
-		return Object.values(data).map((json) => JSON.parse(json));
+		const data = await this.cache.hgetall(this.ALL_PROPS_KEY)
+		return Object.values(data).map((json) => JSON.parse(json))
 	}
 
 	/**
@@ -243,15 +247,17 @@ export class PropsCacheService {
 	async cacheActiveProps(props: CachedProp[]): Promise<void> {
 		// Validate input (allow empty array to clear cache)
 		try {
-			z.array(CachedPropSchema).parse(props);
+			z.array(CachedPropSchema).parse(props)
 		} catch (error) {
-			throw new Error(`Invalid props data for cacheActiveProps: ${error instanceof Error ? error.message : 'unknown error'}`);
+			throw new Error(
+				`Invalid props data for cacheActiveProps: ${error instanceof Error ? error.message : 'unknown error'}`,
+			)
 		}
 
-		const pipeline = this.cache.pipeline();
+		const pipeline = this.cache.pipeline()
 
 		// Clear existing data
-		pipeline.del(this.ACTIVE_PROPS_KEY);
+		pipeline.del(this.ACTIVE_PROPS_KEY)
 
 		// Store each prop as a hash with the outcome_uuid as the field
 		for (const prop of props) {
@@ -259,14 +265,19 @@ export class PropsCacheService {
 				this.ACTIVE_PROPS_KEY,
 				prop.outcome_uuid,
 				JSON.stringify(prop),
-			);
+			)
 		}
 
 		// Set 5 min TTL for active props
-		pipeline.expire(this.ACTIVE_PROPS_KEY, 300);
-		const results = await pipeline.exec();
+		pipeline.expire(this.ACTIVE_PROPS_KEY, 300)
+		const results = await pipeline.exec()
 		if (results?.some(([err]) => err)) {
-			throw new Error(`Failed to cache active props: ${results.filter(([err]) => err).map(([err]) => err?.message).join(', ')}`);
+			throw new Error(
+				`Failed to cache active props: ${results
+					.filter(([err]) => err)
+					.map(([err]) => err?.message)
+					.join(', ')}`,
+			)
 		}
 	}
 
@@ -295,8 +306,8 @@ export class PropsCacheService {
 	 * ```
 	 */
 	async getActivePropsIds(): Promise<Set<string>> {
-		const data = await this.cache.hgetall(this.ACTIVE_PROPS_KEY);
-		return new Set(Object.keys(data));
+		const data = await this.cache.hgetall(this.ACTIVE_PROPS_KEY)
+		return new Set(Object.keys(data))
 	}
 
 	/**
@@ -345,43 +356,45 @@ export class PropsCacheService {
 	 * ```
 	 */
 	async getActiveProps(): Promise<CachedProp[]> {
-		const data = await this.cache.hgetall(this.ACTIVE_PROPS_KEY);
+		const data = await this.cache.hgetall(this.ACTIVE_PROPS_KEY)
 		if (Object.keys(data).length === 0) {
-			return [];
+			return []
 		}
 
-		const validatedOutcomes: CachedProp[] = [];
+		const validatedOutcomes: CachedProp[] = []
 
 		for (const [key, json] of Object.entries(data)) {
 			try {
-				const parsed = JSON.parse(json);
-				const validated = CachedPropSchema.parse(parsed);
-				validatedOutcomes.push(validated);
+				const parsed = JSON.parse(json)
+				const validated = CachedPropSchema.parse(parsed)
+				validatedOutcomes.push(validated)
 			} catch (error) {
-				logger.warn(`Failed to parse/validate cached outcome with key ${key}: ${error instanceof Error ? error.message : 'unknown error'}`);
+				logger.warn(
+					`Failed to parse/validate cached outcome with key ${key}: ${error instanceof Error ? error.message : 'unknown error'}`,
+				)
 				// Skip invalid entries instead of throwing
 			}
 		}
 
 		// Deduplicate outcomes by market_id to return one outcome per prop
 		// Props are identified by market_id - multiple outcomes share the same market_id
-		const deduplicatedOutcomes: CachedProp[] = [];
-		const marketIdMap = new Map<number, CachedProp>();
+		const deduplicatedOutcomes: CachedProp[] = []
+		const marketIdMap = new Map<number, CachedProp>()
 
 		for (const outcome of validatedOutcomes) {
 			if (outcome.market_id !== null && outcome.market_id !== undefined) {
 				// Group by market_id (prop) - keep first occurrence
 				// This ensures autocomplete shows one entry per prop pair
 				if (!marketIdMap.has(outcome.market_id)) {
-					marketIdMap.set(outcome.market_id, outcome);
-					deduplicatedOutcomes.push(outcome);
+					marketIdMap.set(outcome.market_id, outcome)
+					deduplicatedOutcomes.push(outcome)
 				}
 			} else {
 				// Legacy outcomes without market_id - keep all
-				deduplicatedOutcomes.push(outcome);
+				deduplicatedOutcomes.push(outcome)
 			}
 		}
 
-		return deduplicatedOutcomes;
+		return deduplicatedOutcomes
 	}
 }

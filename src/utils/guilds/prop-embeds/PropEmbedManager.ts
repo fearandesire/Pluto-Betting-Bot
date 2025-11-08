@@ -6,37 +6,37 @@ import {
 	EmbedBuilder,
 	type Emoji,
 	type GuildEmoji,
-} from 'discord.js';
-import _ from 'lodash';
-import { PropButtons } from '../../../lib/interfaces/props/prop-buttons.interface.js';
+} from 'discord.js'
+import _ from 'lodash'
+import { PropButtons } from '../../../lib/interfaces/props/prop-buttons.interface.js'
 import {
 	MarketKeyTranslations,
 	type PropZod,
-} from '../../api/common/interfaces/index.js';
-import { DateManager } from '../../common/DateManager.js';
-import TeamInfo from '../../common/TeamInfo.js';
-import StringUtils from '../../common/string-utils.js';
-import { logger } from '../../logging/WinstonLogger.js';
-import GuildUtils from '../GuildUtils.js';
+} from '../../api/common/interfaces/index.js'
+import { DateManager } from '../../common/DateManager.js'
+import StringUtils from '../../common/string-utils.js'
+import TeamInfo from '../../common/TeamInfo.js'
+import { logger } from '../../logging/WinstonLogger.js'
+import GuildUtils from '../GuildUtils.js'
 
 interface AggregateDetailsParams {
 	home: {
-		fullName: string;
-		transformed: GuildEmoji | Emoji | string;
-		shortName: string;
-	};
+		fullName: string
+		transformed: GuildEmoji | Emoji | string
+		shortName: string
+	}
 	away: {
-		fullName: string;
-		transformed: GuildEmoji | Emoji | string;
-		shortName: string;
-	};
+		fullName: string
+		transformed: GuildEmoji | Emoji | string
+		shortName: string
+	}
 }
 
 export default class PropEmbedManager {
-	private client: Client;
+	private client: Client
 
 	constructor(client: Client) {
-		this.client = client;
+		this.client = client
 	}
 
 	/**
@@ -46,44 +46,44 @@ export default class PropEmbedManager {
 	async transformTeamName(
 		teamName: string,
 	): Promise<GuildEmoji | Emoji | string> {
-		const shortName = new StringUtils().getShortName(teamName);
+		const shortName = new StringUtils().getShortName(teamName)
 		const emoji = this.client.emojis.cache.find(
 			(emoji) => emoji.name?.toLowerCase() === shortName.toLowerCase(),
-		);
-		return emoji ? emoji : shortName;
+		)
+		return emoji ? emoji : shortName
 	}
 
 	private aggregateDetails(
 		prop: PropZod,
 		{ home, away }: AggregateDetailsParams,
 	): {
-		title: string;
-		desc: string;
-		fields: { name: string; value: string; inline: boolean }[];
-		buttons: ButtonBuilder[];
+		title: string
+		desc: string
+		fields: { name: string; value: string; inline: boolean }[]
+		buttons: ButtonBuilder[]
 	} {
-		const marketKey = prop.market_key;
-		const marketDescription = MarketKeyTranslations[marketKey] || marketKey;
+		const marketKey = prop.market_key
+		const marketDescription = MarketKeyTranslations[marketKey] || marketKey
 		const standardizedMarketDescription =
-			StringUtils.standardizeString(marketDescription);
+			StringUtils.standardizeString(marketDescription)
 		const humanReadableDate = new DateManager().toDiscordUnix(
 			prop.commence_time,
-		);
-		const matchString = `${home.transformed} vs ${away.transformed}`;
+		)
+		const matchString = `${home.transformed} vs ${away.transformed}`
 		// Strip spaces and replace with underscores for a uniform button ID
-		const createBtnString = (name: string) => name.replace(/\s+/g, '_');
-		const homeBtnString = createBtnString(home.fullName);
-		const awayBtnString = createBtnString(away.fullName);
-		const ovrUnderStr = (amount: string) => `Over/Under **\`${amount}\`**`;
-		const { point } = prop;
-		const title = 'Accuracy Challenge';
-		let desc = '';
-		let fields: { name: string; value: string; inline: boolean }[] = [];
-		let buttons: ButtonBuilder[] = [];
+		const createBtnString = (name: string) => name.replace(/\s+/g, '_')
+		const homeBtnString = createBtnString(home.fullName)
+		const awayBtnString = createBtnString(away.fullName)
+		const ovrUnderStr = (amount: string) => `Over/Under **\`${amount}\`**`
+		const { point } = prop
+		const title = 'Accuracy Challenge'
+		let desc = ''
+		let fields: { name: string; value: string; inline: boolean }[] = []
+		let buttons: ButtonBuilder[] = []
 
 		if (prop.description) {
 			// Player-based prop
-			desc = `Will **${prop.description}** get over/under **\`${prop.point}\` ${marketDescription}**?`;
+			desc = `Will **${prop.description}** get over/under **\`${prop.point}\` ${marketDescription}**?`
 			fields = [
 				{
 					name: 'Match',
@@ -95,9 +95,13 @@ export default class PropEmbedManager {
 					value: `**\`${point}\`** ${standardizedMarketDescription}`,
 					inline: true,
 				},
-				{ name: 'Player', value: `**${prop.description}**`, inline: true },
+				{
+					name: 'Player',
+					value: `**${prop.description}**`,
+					inline: true,
+				},
 				{ name: 'Date', value: humanReadableDate, inline: true },
-			];
+			]
 			buttons = [
 				new ButtonBuilder()
 					.setCustomId(`prop_${PropButtons.OVER}_${prop.id}`)
@@ -111,10 +115,10 @@ export default class PropEmbedManager {
 					.setCustomId(`prop_${PropButtons.CANCEL}_${prop.id}`)
 					.setLabel('Cancel')
 					.setStyle(ButtonStyle.Danger),
-			];
+			]
 		} else if (marketKey === 'h2h') {
 			// Team-based prop (who will win)
-			desc = `Who will win the match between **${home.transformed}** and **${away.transformed}**?`;
+			desc = `Who will win the match between **${home.transformed}** and **${away.transformed}**?`
 			fields = [
 				{
 					name: 'Match',
@@ -122,7 +126,7 @@ export default class PropEmbedManager {
 					inline: true,
 				},
 				{ name: 'Date', value: humanReadableDate, inline: true },
-			];
+			]
 			buttons = [
 				new ButtonBuilder()
 					.setCustomId(`prop_${homeBtnString}_${prop.id}`)
@@ -136,16 +140,16 @@ export default class PropEmbedManager {
 					.setCustomId(`prop_${PropButtons.CANCEL}_${prop.id}`)
 					.setLabel('Cancel')
 					.setStyle(ButtonStyle.Danger),
-			];
+			]
 			// Add team emojis if they are available
 			if (typeof home.transformed !== 'string') {
-				buttons[0].setEmoji(home.transformed.id);
+				buttons[0].setEmoji(home.transformed.id)
 			}
 			if (typeof away.transformed !== 'string') {
-				buttons[1].setEmoji(away.transformed.id);
+				buttons[1].setEmoji(away.transformed.id)
 			}
 		} else if (marketKey === 'totals' && !prop.description) {
-			desc = `Will the total score between **${home.transformed}** *vs.* **${away.transformed}** be over/under **\`${prop.point}\`**?`;
+			desc = `Will the total score between **${home.transformed}** *vs.* **${away.transformed}** be over/under **\`${prop.point}\`**?`
 			fields = [
 				{
 					name: 'Match',
@@ -158,7 +162,7 @@ export default class PropEmbedManager {
 					inline: true,
 				},
 				{ name: 'Date', value: humanReadableDate, inline: true },
-			];
+			]
 			buttons = [
 				new ButtonBuilder()
 					.setCustomId(`prop_${PropButtons.OVER}_${prop.id}`)
@@ -172,30 +176,34 @@ export default class PropEmbedManager {
 					.setCustomId(`prop_${PropButtons.CANCEL}_${prop.id}`)
 					.setLabel('Cancel')
 					.setStyle(ButtonStyle.Danger),
-			];
+			]
 		} else {
 			// Unsupported markets
-			return;
+			return
 		}
 
-		return { title, desc, fields, buttons };
+		return { title, desc, fields, buttons }
 	}
 
 	async createEmbeds(
 		props: PropZod[],
-		guildChannels: { guild_id: string; channel_id: string; sport: string }[],
+		guildChannels: {
+			guild_id: string
+			channel_id: string
+			sport: string
+		}[],
 	) {
-		let totalEmbedsCreated = 0;
+		let totalEmbedsCreated = 0
 
 		await logger.info('Starting prop embed creation process', {
 			totalProps: props.length,
 			totalGuildChannels: guildChannels.length,
 			source: this.createEmbeds.name,
-		});
+		})
 
 		// Group props by sport
-		const propsBySport = _.groupBy(props, 'sport_title');
-		const guildsBySport = _.groupBy(guildChannels, 'sport');
+		const propsBySport = _.groupBy(props, 'sport_title')
+		const guildsBySport = _.groupBy(guildChannels, 'sport')
 
 		await logger.info('Iterating through props & guilds by sport', {
 			propsBySportLength: Object.keys(propsBySport).length,
@@ -203,19 +211,19 @@ export default class PropEmbedManager {
 			propsBySport,
 			guildsBySport,
 			source: this.createEmbeds.name,
-		});
+		})
 
 		// For each sport that has props
 		for (const sport in propsBySport) {
-			const sportGuilds = guildsBySport[sport] || [];
-			const sportProps = propsBySport[sport] || [];
+			const sportGuilds = guildsBySport[sport] || []
+			const sportProps = propsBySport[sport] || []
 
 			await logger.info(`Processing props for sport: ${sport}`, {
 				sport,
 				propsCount: sportProps.length,
 				guildsCount: sportGuilds.length,
 				source: this.createEmbeds.name,
-			});
+			})
 
 			// ? Skip empty entries
 			if (!sportProps.length || !sportGuilds.length) {
@@ -224,8 +232,8 @@ export default class PropEmbedManager {
 					sportPropsLength: sportProps.length,
 					sportGuildsLength: sportGuilds.length,
 					source: this.createEmbeds.name,
-				});
-				continue;
+				})
+				continue
 			}
 
 			// For each guild that follows this sport
@@ -235,20 +243,20 @@ export default class PropEmbedManager {
 					channel_id,
 					sport,
 					source: this.createEmbeds.name,
-				});
+				})
 
-				const guildUtils = new GuildUtils();
-				const guild = await guildUtils.getGuild(guild_id);
+				const guildUtils = new GuildUtils()
+				const guild = await guildUtils.getGuild(guild_id)
 
 				if (!guild) {
 					await logger.info('Skipping guild due to not found', {
 						guild_id,
 						source: this.createEmbeds.name,
-					});
-					continue;
+					})
+					continue
 				}
 
-				const channel = await guild.channels.fetch(channel_id);
+				const channel = await guild.channels.fetch(channel_id)
 				if (!channel?.isTextBased()) {
 					await logger.info(
 						'Skipping channel due to not being text based',
@@ -256,8 +264,8 @@ export default class PropEmbedManager {
 							channel_id,
 							source: this.createEmbeds.name,
 						},
-					);
-					continue;
+					)
+					continue
 				}
 
 				// Create all embeds for this sport's props
@@ -269,24 +277,22 @@ export default class PropEmbedManager {
 							away_team: prop.away_team,
 							market_key: prop.market_key,
 							source: this.createEmbeds.name,
-						});
+						})
 
 						const HTEAM_TRANSFORMED = await this.transformTeamName(
 							prop.home_team,
-						);
+						)
 						const AWTEAM_TRANSFORMED = await this.transformTeamName(
 							prop.away_team,
-						);
+						)
 						const HTEAM_SHORT_NAME = new StringUtils().getShortName(
 							prop.home_team,
-						);
-						const AWTEAM_SHORT_NAME = new StringUtils().getShortName(
-							prop.away_team,
-						);
+						)
+						const AWTEAM_SHORT_NAME =
+							new StringUtils().getShortName(prop.away_team)
 
-						const { title, desc, fields, buttons } = this.aggregateDetails(
-							prop,
-							{
+						const { title, desc, fields, buttons } =
+							this.aggregateDetails(prop, {
 								home: {
 									fullName: prop.home_team,
 									transformed: HTEAM_TRANSFORMED,
@@ -297,51 +303,62 @@ export default class PropEmbedManager {
 									transformed: AWTEAM_TRANSFORMED,
 									shortName: AWTEAM_SHORT_NAME,
 								},
-							},
-						);
+							})
 
-						const teamColor = await TeamInfo.getTeamColor(prop.home_team);
+						const teamColor = await TeamInfo.getTeamColor(
+							prop.home_team,
+						)
 
 						const embed = new EmbedBuilder()
 							.setTitle(title)
 							.setDescription(desc)
 							.addFields(fields)
-							.setColor(teamColor);
+							.setColor(teamColor)
 
-						const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-							buttons,
-						);
+						const row =
+							new ActionRowBuilder<ButtonBuilder>().addComponents(
+								buttons,
+							)
 
-						return { embed, row };
+						return { embed, row }
 					}),
-				);
+				)
 
 				await logger.info('Created embeds batch for guild', {
 					guild_id,
 					channel_id,
 					embedsCount: embeds.length,
 					source: this.createEmbeds.name,
-				});
+				})
 
 				// Send all embeds to the channel
 				for (const { embed, row } of embeds) {
 					try {
-						await channel.send({ embeds: [embed], components: [row] });
-						totalEmbedsCreated++;
+						await channel.send({
+							embeds: [embed],
+							components: [row],
+						})
+						totalEmbedsCreated++
 
-						await logger.info('Successfully sent embed to channel', {
-							guild_id,
-							channel_id,
-							currentTotal: totalEmbedsCreated,
-							source: this.createEmbeds.name,
-						});
+						await logger.info(
+							'Successfully sent embed to channel',
+							{
+								guild_id,
+								channel_id,
+								currentTotal: totalEmbedsCreated,
+								source: this.createEmbeds.name,
+							},
+						)
 					} catch (error) {
 						await logger.error('Failed to send embed to channel', {
 							guild_id,
 							channel_id,
-							error: error instanceof Error ? error.message : 'Unknown error',
+							error:
+								error instanceof Error
+									? error.message
+									: 'Unknown error',
 							source: this.createEmbeds.name,
-						});
+						})
 					}
 				}
 			}
@@ -352,7 +369,7 @@ export default class PropEmbedManager {
 			totalProps: props.length,
 			totalGuildChannels: guildChannels.length,
 			source: this.createEmbeds.name,
-		});
+		})
 	}
 
 	async createSingleEmbed(
@@ -365,24 +382,24 @@ export default class PropEmbedManager {
 			away_team: prop.away_team,
 			market_key: prop.market_key,
 			source: this.createSingleEmbed.name,
-		});
+		})
 
 		const { title, desc, fields, buttons } = this.aggregateDetails(prop, {
 			home,
 			away,
-		});
+		})
 
-		const teamColor = await TeamInfo.getTeamColor(prop.home_team);
+		const teamColor = await TeamInfo.getTeamColor(prop.home_team)
 
 		const embed = new EmbedBuilder()
 			.setTitle(title)
 			.setDescription(desc)
 			.addFields(fields)
-			.setColor(teamColor);
+			.setColor(teamColor)
 
 		// Create buttons
-		const row = new ActionRowBuilder<ButtonBuilder>().addComponents(buttons);
+		const row = new ActionRowBuilder<ButtonBuilder>().addComponents(buttons)
 
-		return { embed, row };
+		return { embed, row }
 	}
 }
