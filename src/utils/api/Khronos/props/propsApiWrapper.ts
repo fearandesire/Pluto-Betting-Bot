@@ -1,7 +1,7 @@
 import {
-	PropsApi,
 	type ProcessedPropDto,
 	type PropDto,
+	PropsApi,
 	type SetPropResultDto,
 	type SetPropResultResponseDto,
 } from '@kh-openapi';
@@ -9,8 +9,30 @@ import { logger } from '../../../logging/WinstonLogger.js';
 import { KH_API_CONFIG } from '../KhronosInstances.js';
 
 /**
+ * Options for retrieving a prop by identifier.
+ * 
+ * At least one of `outcomeUuid` or `marketId` must be provided.
+ * Both can be provided simultaneously if needed.
+ * 
+ * @example
+ * ```typescript
+ * // By UUID only
+ * { outcomeUuid: '123e4567-e89b-12d3-a456-426614174000' }
+ * 
+ * // By market ID only
+ * { marketId: 12345 }
+ * 
+ * // Both (redundant but allowed)
+ * { outcomeUuid: '123e4567-e89b-12d3-a456-426614174000', marketId: 12345 }
+ * ```
+ */
+export type GetPropOptions =
+	| { outcomeUuid: string }
+	| { marketId: number }
+	| { outcomeUuid: string; marketId: number };
+
+/**
  * Wrapper for the Props Controller in Khronos
- * Note: After API streamlining, only random props and result setting are available
  */
 export default class PropsApiWrapper {
 	private propsApi: PropsApi;
@@ -110,25 +132,45 @@ export default class PropsApiWrapper {
 	}
 
 	/**
-	 * Get a prop by outcome UUID
-	 * @param outcomeUuid - The UUID of the outcome/prop
+	 * Get a prop by outcome UUID or market ID
+	 * @param options - Either outcomeUuid or marketId (at least one must be provided)
 	 * @returns Prop details with event context including sport information
 	 */
-	async getPropByUuid(outcomeUuid: string): Promise<PropDto> {
-		const response = await this.propsApi.propsControllerGetPropByUuidV1({
+	async getProp(options: GetPropOptions): Promise<PropDto> {
+		const outcomeUuid = 'outcomeUuid' in options ? options.outcomeUuid : undefined;
+		const marketId = 'marketId' in options ? options.marketId : undefined;
+
+		if (!outcomeUuid && !marketId) {
+			throw new Error(
+				'getProp requires at least one of outcomeUuid or marketId to be provided',
+			);
+		}
+
+		const response = await this.propsApi.getProp({
 			outcomeUuid,
+			marketId,
 		});
 
 		await logger.info({
-			message: `Retrieved prop by UUID: ${outcomeUuid}`,
+			message: `Retrieved prop${outcomeUuid ? ` by UUID: ${outcomeUuid}` : ` by market ID: ${marketId}`}`,
 			metadata: {
-				source: `${this.constructor.name}.${this.getPropByUuid.name}`,
+				source: `${this.constructor.name}.${this.getProp.name}`,
 				outcomeUuid,
+				marketId,
 				sport: response.event_context?.sport_title,
 			},
 		});
 
 		return response;
+	}
+
+	/**
+	 * Get a prop by outcome UUID (convenience method)
+	 * @param outcomeUuid - The UUID of the outcome/prop
+	 * @returns Prop details with event context including sport information
+	 */
+	async getPropByUuid(outcomeUuid: string): Promise<PropDto> {
+		return this.getProp({ outcomeUuid });
 	}
 
 	/**

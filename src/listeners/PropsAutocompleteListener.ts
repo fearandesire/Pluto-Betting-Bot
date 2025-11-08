@@ -68,25 +68,22 @@ export class PropsAutocompleteListener extends Listener {
 		try {
 			// Get active props (uses cache with fallback to API)
 			const cacheStartTime = Date.now();
-			const activeProps = await this.activePropsService.getActiveProps(
-				guildId,
-				false, // Don't force refresh on every autocomplete
-			);
+			const { props: activeProps, fromCache } =
+				await this.activePropsService.getActiveProps(
+					guildId,
+					false, // Don't force refresh on every autocomplete
+				);
 			const cacheDuration = Date.now() - cacheStartTime;
 
 			// Log cache performance
-			if (activeProps.length > 0) {
-				this.container.logger.info('Props autocomplete cache hit', {
+			this.container.logger.info(
+				fromCache ? 'Props autocomplete cache hit' : 'Props autocomplete cache miss',
+				{
 					guildId,
 					propsCount: activeProps.length,
 					cacheDuration: `${cacheDuration}ms`,
-				});
-			} else {
-				this.container.logger.warn('Props autocomplete cache miss', {
-					guildId,
-					cacheDuration: `${cacheDuration}ms`,
-				});
-			}
+				},
+			);
 
 			// Filter by user's current input
 			const filtered = PropsAutocompleteFormatter.filterByQuery(

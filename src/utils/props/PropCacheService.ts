@@ -2,15 +2,46 @@
 // Redis Cache Service - Isolated prop caching logic
 // ============================================================================
 
+import { z } from 'zod';
 import type { CacheManager } from '../cache/cache-manager.js';
+import { logger } from '../logging/WinstonLogger.js';
 
 /**
- * Represents a cached prop with essential metadata for autocomplete and display
+ * Zod schema for validating CachedProp objects
+ * 
+ * Note: We cache outcomes (individual Over/Under), not props (pairs).
+ * Multiple outcomes share the same market_id (they belong to the same prop).
+ */
+export const CachedPropSchema = z.object({
+	/** Unique identifier for the outcome (used as Redis hash field key) */
+	outcome_uuid: z.string(),
+	/** Market ID from Goracle - groups outcomes into prop pairs (e.g., Over/Under share same market_id). Null for legacy data. */
+	market_id: z.number().nullable(),
+	/** Player or stat description (e.g., "LeBron James Touchdowns") */
+	description: z.string(),
+	/** Market type identifier (e.g., "player_touchdowns", "player_receptions") */
+	market_key: z.string(),
+	/** Point/line value for the prop (null if not applicable) */
+	point: z.number().nullable(),
+	/** Home team name */
+	home_team: z.string(),
+	/** Away team name */
+	away_team: z.string(),
+	/** ISO timestamp of when the game commences */
+	commence_time: z.string(),
+});
+
+/**
+ * Represents a cached outcome (individual Over/Under), not a prop pair.
+ * Multiple outcomes share the same market_id (they belong to the same prop).
+ * 
+ * Props are identified by market_id - a prop pair (Over/Under) shares the same market_id.
  *
  * @example
  * ```typescript
- * const prop: CachedProp = {
+ * const outcome: CachedProp = {
  *   outcome_uuid: "abc-123-def-456",
+ *   market_id: 12345, // Groups this outcome with its pair (same market_id)
  *   description: "LeBron James Touchdowns",
  *   market_key: "player_touchdowns",
  *   point: 2.5,
@@ -20,70 +51,59 @@ import type { CacheManager } from '../cache/cache-manager.js';
  * };
  * ```
  */
-export interface CachedProp {
-	/** Unique identifier for the outcome (used as Redis hash field key) */
-	outcome_uuid: string;
-	/** Player or stat description (e.g., "LeBron James Touchdowns") */
-	description: string;
-	/** Market type identifier (e.g., "player_touchdowns", "player_receptions") */
-	market_key: string;
-	/** Point/line value for the prop (null if not applicable) */
-	point: number | null;
-	/** Home team name */
-	home_team: string;
-	/** Away team name */
-	away_team: string;
-	/** ISO timestamp of when the game commences */
-	commence_time: string;
-}
+export type CachedProp = z.infer<typeof CachedPropSchema>;
 
 /**
- * Service for caching player props in Redis
+ * Service for caching outcomes (individual Over/Under) in Redis
+ * 
+ * Note: We cache outcomes, not props. Multiple outcomes share the same market_id (same prop).
+ * Props are identified by market_id - a prop pair (Over/Under) shares the same market_id.
  *
  * Uses Redis hash structures for efficient storage and retrieval:
- * - `props:all` - Hash containing all cached props (populated by cron job)
- * - `props:active` - Hash containing only props with active predictions (populated on-demand)
+ * - `props:all` - Hash containing all cached outcomes (populated by cron job)
+ * - `props:active` - Hash containing only outcomes with active predictions (populated on-demand)
  *
  * **Redis Structure:**
  * ```
  * props:all (Hash)
- *   ├─ field: "abc-123-def-456"
- *   │  value: '{"outcome_uuid":"abc-123-def-456","description":"LeBron James Touchdowns",...}'
- *   ├─ field: "xyz-789-ghi-012"
- *   │  value: '{"outcome_uuid":"xyz-789-ghi-012","description":"Player Receptions",...}'
- *   └─ ... (more props)
+ *   ├─ field: "abc-123-def-456" (outcome UUID)
+ *   │  value: '{"outcome_uuid":"abc-123-def-456","market_id":12345,"description":"LeBron James",...}'
+ *   ├─ field: "xyz-789-ghi-012" (outcome UUID - same market_id as above)
+ *   │  value: '{"outcome_uuid":"xyz-789-ghi-012","market_id":12345,"description":"LeBron James",...}'
+ *   └─ ... (more outcomes)
  *
  * props:active (Hash)
- *   ├─ field: "abc-123-def-456"
- *   │  value: '{"outcome_uuid":"abc-123-def-456","description":"LeBron James Touchdowns",...}'
- *   └─ ... (only props with active predictions)
+ *   ├─ field: "abc-123-def-456" (outcome UUID)
+ *   │  value: '{"outcome_uuid":"abc-123-def-456","market_id":12345,...}'
+ *   └─ ... (only outcomes with active predictions)
  * ```
  *
  * **Retrieval Pattern:**
- * - Use `getActiveProps()` for autocomplete (returns full CachedProp objects)
+ * - Use `getActiveProps()` for autocomplete (returns one outcome per prop, deduplicated by market_id)
  * - Use `getActivePropsIds()` if you only need UUIDs (backward compatibility)
- * - Use `getAllProps()` to get all cached props (from cron job cache)
+ * - Use `getAllProps()` to get all cached outcomes (from cron job cache)
  *
  * @example
  * ```typescript
  * const cacheService = new PropsCacheService(cacheManager);
  *
- * // Cache active props (called when fetching from API)
+ * // Cache active outcomes (called when fetching from API)
  * await cacheService.cacheActiveProps([
  *   {
  *     outcome_uuid: "abc-123",
- *     description: "LeBron James Touchdowns",
- *     market_key: "player_touchdowns",
- *     point: 2.5,
+ *     market_id: 12345, // Groups outcomes into prop pairs
+ *     description: "LeBron James",
+ *     market_key: "player_points",
+ *     point: 25.5,
  *     home_team: "Lakers",
  *     away_team: "Warriors",
  *     commence_time: "2025-01-27T20:00:00Z"
  *   }
  * ]);
  *
- * // Retrieve active props (for autocomplete)
+ * // Retrieve active props (for autocomplete) - deduplicated by market_id
  * const activeProps = await cacheService.getActiveProps();
- * // Returns: CachedProp[] with all props that have active predictions
+ * // Returns: CachedProp[] with one outcome per prop (deduplicated by market_id)
  *
  * // Get only UUIDs (if needed)
  * const activeIds = await cacheService.getActivePropsIds();
@@ -101,32 +121,34 @@ export class PropsCacheService {
 	}
 
 	/**
-	 * Store all props in Redis (called by cron job)
+	 * Store all outcomes in Redis (called by cron job)
 	 *
-	 * Uses a Redis hash with outcome_uuid as field and JSON-serialized prop as value.
-	 * This cache is populated periodically with random props to improve initial autocomplete response time.
+	 * Uses a Redis hash with outcome_uuid as field and JSON-serialized outcome as value.
+	 * This cache is populated periodically with random outcomes to improve initial autocomplete response time.
+	 * Note: We cache outcomes (individual Over/Under), not props (pairs).
 	 *
 	 * **Redis Command Sequence:**
 	 * 1. `DEL props:all` - Clear existing hash
-	 * 2. `HSET props:all <outcome_uuid> <json>` - Store each prop (batched via pipeline)
+	 * 2. `HSET props:all <outcome_uuid> <json>` - Store each outcome (batched via pipeline)
 	 * 3. `EXPIRE props:all 3600` - Set 1-hour TTL
 	 *
-	 * @param props - Array of props to cache (typically random props from API)
+	 * @param props - Array of outcomes to cache (typically random outcomes from API)
 	 *
 	 * @example
 	 * ```typescript
-	 * const props: CachedProp[] = [
+	 * const outcomes: CachedProp[] = [
 	 *   {
 	 *     outcome_uuid: "abc-123",
-	 *     description: "LeBron James Touchdowns",
-	 *     market_key: "player_touchdowns",
-	 *     point: 2.5,
+	 *     market_id: 12345,
+	 *     description: "LeBron James",
+	 *     market_key: "player_points",
+	 *     point: 25.5,
 	 *     home_team: "Lakers",
 	 *     away_team: "Warriors",
 	 *     commence_time: "2025-01-27T20:00:00Z"
 	 *   }
 	 * ];
-	 * await cacheService.cacheAllProps(props);
+	 * await cacheService.cacheAllProps(outcomes);
 	 * ```
 	 */
 	async cacheAllProps(props: CachedProp[]): Promise<void> {
@@ -145,31 +167,33 @@ export class PropsCacheService {
 	}
 
 	/**
-	 * Get all cached props from Redis hash
+	 * Get all cached outcomes from Redis hash
 	 *
-	 * Retrieves all props stored in the `props:all` hash (populated by cron job).
-	 * This includes random props cached for performance, not necessarily active props.
+	 * Retrieves all outcomes stored in the `props:all` hash (populated by cron job).
+	 * This includes random outcomes cached for performance, not necessarily active outcomes.
+	 * Note: We cache outcomes (individual Over/Under), not props (pairs).
 	 *
 	 * **Redis Command:**
 	 * - `HGETALL props:all` - Returns all hash fields and values
 	 *
-	 * @returns Array of all cached props, or empty array if cache is empty
+	 * @returns Array of all cached outcomes, or empty array if cache is empty
 	 *
 	 * @example
 	 * ```typescript
-	 * const allProps = await cacheService.getAllProps();
+	 * const allOutcomes = await cacheService.getAllProps();
 	 * // Returns: CachedProp[]
 	 * // Example: [
 	 * //   {
 	 * //     outcome_uuid: "abc-123",
-	 * //     description: "LeBron James Touchdowns",
-	 * //     market_key: "player_touchdowns",
-	 * //     point: 2.5,
+	 * //     market_id: 12345,
+	 * //     description: "LeBron James",
+	 * //     market_key: "player_points",
+	 * //     point: 25.5,
 	 * //     home_team: "Lakers",
 	 * //     away_team: "Warriors",
 	 * //     commence_time: "2025-01-27T20:00:00Z"
 	 * //   },
-	 * //   ...more props
+	 * //   ...more outcomes
 	 * // ]
 	 * ```
 	 */
@@ -179,42 +203,51 @@ export class PropsCacheService {
 	}
 
 	/**
-	 * Cache active props with full metadata (called on-demand when cache miss occurs)
+	 * Cache active outcomes with full metadata (called on-demand when cache miss occurs)
 	 *
-	 * Stores props that have active predictions in the `props:active` hash.
-	 * This is the primary cache used for autocomplete - it contains only props
+	 * Stores outcomes that have active predictions in the `props:active` hash.
+	 * This is the primary cache used for autocomplete - it contains only outcomes
 	 * with pending predictions, eliminating the need for filtering.
+	 * Note: We cache outcomes (individual Over/Under UUIDs), not props (pairs).
 	 *
 	 * **Redis Command Sequence:**
 	 * 1. `DEL props:active` - Clear existing hash
-	 * 2. `HSET props:active <outcome_uuid> <json>` - Store each prop (batched via pipeline)
+	 * 2. `HSET props:active <outcome_uuid> <json>` - Store each outcome (batched via pipeline)
 	 * 3. `EXPIRE props:active 300` - Set 5-minute TTL
 	 *
-	 * **Performance:** Uses Redis pipeline for atomic batch operations (O(1) per prop)
+	 * **Performance:** Uses Redis pipeline for atomic batch operations (O(1) per outcome)
 	 *
-	 * @param props - Array of active props with full metadata to cache
+	 * @param props - Array of active outcomes with full metadata to cache
 	 *
 	 * @example
 	 * ```typescript
 	 * // Called after fetching active outcomes from API
-	 * const activeProps: CachedProp[] = [
+	 * const activeOutcomes: CachedProp[] = [
 	 *   {
 	 *     outcome_uuid: "abc-123",
-	 *     description: "LeBron James Touchdowns",
-	 *     market_key: "player_touchdowns",
-	 *     point: 2.5,
+	 *     market_id: 12345, // Groups outcomes into prop pairs
+	 *     description: "LeBron James",
+	 *     market_key: "player_points",
+	 *     point: 25.5,
 	 *     home_team: "Lakers",
 	 *     away_team: "Warriors",
 	 *     commence_time: "2025-01-27T20:00:00Z"
 	 *   }
 	 * ];
-	 * await cacheService.cacheActiveProps(activeProps);
+	 * await cacheService.cacheActiveProps(activeOutcomes);
 	 *
-	 * // Now getActiveProps() will return these props immediately
+	 * // Now getActiveProps() will return one outcome per prop (deduplicated by market_id)
 	 * const cached = await cacheService.getActiveProps();
 	 * ```
 	 */
 	async cacheActiveProps(props: CachedProp[]): Promise<void> {
+		// Validate input (allow empty array to clear cache)
+		try {
+			z.array(CachedPropSchema).parse(props);
+		} catch (error) {
+			throw new Error(`Invalid props data for cacheActiveProps: ${error instanceof Error ? error.message : 'unknown error'}`);
+		}
+
 		const pipeline = this.cache.pipeline();
 
 		// Clear existing data
@@ -231,14 +264,18 @@ export class PropsCacheService {
 
 		// Set 5 min TTL for active props
 		pipeline.expire(this.ACTIVE_PROPS_KEY, 300);
-		await pipeline.exec();
+		const results = await pipeline.exec();
+		if (results?.some(([err]) => err)) {
+			throw new Error(`Failed to cache active props: ${results.filter(([err]) => err).map(([err]) => err?.message).join(', ')}`);
+		}
 	}
 
 	/**
-	 * Get active prop IDs from cache (backward compatibility)
+	 * Get active outcome IDs from cache (backward compatibility)
 	 *
 	 * Extracts only the outcome UUIDs from the `props:active` hash.
-	 * Useful when you only need to check if a prop is active, not the full metadata.
+	 * Useful when you only need to check if an outcome is active, not the full metadata.
+	 * Note: We cache outcomes, not props.
 	 *
 	 * **Redis Command:**
 	 * - `HGETALL props:active` - Returns all hash fields (keys are UUIDs)
@@ -251,9 +288,9 @@ export class PropsCacheService {
 	 * // Returns: Set<string>
 	 * // Example: Set { "abc-123", "xyz-789", "def-456" }
 	 *
-	 * // Check if a specific prop is active
+	 * // Check if a specific outcome is active
 	 * if (activeIds.has("abc-123")) {
-	 *   console.log("Prop has active predictions");
+	 *   console.log("Outcome has active predictions");
 	 * }
 	 * ```
 	 */
@@ -263,41 +300,47 @@ export class PropsCacheService {
 	}
 
 	/**
-	 * Get active props directly from cache
+	 * Get active outcomes directly from cache, deduplicated by market_id
 	 *
-	 * Primary method for retrieving active props for autocomplete.
-	 * Returns all props stored in the `props:active` hash with full metadata.
-	 * No filtering needed - the hash contains only props with active predictions.
+	 * Primary method for retrieving active outcomes for autocomplete.
+	 * Returns one outcome per prop (deduplicated by market_id). Props are identified by market_id.
+	 * Multiple outcomes share the same market_id (they belong to the same prop).
 	 *
 	 * **Redis Command:**
 	 * - `HGETALL props:active` - Returns all hash fields and values
 	 *
-	 * **Performance:** Single Redis operation, O(1) lookup per prop
+	 * **Deduplication Logic:**
+	 * - Groups outcomes by market_id
+	 * - Returns one outcome per market_id (first occurrence)
+	 * - Legacy outcomes without market_id are kept as-is
 	 *
-	 * @returns Array of active props with full metadata, or empty array if cache is empty
+	 * **Performance:** Single Redis operation, O(1) lookup per outcome
+	 *
+	 * @returns Array of active outcomes (one per prop), deduplicated by market_id, or empty array if cache is empty
 	 *
 	 * @example
 	 * ```typescript
-	 * // Get active props for autocomplete
-	 * const activeProps = await cacheService.getActiveProps();
+	 * // Get active outcomes for autocomplete (deduplicated by market_id)
+	 * const activeOutcomes = await cacheService.getActiveProps();
 	 *
-	 * // Returns: CachedProp[]
+	 * // Returns: CachedProp[] with one outcome per prop
 	 * // Example: [
 	 * //   {
 	 * //     outcome_uuid: "abc-123",
-	 * //     description: "LeBron James Touchdowns",
-	 * //     market_key: "player_touchdowns",
-	 * //     point: 2.5,
+	 * //     market_id: 12345, // Groups outcomes into prop pairs
+	 * //     description: "LeBron James",
+	 * //     market_key: "player_points",
+	 * //     point: 25.5,
 	 * //     home_team: "Lakers",
 	 * //     away_team: "Warriors",
 	 * //     commence_time: "2025-01-27T20:00:00Z"
 	 * //   },
-	 * //   ...more active props
+	 * //   ...more outcomes (one per prop)
 	 * // ]
 	 *
 	 * // Use for autocomplete filtering
-	 * const filtered = activeProps.filter(prop =>
-	 *   prop.description.toLowerCase().includes(query.toLowerCase())
+	 * const filtered = activeOutcomes.filter(outcome =>
+	 *   outcome.description.toLowerCase().includes(query.toLowerCase())
 	 * );
 	 * ```
 	 */
@@ -306,6 +349,39 @@ export class PropsCacheService {
 		if (Object.keys(data).length === 0) {
 			return [];
 		}
-		return Object.values(data).map((json) => JSON.parse(json) as CachedProp);
+
+		const validatedOutcomes: CachedProp[] = [];
+
+		for (const [key, json] of Object.entries(data)) {
+			try {
+				const parsed = JSON.parse(json);
+				const validated = CachedPropSchema.parse(parsed);
+				validatedOutcomes.push(validated);
+			} catch (error) {
+				logger.warn(`Failed to parse/validate cached outcome with key ${key}: ${error instanceof Error ? error.message : 'unknown error'}`);
+				// Skip invalid entries instead of throwing
+			}
+		}
+
+		// Deduplicate outcomes by market_id to return one outcome per prop
+		// Props are identified by market_id - multiple outcomes share the same market_id
+		const deduplicatedOutcomes: CachedProp[] = [];
+		const marketIdMap = new Map<number, CachedProp>();
+
+		for (const outcome of validatedOutcomes) {
+			if (outcome.market_id !== null && outcome.market_id !== undefined) {
+				// Group by market_id (prop) - keep first occurrence
+				// This ensures autocomplete shows one entry per prop pair
+				if (!marketIdMap.has(outcome.market_id)) {
+					marketIdMap.set(outcome.market_id, outcome);
+					deduplicatedOutcomes.push(outcome);
+				}
+			} else {
+				// Legacy outcomes without market_id - keep all
+				deduplicatedOutcomes.push(outcome);
+			}
+		}
+
+		return deduplicatedOutcomes;
 	}
 }
