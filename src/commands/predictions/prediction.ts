@@ -7,6 +7,7 @@ import {
 	PermissionFlagsBits,
 } from 'discord.js'
 import _ from 'lodash'
+import { teamResolver } from 'resolve-team'
 import embedColors from '../../lib/colorsConfig.js'
 import { GetAllPredictionsFilteredStatusEnum } from '../../openapi/khronos/apis/PredictionApi.js'
 import type { AllUserPredictionsDto } from '../../openapi/khronos/models/AllUserPredictionsDto.js'
@@ -223,7 +224,7 @@ export class UserCommand extends Subcommand {
 		const formattedPredictions = await Promise.all(
 			pending.map(async (p): Promise<FormattedPrediction> => {
 				const outcome = await this.getOutcomeDetails(p.outcome_uuid)
-				const formattedText = this.formatPredictionCompact(
+				const formattedText = await this.formatPredictionCompact(
 					p,
 					outcome,
 					null,
@@ -294,7 +295,7 @@ export class UserCommand extends Subcommand {
 					isCorrect = p.is_correct === true
 				}
 				const outcome = await this.getOutcomeDetails(p.outcome_uuid)
-				const formattedText = this.formatPredictionCompact(
+				const formattedText = await this.formatPredictionCompact(
 					p,
 					outcome,
 					isCorrect,
@@ -382,10 +383,10 @@ export class UserCommand extends Subcommand {
 
 	/**
 	 * Format prediction in compact view format
-	 * Player format: **✅ Player Name** (Team)\nProp Type • **PICK Line**\n*<t:TIMESTAMP:d>*
+	 * Player format: **✅ Player Name** (ABBREV vs. ABBREV)\nProp Type • **PICK Line**\n*<t:TIMESTAMP:d>*
 	 * Team format: **✅ Team Name**\nProp Type • **PICK Line**\n*<t:TIMESTAMP:d>*
 	 */
-	private formatPredictionCompact(
+	private async formatPredictionCompact(
 		prediction: AllUserPredictionsDto,
 		outcome: {
 			name: string
@@ -398,7 +399,7 @@ export class UserCommand extends Subcommand {
 			}
 		} | null,
 		isCorrect: boolean | null,
-	): string {
+	): Promise<string> {
 		if (!outcome) {
 			return 'Unknown prediction'
 		}
@@ -411,18 +412,47 @@ export class UserCommand extends Subcommand {
 		let entityLine: string
 		if (isPlayerPrediction) {
 			const playerName = outcome.description!
-			let teamName: string
+			let matchupString: string
 			if (prediction.match_string) {
-				const [awayTeam] = prediction.match_string.split(' vs. ')
-				teamName = TeamInfo.getTeamShortName(
+				const [awayTeam, homeTeam] =
+					prediction.match_string.split(' vs. ')
+				const awayTeamData = await teamResolver.resolve(
 					awayTeam || outcome.event_context.away_team,
+					{ full: true },
 				)
+				const homeTeamData = await teamResolver.resolve(
+					homeTeam || outcome.event_context.home_team,
+					{ full: true },
+				)
+				const awayAbbrev =
+					awayTeamData?.abbrev ||
+					TeamInfo.getTeamShortName(
+						awayTeam || outcome.event_context.away_team,
+					)
+				const homeAbbrev =
+					homeTeamData?.abbrev ||
+					TeamInfo.getTeamShortName(
+						homeTeam || outcome.event_context.home_team,
+					)
+				matchupString = `${awayAbbrev} vs. ${homeAbbrev}`
 			} else {
-				teamName = TeamInfo.getTeamShortName(
+				const awayTeamData = await teamResolver.resolve(
 					outcome.event_context.away_team,
+					{ full: true },
 				)
+				const homeTeamData = await teamResolver.resolve(
+					outcome.event_context.home_team,
+					{ full: true },
+				)
+				const awayAbbrev =
+					awayTeamData?.abbrev ||
+					TeamInfo.getTeamShortName(outcome.event_context.away_team)
+				const homeAbbrev =
+					homeTeamData?.abbrev ||
+					TeamInfo.getTeamShortName(outcome.event_context.home_team)
+				matchupString = `${awayAbbrev} vs. ${homeAbbrev}`
 			}
-			entityLine = `**${result} ${playerName}** (${teamName})`
+			entityLine = `**${result} ${playerName}** (${matchupString})`
 		} else {
 			const teamName = TeamInfo.getTeamShortName(outcome.name)
 			entityLine = `**${result} ${teamName}**`
