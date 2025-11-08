@@ -59,36 +59,43 @@ export type CachedProp = z.infer<typeof CachedPropSchema>
  * Note: We cache outcomes, not props. Multiple outcomes share the same market_id (same prop).
  * Props are identified by market_id - a prop pair (Over/Under) shares the same market_id.
  *
+ * **Guild-Scoping:**
+ * - `cacheAllProps()` and `getAllProps()` are global (shared across all guilds)
+ * - `cacheActiveProps(guildId)` and `getActiveProps(guildId)` are guild-scoped (each guild has separate cache)
+ * - Active props cache keys are scoped by guildId: `props:active:${guildId}`
+ * - This prevents cross-guild cache contamination when different guilds refresh their active props
+ *
  * Uses Redis hash structures for efficient storage and retrieval:
- * - `props:all` - Hash containing all cached outcomes (populated by cron job)
- * - `props:active` - Hash containing only outcomes with active predictions (populated on-demand)
+ * - `props:all` - Hash containing all cached outcomes (populated by cron job, global)
+ * - `props:active:${guildId}` - Hash containing only outcomes with active predictions for a specific guild (populated on-demand)
  *
  * **Redis Structure:**
  * ```
- * props:all (Hash)
+ * props:all (Hash) - Global
  *   ├─ field: "abc-123-def-456" (outcome UUID)
  *   │  value: '{"outcome_uuid":"abc-123-def-456","market_id":12345,"description":"LeBron James",...}'
- *   ├─ field: "xyz-789-ghi-012" (outcome UUID - same market_id as above)
- *   │  value: '{"outcome_uuid":"xyz-789-ghi-012","market_id":12345,"description":"LeBron James",...}'
  *   └─ ... (more outcomes)
  *
- * props:active (Hash)
+ * props:active:guild123 (Hash) - Guild-scoped
  *   ├─ field: "abc-123-def-456" (outcome UUID)
  *   │  value: '{"outcome_uuid":"abc-123-def-456","market_id":12345,...}'
- *   └─ ... (only outcomes with active predictions)
+ *   └─ ... (only outcomes with active predictions for guild123)
+ *
+ * props:active:guild456 (Hash) - Different guild, separate cache
+ *   └─ ... (outcomes with active predictions for guild456)
  * ```
  *
  * **Retrieval Pattern:**
- * - Use `getActiveProps()` for autocomplete (returns one outcome per prop, deduplicated by market_id)
- * - Use `getActivePropsIds()` if you only need UUIDs (backward compatibility)
- * - Use `getAllProps()` to get all cached outcomes (from cron job cache)
+ * - Use `getActiveProps(guildId)` for autocomplete (returns one outcome per prop, deduplicated by market_id)
+ * - Use `getActivePropsIds(guildId)` if you only need UUIDs (backward compatibility)
+ * - Use `getAllProps()` to get all cached outcomes (from cron job cache, global)
  *
  * @example
  * ```typescript
  * const cacheService = new PropsCacheService(cacheManager);
  *
- * // Cache active outcomes (called when fetching from API)
- * await cacheService.cacheActiveProps([
+ * // Cache active outcomes for a specific guild (called when fetching from API)
+ * await cacheService.cacheActiveProps('guild123', [
  *   {
  *     outcome_uuid: "abc-123",
  *     market_id: 12345, // Groups outcomes into prop pairs
@@ -101,23 +108,40 @@ export type CachedProp = z.infer<typeof CachedPropSchema>
  *   }
  * ]);
  *
- * // Retrieve active props (for autocomplete) - deduplicated by market_id
- * const activeProps = await cacheService.getActiveProps();
+ * // Retrieve active props for a specific guild (for autocomplete) - deduplicated by market_id
+ * const activeProps = await cacheService.getActiveProps('guild123');
  * // Returns: CachedProp[] with one outcome per prop (deduplicated by market_id)
  *
  * // Get only UUIDs (if needed)
- * const activeIds = await cacheService.getActivePropsIds();
+ * const activeIds = await cacheService.getActivePropsIds('guild123');
  * // Returns: Set<string> with outcome UUIDs
  * ```
  */
 export class PropsCacheService {
 	private cache: CacheManager
 	private readonly ALL_PROPS_KEY = 'props:all'
-	private readonly ACTIVE_PROPS_KEY = 'props:active'
 	private readonly CACHE_TTL = 3600 // 1 hour
 
 	constructor(cache: CacheManager) {
 		this.cache = cache
+	}
+
+	/**
+	 * Get guild-scoped Redis key for active props cache
+	 * @param guildId - Discord guild ID
+	 * @returns Redis key string: `props:active:${guildId}`
+	 */
+	private getActivePropsKey(guildId: string): string {
+		if (
+			!guildId ||
+			typeof guildId !== 'string' ||
+			guildId.trim().length === 0
+		) {
+			throw new Error(
+				`Invalid guildId provided to PropsCacheService: ${guildId}. Guild ID must be a non-empty string.`,
+			)
+		}
+		return `props:active:${guildId}`
 	}
 
 	/**
@@ -209,23 +233,28 @@ export class PropsCacheService {
 	/**
 	 * Cache active outcomes with full metadata (called on-demand when cache miss occurs)
 	 *
-	 * Stores outcomes that have active predictions in the `props:active` hash.
+	 * Stores outcomes that have active predictions in a guild-scoped hash: `props:active:${guildId}`.
 	 * This is the primary cache used for autocomplete - it contains only outcomes
-	 * with pending predictions, eliminating the need for filtering.
+	 * with pending predictions for the specified guild, eliminating the need for filtering.
 	 * Note: We cache outcomes (individual Over/Under UUIDs), not props (pairs).
 	 *
+	 * **Guild-Scoping:**
+	 * Each guild has its own separate cache to prevent cross-guild contamination.
+	 * When Guild A refreshes its active props, it does not affect Guild B's cache.
+	 *
 	 * **Redis Command Sequence:**
-	 * 1. `DEL props:active` - Clear existing hash
-	 * 2. `HSET props:active <outcome_uuid> <json>` - Store each outcome (batched via pipeline)
-	 * 3. `EXPIRE props:active 300` - Set 5-minute TTL
+	 * 1. `DEL props:active:${guildId}` - Clear existing hash for this guild
+	 * 2. `HSET props:active:${guildId} <outcome_uuid> <json>` - Store each outcome (batched via pipeline)
+	 * 3. `EXPIRE props:active:${guildId} 300` - Set 5-minute TTL
 	 *
 	 * **Performance:** Uses Redis pipeline for atomic batch operations (O(1) per outcome)
 	 *
+	 * @param guildId - Discord guild ID (required for guild-scoped caching)
 	 * @param props - Array of active outcomes with full metadata to cache
 	 *
 	 * @example
 	 * ```typescript
-	 * // Called after fetching active outcomes from API
+	 * // Called after fetching active outcomes from API for a specific guild
 	 * const activeOutcomes: CachedProp[] = [
 	 *   {
 	 *     outcome_uuid: "abc-123",
@@ -238,13 +267,19 @@ export class PropsCacheService {
 	 *     commence_time: "2025-01-27T20:00:00Z"
 	 *   }
 	 * ];
-	 * await cacheService.cacheActiveProps(activeOutcomes);
+	 * await cacheService.cacheActiveProps('guild123', activeOutcomes);
 	 *
-	 * // Now getActiveProps() will return one outcome per prop (deduplicated by market_id)
-	 * const cached = await cacheService.getActiveProps();
+	 * // Now getActiveProps('guild123') will return one outcome per prop (deduplicated by market_id)
+	 * const cached = await cacheService.getActiveProps('guild123');
 	 * ```
 	 */
-	async cacheActiveProps(props: CachedProp[]): Promise<void> {
+	async cacheActiveProps(
+		guildId: string,
+		props: CachedProp[],
+	): Promise<void> {
+		// Validate guildId (getActivePropsKey will throw if invalid)
+		const activePropsKey = this.getActivePropsKey(guildId)
+
 		// Validate input (allow empty array to clear cache)
 		try {
 			z.array(CachedPropSchema).parse(props)
@@ -256,24 +291,24 @@ export class PropsCacheService {
 
 		const pipeline = this.cache.pipeline()
 
-		// Clear existing data
-		pipeline.del(this.ACTIVE_PROPS_KEY)
+		// Clear existing data for this guild
+		pipeline.del(activePropsKey)
 
 		// Store each prop as a hash with the outcome_uuid as the field
 		for (const prop of props) {
 			pipeline.hset(
-				this.ACTIVE_PROPS_KEY,
+				activePropsKey,
 				prop.outcome_uuid,
 				JSON.stringify(prop),
 			)
 		}
 
 		// Set 5 min TTL for active props
-		pipeline.expire(this.ACTIVE_PROPS_KEY, 300)
+		pipeline.expire(activePropsKey, 300)
 		const results = await pipeline.exec()
 		if (results?.some(([err]) => err)) {
 			throw new Error(
-				`Failed to cache active props: ${results
+				`Failed to cache active props for guild ${guildId}: ${results
 					.filter(([err]) => err)
 					.map(([err]) => err?.message)
 					.join(', ')}`,
@@ -284,18 +319,22 @@ export class PropsCacheService {
 	/**
 	 * Get active outcome IDs from cache (backward compatibility)
 	 *
-	 * Extracts only the outcome UUIDs from the `props:active` hash.
+	 * Extracts only the outcome UUIDs from the guild-scoped `props:active:${guildId}` hash.
 	 * Useful when you only need to check if an outcome is active, not the full metadata.
 	 * Note: We cache outcomes, not props.
 	 *
-	 * **Redis Command:**
-	 * - `HGETALL props:active` - Returns all hash fields (keys are UUIDs)
+	 * **Guild-Scoping:**
+	 * Returns UUIDs only for the specified guild's active props cache.
 	 *
+	 * **Redis Command:**
+	 * - `HGETALL props:active:${guildId}` - Returns all hash fields (keys are UUIDs)
+	 *
+	 * @param guildId - Discord guild ID (required for guild-scoped caching)
 	 * @returns Set of outcome UUIDs, or empty Set if cache is empty
 	 *
 	 * @example
 	 * ```typescript
-	 * const activeIds = await cacheService.getActivePropsIds();
+	 * const activeIds = await cacheService.getActivePropsIds('guild123');
 	 * // Returns: Set<string>
 	 * // Example: Set { "abc-123", "xyz-789", "def-456" }
 	 *
@@ -305,8 +344,9 @@ export class PropsCacheService {
 	 * }
 	 * ```
 	 */
-	async getActivePropsIds(): Promise<Set<string>> {
-		const data = await this.cache.hgetall(this.ACTIVE_PROPS_KEY)
+	async getActivePropsIds(guildId: string): Promise<Set<string>> {
+		const activePropsKey = this.getActivePropsKey(guildId)
+		const data = await this.cache.hgetall(activePropsKey)
 		return new Set(Object.keys(data))
 	}
 
@@ -317,8 +357,12 @@ export class PropsCacheService {
 	 * Returns one outcome per prop (deduplicated by market_id). Props are identified by market_id.
 	 * Multiple outcomes share the same market_id (they belong to the same prop).
 	 *
+	 * **Guild-Scoping:**
+	 * Returns outcomes only from the specified guild's active props cache.
+	 * Each guild maintains its own separate cache to prevent cross-guild contamination.
+	 *
 	 * **Redis Command:**
-	 * - `HGETALL props:active` - Returns all hash fields and values
+	 * - `HGETALL props:active:${guildId}` - Returns all hash fields and values for this guild
 	 *
 	 * **Deduplication Logic:**
 	 * - Groups outcomes by market_id
@@ -327,12 +371,13 @@ export class PropsCacheService {
 	 *
 	 * **Performance:** Single Redis operation, O(1) lookup per outcome
 	 *
+	 * @param guildId - Discord guild ID (required for guild-scoped caching)
 	 * @returns Array of active outcomes (one per prop), deduplicated by market_id, or empty array if cache is empty
 	 *
 	 * @example
 	 * ```typescript
 	 * // Get active outcomes for autocomplete (deduplicated by market_id)
-	 * const activeOutcomes = await cacheService.getActiveProps();
+	 * const activeOutcomes = await cacheService.getActiveProps('guild123');
 	 *
 	 * // Returns: CachedProp[] with one outcome per prop
 	 * // Example: [
@@ -355,8 +400,9 @@ export class PropsCacheService {
 	 * );
 	 * ```
 	 */
-	async getActiveProps(): Promise<CachedProp[]> {
-		const data = await this.cache.hgetall(this.ACTIVE_PROPS_KEY)
+	async getActiveProps(guildId: string): Promise<CachedProp[]> {
+		const activePropsKey = this.getActivePropsKey(guildId)
+		const data = await this.cache.hgetall(activePropsKey)
 		if (Object.keys(data).length === 0) {
 			return []
 		}
@@ -370,7 +416,7 @@ export class PropsCacheService {
 				validatedOutcomes.push(validated)
 			} catch (error) {
 				logger.warn(
-					`Failed to parse/validate cached outcome with key ${key}: ${error instanceof Error ? error.message : 'unknown error'}`,
+					`Failed to parse/validate cached outcome with key ${key} for guild ${guildId}: ${error instanceof Error ? error.message : 'unknown error'}`,
 				)
 				// Skip invalid entries instead of throwing
 			}

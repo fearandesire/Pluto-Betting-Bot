@@ -78,9 +78,9 @@ export class ActivePropsService {
 				}
 			}
 
-			// Update cache with full outcome metadata
+			// Update cache with full outcome metadata (guild-scoped)
 			const cacheStartTime = Date.now()
-			await this.cacheService.cacheActiveProps(cachedOutcomes)
+			await this.cacheService.cacheActiveProps(guildId, cachedOutcomes)
 			const cacheDuration = Date.now() - cacheStartTime
 
 			// Log performance metrics
@@ -117,7 +117,7 @@ export class ActivePropsService {
 	): Promise<{ props: CachedProp[]; fromCache: boolean }> {
 		// Check cache first unless forced refresh
 		if (!forceRefresh) {
-			const cached = await this.cacheService.getActiveProps()
+			const cached = await this.cacheService.getActiveProps(guildId)
 			if (cached.length > 0) {
 				return { props: cached, fromCache: true }
 			}
@@ -128,7 +128,8 @@ export class ActivePropsService {
 		await this.refreshActiveProps(guildId)
 
 		// Retrieve deduplicated outcomes from cache (PropCacheService.getActiveProps handles deduplication)
-		const deduplicatedOutcomes = await this.cacheService.getActiveProps()
+		const deduplicatedOutcomes =
+			await this.cacheService.getActiveProps(guildId)
 
 		return { props: deduplicatedOutcomes, fromCache: false }
 	}
