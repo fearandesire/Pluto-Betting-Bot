@@ -6,6 +6,7 @@ import {
 import type { ButtonInteraction } from 'discord.js'
 import { EmbedBuilder } from 'discord.js'
 import _ from 'lodash'
+import { teamResolver } from 'resolve-team'
 import embedColors from '../lib/colorsConfig.js'
 import { ApiModules } from '../lib/interfaces/api/api.interface.js'
 import { btnIds } from '../lib/interfaces/interaction-handlers/interaction-handlers.interface.js'
@@ -13,14 +14,12 @@ import {
 	BetsCacheService,
 	type CachedBetData,
 } from '../utils/api/common/bets/BetsCacheService.js'
-import { MarketKeyAbbreviations } from '../utils/api/common/interfaces/market-abbreviations.js'
 import { BetslipManager } from '../utils/api/Khronos/bets/BetslipsManager.js'
 import BetslipWrapper from '../utils/api/Khronos/bets/betslip-wrapper.js'
 import { ApiErrorHandler } from '../utils/api/Khronos/error-handling/ApiErrorHandler.js'
 import PredictionApiWrapper from '../utils/api/Khronos/prediction/predictionApiWrapper.js'
 import PropsApiWrapper from '../utils/api/Khronos/props/propsApiWrapper.js'
 import { CacheManager } from '../utils/cache/cache-manager.js'
-import { DateManager } from '../utils/common/DateManager.js'
 import { ErrorEmbeds } from '../utils/common/errors/global.js'
 import TeamInfo from '../utils/common/TeamInfo.js'
 
@@ -214,43 +213,25 @@ export class ButtonHandler extends InteractionHandler {
 					},
 				})
 
-				// Format the choice with point and market from the matched outcome
-				const formattedChoice = this.formatPredictionChoice(
-					matchedOutcome.name,
-					matchedOutcome.point,
-					prop.market_key,
-					matchedOutcome.description,
-				)
-
-				// Format match string
-				const matchString = await this.formatMatchString(
-					prop.event_context.away_team,
-					prop.event_context.home_team,
-				)
-
-				// Format date
-				const formattedDate = new DateManager().toMMDDYYYY(
-					prop.event_context.commence_time,
-				)
+				// Format prediction in compact view format matching history style
+				const formattedPrediction =
+					await this.formatPredictionConfirmation(
+						matchedOutcome,
+						prop.market_key,
+						prop.event_context,
+					)
 
 				const predictionEmbed = new EmbedBuilder()
 					.setColor(embedColors.PlutoGreen)
-					.setTitle('Prediction Placed')
+					.setTitle('✅ Prediction Placed')
 					.setDescription(
 						'Your prediction has been recorded.\nView your predictions with `/predictions history`',
 					)
-					.addFields(
-						{
-							name: 'Your Prediction',
-							value: formattedChoice,
-							inline: false,
-						},
-						{
-							name: 'Event Details',
-							value: `**Match:** ${matchString}\n**Date:** ${formattedDate}`,
-							inline: false,
-						},
-					)
+					.addFields({
+						name: '\u200B',
+						value: formattedPrediction,
+						inline: false,
+					})
 					.setTimestamp()
 
 				await interaction.editReply({
@@ -280,66 +261,71 @@ export class ButtonHandler extends InteractionHandler {
 	}
 
 	/**
-	 * Formats a prediction choice with point and market information
-	 * @param choice - The user's choice (e.g., "over", "under", "philadelphia eagles")
-	 * @param point - The point value (e.g., 15.5, -7.0)
-	 * @param marketKey - The market key (e.g., "player_reception_yds", "spreads")
-	 * @param description - Optional prop description (e.g., player name)
-	 * @returns Formatted choice string (e.g., "Patrick Mahomes OVER 15.5 Reception Yards", "Philadelphia Eagles -7.0")
+	 * Format prediction confirmation in compact view format matching history style
+	 * Player format: **⏳ Player Name** (ABBREV vs. ABBREV)\nProp Type • **PICK Line**\n*<t:TIMESTAMP:d>*
+	 * Team format: **⏳ Team Name**\nProp Type • **PICK Line**\n*<t:TIMESTAMP:d>*
 	 */
-	private formatPredictionChoice(
-		choice: string,
-		point: number | undefined,
+	private async formatPredictionConfirmation(
+		outcome: {
+			name: string
+			description?: string
+			point?: number | null
+		},
 		marketKey: string,
-		description?: string,
-	): string {
-		// Handle spreads market specially - choice is team name
-		if (marketKey === 'spreads') {
-			if (point !== undefined && point !== null) {
-				const spreadDisplay = point > 0 ? `+${point}` : point
-				return `${_.startCase(choice)} ${spreadDisplay}`
-			}
-			return _.startCase(choice)
-		}
-
-		// Standard handling for other markets (over/under, yes/no)
-		const upperChoice = choice.toUpperCase()
-		const abbreviation = MarketKeyAbbreviations[marketKey]
-		const marketName = abbreviation
-			? abbreviation
-			: _.startCase(marketKey.replace('player_', ''))
-
-		// Build the formatted string with player name if available
-		let formattedString = ''
-
-		if (description) {
-			formattedString = `**${description}** `
-		}
-
-		if (point !== undefined && point !== null) {
-			formattedString += `${upperChoice} \`${point}\` ${marketName}`
-		} else {
-			formattedString += `${upperChoice} ${marketName}`
-		}
-
-		return formattedString
-	}
-
-	/**
-	 * Formats the match string with team identifiers
-	 * @param awayTeam - Away team name
-	 * @param homeTeam - Home team name
-	 * @returns Formatted match string (e.g., "LAL vs. BOS")
-	 */
-	private async formatMatchString(
-		awayTeam: string,
-		homeTeam: string,
+		eventContext: {
+			home_team: string
+			away_team: string
+			commence_time: string
+		},
 	): Promise<string> {
-		const result = await TeamInfo.resolveTeamIdentifier({
-			away_team: awayTeam,
-			home_team: homeTeam,
-		})
-		return `${result.away_team} vs. ${result.home_team}`
+		const isPlayerPrediction =
+			outcome.description && outcome.description.trim() !== ''
+
+		let entityLine: string
+		if (isPlayerPrediction) {
+			const playerName = outcome.description!
+			const awayTeamData = await teamResolver.resolve(
+				eventContext.away_team,
+				{ full: true },
+			)
+			const homeTeamData = await teamResolver.resolve(
+				eventContext.home_team,
+				{ full: true },
+			)
+			const awayAbbrev =
+				awayTeamData?.abbrev ||
+				TeamInfo.getTeamShortName(eventContext.away_team)
+			const homeAbbrev =
+				homeTeamData?.abbrev ||
+				TeamInfo.getTeamShortName(eventContext.home_team)
+			const matchupString = `${awayAbbrev} vs. ${homeAbbrev}`
+			entityLine = `**⏳ ${playerName}** (${matchupString})`
+		} else {
+			// Handle spreads market - choice is team name
+			const teamName = TeamInfo.getTeamShortName(outcome.name)
+			entityLine = `**⏳ ${teamName}**`
+		}
+
+		const propType = _.startCase(
+			marketKey.replace('player_', '').replace('_', ' '),
+		)
+
+		const pick = outcome.name.toUpperCase()
+		const line =
+			outcome.point !== null && outcome.point !== undefined
+				? outcome.point.toString()
+				: ''
+
+		const timestamp = Math.floor(
+			new Date(eventContext.commence_time).getTime() / 1000,
+		)
+		const formattedDate = `<t:${timestamp}:d>`
+
+		const propLine = line
+			? `${propType} • **${pick} ${line}**`
+			: `${propType} • **${pick}**`
+
+		return `${entityLine}\n${propLine}\n*${formattedDate}*`
 	}
 }
 
