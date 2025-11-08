@@ -59,8 +59,8 @@ COPY --from=builder /app/dist ./dist
 # Copy Assets
 COPY --from=builder /app/assets ./assets
 
-# Install production dependencies
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --force
+# Install production dependencies (skip scripts to avoid husky prepare hook)
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --force --ignore-scripts
 
 EXPOSE 2090
 
