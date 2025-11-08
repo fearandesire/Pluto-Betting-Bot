@@ -38,32 +38,60 @@ export class PropsAutocompleteListener extends Listener {
 	}
 
 	public async run(interaction: AutocompleteInteraction) {
-		// Only handle autocomplete for props command
+		const startTime = Date.now();
+
 		if (!interaction.isAutocomplete()) return;
-		if (interaction.commandName !== 'props') return;
+
+		// Check for admin command with props subcommand group
+		if (interaction.commandName !== 'admin') return;
 
 		const subcommandGroup = interaction.options.getSubcommandGroup();
 		const subcommand = interaction.options.getSubcommand();
 
-		// Only handle setresult autocomplete
-		if (subcommandGroup !== 'manage' || subcommand !== 'setresult') return;
+		// Only handle props setresult autocomplete
+		if (subcommandGroup !== 'props' || subcommand !== 'setresult') return;
 
 		const focusedOption = interaction.options.getFocused(true);
 
 		// Only handle prop_id autocomplete
 		if (focusedOption.name !== 'prop_id') return;
 
+		const guildId = interaction.guildId;
+		const query = (focusedOption.value as string) || '';
+
+		if (!guildId) {
+			this.container.logger.warn('Props autocomplete: missing guildId');
+			await interaction.respond([]);
+			return;
+		}
+
 		try {
 			// Get active props (uses cache with fallback to API)
+			const cacheStartTime = Date.now();
 			const activeProps = await this.activePropsService.getActiveProps(
-				interaction.guildId!,
+				guildId,
 				false, // Don't force refresh on every autocomplete
 			);
+			const cacheDuration = Date.now() - cacheStartTime;
+
+			// Log cache performance
+			if (activeProps.length > 0) {
+				this.container.logger.info('Props autocomplete cache hit', {
+					guildId,
+					propsCount: activeProps.length,
+					cacheDuration: `${cacheDuration}ms`,
+				});
+			} else {
+				this.container.logger.warn('Props autocomplete cache miss', {
+					guildId,
+					cacheDuration: `${cacheDuration}ms`,
+				});
+			}
 
 			// Filter by user's current input
 			const filtered = PropsAutocompleteFormatter.filterByQuery(
 				activeProps,
-				focusedOption.value as string,
+				query,
 			);
 
 			// Convert to autocomplete choices (limit to 25 per Discord)
@@ -71,9 +99,26 @@ export class PropsAutocompleteListener extends Listener {
 				filtered.slice(0, 25),
 			);
 
+			const totalDuration = Date.now() - startTime;
+			this.container.logger.info('Props autocomplete response', {
+				guildId,
+				query: query || '(empty)',
+				totalProps: activeProps.length,
+				filteredCount: filtered.length,
+				returnedCount: choices.length,
+				totalDuration: `${totalDuration}ms`,
+			});
+
 			await interaction.respond(choices);
 		} catch (error) {
-			this.container.logger.error('Props autocomplete error:', error);
+			const totalDuration = Date.now() - startTime;
+			this.container.logger.error('Props autocomplete error', {
+				guildId,
+				query,
+				error: error instanceof Error ? error.message : String(error),
+				stack: error instanceof Error ? error.stack : undefined,
+				totalDuration: `${totalDuration}ms`,
+			});
 			// Respond with empty array on error to avoid interaction timeout
 			await interaction.respond([]);
 		}
