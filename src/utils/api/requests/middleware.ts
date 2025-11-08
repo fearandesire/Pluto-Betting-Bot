@@ -1,4 +1,3 @@
-
 export async function pageNotFound(ctx, next) {
 	return next().then(() => {
 		if (ctx.status === 404) {

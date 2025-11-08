@@ -74,11 +74,11 @@ export class RedisPubSubManager {
 			// Set up message handling
 			this.subscriber.on(
 				'pmessage',
-				(_pattern: string, channel: string, message: string) => {
-					try {
-						const parsedMessage = JSON.parse(message)
+			(_pattern: string, channel: string, message: string) => {
+				try {
+					const _parsedMessage = JSON.parse(message)
 
-						switch (channel as RedisChannel) {
+					switch (channel as RedisChannel) {
 							// ? WIP
 							case RedisChannel.CHANNEL_CREATION:
 								break

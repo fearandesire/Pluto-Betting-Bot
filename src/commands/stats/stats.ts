@@ -114,11 +114,11 @@ export class UserCommand extends Subcommand {
 				},
 			}
 
-			await interaction.editReply({ embeds: [embed] })
-		} catch (error) {
-			return await interaction.editReply({
-				content: 'An error occurred while fetching your stats.',
-			})
-		}
+		await interaction.editReply({ embeds: [embed] })
+	} catch (_error) {
+		return await interaction.editReply({
+			content: 'An error occurred while fetching your stats.',
+		})
+	}
 	}
 }

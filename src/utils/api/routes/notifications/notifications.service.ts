@@ -237,8 +237,8 @@ export default class NotificationService {
 				betId,
 				error: err instanceof Error ? err.message : String(err),
 				stack: err instanceof Error ? err.stack : undefined,
-				method: this.sendEmbed.name
+				method: this.sendEmbed.name,
 			})
+		}
 	}
-}
 }
