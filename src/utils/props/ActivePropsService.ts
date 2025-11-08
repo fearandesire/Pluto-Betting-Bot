@@ -107,8 +107,7 @@ export class ActivePropsService {
 	/**
 	 * Get active outcomes with cache fallback
 	 * Uses cached data unless forceRefresh is true
-	 * Optimized to return cached outcomes directly without extra cache read
-	 * Returns one outcome per prop (deduplicated by market_id)
+	 * Returns one outcome per prop (deduplicated by market_id via PropCacheService)
 	 *
 	 * @returns Object with outcomes array and cache metadata
 	 */
@@ -125,27 +124,11 @@ export class ActivePropsService {
 		}
 
 		// Refresh from API if cache is empty or refresh is forced
-		// refreshActiveProps returns all outcomes; deduplicate by market_id before returning
-		const allOutcomes = await this.refreshActiveProps(guildId)
+		// refreshActiveProps caches all outcomes, then we retrieve deduplicated results from cache
+		await this.refreshActiveProps(guildId)
 
-		// Deduplicate outcomes by market_id to return one outcome per prop
-		// Props are identified by market_id - multiple outcomes share the same market_id
-		const deduplicatedOutcomes: CachedProp[] = []
-		const marketIdMap = new Map<number, CachedProp>()
-
-		for (const outcome of allOutcomes) {
-			if (outcome.market_id !== null && outcome.market_id !== undefined) {
-				// Group by market_id (prop) - keep first occurrence
-				// This ensures autocomplete shows one entry per prop pair
-				if (!marketIdMap.has(outcome.market_id)) {
-					marketIdMap.set(outcome.market_id, outcome)
-					deduplicatedOutcomes.push(outcome)
-				}
-			} else {
-				// Legacy outcomes without market_id - keep all
-				deduplicatedOutcomes.push(outcome)
-			}
-		}
+		// Retrieve deduplicated outcomes from cache (PropCacheService.getActiveProps handles deduplication)
+		const deduplicatedOutcomes = await this.cacheService.getActiveProps()
 
 		return { props: deduplicatedOutcomes, fromCache: false }
 	}
