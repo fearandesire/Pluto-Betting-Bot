@@ -27,7 +27,8 @@
 		"dvault": "npx dotenv-vault@latest",
 		"dvault-prod": "npx dotenv-vault@latest push production",
 		"release": "release-it",
-		"docker:ci": "docker-compose build && docker-compose push"
+		"docker:ci": "docker-compose build && docker-compose push",
+		"prepare": "husky"
 	},
 	"imports": {
 		"@khronos-index": "./dist/openapi/khronos/index.js",
@@ -83,14 +84,13 @@
 		"koa-bodyparser": "^4.4.1",
 		"koa-logger": "^4.0.0",
 		"koa2-winston": "^3.2.1",
-		"lefthook": "^2.0.2",
 		"lodash": "^4.17.21",
 		"module-alias": "^2.2.3",
 		"numeral": "^2.0.6",
 		"pg": "^8.13.3",
 		"pg-monitor": "^3.1.0",
 		"pg-promise": "^12.2.0",
-		"pkg-dir": "^9.0.0",
+		"package-directory": "^8.1.0",
 		"puppeteer": "^24.28.0",
 		"puppeteer-extra": "^3.3.6",
 		"puppeteer-extra-plugin-recaptcha": "^3.6.8",
@@ -107,7 +107,7 @@
 		"zod-validation-error": "^5.0.0"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "2.3.3",
+		"@biomejs/biome": "2.3.4",
 		"@biomejs/cli-win32-x64": "^2.3.3",
 		"@sapphire/cli": "^1.9.3",
 		"@sapphire/prettier-config": "^2.0.0",
@@ -127,6 +127,7 @@
 		"@types/numeral": "^2.0.5",
 		"@types/ws": "^8.5.14",
 		"bluebird": "^3.7.2",
+		"husky": "^9.1.7",
 		"jest": "^30.2.0",
 		"npm-run-all": "^4.1.5",
 		"pkgroll": "^2.20.1",

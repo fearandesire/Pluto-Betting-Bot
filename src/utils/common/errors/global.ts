@@ -1,7 +1,7 @@
-import { helpfooter } from '@pluto-config';
-import { EmbedBuilder } from 'discord.js';
-import embedColors from '../../../lib/colorsConfig.js';
-import { nonPatreonMemberMsg } from '../../api/patreon/interfaces.js';
+import { helpfooter } from '@pluto-config'
+import { EmbedBuilder } from 'discord.js'
+import embedColors from '../../../lib/colorsConfig.js'
+import { nonPatreonMemberMsg } from '../../api/patreon/interfaces.js'
 
 /**
  * @summary Generates Error Embeds
@@ -23,45 +23,48 @@ export class ErrorEmbeds {
 				text: extraData
 					? `${extraData.footerData} | ${await helpfooter()}`
 					: await helpfooter(),
-			});
+			})
 	}
 
 	// Specific error methods just call the generalized method with predefined titles
 	static patreonMembersOnly() {
-		return ErrorEmbeds.createErrorEmbed('Access Denied', nonPatreonMemberMsg);
+		return ErrorEmbeds.createErrorEmbed(
+			'Access Denied',
+			nonPatreonMemberMsg,
+		)
 	}
 	static internalErr(description: string) {
-		return ErrorEmbeds.createErrorEmbed('Internal Error', description);
+		return ErrorEmbeds.createErrorEmbed('Internal Error', description)
 	}
 
 	static betErr(description: string) {
-		return ErrorEmbeds.createErrorEmbed('Invalid Bet', description);
+		return ErrorEmbeds.createErrorEmbed('Invalid Bet', description)
 	}
 
 	static invalidRequest(description: string) {
-		return ErrorEmbeds.createErrorEmbed('Invalid Request', description);
+		return ErrorEmbeds.createErrorEmbed('Invalid Request', description)
 	}
 
 	static accountErr(description: string) {
-		return ErrorEmbeds.createErrorEmbed('Account Error', description);
+		return ErrorEmbeds.createErrorEmbed('Account Error', description)
 	}
 
 	static propsErr(description: string) {
-		return ErrorEmbeds.createErrorEmbed('Props Error', description);
+		return ErrorEmbeds.createErrorEmbed('Props Error', description)
 	}
 
 	static predictionsErr(description: string) {
-		return ErrorEmbeds.createErrorEmbed('Predictions Error', description);
+		return ErrorEmbeds.createErrorEmbed('Predictions Error', description)
 	}
 
 	static unknownErr(description: string) {
-		return ErrorEmbeds.createErrorEmbed('Unknown Error', description);
+		return ErrorEmbeds.createErrorEmbed('Unknown Error', description)
 	}
 
 	static maintenanceMode() {
 		return ErrorEmbeds.createErrorEmbed(
 			'🚧 Maintenance Mode',
-			'Pluto is currently undergoing large updates. This feature is unavailable. Please check back soon as it\'s under maintenance.',
-		);
+			"Pluto is currently undergoing large updates. This feature is unavailable. Please check back soon as it's under maintenance.",
+		)
 	}
 }

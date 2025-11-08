@@ -100,17 +100,17 @@ const footers = {
 		'🍬 Sweet and small, but still a gamble.',
 		'🧩 Tiny bet, tiny regret... or maybe not.',
 	],
-} as const;
+} as const
 
-type FooterTypes = keyof typeof footers | 'all';
+type FooterTypes = keyof typeof footers | 'all'
 
 // Cache for combined footer arrays
-const footerCache = new Map<FooterTypes, readonly string[]>();
+const footerCache = new Map<FooterTypes, readonly string[]>()
 
 // Pre-compute the 'all' footers array
 const allFooters = Object.freeze(
 	Object.values(footers).flat(),
-) as readonly string[];
+) as readonly string[]
 
 /**
  * Get a random footer message based on the specified type
@@ -119,34 +119,34 @@ const allFooters = Object.freeze(
  */
 function randomFooter(type: FooterTypes = 'core'): string {
 	// Use cached array if available
-	let selectedFooters = footerCache.get(type);
+	let selectedFooters = footerCache.get(type)
 
 	if (!selectedFooters) {
 		if (type === 'all') {
-			selectedFooters = allFooters;
+			selectedFooters = allFooters
 		} else {
 			// Create and cache the combined array
 			selectedFooters = Object.freeze([
 				...footers.core,
 				...(type === 'core' ? [] : footers[type]),
-			]);
+			])
 		}
-		footerCache.set(type, selectedFooters);
+		footerCache.set(type, selectedFooters)
 	}
 
 	// Use crypto random for better randomization if available
-	let randomIndex: number;
+	let randomIndex: number
 	if (typeof crypto !== 'undefined') {
-		const array = new Uint32Array(1);
-		crypto.getRandomValues(array);
-		randomIndex = array[0] % selectedFooters.length;
+		const array = new Uint32Array(1)
+		crypto.getRandomValues(array)
+		randomIndex = array[0] % selectedFooters.length
 	} else {
-		randomIndex = Math.floor(Math.random() * selectedFooters.length);
+		randomIndex = Math.floor(Math.random() * selectedFooters.length)
 	}
 
-	return selectedFooters[randomIndex];
+	return selectedFooters[randomIndex]
 }
 
-const supportMessage = 'Please reach out to `fenixforever` for support.';
+const supportMessage = 'Please reach out to `fenixforever` for support.'
 
-export { randomFooter as helpfooter, supportMessage };
+export { randomFooter as helpfooter, supportMessage }

@@ -1,14 +1,14 @@
 import {
 	LeaderboardApi,
 	type LeaderboardControllerGetLeaderboardV1Request,
-} from '../../../../openapi/khronos/apis/LeaderboardApi.js';
-import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js';
+} from '../../../../openapi/khronos/apis/LeaderboardApi.js'
+import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js'
 
 export default class LeaderboardWrapper {
-	private leaderboardsApi: LeaderboardApi;
-	private readonly khConfig: IKH_API_CONFIG = KH_API_CONFIG;
+	private leaderboardsApi: LeaderboardApi
+	private readonly khConfig: IKH_API_CONFIG = KH_API_CONFIG
 	constructor() {
-		this.leaderboardsApi = new LeaderboardApi(this.khConfig);
+		this.leaderboardsApi = new LeaderboardApi(this.khConfig)
 	}
 
 	/**
@@ -17,6 +17,6 @@ export default class LeaderboardWrapper {
 	async getLeaderboard(params: LeaderboardControllerGetLeaderboardV1Request) {
 		return await this.leaderboardsApi.leaderboardControllerGetLeaderboardV1(
 			params,
-		);
+		)
 	}
 }

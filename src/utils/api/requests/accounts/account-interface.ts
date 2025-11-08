@@ -1,5 +1,5 @@
 export interface IProfileArgs {
-	targetUserId: string;
-	targetUsername: string;
-	onlyBalance?: boolean;
+	targetUserId: string
+	targetUsername: string
+	onlyBalance?: boolean
 }

@@ -1,32 +1,32 @@
-import type { ColorResolvable } from 'discord.js';
-import { z } from 'zod';
-import type { SportsServing } from '@pluto-khronos/types';
+import type { SportsServing } from '@pluto-khronos/types'
+import type { ColorResolvable } from 'discord.js'
+import { z } from 'zod'
 
 const channelDeletionJobDataSchema = z.object({
 	channelName: z.string(),
 	jobId: z.string().optional(),
-});
+})
 
 const channelDeletionResultSchema = z.object({
 	success: z.boolean(),
 	channelName: z.string(),
 	error: z.string().optional(),
-});
+})
 
 export type ChannelDeletionJobData = z.infer<
 	typeof channelDeletionJobDataSchema
->;
+>
 
-export type ChannelDeletionResult = z.infer<typeof channelDeletionResultSchema>;
+export type ChannelDeletionResult = z.infer<typeof channelDeletionResultSchema>
 
 export const teamRecordSchema = z.object({
 	total_record: z.string(),
-});
+})
 
 export const teamRecordsResultSchema = z.object({
 	home_team: teamRecordSchema,
 	away_team: teamRecordSchema,
-});
+})
 
 export const channelDeletionEventSchema = z.object({
 	channelIds: z
@@ -42,7 +42,7 @@ export const channelDeletionEventSchema = z.object({
 				.describe('Unique identifier for tracking the deletion event'),
 		})
 		.describe('Metadata associated with the channel deletion event'),
-});
+})
 
 export const eligibleGuildData = z
 	.object({
@@ -66,7 +66,9 @@ export const eligibleGuildData = z
 				'Optional list of teams the guild wants to prioritize for channel creation',
 			),
 	})
-	.describe('Data regarding the guild that is eligible for a channel creation');
+	.describe(
+		'Data regarding the guild that is eligible for a channel creation',
+	)
 
 export const channelAggregatedSchema = z
 	.object({
@@ -82,7 +84,9 @@ export const channelAggregatedSchema = z
 			) as z.ZodType<SportsServing>,
 		created: z
 			.boolean()
-			.describe('Flag indicating whether the Discord channel has been created'),
+			.describe(
+				'Flag indicating whether the Discord channel has been created',
+			),
 		gametime: z.date().describe('Scheduled start time of the game'),
 		channelname: z
 			.string()
@@ -91,9 +95,15 @@ export const channelAggregatedSchema = z
 			.object({
 				favored: z
 					.string()
-					.describe('Name of the team favored to win based on betting odds'),
-				home_team_odds: z.number().describe('Betting odds for the home team'),
-				away_team_odds: z.number().describe('Betting odds for the away team'),
+					.describe(
+						'Name of the team favored to win based on betting odds',
+					),
+				home_team_odds: z
+					.number()
+					.describe('Betting odds for the home team'),
+				away_team_odds: z
+					.number()
+					.describe('Betting odds for the away team'),
 			})
 			.describe('Betting odds information for the match'),
 		home_team: z.string().describe('Name of the home team'),
@@ -112,7 +122,7 @@ export const channelAggregatedSchema = z
 			.nullable()
 			.describe('Additional metadata about the teams and game'),
 	})
-	.describe('Enriched channel data including match odds and team information');
+	.describe('Enriched channel data including match odds and team information')
 
 export const channelCreationEventSchema = z.object({
 	channel: channelAggregatedSchema.describe(
@@ -131,19 +141,19 @@ export const channelCreationEventSchema = z.object({
 				.describe('Unique identifier for tracking the creation event'),
 		})
 		.describe('Metadata associated with the channel creation event'),
-});
+})
 
 /** Complete scheduled channels data schema */
 export const incomingChannelDataSchema = z.object({
 	channels: z.array(channelAggregatedSchema),
 	guilds: z.array(eligibleGuildData),
-});
+})
 
-export type IncomingChannelData = z.infer<typeof incomingChannelDataSchema>;
+export type IncomingChannelData = z.infer<typeof incomingChannelDataSchema>
 
-export type ChannelAggregated = z.infer<typeof channelAggregatedSchema>;
-export type GuildEligibility = z.infer<typeof eligibleGuildData>;
-export type ChannelCreationPayload = z.infer<typeof channelCreationEventSchema>;
+export type ChannelAggregated = z.infer<typeof channelAggregatedSchema>
+export type GuildEligibility = z.infer<typeof eligibleGuildData>
+export type ChannelCreationPayload = z.infer<typeof channelCreationEventSchema>
 
 export const prepareMatchEmbedSchema = z
 	.object({
@@ -163,7 +173,7 @@ export const prepareMatchEmbedSchema = z
 			.optional()
 			.describe('Optional team records'),
 	})
-	.describe('Data required to prepare a match embed');
+	.describe('Data required to prepare a match embed')
 
 export const createChannelAndSendEmbedSchema = z
 	.object({
@@ -171,7 +181,10 @@ export const createChannelAndSendEmbedSchema = z
 		guild: eligibleGuildData,
 		metadata: z.object({
 			favoredTeamInfo: z.any().describe('Resolved team information'),
-			matchImg: z.instanceof(Buffer).nullable().describe('Match image buffer'),
+			matchImg: z
+				.instanceof(Buffer)
+				.nullable()
+				.describe('Match image buffer'),
 			headline: z
 				.string()
 				.nullable()
@@ -183,9 +196,9 @@ export const createChannelAndSendEmbedSchema = z
 				.describe('Team records and statistics'),
 		}),
 	})
-	.describe('Data required to create a channel and send an embed');
+	.describe('Data required to create a channel and send an embed')
 
-export type PrepareMatchEmbed = z.infer<typeof prepareMatchEmbedSchema>;
+export type PrepareMatchEmbed = z.infer<typeof prepareMatchEmbedSchema>
 export type CreateChannelAndSendEmbed = z.infer<
 	typeof createChannelAndSendEmbedSchema
->;
+>

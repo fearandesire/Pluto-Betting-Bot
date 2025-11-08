@@ -1,9 +1,3 @@
-export async function responseTime(ctx, next) {
-	const started = Date.now();
-	await next();
-	const ellapsed = `${Date.now() - started}ms`;
-}
-
 export async function pageNotFound(ctx, next) {
 	return next().then(() => {
 		if (ctx.status === 404) {
@@ -69,8 +63,10 @@ export async function pageNotFound(ctx, next) {
             </body>
             
             </html>
-        `;
-			console.error(`404 - Page Not Found - Endpoint => ${ctx.request.url}`);
+        `
+			console.error(
+				`404 - Page Not Found - Endpoint => ${ctx.request.url}`,
+			)
 		}
-	});
+	})
 }

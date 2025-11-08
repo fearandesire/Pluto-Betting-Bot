@@ -1,22 +1,62 @@
 import {
-	PropsApi,
 	type ProcessedPropDto,
 	type PropDto,
+	PropsApi,
 	type SetPropResultDto,
 	type SetPropResultResponseDto,
-} from '@kh-openapi';
-import { logger } from '../../../logging/WinstonLogger.js';
-import { KH_API_CONFIG } from '../KhronosInstances.js';
+} from '@kh-openapi'
+import { z } from 'zod'
+import { logger } from '../../../logging/WinstonLogger.js'
+import { KH_API_CONFIG } from '../KhronosInstances.js'
+
+/**
+ * Zod schema for validating GetPropOptions.
+ * Ensures outcomeUuid is a valid UUID and marketId is a positive integer.
+ * At least one identifier must be provided.
+ */
+const GetPropOptionsSchema = z
+	.object({
+		outcomeUuid: z.uuid('outcomeUuid must be a valid UUID').optional(),
+		marketId: z.number().int().positive().optional(),
+	})
+	.refine(
+		(data) => data.outcomeUuid !== undefined || data.marketId !== undefined,
+		{
+			message: 'At least one of outcomeUuid or marketId must be provided',
+		},
+	)
+
+/**
+ * Options for retrieving a prop by identifier.
+ *
+ * At least one of `outcomeUuid` or `marketId` must be provided.
+ * Both can be provided simultaneously if needed.
+ *
+ * @example
+ * ```typescript
+ * // By UUID only
+ * { outcomeUuid: '123e4567-e89b-12d3-a456-426614174000' }
+ *
+ * // By market ID only
+ * { marketId: 12345 }
+ *
+ * // Both (redundant but allowed)
+ * { outcomeUuid: '123e4567-e89b-12d3-a456-426614174000', marketId: 12345 }
+ * ```
+ */
+export type GetPropOptions =
+	| { outcomeUuid: string }
+	| { marketId: number }
+	| { outcomeUuid: string; marketId: number }
 
 /**
  * Wrapper for the Props Controller in Khronos
- * Note: After API streamlining, only random props and result setting are available
  */
 export default class PropsApiWrapper {
-	private propsApi: PropsApi;
+	private propsApi: PropsApi
 
 	constructor() {
-		this.propsApi = new PropsApi(KH_API_CONFIG);
+		this.propsApi = new PropsApi(KH_API_CONFIG)
 	}
 
 	/**
@@ -24,11 +64,14 @@ export default class PropsApiWrapper {
 	 * @param sport - Sport key (nba, nfl, etc.)
 	 * @param count - Number of random props to return
 	 */
-	async getRandomProps(sport: 'nba' | 'nfl', count?: number): Promise<PropDto[]> {
+	async getRandomProps(
+		sport: 'nba' | 'nfl',
+		count?: number,
+	): Promise<PropDto[]> {
 		const response = await this.propsApi.propsControllerGetRandomPropsV1({
 			sport,
 			count,
-		});
+		})
 		await logger.info({
 			message: `Retrieved ${response.length} random props for ${sport}`,
 			metadata: {
@@ -36,8 +79,8 @@ export default class PropsApiWrapper {
 				sport,
 				count: response.length,
 			},
-		});
-		return response;
+		})
+		return response
 	}
 
 	/**
@@ -45,7 +88,7 @@ export default class PropsApiWrapper {
 	 * @param sport - Sport key (nba, nfl, etc.)
 	 */
 	async getRandomProp(sport: 'nba' | 'nfl'): Promise<PropDto> {
-		return await this.propsApi.propsControllerGetRandomPropV1({ sport });
+		return await this.propsApi.propsControllerGetRandomPropV1({ sport })
 	}
 
 	/**
@@ -66,12 +109,14 @@ export default class PropsApiWrapper {
 				sport,
 				requested_count: count,
 			},
-		});
+		})
 
-		const response = await this.propsApi.propsControllerGetProcessedPropsV1({
-			sport,
-			count,
-		});
+		const response = await this.propsApi.propsControllerGetProcessedPropsV1(
+			{
+				sport,
+				count,
+			},
+		)
 
 		await logger.info({
 			message: `✅ Khronos returned ${response.length} processed prop pairs for ${sport}`,
@@ -81,9 +126,9 @@ export default class PropsApiWrapper {
 				requested_count: count,
 				received_count: response.length,
 			},
-		});
+		})
 
-		return response;
+		return response
 	}
 
 	/**
@@ -93,9 +138,11 @@ export default class PropsApiWrapper {
 	 * @returns All available props for the sport (flat array of outcomes)
 	 */
 	async getAvailableProps(sport: 'nba' | 'nfl'): Promise<PropDto[]> {
-		const response = await this.propsApi.propsControllerGetAvailablePropsV1({
-			sport,
-		});
+		const response = await this.propsApi.propsControllerGetAvailablePropsV1(
+			{
+				sport,
+			},
+		)
 
 		await logger.info({
 			message: `Retrieved ${response.length} available props for ${sport}`,
@@ -104,31 +151,54 @@ export default class PropsApiWrapper {
 				sport,
 				count: response.length,
 			},
-		});
+		})
 
-		return response;
+		return response
 	}
 
 	/**
-	 * Get a prop by outcome UUID
+	 * Get a prop by outcome UUID or market ID
+	 * @param options - Either outcomeUuid or marketId (at least one must be provided)
+	 * @returns Prop details with event context including sport information
+	 * @throws Error if validation fails (invalid UUID format or non-positive marketId)
+	 */
+	async getProp(options: GetPropOptions): Promise<PropDto> {
+		const validationResult = GetPropOptionsSchema.safeParse(options)
+		if (!validationResult.success) {
+			throw new Error(
+				`Invalid GetPropOptions: ${validationResult.error.issues.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ')}`,
+			)
+		}
+
+		const validatedOptions = validationResult.data
+		const outcomeUuid = validatedOptions.outcomeUuid
+		const marketId = validatedOptions.marketId
+
+		const response = await this.propsApi.getProp({
+			outcomeUuid,
+			marketId,
+		})
+
+		await logger.info({
+			message: `Retrieved prop${outcomeUuid ? ` by UUID: ${outcomeUuid}` : ` by market ID: ${marketId}`}`,
+			metadata: {
+				source: `${this.constructor.name}.${this.getProp.name}`,
+				outcomeUuid,
+				marketId,
+				sport: response.event_context?.sport_title,
+			},
+		})
+
+		return response
+	}
+
+	/**
+	 * Get a prop by outcome UUID (convenience method)
 	 * @param outcomeUuid - The UUID of the outcome/prop
 	 * @returns Prop details with event context including sport information
 	 */
 	async getPropByUuid(outcomeUuid: string): Promise<PropDto> {
-		const response = await this.propsApi.propsControllerGetPropByUuidV1({
-			outcomeUuid,
-		});
-
-		await logger.info({
-			message: `Retrieved prop by UUID: ${outcomeUuid}`,
-			metadata: {
-				source: `${this.constructor.name}.${this.getPropByUuid.name}`,
-				outcomeUuid,
-				sport: response.event_context?.sport_title,
-			},
-		});
-
-		return response;
+		return this.getProp({ outcomeUuid })
 	}
 
 	/**
@@ -139,7 +209,7 @@ export default class PropsApiWrapper {
 	async setResult(dto: SetPropResultDto): Promise<SetPropResultResponseDto> {
 		const result = await this.propsApi.propsControllerSetPropResultV1({
 			setPropResultDto: dto,
-		});
+		})
 
 		await logger.info({
 			message: `Set prop result for ${dto.propId}`,
@@ -149,8 +219,8 @@ export default class PropsApiWrapper {
 				winner: dto.winner,
 				totalProcessed: result.total_predictions_count,
 			},
-		});
+		})
 
-		return result;
+		return result
 	}
 }

@@ -1,28 +1,32 @@
-import type { BetslipWithAggregationDTO, PlaceBetDto, PlaceBetDtoMarketKeyEnum } from '@kh-openapi';
-import type { CacheManager } from '../../../cache/cache-manager.js';
+import type {
+	BetslipWithAggregationDTO,
+	PlaceBetDto,
+	PlaceBetDtoMarketKeyEnum,
+} from '@kh-openapi'
+import type { CacheManager } from '../../../cache/cache-manager.js'
 
 /**
  * Simplified bet data structure for caching
  * Stores only essential data needed for bet finalization
  */
 export interface CachedBetData {
-	userid: string;
-	team: string;
-	amount: number;
-	matchup_id: string;
-	opponent: string;
-	dateofmatchup: string;
-	profit: number;
-	payout: number;
-	guild_id: string;
-	market_key: PlaceBetDtoMarketKeyEnum;
-	betresult: string;
-	dateofbet: string;
+	userid: string
+	team: string
+	amount: number
+	matchup_id: string
+	opponent: string
+	dateofmatchup: string
+	profit: number
+	payout: number
+	guild_id: string
+	market_key: PlaceBetDtoMarketKeyEnum
+	betresult: string
+	dateofbet: string
 }
 
 export class BetsCacheService {
-	private cachePrefix = 'bets:';
-	private readonly BET_CACHE_TTL = 3600; // 1 hour - reasonable time for user to decide
+	private cachePrefix = 'bets:'
+	private readonly BET_CACHE_TTL = 3600 // 1 hour - reasonable time for user to decide
 
 	constructor(private cache: CacheManager) {}
 
@@ -30,13 +34,16 @@ export class BetsCacheService {
 	 * Cache a pending bet with simplified structure
 	 * Extracts match ID from the match object to avoid storing redundant data
 	 */
-	async cacheUserBet(userId: string, betData: BetslipWithAggregationDTO & { guild_id: string }) {
-		const cacheKey = this.cachePrefix + userId;
-		
+	async cacheUserBet(
+		userId: string,
+		betData: BetslipWithAggregationDTO & { guild_id: string },
+	) {
+		const cacheKey = this.cachePrefix + userId
+
 		// Extract match ID from the properly typed match object
-		const matchId = betData.match.id;
+		const matchId = betData.match.id
 		if (!matchId) {
-			throw new Error('Match ID not found in betslip data');
+			throw new Error('Match ID not found in betslip data')
 		}
 
 		// Store simplified structure with only essential data
@@ -50,40 +57,44 @@ export class BetsCacheService {
 			profit: betData.profit ?? 0,
 			payout: betData.payout ?? 0,
 			guild_id: betData.guild_id,
-			market_key: ((betData as any).market_key ?? 'h2h') as PlaceBetDtoMarketKeyEnum,
+			market_key: ((betData as any).market_key ??
+				'h2h') as PlaceBetDtoMarketKeyEnum,
 			betresult: (betData as any).betresult ?? 'pending',
 			dateofbet: (betData as any).dateofbet ?? new Date().toISOString(),
-		};
+		}
 
-		await this.cache.set(cacheKey, cachedData, this.BET_CACHE_TTL);
+		await this.cache.set(cacheKey, cachedData, this.BET_CACHE_TTL)
 	}
 
 	/**
 	 * Retrieve cached bet data
 	 */
 	async getUserBet(userId: string): Promise<CachedBetData | null> {
-		const cacheKey = this.cachePrefix + userId;
-		const betData = await this.cache.get(cacheKey);
-		return betData || null;
+		const cacheKey = this.cachePrefix + userId
+		const betData = await this.cache.get(cacheKey)
+		return betData || null
 	}
 
 	/**
 	 * Update cached bet data with new values (e.g., profit/payout after match selection)
 	 */
-	async updateUserBet(userId: string, updates: Partial<CachedBetData>): Promise<void> {
-		const cacheKey = this.cachePrefix + userId;
-		const existingBet = await this.getUserBet(userId);
-		
+	async updateUserBet(
+		userId: string,
+		updates: Partial<CachedBetData>,
+	): Promise<void> {
+		const cacheKey = this.cachePrefix + userId
+		const existingBet = await this.getUserBet(userId)
+
 		if (!existingBet) {
-			throw new Error('No cached bet found to update');
+			throw new Error('No cached bet found to update')
 		}
 
 		const updatedBet: CachedBetData = {
 			...existingBet,
 			...updates,
-		};
+		}
 
-		await this.cache.set(cacheKey, updatedBet, this.BET_CACHE_TTL);
+		await this.cache.set(cacheKey, updatedBet, this.BET_CACHE_TTL)
 	}
 
 	/**
@@ -98,11 +109,11 @@ export class BetsCacheService {
 			matchup_id: betData.matchup_id,
 			guild_id: betData.guild_id,
 			market_key: betData.market_key,
-		};
+		}
 	}
 
 	async clearUserBet(userId: string) {
-		const cacheKey = this.cachePrefix + userId;
-		await this.cache.remove(cacheKey);
+		const cacheKey = this.cachePrefix + userId
+		await this.cache.remove(cacheKey)
 	}
 }

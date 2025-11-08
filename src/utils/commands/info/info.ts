@@ -1,8 +1,8 @@
-import { helpfooter } from '@pluto-config';
-import embedColors from '../../../lib/colorsConfig.js';
-import { plutoDocsUrl } from '../../../lib/configs/constants.js';
-import { patreonUrl } from '../../../utils/api/patreon/interfaces.js';
-import { APP_VERSION } from '../../../utils/scripts/pkg-version.js';
+import { helpfooter } from '@pluto-config'
+import embedColors from '../../../lib/colorsConfig.js'
+import { plutoDocsUrl } from '../../../lib/configs/constants.js'
+import { patreonUrl } from '../../../utils/api/patreon/interfaces.js'
+import { APP_VERSION } from '../../../utils/scripts/pkg-version.js'
 
 export default class PlutoInfo {
 	static async commandsInfo() {
@@ -12,9 +12,11 @@ export default class PlutoInfo {
 				bet: 'Place a bet on a match',
 				cancelbet: "Cancel a pending bet you've placed",
 				balance: 'View your current balance',
-				dailyclaim: 'Claim $50 every day, or twice a day for Patreon members.',
+				dailyclaim:
+					'Claim $50 every day, or twice a day for Patreon members.',
 				mybets: 'View your active placed bets',
-				doubledown: 'Double an existing bet, use it on a confident bet!',
+				doubledown:
+					'Double an existing bet, use it on a confident bet!',
 			},
 			info: {
 				stats: 'View your betting stats',
@@ -24,25 +26,25 @@ export default class PlutoInfo {
 				commands: 'View all commands',
 				bethistory: 'View the track record of your bets',
 			},
-		};
+		}
 		const formatCommands = (cmds: {
-			[key: string]: { [key: string]: string };
+			[key: string]: { [key: string]: string }
 		}) => {
-			let formattedCommands = '';
+			let formattedCommands = ''
 			for (const [category, commands] of Object.entries(cmds)) {
-				formattedCommands += `⭐ **__${category.charAt(0).toUpperCase() + category.slice(1)}__**\n`; // Capitalize the first letter of each category name
+				formattedCommands += `⭐ **__${category.charAt(0).toUpperCase() + category.slice(1)}__**\n` // Capitalize the first letter of each category name
 				for (const [command, description] of Object.entries(commands)) {
-					formattedCommands += `**\`/${command}\`** - ${description}\n`;
+					formattedCommands += `**\`/${command}\`** - ${description}\n`
 				}
-				formattedCommands += '\n';
+				formattedCommands += '\n'
 			}
 			// Add link to the website
-			formattedCommands += `**📒 [Docs](${plutoDocsUrl})**\n`;
-			return formattedCommands;
-		};
+			formattedCommands += `**📒 [Docs](${plutoDocsUrl})**\n`
+			return formattedCommands
+		}
 
 		// Construct the embed description with formatted commands and maintenance note
-		const cmdDescription = `${formatCommands(cmdList)}*Currently, the following commands are under maintenance:\n- \`bethistory\`\n- \`stats\`*`;
+		const cmdDescription = `${formatCommands(cmdList)}*Currently, the following commands are under maintenance:\n- \`bethistory\`\n- \`stats\`*`
 
 		return {
 			title: 'Pluto Commands',
@@ -50,7 +52,7 @@ export default class PlutoInfo {
 			thumbnail: 'https://i.imgur.com/RWjfjyv.png',
 			color: embedColors.PlutoBlue, // Placeholder color, replace with actual one from your configuration
 			footer: await helpfooter('core'),
-		};
+		}
 	}
 
 	static async helpInfo() {
@@ -60,7 +62,7 @@ export default class PlutoInfo {
 			thumbnail: 'https://i.imgur.com/RWjfjyv.png',
 			color: embedColors.PlutoBlue,
 			footer: await helpfooter('core'),
-		};
+		}
 	}
 
 	static async faqInfo() {
@@ -70,6 +72,6 @@ export default class PlutoInfo {
 			color: embedColors.PlutoBlue,
 			thumbnail: 'https://i.imgur.com/RWjfjyv.png',
 			footer: await helpfooter('core'),
-		};
+		}
 	}
 }

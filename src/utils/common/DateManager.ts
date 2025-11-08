@@ -7,21 +7,21 @@ import {
 	isValid,
 	parseISO,
 	startOfDay,
-} from 'date-fns';
+} from 'date-fns'
 
 /**
  * A utility class for managing date-related operations, particularly for filtering items based on a date range.
  * @template T - The type of items to be filtered, must include a 'commence_time' property of type string.
  */
 export class DateManager<T extends { commence_time?: string }> {
-	private readonly daysAhead: number;
+	private readonly daysAhead: number
 
 	/**
 	 * Creates a new DateManager instance.
 	 * @param {number} daysAhead - The number of days ahead to consider in the date range.
 	 */
 	constructor(daysAhead?: number | null) {
-		this.daysAhead = daysAhead || null;
+		this.daysAhead = daysAhead || null
 	}
 
 	/**
@@ -30,14 +30,16 @@ export class DateManager<T extends { commence_time?: string }> {
 	 * @returns {T[]} An array of items that fall within the specified date range.
 	 */
 	filterByDateRange(items: T[]): T[] {
-		const currentDate = startOfDay(new Date());
-		const futureDate = endOfDay(addDays(currentDate, this.daysAhead));
+		const currentDate = startOfDay(new Date())
+		const futureDate = endOfDay(addDays(currentDate, this.daysAhead))
 
 		return items.filter((item) => {
-			if (!item.commence_time) return false;
-			const itemDate = parseISO(item.commence_time);
-			return isAfter(itemDate, currentDate) && isBefore(itemDate, futureDate);
-		});
+			if (!item.commence_time) return false
+			const itemDate = parseISO(item.commence_time)
+			return (
+				isAfter(itemDate, currentDate) && isBefore(itemDate, futureDate)
+			)
+		})
 	}
 
 	/**
@@ -46,16 +48,16 @@ export class DateManager<T extends { commence_time?: string }> {
 	 * @returns {boolean} True if the date is within the range, false otherwise.
 	 */
 	isWithinRange(date: string): boolean {
-		const currentDate = startOfDay(new Date());
-		const futureDate = endOfDay(addDays(currentDate, this.daysAhead));
-		const itemDate = parseISO(date);
+		const currentDate = startOfDay(new Date())
+		const futureDate = endOfDay(addDays(currentDate, this.daysAhead))
+		const itemDate = parseISO(date)
 
-		return isAfter(itemDate, currentDate) && isBefore(itemDate, futureDate);
+		return isAfter(itemDate, currentDate) && isBefore(itemDate, futureDate)
 	}
 
 	toMMDDYYYY(input: string | Date): string {
-		const date = new Date(input);
-		return format(date, 'MM/dd/yyyy');
+		const date = new Date(input)
+		return format(date, 'MM/dd/yyyy')
 	}
 
 	/**
@@ -65,24 +67,24 @@ export class DateManager<T extends { commence_time?: string }> {
 	 */
 	toDiscordUnix(input: string | Date): string {
 		try {
-			let date: Date;
+			let date: Date
 			if (typeof input === 'string') {
-				date = parseISO(input);
+				date = parseISO(input)
 			} else if (input instanceof Date) {
-				date = input;
+				date = input
 			} else {
-				throw new Error('Invalid input type');
+				throw new Error('Invalid input type')
 			}
 
 			if (!isValid(date)) {
-				throw new Error('Invalid date');
+				throw new Error('Invalid date')
 			}
 
-			const unixTimestamp = Math.floor(date.getTime() / 1000);
-			return `<t:${unixTimestamp}:d> @ <t:${unixTimestamp}:t>`;
+			const unixTimestamp = Math.floor(date.getTime() / 1000)
+			return `<t:${unixTimestamp}:d> @ <t:${unixTimestamp}:t>`
 		} catch (error) {
-			console.error(`Error parsing date: ${input}`, error);
-			return 'Invalid Date';
+			console.error(`Error parsing date: ${input}`, error)
+			return 'Invalid Date'
 		}
 	}
 }

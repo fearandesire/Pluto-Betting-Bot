@@ -2,7 +2,7 @@ import {
 	type ColorResolvable,
 	EmbedBuilder,
 	type TextChannel,
-} from 'discord.js';
+} from 'discord.js'
 
 /**
  * PlutoLogger
@@ -23,7 +23,7 @@ export default class PlutoLogger {
 	static async sendEmbed(embed: EmbedBuilder, logChan: TextChannel) {
 		await logChan.send({
 			embeds: [embed],
-		});
+		})
 	}
 
 	/**
@@ -42,65 +42,65 @@ export default class PlutoLogger {
 	static async log(
 		logChan: TextChannel,
 		data: {
-			id: string | number;
-			title?: string;
-			color?: string;
-			description: string;
-			content?: string;
-			footer?: string;
+			id: string | number
+			title?: string
+			color?: string
+			description: string
+			content?: string
+			footer?: string
 		},
 	) {
-		let color: string;
-		let title: string;
+		let color: string
+		let title: string
 		// # Pre-Built Embed for Log Channel
-		const logsEmbed = new EmbedBuilder();
+		const logsEmbed = new EmbedBuilder()
 		switch (data?.id) {
 			case 0:
-				color = '#c4f3fd'; // Off-White Sky Blue for General Logs
-				title = 'General';
-				break;
+				color = '#c4f3fd' // Off-White Sky Blue for General Logs
+				title = 'General'
+				break
 			case 1:
-				color = '#0000ff'; // Blue for Database Logs
-				title = 'Database';
-				break;
+				color = '#0000ff' // Blue for Database Logs
+				title = 'Database'
+				break
 			case 2:
-				color = '#ff8000'; // Orange for Game Scheduling Logs
-				title = 'Game Handling';
-				break;
+				color = '#ff8000' // Orange for Game Scheduling Logs
+				title = 'Game Handling'
+				break
 			case 3:
-				color = '#ff00ff'; // Magenta for Betting Logs
-				title = 'Betting';
-				break;
+				color = '#ff00ff' // Magenta for Betting Logs
+				title = 'Betting'
+				break
 			case 4:
-				color = '#ff0000'; // Red for Error Logs
-				title = 'Error';
-				break;
+				color = '#ff0000' // Red for Error Logs
+				title = 'Error'
+				break
 
 			case 5:
-				color = '#ffff00'; // Yellow for Warning Logs
-				title = 'Warning';
-				break;
+				color = '#ffff00' // Yellow for Warning Logs
+				title = 'Warning'
+				break
 			case 'api':
-				color = '#9db08d'; // Yellow for Warning Logs
-				title = 'API';
-				break;
+				color = '#9db08d' // Yellow for Warning Logs
+				title = 'API'
+				break
 			default:
 				// Default to General Logs
-				color = data?.color || '#c4f3fd';
-				title = data?.title || 'General';
-				break;
+				color = data?.color || '#c4f3fd'
+				title = data?.title || 'General'
+				break
 		}
-		const desc = data.description || 'N/A';
-		const footer = data?.footer !== null ? data.footer : 'N/A';
-		if (!footer) return;
-		logsEmbed.setColor(color as ColorResolvable);
-		logsEmbed.setTitle(`${title} Logs`);
-		logsEmbed.setDescription(desc);
-		logsEmbed.setFooter({ text: footer });
+		const desc = data.description || 'N/A'
+		const footer = data?.footer !== null ? data.footer : 'N/A'
+		if (!footer) return
+		logsEmbed.setColor(color as ColorResolvable)
+		logsEmbed.setTitle(`${title} Logs`)
+		logsEmbed.setDescription(desc)
+		logsEmbed.setFooter({ text: footer })
 		// # Send embed to modChan
 		await logChan.send({
 			content: data?.content,
 			embeds: [logsEmbed],
-		});
+		})
 	}
 }

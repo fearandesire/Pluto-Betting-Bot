@@ -1,10 +1,10 @@
-import { z } from 'zod';
-import { BettingMarketSchema } from './betting-market.schema.js';
+import { z } from 'zod'
+import { BettingMarketSchema } from './betting-market.schema.js'
 
 /**
  * Enum representing the possible statuses of a prop.
  */
-export const PropStatusEnum = z.enum(['pending', 'completed', 'error']);
+export const PropStatusEnum = z.enum(['pending', 'completed', 'error'])
 
 /**
  * Schema for a prop object.
@@ -46,22 +46,22 @@ export const PropSchema = z.object({
 	result: z.string().nullable(),
 	/** Description of the prop */
 	description: z.string().nullable(),
-});
+})
 
 /**
  * Schema for an array of prop objects.
  */
-export const PropArraySchema = z.array(PropSchema);
+export const PropArraySchema = z.array(PropSchema)
 
 /**
  * Type definition for a prop object based on the PropSchema.
  */
-export type PropZod = z.infer<typeof PropSchema>;
+export type PropZod = z.infer<typeof PropSchema>
 
 /**
  * Type definition for an array of prop objects.
  */
-export type PropArray = z.infer<typeof PropArraySchema>;
+export type PropArray = z.infer<typeof PropArraySchema>
 
 /**
  * Schema for prop options.
@@ -69,12 +69,12 @@ export type PropArray = z.infer<typeof PropArraySchema>;
 export const PropOptionsSchema = z.object({
 	/** Number of days ahead to consider for props */
 	daysAhead: z.number().optional(),
-});
+})
 
 /**
  * Type definition for prop options.
  */
-export type PropOptions = z.infer<typeof PropOptionsSchema>;
+export type PropOptions = z.infer<typeof PropOptionsSchema>
 
 /**
  * Schema for guild configuration where prediction stats should be posted
@@ -87,34 +87,34 @@ export const PropStatsGuildConfigSchema = z.object({
 	channel_id: z
 		.string()
 		.describe('The ID of the channel where stats will be posted'),
-});
+})
 
 export const h2HStatsSchema = z.object({
 	home: z.number(),
 	away: z.number(),
-});
+})
 
 export const overUnderStatsSchema = z.object({
 	over: z.number(),
 	under: z.number(),
-});
+})
 
 // Create base type for stats that's shared between both types
 const BasePropStats = z.object({
 	total_predictions: z.number(),
-});
+})
 
 // H2H specific stats
 export const H2HPropStatsSchema = BasePropStats.extend({
 	percentages: h2HStatsSchema,
 	tallies: h2HStatsSchema,
-});
+})
 
 // Non-H2H stats (all other market types)
 export const NonH2HPropStatsSchema = BasePropStats.extend({
 	percentages: overUnderStatsSchema,
 	tallies: overUnderStatsSchema,
-});
+})
 
 /**
  * Schema for prop prediction statistics
@@ -148,7 +148,7 @@ export const PropPredictionStatsSchema = z.object({
 		.string()
 		.nullable()
 		.describe('Optional description of the prediction'),
-});
+})
 
 /**
  * Combined schema matching PropEmbedsOutgoingDto
@@ -160,16 +160,16 @@ export const PropEmbedsIncomingSchema = z.object({
 	guilds: z
 		.array(PropStatsGuildConfigSchema)
 		.describe('Array of guild configurations for posting'),
-});
+})
 
 /**
  * Type definitions
  */
-export type PropPredictionStats = z.infer<typeof PropPredictionStatsSchema>;
-export type PropStatsGuildConfig = z.infer<typeof PropStatsGuildConfigSchema>;
-export type PropEmbedsIncoming = z.infer<typeof PropEmbedsIncomingSchema>;
+export type PropPredictionStats = z.infer<typeof PropPredictionStatsSchema>
+export type PropStatsGuildConfig = z.infer<typeof PropStatsGuildConfigSchema>
+export type PropEmbedsIncoming = z.infer<typeof PropEmbedsIncomingSchema>
 
 // Export the discriminated union types
-export type H2HPropStats = z.infer<typeof H2HPropStatsSchema>;
-export type NonH2HPropStats = z.infer<typeof NonH2HPropStatsSchema>;
-export type PropStats = H2HPropStats | NonH2HPropStats;
+export type H2HPropStats = z.infer<typeof H2HPropStatsSchema>
+export type NonH2HPropStats = z.infer<typeof NonH2HPropStatsSchema>
+export type PropStats = H2HPropStats | NonH2HPropStats

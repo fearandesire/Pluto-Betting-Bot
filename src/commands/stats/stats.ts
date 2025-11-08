@@ -1,8 +1,8 @@
-import { ApplyOptions } from '@sapphire/decorators';
-import { Subcommand } from '@sapphire/plugin-subcommands';
-import { Colors } from 'discord.js';
-import { helpfooter } from '../../lib/PlutoConfig.js';
-import StatsWraps from '../../utils/api/Khronos/stats/stats-wrapper.js';
+import { ApplyOptions } from '@sapphire/decorators'
+import { Subcommand } from '@sapphire/plugin-subcommands'
+import { Colors } from 'discord.js'
+import { helpfooter } from '../../lib/PlutoConfig.js'
+import StatsWraps from '../../utils/api/Khronos/stats/stats-wrapper.js'
 
 @ApplyOptions<Subcommand.Options>({
 	description: '📈 View Your Betting Stats',
@@ -36,18 +36,18 @@ export class UserCommand extends Subcommand {
 								.setDescription('View your h2h betting stats'),
 						),
 				),
-		);
+		)
 	}
 
 	public async viewH2hStats(
 		interaction: Subcommand.ChatInputCommandInteraction,
 	) {
 		try {
-			await interaction.deferReply();
-			const stats = new StatsWraps();
+			await interaction.deferReply()
+			const stats = new StatsWraps()
 			const overallStats = await stats.getOverallStats({
 				userId: interaction.user.id,
-			});
+			})
 
 			if (!overallStats || overallStats.totalBets === 0) {
 				const noStatsEmbed = {
@@ -58,14 +58,14 @@ export class UserCommand extends Subcommand {
 					footer: {
 						text: await helpfooter(),
 					},
-				};
-				return await interaction.editReply({ embeds: [noStatsEmbed] });
+				}
+				return await interaction.editReply({ embeds: [noStatsEmbed] })
 			}
 
 			const formatValue = (value: number) =>
-				value === 0 ? 'N/A' : `$${value.toLocaleString()}`;
+				value === 0 ? 'N/A' : `$${value.toLocaleString()}`
 			const formatPercentage = (value: number) =>
-				value === 0 ? 'N/A' : `${(value * 100).toFixed(1)}%`;
+				value === 0 ? 'N/A' : `${(value * 100).toFixed(1)}%`
 
 			const embed = {
 				color: Colors.Blue,
@@ -112,13 +112,17 @@ export class UserCommand extends Subcommand {
 				footer: {
 					text: await helpfooter(),
 				},
-			};
+			}
 
-			await interaction.editReply({ embeds: [embed] });
+			await interaction.editReply({ embeds: [embed] })
 		} catch (error) {
+			this.container.logger.error('Failed to fetch h2h stats', {
+				userId: interaction.user.id,
+				error,
+			})
 			return await interaction.editReply({
 				content: 'An error occurred while fetching your stats.',
-			});
+			})
 		}
 	}
 }

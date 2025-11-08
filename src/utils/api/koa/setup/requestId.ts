@@ -1,5 +1,5 @@
-import type { Context, Next } from 'koa';
-import { v4 as uuidv4 } from 'uuid';
+import type { Context, Next } from 'koa'
+import { v4 as uuidv4 } from 'uuid'
 
 /**
  * Creates and returns the request ID middleware
@@ -11,10 +11,10 @@ export function createRequestIdMiddleware() {
 			ctx.get('X-Request-ID') ||
 			ctx.get('Request-ID') ||
 			ctx.get('reqId') ||
-			ctx.get('x-request-id');
+			ctx.get('x-request-id')
 
-		ctx.state.reqId = existingRequestId || uuidv4();
-		ctx.set('reqId', ctx.state.reqId);
-		await next();
-	};
+		ctx.state.reqId = existingRequestId || uuidv4()
+		ctx.set('reqId', ctx.state.reqId)
+		await next()
+	}
 }

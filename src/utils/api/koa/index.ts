@@ -4,23 +4,22 @@
  *
  */
 
-import { matchCache } from '../routes/cache/match-cache.js';
-import ChannelsRoutes from '../routes/channels/channels-router.js';
-import NotificationRouter from '../routes/notifications/notifications.controller.js';
-import PropsRouter from '../routes/props/props-router.js';
-import ScheduleRouter from '../routes/schedule/schedule.js';
-import { setupKoaApp } from './setup/koaSetup.js';
-import env from '#lib/startup/env.js';
+import env from '#lib/startup/env.js'
+import { matchCache } from '../routes/cache/match-cache.js'
+import ChannelsRoutes from '../routes/channels/channels-router.js'
+import NotificationRouter from '../routes/notifications/notifications.controller.js'
+import PropsRouter from '../routes/props/props-router.js'
+import ScheduleRouter from '../routes/schedule/schedule.js'
+import { setupKoaApp } from './setup/koaSetup.js'
 
-const app = await setupKoaApp();
+const app = await setupKoaApp()
 
-app.use(ChannelsRoutes.routes()).use(ChannelsRoutes.allowedMethods());
-app.use(NotificationRouter.routes()).use(NotificationRouter.allowedMethods());
-app.use(matchCache.routes()).use(matchCache.allowedMethods());
-app.use(ScheduleRouter.routes()).use(ScheduleRouter.allowedMethods());
-app.use(PropsRouter.routes()).use(PropsRouter.allowedMethods());
+app.use(ChannelsRoutes.routes()).use(ChannelsRoutes.allowedMethods())
+app.use(NotificationRouter.routes()).use(NotificationRouter.allowedMethods())
+app.use(matchCache.routes()).use(matchCache.allowedMethods())
+app.use(ScheduleRouter.routes()).use(ScheduleRouter.allowedMethods())
+app.use(PropsRouter.routes()).use(PropsRouter.allowedMethods())
 
+app.listen(env.API_PORT)
 
-app.listen(env.API_PORT);
-
-export { app };
+export { app }
