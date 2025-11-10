@@ -15,8 +15,8 @@ importers:
         specifier: ^6.14.1
         version: 6.14.1(@bull-board/ui@6.14.1)
       '@bull-board/koa':
-        specifier: ^6.14.0
-        version: 6.14.0(@babel/core@7.28.4)(@types/koa@3.0.1)(handlebars@4.7.8)(lodash@4.17.21)
+        specifier: ^6.14.1
+        version: 6.14.1(@babel/core@7.28.4)(@types/koa@3.0.1)(handlebars@4.7.8)(lodash@4.17.21)
       '@bull-board/ui':
         specifier: ^6.14.1
         version: 6.14.1
@@ -563,21 +563,13 @@ packages:
   '@borewit/text-codec@0.1.1':
     resolution: {integrity: sha512-5L/uBxmjaCIX5h8Z+uu+kA9BQLkc/Wl06UGR5ajNRxu+/XjonB5i8JpgFMrPj3LXTCPA0pv8yxUvbUi+QthGGA==}
 
-  '@bull-board/api@6.14.0':
-    resolution: {integrity: sha512-oMDwXwoPn0RsdZ3Y68/bOErZ/qGZE5H97vgE/Pc8Uul/OHajlvajKW4NV+ZGTix82liUfH9CkjYx7PpwvBWhxg==}
-    peerDependencies:
-      '@bull-board/ui': 6.14.0
-
   '@bull-board/api@6.14.1':
     resolution: {integrity: sha512-Bl0Xa9V8UdyjPtkhzAp3o2yTbF7TkVoCr71dctPaRGQoM7oKRT+1RDIaRtmEy49Uhr/8sbb4WhmwkbO6u8ZAtg==}
     peerDependencies:
       '@bull-board/ui': 6.14.1
 
-  '@bull-board/koa@6.14.0':
-    resolution: {integrity: sha512-EQ/BXQiwSsSOphDE/ZkMIi+XXpZ+NL416XtWwaXd2r9aNYz8TxNUIqaj/kHGNjYthAmP9WA3xl5bzo0DVweeCA==}
-
-  '@bull-board/ui@6.14.0':
-    resolution: {integrity: sha512-5yqfS9CwWR8DBxpReIbqv/VSPFM/zT4KZ75keyApMiejasRC2joaHqEzYWlMCjkMycbNNCvlQNlTbl+C3dE/dg==}
+  '@bull-board/koa@6.14.1':
+    resolution: {integrity: sha512-3xFwj1/CLaB+o0/uNuhTEobmGI20T4L1n1ucOBRMErsZwe+W0iOww5p3vIjGSNkNm30oQ9B7c3tqz3va2twiMg==}
 
   '@bull-board/ui@6.14.1':
     resolution: {integrity: sha512-2VvSTj/ZuieByMjJBqR+G2u8Ke9XhXQKUmyCPaP3x5P8shDkt6JAB2gmfS576KCH+ytA8U8REuy2Yiy/N4dElA==}
@@ -1113,11 +1105,11 @@ packages:
     resolution: {integrity: sha512-p69lrxf10R+ydpsyM2EdItOkkw8VPw0EkQkzR/83puW0XRcou/lJ8iYZTBXZ3vmCFRxvahV4K6M7U+Rtj6jKJw==}
     engines: {node: '>=16.6.0', npm: '>=7.0.0'}
 
-  '@koa/bodyparser@5.1.2':
-    resolution: {integrity: sha512-eGJm9/66iUX+LUH03Cz0e94unbSKrmSPCick4MO5UorAAomcjC5Kl+SkoZ6CSyPew3neMYjj7n+djnlGYBSJAg==}
-    engines: {node: '>= 16'}
+  '@koa/bodyparser@6.0.0':
+    resolution: {integrity: sha512-CjM/tiisZHBA9iVkOOyj/ocLCNJTbpLsIUjCbVkrx5rkUOZlsFf/qSbXzAbY2SNJTMl0VtKgVen6SZdjaCfVhA==}
+    engines: {node: '>= 18'}
     peerDependencies:
-      koa: ^2.14.1
+      koa: '>=2'
 
   '@koa/cors@5.0.0':
     resolution: {integrity: sha512-x/iUDjcS90W69PryLDIMgFyV21YLTnG9zOpPXS7Bkt2b8AsY3zZsIpOLBkYr9fBcF3HbkKaER5hOBZLfpLgYNw==}
@@ -2242,6 +2234,9 @@ packages:
 
   '@types/cli-progress@3.11.6':
     resolution: {integrity: sha512-cE3+jb9WRlu+uOSAugewNpITJDt1VF8dHOopPO4IABFc3SXYL5WE/+PTz/FCdZRRfIujiWW3n3aMbv1eIGVRWA==}
+
+  '@types/co-body@6.1.3':
+    resolution: {integrity: sha512-UhuhrQ5hclX6UJctv5m4Rfp52AfG9o9+d9/HwjxhVB5NjXxr5t9oKgJxN8xRHgr35oo8meUEHUPFWiKg6y71aA==}
 
   '@types/color-convert@2.0.4':
     resolution: {integrity: sha512-Ub1MmDdyZ7mX//g25uBAoH/mWGd9swVbt8BseymnaE18SU4po/PjmCrHxqIIRjBo3hV/vh1KGr0eMxUhp+t+dQ==}
@@ -6218,10 +6213,6 @@ packages:
     resolution: {integrity: sha512-W/KYk+NFhkmsYpuHq5JykngiOCnxeVL8v8dFnqxSD8qEEdRfXk1SDM6JzNqcERbcGYj9tMrDQBYV9cjgnunFIg==}
     engines: {node: '>=18'}
 
-  tinyglobby@0.2.14:
-    resolution: {integrity: sha512-tX5e7OM1HnYr2+a2C/4V0htOcSQcoSTH9KgJnVvNm5zm/cyEWKJ7j7YutsH9CxMdtOkkLFy2AHrMci9IM8IPZQ==}
-    engines: {node: '>=12.0.0'}
-
   tinyglobby@0.2.15:
     resolution: {integrity: sha512-j2Zq4NyQYG5XMST4cbs02Ak8iJUdxRM0XI5QyxXuZOzKOINmWurp3smXu3y5wDcJrptwpSjgXHzIQxR0omXljQ==}
     engines: {node: '>=12.0.0'}
@@ -6974,21 +6965,16 @@ snapshots:
 
   '@borewit/text-codec@0.1.1': {}
 
-  '@bull-board/api@6.14.0(@bull-board/ui@6.14.0)':
-    dependencies:
-      '@bull-board/ui': 6.14.0
-      redis-info: 3.1.0
-
   '@bull-board/api@6.14.1(@bull-board/ui@6.14.1)':
     dependencies:
       '@bull-board/ui': 6.14.1
       redis-info: 3.1.0
 
-  '@bull-board/koa@6.14.0(@babel/core@7.28.4)(@types/koa@3.0.1)(handlebars@4.7.8)(lodash@4.17.21)':
+  '@bull-board/koa@6.14.1(@babel/core@7.28.4)(@types/koa@3.0.1)(handlebars@4.7.8)(lodash@4.17.21)':
     dependencies:
-      '@bull-board/api': 6.14.0(@bull-board/ui@6.14.0)
-      '@bull-board/ui': 6.14.0
-      '@koa/bodyparser': 5.1.2(koa@3.1.1)
+      '@bull-board/api': 6.14.1(@bull-board/ui@6.14.1)
+      '@bull-board/ui': 6.14.1
+      '@koa/bodyparser': 6.0.0(koa@3.1.1)
       '@ladjs/koa-views': 9.0.0(@babel/core@7.28.4)(@types/koa@3.0.1)(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)
       ejs: 3.1.10
       koa: 3.1.1
@@ -7045,10 +7031,6 @@ snapshots:
       - velocityjs
       - walrus
       - whiskers
-
-  '@bull-board/ui@6.14.0':
-    dependencies:
-      '@bull-board/api': 6.14.0(@bull-board/ui@6.14.0)
 
   '@bull-board/ui@6.14.1':
     dependencies:
@@ -7640,12 +7622,13 @@ snapshots:
       systeminformation: 5.27.8
       tslib: 2.8.1
 
-  '@koa/bodyparser@5.1.2(koa@3.1.1)':
+  '@koa/bodyparser@6.0.0(koa@3.1.1)':
     dependencies:
+      '@types/co-body': 6.1.3
       co-body: 6.2.0
       koa: 3.1.1
       lodash.merge: 4.6.2
-      type-is: 1.6.18
+      type-is: 2.0.1
 
   '@koa/cors@5.0.0':
     dependencies:
@@ -8677,6 +8660,11 @@ snapshots:
   '@types/cli-progress@3.11.6':
     dependencies:
       '@types/node': 24.10.0
+
+  '@types/co-body@6.1.3':
+    dependencies:
+      '@types/node': 24.10.0
+      '@types/qs': 6.14.0
 
   '@types/color-convert@2.0.4':
     dependencies:
@@ -13213,11 +13201,6 @@ snapshots:
   tinyexec@0.3.2: {}
 
   tinyexec@1.0.2: {}
-
-  tinyglobby@0.2.14:
-    dependencies:
-      fdir: 6.5.0(picomatch@4.0.3)
-      picomatch: 4.0.3
 
   tinyglobby@0.2.15:
     dependencies:
