@@ -12,14 +12,14 @@ importers:
         specifier: ^1.3.1
         version: 1.3.1
       '@bull-board/api':
-        specifier: ^6.14.0
-        version: 6.14.0(@bull-board/ui@6.14.0)
+        specifier: ^6.14.1
+        version: 6.14.1(@bull-board/ui@6.14.1)
       '@bull-board/koa':
         specifier: ^6.14.0
         version: 6.14.0(@babel/core@7.28.4)(@types/koa@3.0.1)(handlebars@4.7.8)(lodash@4.17.21)
       '@bull-board/ui':
-        specifier: ^6.14.0
-        version: 6.14.0
+        specifier: ^6.14.1
+        version: 6.14.1
       '@favware/colorette-spinner':
         specifier: ^1.0.1
         version: 1.0.1
@@ -551,6 +551,7 @@ packages:
   '@biomejs/cli-win32-x64@2.3.3':
     resolution: {integrity: sha512-klJKPPQvUk9Rlp0Dd56gQw/+Wt6uUprHdHWtbDC93f3Iv+knA2tLWpcYoOZJgPV+9s+RBmYv0DGy4mUlr20esg==}
     engines: {node: '>=14.21.3'}
+    cpu: [x64]
     os: [win32]
 
   '@biomejs/cli-win32-x64@2.3.4':
@@ -567,11 +568,19 @@ packages:
     peerDependencies:
       '@bull-board/ui': 6.14.0
 
+  '@bull-board/api@6.14.1':
+    resolution: {integrity: sha512-Bl0Xa9V8UdyjPtkhzAp3o2yTbF7TkVoCr71dctPaRGQoM7oKRT+1RDIaRtmEy49Uhr/8sbb4WhmwkbO6u8ZAtg==}
+    peerDependencies:
+      '@bull-board/ui': 6.14.1
+
   '@bull-board/koa@6.14.0':
     resolution: {integrity: sha512-EQ/BXQiwSsSOphDE/ZkMIi+XXpZ+NL416XtWwaXd2r9aNYz8TxNUIqaj/kHGNjYthAmP9WA3xl5bzo0DVweeCA==}
 
   '@bull-board/ui@6.14.0':
     resolution: {integrity: sha512-5yqfS9CwWR8DBxpReIbqv/VSPFM/zT4KZ75keyApMiejasRC2joaHqEzYWlMCjkMycbNNCvlQNlTbl+C3dE/dg==}
+
+  '@bull-board/ui@6.14.1':
+    resolution: {integrity: sha512-2VvSTj/ZuieByMjJBqR+G2u8Ke9XhXQKUmyCPaP3x5P8shDkt6JAB2gmfS576KCH+ytA8U8REuy2Yiy/N4dElA==}
 
   '@colors/colors@1.6.0':
     resolution: {integrity: sha512-Ir+AOibqzrIsL6ajt3Rz3LskB7OiMVHqltZmspbW/TJuTVuyOMirVqAkjfY6JISiLHgyNqicAC8AyHHGzNd/dA==}
@@ -6942,6 +6951,11 @@ snapshots:
       '@bull-board/ui': 6.14.0
       redis-info: 3.1.0
 
+  '@bull-board/api@6.14.1(@bull-board/ui@6.14.1)':
+    dependencies:
+      '@bull-board/ui': 6.14.1
+      redis-info: 3.1.0
+
   '@bull-board/koa@6.14.0(@babel/core@7.28.4)(@types/koa@3.0.1)(handlebars@4.7.8)(lodash@4.17.21)':
     dependencies:
       '@bull-board/api': 6.14.0(@bull-board/ui@6.14.0)
@@ -7007,6 +7021,10 @@ snapshots:
   '@bull-board/ui@6.14.0':
     dependencies:
       '@bull-board/api': 6.14.0(@bull-board/ui@6.14.0)
+
+  '@bull-board/ui@6.14.1':
+    dependencies:
+      '@bull-board/api': 6.14.1(@bull-board/ui@6.14.1)
 
   '@colors/colors@1.6.0': {}
 
