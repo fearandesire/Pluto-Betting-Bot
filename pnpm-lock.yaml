@@ -42,8 +42,8 @@ importers:
         specifier: ^6.1.1
         version: 6.2.0
       '@sapphire/discord-utilities':
-        specifier: ^3.4.4
-        version: 3.5.0
+        specifier: ^4.0.0
+        version: 4.0.0
       '@sapphire/discord.js-utilities':
         specifier: ^7.3.2
         version: 7.3.3
@@ -551,6 +551,7 @@ packages:
   '@biomejs/cli-win32-x64@2.3.3':
     resolution: {integrity: sha512-klJKPPQvUk9Rlp0Dd56gQw/+Wt6uUprHdHWtbDC93f3Iv+knA2tLWpcYoOZJgPV+9s+RBmYv0DGy4mUlr20esg==}
     engines: {node: '>=14.21.3'}
+    cpu: [x64]
     os: [win32]
 
   '@biomejs/cli-win32-x64@2.3.4':
@@ -1945,6 +1946,10 @@ packages:
 
   '@sapphire/discord-utilities@3.5.0':
     resolution: {integrity: sha512-H4SY5KTVDZrqA5QG7ob6etwqhdOb3TRSY2wv56f0tiobUdIr0irlrYvdmr8Kg/FRxWU+aiHDIISWGG5vBuxOGw==}
+    engines: {node: '>=v14.0.0', npm: '>=7.0.0'}
+
+  '@sapphire/discord-utilities@4.0.0':
+    resolution: {integrity: sha512-QAvrKNHgswz+ZX48WqSYpRiRzQcugNXXB1C3fR1qbpTJGd7Ckr2OWyFK88TyOksi3U2isrk8sMriTcAgaIe7Qg==}
     engines: {node: '>=v14.0.0', npm: '>=7.0.0'}
 
   '@sapphire/discord.js-utilities@7.3.3':
@@ -8353,6 +8358,10 @@ snapshots:
       tslib: 2.8.1
 
   '@sapphire/discord-utilities@3.5.0':
+    dependencies:
+      discord-api-types: 0.38.31
+
+  '@sapphire/discord-utilities@4.0.0':
     dependencies:
       discord-api-types: 0.38.31
 

@@ -48,7 +48,7 @@
 		"@openapitools/openapi-generator-cli": "^2.25.0",
 		"@pluto-khronos/types": "^0.2.4",
 		"@sapphire/decorators": "^6.1.1",
-		"@sapphire/discord-utilities": "^3.4.4",
+		"@sapphire/discord-utilities": "^4.0.0",
 		"@sapphire/discord.js-utilities": "^7.3.2",
 		"@sapphire/fetch": "^3.0.5",
 		"@sapphire/framework": "^5.3.7",
