@@ -91,7 +91,7 @@
 		"pg-monitor": "^3.1.0",
 		"pg-promise": "^12.2.0",
 		"package-directory": "^8.1.0",
-		"puppeteer": "^24.28.0",
+		"puppeteer": "^24.29.1",
 		"puppeteer-extra": "^3.3.6",
 		"puppeteer-extra-plugin-recaptcha": "^3.6.8",
 		"puppeteer-extra-plugin-stealth": "^2.11.2",
