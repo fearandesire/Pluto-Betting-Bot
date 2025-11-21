@@ -115,13 +115,17 @@ export class BetslipManager {
 				})
 				return message
 			}
+			// Handle non-201 status codes
+			const errEmb = await ErrorEmbeds.internalErr(
+				`Unexpected response from server (Status: ${response.statusCode}). Please try again later.`,
+			)
+			return interaction.editReply({ embeds: [errEmb] })
 		} catch (error) {
-			const result = await new ApiErrorHandler().handle(
+			return await new ApiErrorHandler().handle(
 				interaction,
 				error,
 				ApiModules.betting,
 			)
-			return result.message
 		}
 	}
 
@@ -272,9 +276,10 @@ export class BetslipManager {
 			}
 
 			const guildWrapper = new GuildWrapper()
+			const formattedAmount = MoneyFormatter.toUSD(betDetails.amount)
 			const publicEmbed = new EmbedBuilder()
 				.setDescription(
-					`<@${interaction.user.id}> placed a bet on **${betDetails.betOnTeam}**!`,
+					`<@${interaction.user.id}> placed a bet on **${betDetails.betOnTeam}** for **\`${formattedAmount}\`**!`,
 				)
 				.setColor(embedColors.PlutoYellow)
 				.setFooter({
@@ -373,12 +378,11 @@ export class BetslipManager {
 				message: `[${this.cancelBet.name}] Error`,
 				error,
 			})
-			const result = await new ApiErrorHandler().handle(
+			return await new ApiErrorHandler().handle(
 				interaction,
 				error,
 				ApiModules.betting,
 			)
-			return result.message
 		}
 	}
 

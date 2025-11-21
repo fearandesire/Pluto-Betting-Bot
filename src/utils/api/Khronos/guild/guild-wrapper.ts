@@ -28,7 +28,7 @@ export default class GuildWrapper {
 	}
 
 	/**
-	 * Validates that a string is a valid Discord snowflake (17-19 digits)
+	 * Validates that a string is a valid Discord snowflake (17-22 digits)
 	 * @param value - Value to validate
 	 * @param channelType - Type of channel for error message context
 	 * @param guildId - Guild ID for error message context
@@ -39,10 +39,10 @@ export default class GuildWrapper {
 		channelType: string,
 		guildId: string,
 	): void {
-		const snowflakeRegex = /^\d{17,19}$/
+		const snowflakeRegex = /^\d{17,22}$/
 		if (!snowflakeRegex.test(value)) {
 			throw new Error(
-				`Invalid ${channelType} channel ID format for guild ${guildId}: expected Discord snowflake (17-19 digits), got "${value}"`,
+				`Invalid ${channelType} channel ID format for guild ${guildId}: expected Discord snowflake (17-22 digits), got "${value}"`,
 			)
 		}
 	}
@@ -115,7 +115,7 @@ export default class GuildWrapper {
 			guildId,
 		)
 
-		let channel: Channel
+		let channel: Channel | null
 		try {
 			channel = await container.client.channels.fetch(
 				channelConfig.setting_value,
@@ -123,6 +123,12 @@ export default class GuildWrapper {
 		} catch (error) {
 			throw new Error(
 				`Failed to fetch ${channelTypeLabel} channel for guild ${guildId} (channel ID: ${channelConfig.setting_value}): ${error instanceof Error ? error.message : String(error)}`,
+			)
+		}
+
+		if (!channel) {
+			throw new Error(
+				`${channelTypeLabel.charAt(0).toUpperCase() + channelTypeLabel.slice(1)} channel for guild ${guildId} could not be found (channel ID: ${channelConfig.setting_value})`,
 			)
 		}
 

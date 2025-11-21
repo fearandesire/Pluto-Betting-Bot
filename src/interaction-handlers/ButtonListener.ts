@@ -262,12 +262,12 @@ export class ButtonHandler extends InteractionHandler {
 						error,
 					},
 				})
-				const result = await new ApiErrorHandler().handle(
+				await new ApiErrorHandler().handle(
 					interaction,
 					error,
 					ApiModules.predictions,
 				)
-				return result.message
+				return
 			}
 		}
 	}

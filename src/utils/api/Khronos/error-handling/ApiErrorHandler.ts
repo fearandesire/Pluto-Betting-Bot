@@ -22,6 +22,11 @@ import { toKhronosApiError } from './types.js'
  * As a fallback, this will also handle errors that cannot be identified to be originating from Khronos.
  */
 export class ApiErrorHandler {
+	private static readonly pendingTimeouts = new Map<
+		string,
+		NodeJS.Timeout
+	>()
+
 	private async safeDeleteMessage(
 		msg: Message<boolean>,
 		source: string,
@@ -33,6 +38,7 @@ export class ApiErrorHandler {
 					message: 'Message is not deletable, skipping deletion',
 					messageId: msg.id,
 				})
+				this.clearTimeout(msg.id)
 				return
 			}
 
@@ -43,10 +49,12 @@ export class ApiErrorHandler {
 						'Message channel no longer exists, skipping deletion',
 					messageId: msg.id,
 				})
+				this.clearTimeout(msg.id)
 				return
 			}
 
 			await msg.delete()
+			this.clearTimeout(msg.id)
 		} catch (err) {
 			console.error({
 				source,
@@ -54,7 +62,37 @@ export class ApiErrorHandler {
 				error: err,
 				messageId: msg.id,
 			})
+			this.clearTimeout(msg.id)
 		}
+	}
+
+	private clearTimeout(messageId: string): void {
+		const timeout = ApiErrorHandler.pendingTimeouts.get(messageId)
+		if (timeout) {
+			clearTimeout(timeout)
+			ApiErrorHandler.pendingTimeouts.delete(messageId)
+		}
+	}
+
+	private scheduleMessageDeletion(
+		msg: Message<boolean>,
+		source: string,
+	): void {
+		// Skip deletion for ephemeral messages - they auto-expire after 15 minutes
+		if (msg.flags.has('Ephemeral')) {
+			return
+		}
+		const timeoutId = setTimeout(() => {
+			this.safeDeleteMessage(msg, source)
+		}, 30000)
+		ApiErrorHandler.pendingTimeouts.set(msg.id, timeoutId)
+	}
+
+	static cleanupAllTimeouts(): void {
+		for (const timeout of ApiErrorHandler.pendingTimeouts.values()) {
+			clearTimeout(timeout)
+		}
+		ApiErrorHandler.pendingTimeouts.clear()
 	}
 
 	private resolveErrorMessage(apiError: KhronosApiError): string {
@@ -71,10 +109,7 @@ export class ApiErrorHandler {
 		}
 
 		if (apiError.exception === ApiHttpErrorTypes.InsufficientBalance) {
-			if (
-				apiError.details?.balance &&
-				typeof apiError.details.balance === 'number'
-			) {
+			if (typeof apiError.details?.balance === 'number') {
 				return `You only have **\`${MoneyFormatter.toUSD(apiError.details.balance)}\`** available to place bets with.`
 			}
 			return 'Your balance is insufficient to place this bet.'
@@ -87,7 +122,7 @@ export class ApiErrorHandler {
 		interaction: CommandInteraction | ButtonInteraction,
 		apiError: KhronosApiError,
 		errModule: ApiModules,
-	): Promise<{ message: Message<boolean>; timeoutId: NodeJS.Timeout }> {
+	): Promise<Message<boolean>> {
 		const errorMessage = this.resolveErrorMessage(apiError)
 
 		const errEmbed = await this.createErrorEmbed(errModule, errorMessage)
@@ -95,10 +130,8 @@ export class ApiErrorHandler {
 		const msg = await interaction.editReply({
 			embeds: [errEmbed],
 		})
-		const timeoutId = setTimeout(() => {
-			this.safeDeleteMessage(msg, 'ApiErrorHandler.errorResponses')
-		}, 30000)
-		return { message: msg, timeoutId }
+		this.scheduleMessageDeletion(msg, 'ApiErrorHandler.errorResponses')
+		return msg
 	}
 
 	private async createErrorEmbed(
@@ -144,13 +177,13 @@ export class ApiErrorHandler {
 
 	/**
 	 * Handles errors from the Khronos API and provides appropriate user feedback
-	 * @returns An object containing the message and timeout ID for potential cleanup
+	 * @returns The error message that was sent to the user
 	 */
 	async handle(
 		interaction: CommandInteraction | ButtonInteraction | null,
 		error: unknown,
 		errModule: ApiModules,
-	): Promise<{ message: Message<boolean>; timeoutId: NodeJS.Timeout }> {
+	): Promise<Message<boolean>> {
 		try {
 			const khronosError = await toKhronosApiError(error)
 
@@ -189,10 +222,8 @@ export class ApiErrorHandler {
 			}
 
 			const msg = await interaction.editReply({ embeds: [errEmbed] })
-			const timeoutId = setTimeout(() => {
-				this.safeDeleteMessage(msg, 'ApiErrorHandler.handle')
-			}, 30000)
-			return { message: msg, timeoutId }
+			this.scheduleMessageDeletion(msg, 'ApiErrorHandler.handle')
+			return msg
 		}
 	}
 }
