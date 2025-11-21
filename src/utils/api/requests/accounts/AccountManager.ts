@@ -104,11 +104,21 @@ export class AccountManager {
 			)
 			return interaction.editReply({ embeds: [embed] })
 		} catch (error) {
-			return new ApiErrorHandler().handle(
-				interaction,
+			const errorMessage = await new ApiErrorHandler().getErrorMessage(
 				error,
-				ApiModules.account,
 			)
+			if (interaction.replied || interaction.deferred) {
+				await interaction.followUp({
+					content: errorMessage,
+					ephemeral: true,
+				})
+			} else {
+				await interaction.reply({
+					content: errorMessage,
+					ephemeral: true,
+				})
+			}
+			return
 		}
 	}
 	async fetchProfile(interaction: CommandInteraction, targetId: string) {
@@ -146,11 +156,27 @@ export class AccountManager {
 				return interaction.editReply({ embeds: [embed] })
 			}
 		} catch (error) {
-			return new ApiErrorHandler().handle(
-				interaction,
+			console.error({
+				source: 'AccountManager.fetchProfile',
+				message: 'Error fetching profile',
+				error: error,
+				targetId,
+			})
+			const errorMessage = await new ApiErrorHandler().getErrorMessage(
 				error,
-				ApiModules.account,
 			)
+			if (interaction.replied || interaction.deferred) {
+				await interaction.followUp({
+					content: errorMessage,
+					ephemeral: true,
+				})
+			} else {
+				await interaction.reply({
+					content: errorMessage,
+					ephemeral: true,
+				})
+			}
+			return
 		}
 	}
 
@@ -191,11 +217,21 @@ export class AccountManager {
 				1,
 			)
 		} catch (error) {
-			return new ApiErrorHandler().handle(
-				interaction,
+			const errorMessage = await new ApiErrorHandler().getErrorMessage(
 				error,
-				ApiModules.account,
 			)
+			if (interaction.replied || interaction.deferred) {
+				await interaction.followUp({
+					content: errorMessage,
+					ephemeral: true,
+				})
+			} else {
+				await interaction.reply({
+					content: errorMessage,
+					ephemeral: true,
+				})
+			}
+			return
 		}
 	}
 }

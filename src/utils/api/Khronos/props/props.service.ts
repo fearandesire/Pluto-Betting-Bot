@@ -18,11 +18,12 @@ export default class PropsRepoService {
 			return await this.propsApi.getPropByUuid(args.id)
 		} catch (error) {
 			console.error(error)
-			return new ApiErrorHandler().handle(
+			const result = await new ApiErrorHandler().handle(
 				args.interaction,
 				error,
 				ApiModules.props,
 			)
+			return result.message
 		}
 	}
 }

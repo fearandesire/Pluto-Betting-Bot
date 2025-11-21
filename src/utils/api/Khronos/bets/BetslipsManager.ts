@@ -7,6 +7,7 @@ import type {
 	PlacedBetslipDto,
 } from '@kh-openapi'
 import { helpfooter, supportMessage } from '@pluto-config'
+import { container } from '@sapphire/framework'
 import { format } from 'date-fns'
 import {
 	ActionRowBuilder,
@@ -16,6 +17,7 @@ import {
 	type CommandInteraction,
 	EmbedBuilder,
 	type GuildEmoji,
+	type Message,
 	type StringSelectMenuInteraction,
 } from 'discord.js'
 import _ from 'lodash'
@@ -61,7 +63,7 @@ export class BetslipManager {
 		interaction: CommandInteraction,
 		userId: string,
 		params: InitializeParams,
-	) {
+	): Promise<Message> {
 		const { team, amount, guild_id, event_id, market_key } = params
 		try {
 			const guild = await new GuildWrapper().getGuild(guild_id)
@@ -100,7 +102,7 @@ export class BetslipManager {
 					return interaction.editReply({ embeds: [errEmb] })
 				}
 				await this.betCacheService.cacheUserBet(userId, cacheBetData)
-				return this.presentBetWithPay(interaction, {
+				const message = await this.presentBetWithPay(interaction, {
 					betslip,
 					payData: {
 						payout: betslip.payout!,
@@ -111,13 +113,15 @@ export class BetslipManager {
 						dateofmatchup: betslip.dateofmatchup,
 					},
 				})
+				return message
 			}
 		} catch (error) {
-			return new ApiErrorHandler().handle(
+			const result = await new ApiErrorHandler().handle(
 				interaction,
 				error,
 				ApiModules.betting,
 			)
+			return result.message
 		}
 	}
 
@@ -172,12 +176,24 @@ export class BetslipManager {
 					betslip,
 					matchInfo,
 				)
+
+				await this.announceBetPlaced(interaction, {
+					betOnTeam: chosenTeamStr,
+					amount: betslip.amount,
+				})
 			} else {
 				const errEmbed = await ErrorEmbeds.internalErr(
 					'Failed to place your bet due to an unexpected response from the API. Please try again later.',
 				)
+				// Use editReply if deferred, otherwise followUp
+				if (interaction.deferred || interaction.replied) {
+					return interaction.editReply({
+						embeds: [errEmbed],
+					})
+				}
 				return interaction.followUp({
 					embeds: [errEmbed],
+					ephemeral: true,
 				})
 			}
 		} catch (error) {
@@ -185,8 +201,15 @@ export class BetslipManager {
 				'Failed to place your bet due to an internal error. Please try again later.',
 			)
 			console.error(error)
+			// Use editReply if deferred, otherwise followUp
+			if (interaction.deferred || interaction.replied) {
+				return interaction.editReply({
+					embeds: [errEmbed],
+				})
+			}
 			return interaction.followUp({
 				embeds: [errEmbed],
+				ephemeral: true,
 			})
 		}
 	}
@@ -204,7 +227,7 @@ export class BetslipManager {
 		},
 		betslip: PlacedBetslip,
 		apiInfo: IMatchInfoArgs,
-	) {
+	): Promise<Message> {
 		const { betAmount, profit, payout } =
 			await MoneyFormatter.formatAmounts({
 				amount: betslip.amount,
@@ -226,9 +249,44 @@ export class BetslipManager {
 			.setFooter({
 				text: `Bet ID: ${betslip.betid} | ${await helpfooter('betting')}`,
 			})
-		await interaction.followUp({
+		// Use editReply if deferred, otherwise followUp
+		if (interaction.deferred || interaction.replied) {
+			return interaction.editReply({
+				embeds: [successEmbed],
+			})
+		}
+		return interaction.followUp({
 			embeds: [successEmbed],
+			ephemeral: true,
 		})
+	}
+
+	private async announceBetPlaced(
+		interaction: CommandInteraction | ButtonInteraction,
+		betDetails: { betOnTeam: string; amount: number },
+	) {
+		try {
+			if (!interaction.guildId) {
+				console.warn('Cannot announce bet - no guild context')
+				return
+			}
+
+			const guildWrapper = new GuildWrapper()
+			const publicEmbed = new EmbedBuilder()
+				.setDescription(
+					`<@${interaction.user.id}> placed a bet on **${betDetails.betOnTeam}**!`,
+				)
+				.setColor(embedColors.PlutoYellow)
+				.setFooter({
+					text: await helpfooter('betting'),
+				})
+
+			await guildWrapper.sendToBettingChannel(interaction.guildId, {
+				embeds: [publicEmbed],
+			})
+		} catch (e) {
+			console.warn('Failed to announce bet placed', e)
+		}
 	}
 
 	private formatBetStr(betAmount: string, payout: string, profit: string) {
@@ -279,7 +337,7 @@ export class BetslipManager {
 		interaction: CommandInteraction,
 		userid: string,
 		betId: number,
-	) {
+	): Promise<Message> {
 		try {
 			const patreonOverride = await PatreonFacade.isSponsorTier(userid)
 			if (isApiError(patreonOverride)) {
@@ -315,11 +373,12 @@ export class BetslipManager {
 				message: `[${this.cancelBet.name}] Error`,
 				error,
 			})
-			return new ApiErrorHandler().handle(
+			const result = await new ApiErrorHandler().handle(
 				interaction,
 				error,
 				ApiModules.betting,
 			)
+			return result.message
 		}
 	}
 
@@ -383,10 +442,11 @@ export class BetslipManager {
 				.setLabel('Cancel Bet')
 				.setStyle(ButtonStyle.Danger),
 		)
-		await interaction.editReply({
+		const message = await interaction.editReply({
 			embeds: [embed],
 			components: [actionRow],
 		})
+		return message
 	}
 
 	async doubleDown(userId: string, betId: number): Promise<DoubleDownDto> {

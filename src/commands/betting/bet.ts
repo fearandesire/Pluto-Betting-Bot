@@ -50,7 +50,7 @@ export class UserCommand extends Command {
 	public override async chatInputRun(
 		interaction: Command.ChatInputCommandInteraction,
 	) {
-		await interaction.deferReply()
+		await interaction.deferReply({ ephemeral: true })
 
 		if (env.MAINTENANCE_MODE) {
 			const errEmbed = await ErrorEmbeds.maintenanceMode()

@@ -71,10 +71,29 @@ export class ButtonHandler extends InteractionHandler {
 
 			// Confirm button
 			if (interaction.customId === btnIds.matchup_btn_confirm) {
-				await interaction.deferUpdate()
-				await interaction.editReply({
-					components: [],
-				})
+				// Defer ephemeral reply for error/success messages (private to user)
+				await interaction.deferReply({ ephemeral: true })
+				// Update original message to remove buttons
+				await interaction.message
+					.edit({ components: [] })
+					.catch((error) => {
+						console.warn({
+							method: this.constructor.name,
+							message:
+								'Failed to edit message when removing buttons',
+							context: {
+								interactionId: interaction.id,
+								userId: interaction.user.id,
+								messageId: interaction.message?.id,
+							},
+							error:
+								error instanceof Error ? error.message : error,
+							stack:
+								error instanceof Error
+									? error.stack
+									: undefined,
+						})
+					})
 				try {
 					const cachedBet = await this.betsCacheService.getUserBet(
 						interaction.user.id,
@@ -124,15 +143,11 @@ export class ButtonHandler extends InteractionHandler {
 	public async run(interaction: ButtonInteraction, payload: ButtonPayload) {
 		if ('hasFailed' in payload && payload.hasFailed) {
 			const errMsg = payload.errMsg
-			const errEmbed = await interaction.editReply({
+			await interaction.editReply({
 				embeds: [await ErrorEmbeds.internalErr(errMsg)],
 				components: [],
 			})
-			// delete after 10 secs
-			// todo: add queue for this
-			setTimeout(() => {
-				errEmbed.delete().catch(console.error)
-			}, 10000)
+			// Error message will persist as ephemeral message (private to user)
 			return
 		}
 
@@ -238,10 +253,7 @@ export class ButtonHandler extends InteractionHandler {
 					embeds: [predictionEmbed],
 				})
 
-				// Delete the ephemeral message after 10 seconds
-				setTimeout(() => {
-					interaction.deleteReply().catch(console.error)
-				}, 10000)
+				// Ephemeral message will persist for user reference
 			} catch (error: unknown) {
 				console.error({
 					method: this.constructor.name,
@@ -250,11 +262,12 @@ export class ButtonHandler extends InteractionHandler {
 						error,
 					},
 				})
-				return new ApiErrorHandler().handle(
+				const result = await new ApiErrorHandler().handle(
 					interaction,
 					error,
 					ApiModules.predictions,
 				)
+				return result.message
 			}
 		}
 	}

@@ -5,7 +5,13 @@ import {
 } from '@kh-openapi'
 import { container } from '@sapphire/framework'
 import { isAxiosError } from 'axios'
-import type { Message, MessageCreateOptions, TextChannel } from 'discord.js'
+import {
+	type Channel,
+	ChannelType,
+	type Message,
+	type MessageCreateOptions,
+	type TextChannel,
+} from 'discord.js'
 import { DiscordConfigEnums } from '../../common/interfaces/kh-pluto/kh-pluto.interface.js'
 import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js'
 
@@ -20,6 +26,27 @@ export default class GuildWrapper {
 	constructor() {
 		this.guildsApi = new GuildsApi(this.khConfig)
 	}
+
+	/**
+	 * Validates that a string is a valid Discord snowflake (17-19 digits)
+	 * @param value - Value to validate
+	 * @param channelType - Type of channel for error message context
+	 * @param guildId - Guild ID for error message context
+	 * @throws Error if value is not a valid snowflake
+	 */
+	private validateSnowflake(
+		value: string,
+		channelType: string,
+		guildId: string,
+	): void {
+		const snowflakeRegex = /^\d{17,19}$/
+		if (!snowflakeRegex.test(value)) {
+			throw new Error(
+				`Invalid ${channelType} channel ID format for guild ${guildId}: expected Discord snowflake (17-19 digits), got "${value}"`,
+			)
+		}
+	}
+
 	/**
 	 * Fetches guild data from Khronos API
 	 * @param guildId - Discord guild ID
@@ -54,31 +81,72 @@ export default class GuildWrapper {
 	}
 
 	/**
+	 * Retrieves a configured channel for a guild by config type
+	 *
+	 * @param guildId - Discord guild ID
+	 * @param configType - Configuration type enum
+	 * @param channelTypeLabel - Label for error messages (e.g., "log", "prediction")
+	 * @returns TextChannel for the configured channel
+	 * @throws {Error} If channel not configured, not found, or not a text channel
+	 */
+	private async getConfiguredChannel(
+		guildId: string,
+		configType: DiscordConfigEnums,
+		channelTypeLabel: string,
+	): Promise<TextChannel> {
+		const guild = await this.getGuild(guildId)
+		if (!guild.config || guild.config.length === 0) {
+			throw new Error('Guild does not have any configuration set')
+		}
+
+		const channelConfig = guild.config.find(
+			(config) => config.setting_type === configType,
+		)
+
+		if (!channelConfig) {
+			throw new Error(
+				`${channelTypeLabel.charAt(0).toUpperCase() + channelTypeLabel.slice(1)} channel not configured for guild ${guildId}`,
+			)
+		}
+
+		this.validateSnowflake(
+			channelConfig.setting_value,
+			channelTypeLabel,
+			guildId,
+		)
+
+		let channel: Channel
+		try {
+			channel = await container.client.channels.fetch(
+				channelConfig.setting_value,
+			)
+		} catch (error) {
+			throw new Error(
+				`Failed to fetch ${channelTypeLabel} channel for guild ${guildId} (channel ID: ${channelConfig.setting_value}): ${error instanceof Error ? error.message : String(error)}`,
+			)
+		}
+
+		if (channel.type !== ChannelType.GuildText) {
+			throw new Error(
+				`${channelTypeLabel.charAt(0).toUpperCase() + channelTypeLabel.slice(1)} channel for guild ${guildId} is not a text channel (got ${ChannelType[channel.type]})`,
+			)
+		}
+
+		return channel as TextChannel
+	}
+
+	/**
 	 * Retrieves the configured log channel for a guild
 	 * @param guildId - Discord guild ID
 	 * @returns TextChannel for logging
 	 * @throws Error if guild has no configuration or log channel not found
 	 */
 	async getLogChannel(guildId: string): Promise<TextChannel> {
-		const guild = await this.getGuild(guildId)
-		if (!guild.config || guild?.config.length === 0) {
-			throw new Error('Guild does not have any configuration set')
-		}
-		const logChanConfig = guild.config.find(
-			(config) => config.setting_type === DiscordConfigEnums.LOGS_CHAN,
+		return this.getConfiguredChannel(
+			guildId,
+			DiscordConfigEnums.LOGS_CHAN,
+			'log',
 		)
-
-		if (!logChanConfig) {
-			throw new Error(`Log channel not configured for guild ${guildId}`)
-		}
-
-		const logChannel = container.client.channels.cache.get(
-			logChanConfig.setting_value,
-		) as TextChannel
-		if (!logChannel) {
-			throw new Error(`Log channel not found for guild ${guildId}`)
-		}
-		return logChannel
 	}
 
 	/**
@@ -88,29 +156,11 @@ export default class GuildWrapper {
 	 * @throws Error if guild has no configuration or prediction channel not configured
 	 */
 	async getPredictionChannel(guildId: string): Promise<TextChannel> {
-		const guild = await this.getGuild(guildId)
-		if (!guild.config || guild?.config.length === 0) {
-			throw new Error('Guild does not have any configuration set')
-		}
-
-		const predictionChanConfig = guild.config.find(
-			(config) =>
-				config.setting_type === DiscordConfigEnums.PREDICTIONS_CHAN,
+		return this.getConfiguredChannel(
+			guildId,
+			DiscordConfigEnums.PREDICTIONS_CHAN,
+			'prediction',
 		)
-
-		if (!predictionChanConfig) {
-			throw new Error(
-				`Prediction channel not configured for guild ${guildId}`,
-			)
-		}
-
-		const predictionChannel = container.client.channels.cache.get(
-			predictionChanConfig.setting_value,
-		) as TextChannel
-		if (!predictionChannel) {
-			throw new Error(`Prediction channel not found for guild ${guildId}`)
-		}
-		return predictionChannel
 	}
 
 	/**
@@ -133,6 +183,35 @@ export default class GuildWrapper {
 	): Promise<Message> {
 		const predictionChannel = await this.getPredictionChannel(guildId)
 		return await predictionChannel.send(options)
+	}
+
+	/**
+	 * Retrieves the configured betting channel for a guild
+	 * @param guildId - Discord guild ID
+	 * @returns TextChannel for posting bets
+	 * @throws Error if guild has no configuration or betting channel not configured
+	 */
+	async getBettingChannel(guildId: string): Promise<TextChannel> {
+		return this.getConfiguredChannel(
+			guildId,
+			DiscordConfigEnums.BETTING_CHANNEL,
+			'betting',
+		)
+	}
+
+	/**
+	 * Sends a message to the guild's configured betting channel
+	 * @param guildId - Discord guild ID
+	 * @param options - Discord message options (embeds, components, content, etc.)
+	 * @returns The sent message
+	 * @throws Error if betting channel not configured or message send fails
+	 */
+	async sendToBettingChannel(
+		guildId: string,
+		options: MessageCreateOptions,
+	): Promise<Message> {
+		const bettingChannel = await this.getBettingChannel(guildId)
+		return await bettingChannel.send(options)
 	}
 
 	/**

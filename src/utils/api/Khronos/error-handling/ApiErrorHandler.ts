@@ -22,41 +22,83 @@ import { toKhronosApiError } from './types.js'
  * As a fallback, this will also handle errors that cannot be identified to be originating from Khronos.
  */
 export class ApiErrorHandler {
-	private async errorResponses(
-		interaction: CommandInteraction | ButtonInteraction,
-		apiError: KhronosApiError,
-		errModule: ApiModules,
-	) {
-		let errorMessage: string
+	private async safeDeleteMessage(
+		msg: Message<boolean>,
+		source: string,
+	): Promise<void> {
+		try {
+			if (!msg.deletable) {
+				console.warn({
+					source,
+					message: 'Message is not deletable, skipping deletion',
+					messageId: msg.id,
+				})
+				return
+			}
+
+			if (!msg.channel) {
+				console.warn({
+					source,
+					message:
+						'Message channel no longer exists, skipping deletion',
+					messageId: msg.id,
+				})
+				return
+			}
+
+			await msg.delete()
+		} catch (err) {
+			console.error({
+				source,
+				message: 'Failed to delete error message',
+				error: err,
+				messageId: msg.id,
+			})
+		}
+	}
+
+	private resolveErrorMessage(apiError: KhronosApiError): string {
 		const defaultMessages = {
 			default:
 				'An unexpected server-side error has occurred. Please try again later.',
 		}
 
-		// Handle specific error cases
 		if (apiError.exception === ApiHttpErrorTypes.ClaimCooldown) {
-			errorMessage = `You are on cooldown and can claim again in ${apiError.details.timeLeft}`
-		} else if (
-			apiError.exception === ApiHttpErrorTypes.InsufficientBalance
-		) {
+			if (apiError.details?.timeLeft) {
+				return `You are on cooldown and can claim again in ${apiError.details.timeLeft}`
+			}
+			return 'You are on cooldown. Please try again later.'
+		}
+
+		if (apiError.exception === ApiHttpErrorTypes.InsufficientBalance) {
 			if (
 				apiError.details?.balance &&
 				typeof apiError.details.balance === 'number'
 			) {
-				errorMessage = `You only have **\`${MoneyFormatter.toUSD(apiError.details.balance)}\`** available to place bets with.`
-			} else {
-				errorMessage = 'Your balance is insufficient to place this bet.'
+				return `You only have **\`${MoneyFormatter.toUSD(apiError.details.balance)}\`** available to place bets with.`
 			}
-		} else {
-			errorMessage = apiError.message ?? defaultMessages.default
+			return 'Your balance is insufficient to place this bet.'
 		}
 
-		// Create appropriate error embed
+		return apiError.message ?? defaultMessages.default
+	}
+
+	private async errorResponses(
+		interaction: CommandInteraction | ButtonInteraction,
+		apiError: KhronosApiError,
+		errModule: ApiModules,
+	): Promise<{ message: Message<boolean>; timeoutId: NodeJS.Timeout }> {
+		const errorMessage = this.resolveErrorMessage(apiError)
+
 		const errEmbed = await this.createErrorEmbed(errModule, errorMessage)
 
-		return interaction.editReply({
+		const msg = await interaction.editReply({
 			embeds: [errEmbed],
 		})
+		const timeoutId = setTimeout(() => {
+			this.safeDeleteMessage(msg, 'ApiErrorHandler.errorResponses')
+		}, 30000)
+		return { message: msg, timeoutId }
 	}
 
 	private async createErrorEmbed(
@@ -82,19 +124,42 @@ export class ApiErrorHandler {
 	}
 
 	/**
+	 * Gets the error message string from an error without sending a response
+	 * @param error The error to process
+	 * @returns The user-friendly error message string
+	 */
+	async getErrorMessage(error: unknown): Promise<string> {
+		try {
+			const khronosError = await toKhronosApiError(error)
+			return this.resolveErrorMessage(khronosError)
+		} catch (e) {
+			console.error({
+				source: 'ApiErrorHandler.getErrorMessage',
+				message: 'Issue while processing error message',
+				error: e,
+			})
+			return `An issue occurred while handling an error related to your request.\n\nIf this issue persists, please contact ${APP_OWNER_INFO.discord_username}`
+		}
+	}
+
+	/**
 	 * Handles errors from the Khronos API and provides appropriate user feedback
+	 * @returns An object containing the message and timeout ID for potential cleanup
 	 */
 	async handle(
 		interaction: CommandInteraction | ButtonInteraction | null,
 		error: unknown,
 		errModule: ApiModules,
-	): Promise<Message<boolean>> {
+	): Promise<{ message: Message<boolean>; timeoutId: NodeJS.Timeout }> {
 		try {
 			const khronosError = await toKhronosApiError(error)
 
 			if (interaction) {
-				await this.errorResponses(interaction, khronosError, errModule)
-				return
+				return await this.errorResponses(
+					interaction,
+					khronosError,
+					errModule,
+				)
 			}
 			// nO interaction provided, fallback to throwing the error again. someone will catch this dang thing
 			console.error({
@@ -113,7 +178,21 @@ export class ApiErrorHandler {
 			const errEmbed = await ErrorEmbeds.internalErr(
 				`An issue occurred while handling an error related to your request.\n\nIf this issue persists, please contact ${APP_OWNER_INFO.discord_username}`,
 			)
-			await interaction.editReply({ embeds: [errEmbed] })
+
+			if (!interaction) {
+				console.error({
+					source: 'ApiErrorHandler.handle',
+					message:
+						'Cannot send error embed - no interaction provided',
+				})
+				throw e
+			}
+
+			const msg = await interaction.editReply({ embeds: [errEmbed] })
+			const timeoutId = setTimeout(() => {
+				this.safeDeleteMessage(msg, 'ApiErrorHandler.handle')
+			}, 30000)
+			return { message: msg, timeoutId }
 		}
 	}
 }

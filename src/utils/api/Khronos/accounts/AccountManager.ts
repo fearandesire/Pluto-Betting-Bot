@@ -14,11 +14,12 @@ export default class AccountManager {
 		try {
 			const account = await this.accountWrapper.createAccount(userId)
 			if (!account) {
-				return new ApiErrorHandler().handle(
+				const result = await new ApiErrorHandler().handle(
 					interaction,
 					'Failed to create account.',
 					ApiModules.unknown,
 				)
+				return result.message
 			}
 			const accountCreatedEmbed = new EmbedBuilder()
 				.setTitle('Account Created')
@@ -28,12 +29,13 @@ export default class AccountManager {
 				.setColor(embedColors.PlutoGreen)
 				.setThumbnail(interaction.user.displayAvatarURL())
 			return interaction.editReply({ embeds: [accountCreatedEmbed] })
-		} catch (e) {
-			return new ApiErrorHandler().handle(
+		} catch (e: unknown) {
+			const result = await new ApiErrorHandler().handle(
 				interaction,
 				e,
 				ApiModules.account,
 			)
+			return result.message
 		}
 	}
 }

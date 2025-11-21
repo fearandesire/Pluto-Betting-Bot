@@ -26,7 +26,7 @@ export interface CachedBetData {
 
 export class BetsCacheService {
 	private cachePrefix = 'bets:'
-	private readonly BET_CACHE_TTL = 3600 // 1 hour - reasonable time for user to decide
+	private readonly BET_CACHE_TTL = 900 // 15 minutes - matches Discord Interaction Token validity
 
 	constructor(private cache: CacheManager) {}
 
