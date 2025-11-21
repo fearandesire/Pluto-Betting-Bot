@@ -107,10 +107,14 @@ export class AccountManager {
 			const errorMessage = await new ApiErrorHandler().getErrorMessage(
 				error,
 			)
-			if (interaction.replied || interaction.deferred) {
+			if (interaction.replied) {
 				await interaction.followUp({
 					content: errorMessage,
 					ephemeral: true,
+				})
+			} else if (interaction.deferred) {
+				await interaction.editReply({
+					content: errorMessage,
 				})
 			} else {
 				await interaction.reply({
@@ -165,10 +169,14 @@ export class AccountManager {
 			const errorMessage = await new ApiErrorHandler().getErrorMessage(
 				error,
 			)
-			if (interaction.replied || interaction.deferred) {
+			if (interaction.replied) {
 				await interaction.followUp({
 					content: errorMessage,
 					ephemeral: true,
+				})
+			} else if (interaction.deferred) {
+				await interaction.editReply({
+					content: errorMessage,
 				})
 			} else {
 				await interaction.reply({
@@ -220,10 +228,14 @@ export class AccountManager {
 			const errorMessage = await new ApiErrorHandler().getErrorMessage(
 				error,
 			)
-			if (interaction.replied || interaction.deferred) {
+			if (interaction.replied) {
 				await interaction.followUp({
 					content: errorMessage,
 					ephemeral: true,
+				})
+			} else if (interaction.deferred) {
+				await interaction.editReply({
+					content: errorMessage,
 				})
 			} else {
 				await interaction.reply({

@@ -22,10 +22,7 @@ import { toKhronosApiError } from './types.js'
  * As a fallback, this will also handle errors that cannot be identified to be originating from Khronos.
  */
 export class ApiErrorHandler {
-	private static readonly pendingTimeouts = new Map<
-		string,
-		NodeJS.Timeout
-	>()
+	private static readonly pendingTimeouts = new Map<string, NodeJS.Timeout>()
 
 	private async safeDeleteMessage(
 		msg: Message<boolean>,
