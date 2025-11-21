@@ -40,7 +40,7 @@ export class UserCommand extends Command {
 	public override async chatInputRun(
 		interaction: Command.ChatInputCommandInteraction,
 	) {
-		await interaction.deferReply()
+		await interaction.deferReply({ ephemeral: true })
 
 		if (env.MAINTENANCE_MODE) {
 			const errEmbed = await ErrorEmbeds.maintenanceMode()
@@ -51,7 +51,7 @@ export class UserCommand extends Command {
 		const isMember = await PatreonFacade.memberDetails(interaction.user.id)
 		if (!isMember || isApiError(isMember)) {
 			const errEmbed = await ErrorEmbeds.patreonMembersOnly()
-			await interaction.reply({
+			await interaction.editReply({
 				embeds: [errEmbed],
 			})
 			return
