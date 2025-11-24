@@ -59,14 +59,48 @@ export class ButtonHandler extends InteractionHandler {
 
 		// Handle matchup buttons
 		if (_.startsWith(interaction.customId, 'matchup')) {
-			// Cancel button
+			// Cancel button - handle completely in parse, no need for run()
 			if (interaction.customId === btnIds.matchup_btn_cancel) {
-				await interaction.update({
-					components: [],
-				})
-				return this.some({
-					hasFailed: false,
-				})
+				// Acknowledge interaction immediately to avoid 3s timeout
+				await interaction.deferUpdate()
+
+				try {
+					const betslipWrapper = new BetslipWrapper()
+					await betslipWrapper.clearPending(interaction.user.id)
+
+					const cancelEmbed = new EmbedBuilder()
+						.setTitle('Bet Canceled')
+						.setDescription(
+							'Your bet has been successfully cancelled.',
+						)
+						.setColor(embedColors.PlutoRed)
+						.setThumbnail(interaction.user.displayAvatarURL())
+						.setFooter({ text: await helpfooter('betting') })
+
+					await interaction.editReply({
+						embeds: [cancelEmbed],
+						components: [],
+					})
+				} catch (error) {
+					console.error({
+						method: this.constructor.name,
+						message: 'Failed to cancel bet',
+						data: {
+							userId: interaction.user.id,
+							error:
+								error instanceof Error ? error.message : error,
+						},
+					})
+
+					const errEmbed = await ErrorEmbeds.internalErr(
+						'Failed to cancel your bet. Please try again.',
+					)
+					await interaction.editReply({
+						embeds: [errEmbed],
+						components: [],
+					})
+				}
+				return this.none()
 			}
 
 			// Confirm button
@@ -151,25 +185,8 @@ export class ButtonHandler extends InteractionHandler {
 			return
 		}
 
-		// ? Handle Cancelling A Betslip
-		if (interaction.customId === btnIds.matchup_btn_cancel) {
-			const betslipWrapper = new BetslipWrapper()
-			await betslipWrapper.clearPending(interaction.user.id)
-			const cancelEmbed = new EmbedBuilder()
-				.setTitle('Bet Canceled')
-				.setDescription('Your bet has been successfully cancelled.')
-				.setColor(embedColors.PlutoRed)
-				.setThumbnail(interaction.user.displayAvatarURL())
-				.setFooter({
-					text: await helpfooter('betting'),
-				})
-			await interaction.editReply({
-				embeds: [cancelEmbed],
-				components: [],
-			})
-		}
 		// ? Handle Confirming A Betslip
-		else if (interaction.customId === btnIds.matchup_btn_confirm) {
+		if (interaction.customId === btnIds.matchup_btn_confirm) {
 			if ('betslip' in payload) {
 				const { betslip } = payload
 

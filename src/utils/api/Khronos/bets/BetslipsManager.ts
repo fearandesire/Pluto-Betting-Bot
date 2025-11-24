@@ -352,7 +352,7 @@ export class BetslipManager {
 				const errEmbed = await ErrorEmbeds.accountErr(
 					`Unable to cancel bet due to an error.\n${supportMessage}`,
 				)
-				return interaction.followUp({ embeds: [errEmbed] })
+				return interaction.editReply({ embeds: [errEmbed] })
 			}
 			await this.betslipInstance.cancel({
 				betId: betId,
@@ -370,7 +370,7 @@ export class BetslipManager {
 				.setFooter({
 					text: await helpfooter('betting'),
 				})
-			return interaction.followUp({
+			return interaction.editReply({
 				embeds: [cancelledEmbed],
 			})
 		} catch (error) {
