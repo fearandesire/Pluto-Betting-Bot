@@ -85,13 +85,6 @@ export class ApiErrorHandler {
 		ApiErrorHandler.pendingTimeouts.set(msg.id, timeoutId)
 	}
 
-	static cleanupAllTimeouts(): void {
-		for (const timeout of ApiErrorHandler.pendingTimeouts.values()) {
-			clearTimeout(timeout)
-		}
-		ApiErrorHandler.pendingTimeouts.clear()
-	}
-
 	private resolveErrorMessage(apiError: KhronosApiError): string {
 		const defaultMessages = {
 			default:
