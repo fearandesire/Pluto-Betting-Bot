@@ -48,49 +48,91 @@ export function isKhronosApiError(error: unknown): error is KhronosApiError {
  * Converts an unknown error into a KhronosApiError
  * If it's a ResponseError, extracts the API error data
  * Otherwise creates a standardized internal error
+ *
+ * Note: This intentionally does NOT include originalError in details
+ * to prevent leaking internal errors to users
  */
 export async function toKhronosApiError(
 	error: unknown,
 ): Promise<KhronosApiError> {
 	try {
+		// Handle plain strings (e.g., 'Failed to create account.')
+		if (typeof error === 'string') {
+			return {
+				exception: ApiHttpErrorTypes.InternalError,
+				message: error,
+			}
+		}
+
 		// Handle ResponseError from API
 		if (error instanceof ResponseError) {
-			const errorData = await error.response.json()
+			try {
+				const errorData = await error.response.json()
 
-			// Check if parsed response is a valid KhronosApiError
-			if (isKhronosApiError(errorData)) {
+				// Check if parsed response is a valid KhronosApiError
+				if (isKhronosApiError(errorData)) {
+					return {
+						exception: errorData.exception,
+						message: errorData.message,
+						details: errorData.details,
+					}
+				}
+			} catch {
+				// JSON parsing failed, create a generic error
 				return {
-					...errorData,
+					exception: ApiHttpErrorTypes.InternalError,
+					message: `Request failed with status ${error.response.status}`,
 				}
 			}
 		}
 
 		// Handle pre-parsed KhronosApiError instances
 		if (isKhronosApiError(error)) {
-			return error
+			return {
+				exception: error.exception,
+				message: error.message,
+				details: error.details,
+			}
 		}
 
-		// Create a default internal error for all other cases
+		// Handle standard Error objects
+		if (error instanceof Error) {
+			// Log the full error internally but don't expose it
+			console.error({
+				source: 'toKhronosApiError',
+				errorName: error.name,
+				errorMessage: error.message,
+				stack: error.stack,
+			})
+
+			return {
+				exception: ApiHttpErrorTypes.InternalError,
+				message: error.message,
+			}
+		}
+
+		// Fallback for unknown error types
+		console.error({
+			source: 'toKhronosApiError',
+			message: 'Unknown error type received',
+			errorType: typeof error,
+		})
+
 		return {
 			exception: ApiHttpErrorTypes.InternalError,
-			message: error instanceof Error ? error.message : String(error),
-			details: {
-				originalError: error,
-				errorType:
-					error instanceof Error
-						? error.constructor.name
-						: typeof error,
-			},
+			message: 'An unexpected error occurred',
 		}
 	} catch (conversionError) {
 		// Handle errors during conversion process
+		console.error({
+			source: 'toKhronosApiError',
+			message: 'Error while processing API error',
+			conversionError,
+		})
+
 		return {
 			exception: ApiHttpErrorTypes.InternalError,
-			message: 'Error while processing API error response',
-			details: {
-				originalError: error,
-				conversionError,
-			},
+			message: 'Error while processing request',
 		}
 	}
 }

@@ -85,12 +85,59 @@ export class ApiErrorHandler {
 		ApiErrorHandler.pendingTimeouts.set(msg.id, timeoutId)
 	}
 
-	private resolveErrorMessage(apiError: KhronosApiError): string {
-		const defaultMessages = {
-			default:
-				'An unexpected server-side error has occurred. Please try again later.',
+	private static readonly GENERIC_ERROR =
+		`Something went wrong while processing your request.\nIf this issue persists, please contact <@${APP_OWNER_INFO.discord_id}>`;
+
+
+	private static readonly UNSAFE_PATTERNS = [
+		/at\s+\S+\s+\(/i, // Stack trace pattern
+		/error:\s*\d{3}/i, // HTTP error codes
+		/failed to fetch/i,
+		/econnrefused/i,
+		/timeout/i,
+		/socket hang up/i,
+		/network error/i,
+		/internal server error/i,
+		/500\s/i,
+		/502\s/i,
+		/503\s/i,
+		/504\s/i,
+		/unexpected token/i,
+		/syntax error/i,
+		/cannot read propert/i,
+		/undefined is not/i,
+		/null is not/i,
+		/\.ts:\d+/i, // TypeScript file references
+		/\.js:\d+/i, // JavaScript file references
+		/node_modules/i,
+	]
+
+	/**
+	 * Sanitizes error messages to prevent leaking internal details
+	 * Returns a generic message if the input looks like a raw error/stack trace
+	 */
+	private sanitizeErrorMessage(message: string | undefined): string {
+		if (!message || typeof message !== 'string') {
+			return ApiErrorHandler.GENERIC_ERROR
 		}
 
+		// Check for patterns that indicate raw/internal errors
+		for (const pattern of ApiErrorHandler.UNSAFE_PATTERNS) {
+			if (pattern.test(message)) {
+				console.warn({
+					source: 'ApiErrorHandler.sanitizeErrorMessage',
+					message: 'Sanitized potentially unsafe error message',
+					originalMessage: message,
+				})
+				return ApiErrorHandler.GENERIC_ERROR
+			}
+		}
+
+		// Message seems safe for user display
+		return message
+	}
+
+	private resolveErrorMessage(apiError: KhronosApiError): string {
 		if (apiError.exception === ApiHttpErrorTypes.ClaimCooldown) {
 			if (apiError.details?.timeLeft) {
 				return `You are on cooldown and can claim again in ${apiError.details.timeLeft}`
@@ -105,7 +152,7 @@ export class ApiErrorHandler {
 			return 'Your balance is insufficient to place this bet.'
 		}
 
-		return apiError.message ?? defaultMessages.default
+		return this.sanitizeErrorMessage(apiError.message)
 	}
 
 	private async errorResponses(
