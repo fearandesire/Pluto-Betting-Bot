@@ -15,8 +15,8 @@ importers:
         specifier: ^6.14.1
         version: 6.14.1(@bull-board/ui@6.14.1)
       '@bull-board/koa':
-        specifier: ^6.14.1
-        version: 6.14.1(@babel/core@7.28.4)(@types/koa@3.0.1)(handlebars@4.7.8)(lodash@4.17.21)
+        specifier: ^6.14.2
+        version: 6.14.2(@babel/core@7.28.4)(@types/koa@3.0.1)(handlebars@4.7.8)(lodash@4.17.21)
       '@bull-board/ui':
         specifier: ^6.14.1
         version: 6.14.1
@@ -568,11 +568,19 @@ packages:
     peerDependencies:
       '@bull-board/ui': 6.14.1
 
-  '@bull-board/koa@6.14.1':
-    resolution: {integrity: sha512-3xFwj1/CLaB+o0/uNuhTEobmGI20T4L1n1ucOBRMErsZwe+W0iOww5p3vIjGSNkNm30oQ9B7c3tqz3va2twiMg==}
+  '@bull-board/api@6.14.2':
+    resolution: {integrity: sha512-UzkvN/wM+1qS73BS43a75LYkRzpBpCCUKlaGq0hp3dM5MNmdF1mx7LMGYgXPt91gqF8j4jq9Y/zCpC3Sqs3RLQ==}
+    peerDependencies:
+      '@bull-board/ui': 6.14.2
+
+  '@bull-board/koa@6.14.2':
+    resolution: {integrity: sha512-Zgml8nF07RwI9F3WlrQLSq/JkSict1kvvFOI2IdvmPEX3EY52p+yy9OSXEBx6CE8rWLB2gFOufyC0tmXU32PfA==}
 
   '@bull-board/ui@6.14.1':
     resolution: {integrity: sha512-2VvSTj/ZuieByMjJBqR+G2u8Ke9XhXQKUmyCPaP3x5P8shDkt6JAB2gmfS576KCH+ytA8U8REuy2Yiy/N4dElA==}
+
+  '@bull-board/ui@6.14.2':
+    resolution: {integrity: sha512-OTCsBbMAhYoB2NJc6FxkkREWWPUFvEhL2Az1gAKpdNOBqup4CsKj7eBK3rcWSRLZ4LnaOaPK8E8tiogkhrRuOA==}
 
   '@colors/colors@1.6.0':
     resolution: {integrity: sha512-Ir+AOibqzrIsL6ajt3Rz3LskB7OiMVHqltZmspbW/TJuTVuyOMirVqAkjfY6JISiLHgyNqicAC8AyHHGzNd/dA==}
@@ -4195,6 +4203,10 @@ packages:
     resolution: {integrity: sha512-7Bv8RF0k6xjo7d4A/PxYLbUCfb6c+Vpd2/mB2yRDlew7Jb5hEXiCD9ibfO7wpk8i4sevK6DFny9h7EYbM3/sHg==}
     hasBin: true
 
+  glob@10.5.0:
+    resolution: {integrity: sha512-DfXN8DfhJ7NH3Oe7cFmu3NCu1wKbkReJ8TorzSAFbSKrlNaQSKfIzqYqVY8zlbs2NLBbWpRiU52GX2PbaBVNkg==}
+    hasBin: true
+
   glob@11.0.3:
     resolution: {integrity: sha512-2Nim7dha1KVkaiF4q6Dj+ngPPMdfvLJEOpZk/jKiUAkqKebpGAWQXAq9z1xu9HKu5lWfqw/FASuccEjyznjPaA==}
     engines: {node: 20 || >=22}
@@ -4300,6 +4312,10 @@ packages:
 
   http-errors@2.0.0:
     resolution: {integrity: sha512-FtwrG/euBzaEjYeRqOgly7G0qviiXoJWnvEH2Z1plBdXgbyjv34pHTSb9zoeHMyDy33+DWy5Wt9Wo+TURtOYSQ==}
+    engines: {node: '>= 0.8'}
+
+  http-errors@2.0.1:
+    resolution: {integrity: sha512-4FbRdAX+bSdmo4AUFuS0WNiPz8NgFt+r8ThgNWmlrjQjt1Q7ZR9+zTlce2859x4KSXrwIsaeTqDoKQmtP8pLmQ==}
     engines: {node: '>= 0.8'}
 
   http-proxy-agent@7.0.2:
@@ -7251,10 +7267,15 @@ snapshots:
       '@bull-board/ui': 6.14.1
       redis-info: 3.1.0
 
-  '@bull-board/koa@6.14.1(@babel/core@7.28.4)(@types/koa@3.0.1)(handlebars@4.7.8)(lodash@4.17.21)':
+  '@bull-board/api@6.14.2(@bull-board/ui@6.14.2)':
     dependencies:
-      '@bull-board/api': 6.14.1(@bull-board/ui@6.14.1)
-      '@bull-board/ui': 6.14.1
+      '@bull-board/ui': 6.14.2
+      redis-info: 3.1.0
+
+  '@bull-board/koa@6.14.2(@babel/core@7.28.4)(@types/koa@3.0.1)(handlebars@4.7.8)(lodash@4.17.21)':
+    dependencies:
+      '@bull-board/api': 6.14.2(@bull-board/ui@6.14.2)
+      '@bull-board/ui': 6.14.2
       '@koa/bodyparser': 6.0.0(koa@3.1.1)
       '@ladjs/koa-views': 9.0.0(@babel/core@7.28.4)(@types/koa@3.0.1)(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)
       ejs: 3.1.10
@@ -7316,6 +7337,10 @@ snapshots:
   '@bull-board/ui@6.14.1':
     dependencies:
       '@bull-board/api': 6.14.1(@bull-board/ui@6.14.1)
+
+  '@bull-board/ui@6.14.2':
+    dependencies:
+      '@bull-board/api': 6.14.2(@bull-board/ui@6.14.2)
 
   '@colors/colors@1.6.0': {}
 
@@ -11005,6 +11030,15 @@ snapshots:
       package-json-from-dist: 1.0.1
       path-scurry: 1.11.1
 
+  glob@10.5.0:
+    dependencies:
+      foreground-child: 3.3.1
+      jackspeak: 3.4.3
+      minimatch: 9.0.5
+      minipass: 7.1.2
+      package-json-from-dist: 1.0.1
+      path-scurry: 1.11.1
+
   glob@11.0.3:
     dependencies:
       foreground-child: 3.3.1
@@ -11143,6 +11177,14 @@ snapshots:
       inherits: 2.0.4
       setprototypeof: 1.2.0
       statuses: 2.0.1
+      toidentifier: 1.0.1
+
+  http-errors@2.0.1:
+    dependencies:
+      depd: 2.0.0
+      inherits: 2.0.4
+      setprototypeof: 1.2.0
+      statuses: 2.0.2
       toidentifier: 1.0.1
 
   http-proxy-agent@7.0.2:
@@ -11870,7 +11912,7 @@ snapshots:
     dependencies:
       config-chain: 1.1.13
       editorconfig: 1.0.4
-      glob: 10.4.5
+      glob: 10.5.0
       js-cookie: 3.0.5
       nopt: 7.2.1
 
@@ -11964,7 +12006,7 @@ snapshots:
   koa-router@13.1.1:
     dependencies:
       debug: 4.4.3(supports-color@8.1.1)
-      http-errors: 2.0.0
+      http-errors: 2.0.1
       koa-compose: 4.1.0
       path-to-regexp: 6.3.0
     transitivePeerDependencies:
