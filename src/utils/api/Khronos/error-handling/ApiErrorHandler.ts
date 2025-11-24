@@ -86,8 +86,7 @@ export class ApiErrorHandler {
 	}
 
 	private static readonly GENERIC_ERROR =
-		`Something went wrong while processing your request.\nIf this issue persists, please contact <@${APP_OWNER_INFO.discord_id}>`;
-
+		`Something went wrong while processing your request.\nIf this issue persists, please contact <@${APP_OWNER_INFO.discord_id}>`
 
 	private static readonly UNSAFE_PATTERNS = [
 		/at\s+\S+\s+\(/i, // Stack trace pattern
