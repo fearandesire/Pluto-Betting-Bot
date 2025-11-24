@@ -146,12 +146,6 @@ export class AccountManager {
 				return interaction.editReply({ embeds: [embed] })
 			}
 		} catch (error) {
-			console.error({
-				source: 'AccountManager.fetchProfile',
-				message: 'Error fetching profile',
-				error: error,
-				targetId,
-			})
 			return await new ApiErrorHandler().handle(
 				interaction,
 				error,
