@@ -77,6 +77,13 @@ export async function toKhronosApiError(
 						details: errorData.details,
 					}
 				}
+
+				// JSON parsed but doesn't match KhronosApiError shape
+				// Still return with HTTP status to preserve context
+				return {
+					exception: ApiHttpErrorTypes.InternalError,
+					message: `Request failed with status ${error.response.status}`,
+				}
 			} catch {
 				// JSON parsing failed, create a generic error
 				return {
