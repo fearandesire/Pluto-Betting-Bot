@@ -113,7 +113,7 @@
 		"@sapphire/prettier-config": "^2.0.0",
 		"@sapphire/ts-config": "^5.0.2",
 		"@swc/cli": "^0.7.9",
-		"@swc/core": "^1.15.1",
+		"@swc/core": "^1.15.3",
 		"@types/color": "^4.2.0",
 		"@types/jest": "^30.0.0",
 		"@types/koa": "^3.0.1",
