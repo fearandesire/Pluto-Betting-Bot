@@ -111,7 +111,7 @@
 		"@biomejs/cli-win32-x64": "^2.3.7",
 		"@sapphire/cli": "^1.9.3",
 		"@sapphire/prettier-config": "^2.0.0",
-		"@sapphire/ts-config": "^5.0.1",
+		"@sapphire/ts-config": "^5.0.2",
 		"@swc/cli": "^0.7.9",
 		"@swc/core": "^1.15.1",
 		"@types/color": "^4.2.0",
