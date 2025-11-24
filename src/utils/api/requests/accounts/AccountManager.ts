@@ -104,25 +104,11 @@ export class AccountManager {
 			)
 			return interaction.editReply({ embeds: [embed] })
 		} catch (error) {
-			const errorMessage = await new ApiErrorHandler().getErrorMessage(
+			return await new ApiErrorHandler().handle(
+				interaction,
 				error,
+				ApiModules.account,
 			)
-			if (interaction.replied) {
-				await interaction.followUp({
-					content: errorMessage,
-					ephemeral: true,
-				})
-			} else if (interaction.deferred) {
-				await interaction.editReply({
-					content: errorMessage,
-				})
-			} else {
-				await interaction.reply({
-					content: errorMessage,
-					ephemeral: true,
-				})
-			}
-			return
 		}
 	}
 	async fetchProfile(interaction: CommandInteraction, targetId: string) {
@@ -166,25 +152,11 @@ export class AccountManager {
 				error: error,
 				targetId,
 			})
-			const errorMessage = await new ApiErrorHandler().getErrorMessage(
+			return await new ApiErrorHandler().handle(
+				interaction,
 				error,
+				ApiModules.account,
 			)
-			if (interaction.replied) {
-				await interaction.followUp({
-					content: errorMessage,
-					ephemeral: true,
-				})
-			} else if (interaction.deferred) {
-				await interaction.editReply({
-					content: errorMessage,
-				})
-			} else {
-				await interaction.reply({
-					content: errorMessage,
-					ephemeral: true,
-				})
-			}
-			return
 		}
 	}
 
@@ -225,25 +197,11 @@ export class AccountManager {
 				1,
 			)
 		} catch (error) {
-			const errorMessage = await new ApiErrorHandler().getErrorMessage(
+			return await new ApiErrorHandler().handle(
+				interaction,
 				error,
+				ApiModules.account,
 			)
-			if (interaction.replied) {
-				await interaction.followUp({
-					content: errorMessage,
-					ephemeral: true,
-				})
-			} else if (interaction.deferred) {
-				await interaction.editReply({
-					content: errorMessage,
-				})
-			} else {
-				await interaction.reply({
-					content: errorMessage,
-					ephemeral: true,
-				})
-			}
-			return
 		}
 	}
 }
