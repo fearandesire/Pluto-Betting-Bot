@@ -105,29 +105,8 @@ export class ButtonHandler extends InteractionHandler {
 
 			// Confirm button
 			if (interaction.customId === btnIds.matchup_btn_confirm) {
-				// Defer ephemeral reply for error/success messages (private to user)
-				await interaction.deferReply({ ephemeral: true })
-				// Update original message to remove buttons
-				await interaction.message
-					.edit({ components: [] })
-					.catch((error) => {
-						console.warn({
-							method: this.constructor.name,
-							message:
-								'Failed to edit message when removing buttons',
-							context: {
-								interactionId: interaction.id,
-								userId: interaction.user.id,
-								messageId: interaction.message?.id,
-							},
-							error:
-								error instanceof Error ? error.message : error,
-							stack:
-								error instanceof Error
-									? error.stack
-									: undefined,
-						})
-					})
+				// Defer update to modify the original ephemeral message in-place
+				await interaction.deferUpdate()
 				try {
 					const cachedBet = await this.betsCacheService.getUserBet(
 						interaction.user.id,

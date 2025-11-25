@@ -189,10 +189,10 @@ export class BetslipManager {
 				const errEmbed = await ErrorEmbeds.internalErr(
 					'Failed to place your bet due to an unexpected response from the API. Please try again later.',
 				)
-				// Use editReply if deferred, otherwise followUp
 				if (interaction.deferred || interaction.replied) {
 					return interaction.editReply({
 						embeds: [errEmbed],
+						components: [],
 					})
 				}
 				return interaction.followUp({
@@ -205,10 +205,10 @@ export class BetslipManager {
 				'Failed to place your bet due to an internal error. Please try again later.',
 			)
 			console.error(error)
-			// Use editReply if deferred, otherwise followUp
 			if (interaction.deferred || interaction.replied) {
 				return interaction.editReply({
 					embeds: [errEmbed],
+					components: [],
 				})
 			}
 			return interaction.followUp({
@@ -253,10 +253,11 @@ export class BetslipManager {
 			.setFooter({
 				text: `Bet ID: ${betslip.betid} | ${await helpfooter('betting')}`,
 			})
-		// Use editReply if deferred, otherwise followUp
+
 		if (interaction.deferred || interaction.replied) {
 			return interaction.editReply({
 				embeds: [successEmbed],
+				components: [],
 			})
 		}
 		return interaction.followUp({
