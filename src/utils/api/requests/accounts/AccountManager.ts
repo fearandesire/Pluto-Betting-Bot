@@ -104,7 +104,7 @@ export class AccountManager {
 			)
 			return interaction.editReply({ embeds: [embed] })
 		} catch (error) {
-			return new ApiErrorHandler().handle(
+			return await new ApiErrorHandler().handle(
 				interaction,
 				error,
 				ApiModules.account,
@@ -146,7 +146,7 @@ export class AccountManager {
 				return interaction.editReply({ embeds: [embed] })
 			}
 		} catch (error) {
-			return new ApiErrorHandler().handle(
+			return await new ApiErrorHandler().handle(
 				interaction,
 				error,
 				ApiModules.account,
@@ -191,7 +191,7 @@ export class AccountManager {
 				1,
 			)
 		} catch (error) {
-			return new ApiErrorHandler().handle(
+			return await new ApiErrorHandler().handle(
 				interaction,
 				error,
 				ApiModules.account,
