@@ -7,7 +7,6 @@ import type {
 	PlacedBetslipDto,
 } from '@kh-openapi'
 import { helpfooter, supportMessage } from '@pluto-config'
-import { container } from '@sapphire/framework'
 import { format } from 'date-fns'
 import {
 	ActionRowBuilder,
@@ -55,9 +54,7 @@ export class BetslipManager {
 	constructor(
 		private betslipInstance: BetslipWrapper,
 		private betCacheService: BetsCacheService,
-	) {
-		this.betslipInstance = new BetslipWrapper()
-	}
+	) {}
 
 	async initialize(
 		interaction: CommandInteraction,

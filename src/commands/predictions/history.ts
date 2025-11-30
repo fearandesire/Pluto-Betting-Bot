@@ -74,10 +74,20 @@ export class UserCommand extends Command {
 
 		try {
 			const predictionApiWrapper = new PredictionApiWrapper()
-			const usersPredictions =
-				await predictionApiWrapper.getPredictionsForUser({
-					userId: user.id,
-				})
+			const predictionsResponse = status
+				? await predictionApiWrapper.getPredictionsFiltered({
+						userId: user.id,
+						status,
+					})
+				: await predictionApiWrapper.getPredictionsForUser({
+						userId: user.id,
+					})
+
+			const usersPredictions: AllUserPredictionsDto[] = Array.isArray(
+				predictionsResponse,
+			)
+				? (predictionsResponse as unknown as AllUserPredictionsDto[])
+				: []
 
 			if (!usersPredictions || usersPredictions.length === 0) {
 				return interaction.editReply({
@@ -90,11 +100,33 @@ export class UserCommand extends Command {
 				.setDescription(descStr)
 				.setColor(embedColors.PlutoBlue)
 
-			const formattedPredictions = await Promise.all(
-				usersPredictions.map((prediction) =>
-					this.createPredictionField(prediction),
-				),
+			const formattedPredictions = (
+				await Promise.allSettled(
+					usersPredictions.map((prediction) =>
+						this.createPredictionField(prediction),
+					),
+				)
 			)
+				.map((result, index) => {
+					if (result.status === 'fulfilled') {
+						return result.value
+					}
+					const prediction = usersPredictions[index]
+					this.container.logger.error(
+						`Failed to create prediction field for prediction ${prediction?.id || 'unknown'} (user: ${user.id})`,
+						result.reason,
+					)
+					return null
+				})
+				.filter(
+					(
+						field,
+					): field is {
+						name: string
+						value: string
+						inline: boolean
+					} => field !== null,
+				)
 
 			const paginatedMsg = new PaginatedMessageEmbedFields({
 				template: { embeds: [templateEmbed] },
@@ -153,11 +185,13 @@ export class UserCommand extends Command {
 			prediction.match_string,
 		)
 		const parsedChoice = this.parseChoice(prediction.choice)
-		// Get Prop via ID within the prediction
 		const propApiWrapper = new PropsApiWrapper()
-		const prop = await propApiWrapper.getPropById(prediction.prop_id)
-		// type of prop
-		const { market_key, point } = prop
+		const prop = await propApiWrapper.getPropByUuid(prediction.outcome_uuid)
+		const outcome = prop.outcomes.find(
+			(o) => o.outcome_uuid === prediction.outcome_uuid,
+		)
+		const { market_key } = prop
+		const point = outcome?.point
 		let parsedMarketKey = MarketKeyAbbreviations[market_key] || market_key
 		parsedMarketKey = _.startCase(parsedMarketKey)
 		const outcomeStr = (emoji: string) => {

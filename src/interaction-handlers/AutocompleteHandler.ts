@@ -17,16 +17,17 @@ export class AutocompleteHandler extends InteractionHandler {
 	public constructor(
 		ctx: InteractionHandler.LoaderContext,
 		options: InteractionHandler.Options,
-		matchCacheService?: MatchCacheService,
-		stringUtils?: StringUtils,
+		matchCacheService: MatchCacheService = new MatchCacheService(
+			new CacheManager(),
+		),
+		stringUtils: StringUtils = new StringUtils(),
 	) {
 		super(ctx, {
 			...options,
 			interactionHandlerType: InteractionHandlerTypes.Autocomplete,
 		})
-		this.matchCacheService =
-			matchCacheService ?? new MatchCacheService(new CacheManager())
-		this.stringUtils = stringUtils ?? new StringUtils()
+		this.matchCacheService = matchCacheService
+		this.stringUtils = stringUtils
 	}
 
 	public override async run(

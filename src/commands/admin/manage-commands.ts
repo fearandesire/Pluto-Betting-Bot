@@ -1,6 +1,6 @@
 import { ApplyOptions } from '@sapphire/decorators'
 import { type ApplicationCommandRegistry, Command } from '@sapphire/framework'
-import { PermissionFlagsBits } from 'discord.js'
+import { InteractionContextType, PermissionFlagsBits } from 'discord.js'
 import { pltuoDevGuild } from './../../lib/configs/constants.js'
 
 @ApplyOptions<Command.Options>({
@@ -16,6 +16,7 @@ export class ManageCommandsCommand extends Command {
 				builder
 					.setName('manage-commands')
 					.setDescription(this.description)
+					.setContexts([InteractionContextType.Guild])
 					.setDefaultMemberPermissions(
 						PermissionFlagsBits.Administrator,
 					)
@@ -82,6 +83,11 @@ export class ManageCommandsCommand extends Command {
 		if (subcommand === 'delete-global') {
 			return this.deleteGlobalCommand(interaction)
 		}
+
+		return interaction.reply({
+			content: `Unknown subcommand: ${subcommand}`,
+			ephemeral: true,
+		})
 	}
 
 	private async viewCommands(
@@ -89,32 +95,58 @@ export class ManageCommandsCommand extends Command {
 	) {
 		await interaction.deferReply({ ephemeral: true })
 
-		const commands = await interaction.guild!.commands.fetch()
-		const commandList = commands
-			.map((cmd) => `${cmd.name} (ID: ${cmd.id})`)
-			.join('\n')
+		if (!interaction.guild) {
+			return interaction.editReply({
+				content: 'This command must be used in a guild.',
+			})
+		}
 
-		return interaction.editReply({
-			content: `Registered commands:\n\`\`\`\n${commandList}\n\`\`\``,
-		})
+		try {
+			const commands = await interaction.guild.commands.fetch()
+
+			if (commands.size === 0) {
+				return interaction.editReply({
+					content: 'No registered commands found.',
+				})
+			}
+
+			const commandList = commands
+				.map((cmd) => `${cmd.name} (ID: ${cmd.id})`)
+				.join('\n')
+
+			return interaction.editReply({
+				content: `Registered commands:\n\`\`\`\n${commandList}\n\`\`\``,
+			})
+		} catch (error) {
+			this.container.logger.error(error)
+			return interaction.editReply({
+				content: 'Failed to fetch guild commands.',
+			})
+		}
 	}
 
 	private async deleteCommand(
 		interaction: Command.ChatInputCommandInteraction,
 	) {
+		await interaction.deferReply({ ephemeral: true })
+
+		if (!interaction.guild) {
+			return interaction.editReply({
+				content: 'This command must be used in a guild.',
+			})
+		}
+
 		const commandId = interaction.options.getString('command_id', true)
 
 		try {
-			await interaction.guild!.commands.delete(commandId)
-			return interaction.reply({
+			await interaction.guild.commands.delete(commandId)
+			return interaction.editReply({
 				content: `Command with ID ${commandId} has been successfully deleted.`,
-				ephemeral: true,
 			})
 		} catch (error) {
 			this.container.logger.error(error)
-			return interaction.reply({
+			return interaction.editReply({
 				content: `Failed to delete command with ID ${commandId}. Please check if the ID is correct and try again.`,
-				ephemeral: true,
 			})
 		}
 	}
@@ -132,6 +164,12 @@ export class ManageCommandsCommand extends Command {
 				return interaction.editReply({
 					content:
 						'Unable to fetch global commands. Make sure the bot has the necessary permissions.',
+				})
+			}
+
+			if (globalCommands.size === 0) {
+				return interaction.editReply({
+					content: 'No globally registered commands found.',
 				})
 			}
 
