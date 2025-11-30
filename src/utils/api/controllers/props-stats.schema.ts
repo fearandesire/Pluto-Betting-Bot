@@ -16,16 +16,36 @@ import { z } from 'zod'
  */
 const _h2HPercentagesSchema = z
 	.object({
-		home: z.number().describe('Home team win percentage'),
-		away: z.number().describe('Away team win percentage'),
+		home: z
+			.number()
+			.min(0, 'Home team win percentage must be at least 0')
+			.max(100, 'Home team win percentage cannot exceed 100')
+			.int('Home team win percentage must be a whole number')
+			.describe('Home team win percentage (0-100)'),
+		away: z
+			.number()
+			.min(0, 'Away team win percentage must be at least 0')
+			.max(100, 'Away team win percentage cannot exceed 100')
+			.int('Away team win percentage must be a whole number')
+			.describe('Away team win percentage (0-100)'),
 	})
 	.strict()
-	.describe('Head-to-head percentage distribution between teams')
+	.describe('Head-to-head percentage distribution between teams (0-100)')
 
 const _overUnderPercentagesSchema = z
 	.object({
-		over: z.number().describe('Percentage of over predictions'),
-		under: z.number().describe('Percentage of under predictions'),
+		over: z
+			.number()
+			.min(0, 'Over percentage must be at least 0')
+			.max(100, 'Over percentage cannot exceed 100')
+			.int('Over percentage must be a whole number')
+			.describe('Percentage of over predictions (0-100)'),
+		under: z
+			.number()
+			.min(0, 'Under percentage must be at least 0')
+			.max(100, 'Under percentage cannot exceed 100')
+			.int('Under percentage must be a whole number')
+			.describe('Percentage of under predictions (0-100)'),
 	})
 	.strict()
-	.describe('Over/under percentage distribution for totals markets')
+	.describe('Over/under percentage distribution for totals markets (0-100)')

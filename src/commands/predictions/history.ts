@@ -19,6 +19,15 @@ import TeamInfo from '../../utils/common/TeamInfo.js'
 	description: 'View your prediction history',
 })
 export class UserCommand extends Command {
+	private readonly dateManager = new DateManager()
+
+	public constructor(context: Command.Context, options: Command.Options) {
+		super(context, {
+			...options,
+			description: 'View your prediction history.',
+		})
+	}
+
 	public override registerApplicationCommands(registry: Command.Registry) {
 		registry.registerChatInputCommand(
 			(builder) =>
@@ -66,28 +75,16 @@ export class UserCommand extends Command {
 			'status',
 		) as GetAllPredictionsFilteredStatusEnum | null
 
-		if (!user) {
-			return interaction.editReply({
-				content: 'Invalid user specified.',
-			})
-		}
-
 		try {
 			const predictionApiWrapper = new PredictionApiWrapper()
-			const predictionsResponse = status
-				? await predictionApiWrapper.getPredictionsFiltered({
+			const usersPredictions = await (status
+				? predictionApiWrapper.getPredictionsFiltered({
 						userId: user.id,
 						status,
 					})
-				: await predictionApiWrapper.getPredictionsForUser({
+				: predictionApiWrapper.getPredictionsForUser({
 						userId: user.id,
-					})
-
-			const usersPredictions: AllUserPredictionsDto[] = Array.isArray(
-				predictionsResponse,
-			)
-				? (predictionsResponse as unknown as AllUserPredictionsDto[])
-				: []
+					}))
 
 			if (!usersPredictions || usersPredictions.length === 0) {
 				return interaction.editReply({
@@ -100,33 +97,24 @@ export class UserCommand extends Command {
 				.setDescription(descStr)
 				.setColor(embedColors.PlutoBlue)
 
+			const propsApiWrapper = new PropsApiWrapper()
 			const formattedPredictions = (
 				await Promise.allSettled(
 					usersPredictions.map((prediction) =>
-						this.createPredictionField(prediction),
+						this.createPredictionField(prediction, propsApiWrapper),
 					),
 				)
-			)
-				.map((result, index) => {
-					if (result.status === 'fulfilled') {
-						return result.value
-					}
-					const prediction = usersPredictions[index]
-					this.container.logger.error(
-						`Failed to create prediction field for prediction ${prediction?.id || 'unknown'} (user: ${user.id})`,
-						result.reason,
-					)
-					return null
-				})
-				.filter(
-					(
-						field,
-					): field is {
-						name: string
-						value: string
-						inline: boolean
-					} => field !== null,
+			).flatMap((result, index) => {
+				if (result.status === 'fulfilled') {
+					return result.value ? [result.value] : []
+				}
+				const prediction = usersPredictions[index]
+				this.container.logger.error(
+					`Failed to create prediction field for prediction ${prediction?.id || 'unknown'} (user: ${user.id})`,
+					result.reason,
 				)
+				return []
+			})
 
 			const paginatedMsg = new PaginatedMessageEmbedFields({
 				template: { embeds: [templateEmbed] },
@@ -145,53 +133,29 @@ export class UserCommand extends Command {
 		}
 	}
 
-	private async createHistoryEmbed(
-		predictions: AllUserPredictionsDto[],
-		user: User,
-		currentPage: number,
-		status: GetAllPredictionsFilteredStatusEnum | null,
-	): Promise<EmbedBuilder> {
-		const startIndex = (currentPage - 1) * 10
-		const endIndex = startIndex + 10
-		const pageEntries = predictions.slice(startIndex, endIndex)
-		const totalPages = Math.ceil(predictions.length / 10)
-
-		const embed = new EmbedBuilder()
-			.setTitle(`Prediction History for ${user.username}`)
-			.setColor(embedColors.PlutoBlue)
-			.setFooter({ text: `Page ${currentPage} of ${totalPages}` })
-
-		const totalPredictions = predictions.length
-		let headerText = `Total predictions: \`${totalPredictions}\``
-		if (status) {
-			headerText += ` | Filtered by: \`${status}\``
-		}
-
-		embed.setDescription(headerText)
-
-		for (const prediction of pageEntries) {
-			const field = await this.createPredictionField(prediction)
-			embed.addFields(field)
-		}
-
-		return embed
-	}
-
 	private async createPredictionField(
 		prediction: AllUserPredictionsDto,
-	): Promise<{ name: string; value: string; inline: boolean }> {
+		propsApiWrapper: PropsApiWrapper,
+	): Promise<{ name: string; value: string; inline: boolean } | null> {
 		const outcomeEmoji = this.getOutcomeEmoji(prediction)
 		const parsedMatchString = await this.parseMatchString(
 			prediction.match_string,
 		)
 		const parsedChoice = this.parseChoice(prediction.choice)
-		const propApiWrapper = new PropsApiWrapper()
-		const prop = await propApiWrapper.getPropByUuid(prediction.outcome_uuid)
+		const prop = await propsApiWrapper.getPropByUuid(
+			prediction.outcome_uuid,
+		)
 		const outcome = prop.outcomes.find(
 			(o) => o.outcome_uuid === prediction.outcome_uuid,
 		)
+		if (!outcome) {
+			this.container.logger.warn(
+				`Missing outcome for prediction ${prediction.id} (market_key: ${prop.market_key}, outcome_uuid: ${prediction.outcome_uuid})`,
+			)
+			return null
+		}
 		const { market_key } = prop
-		const point = outcome?.point
+		const point = outcome.point ?? null
 		let parsedMarketKey = MarketKeyAbbreviations[market_key] || market_key
 		parsedMarketKey = _.startCase(parsedMarketKey)
 		const outcomeStr = (emoji: string) => {
@@ -206,8 +170,15 @@ export class UserCommand extends Command {
 			}
 			return emoji
 		}
-		const date = new DateManager().toMMDDYYYY(prediction.created_at)
-		let value = `**Date**: ${date}\n**Status**: ${outcomeStr(outcomeEmoji)}\n**Choice**: \`${parsedChoice} ${point ? `${point}` : ''}\`\n**Market**: ${parsedMarketKey} `
+		const date = this.dateManager.toMMDDYYYY(
+			prop.event_context.commence_time,
+		)
+		const pointText = point ?? ''
+		const formattedChoice =
+			pointText === ''
+				? `\`${parsedChoice}\``
+				: `\`${parsedChoice} ${pointText}\``
+		let value = `**Date**: ${date}\n**Status**: ${outcomeStr(outcomeEmoji)}\n**Choice**: ${formattedChoice}\n**Market**: ${parsedMarketKey} `
 
 		if (prediction.description && prediction.description.trim() !== '') {
 			value += `\n**Player:** ${prediction.description}`
@@ -234,6 +205,9 @@ export class UserCommand extends Command {
 
 	private async parseMatchString(matchString: string) {
 		const [awayTeam, homeTeam] = matchString.split(' vs. ')
+		if (!awayTeam || !homeTeam) {
+			return matchString
+		}
 		const result = await TeamInfo.resolveTeamIdentifier({
 			away_team: awayTeam,
 			home_team: homeTeam,

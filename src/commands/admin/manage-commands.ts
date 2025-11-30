@@ -193,6 +193,14 @@ export class ManageCommandsCommand extends Command {
 	) {
 		await interaction.deferReply({ ephemeral: true })
 
+		const application = this.container.client.application
+		if (!application) {
+			return interaction.editReply({
+				content:
+					'Unable to access application commands. Ensure the bot is properly initialized.',
+			})
+		}
+
 		const commandIds = interaction.options
 			.getString('command_ids', true)
 			.split(',')
@@ -202,9 +210,7 @@ export class ManageCommandsCommand extends Command {
 
 		for (const commandId of commandIds) {
 			try {
-				await this.container.client.application?.commands.delete(
-					commandId,
-				)
+				await application.commands.delete(commandId)
 				results.push(`Deleted cmd (${commandId})`)
 			} catch (error) {
 				this.container.logger.error(error)
