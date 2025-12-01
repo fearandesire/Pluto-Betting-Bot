@@ -1,16 +1,18 @@
 import { ApplyOptions } from '@sapphire/decorators'
 import { Command } from '@sapphire/framework'
 import { EmbedBuilder } from 'discord.js'
+import { APP_OWNER_INFO } from '#lib/configs/constants.js'
 import embedColors from '../../lib/colorsConfig.js'
 import { ApiModules } from '../../lib/interfaces/api/api.interface.js'
-import { ApiErrorHandler } from '../../utils/api/Khronos/error-handling/ApiErrorHandler.js'
 import { ChangelogWrapper } from '../../utils/api/Khronos/changelog/changelog-wrapper.js'
-import { APP_OWNER_INFO } from '#lib/configs/constants.js'
+import { ApiErrorHandler } from '../../utils/api/Khronos/error-handling/ApiErrorHandler.js'
 
 @ApplyOptions<Command.Options>({
 	description: '📝 View the latest Pluto update',
 })
 export class UserCommand extends Command {
+	private readonly changelogWrapper = new ChangelogWrapper()
+
 	public override registerApplicationCommands(registry: Command.Registry) {
 		registry.registerChatInputCommand((builder) =>
 			builder.setName(this.name).setDescription(this.description),
@@ -22,10 +24,9 @@ export class UserCommand extends Command {
 	) {
 		await interaction.deferReply({ ephemeral: true })
 
-		const wrapper = new ChangelogWrapper()
-
 		try {
-			const changelog = await wrapper.getLatestPlutoChangelog()
+			const changelog =
+				await this.changelogWrapper.getLatestPlutoChangelog()
 
 			if (!changelog) {
 				return interaction.editReply({
@@ -34,7 +35,7 @@ export class UserCommand extends Command {
 			}
 
 			const publishedTimestamp = Math.floor(
-				new Date(changelog.published_at).getTime() / 1000,
+				changelog.published_at.getTime() / 1000,
 			)
 
 			// Process content to ensure escaped newlines become actual newlines
@@ -46,7 +47,9 @@ export class UserCommand extends Command {
 
 			const embed = new EmbedBuilder()
 				.setTitle(`Pluto Update v${changelog.version}`)
-				.setDescription(`${processedTitle}\n\n${processedContent}\n\nMade by <@${APP_OWNER_INFO.discord_username}>`)
+				.setDescription(
+					`${processedTitle}\n\n${processedContent}\n\nMade by <@${APP_OWNER_INFO.discord_id}>`,
+				)
 				.setColor(embedColors.PlutoBlue)
 				.addFields({
 					name: '📅 Published',
@@ -55,10 +58,12 @@ export class UserCommand extends Command {
 				})
 				.addFields({
 					name: 'Docs',
-					value: 'https://docs.pluto.fearandesire.com'
+					value: 'https://docs.pluto.fearandesire.com',
 				})
-				.setFooter({ text: 'Use `/help for more information on Pluto' })
-				.setTimestamp(new Date(changelog.created_at))
+				.setFooter({
+					text: 'Use `/help` for more information on Pluto',
+				})
+				.setTimestamp(changelog.published_at)
 
 			return interaction.editReply({ embeds: [embed] })
 		} catch (error) {
