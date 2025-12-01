@@ -68,7 +68,7 @@ export class UserCommand extends Command {
 	public override async chatInputRun(
 		interaction: Command.ChatInputCommandInteraction,
 	) {
-		await interaction.deferReply()
+		await interaction.deferReply({ ephemeral: true })
 
 		const user = interaction.options.getUser('user') || interaction.user
 		const status = interaction.options.getString(
