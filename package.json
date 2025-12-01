@@ -1,6 +1,6 @@
 {
 	"name": "pluto-betting",
-	"version": "3.5.1",
+	"version": "4.0.0",
 	"description": "Sports Betting Application for Discord",
 	"type": "module",
 	"license": "MIT",
