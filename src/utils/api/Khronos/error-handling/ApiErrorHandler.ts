@@ -230,7 +230,7 @@ export class ApiErrorHandler {
 					errModule,
 				)
 			}
-			// nO interaction provided, fallback to throwing the error again. someone will catch this dang thing
+			// No interaction provided, fallback to throwing the error again. someone will catch this dang thing
 			console.error({
 				source: 'ApiErrorHandler.handle',
 				message:
