@@ -213,7 +213,7 @@ export class ApiErrorHandler {
 
 	/**
 	 * Handles errors from the Khronos API and provides appropriate user feedback
-	 * @returns The error message that was sent to the user
+	 * @returns The Discord message containing the error embed
 	 */
 	async handle(
 		interaction: CommandInteraction | ButtonInteraction | null,
