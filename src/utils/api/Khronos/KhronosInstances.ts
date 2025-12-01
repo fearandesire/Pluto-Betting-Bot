@@ -9,6 +9,7 @@ import env from '../../../lib/startup/env.js'
 import {
 	AccountsApi,
 	BetslipsApi,
+	ChangelogsApi,
 	Configuration,
 	DiscordConfigApi,
 	GuildsApi,
@@ -31,5 +32,7 @@ export const ConfigInstance = new DiscordConfigApi(KH_API_CONFIG)
 export const MatchesInstance = new MatchesApi(KH_API_CONFIG)
 
 export const GuildsInstance = new GuildsApi(KH_API_CONFIG)
+
+export const ChangelogsInstance = new ChangelogsApi(KH_API_CONFIG)
 
 export type IKH_API_CONFIG = Configuration

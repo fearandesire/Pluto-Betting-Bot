@@ -15,6 +15,9 @@ const footers = {
 		'❓ Learn more about Pluto via /help',
 		'📞 Addicted? Call 1-800-GAMBLER',
 		'🌟 Pluto: Not just a dwarf planet, but a stellar bot!',
+		'📝 Use /changelog to see the latest Pluto updates!',
+		"🚀 Check out what's new with /changelog!",
+		'⭐ Stay updated! Use /changelog for new features!',
 	],
 	general: [
 		'🧙‍♂️ You shall not pass... up another bet! - Gandalf the Broke',
