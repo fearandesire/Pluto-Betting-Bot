@@ -29,6 +29,7 @@ import { findEmoji } from '../../../bot_res/findEmoji.js'
 import { ErrorEmbeds } from '../../../common/errors/global.js'
 import StringUtils from '../../../common/string-utils.js'
 import GuildUtils from '../../../guilds/GuildUtils.js'
+import { logger } from '../../../logging/WinstonLogger.js'
 import type { BetsCacheService } from '../../common/bets/BetsCacheService.js'
 import { handleNewUser } from '../../common/handleNewUser.js'
 import type { IMatchInfoArgs } from '../../common/interfaces/kh-pluto/kh-pluto.interface.js'
@@ -202,7 +203,7 @@ export class BetslipManager {
 			const errEmbed = await ErrorEmbeds.internalErr(
 				'Failed to place your bet due to an internal error. Please try again later.',
 			)
-			console.error(error)
+			logger.error('Failed to place bet', { error })
 			if (interaction.deferred || interaction.replied) {
 				return interaction.editReply({
 					embeds: [errEmbed],
@@ -270,7 +271,7 @@ export class BetslipManager {
 	) {
 		try {
 			if (!interaction.guildId) {
-				console.warn('Cannot announce bet - no guild context')
+				logger.warn('Cannot announce bet - no guild context')
 				return
 			}
 
@@ -289,7 +290,7 @@ export class BetslipManager {
 				embeds: [publicEmbed],
 			})
 		} catch (e) {
-			console.warn('Failed to announce bet placed', e)
+			logger.warn('Failed to announce bet placed', { error: e })
 		}
 	}
 
@@ -345,9 +346,9 @@ export class BetslipManager {
 		try {
 			const patreonOverride = await PatreonFacade.isSponsorTier(userid)
 			if (isApiError(patreonOverride)) {
-				console.error(
-					`Unknown Err in patreonOverride:\n${patreonOverride}`,
-				)
+				logger.error('Unknown error in patreonOverride', {
+					error: patreonOverride,
+				})
 				const errEmbed = await ErrorEmbeds.accountErr(
 					`Unable to cancel bet due to an error.\n${supportMessage}`,
 				)
@@ -389,10 +390,7 @@ export class BetslipManager {
 				ephemeral: true,
 			})
 		} catch (error) {
-			console.error({
-				message: `[${this.cancelBet.name}] Error`,
-				error,
-			})
+			logger.error(`[${this.cancelBet.name}] Error`, { error })
 			return await new ApiErrorHandler().handle(
 				interaction,
 				error,
