@@ -98,6 +98,7 @@ export class UserCommand extends Command {
 				.setColor(embedColors.PlutoBlue)
 
 			const propsApiWrapper = new PropsApiWrapper()
+			let hadFormattingFailures = false
 			const formattedPredictions = (
 				await Promise.allSettled(
 					usersPredictions.map((prediction) =>
@@ -108,6 +109,7 @@ export class UserCommand extends Command {
 				if (result.status === 'fulfilled') {
 					return result.value ? [result.value] : []
 				}
+				hadFormattingFailures = true
 				const prediction = usersPredictions[index]
 				this.container.logger.error(
 					`Failed to create prediction field for prediction ${prediction?.id || 'unknown'} (user: ${user.id})`,
@@ -117,10 +119,12 @@ export class UserCommand extends Command {
 			})
 
 			if (formattedPredictions.length === 0) {
-				templateEmbed.setDescription(
-					(descStr ? `${descStr}\n\n` : '') +
-						'No prediction history found. Your predictions will appear here once you make them.',
-				)
+				const baseDescription = descStr ? `${descStr}\n\n` : ''
+				const message = hadFormattingFailures
+					? 'We were unable to load details for your predictions. Please try again later.'
+					: 'No prediction history found. Your predictions will appear here once you make them.'
+
+				templateEmbed.setDescription(baseDescription + message)
 				return interaction.editReply({ embeds: [templateEmbed] })
 			}
 
