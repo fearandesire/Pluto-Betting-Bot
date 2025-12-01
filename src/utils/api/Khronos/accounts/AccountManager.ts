@@ -14,7 +14,7 @@ export default class AccountManager {
 		try {
 			const account = await this.accountWrapper.createAccount(userId)
 			if (!account) {
-				return new ApiErrorHandler().handle(
+				return await new ApiErrorHandler().handle(
 					interaction,
 					'Failed to create account.',
 					ApiModules.unknown,
@@ -28,8 +28,8 @@ export default class AccountManager {
 				.setColor(embedColors.PlutoGreen)
 				.setThumbnail(interaction.user.displayAvatarURL())
 			return interaction.editReply({ embeds: [accountCreatedEmbed] })
-		} catch (e) {
-			return new ApiErrorHandler().handle(
+		} catch (e: unknown) {
+			return await new ApiErrorHandler().handle(
 				interaction,
 				e,
 				ApiModules.account,

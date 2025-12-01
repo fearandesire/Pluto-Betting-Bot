@@ -59,22 +59,54 @@ export class ButtonHandler extends InteractionHandler {
 
 		// Handle matchup buttons
 		if (_.startsWith(interaction.customId, 'matchup')) {
-			// Cancel button
+			// Cancel button - handle completely in parse, no need for run()
 			if (interaction.customId === btnIds.matchup_btn_cancel) {
-				await interaction.update({
-					components: [],
-				})
-				return this.some({
-					hasFailed: false,
-				})
+				// Acknowledge interaction immediately to avoid 3s timeout
+				await interaction.deferUpdate()
+
+				try {
+					const betslipWrapper = new BetslipWrapper()
+					await betslipWrapper.clearPending(interaction.user.id)
+
+					const cancelEmbed = new EmbedBuilder()
+						.setTitle('Bet Canceled')
+						.setDescription(
+							'Your bet has been successfully cancelled.',
+						)
+						.setColor(embedColors.PlutoRed)
+						.setThumbnail(interaction.user.displayAvatarURL())
+						.setFooter({ text: await helpfooter('betting') })
+
+					await interaction.editReply({
+						embeds: [cancelEmbed],
+						components: [],
+					})
+				} catch (error) {
+					console.error({
+						method: this.constructor.name,
+						message: 'Failed to cancel bet',
+						data: {
+							userId: interaction.user.id,
+							error:
+								error instanceof Error ? error.message : error,
+						},
+					})
+
+					const errEmbed = await ErrorEmbeds.internalErr(
+						'Failed to cancel your bet. Please try again.',
+					)
+					await interaction.editReply({
+						embeds: [errEmbed],
+						components: [],
+					})
+				}
+				return this.none()
 			}
 
 			// Confirm button
 			if (interaction.customId === btnIds.matchup_btn_confirm) {
+				// Defer update to modify the original ephemeral message in-place
 				await interaction.deferUpdate()
-				await interaction.editReply({
-					components: [],
-				})
 				try {
 					const cachedBet = await this.betsCacheService.getUserBet(
 						interaction.user.id,
@@ -124,37 +156,16 @@ export class ButtonHandler extends InteractionHandler {
 	public async run(interaction: ButtonInteraction, payload: ButtonPayload) {
 		if ('hasFailed' in payload && payload.hasFailed) {
 			const errMsg = payload.errMsg
-			const errEmbed = await interaction.editReply({
+			await interaction.editReply({
 				embeds: [await ErrorEmbeds.internalErr(errMsg)],
 				components: [],
 			})
-			// delete after 10 secs
-			// todo: add queue for this
-			setTimeout(() => {
-				errEmbed.delete().catch(console.error)
-			}, 10000)
+			// Error message will persist as ephemeral message (private to user)
 			return
 		}
 
-		// ? Handle Cancelling A Betslip
-		if (interaction.customId === btnIds.matchup_btn_cancel) {
-			const betslipWrapper = new BetslipWrapper()
-			await betslipWrapper.clearPending(interaction.user.id)
-			const cancelEmbed = new EmbedBuilder()
-				.setTitle('Bet Canceled')
-				.setDescription('Your bet has been successfully cancelled.')
-				.setColor(embedColors.PlutoRed)
-				.setThumbnail(interaction.user.displayAvatarURL())
-				.setFooter({
-					text: await helpfooter('betting'),
-				})
-			await interaction.editReply({
-				embeds: [cancelEmbed],
-				components: [],
-			})
-		}
 		// ? Handle Confirming A Betslip
-		else if (interaction.customId === btnIds.matchup_btn_confirm) {
+		if (interaction.customId === btnIds.matchup_btn_confirm) {
 			if ('betslip' in payload) {
 				const { betslip } = payload
 
@@ -238,10 +249,7 @@ export class ButtonHandler extends InteractionHandler {
 					embeds: [predictionEmbed],
 				})
 
-				// Delete the ephemeral message after 10 seconds
-				setTimeout(() => {
-					interaction.deleteReply().catch(console.error)
-				}, 10000)
+				// Ephemeral message will persist for user reference
 			} catch (error: unknown) {
 				console.error({
 					method: this.constructor.name,
@@ -250,11 +258,12 @@ export class ButtonHandler extends InteractionHandler {
 						error,
 					},
 				})
-				return new ApiErrorHandler().handle(
+				await new ApiErrorHandler().handle(
 					interaction,
 					error,
 					ApiModules.predictions,
 				)
+				return
 			}
 		}
 	}

@@ -2,6 +2,7 @@ import type { DateGroupDto } from '@kh-openapi'
 import {
 	type AllUserPredictionsDto,
 	type CreatePredictionRequest,
+	type EventPredictionsDto,
 	type GetActiveOutcomesRequest,
 	type GetActivePredictionsForUserRequest,
 	type GetAllPredictionsFilteredRequest,
@@ -47,11 +48,24 @@ export default class PredictionApiWrapper {
 		await this.predictionApi.removePrediction(params)
 	}
 
-	async getPredictionsFiltered(params: GetAllPredictionsFilteredRequest) {
+	async getPredictionsFiltered(
+		params: GetAllPredictionsFilteredRequest,
+	): Promise<AllUserPredictionsDto[]> {
+		type KhronosFilteredPredictionsResponse =
+			| EventPredictionsDto
+			| AllUserPredictionsDto[]
 		try {
 			const response =
-				await this.predictionApi.getAllPredictionsFiltered(params)
-			return response
+				(await this.predictionApi.getAllPredictionsFiltered(
+					params,
+				)) as KhronosFilteredPredictionsResponse
+			if (Array.isArray(response)) {
+				return response
+			}
+			if (Array.isArray(response?.predictions)) {
+				return response.predictions as unknown as AllUserPredictionsDto[]
+			}
+			return []
 		} catch (error) {
 			console.error('Error fetching filtered predictions', error)
 			throw error
