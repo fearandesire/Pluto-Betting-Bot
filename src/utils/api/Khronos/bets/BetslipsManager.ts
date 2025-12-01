@@ -280,7 +280,7 @@ export class BetslipManager {
 				.setDescription(
 					`<@${interaction.user.id}> placed a bet on **${betDetails.betOnTeam}** for **\`${formattedAmount}\`**!`,
 				)
-				.setColor(embedColors.PlutoYellow)
+				.setColor(embedColors.success)
 				.setFooter({
 					text: await helpfooter('betting'),
 				})
