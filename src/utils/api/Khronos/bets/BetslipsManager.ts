@@ -16,6 +16,7 @@ import {
 	type CommandInteraction,
 	EmbedBuilder,
 	type GuildEmoji,
+	type InteractionResponse,
 	type Message,
 	type StringSelectMenuInteraction,
 } from 'discord.js'
@@ -340,7 +341,7 @@ export class BetslipManager {
 		interaction: CommandInteraction,
 		userid: string,
 		betId: number,
-	): Promise<Message> {
+	): Promise<Message | InteractionResponse<boolean>> {
 		try {
 			const patreonOverride = await PatreonFacade.isSponsorTier(userid)
 			if (isApiError(patreonOverride)) {
@@ -350,7 +351,16 @@ export class BetslipManager {
 				const errEmbed = await ErrorEmbeds.accountErr(
 					`Unable to cancel bet due to an error.\n${supportMessage}`,
 				)
-				return interaction.editReply({ embeds: [errEmbed] })
+				if (interaction.deferred || interaction.replied) {
+					return interaction.followUp({
+						embeds: [errEmbed],
+						ephemeral: true,
+					})
+				}
+				return interaction.reply({
+					embeds: [errEmbed],
+					ephemeral: true,
+				})
 			}
 			await this.betslipInstance.cancel({
 				betId: betId,
@@ -368,8 +378,15 @@ export class BetslipManager {
 				.setFooter({
 					text: await helpfooter('betting'),
 				})
-			return interaction.editReply({
+			if (interaction.deferred || interaction.replied) {
+				return interaction.followUp({
+					embeds: [cancelledEmbed],
+					ephemeral: true,
+				})
+			}
+			return interaction.reply({
 				embeds: [cancelledEmbed],
+				ephemeral: true,
 			})
 		} catch (error) {
 			console.error({
