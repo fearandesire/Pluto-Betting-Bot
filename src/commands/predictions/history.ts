@@ -116,6 +116,14 @@ export class UserCommand extends Command {
 				return []
 			})
 
+			if (formattedPredictions.length === 0) {
+				templateEmbed.setDescription(
+					(descStr ? `${descStr}\n\n` : '') +
+						'No prediction history found. Your predictions will appear here once you make them.',
+				)
+				return interaction.editReply({ embeds: [templateEmbed] })
+			}
+
 			const paginatedMsg = new PaginatedMessageEmbedFields({
 				template: { embeds: [templateEmbed] },
 			})
