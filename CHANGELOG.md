@@ -1,5 +1,15 @@
 # Changelog
 
+## [4.1.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.0.0...v4.1.0) (2025-12-02)
+
+
+### Features
+
+* **api:** add Khronos API service layer and error definitions ([49573c2](https://github.com/fearandesire/Pluto-Betting-Bot/commit/49573c2d051be7df171a1db6a8ef249a1a6d473f))
+* **bot:** initialize FooterManager on ready event ([d1bd2eb](https://github.com/fearandesire/Pluto-Betting-Bot/commit/d1bd2ebe84cabff8beca909da9001aef3f94611f))
+* **changelog:** add explicit command name property ([f1edbb7](https://github.com/fearandesire/Pluto-Betting-Bot/commit/f1edbb78abe7fa2da202949513f9a93a72a4e039))
+* **footers:** implement centralized FooterManager with remote config ([bf34345](https://github.com/fearandesire/Pluto-Betting-Bot/commit/bf343453ced9fc9aeaf02af7b4efa6ddd06d2a26))
+
 ## 4.0.0 (2025-12-01)
 
 
