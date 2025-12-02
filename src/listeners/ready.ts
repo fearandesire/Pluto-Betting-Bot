@@ -10,15 +10,27 @@ import {
 	yellow,
 } from 'colorette'
 
+import { FooterManager } from '../lib/footers/FooterManager.js'
+
 const dev = process.env.NODE_ENV !== 'production'
 
 @ApplyOptions<Listener.Options>({ once: true })
 export class UserEvent extends Listener {
 	private readonly style = dev ? yellow : blue
 
-	public override run() {
+	public override async run() {
 		this.printBanner()
 		this.printStoreDebugInformation()
+		// Defer FooterManager initialization to avoid blocking the ready event
+		setImmediate(async () => {
+			try {
+				await FooterManager.getInstance().init()
+			} catch (error) {
+				this.container.logger.error(
+					`FooterManager initialization failed: ${error instanceof Error ? error.message : error}`,
+				)
+			}
+		})
 	}
 
 	private printBanner() {
