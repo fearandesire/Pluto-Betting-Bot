@@ -8,6 +8,7 @@ import { ChangelogWrapper } from '../../utils/api/Khronos/changelog/changelog-wr
 import { ApiErrorHandler } from '../../utils/api/Khronos/error-handling/ApiErrorHandler.js'
 
 @ApplyOptions<Command.Options>({
+	name: 'changelog',
 	description: '📝 View the latest Pluto update',
 })
 export class UserCommand extends Command {
