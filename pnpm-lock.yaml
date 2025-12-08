@@ -223,8 +223,8 @@ importers:
         specifier: 2.3.7
         version: 2.3.7
       '@biomejs/cli-win32-x64':
-        specifier: ^2.3.7
-        version: 2.3.7
+        specifier: ^2.3.8
+        version: 2.3.8
       '@sapphire/cli':
         specifier: ^1.9.3
         version: 1.9.3
@@ -556,6 +556,12 @@ packages:
 
   '@biomejs/cli-win32-x64@2.3.7':
     resolution: {integrity: sha512-pulzUshqv9Ed//MiE8MOUeeEkbkSHVDVY5Cz5wVAnH1DUqliCQG3j6s1POaITTFqFfo7AVIx2sWdKpx/GS+Nqw==}
+    engines: {node: '>=14.21.3'}
+    cpu: [x64]
+    os: [win32]
+
+  '@biomejs/cli-win32-x64@2.3.8':
+    resolution: {integrity: sha512-RguzimPoZWtBapfKhKjcWXBVI91tiSprqdBYu7tWhgN8pKRZhw24rFeNZTNf6UiBfjCYCi9eFQs/JzJZIhuK4w==}
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [win32]
@@ -7117,7 +7123,10 @@ snapshots:
   '@biomejs/cli-win32-arm64@2.3.7':
     optional: true
 
-  '@biomejs/cli-win32-x64@2.3.7': {}
+  '@biomejs/cli-win32-x64@2.3.7':
+    optional: true
+
+  '@biomejs/cli-win32-x64@2.3.8': {}
 
   '@borewit/text-codec@0.1.1': {}
 
