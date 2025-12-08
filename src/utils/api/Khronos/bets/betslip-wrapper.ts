@@ -4,6 +4,7 @@ import {
 	type DoubleDownBetRequest,
 	type DoubleDownDto,
 	type GetActiveBetslipsRequest,
+	type GetUserBetslipsRequest,
 	type InitBetslipRequest,
 	type PlaceBetslipRequest,
 	type PlacedBetslip,
@@ -34,6 +35,17 @@ export default class BetslipWrapper {
 		userId: GetActiveBetslipsRequest,
 	): Promise<PlacedBetslip[]> {
 		return await this.betslipApi.getActiveBetslips(userId)
+	}
+
+	/**
+	 * @summary Retrieve user betslips (pending and historical)
+	 * @param payload - User betslips query parameters
+	 * @returns Promise resolving to array of user betslips
+	 */
+	async getUserBetslips(
+		payload: GetUserBetslipsRequest,
+	): Promise<PlacedBetslip[]> {
+		return await this.betslipApi.getUserBetslips(payload)
 	}
 
 	async clearPending(userId: string) {

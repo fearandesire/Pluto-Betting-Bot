@@ -1,7 +1,7 @@
 import type { CommandInteraction } from 'discord.js'
 import { ApiModules } from '../../../../lib/interfaces/api/api.interface.js'
 import { ApiErrorHandler } from '../error-handling/ApiErrorHandler.js'
-import PropsApiWrapper from './propsApiWrapper.js'
+import PropsApiWrapper from './props-api-wrapper.js'
 
 /**
  * App / Business specific logic

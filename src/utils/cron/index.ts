@@ -3,7 +3,7 @@
 // ============================================================================
 
 import PredictionApiWrapper from '../api/Khronos/prediction/predictionApiWrapper.js'
-import PropsApiWrapper from '../api/Khronos/props/propsApiWrapper.js'
+import PropsApiWrapper from '../api/Khronos/props/props-api-wrapper.js'
 import { Cache } from '../cache/cache-manager.js'
 import { logger } from '../logging/WinstonLogger.js'
 import { ActivePropsService } from '../props/ActivePropsService.js'

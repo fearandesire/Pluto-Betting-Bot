@@ -11,7 +11,7 @@ import {
 } from '../../openapi/khronos/index.js'
 import { MarketKeyAbbreviations } from '../../utils/api/common/interfaces/market-abbreviations.js'
 import PredictionApiWrapper from '../../utils/api/Khronos/prediction/predictionApiWrapper.js'
-import PropsApiWrapper from '../../utils/api/Khronos/props/propsApiWrapper.js'
+import PropsApiWrapper from '../../utils/api/Khronos/props/props-api-wrapper.js'
 import { DateManager } from '../../utils/common/DateManager.js'
 import TeamInfo from '../../utils/common/TeamInfo.js'
 

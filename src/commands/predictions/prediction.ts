@@ -12,7 +12,7 @@ import embedColors from '../../lib/colorsConfig.js'
 import { GetAllPredictionsFilteredStatusEnum } from '../../openapi/khronos/apis/PredictionApi.js'
 import type { AllUserPredictionsDto } from '../../openapi/khronos/models/AllUserPredictionsDto.js'
 import PredictionApiWrapper from '../../utils/api/Khronos/prediction/predictionApiWrapper.js'
-import PropsApiWrapper from '../../utils/api/Khronos/props/propsApiWrapper.js'
+import PropsApiWrapper from '../../utils/api/Khronos/props/props-api-wrapper.js'
 import TeamInfo from '../../utils/common/TeamInfo.js'
 
 /**

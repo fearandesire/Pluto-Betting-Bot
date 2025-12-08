@@ -131,6 +131,9 @@ importers:
       esm-module-alias:
         specifier: ^2.2.1
         version: 2.2.1
+      fetch-retry:
+        specifier: ^6.0.0
+        version: 6.0.0
       ioredis:
         specifier: ^5.8.2
         version: 5.8.2
@@ -158,6 +161,9 @@ importers:
       numeral:
         specifier: ^2.0.6
         version: 2.0.6
+      p-timeout:
+        specifier: ^7.0.1
+        version: 7.0.1
       package-directory:
         specifier: ^8.1.0
         version: 8.1.0
@@ -551,7 +557,6 @@ packages:
   '@biomejs/cli-win32-x64@2.3.7':
     resolution: {integrity: sha512-pulzUshqv9Ed//MiE8MOUeeEkbkSHVDVY5Cz5wVAnH1DUqliCQG3j6s1POaITTFqFfo7AVIx2sWdKpx/GS+Nqw==}
     engines: {node: '>=14.21.3'}
-    cpu: [x64]
     os: [win32]
 
   '@borewit/text-codec@0.1.1':
@@ -5363,6 +5368,10 @@ packages:
   p-locate@5.0.0:
     resolution: {integrity: sha512-LaNjtRWUBY++zB5nE/NwcaoMylSPk+S+ZHNB1TzdbMJMny6dynpAGt7X/tl/QYq3TIeE6nxHppbo2LGymrG5Pw==}
     engines: {node: '>=10'}
+
+  p-timeout@7.0.1:
+    resolution: {integrity: sha512-AxTM2wDGORHGEkPCt8yqxOTMgpfbEHqF51f/5fJCmwFC3C/zNcGT63SymH2ttOAaiIws2zVg4+izQCjrakcwHg==}
+    engines: {node: '>=20'}
 
   p-try@2.2.0:
     resolution: {integrity: sha512-R4nPAVTAU0B9D35/Gk3uJf/7XYbQcyohSKdvAxIRSNghFl4e71hVoGnBNQz9cWaXxO2I10KTC+3jMdvvoKw6dQ==}
@@ -12334,6 +12343,8 @@ snapshots:
   p-locate@5.0.0:
     dependencies:
       p-limit: 3.1.0
+
+  p-timeout@7.0.1: {}
 
   p-try@2.2.0: {}
 

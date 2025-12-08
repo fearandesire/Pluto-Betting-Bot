@@ -145,6 +145,7 @@ export class MenuHandler extends InteractionHandler {
 
 		const betslipForPresentation: BetslipWithAggregationDTO = {
 			userid: betslip.userid,
+			isNewUser: betslip.isNewUser ?? false,
 			team: betslip.team,
 			amount: betslip.amount,
 			profit: betslip.profit,

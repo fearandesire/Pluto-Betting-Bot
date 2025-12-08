@@ -6,7 +6,7 @@ import _ from 'lodash'
 import embedColors from '../../lib/colorsConfig.js'
 import type { AllUserPredictionsDto } from '../../openapi/khronos/models/AllUserPredictionsDto.js'
 import PredictionApiWrapper from '../api/Khronos/prediction/predictionApiWrapper.js'
-import PropsApiWrapper from '../api/Khronos/props/propsApiWrapper.js'
+import PropsApiWrapper from '../api/Khronos/props/props-api-wrapper.js'
 import { DateManager } from '../common/DateManager.js'
 import TeamInfo from '../common/TeamInfo.js'
 

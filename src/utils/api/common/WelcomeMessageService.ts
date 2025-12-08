@@ -1,6 +1,7 @@
 import { container } from '@sapphire/framework'
 import { EmbedBuilder } from 'discord.js'
 import _ from 'lodash'
+import pTimeout, { TimeoutError } from 'p-timeout'
 import type { CacheManager } from '../../cache/cache-manager.js'
 import { logger } from '../../logging/WinstonLogger.js'
 import { plutoWelcomeMsg } from './interfaces/kh-pluto/kh-pluto.interface.js'
@@ -138,7 +139,7 @@ export class WelcomeMessageService {
 			}
 
 			// Handle timeout errors - re-enqueue for retry
-			if (error instanceof Error && error.message.includes('timeout')) {
+			if (error instanceof TimeoutError) {
 				logger.warn({
 					message: 'Discord API call timed out, scheduling retry',
 					userId,
@@ -361,32 +362,6 @@ export class WelcomeMessageService {
 	}
 
 	/**
-	 * Wraps Discord API calls with timeout protection.
-	 * @param promise - The promise to wrap
-	 * @param timeoutMs - Timeout in milliseconds
-	 * @returns Promise that rejects on timeout
-	 */
-	private async withTimeout<T>(
-		promise: Promise<T>,
-		timeoutMs: number,
-	): Promise<T> {
-		return Promise.race([
-			promise,
-			new Promise<T>((_, reject) =>
-				setTimeout(
-					() =>
-						reject(
-							new Error(
-								`Operation timed out after ${timeoutMs}ms`,
-							),
-						),
-					timeoutMs,
-				),
-			),
-		])
-	}
-
-	/**
 	 * Fetches a user with timeout protection.
 	 * @param userId - Discord user ID
 	 * @returns User object or null
@@ -395,12 +370,11 @@ export class WelcomeMessageService {
 		userId: string,
 	): Promise<Awaited<ReturnType<typeof this.client.users.fetch>> | null> {
 		try {
-			return await this.withTimeout(
-				this.client.users.fetch(userId),
-				this.API_TIMEOUT_MS,
-			)
+			return await pTimeout(this.client.users.fetch(userId), {
+				milliseconds: this.API_TIMEOUT_MS,
+			})
 		} catch (error) {
-			if (error instanceof Error && error.message.includes('timeout')) {
+			if (error instanceof TimeoutError) {
 				throw error
 			}
 			return null
@@ -416,10 +390,9 @@ export class WelcomeMessageService {
 		user: Awaited<ReturnType<typeof this.client.users.fetch>>,
 		embed: EmbedBuilder,
 	): Promise<void> {
-		await this.withTimeout(
-			user.send({ embeds: [embed] }),
-			this.API_TIMEOUT_MS,
-		)
+		await pTimeout(user.send({ embeds: [embed] }), {
+			milliseconds: this.API_TIMEOUT_MS,
+		})
 	}
 
 	/**
