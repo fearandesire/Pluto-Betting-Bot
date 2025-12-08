@@ -183,31 +183,79 @@ export default class PropsApiWrapper {
 		sport: 'nba' | 'nfl',
 		count: number,
 	): Promise<ProcessedPropDto[]> {
+		const source = `${this.constructor.name}.${this.getProcessedProps.name}`
+
 		await logger.info({
 			message: `🔄 Calling Khronos /props/random/processed - requesting ${count} pairs for ${sport}`,
 			metadata: {
-				source: `${this.constructor.name}.${this.getProcessedProps.name}`,
+				source,
 				sport,
 				requested_count: count,
 			},
 		})
 
-		const response = await this.propsApi.propsControllerGetProcessedProps({
-			sport,
-			count,
-		})
+		try {
+			const response = await pTimeout(
+				this.propsApi.propsControllerGetProcessedProps({
+					sport,
+					count,
+				}),
+				{ milliseconds: DEFAULT_TIMEOUT_MS },
+			)
 
-		await logger.info({
-			message: `✅ Khronos returned ${response.length} processed prop pairs for ${sport}`,
-			metadata: {
-				source: `${this.constructor.name}.${this.getProcessedProps.name}`,
-				sport,
-				requested_count: count,
-				received_count: response.length,
-			},
-		})
+			await logger.info({
+				message: `✅ Khronos returned ${response.length} processed prop pairs for ${sport}`,
+				metadata: {
+					source,
+					sport,
+					requested_count: count,
+					received_count: response.length,
+				},
+			})
 
-		return response
+			return response
+		} catch (error) {
+			const errorMessage =
+				error instanceof Error ? error.message : String(error)
+			const status =
+				error instanceof ResponseError
+					? error.response.status
+					: undefined
+
+			// Check if this is a timeout error
+			const isTimeout =
+				error instanceof Error &&
+				(error.name === 'TimeoutError' ||
+					errorMessage.includes('timeout') ||
+					errorMessage.includes('Timeout'))
+
+			await logger.error({
+				message: isTimeout
+					? `Timeout fetching processed props for ${sport} after ${DEFAULT_TIMEOUT_MS}ms`
+					: `Failed to fetch processed props: ${errorMessage}`,
+				metadata: {
+					source,
+					sport,
+					count,
+					error: errorMessage,
+					status,
+					isTimeout,
+					body:
+						error instanceof ResponseError
+							? await error.response
+									.clone()
+									.json()
+									.catch(() => null)
+							: undefined,
+				},
+			})
+
+			throw new Error(
+				isTimeout
+					? `Timeout fetching processed props for ${sport} after ${DEFAULT_TIMEOUT_MS}ms`
+					: `Failed to fetch processed props: ${errorMessage}`,
+			)
+		}
 	}
 
 	/**
