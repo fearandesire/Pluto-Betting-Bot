@@ -289,8 +289,8 @@ importers:
         specifier: ^4.1.5
         version: 4.1.5
       pkgroll:
-        specifier: ^2.21.3
-        version: 2.21.3(typescript@5.9.3)
+        specifier: ^2.21.4
+        version: 2.21.4(typescript@5.9.3)
       prettier:
         specifier: ^3.5.3
         version: 3.6.2
@@ -557,6 +557,7 @@ packages:
   '@biomejs/cli-win32-x64@2.3.7':
     resolution: {integrity: sha512-pulzUshqv9Ed//MiE8MOUeeEkbkSHVDVY5Cz5wVAnH1DUqliCQG3j6s1POaITTFqFfo7AVIx2sWdKpx/GS+Nqw==}
     engines: {node: '>=14.21.3'}
+    cpu: [x64]
     os: [win32]
 
   '@borewit/text-codec@0.1.1':
@@ -5584,8 +5585,8 @@ packages:
   pkg-types@2.3.0:
     resolution: {integrity: sha512-SIqCzDRg0s9npO5XQ3tNZioRY1uK06lA41ynBC1YmFTmnY6FjUjVt6s4LoADmwoig1qqD0oK8h1p/8mlMx8Oig==}
 
-  pkgroll@2.21.3:
-    resolution: {integrity: sha512-cbvrfkyGTNn/U+RAk16SirVp6UxT4Cqv2tuQP7VlEGDCwOFTiLX1soMo+40S5F0h3R0Ml4QL3flZ/PQoApwOSQ==}
+  pkgroll@2.21.4:
+    resolution: {integrity: sha512-A86a27/WRXDSJlsIwGbR3zOQsf4TP6+CGRVdBgCUSQ6BGzrmXrH0IIJ/TEOLT4z8FNbR+ALjwNqPgSHBMK1llA==}
     engines: {node: '>=18'}
     hasBin: true
     peerDependencies:
@@ -6839,11 +6840,6 @@ packages:
 
   yallist@4.0.0:
     resolution: {integrity: sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A==}
-
-  yaml@2.8.1:
-    resolution: {integrity: sha512-lcYcMxX2PO9XMGvAJkJ3OsNMw+/7FKes7/hgerGUYWIoWu5j/+YQqcZr5JnPZWzOsEBgMbSbiSTn/dv/69Mkpw==}
-    engines: {node: '>= 14.6'}
-    hasBin: true
 
   yaml@2.8.2:
     resolution: {integrity: sha512-mplynKqc1C2hTVYxd0PU2xQAc22TI1vShAYGksCCfxbn/dFwnHTNi1bvYsBTkhdUNtGIf5xNOg938rrSSYvS9A==}
@@ -12544,7 +12540,7 @@ snapshots:
       exsolve: 1.0.8
       pathe: 2.0.3
 
-  pkgroll@2.21.3(typescript@5.9.3):
+  pkgroll@2.21.4(typescript@5.9.3):
     dependencies:
       '@rollup/plugin-alias': 6.0.0(rollup@4.53.3)
       '@rollup/plugin-commonjs': 29.0.0(rollup@4.53.3)
@@ -12558,7 +12554,7 @@ snapshots:
       magic-string: 0.30.21
       rollup: 4.53.3
       rollup-pluginutils: 2.8.2
-      yaml: 2.8.1
+      yaml: 2.8.2
     optionalDependencies:
       typescript: 5.9.3
 
@@ -13975,8 +13971,6 @@ snapshots:
   yallist@3.1.1: {}
 
   yallist@4.0.0: {}
-
-  yaml@2.8.1: {}
 
   yaml@2.8.2: {}
 
