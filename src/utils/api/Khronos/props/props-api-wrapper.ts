@@ -6,9 +6,9 @@ import {
 	type SetPropResultResponseDto,
 } from '@kh-openapi'
 import { ResponseError } from '@khronos-index'
+import pTimeout from 'p-timeout'
 import { z } from 'zod'
 import { logger } from '../../../logging/WinstonLogger.js'
-import { withTimeout } from '../../common/timeout-utils.js'
 
 const DEFAULT_TIMEOUT_MS = 30000
 
@@ -76,12 +76,12 @@ export default class PropsApiWrapper {
 		const source = `${this.constructor.name}.${this.getRandomProps.name}`
 
 		try {
-			const response = await withTimeout(
+			const response = await pTimeout(
 				this.propsApi.propsControllerGetRandomProps({
 					sport,
 					count,
 				}),
-				DEFAULT_TIMEOUT_MS,
+				{ milliseconds: DEFAULT_TIMEOUT_MS },
 			)
 
 			await logger.info({
@@ -180,11 +180,11 @@ export default class PropsApiWrapper {
 		const source = `${this.constructor.name}.${this.getAvailableProps.name}`
 
 		try {
-			const response = await withTimeout(
+			const response = await pTimeout(
 				this.propsApi.propsControllerGetAvailableProps({
 					sport,
 				}),
-				DEFAULT_TIMEOUT_MS,
+				{ milliseconds: DEFAULT_TIMEOUT_MS },
 			)
 
 			await logger.info({
@@ -248,12 +248,12 @@ export default class PropsApiWrapper {
 		const source = `${this.constructor.name}.${this.getProp.name}`
 
 		try {
-			const response = await withTimeout(
+			const response = await pTimeout(
 				this.propsApi.getProp({
 					outcomeUuid,
 					marketId,
 				}),
-				DEFAULT_TIMEOUT_MS,
+				{ milliseconds: DEFAULT_TIMEOUT_MS },
 			)
 
 			await logger.info({
@@ -315,11 +315,11 @@ export default class PropsApiWrapper {
 		const source = `${this.constructor.name}.${this.setResult.name}`
 
 		try {
-			const result = await withTimeout(
+			const result = await pTimeout(
 				this.propsApi.propsControllerSetPropResult({
 					setPropResultDto: dto,
 				}),
-				DEFAULT_TIMEOUT_MS,
+				{ milliseconds: DEFAULT_TIMEOUT_MS },
 			)
 
 			await logger.info({

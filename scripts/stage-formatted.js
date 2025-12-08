@@ -23,7 +23,7 @@ try {
 
 	if (filesToStage.length > 0) {
 		for (const file of filesToStage) {
-			execSync(`git add "${file}"`, { stdio: 'inherit' });
+			execSync('git', ['add', file], { stdio: 'inherit' });
 		}
 	}
 } catch (error) {
