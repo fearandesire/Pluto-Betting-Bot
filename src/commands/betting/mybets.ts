@@ -56,9 +56,9 @@ export class UserCommand extends Command {
 			return interaction.editReply(response)
 		} catch (error) {
 			this.container.logger.error({
-				message: 'Failed to fetch mybets',
+				message: 'Failed to fetch user bets',
 				metadata: {
-					source: this.constructor.name,
+					source: this.chatInputRun.name,
 					userId: interaction.user.id,
 					error:
 						error instanceof Error ? error.message : String(error),
