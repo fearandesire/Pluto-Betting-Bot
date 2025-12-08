@@ -1,7 +1,7 @@
 import { container } from '@sapphire/framework'
 import { EmbedBuilder } from 'discord.js'
 import _ from 'lodash'
-import pTimeout from 'p-timeout'
+import pTimeout, { TimeoutError } from 'p-timeout'
 import type { CacheManager } from '../../cache/cache-manager.js'
 import { logger } from '../../logging/WinstonLogger.js'
 import { plutoWelcomeMsg } from './interfaces/kh-pluto/kh-pluto.interface.js'
@@ -139,7 +139,7 @@ export class WelcomeMessageService {
 			}
 
 			// Handle timeout errors - re-enqueue for retry
-			if (error instanceof Error && error.message.includes('timeout')) {
+			if (error instanceof TimeoutError) {
 				logger.warn({
 					message: 'Discord API call timed out, scheduling retry',
 					userId,
@@ -374,7 +374,7 @@ export class WelcomeMessageService {
 				milliseconds: this.API_TIMEOUT_MS,
 			})
 		} catch (error) {
-			if (error instanceof Error && error.message.includes('timeout')) {
+			if (error instanceof TimeoutError) {
 				throw error
 			}
 			return null
