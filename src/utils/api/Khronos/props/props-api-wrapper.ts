@@ -8,14 +8,9 @@ import {
 import { ResponseError } from '@khronos-index'
 import { z } from 'zod'
 import { logger } from '../../../logging/WinstonLogger.js'
-import {
-	type RetryConfig as BaseRetryConfig,
-	extractRetryAfter,
-	isRetriableError,
-	DEFAULT_RETRY_CONFIG as SHARED_RETRY_CONFIG,
-	sleep,
-	withTimeout,
-} from '../../common/retry-utils.js'
+import { withTimeout } from '../../common/timeout-utils.js'
+
+const DEFAULT_TIMEOUT_MS = 30000
 import { KH_API_CONFIG } from '../KhronosInstances.js'
 
 /**
@@ -58,11 +53,6 @@ export type GetPropOptions =
 	| { marketId: number }
 	| { outcomeUuid: string; marketId: number }
 
-interface RetryConfig extends BaseRetryConfig {}
-
-const DEFAULT_RETRY_CONFIG: RetryConfig = {
-	...SHARED_RETRY_CONFIG,
-}
 
 /**
  * Wrapper for the Props Controller in Khronos
@@ -83,127 +73,55 @@ export default class PropsApiWrapper {
 		sport: 'nba' | 'nfl',
 		count?: number,
 	): Promise<PropDto[]> {
-		const retryConfig = { ...DEFAULT_RETRY_CONFIG }
 		const source = `${this.constructor.name}.${this.getRandomProps.name}`
-		let lastError: Error | null = null
 
-		for (let attempt = 0; attempt <= retryConfig.maxRetries; attempt++) {
-			try {
-				const response = await withTimeout(
-					this.propsApi.propsControllerGetRandomProps({
-						sport,
-						count,
-					}),
-					retryConfig.timeoutMs,
-				)
+		try {
+			const response = await withTimeout(
+				this.propsApi.propsControllerGetRandomProps({
+					sport,
+					count,
+				}),
+				DEFAULT_TIMEOUT_MS,
+			)
 
-				await logger.info({
-					message: `Retrieved ${response.length} random props for ${sport}`,
-					metadata: {
-						source,
-						sport,
-						count: response.length,
-					},
-				})
+			await logger.info({
+				message: `Retrieved ${response.length} random props for ${sport}`,
+				metadata: {
+					source,
+					sport,
+					count: response.length,
+				},
+			})
 
-				return response
-			} catch (error) {
-				lastError =
-					error instanceof Error ? error : new Error(String(error))
+			return response
+		} catch (error) {
+			const errorMessage =
+				error instanceof Error ? error.message : String(error)
+			const status =
+				error instanceof ResponseError
+					? error.response.status
+					: undefined
 
-				if (!isRetriableError(error)) {
-					await logger.error({
-						message: `Failed to fetch random props: ${lastError.message}`,
-						metadata: {
-							source,
-							sport,
-							count,
-							error: lastError.message,
-							status:
-								error instanceof ResponseError
-									? error.response.status
-									: undefined,
-							body:
-								error instanceof ResponseError
-									? await error.response
-											.clone()
-											.json()
-											.catch(() => null)
-									: undefined,
-						},
-					})
-					throw new Error(
-						`Failed to fetch random props: ${lastError.message}`,
-					)
-				}
+			await logger.error({
+				message: `Failed to fetch random props: ${errorMessage}`,
+				metadata: {
+					source,
+					sport,
+					count,
+					error: errorMessage,
+					status,
+					body:
+						error instanceof ResponseError
+							? await error.response
+									.clone()
+									.json()
+									.catch(() => null)
+							: undefined,
+				},
+			})
 
-				if (attempt >= retryConfig.maxRetries) {
-					break
-				}
-
-				let delay: number
-
-				if (
-					error instanceof ResponseError &&
-					error.response.status === 429
-				) {
-					const retryAfter = extractRetryAfter(error.response)
-					delay = retryAfter
-						? Math.min(retryAfter, retryConfig.maxDelayMs)
-						: retryConfig.baseDelayMs * 2 ** attempt
-				} else {
-					delay = Math.min(
-						retryConfig.baseDelayMs * 2 ** attempt,
-						retryConfig.maxDelayMs,
-					)
-				}
-
-				await logger.warn({
-					message: `Retrying getRandomProps (attempt ${attempt + 1}/${retryConfig.maxRetries + 1})`,
-					metadata: {
-						source,
-						sport,
-						count,
-						attempt: attempt + 1,
-						maxAttempts: retryConfig.maxRetries + 1,
-						delay,
-						error: lastError.message,
-						status:
-							error instanceof ResponseError
-								? error.response.status
-								: undefined,
-					},
-				})
-
-				await sleep(delay)
-			}
+			throw new Error(`Failed to fetch random props: ${errorMessage}`)
 		}
-
-		await logger.error({
-			message: `Failed to fetch random props after ${retryConfig.maxRetries + 1} attempts: ${lastError?.message ?? 'Unknown error'}`,
-			metadata: {
-				source,
-				sport,
-				count,
-				attempts: retryConfig.maxRetries + 1,
-				error: lastError?.message,
-				status:
-					lastError && lastError instanceof ResponseError
-						? lastError.response.status
-						: undefined,
-				body:
-					lastError && lastError instanceof ResponseError
-						? await lastError.response
-								.clone()
-								.json()
-								.catch(() => null)
-						: undefined,
-			},
-		})
-
-		throw new Error(
-			`Failed to fetch random props after ${retryConfig.maxRetries + 1} attempts: ${lastError?.message ?? 'Unknown error'}`,
-		)
 	}
 
 	/**
@@ -259,123 +177,55 @@ export default class PropsApiWrapper {
 	 * @returns All available props for the sport (flat array of outcomes)
 	 */
 	async getAvailableProps(sport: 'nba' | 'nfl'): Promise<PropDto[]> {
-		const retryConfig = { ...DEFAULT_RETRY_CONFIG }
 		const source = `${this.constructor.name}.${this.getAvailableProps.name}`
-		let lastError: Error | null = null
 
-		for (let attempt = 0; attempt <= retryConfig.maxRetries; attempt++) {
-			try {
-				const response = await withTimeout(
-					this.propsApi.propsControllerGetAvailableProps({
-						sport,
-					}),
-					retryConfig.timeoutMs,
-				)
+		try {
+			const response = await withTimeout(
+				this.propsApi.propsControllerGetAvailableProps({
+					sport,
+				}),
+				DEFAULT_TIMEOUT_MS,
+			)
 
-				await logger.info({
-					message: `Retrieved ${response.length} available props for ${sport}`,
-					metadata: {
-						source,
-						sport,
-						count: response.length,
-					},
-				})
+			await logger.info({
+				message: `Retrieved ${response.length} available props for ${sport}`,
+				metadata: {
+					source,
+					sport,
+					count: response.length,
+				},
+			})
 
-				return response
-			} catch (error) {
-				lastError =
-					error instanceof Error ? error : new Error(String(error))
+			return response
+		} catch (error) {
+			const errorMessage =
+				error instanceof Error ? error.message : String(error)
+			const status =
+				error instanceof ResponseError
+					? error.response.status
+					: undefined
 
-				if (!isRetriableError(error)) {
-					await logger.error({
-						message: `Failed to fetch available props for ${sport}: ${lastError.message}`,
-						metadata: {
-							source,
-							sport,
-							error: lastError.message,
-							status:
-								error instanceof ResponseError
-									? error.response.status
-									: undefined,
-							body:
-								error instanceof ResponseError
-									? await error.response
-											.clone()
-											.json()
-											.catch(() => null)
-									: undefined,
-						},
-					})
-					throw new Error(
-						`Failed to fetch available props for ${sport}: ${lastError.message}`,
-					)
-				}
+			await logger.error({
+				message: `Failed to fetch available props for ${sport}: ${errorMessage}`,
+				metadata: {
+					source,
+					sport,
+					error: errorMessage,
+					status,
+					body:
+						error instanceof ResponseError
+							? await error.response
+									.clone()
+									.json()
+									.catch(() => null)
+							: undefined,
+				},
+			})
 
-				if (attempt >= retryConfig.maxRetries) {
-					break
-				}
-
-				let delay: number
-
-				if (
-					error instanceof ResponseError &&
-					error.response.status === 429
-				) {
-					const retryAfter = extractRetryAfter(error.response)
-					delay = retryAfter
-						? Math.min(retryAfter, retryConfig.maxDelayMs)
-						: retryConfig.baseDelayMs * 2 ** attempt
-				} else {
-					delay = Math.min(
-						retryConfig.baseDelayMs * 2 ** attempt,
-						retryConfig.maxDelayMs,
-					)
-				}
-
-				await logger.warn({
-					message: `Retrying getAvailableProps (attempt ${attempt + 1}/${retryConfig.maxRetries + 1})`,
-					metadata: {
-						source,
-						sport,
-						attempt: attempt + 1,
-						maxAttempts: retryConfig.maxRetries + 1,
-						delay,
-						error: lastError.message,
-						status:
-							error instanceof ResponseError
-								? error.response.status
-								: undefined,
-					},
-				})
-
-				await sleep(delay)
-			}
+			throw new Error(
+				`Failed to fetch available props for ${sport}: ${errorMessage}`,
+			)
 		}
-
-		await logger.error({
-			message: `Failed to fetch available props for ${sport} after ${retryConfig.maxRetries + 1} attempts: ${lastError?.message ?? 'Unknown error'}`,
-			metadata: {
-				source,
-				sport,
-				attempts: retryConfig.maxRetries + 1,
-				error: lastError?.message,
-				status:
-					lastError && lastError instanceof ResponseError
-						? lastError.response.status
-						: undefined,
-				body:
-					lastError && lastError instanceof ResponseError
-						? await lastError.response
-								.clone()
-								.json()
-								.catch(() => null)
-						: undefined,
-			},
-		})
-
-		throw new Error(
-			`Failed to fetch available props for ${sport} after ${retryConfig.maxRetries + 1} attempts: ${lastError?.message ?? 'Unknown error'}`,
-		)
 	}
 
 	/**
@@ -395,128 +245,56 @@ export default class PropsApiWrapper {
 		const validatedOptions = validationResult.data
 		const outcomeUuid = validatedOptions.outcomeUuid
 		const marketId = validatedOptions.marketId
-		const retryConfig = { ...DEFAULT_RETRY_CONFIG }
 		const source = `${this.constructor.name}.${this.getProp.name}`
-		let lastError: Error | null = null
 
-		for (let attempt = 0; attempt <= retryConfig.maxRetries; attempt++) {
-			try {
-				const response = await withTimeout(
-					this.propsApi.getProp({
-						outcomeUuid,
-						marketId,
-					}),
-					retryConfig.timeoutMs,
-				)
+		try {
+			const response = await withTimeout(
+				this.propsApi.getProp({
+					outcomeUuid,
+					marketId,
+				}),
+				DEFAULT_TIMEOUT_MS,
+			)
 
-				await logger.info({
-					message: `Retrieved prop${outcomeUuid ? ` by UUID: ${outcomeUuid}` : ` by market ID: ${marketId}`}`,
-					metadata: {
-						source,
-						outcomeUuid,
-						marketId,
-						sport: response.event_context?.sport_title,
-					},
-				})
+			await logger.info({
+				message: `Retrieved prop${outcomeUuid ? ` by UUID: ${outcomeUuid}` : ` by market ID: ${marketId}`}`,
+				metadata: {
+					source,
+					outcomeUuid,
+					marketId,
+					sport: response.event_context?.sport_title,
+				},
+			})
 
-				return response
-			} catch (error) {
-				lastError =
-					error instanceof Error ? error : new Error(String(error))
+			return response
+		} catch (error) {
+			const errorMessage =
+				error instanceof Error ? error.message : String(error)
+			const status =
+				error instanceof ResponseError
+					? error.response.status
+					: undefined
 
-				if (!isRetriableError(error)) {
-					await logger.error({
-						message: `Failed to fetch prop: ${lastError.message}`,
-						metadata: {
-							source,
-							outcomeUuid,
-							marketId,
-							error: lastError.message,
-							status:
-								error instanceof ResponseError
-									? error.response.status
-									: undefined,
-							body:
-								error instanceof ResponseError
-									? await error.response
-											.clone()
-											.json()
-											.catch(() => null)
-									: undefined,
-						},
-					})
-					throw new Error(
-						`Failed to fetch prop: ${lastError.message}`,
-					)
-				}
+			await logger.error({
+				message: `Failed to fetch prop: ${errorMessage}`,
+				metadata: {
+					source,
+					outcomeUuid,
+					marketId,
+					error: errorMessage,
+					status,
+					body:
+						error instanceof ResponseError
+							? await error.response
+									.clone()
+									.json()
+									.catch(() => null)
+							: undefined,
+				},
+			})
 
-				if (attempt >= retryConfig.maxRetries) {
-					break
-				}
-
-				let delay: number
-
-				if (
-					error instanceof ResponseError &&
-					error.response.status === 429
-				) {
-					const retryAfter = extractRetryAfter(error.response)
-					delay = retryAfter
-						? Math.min(retryAfter, retryConfig.maxDelayMs)
-						: retryConfig.baseDelayMs * 2 ** attempt
-				} else {
-					delay = Math.min(
-						retryConfig.baseDelayMs * 2 ** attempt,
-						retryConfig.maxDelayMs,
-					)
-				}
-
-				await logger.warn({
-					message: `Retrying getProp (attempt ${attempt + 1}/${retryConfig.maxRetries + 1})`,
-					metadata: {
-						source,
-						outcomeUuid,
-						marketId,
-						attempt: attempt + 1,
-						maxAttempts: retryConfig.maxRetries + 1,
-						delay,
-						error: lastError.message,
-						status:
-							error instanceof ResponseError
-								? error.response.status
-								: undefined,
-					},
-				})
-
-				await sleep(delay)
-			}
+			throw new Error(`Failed to fetch prop: ${errorMessage}`)
 		}
-
-		await logger.error({
-			message: `Failed to fetch prop after ${retryConfig.maxRetries + 1} attempts: ${lastError?.message ?? 'Unknown error'}`,
-			metadata: {
-				source,
-				outcomeUuid,
-				marketId,
-				attempts: retryConfig.maxRetries + 1,
-				error: lastError?.message,
-				status:
-					lastError && lastError instanceof ResponseError
-						? lastError.response.status
-						: undefined,
-				body:
-					lastError && lastError instanceof ResponseError
-						? await lastError.response
-								.clone()
-								.json()
-								.catch(() => null)
-						: undefined,
-			},
-		})
-
-		throw new Error(
-			`Failed to fetch prop after ${retryConfig.maxRetries + 1} attempts: ${lastError?.message ?? 'Unknown error'}`,
-		)
 	}
 
 	/**
@@ -535,14 +313,13 @@ export default class PropsApiWrapper {
 	 */
 	async setResult(dto: SetPropResultDto): Promise<SetPropResultResponseDto> {
 		const source = `${this.constructor.name}.${this.setResult.name}`
-		const timeoutMs = DEFAULT_RETRY_CONFIG.timeoutMs
 
 		try {
 			const result = await withTimeout(
 				this.propsApi.propsControllerSetPropResult({
 					setPropResultDto: dto,
 				}),
-				timeoutMs,
+				DEFAULT_TIMEOUT_MS,
 			)
 
 			await logger.info({

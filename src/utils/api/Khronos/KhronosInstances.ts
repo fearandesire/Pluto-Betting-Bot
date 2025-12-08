@@ -15,13 +15,29 @@ import {
 	GuildsApi,
 	MatchesApi,
 } from '../../../openapi/khronos/index.js'
+import fetchRetry from 'fetch-retry'
+
+const retryingFetch = fetchRetry(global.fetch, {
+	retries: 3,
+	retryDelay: (attempt) => {
+		return Math.pow(2, attempt) * 1000
+	},
+	retryOn: (attempt, error, response) => {
+		if (error !== null || response?.status === 429 || response?.status >= 500) {
+			return true
+		}
+		return false
+	},
+})
 
 export const KH_API_CONFIG = new Configuration({
 	basePath: `${env.KH_API_URL}`,
 	headers: {
 		'x-api-key': `${env.KH_PLUTO_CLIENT_KEY}`,
 	},
+	fetchApi: retryingFetch,
 })
+
 
 export const AccountsInstance = new AccountsApi(KH_API_CONFIG)
 

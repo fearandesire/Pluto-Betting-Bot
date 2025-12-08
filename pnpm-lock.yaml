@@ -131,6 +131,9 @@ importers:
       esm-module-alias:
         specifier: ^2.2.1
         version: 2.2.1
+      fetch-retry:
+        specifier: ^6.0.0
+        version: 6.0.0
       ioredis:
         specifier: ^5.8.2
         version: 5.8.2
@@ -551,7 +554,6 @@ packages:
   '@biomejs/cli-win32-x64@2.3.7':
     resolution: {integrity: sha512-pulzUshqv9Ed//MiE8MOUeeEkbkSHVDVY5Cz5wVAnH1DUqliCQG3j6s1POaITTFqFfo7AVIx2sWdKpx/GS+Nqw==}
     engines: {node: '>=14.21.3'}
-    cpu: [x64]
     os: [win32]
 
   '@borewit/text-codec@0.1.1':

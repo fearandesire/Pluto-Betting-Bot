@@ -10,14 +10,6 @@ import {
 	type PlacedBetslip,
 	type PlacedBetslipDto,
 } from '@kh-openapi'
-import { ResponseError } from '@khronos-index'
-import {
-	DEFAULT_RETRY_CONFIG,
-	extractRetryAfter,
-	isRetriableError,
-	type RetryConfig,
-	sleep,
-} from '../../common/retry-utils.js'
 import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js'
 
 export default class BetslipWrapper {
@@ -48,58 +40,12 @@ export default class BetslipWrapper {
 	/**
 	 * @summary Retrieve user betslips (pending and historical)
 	 * @param payload - User betslips query parameters
-	 * @param config - Optional retry configuration
 	 * @returns Promise resolving to array of user betslips
-	 * @throws Error if API call fails after retries or non-retriable error occurs
 	 */
 	async getUserBetslips(
 		payload: GetUserBetslipsRequest,
-		config: Partial<RetryConfig> = {},
 	): Promise<PlacedBetslip[]> {
-		const retryConfig = { ...DEFAULT_RETRY_CONFIG, ...config }
-		let lastError: Error | null = null
-
-		for (let attempt = 0; attempt <= retryConfig.maxRetries; attempt++) {
-			try {
-				return await this.betslipApi.getUserBetslips(payload)
-			} catch (error) {
-				lastError =
-					error instanceof Error ? error : new Error(String(error))
-
-				if (!isRetriableError(error)) {
-					throw new Error(
-						`Failed to fetch user betslips: ${lastError.message}`,
-					)
-				}
-
-				if (attempt >= retryConfig.maxRetries) {
-					break
-				}
-
-				let delay: number
-
-				if (
-					error instanceof ResponseError &&
-					error.response.status === 429
-				) {
-					const retryAfter = extractRetryAfter(error.response)
-					delay = retryAfter
-						? Math.min(retryAfter, retryConfig.maxDelayMs)
-						: retryConfig.baseDelayMs * 2 ** attempt
-				} else {
-					delay = Math.min(
-						retryConfig.baseDelayMs * 2 ** attempt,
-						retryConfig.maxDelayMs,
-					)
-				}
-
-				await sleep(delay)
-			}
-		}
-
-		throw new Error(
-			`Failed to fetch user betslips after ${retryConfig.maxRetries + 1} attempts: ${lastError?.message ?? 'Unknown error'}`,
-		)
+		return await this.betslipApi.getUserBetslips(payload)
 	}
 
 	async clearPending(userId: string) {
