@@ -11,6 +11,7 @@ import { logger } from '../../../logging/WinstonLogger.js'
 import { withTimeout } from '../../common/timeout-utils.js'
 
 const DEFAULT_TIMEOUT_MS = 30000
+
 import { KH_API_CONFIG } from '../KhronosInstances.js'
 
 /**
@@ -52,7 +53,6 @@ export type GetPropOptions =
 	| { outcomeUuid: string }
 	| { marketId: number }
 	| { outcomeUuid: string; marketId: number }
-
 
 /**
  * Wrapper for the Props Controller in Khronos

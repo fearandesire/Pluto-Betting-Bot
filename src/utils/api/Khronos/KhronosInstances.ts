@@ -1,3 +1,4 @@
+import fetchRetry from 'fetch-retry'
 import env from '../../../lib/startup/env.js'
 /**
  * @module KhronosApi
@@ -15,7 +16,6 @@ import {
 	GuildsApi,
 	MatchesApi,
 } from '../../../openapi/khronos/index.js'
-import fetchRetry from 'fetch-retry'
 
 const retryingFetch = fetchRetry(global.fetch, {
 	retries: 3,
@@ -23,7 +23,11 @@ const retryingFetch = fetchRetry(global.fetch, {
 		return Math.pow(2, attempt) * 1000
 	},
 	retryOn: (attempt, error, response) => {
-		if (error !== null || response?.status === 429 || response?.status >= 500) {
+		if (
+			error !== null ||
+			response?.status === 429 ||
+			response?.status >= 500
+		) {
 			return true
 		}
 		return false
@@ -37,7 +41,6 @@ export const KH_API_CONFIG = new Configuration({
 	},
 	fetchApi: retryingFetch,
 })
-
 
 export const AccountsInstance = new AccountsApi(KH_API_CONFIG)
 
