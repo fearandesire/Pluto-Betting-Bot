@@ -1,4 +1,3 @@
-import { ResponseError } from '@khronos-index'
 import {
 	BetslipsApi,
 	type CancelBetslipRequest,
@@ -11,6 +10,7 @@ import {
 	type PlacedBetslip,
 	type PlacedBetslipDto,
 } from '@kh-openapi'
+import { ResponseError } from '@khronos-index'
 import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js'
 
 interface RetryConfig {
@@ -111,7 +111,8 @@ export default class BetslipWrapper {
 			try {
 				return await this.betslipApi.getUserBetslips(payload)
 			} catch (error) {
-				lastError = error instanceof Error ? error : new Error(String(error))
+				lastError =
+					error instanceof Error ? error : new Error(String(error))
 
 				if (!isRetriableError(error)) {
 					throw new Error(
@@ -125,7 +126,10 @@ export default class BetslipWrapper {
 
 				let delay: number
 
-				if (error instanceof ResponseError && error.response.status === 429) {
+				if (
+					error instanceof ResponseError &&
+					error.response.status === 429
+				) {
 					const retryAfter = extractRetryAfter(error.response)
 					delay = retryAfter
 						? Math.min(retryAfter, retryConfig.maxDelayMs)

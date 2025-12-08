@@ -88,7 +88,8 @@ export default class LeaderboardWrapper {
 					params,
 				)
 			} catch (error) {
-				lastError = error instanceof Error ? error : new Error(String(error))
+				lastError =
+					error instanceof Error ? error : new Error(String(error))
 
 				if (!isRetriableError(error)) {
 					throw new Error(
@@ -102,7 +103,10 @@ export default class LeaderboardWrapper {
 
 				let delay: number
 
-				if (error instanceof ResponseError && error.response.status === 429) {
+				if (
+					error instanceof ResponseError &&
+					error.response.status === 429
+				) {
 					const retryAfter = extractRetryAfter(error.response)
 					delay = retryAfter
 						? Math.min(retryAfter, retryConfig.maxDelayMs)

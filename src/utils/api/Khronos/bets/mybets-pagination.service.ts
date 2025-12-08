@@ -1,6 +1,6 @@
 import type { PlacedBetslip } from '@kh-openapi'
-import { PlacedBetslipBetresultEnum } from '../../../../openapi/khronos/index.js'
 import { format, isValid, parseISO } from 'date-fns'
+import { PlacedBetslipBetresultEnum } from '../../../../openapi/khronos/index.js'
 import { logger } from '../../../logging/WinstonLogger.js'
 import BetslipWrapper from './betslip-wrapper.js'
 
@@ -31,11 +31,16 @@ export class MyBetsPaginationService {
 
 	async fetchUserBets(userId: string): Promise<MyBetsData> {
 		try {
-			const allBets = await this.betslipWrapper.getUserBetslips({ userid: userId })
+			const allBets = await this.betslipWrapper.getUserBetslips({
+				userid: userId,
+			})
 
 			const { pending, history } = this.splitBetsByStatus(allBets)
 			const sortedHistory = this.sortByDateDesc(history)
-			const totalPages = Math.max(1, Math.ceil(sortedHistory.length / this.PAGE_SIZE))
+			const totalPages = Math.max(
+				1,
+				Math.ceil(sortedHistory.length / this.PAGE_SIZE),
+			)
 
 			return {
 				pendingBets: pending,
@@ -86,7 +91,10 @@ export class MyBetsPaginationService {
 	}
 
 	getHistoryPage(historyBets: PlacedBetslip[], page: number): HistoryPage {
-		const totalPages = Math.max(1, Math.ceil(historyBets.length / this.PAGE_SIZE))
+		const totalPages = Math.max(
+			1,
+			Math.ceil(historyBets.length / this.PAGE_SIZE),
+		)
 		const clampedPage = Math.max(1, Math.min(page, totalPages))
 		const start = (clampedPage - 1) * this.PAGE_SIZE
 		const end = start + this.PAGE_SIZE

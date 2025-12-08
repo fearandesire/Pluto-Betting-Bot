@@ -29,12 +29,10 @@ export const buildMyBetsNavCustomId = (
 
 export const parseMyBetsNavCustomId = (
 	customId: string,
-):
-	| {
-			action: MyBetsNavAction
-			currentPage: number
-	  }
-	| null => {
+): {
+	action: MyBetsNavAction
+	currentPage: number
+} | null => {
 	const match = mybetsNavRegex.exec(customId)
 	if (!match) return null
 

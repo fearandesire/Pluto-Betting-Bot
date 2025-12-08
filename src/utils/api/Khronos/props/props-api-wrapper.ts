@@ -111,12 +111,10 @@ export default class PropsApiWrapper {
 			},
 		})
 
-		const response = await this.propsApi.propsControllerGetProcessedProps(
-			{
-				sport,
-				count,
-			},
-		)
+		const response = await this.propsApi.propsControllerGetProcessedProps({
+			sport,
+			count,
+		})
 
 		await logger.info({
 			message: `✅ Khronos returned ${response.length} processed prop pairs for ${sport}`,
@@ -138,11 +136,9 @@ export default class PropsApiWrapper {
 	 * @returns All available props for the sport (flat array of outcomes)
 	 */
 	async getAvailableProps(sport: 'nba' | 'nfl'): Promise<PropDto[]> {
-		const response = await this.propsApi.propsControllerGetAvailableProps(
-			{
-				sport,
-			},
-		)
+		const response = await this.propsApi.propsControllerGetAvailableProps({
+			sport,
+		})
 
 		await logger.info({
 			message: `Retrieved ${response.length} available props for ${sport}`,

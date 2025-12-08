@@ -6,10 +6,10 @@ import {
 	ButtonStyle,
 	ContainerBuilder,
 	EmbedBuilder,
-	MessageFlags,
-	SeparatorSpacingSize,
 	type Guild,
 	type InteractionEditReplyOptions,
+	MessageFlags,
+	SeparatorSpacingSize,
 } from 'discord.js'
 import embedColors from '../../../../lib/colorsConfig.js'
 import {
@@ -32,13 +32,13 @@ export class MyBetsFormatterService {
 		return `$${Number(amount).toFixed(2)}`
 	}
 
-private formatDate(dateStr: string | null): string {
-	if (!dateStr) return 'Unknown'
-	const date = new Date(dateStr)
-	if (isNaN(date.getTime())) return 'Unknown'
-	const timestamp = Math.floor(date.getTime() / 1000)
-	return `<t:${timestamp}:d>`
-}
+	private formatDate(dateStr: string | null): string {
+		if (!dateStr) return 'Unknown'
+		const date = new Date(dateStr)
+		if (isNaN(date.getTime())) return 'Unknown'
+		const timestamp = Math.floor(date.getTime() / 1000)
+		return `<t:${timestamp}:d>`
+	}
 	private getBetResultEmoji(result: PlacedBetslipBetresultEnum): string {
 		switch (result) {
 			case PlacedBetslipBetresultEnum.Won:
@@ -269,7 +269,10 @@ private formatDate(dateStr: string | null): string {
 		const embeds: EmbedBuilder[] = []
 
 		// Pending embed (always show, even if empty)
-		const pendingEmbed = await this.buildPendingEmbed(data.pendingBets, guild)
+		const pendingEmbed = await this.buildPendingEmbed(
+			data.pendingBets,
+			guild,
+		)
 		embeds.push(pendingEmbed)
 
 		// History embed

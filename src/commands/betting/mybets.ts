@@ -1,11 +1,13 @@
 import { ApplyOptions } from '@sapphire/decorators'
 import { Command } from '@sapphire/framework'
 import { InteractionContextType } from 'discord.js'
-
+import {
+	type MyBetsDisplayData,
+	MyBetsFormatterService,
+} from '../../utils/api/Khronos/bets/mybets-formatter.service.js'
+import { MyBetsPaginationService } from '../../utils/api/Khronos/bets/mybets-pagination.service.js'
 import { CacheManager } from '../../utils/cache/cache-manager.js'
 import { ErrorEmbeds } from '../../utils/common/errors/global.js'
-import { MyBetsPaginationService } from '../../utils/api/Khronos/bets/mybets-pagination.service.js'
-import { MyBetsFormatterService, type MyBetsDisplayData } from '../../utils/api/Khronos/bets/mybets-formatter.service.js'
 
 const MYBETS_CACHE_TTL = 300 // 5 minutes
 
@@ -47,8 +49,9 @@ export class UserCommand extends Command {
 				betsData.historyBets,
 				1,
 			)
-			const groupedBets =
-				this.paginationService.groupBetsByDate(historyPage.bets)
+			const groupedBets = this.paginationService.groupBetsByDate(
+				historyPage.bets,
+			)
 
 			const displayData: MyBetsDisplayData = {
 				userId,
@@ -69,7 +72,8 @@ export class UserCommand extends Command {
 				metadata: {
 					source: this.constructor.name,
 					userId: interaction.user.id,
-					error: error instanceof Error ? error.message : String(error),
+					error:
+						error instanceof Error ? error.message : String(error),
 				},
 			})
 

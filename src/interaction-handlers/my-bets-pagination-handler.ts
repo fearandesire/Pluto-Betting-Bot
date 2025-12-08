@@ -1,16 +1,16 @@
+import type { PlacedBetslip } from '@kh-openapi'
 import {
 	InteractionHandler,
 	InteractionHandlerTypes,
 } from '@sapphire/framework'
 import { type ButtonInteraction } from 'discord.js'
-import type { PlacedBetslip } from '@kh-openapi'
 import {
-	parseMyBetsNavCustomId,
 	type MyBetsNavAction,
+	parseMyBetsNavCustomId,
 } from '../lib/interfaces/interaction-handlers/interaction-handlers.interface.js'
 import {
-	MyBetsFormatterService,
 	type MyBetsDisplayData,
+	MyBetsFormatterService,
 } from '../utils/api/Khronos/bets/mybets-formatter.service.js'
 import { MyBetsPaginationService } from '../utils/api/Khronos/bets/mybets-pagination.service.js'
 import { CacheManager } from '../utils/cache/cache-manager.js'
@@ -77,8 +77,13 @@ export class MyBetsPaginationHandler extends InteractionHandler {
 							userId,
 						},
 					})
-					betsData = await this.paginationService.fetchUserBets(userId)
-					await this.cacheManager.set(cacheKey, JSON.stringify(betsData), 300)
+					betsData =
+						await this.paginationService.fetchUserBets(userId)
+					await this.cacheManager.set(
+						cacheKey,
+						JSON.stringify(betsData),
+						300,
+					)
 				}
 			} else {
 				// Cache expired, refetch
