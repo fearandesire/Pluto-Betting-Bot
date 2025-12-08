@@ -501,7 +501,9 @@ export default class PropsApiWrapper {
 									: undefined,
 						},
 					})
-					throw new Error(`Failed to fetch prop: ${lastError.message}`)
+					throw new Error(
+						`Failed to fetch prop: ${lastError.message}`,
+					)
 				}
 
 				if (attempt >= retryConfig.maxRetries) {
