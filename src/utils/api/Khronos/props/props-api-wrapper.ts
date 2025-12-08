@@ -77,7 +77,7 @@ export default class PropsApiWrapper {
 
 		try {
 			const response = await pTimeout(
-				this.propsApi.propsControllerGetRandomProps({
+				this.propsApi.propsControllerGetRandomPropsV1({
 					sport,
 					count,
 				}),
@@ -133,7 +133,7 @@ export default class PropsApiWrapper {
 
 		try {
 			const response = await pTimeout(
-				this.propsApi.propsControllerGetRandomProp({ sport }),
+				this.propsApi.propsControllerGetRandomPropV1({ sport }),
 				{ milliseconds: DEFAULT_TIMEOUT_MS },
 			)
 
@@ -196,7 +196,7 @@ export default class PropsApiWrapper {
 
 		try {
 			const response = await pTimeout(
-				this.propsApi.propsControllerGetProcessedProps({
+				this.propsApi.propsControllerGetProcessedPropsV1({
 					sport,
 					count,
 				}),
@@ -269,7 +269,7 @@ export default class PropsApiWrapper {
 
 		try {
 			const response = await pTimeout(
-				this.propsApi.propsControllerGetAvailableProps({
+				this.propsApi.propsControllerGetAvailablePropsV1({
 					sport,
 				}),
 				{ milliseconds: DEFAULT_TIMEOUT_MS },
@@ -404,7 +404,7 @@ export default class PropsApiWrapper {
 
 		try {
 			const result = await pTimeout(
-				this.propsApi.propsControllerSetPropResult({
+				this.propsApi.propsControllerSetPropResultV1({
 					setPropResultDto: dto,
 				}),
 				{ milliseconds: DEFAULT_TIMEOUT_MS },
