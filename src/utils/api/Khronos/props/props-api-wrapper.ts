@@ -108,10 +108,7 @@ function isRetriableError(error: unknown): boolean {
 	return false
 }
 
-function withTimeout<T>(
-	promise: Promise<T>,
-	timeoutMs: number,
-): Promise<T> {
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
 	return Promise.race([
 		promise,
 		new Promise<never>((_, reject) =>
@@ -318,50 +315,123 @@ export default class PropsApiWrapper {
 	 * @returns All available props for the sport (flat array of outcomes)
 	 */
 	async getAvailableProps(sport: 'nba' | 'nfl'): Promise<PropDto[]> {
+		const retryConfig = { ...DEFAULT_RETRY_CONFIG }
 		const source = `${this.constructor.name}.${this.getAvailableProps.name}`
+		let lastError: Error | null = null
 
-		try {
-			const response = await this.propsApi.propsControllerGetAvailableProps({
-				sport,
-			})
+		for (let attempt = 0; attempt <= retryConfig.maxRetries; attempt++) {
+			try {
+				const response = await withTimeout(
+					this.propsApi.propsControllerGetAvailableProps({
+						sport,
+					}),
+					retryConfig.timeoutMs,
+				)
 
-			await logger.info({
-				message: `Retrieved ${response.length} available props for ${sport}`,
-				metadata: {
-					source,
-					sport,
-					count: response.length,
-				},
-			})
+				await logger.info({
+					message: `Retrieved ${response.length} available props for ${sport}`,
+					metadata: {
+						source,
+						sport,
+						count: response.length,
+					},
+				})
 
-			return response
-		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : String(error)
-			const status =
-				error instanceof ResponseError ? error.response.status : undefined
+				return response
+			} catch (error) {
+				lastError =
+					error instanceof Error ? error : new Error(String(error))
 
-			await logger.error({
-				message: `Failed to fetch available props for ${sport}: ${errorMessage}`,
-				metadata: {
-					source,
-					sport,
-					error: errorMessage,
-					status,
-					body:
-						error instanceof ResponseError
-							? await error.response
-									.clone()
-									.json()
-									.catch(() => null)
-							: undefined,
-				},
-			})
+				if (!isRetriableError(error)) {
+					await logger.error({
+						message: `Failed to fetch available props for ${sport}: ${lastError.message}`,
+						metadata: {
+							source,
+							sport,
+							error: lastError.message,
+							status:
+								error instanceof ResponseError
+									? error.response.status
+									: undefined,
+							body:
+								error instanceof ResponseError
+									? await error.response
+											.clone()
+											.json()
+											.catch(() => null)
+									: undefined,
+						},
+					})
+					throw new Error(
+						`Failed to fetch available props for ${sport}: ${lastError.message}`,
+					)
+				}
 
-			throw new Error(
-				`Failed to fetch available props for ${sport}: ${errorMessage}`,
-			)
+				if (attempt >= retryConfig.maxRetries) {
+					break
+				}
+
+				let delay: number
+
+				if (
+					error instanceof ResponseError &&
+					error.response.status === 429
+				) {
+					const retryAfter = extractRetryAfter(error.response)
+					delay = retryAfter
+						? Math.min(retryAfter, retryConfig.maxDelayMs)
+						: retryConfig.baseDelayMs * 2 ** attempt
+				} else {
+					delay = Math.min(
+						retryConfig.baseDelayMs * 2 ** attempt,
+						retryConfig.maxDelayMs,
+					)
+				}
+
+				await logger.warn({
+					message: `Retrying getAvailableProps (attempt ${attempt + 1}/${retryConfig.maxRetries + 1})`,
+					metadata: {
+						source,
+						sport,
+						attempt: attempt + 1,
+						maxAttempts: retryConfig.maxRetries + 1,
+						delay,
+						error: lastError.message,
+						status:
+							error instanceof ResponseError
+								? error.response.status
+								: undefined,
+					},
+				})
+
+				await sleep(delay)
+			}
 		}
+
+		await logger.error({
+			message: `Failed to fetch available props for ${sport} after ${retryConfig.maxRetries + 1} attempts: ${lastError?.message ?? 'Unknown error'}`,
+			metadata: {
+				source,
+				sport,
+				attempts: retryConfig.maxRetries + 1,
+				error: lastError?.message,
+				status:
+					lastError && lastError instanceof ResponseError
+						? lastError.response.status
+						: undefined,
+				body:
+					lastError && lastError instanceof ResponseError
+						? await lastError.response
+								.clone()
+								.json()
+								.catch(() => null)
+						: undefined,
+			},
+		})
+
+		throw new Error(
+			`Failed to fetch available props for ${sport} after ${retryConfig.maxRetries + 1} attempts: ${lastError?.message ?? 'Unknown error'}`,
+		)
 	}
 
 	/**
@@ -381,53 +451,126 @@ export default class PropsApiWrapper {
 		const validatedOptions = validationResult.data
 		const outcomeUuid = validatedOptions.outcomeUuid
 		const marketId = validatedOptions.marketId
+		const retryConfig = { ...DEFAULT_RETRY_CONFIG }
 		const source = `${this.constructor.name}.${this.getProp.name}`
+		let lastError: Error | null = null
 
-		try {
-			const response = await this.propsApi.getProp({
+		for (let attempt = 0; attempt <= retryConfig.maxRetries; attempt++) {
+			try {
+				const response = await withTimeout(
+					this.propsApi.getProp({
+						outcomeUuid,
+						marketId,
+					}),
+					retryConfig.timeoutMs,
+				)
+
+				await logger.info({
+					message: `Retrieved prop${outcomeUuid ? ` by UUID: ${outcomeUuid}` : ` by market ID: ${marketId}`}`,
+					metadata: {
+						source,
+						outcomeUuid,
+						marketId,
+						sport: response.event_context?.sport_title,
+					},
+				})
+
+				return response
+			} catch (error) {
+				lastError =
+					error instanceof Error ? error : new Error(String(error))
+
+				if (!isRetriableError(error)) {
+					await logger.error({
+						message: `Failed to fetch prop: ${lastError.message}`,
+						metadata: {
+							source,
+							outcomeUuid,
+							marketId,
+							error: lastError.message,
+							status:
+								error instanceof ResponseError
+									? error.response.status
+									: undefined,
+							body:
+								error instanceof ResponseError
+									? await error.response
+											.clone()
+											.json()
+											.catch(() => null)
+									: undefined,
+						},
+					})
+					throw new Error(`Failed to fetch prop: ${lastError.message}`)
+				}
+
+				if (attempt >= retryConfig.maxRetries) {
+					break
+				}
+
+				let delay: number
+
+				if (
+					error instanceof ResponseError &&
+					error.response.status === 429
+				) {
+					const retryAfter = extractRetryAfter(error.response)
+					delay = retryAfter
+						? Math.min(retryAfter, retryConfig.maxDelayMs)
+						: retryConfig.baseDelayMs * 2 ** attempt
+				} else {
+					delay = Math.min(
+						retryConfig.baseDelayMs * 2 ** attempt,
+						retryConfig.maxDelayMs,
+					)
+				}
+
+				await logger.warn({
+					message: `Retrying getProp (attempt ${attempt + 1}/${retryConfig.maxRetries + 1})`,
+					metadata: {
+						source,
+						outcomeUuid,
+						marketId,
+						attempt: attempt + 1,
+						maxAttempts: retryConfig.maxRetries + 1,
+						delay,
+						error: lastError.message,
+						status:
+							error instanceof ResponseError
+								? error.response.status
+								: undefined,
+					},
+				})
+
+				await sleep(delay)
+			}
+		}
+
+		await logger.error({
+			message: `Failed to fetch prop after ${retryConfig.maxRetries + 1} attempts: ${lastError?.message ?? 'Unknown error'}`,
+			metadata: {
+				source,
 				outcomeUuid,
 				marketId,
-			})
+				attempts: retryConfig.maxRetries + 1,
+				error: lastError?.message,
+				status:
+					lastError && lastError instanceof ResponseError
+						? lastError.response.status
+						: undefined,
+				body:
+					lastError && lastError instanceof ResponseError
+						? await lastError.response
+								.clone()
+								.json()
+								.catch(() => null)
+						: undefined,
+			},
+		})
 
-			await logger.info({
-				message: `Retrieved prop${outcomeUuid ? ` by UUID: ${outcomeUuid}` : ` by market ID: ${marketId}`}`,
-				metadata: {
-					source,
-					outcomeUuid,
-					marketId,
-					sport: response.event_context?.sport_title,
-				},
-			})
-
-			return response
-		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : String(error)
-			const status =
-				error instanceof ResponseError ? error.response.status : undefined
-
-			await logger.error({
-				message: `Failed to fetch prop: ${errorMessage}`,
-				metadata: {
-					source,
-					outcomeUuid,
-					marketId,
-					error: errorMessage,
-					status,
-					body:
-						error instanceof ResponseError
-							? await error.response
-									.clone()
-									.json()
-									.catch(() => null)
-							: undefined,
-				},
-			})
-
-			throw new Error(
-				`Failed to fetch prop: ${errorMessage}`,
-			)
-		}
+		throw new Error(
+			`Failed to fetch prop after ${retryConfig.maxRetries + 1} attempts: ${lastError?.message ?? 'Unknown error'}`,
+		)
 	}
 
 	/**
@@ -467,7 +610,9 @@ export default class PropsApiWrapper {
 			const errorMessage =
 				error instanceof Error ? error.message : String(error)
 			const status =
-				error instanceof ResponseError ? error.response.status : undefined
+				error instanceof ResponseError
+					? error.response.status
+					: undefined
 
 			await logger.error({
 				message: `Failed to set prop result: ${errorMessage}`,
@@ -488,9 +633,7 @@ export default class PropsApiWrapper {
 				},
 			})
 
-			throw new Error(
-				`Failed to set prop result: ${errorMessage}`,
-			)
+			throw new Error(`Failed to set prop result: ${errorMessage}`)
 		}
 	}
 }

@@ -68,7 +68,10 @@ export class MyBetsPaginationHandler extends InteractionHandler {
 					const errEmb = await ErrorEmbeds.internalErr(
 						'Failed to process navigation. Please try again.',
 					)
-					await interaction.reply({ embeds: [errEmb], ephemeral: true })
+					await interaction.reply({
+						embeds: [errEmb],
+						ephemeral: true,
+					})
 				} catch {
 					// Interaction may have expired or been invalidated
 				}
