@@ -68,7 +68,7 @@ export default class PropsApiWrapper {
 		sport: 'nba' | 'nfl',
 		count?: number,
 	): Promise<PropDto[]> {
-		const response = await this.propsApi.propsControllerGetRandomPropsV1({
+		const response = await this.propsApi.propsControllerGetRandomProps({
 			sport,
 			count,
 		})
@@ -88,7 +88,7 @@ export default class PropsApiWrapper {
 	 * @param sport - Sport key (nba, nfl, etc.)
 	 */
 	async getRandomProp(sport: 'nba' | 'nfl'): Promise<PropDto> {
-		return await this.propsApi.propsControllerGetRandomPropV1({ sport })
+		return await this.propsApi.propsControllerGetRandomProp({ sport })
 	}
 
 	/**
@@ -111,7 +111,7 @@ export default class PropsApiWrapper {
 			},
 		})
 
-		const response = await this.propsApi.propsControllerGetProcessedPropsV1(
+		const response = await this.propsApi.propsControllerGetProcessedProps(
 			{
 				sport,
 				count,
@@ -138,7 +138,7 @@ export default class PropsApiWrapper {
 	 * @returns All available props for the sport (flat array of outcomes)
 	 */
 	async getAvailableProps(sport: 'nba' | 'nfl'): Promise<PropDto[]> {
-		const response = await this.propsApi.propsControllerGetAvailablePropsV1(
+		const response = await this.propsApi.propsControllerGetAvailableProps(
 			{
 				sport,
 			},
@@ -207,7 +207,7 @@ export default class PropsApiWrapper {
 	 * @returns A promise that resolves to the response with prediction statistics
 	 */
 	async setResult(dto: SetPropResultDto): Promise<SetPropResultResponseDto> {
-		const result = await this.propsApi.propsControllerSetPropResultV1({
+		const result = await this.propsApi.propsControllerSetPropResult({
 			setPropResultDto: dto,
 		})
 

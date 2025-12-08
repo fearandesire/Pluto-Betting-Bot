@@ -3,7 +3,7 @@
 // ============================================================================
 
 import { container } from '@sapphire/framework'
-import type PropsApiWrapper from '../api/Khronos/props/propsApiWrapper.js'
+import type PropsApiWrapper from '../api/Khronos/props/props-api-wrapper.js'
 import type { CachedProp, PropsCacheService } from './PropCacheService.js'
 
 /**
