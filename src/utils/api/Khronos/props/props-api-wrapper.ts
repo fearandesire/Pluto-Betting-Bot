@@ -14,6 +14,7 @@ import {
 	isRetriableError,
 	DEFAULT_RETRY_CONFIG as SHARED_RETRY_CONFIG,
 	sleep,
+	withTimeout,
 } from '../../common/retry-utils.js'
 import { KH_API_CONFIG } from '../KhronosInstances.js'
 
@@ -57,25 +58,10 @@ export type GetPropOptions =
 	| { marketId: number }
 	| { outcomeUuid: string; marketId: number }
 
-interface RetryConfig extends BaseRetryConfig {
-	timeoutMs: number
-}
+interface RetryConfig extends BaseRetryConfig {}
 
 const DEFAULT_RETRY_CONFIG: RetryConfig = {
 	...SHARED_RETRY_CONFIG,
-	timeoutMs: 30000,
-}
-
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
-	return Promise.race([
-		promise,
-		new Promise<never>((_, reject) =>
-			setTimeout(
-				() => reject(new Error(`Request timeout after ${timeoutMs}ms`)),
-				timeoutMs,
-			),
-		),
-	])
 }
 
 /**
@@ -549,11 +535,15 @@ export default class PropsApiWrapper {
 	 */
 	async setResult(dto: SetPropResultDto): Promise<SetPropResultResponseDto> {
 		const source = `${this.constructor.name}.${this.setResult.name}`
+		const timeoutMs = DEFAULT_RETRY_CONFIG.timeoutMs
 
 		try {
-			const result = await this.propsApi.propsControllerSetPropResult({
-				setPropResultDto: dto,
-			})
+			const result = await withTimeout(
+				this.propsApi.propsControllerSetPropResult({
+					setPropResultDto: dto,
+				}),
+				timeoutMs,
+			)
 
 			await logger.info({
 				message: `Set prop result for ${dto.propId}`,

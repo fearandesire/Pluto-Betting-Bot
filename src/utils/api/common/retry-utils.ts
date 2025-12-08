@@ -4,12 +4,14 @@ export interface RetryConfig {
 	maxRetries: number
 	baseDelayMs: number
 	maxDelayMs: number
+	timeoutMs: number
 }
 
 export const DEFAULT_RETRY_CONFIG: RetryConfig = {
 	maxRetries: 3,
 	baseDelayMs: 1000,
 	maxDelayMs: 30000,
+	timeoutMs: 30000,
 }
 
 export function sleep(ms: number): Promise<void> {
@@ -54,4 +56,25 @@ export function isRetriableError(error: unknown): boolean {
 	}
 
 	return false
+}
+
+/**
+ * Wraps a promise with a timeout, rejecting if the promise doesn't resolve within the specified time
+ * @param promise - The promise to wrap
+ * @param timeoutMs - Timeout in milliseconds
+ * @returns Promise that rejects with timeout error if timeout is exceeded
+ */
+export function withTimeout<T>(
+	promise: Promise<T>,
+	timeoutMs: number,
+): Promise<T> {
+	return Promise.race([
+		promise,
+		new Promise<never>((_, reject) =>
+			setTimeout(
+				() => reject(new Error(`Request timeout after ${timeoutMs}ms`)),
+				timeoutMs,
+			),
+		),
+	])
 }
