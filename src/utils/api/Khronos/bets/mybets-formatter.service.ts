@@ -28,7 +28,7 @@ export interface MyBetsDisplayData {
 
 export class MyBetsFormatterService {
 	private formatMoney(amount: number | null): string {
-		if (amount === null) return '$0.00'
+		if (amount === null) return 'N/A'
 		return `$${Number(amount).toFixed(2)}`
 	}
 

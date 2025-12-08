@@ -6,6 +6,9 @@ pre-commit:
       run: pnpm lint {staged_files}
       stage_fixed: true
       exclude: "Khronos-Swagger-Spec-v1.json"
+    stage-formatted:
+      run: node scripts/stage-formatted.js
+      follow: lint
 
 
 pre-push:

@@ -56,11 +56,7 @@ export class MyBetsPaginationService {
 				stack: error instanceof Error ? error.stack : undefined,
 			})
 
-			return {
-				pendingBets: [],
-				historyBets: [],
-				totalPages: 1,
-			}
+			throw error
 		}
 	}
 
