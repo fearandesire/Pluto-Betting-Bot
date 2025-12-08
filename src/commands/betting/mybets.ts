@@ -6,10 +6,7 @@ import {
 	MyBetsFormatterService,
 } from '../../utils/api/Khronos/bets/mybets-formatter.service.js'
 import { MyBetsPaginationService } from '../../utils/api/Khronos/bets/mybets-pagination.service.js'
-import { CacheManager } from '../../utils/cache/cache-manager.js'
 import { ErrorEmbeds } from '../../utils/common/errors/global.js'
-
-const MYBETS_CACHE_TTL = 300 // 5 minutes
 
 @ApplyOptions<Command.Options>({
 	description: '🪙 View your pending and historical bets',
@@ -17,7 +14,6 @@ const MYBETS_CACHE_TTL = 300 // 5 minutes
 export class UserCommand extends Command {
 	private paginationService = new MyBetsPaginationService()
 	private formatterService = new MyBetsFormatterService()
-	private cacheManager = new CacheManager()
 
 	public override registerApplicationCommands(registry: Command.Registry) {
 		registry.registerChatInputCommand((builder) =>
@@ -36,14 +32,6 @@ export class UserCommand extends Command {
 		try {
 			const userId = interaction.user.id
 			const betsData = await this.paginationService.fetchUserBets(userId)
-
-			// Cache for button navigation
-			const cacheKey = `mybets:${userId}`
-			await this.cacheManager.set(
-				cacheKey,
-				JSON.stringify(betsData),
-				MYBETS_CACHE_TTL,
-			)
 
 			const historyPage = this.paginationService.getHistoryPage(
 				betsData.historyBets,
