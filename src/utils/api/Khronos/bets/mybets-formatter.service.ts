@@ -74,7 +74,7 @@ export class MyBetsFormatterService {
 	}
 
 	formatPendingBetLine(bet: PlacedBetslip, guild?: Guild): string {
-		const team = this.formatTeamName(bet.team, guild)
+		const team = this.formatTeamName(bet.team ?? 'Unknown', guild)
 		const amount = this.formatMoney(bet.amount)
 		const payout = this.formatMoney(bet.payout)
 		const date = this.formatDate(bet.dateofbet)
@@ -84,7 +84,7 @@ export class MyBetsFormatterService {
 
 	formatHistoryBetLine(bet: PlacedBetslip, guild?: Guild): string {
 		const emoji = this.getBetResultEmoji(bet.betresult)
-		const team = this.formatTeamName(bet.team, guild)
+		const team = this.formatTeamName(bet.team ?? 'Unknown', guild)
 		const amount = this.formatMoney(bet.amount)
 		const payout = this.formatMoney(bet.payout)
 		const profit = this.formatMoney(bet.profit)

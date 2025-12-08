@@ -16,6 +16,8 @@ import { MyBetsPaginationService } from '../utils/api/Khronos/bets/mybets-pagina
 import { CacheManager } from '../utils/cache/cache-manager.js'
 import { ErrorEmbeds } from '../utils/common/errors/global.js'
 
+const MY_BETS_CACHE_TTL = 300
+
 interface CachedBetsData {
 	pendingBets: PlacedBetslip[]
 	historyBets: PlacedBetslip[]
@@ -49,7 +51,31 @@ export class MyBetsPaginationHandler extends InteractionHandler {
 		const navPayload = parseMyBetsNavCustomId(interaction.customId)
 		if (!navPayload) return this.none()
 
-		await interaction.deferUpdate()
+		try {
+			await interaction.deferUpdate()
+		} catch (error) {
+			this.container.logger.error({
+				message: 'Failed to defer MyBets pagination interaction',
+				metadata: {
+					source: this.parse.name,
+					userId: interaction.user.id,
+					error: error instanceof Error ? error.message : error,
+				},
+			})
+
+			if (!interaction.deferred && !interaction.replied) {
+				try {
+					const errEmb = await ErrorEmbeds.internalErr(
+						'Failed to process navigation. Please try again.',
+					)
+					await interaction.reply({ embeds: [errEmb], ephemeral: true })
+				} catch {
+					// Interaction may have expired or been invalidated
+				}
+			}
+
+			return this.none()
+		}
 
 		return this.some(navPayload)
 	}
@@ -68,7 +94,17 @@ export class MyBetsPaginationHandler extends InteractionHandler {
 
 			if (cached) {
 				try {
-					betsData = JSON.parse(cached)
+					const parsed = JSON.parse(cached)
+					if (
+						!parsed ||
+						typeof parsed !== 'object' ||
+						!Array.isArray(parsed.pendingBets) ||
+						!Array.isArray(parsed.historyBets) ||
+						typeof parsed.totalPages !== 'number'
+					) {
+						throw new Error('Invalid cached data structure')
+					}
+					betsData = parsed
 				} catch {
 					this.container.logger.warn({
 						message: 'MyBets cache corrupted, refetching',
@@ -82,7 +118,7 @@ export class MyBetsPaginationHandler extends InteractionHandler {
 					await this.cacheManager.set(
 						cacheKey,
 						JSON.stringify(betsData),
-						300,
+						MY_BETS_CACHE_TTL,
 					)
 				}
 			} else {
@@ -91,10 +127,11 @@ export class MyBetsPaginationHandler extends InteractionHandler {
 				await this.cacheManager.set(
 					cacheKey,
 					JSON.stringify(betsData),
-					300,
+					MY_BETS_CACHE_TTL,
 				)
 			}
 			// Calculate target page
+			const totalPages = Math.max(1, betsData.totalPages)
 			let targetPage: number
 			switch (payload.action) {
 				case 'first':
@@ -104,13 +141,10 @@ export class MyBetsPaginationHandler extends InteractionHandler {
 					targetPage = Math.max(1, payload.currentPage - 1)
 					break
 				case 'next':
-					targetPage = Math.min(
-						betsData.totalPages,
-						payload.currentPage + 1,
-					)
+					targetPage = Math.min(totalPages, payload.currentPage + 1)
 					break
 				case 'last':
-					targetPage = betsData.totalPages
+					targetPage = totalPages
 					break
 				default:
 					targetPage = payload.currentPage
