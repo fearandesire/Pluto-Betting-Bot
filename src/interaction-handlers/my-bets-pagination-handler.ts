@@ -1,4 +1,3 @@
-import type { PlacedBetslip } from '@kh-openapi'
 import {
 	InteractionHandler,
 	InteractionHandlerTypes,
@@ -13,16 +12,7 @@ import {
 	MyBetsFormatterService,
 } from '../utils/api/Khronos/bets/mybets-formatter.service.js'
 import { MyBetsPaginationService } from '../utils/api/Khronos/bets/mybets-pagination.service.js'
-import { CacheManager } from '../utils/cache/cache-manager.js'
 import { ErrorEmbeds } from '../utils/common/errors/global.js'
-
-const MY_BETS_CACHE_TTL = 300
-
-interface CachedBetsData {
-	pendingBets: PlacedBetslip[]
-	historyBets: PlacedBetslip[]
-	totalPages: number
-}
 
 interface MyBetsNavPayload {
 	action: MyBetsNavAction
@@ -30,7 +20,6 @@ interface MyBetsNavPayload {
 }
 
 export class MyBetsPaginationHandler extends InteractionHandler {
-	private cacheManager: CacheManager
 	private paginationService: MyBetsPaginationService
 	private formatterService: MyBetsFormatterService
 
@@ -42,7 +31,6 @@ export class MyBetsPaginationHandler extends InteractionHandler {
 			...options,
 			interactionHandlerType: InteractionHandlerTypes.Button,
 		})
-		this.cacheManager = new CacheManager()
 		this.paginationService = new MyBetsPaginationService()
 		this.formatterService = new MyBetsFormatterService()
 	}
@@ -88,51 +76,10 @@ export class MyBetsPaginationHandler extends InteractionHandler {
 		payload: MyBetsNavPayload,
 	) {
 		const userId = interaction.user.id
-		const cacheKey = `mybets:${userId}`
 
 		try {
-			// Fetch cached data or refresh
-			let betsData: CachedBetsData
-			const cached = await this.cacheManager.get(cacheKey)
+			const betsData = await this.paginationService.fetchUserBets(userId)
 
-			if (cached) {
-				try {
-					const parsed = JSON.parse(cached)
-					if (
-						!parsed ||
-						typeof parsed !== 'object' ||
-						!Array.isArray(parsed.pendingBets) ||
-						!Array.isArray(parsed.historyBets) ||
-						typeof parsed.totalPages !== 'number'
-					) {
-						throw new Error('Invalid cached data structure')
-					}
-					betsData = parsed
-				} catch {
-					this.container.logger.warn({
-						message: 'MyBets cache corrupted, refetching',
-						metadata: {
-							source: this.run.name,
-							userId,
-						},
-					})
-					betsData =
-						await this.paginationService.fetchUserBets(userId)
-					await this.cacheManager.set(
-						cacheKey,
-						JSON.stringify(betsData),
-						MY_BETS_CACHE_TTL,
-					)
-				}
-			} else {
-				// Cache expired, refetch
-				betsData = await this.paginationService.fetchUserBets(userId)
-				await this.cacheManager.set(
-					cacheKey,
-					JSON.stringify(betsData),
-					MY_BETS_CACHE_TTL,
-				)
-			}
 			// Calculate target page
 			const totalPages = Math.max(1, betsData.totalPages)
 			let targetPage: number
