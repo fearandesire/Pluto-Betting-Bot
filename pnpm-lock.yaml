@@ -232,8 +232,8 @@ importers:
         specifier: ^2.0.0
         version: 2.0.0
       '@sapphire/ts-config':
-        specifier: ^5.0.2
-        version: 5.0.2
+        specifier: ^5.0.3
+        version: 5.0.3
       '@swc/cli':
         specifier: ^0.7.9
         version: 0.7.9(@swc/core@1.15.5)(chokidar@4.0.3)
@@ -2308,8 +2308,8 @@ packages:
     resolution: {integrity: sha512-oNwWyNdbt5wm4aYZvlHl1+64U3g0xrFmRIHsnER7RgMxNnp/wmAE4yTK2oUHeadg3t4V9iYctPAQCF+aINke4g==}
     engines: {node: '>=v14.0.0', npm: '>=7.0.0'}
 
-  '@sapphire/ts-config@5.0.2':
-    resolution: {integrity: sha512-6QhgaEoVGsyMf9VCuPy9S8p8cFCDbkClCu9P8RPvMaerpbx5K3FW8S3fE1ZIhN9QECwNtPqnxS6m4rzpo3/7ZA==}
+  '@sapphire/ts-config@5.0.3':
+    resolution: {integrity: sha512-bFyGYHFT3TpOf5Sg2P+zY2ad0t5IA2epc5HtewlghhL7MYvbZvxtKsdaNaMwAdNObBx7hpiQm5OcOhyzEwQvbQ==}
     engines: {node: '>=v16.0.0', npm: '>=8.0.0'}
 
   '@sapphire/utilities@3.18.2':
@@ -8885,7 +8885,7 @@ snapshots:
 
   '@sapphire/timestamp@1.0.5': {}
 
-  '@sapphire/ts-config@5.0.2':
+  '@sapphire/ts-config@5.0.3':
     dependencies:
       tslib: 2.8.1
       typescript: 5.4.5
