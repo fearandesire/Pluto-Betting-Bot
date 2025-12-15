@@ -30,8 +30,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       '@koa/router':
-        specifier: ^14.0.0
-        version: 14.0.0
+        specifier: ^15.1.0
+        version: 15.1.0(koa@3.1.1)
       '@openapitools/openapi-generator-cli':
         specifier: ^2.25.2
         version: 2.25.2(@types/node@24.10.1)
@@ -1276,10 +1276,11 @@ packages:
     resolution: {integrity: sha512-x/iUDjcS90W69PryLDIMgFyV21YLTnG9zOpPXS7Bkt2b8AsY3zZsIpOLBkYr9fBcF3HbkKaER5hOBZLfpLgYNw==}
     engines: {node: '>= 14.0.0'}
 
-  '@koa/router@14.0.0':
-    resolution: {integrity: sha512-LBSu5K0qAaaQcXX/0WIB9PGDevyCxxpnc1uq13vV/CgObaVxuis5hKl3Eboq/8gcb6ebnkAStW9NB/Em2eYyFA==}
+  '@koa/router@15.1.0':
+    resolution: {integrity: sha512-0zCmuapmgBHrfVSFjBfCdgnkBnXwRGcG5qHnxVs8ZoTNEJiwSSspgJ5+2NugiqLJS/S0d96KMeNntLqTNWaioQ==}
     engines: {node: '>= 20'}
-    deprecated: Please upgrade to v15 or higher. All reported bugs in this version are fixed in newer releases, dependencies have been updated, and security has been improved.
+    peerDependencies:
+      koa: ^2.0.0 || ^3.0.0
 
   '@ladjs/consolidate@1.0.4':
     resolution: {integrity: sha512-ErvBg5acSqns86V/xW7gjqqnBBs6thnpMB0gGc3oM7WHsV8PWrnBtKI6dumHDT3UT/zEOfGzp7dmSFqWoCXKWQ==}
@@ -5463,10 +5464,6 @@ packages:
   path-to-regexp@6.3.0:
     resolution: {integrity: sha512-Yhpw4T9C6hPpgPeA28us07OJeqZ5EzQTkbfwuhsUg0c237RomFoETJgmp2sa3F/41gfLE6G5cqcYwznmeEeOlQ==}
 
-  path-to-regexp@8.2.0:
-    resolution: {integrity: sha512-TdrF7fW9Rphjq4RjrW0Kp2AW0Ahwu9sRGTkS6bvDi0SCwZlEZYmcfDbEsTz8RVk0EHIS/Vd1bv3JhG+1xZuAyQ==}
-    engines: {node: '>=16'}
-
   path-to-regexp@8.3.0:
     resolution: {integrity: sha512-7jdwVIRtsP8MYpdXSwOS0YdD0Du+qOoF/AEPIt88PcCFrZCzx41oxku1jD88hZBwbNUIEfpqvuhjFaMAqMTWnA==}
 
@@ -7889,12 +7886,13 @@ snapshots:
     dependencies:
       vary: 1.1.2
 
-  '@koa/router@14.0.0':
+  '@koa/router@15.1.0(koa@3.1.1)':
     dependencies:
       debug: 4.4.3(supports-color@8.1.1)
-      http-errors: 2.0.0
+      http-errors: 2.0.1
+      koa: 3.1.1
       koa-compose: 4.1.0
-      path-to-regexp: 8.2.0
+      path-to-regexp: 8.3.0
     transitivePeerDependencies:
       - supports-color
 
@@ -12439,8 +12437,6 @@ snapshots:
       minipass: 7.1.2
 
   path-to-regexp@6.3.0: {}
-
-  path-to-regexp@8.2.0: {}
 
   path-to-regexp@8.3.0: {}
 
