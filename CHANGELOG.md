@@ -1,5 +1,18 @@
 # Changelog
 
+## [4.2.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.1.0...v4.2.0) (2025-12-22)
+
+
+### Features
+
+* Add pagination to /mybets command with retry logic improvements ([#268](https://github.com/fearandesire/Pluto-Betting-Bot/issues/268)) ([732426c](https://github.com/fearandesire/Pluto-Betting-Bot/commit/732426c3db4f8f18c3d82a48e8c7d40cd306394b))
+
+
+### Bug Fixes
+
+* method reference ([f5b80b4](https://github.com/fearandesire/Pluto-Betting-Bot/commit/f5b80b47ff99964abc205bfae4b3ee67798b6b02))
+* update leaderboard API to v1 endpoint ([#304](https://github.com/fearandesire/Pluto-Betting-Bot/issues/304)) ([7a8bb82](https://github.com/fearandesire/Pluto-Betting-Bot/commit/7a8bb8269d003761c5b1eb3963f7394e6ad8ee0a))
+
 ## [4.1.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.0.0...v4.1.0) (2025-12-02)
 
 
