@@ -213,11 +213,11 @@ importers:
         specifier: ^4.9.0
         version: 4.9.0
       zod:
-        specifier: ^4.2.0
-        version: 4.2.0
+        specifier: ^4.2.1
+        version: 4.2.1
       zod-validation-error:
         specifier: ^5.0.0
-        version: 5.0.0(zod@4.2.0)
+        version: 5.0.0(zod@4.2.1)
     devDependencies:
       '@biomejs/biome':
         specifier: 2.3.10
@@ -6987,8 +6987,8 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
-  zod@4.2.0:
-    resolution: {integrity: sha512-Bd5fw9wlIhtqCCxotZgdTOMwGm1a0u75wARVEY9HMs1X17trvA/lMi4+MGK5EUfYkXVTbX8UDiDKW4OgzHVUZw==}
+  zod@4.2.1:
+    resolution: {integrity: sha512-0wZ1IRqGGhMP76gLqz8EyfBXKk0J2qo2+H3fi4mcUP/KtTocoX08nmIAHl1Z2kJIZbZee8KOpBCSNPRgauucjw==}
 
 snapshots:
 
@@ -8529,7 +8529,7 @@ snapshots:
     dependencies:
       discord.js: 14.25.1
       resolve-team: 2.0.4
-      zod: 4.2.0
+      zod: 4.2.1
 
   '@protobufjs/aspromise@1.1.2': {}
 
@@ -14194,10 +14194,10 @@ snapshots:
 
   yoctocolors@2.1.2: {}
 
-  zod-validation-error@5.0.0(zod@4.2.0):
+  zod-validation-error@5.0.0(zod@4.2.1):
     dependencies:
-      zod: 4.2.0
+      zod: 4.2.1
 
   zod@3.25.76: {}
 
-  zod@4.2.0: {}
+  zod@4.2.1: {}
