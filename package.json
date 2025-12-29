@@ -51,7 +51,7 @@
 		"@sapphire/discord-utilities": "^4.0.0",
 		"@sapphire/discord.js-utilities": "^7.3.2",
 		"@sapphire/fetch": "^3.0.5",
-		"@sapphire/framework": "^5.4.0",
+		"@sapphire/framework": "^5.5.0",
 		"@sapphire/pieces": "^4.3.1",
 		"@sapphire/plugin-api": "^8.0.0",
 		"@sapphire/plugin-editable-commands": "^4.0.4",
