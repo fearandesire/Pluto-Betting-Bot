@@ -45,7 +45,7 @@
 		"@kaname-png/plugin-statcord": "^2.3.3",
 		"@koa/cors": "^5.0.0",
 		"@koa/router": "^15.1.1",
-		"@openapitools/openapi-generator-cli": "^2.25.2",
+		"@openapitools/openapi-generator-cli": "^2.26.0",
 		"@pluto-khronos/types": "^0.2.4",
 		"@sapphire/decorators": "^6.1.1",
 		"@sapphire/discord-utilities": "^4.0.0",
