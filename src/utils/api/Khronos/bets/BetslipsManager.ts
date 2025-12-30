@@ -183,6 +183,7 @@ export class BetslipManager {
 				await this.announceBetPlaced(interaction, {
 					betOnTeam: chosenTeamStr,
 					amount: betslip.amount,
+					balance: (betslip.newBalance ?? 0) + betslip.amount,
 				})
 			} else {
 				const errEmbed = await ErrorEmbeds.internalErr(
@@ -270,7 +271,7 @@ export class BetslipManager {
 
 	private async announceBetPlaced(
 		interaction: CommandInteraction | ButtonInteraction,
-		betDetails: { betOnTeam: string; amount: number },
+		betDetails: { betOnTeam: string; amount: number; balance: number },
 	) {
 		try {
 			if (!interaction.guildId) {
@@ -286,7 +287,10 @@ export class BetslipManager {
 				)
 				.setColor(embedColors.success)
 				.setFooter({
-					text: await helpfooter('betting'),
+					text: await betFooter({
+						balance: betDetails.balance,
+						betAmount: betDetails.amount,
+					}),
 				})
 
 			await guildWrapper.sendToBettingChannel(interaction.guildId, {
