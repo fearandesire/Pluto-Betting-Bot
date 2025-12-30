@@ -1,8 +1,8 @@
 import type { MatchDetailDto } from '@kh-openapi'
 import { helpfooter } from '@pluto-config'
+import { container } from '@sapphire/framework'
 import { format, isValid, parseISO } from 'date-fns'
 import _ from 'lodash'
-import { container } from '@sapphire/framework'
 import parseScheduledGames from '../bot_res/parseScheduled.js'
 import { DateManager } from '../common/DateManager.js'
 import { formatOdds } from './formatOdds.js'
@@ -38,14 +38,17 @@ export async function prepareAndFormat(
 		// Skip matches with missing odds
 		if (hOdds == null || aOdds == null) {
 			nullOddsCount++
-			container.logger.debug('prepareAndFormat: skipping match with null odds', {
-				guildId,
-				matchId: match.id,
-				homeTeam: hTeam,
-				awayTeam: aTeam,
-				homeOdds: hOdds,
-				awayOdds: aOdds,
-			})
+			container.logger.debug(
+				'prepareAndFormat: skipping match with null odds',
+				{
+					guildId,
+					matchId: match.id,
+					homeTeam: hTeam,
+					awayTeam: aTeam,
+					homeOdds: hOdds,
+					awayOdds: aOdds,
+				},
+			)
 			continue
 		}
 

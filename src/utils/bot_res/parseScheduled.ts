@@ -1,5 +1,5 @@
-import { container } from '@sapphire/framework'
 import { helpfooter } from '@pluto-config'
+import { container } from '@sapphire/framework'
 import { format } from 'date-fns'
 import { EmbedBuilder } from 'discord.js'
 import _ from 'lodash'
@@ -69,7 +69,7 @@ export default async function parseScheduledGames(
 
 	// Fix async pattern: extract the function first, then map
 	const matchStrFn = await createMatchStr()
-	
+
 	const fields = await Promise.all(
 		sortedDates.map(async (date) => {
 			try {
@@ -81,12 +81,15 @@ export default async function parseScheduledGames(
 					value: gamesList.join('\n'),
 				}
 			} catch (error) {
-				container.logger.debug('parseScheduledGames: error processing date', {
-					guildId,
-					date,
-					gameCount: groupedGames[date]?.length ?? 0,
-					error,
-				})
+				container.logger.debug(
+					'parseScheduledGames: error processing date',
+					{
+						guildId,
+						date,
+						gameCount: groupedGames[date]?.length ?? 0,
+						error,
+					},
+				)
 				throw error
 			}
 		}),

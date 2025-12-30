@@ -51,7 +51,7 @@ export class UserCommand extends Command {
 					guildId,
 				})
 			const { matches } = matchupsForGuild
-			
+
 			this.container.logger.debug('Odds command: matches retrieved', {
 				guildId,
 				sport,
@@ -66,21 +66,27 @@ export class UserCommand extends Command {
 					guildId,
 				)
 			} catch (formatError) {
-				this.container.logger.debug('Odds command: error in prepareAndFormat', {
-					guildId,
-					sport,
-					matchCount: matches?.length ?? 0,
-					error: formatError,
-				})
+				this.container.logger.debug(
+					'Odds command: error in prepareAndFormat',
+					{
+						guildId,
+						sport,
+						matchCount: matches?.length ?? 0,
+						error: formatError,
+					},
+				)
 				throw formatError
 			}
 
 			if (!oddsEmbed) {
-				this.container.logger.debug('Odds command: prepareAndFormat returned null/undefined', {
-					guildId,
-					sport,
-					matchCount: matches?.length ?? 0,
-				})
+				this.container.logger.debug(
+					'Odds command: prepareAndFormat returned null/undefined',
+					{
+						guildId,
+						sport,
+						matchCount: matches?.length ?? 0,
+					},
+				)
 				const errEmb = await ErrorEmbeds.invalidRequest(
 					'No Odds are currently posted.',
 				)
