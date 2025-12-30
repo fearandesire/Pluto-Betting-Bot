@@ -1,9 +1,8 @@
 import axios, { AxiosHeaders } from 'axios'
-import env from '../../../lib/startup/env.js'
 import { readFileSync } from 'fs'
-import { join } from 'path'
+import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
-import { dirname } from 'path'
+import env from '../../../lib/startup/env.js'
 
 /**
  * Axios Instance(s) configured for our needs to reduce redundant specifications/setup

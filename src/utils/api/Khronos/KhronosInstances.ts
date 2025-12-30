@@ -1,9 +1,8 @@
 import fetchRetry from 'fetch-retry'
-import env from '../../../lib/startup/env.js'
 import { readFileSync } from 'fs'
-import { join } from 'path'
+import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
-import { dirname } from 'path'
+import env from '../../../lib/startup/env.js'
 /**
  * @module KhronosApi
  * @readonly
