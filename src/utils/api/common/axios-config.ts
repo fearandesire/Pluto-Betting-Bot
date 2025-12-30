@@ -9,7 +9,7 @@ const KhronosStandardConfig = {
 	baseURL: `${env.KH_API_URL}`,
 	timeout: 90000, // 90 Seconds in MS
 	headers: new AxiosHeaders({
-		'admin-token': `${env.KH_API_TOKEN}`,
+		'x-api-key': `${env.KH_PLUTO_CLIENT_KEY}`,
 	}),
 }
 

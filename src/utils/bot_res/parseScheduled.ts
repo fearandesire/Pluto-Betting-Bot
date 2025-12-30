@@ -1,3 +1,4 @@
+import { container } from '@sapphire/framework'
 import { helpfooter } from '@pluto-config'
 import { format } from 'date-fns'
 import { EmbedBuilder } from 'discord.js'
@@ -37,6 +38,10 @@ export default async function parseScheduledGames(
 		: embedColors.PlutoYellow
 
 	if (_.isEmpty(scheduledArr)) {
+		container.logger.debug('parseScheduledGames: received empty array', {
+			guildId,
+			includeOdds,
+		})
 		const description = includeOdds
 			? 'There are no odds currently stored right now.'
 			: 'No games are scheduled for the day.'
@@ -62,14 +67,27 @@ export default async function parseScheduledGames(
 		(a, b) => new Date(a).getTime() - new Date(b).getTime(),
 	)
 
+	// Fix async pattern: extract the function first, then map
+	const matchStrFn = await createMatchStr()
+	
 	const fields = await Promise.all(
 		sortedDates.map(async (date) => {
-			const gamesList = await Promise.all(
-				groupedGames[date].map(await createMatchStr()),
-			)
-			return {
-				name: format(new Date(date), 'PP'), // Format date as 'MM/DD/YYYY'
-				value: gamesList.join('\n'),
+			try {
+				const gamesList = await Promise.all(
+					groupedGames[date].map(matchStrFn),
+				)
+				return {
+					name: format(new Date(date), 'PP'), // Format date as 'MM/DD/YYYY'
+					value: gamesList.join('\n'),
+				}
+			} catch (error) {
+				container.logger.debug('parseScheduledGames: error processing date', {
+					guildId,
+					date,
+					gameCount: groupedGames[date]?.length ?? 0,
+					error,
+				})
+				throw error
 			}
 		}),
 	)

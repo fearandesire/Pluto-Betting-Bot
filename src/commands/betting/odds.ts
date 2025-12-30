@@ -51,12 +51,36 @@ export class UserCommand extends Command {
 					guildId,
 				})
 			const { matches } = matchupsForGuild
-			const oddsEmbed = await prepareAndFormat(
-				matches,
-				embedThumbnail,
+			
+			this.container.logger.debug('Odds command: matches retrieved', {
 				guildId,
-			)
+				sport,
+				matchCount: matches?.length ?? 0,
+			})
+
+			let oddsEmbed
+			try {
+				oddsEmbed = await prepareAndFormat(
+					matches,
+					embedThumbnail,
+					guildId,
+				)
+			} catch (formatError) {
+				this.container.logger.debug('Odds command: error in prepareAndFormat', {
+					guildId,
+					sport,
+					matchCount: matches?.length ?? 0,
+					error: formatError,
+				})
+				throw formatError
+			}
+
 			if (!oddsEmbed) {
+				this.container.logger.debug('Odds command: prepareAndFormat returned null/undefined', {
+					guildId,
+					sport,
+					matchCount: matches?.length ?? 0,
+				})
 				const errEmb = await ErrorEmbeds.invalidRequest(
 					'No Odds are currently posted.',
 				)
@@ -68,6 +92,10 @@ export class UserCommand extends Command {
 				embeds: [oddsEmbed],
 			})
 		} catch (error) {
+			this.container.logger.debug('Odds command: unhandled error', {
+				guildId: interaction.guild?.id,
+				error,
+			})
 			await new ApiErrorHandler().handle(
 				interaction,
 				error,
