@@ -1,9 +1,9 @@
 import { ApplyOptions } from '@sapphire/decorators'
 import { Subcommand } from '@sapphire/plugin-subcommands'
 import { EmbedBuilder, InteractionContextType } from 'discord.js'
+import embedColors from '../../lib/colorsConfig.js'
 import { FooterManager } from '../../lib/footers/FooterManager.js'
 import { FALLBACK_FOOTERS } from '../../lib/footers/fallbackFooters.js'
-import embedColors from '../../lib/colorsConfig.js'
 
 /**
  * Config command for managing bot settings
@@ -45,12 +45,16 @@ export class ConfigCommand extends Subcommand {
 							.addSubcommand((subcommand) =>
 								subcommand
 									.setName('status')
-									.setDescription('View footer cache status and statistics'),
+									.setDescription(
+										'View footer cache status and statistics',
+									),
 							)
 							.addSubcommand((subcommand) =>
 								subcommand
 									.setName('refresh')
-									.setDescription('Force refresh footer cache from Khronos'),
+									.setDescription(
+										'Force refresh footer cache from Khronos',
+									),
 							)
 							.addSubcommand((subcommand) =>
 								subcommand
@@ -59,14 +63,31 @@ export class ConfigCommand extends Subcommand {
 									.addStringOption((option) =>
 										option
 											.setName('category')
-											.setDescription('Filter by category (optional)')
+											.setDescription(
+												'Filter by category (optional)',
+											)
 											.addChoices(
 												{ name: 'Core', value: 'core' },
-												{ name: 'General', value: 'general' },
-												{ name: 'Betting', value: 'betting' },
-												{ name: 'Placed Bet', value: 'placedBet' },
-												{ name: 'High Bet', value: 'highBetPlaced' },
-												{ name: 'Low Bet', value: 'lowBetPlaced' },
+												{
+													name: 'General',
+													value: 'general',
+												},
+												{
+													name: 'Betting',
+													value: 'betting',
+												},
+												{
+													name: 'Placed Bet',
+													value: 'placedBet',
+												},
+												{
+													name: 'High Bet',
+													value: 'highBetPlaced',
+												},
+												{
+													name: 'Low Bet',
+													value: 'lowBetPlaced',
+												},
 											),
 									),
 							),
@@ -77,7 +98,9 @@ export class ConfigCommand extends Subcommand {
 		)
 	}
 
-	public async footerStatus(interaction: Subcommand.ChatInputCommandInteraction) {
+	public async footerStatus(
+		interaction: Subcommand.ChatInputCommandInteraction,
+	) {
 		const manager = FooterManager.getInstance()
 		const status = manager.getCacheStatus()
 
@@ -100,7 +123,10 @@ export class ConfigCommand extends Subcommand {
 		// Add category counts
 		if (Object.keys(status.categoryCounts).length > 0) {
 			const categoryList = Object.entries(status.categoryCounts)
-				.map(([category, count]) => `• **${category}:** ${count} footers`)
+				.map(
+					([category, count]) =>
+						`• **${category}:** ${count} footers`,
+				)
 				.join('\n')
 			embed.addFields({
 				name: '📁 Categories',
@@ -112,14 +138,18 @@ export class ConfigCommand extends Subcommand {
 		await interaction.reply({ embeds: [embed], ephemeral: true })
 	}
 
-	public async footerRefresh(interaction: Subcommand.ChatInputCommandInteraction) {
+	public async footerRefresh(
+		interaction: Subcommand.ChatInputCommandInteraction,
+	) {
 		await interaction.deferReply({ ephemeral: true })
 
 		const manager = FooterManager.getInstance()
 		const success = await manager.forceRefresh()
 
 		const embed = new EmbedBuilder()
-			.setTitle(success ? '✅ Footer Cache Refreshed' : '❌ Refresh Failed')
+			.setTitle(
+				success ? '✅ Footer Cache Refreshed' : '❌ Refresh Failed',
+			)
 			.setDescription(
 				success
 					? 'Footer cache has been successfully refreshed from Khronos.'
@@ -130,8 +160,12 @@ export class ConfigCommand extends Subcommand {
 		await interaction.editReply({ embeds: [embed] })
 	}
 
-	public async footerList(interaction: Subcommand.ChatInputCommandInteraction) {
-		const category = interaction.options.getString('category') as keyof typeof FALLBACK_FOOTERS | null
+	public async footerList(
+		interaction: Subcommand.ChatInputCommandInteraction,
+	) {
+		const category = interaction.options.getString('category') as
+			| keyof typeof FALLBACK_FOOTERS
+			| null
 		const manager = FooterManager.getInstance()
 		const status = manager.getCacheStatus()
 
@@ -142,14 +176,18 @@ export class ConfigCommand extends Subcommand {
 		if (category) {
 			// Show specific category
 			const footers = status.categoryCounts[category] || 0
-			embed.setDescription(`**Category:** ${category}\n**Count:** ${footers}`)
-			
+			embed.setDescription(
+				`**Category:** ${category}\n**Count:** ${footers}`,
+			)
+
 			// Note: We can't easily show actual footer text without exposing cache internals
 			// This is intentional to keep the command simple and focused on counts
 		} else {
 			// Show all categories
 			if (Object.keys(status.categoryCounts).length === 0) {
-				embed.setDescription('No footers cached. Try running `/config footer refresh`.')
+				embed.setDescription(
+					'No footers cached. Try running `/config footer refresh`.',
+				)
 			} else {
 				const categoryList = Object.entries(status.categoryCounts)
 					.map(([cat, count]) => `• **${cat}:** ${count} footers`)

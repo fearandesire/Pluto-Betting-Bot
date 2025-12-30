@@ -1,5 +1,5 @@
 import { logger } from '../utils/logging/WinstonLogger.js'
-import { FooterManager, type BetContext } from './footers/FooterManager.js'
+import { type BetContext, FooterManager } from './footers/FooterManager.js'
 import {
 	FALLBACK_FOOTERS,
 	type FooterTypes,
