@@ -3,19 +3,15 @@ import { z } from 'zod'
 // Define the schema for our environment variables
 const envSchema = z.object({
 	NODE_ENV: z.enum(['development', 'production']),
-	TOKEN: z
-		.string()
-		.min(1, {
-			message: 'TOKEN is required for Discord bot authentication',
-		}),
+	TOKEN: z.string().min(1, {
+		message: 'TOKEN is required for Discord bot authentication',
+	}),
 	PREFIX: z.string(),
 	PROJECT_VERSION: z.string(),
 	KH_API_URL: z.url(),
-	KH_API_TOKEN: z
-		.string()
-		.min(1, {
-			message: 'KH_API_TOKEN is required for Khronos API authentication',
-		}),
+	KH_API_TOKEN: z.string().min(1, {
+		message: 'KH_API_TOKEN is required for Khronos API authentication',
+	}),
 	R_HOST: z.string(),
 	R_PORT: z.number().int().positive(),
 	R_DB: z.number().int().nonnegative(),
@@ -25,12 +21,10 @@ const envSchema = z.object({
 	LOG_LEVEL: z.enum(['Trace', 'Debug', 'Info', 'Warn', 'Error', 'Fatal']),
 	DEV_SERVER_ID: z.string(),
 	PATREON_API_URL: z.url(),
-	KH_PLUTO_CLIENT_KEY: z
-		.string()
-		.min(1, {
-			message:
-				'KH_PLUTO_CLIENT_KEY is required for Khronos API authentication',
-		}),
+	KH_PLUTO_CLIENT_KEY: z.string().min(1, {
+		message:
+			'KH_PLUTO_CLIENT_KEY is required for Khronos API authentication',
+	}),
 	APP_OWNER_ID: z.string(),
 	AXIOM_DATASET: z.string(),
 	AXIOM_API_TOKEN: z
