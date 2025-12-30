@@ -6,7 +6,7 @@ import type {
 	PlacedBetslip,
 	PlacedBetslipDto,
 } from '@kh-openapi'
-import { helpfooter, betFooter, supportMessage } from '@pluto-config'
+import { betFooter, helpfooter, supportMessage } from '@pluto-config'
 import { format } from 'date-fns'
 import {
 	ActionRowBuilder,

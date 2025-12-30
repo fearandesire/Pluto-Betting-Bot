@@ -136,20 +136,31 @@ export class FooterManager {
 		const betRatio = context.betAmount / context.balance
 
 		if (betRatio >= 0.8) {
-			return this.pickFromCategory('highBetPlaced') ?? this.pickFromCategory('placedBet')
+			return (
+				this.pickFromCategory('highBetPlaced') ??
+				this.pickFromCategory('placedBet')
+			)
 		}
 
 		if (betRatio <= 0.05) {
-			return this.pickFromCategory('lowBetPlaced') ?? this.pickFromCategory('placedBet')
+			return (
+				this.pickFromCategory('lowBetPlaced') ??
+				this.pickFromCategory('placedBet')
+			)
 		}
 
 		if (context.odds && context.odds >= 5.0) {
 			// Underdog bet - use betting category with underdog-themed footers
-			return this.pickFromCategory('betting') ?? this.pickFromCategory('placedBet')
+			return (
+				this.pickFromCategory('betting') ??
+				this.pickFromCategory('placedBet')
+			)
 		}
 
 		// 3. Default placed_bet category
-		return this.pickFromCategory('placedBet') ?? this.getFallback('placedBet')
+		return (
+			this.pickFromCategory('placedBet') ?? this.getFallback('placedBet')
+		)
 	}
 
 	/**
@@ -159,7 +170,10 @@ export class FooterManager {
 	 */
 	private pickFromCategory(category: FooterTypes): string | null {
 		if (!this.cache) return null
-		const pool = this.cache.categories[category as keyof typeof this.cache.categories]
+		const pool =
+			this.cache.categories[
+				category as keyof typeof this.cache.categories
+			]
 		if (!pool || pool.length === 0) return null
 		return this.pickRandom(pool)
 	}
@@ -170,7 +184,8 @@ export class FooterManager {
 	 * @returns Fallback footer string
 	 */
 	private getFallback(type: FooterTypes): string {
-		const fallbackArr = FALLBACK_FOOTERS[type as keyof typeof FALLBACK_FOOTERS]
+		const fallbackArr =
+			FALLBACK_FOOTERS[type as keyof typeof FALLBACK_FOOTERS]
 		return this.pickRandom(fallbackArr || FALLBACK_FOOTERS.core)
 	}
 
@@ -180,12 +195,23 @@ export class FooterManager {
 	 */
 	getCacheStatus() {
 		const now = new Date()
-		const nextRefresh = this.lastRefresh ? new Date(this.lastRefresh.getTime() + this.REFRESH_INTERVAL) : null
-		const timeToNextRefresh = nextRefresh ? Math.max(0, Math.floor((nextRefresh.getTime() - now.getTime()) / 1000 / 60)) : 0
+		const nextRefresh = this.lastRefresh
+			? new Date(this.lastRefresh.getTime() + this.REFRESH_INTERVAL)
+			: null
+		const timeToNextRefresh = nextRefresh
+			? Math.max(
+					0,
+					Math.floor(
+						(nextRefresh.getTime() - now.getTime()) / 1000 / 60,
+					),
+				)
+			: 0
 
 		const categoryCounts: Record<string, number> = {}
 		if (this.cache) {
-			for (const [category, footers] of Object.entries(this.cache.categories)) {
+			for (const [category, footers] of Object.entries(
+				this.cache.categories,
+			)) {
 				categoryCounts[category] = footers.length
 			}
 		}
@@ -197,7 +223,12 @@ export class FooterManager {
 			ttl: `${this.REFRESH_INTERVAL / 1000 / 60} minutes`,
 			categoryCounts,
 			hasAnnouncement: !!this.cache?.announcement?.isActive,
-			cacheSize: this.cache ? Object.values(this.cache.categories).reduce((sum, arr) => sum + arr.length, 0) : 0,
+			cacheSize: this.cache
+				? Object.values(this.cache.categories).reduce(
+						(sum, arr) => sum + arr.length,
+						0,
+					)
+				: 0,
 		}
 	}
 
