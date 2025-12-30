@@ -252,7 +252,7 @@ export class BetslipManager {
 			.setThumbnail(embedImg)
 			.setFooter({
 				text: `Bet ID: ${betslip.betid} | ${betFooter({
-					balance: betslip.newBalance + betslip.amount,
+					balance: (betslip.newBalance ?? 0) + betslip.amount,
 					betAmount: betslip.amount,
 				})}`,
 			})
