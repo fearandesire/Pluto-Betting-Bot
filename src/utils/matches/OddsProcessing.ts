@@ -1,10 +1,10 @@
 import type { MatchDetailDto } from '@kh-openapi'
 import { helpfooter } from '@pluto-config'
-import { container } from '@sapphire/framework'
 import { format, isValid, parseISO } from 'date-fns'
 import _ from 'lodash'
 import parseScheduledGames from '../bot_res/parseScheduled.js'
 import { DateManager } from '../common/DateManager.js'
+import { logger } from '../logging/WinstonLogger.js'
 import { formatOdds } from './formatOdds.js'
 import type { IOddsField } from './matchups.interface.js'
 
@@ -20,7 +20,7 @@ export async function prepareAndFormat(
 	let nullOddsCount = 0
 	let formatErrorCount = 0
 
-	container.logger.debug('prepareAndFormat: starting', {
+	logger.debug('prepareAndFormat: starting', {
 		guildId,
 		totalMatches: matchups?.length ?? 0,
 	})
@@ -38,17 +38,14 @@ export async function prepareAndFormat(
 		// Skip matches with missing odds
 		if (hOdds == null || aOdds == null) {
 			nullOddsCount++
-			container.logger.debug(
-				'prepareAndFormat: skipping match with null odds',
-				{
-					guildId,
-					matchId: match.id,
-					homeTeam: hTeam,
-					awayTeam: aTeam,
-					homeOdds: hOdds,
-					awayOdds: aOdds,
-				},
-			)
+			logger.debug('prepareAndFormat: skipping match with null odds', {
+				guildId,
+				matchId: match.id,
+				homeTeam: hTeam,
+				awayTeam: aTeam,
+				homeOdds: hOdds,
+				awayOdds: aOdds,
+			})
 			continue
 		}
 
@@ -60,7 +57,7 @@ export async function prepareAndFormat(
 			awayOdds = formatted.awayOdds
 		} catch (error) {
 			formatErrorCount++
-			container.logger.debug('prepareAndFormat: formatOdds error', {
+			logger.debug('prepareAndFormat: formatOdds error', {
 				guildId,
 				matchId: match.id,
 				homeTeam: hTeam,
@@ -118,7 +115,7 @@ export async function prepareAndFormat(
 	// Sort the oddsFields by actual date
 	const sortedOddsFields = _.orderBy(oddsFields, ['dates.mdy'], ['asc'])
 
-	container.logger.debug('prepareAndFormat: filtering complete', {
+	logger.debug('prepareAndFormat: filtering complete', {
 		guildId,
 		totalMatches: matchups?.length ?? 0,
 		completedCount,

@@ -1,9 +1,9 @@
 import { helpfooter } from '@pluto-config'
-import { container } from '@sapphire/framework'
 import { format } from 'date-fns'
 import { EmbedBuilder } from 'discord.js'
 import _ from 'lodash'
 import embedColors from '../../lib/colorsConfig.js'
+import { logger } from '../logging/WinstonLogger.js'
 import type {
 	IMatchupsGrouped,
 	IOddsField,
@@ -38,7 +38,7 @@ export default async function parseScheduledGames(
 		: embedColors.PlutoYellow
 
 	if (_.isEmpty(scheduledArr)) {
-		container.logger.debug('parseScheduledGames: received empty array', {
+		logger.debug('parseScheduledGames: received empty array', {
 			guildId,
 			includeOdds,
 		})
@@ -81,15 +81,12 @@ export default async function parseScheduledGames(
 					value: gamesList.join('\n'),
 				}
 			} catch (error) {
-				container.logger.debug(
-					'parseScheduledGames: error processing date',
-					{
-						guildId,
-						date,
-						gameCount: groupedGames[date]?.length ?? 0,
-						error,
-					},
-				)
+				logger.debug('parseScheduledGames: error processing date', {
+					guildId,
+					date,
+					gameCount: groupedGames[date]?.length ?? 0,
+					error,
+				})
 				throw error
 			}
 		}),
