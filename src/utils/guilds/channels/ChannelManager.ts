@@ -15,6 +15,7 @@ import {
 import _ from 'lodash'
 import { teamResolver } from 'resolve-team'
 import { SapDiscClient } from '../../../index.js'
+import env from '../../../lib/startup/env.js'
 import { findEmoji } from '../../bot_res/findEmoji.js'
 import {
 	type ChannelAggregated,
@@ -36,7 +37,7 @@ export default class ChannelManager {
 	}
 
 	constructor() {
-		this.API_URL = `${process.env.KH_API_URL}`
+		this.API_URL = `${env.KH_API_URL}`
 		this.ep = {
 			gchan: '/channels',
 		}
