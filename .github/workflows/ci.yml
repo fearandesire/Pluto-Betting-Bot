@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: read
+  packages: write
+
+jobs:
+  check:
+    name: Verification
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Validate commit messages (conventional commits)
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            npx commitlint --from ${{ github.event.pull_request.base.sha }} --to HEAD --verbose
+          else
+            # For push events, try to use github.event.before, but fallback to origin/main
+            # if the commit doesn't exist (e.g., after a rebase)
+            FROM_SHA="${{ github.event.before }}"
+            if ! git cat-file -e "$FROM_SHA" 2>/dev/null; then
+              echo "Commit $FROM_SHA not found (likely due to rebase), using origin/main as base"
+              git fetch origin main 2>/dev/null || true
+              # Use merge-base to find common ancestor, or fallback to origin/main
+              MERGE_BASE=$(git merge-base HEAD origin/main 2>/dev/null || echo "origin/main")
+              FROM_SHA="$MERGE_BASE"
+            fi
+            npx commitlint --from "$FROM_SHA" --to HEAD --verbose
+          fi
+
+  docker:
+    name: Build & Push Docker Image
+    needs: check
+    runs-on: ubuntu-latest
+    # Only run when pushing to main AND (it's a release commit OR patch/fix/hotfix OR contains --force-build)
+    if: |
+      github.event_name == 'push' && 
+      github.ref == 'refs/heads/main' &&
+      (startsWith(github.event.head_commit.message, 'chore(main): release') || 
+       contains(github.event.head_commit.message, '--force-build') ||
+       startsWith(github.event.head_commit.message, 'fix:') ||
+       startsWith(github.event.head_commit.message, 'patch:') ||
+       startsWith(github.event.head_commit.message, 'hotfix:'))
+
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: docker build -t ghcr.io/${{ github.repository_owner }}/pluto-betting-bot:latest .
+
+      - name: Push image
+        run: docker push ghcr.io/${{ github.repository_owner }}/pluto-betting-bot:latest
+
