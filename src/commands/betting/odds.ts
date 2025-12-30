@@ -7,8 +7,8 @@ import { ApiErrorHandler } from '../../utils/api/Khronos/error-handling/ApiError
 import GuildWrapper from '../../utils/api/Khronos/guild/guild-wrapper.js'
 import MatchApiWrapper from '../../utils/api/Khronos/matches/matchApiWrapper.js'
 import { ErrorEmbeds } from '../../utils/common/errors/global.js'
-import { prepareAndFormat } from '../../utils/matches/OddsProcessing.js'
 import { logger } from '../../utils/logging/WinstonLogger.js'
+import { prepareAndFormat } from '../../utils/matches/OddsProcessing.js'
 
 @ApplyOptions<Command.Options>({
 	description: '🔎 View current matches & odds',
@@ -77,11 +77,14 @@ export class UserCommand extends Command {
 			}
 
 			if (!oddsEmbed) {
-				logger.debug('Odds command: prepareAndFormat returned null/undefined', {
-					guildId,
-					sport,
-					matchCount: matches?.length ?? 0,
-				})
+				logger.debug(
+					'Odds command: prepareAndFormat returned null/undefined',
+					{
+						guildId,
+						sport,
+						matchCount: matches?.length ?? 0,
+					},
+				)
 				const errEmb = await ErrorEmbeds.invalidRequest(
 					'No Odds are currently posted.',
 				)

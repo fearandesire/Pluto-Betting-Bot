@@ -1,5 +1,9 @@
 import fetchRetry from 'fetch-retry'
 import env from '../../../lib/startup/env.js'
+import { readFileSync } from 'fs'
+import { join } from 'path'
+import { fileURLToPath } from 'url'
+import { dirname } from 'path'
 /**
  * @module KhronosApi
  * @readonly
@@ -16,6 +20,13 @@ import {
 	GuildsApi,
 	MatchesApi,
 } from '../../../openapi/khronos/index.js'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+const packageJsonPath = join(__dirname, '../../../../package.json')
+const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'))
+const SERVICE_NAME = 'Pluto-Betting-Bot'
+const SERVICE_VERSION = packageJson.version || '1.0.0'
 
 const retryingFetch = fetchRetry(global.fetch, {
 	retries: 3,
@@ -73,6 +84,8 @@ export const KH_API_CONFIG = new Configuration({
 	basePath: `${env.KH_API_URL}`,
 	headers: {
 		'x-api-key': `${env.KH_PLUTO_CLIENT_KEY}`,
+		'User-Agent': `${SERVICE_NAME}/${SERVICE_VERSION}`,
+		'X-Service-Name': SERVICE_NAME,
 	},
 	fetchApi: retryingFetch,
 })
