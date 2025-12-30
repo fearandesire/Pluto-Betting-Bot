@@ -5,6 +5,14 @@ import embedColors from '../../lib/colorsConfig.js'
 import { FooterManager } from '../../lib/footers/FooterManager.js'
 import { FALLBACK_FOOTERS } from '../../lib/footers/fallbackFooters.js'
 
+const FOOTER_CATEGORY_CHOICES = Object.keys(FALLBACK_FOOTERS).map((key) => ({
+	name: key
+		.replace(/([A-Z])/g, ' $1')
+		.replace(/^./, (str) => str.toUpperCase())
+		.trim(),
+	value: key,
+}))
+
 /**
  * Config command for managing bot settings
  *
@@ -67,27 +75,7 @@ export class ConfigCommand extends Subcommand {
 												'Filter by category (optional)',
 											)
 											.addChoices(
-												{ name: 'Core', value: 'core' },
-												{
-													name: 'General',
-													value: 'general',
-												},
-												{
-													name: 'Betting',
-													value: 'betting',
-												},
-												{
-													name: 'Placed Bet',
-													value: 'placedBet',
-												},
-												{
-													name: 'High Bet',
-													value: 'highBetPlaced',
-												},
-												{
-													name: 'Low Bet',
-													value: 'lowBetPlaced',
-												},
+												...FOOTER_CATEGORY_CHOICES,
 											),
 									),
 							),
@@ -241,15 +229,11 @@ export class ConfigCommand extends Subcommand {
 				)
 				.setColor(embedColors.error)
 
-			if (interaction.deferred && !interaction.replied) {
+			if (interaction.deferred) {
 				await interaction.editReply({ embeds: [embed] })
-				return
+			} else {
+				await interaction.reply({ embeds: [embed], ephemeral: true })
 			}
-			if (interaction.replied || interaction.deferred) {
-				await interaction.followUp({ embeds: [embed], ephemeral: true })
-				return
-			}
-			await interaction.reply({ embeds: [embed], ephemeral: true })
 		}
 	}
 }
