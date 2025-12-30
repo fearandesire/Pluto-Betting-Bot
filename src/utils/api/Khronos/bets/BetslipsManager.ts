@@ -6,7 +6,7 @@ import type {
 	PlacedBetslip,
 	PlacedBetslipDto,
 } from '@kh-openapi'
-import { helpfooter, supportMessage } from '@pluto-config'
+import { helpfooter, betFooter, supportMessage } from '@pluto-config'
 import { format } from 'date-fns'
 import {
 	ActionRowBuilder,
@@ -250,7 +250,10 @@ export class BetslipManager {
 			.setColor(embedColors.success)
 			.setThumbnail(embedImg)
 			.setFooter({
-				text: `Bet ID: ${betslip.betid} | ${await helpfooter('betting')}`,
+				text: `Bet ID: ${betslip.betid} | ${await betFooter({
+					balance: betslip.newBalance + betslip.amount,
+					betAmount: betslip.amount,
+				})}`,
 			})
 
 		if (interaction.deferred || interaction.replied) {

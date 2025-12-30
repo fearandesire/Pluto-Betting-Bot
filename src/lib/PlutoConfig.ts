@@ -1,11 +1,11 @@
 import { logger } from '../utils/logging/WinstonLogger.js'
-import { FooterManager } from './footers/FooterManager.js'
+import { FooterManager, type BetContext } from './footers/FooterManager.js'
 import {
 	FALLBACK_FOOTERS,
 	type FooterTypes,
 } from './footers/fallbackFooters.js'
 
-export { type FooterTypes }
+export { type FooterTypes, type BetContext }
 
 /** Valid footer type keys for runtime validation */
 const VALID_FOOTER_TYPES = new Set<FooterTypes>([
@@ -44,4 +44,26 @@ function randomFooter(type: FooterTypes = 'core'): string {
 
 const supportMessage = 'Please reach out to `fenixforever` for support.'
 
-export { randomFooter as helpfooter, supportMessage }
+/**
+ * Get a context-aware footer for betting scenarios
+ * @param context - Bet context including balance, bet amount, and optional odds
+ * @returns Footer string based on bet context
+ */
+function betFooter(context: BetContext): string {
+	try {
+		const footer = FooterManager.getInstance().getFooterForBet(context)
+		return footer ?? DEFAULT_FOOTER
+	} catch (error) {
+		logger.error({
+			message: 'Failed to get context-aware footer from FooterManager',
+			metadata: {
+				source: 'PlutoConfig.betFooter',
+				context,
+				error: error instanceof Error ? error.stack : error,
+			},
+		})
+		return DEFAULT_FOOTER
+	}
+}
+
+export { randomFooter as helpfooter, betFooter, supportMessage }
