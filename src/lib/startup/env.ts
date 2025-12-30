@@ -5,7 +5,7 @@ const envSchema = z.object({
 	NODE_ENV: z.enum(['development', 'production']),
 	TOKEN: z.string().min(1, {
 		message: 'TOKEN is required for Discord bot authentication',
-	}),
+	}).describe('Discord bot token used for authentication'),
 	PREFIX: z.string(),
 	PROJECT_VERSION: z.string(),
 	KH_API_URL: z.url(),
@@ -15,12 +15,12 @@ const envSchema = z.object({
 	R_HOST: z.string(),
 	R_PORT: z.number().int().positive(),
 	R_DB: z.number().int().nonnegative(),
-	R_PASS: z.string(),
+	R_PASS: z.string().min(1, { message: 'R_PASS is required' }),
 	API_PORT: z.number().int().positive(),
-	API_URL: z.url(),
+	API_URL: z.string().url().min(1, { message: 'API_URL is required' }),
 	LOG_LEVEL: z.enum(['Trace', 'Debug', 'Info', 'Warn', 'Error', 'Fatal']),
 	DEV_SERVER_ID: z.string(),
-	PATREON_API_URL: z.url(),
+	PATREON_API_URL: z.string().url().min(1, { message: 'PATREON_API_URL is required' }),
 	KH_PLUTO_CLIENT_KEY: z.string().min(1, {
 		message:
 			'KH_PLUTO_CLIENT_KEY is required for Khronos API authentication',
@@ -31,14 +31,14 @@ const envSchema = z.object({
 		.string()
 		.min(1, { message: 'AXIOM_API_TOKEN is required for Axiom logging' }),
 	AXIOM_ORG_ID: z.string(),
-	BULL_BOARD_USERNAME: z.string(),
-	BULL_BOARD_PASSWORD: z.string(),
+	BULL_BOARD_USERNAME: z.string().min(1, { message: 'BULL_BOARD_USERNAME is required' }),
+	BULL_BOARD_PASSWORD: z.string().min(1, { message: 'BULL_BOARD_PASSWORD is required' }),
 	API_KEY: z
 		.string()
 		.min(1, { message: 'API_KEY is required for API authentication' }),
 	LOKI_URL: z.string(),
-	LOKI_USER: z.string(),
-	LOKI_PASS: z.string(),
+	LOKI_USER: z.string().min(1, { message: 'LOKI_USER is required' }),
+	LOKI_PASS: z.string().min(1, { message: 'LOKI_PASS is required' }),
 	MAINTENANCE_MODE: z.boolean(),
 })
 
