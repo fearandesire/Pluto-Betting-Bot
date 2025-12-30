@@ -251,7 +251,7 @@ export class BetslipManager {
 			.setColor(embedColors.success)
 			.setThumbnail(embedImg)
 			.setFooter({
-				text: `Bet ID: ${betslip.betid} | ${await betFooter({
+				text: `Bet ID: ${betslip.betid} | ${betFooter({
 					balance: betslip.newBalance + betslip.amount,
 					betAmount: betslip.amount,
 				})}`,
@@ -287,7 +287,7 @@ export class BetslipManager {
 				)
 				.setColor(embedColors.success)
 				.setFooter({
-					text: await betFooter({
+					text: betFooter({
 						balance: betDetails.balance,
 						betAmount: betDetails.amount,
 					}),
@@ -383,9 +383,6 @@ export class BetslipManager {
 				)
 				.setColor(embedColors.success)
 				.setThumbnail(interaction.user.displayAvatarURL())
-				.setFooter({
-					text: await helpfooter('betting'),
-				})
 			if (interaction.deferred || interaction.replied) {
 				return interaction.followUp({
 					embeds: [cancelledEmbed],
@@ -453,9 +450,6 @@ export class BetslipManager {
 			)
 			.setThumbnail(interaction.user.displayAvatarURL())
 			.setColor(embedColors.PlutoYellow)
-			.setFooter({
-				text: await helpfooter('betting'),
-			})
 		const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
 			new ButtonBuilder()
 				.setCustomId('matchup_btn_confirm')
