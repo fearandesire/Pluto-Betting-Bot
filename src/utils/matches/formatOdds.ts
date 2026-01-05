@@ -26,7 +26,9 @@ export async function formatOdds(
 	} else if (favorAway && !favorHome) {
 		hOdds = `+${hOdds}` // home team underdog
 	} else {
-		throw new Error('Invalid odds provided to be formatted.')
+		throw new Error(
+			`Invalid odds format provided: homeOdds="${hOdds}", awayOdds="${aOdds}". Expected at least one negative value.`,
+		)
 	}
 	return {
 		homeOdds: hOdds,

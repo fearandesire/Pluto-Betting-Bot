@@ -4,6 +4,7 @@ import { format, isValid, parseISO } from 'date-fns'
 import _ from 'lodash'
 import parseScheduledGames from '../bot_res/parseScheduled.js'
 import { DateManager } from '../common/DateManager.js'
+import { logger } from '../logging/WinstonLogger.js'
 import { formatOdds } from './formatOdds.js'
 import type { IOddsField } from './matchups.interface.js'
 
@@ -15,8 +16,18 @@ export async function prepareAndFormat(
 	const oddsFields: IOddsField[] = []
 	const dateManager = new DateManager()
 
+	let completedCount = 0
+	let nullOddsCount = 0
+	let formatErrorCount = 0
+
+	logger.debug('prepareAndFormat: starting', {
+		guildId,
+		totalMatches: matchups?.length ?? 0,
+	})
+
 	for (const match of matchups) {
 		if (match.status === 'completed') {
+			completedCount++
 			continue
 		}
 		const hTeam = `${match.home_team}`
@@ -26,10 +37,37 @@ export async function prepareAndFormat(
 
 		// Skip matches with missing odds
 		if (hOdds == null || aOdds == null) {
+			nullOddsCount++
+			logger.debug('prepareAndFormat: skipping match with null odds', {
+				guildId,
+				matchId: match.id,
+				homeTeam: hTeam,
+				awayTeam: aTeam,
+				homeOdds: hOdds,
+				awayOdds: aOdds,
+			})
 			continue
 		}
 
-		const { homeOdds, awayOdds } = await formatOdds(hOdds, aOdds)
+		let homeOdds: string
+		let awayOdds: string
+		try {
+			const formatted = await formatOdds(hOdds, aOdds)
+			homeOdds = formatted.homeOdds
+			awayOdds = formatted.awayOdds
+		} catch (error) {
+			formatErrorCount++
+			logger.debug('prepareAndFormat: formatOdds error', {
+				guildId,
+				matchId: match.id,
+				homeTeam: hTeam,
+				awayTeam: aTeam,
+				homeOdds: hOdds,
+				awayOdds: aOdds,
+				error,
+			})
+			continue
+		}
 
 		// Parse commence_time to get date and time components
 		let parsedStart = ''
@@ -76,6 +114,15 @@ export async function prepareAndFormat(
 
 	// Sort the oddsFields by actual date
 	const sortedOddsFields = _.orderBy(oddsFields, ['dates.mdy'], ['asc'])
+
+	logger.debug('prepareAndFormat: filtering complete', {
+		guildId,
+		totalMatches: matchups?.length ?? 0,
+		completedCount,
+		nullOddsCount,
+		formatErrorCount,
+		validMatches: sortedOddsFields.length,
+	})
 
 	const count = sortedOddsFields.length
 	const options = {

@@ -7,6 +7,7 @@ import { pageNotFound } from '../../requests/middleware.js'
 import { createApiKeyAuthMiddleware } from './apiKeyAuth.js'
 import { setupBullBoard } from './bullBoard.js'
 import { createErrorHandler } from './errorHandler.js'
+import { captureRequestIdentity } from './logging.js'
 import { createRequestIdMiddleware } from './requestId.js'
 
 /**
@@ -17,6 +18,9 @@ export async function setupKoaApp(): Promise<Koa> {
 
 	// Add request ID middleware before any other middleware
 	app.use(createRequestIdMiddleware())
+
+	// Capture request identity (User-Agent, X-Service-Name) for logging
+	app.use(captureRequestIdentity())
 
 	// Add logging middleware
 	app.use(
