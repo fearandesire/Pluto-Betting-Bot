@@ -30,8 +30,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       '@koa/router':
-        specifier: ^15.1.1
-        version: 15.1.1(koa@3.1.1)
+        specifier: ^15.2.0
+        version: 15.2.0(koa@3.1.1)
       '@openapitools/openapi-generator-cli':
         specifier: ^2.27.0
         version: 2.27.0(@types/node@25.0.3)
@@ -1266,8 +1266,8 @@ packages:
     resolution: {integrity: sha512-x/iUDjcS90W69PryLDIMgFyV21YLTnG9zOpPXS7Bkt2b8AsY3zZsIpOLBkYr9fBcF3HbkKaER5hOBZLfpLgYNw==}
     engines: {node: '>= 14.0.0'}
 
-  '@koa/router@15.1.1':
-    resolution: {integrity: sha512-trYxL4VOx8r92f8luqpN83xkN0DMTsp/HBJIxoDZH/a2I1Hxvoe+jjjhyJRQUQIHmsNQjCM+Xj6nCqSvnDnlCw==}
+  '@koa/router@15.2.0':
+    resolution: {integrity: sha512-7YUhq4W83cybfNa4E7JqJpWzoCTSvbnFltkvRaUaUX1ybFzlUoLNY1SqT8XmIAO6nGbFrev+FvJHw4mL+4WhuQ==}
     engines: {node: '>= 20'}
     peerDependencies:
       koa: ^2.0.0 || ^3.0.0
@@ -7995,7 +7995,7 @@ snapshots:
     dependencies:
       vary: 1.1.2
 
-  '@koa/router@15.1.1(koa@3.1.1)':
+  '@koa/router@15.2.0(koa@3.1.1)':
     dependencies:
       debug: 4.4.3(supports-color@8.1.1)
       http-errors: 2.0.1
