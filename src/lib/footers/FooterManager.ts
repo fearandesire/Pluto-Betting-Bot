@@ -35,7 +35,7 @@ export class FooterManager {
 	async init() {
 		await this.refreshConfig()
 		this._refreshInterval = setInterval(
-			() => this.refreshConfig(),
+			() => void this.refreshConfig(),
 			this.REFRESH_INTERVAL,
 		)
 		logger.info({
@@ -67,12 +67,28 @@ export class FooterManager {
 				message: 'Footer config refreshed',
 				metadata: {
 					source: 'FooterManager.refreshConfig',
-					categories: Object.keys(result.data.categories).length,
+					categories: Object.keys(this.getCachedCategories()).length,
 					hasAnnouncement: !!result.data.announcement?.isActive,
 				},
 			})
 		}
 		// Error logging is handled by FooterService - just silently use cache/fallback
+	}
+
+	private getCachedCategories(): Record<string, readonly string[]> {
+		const raw = this.cache?.categories
+		if (!raw || typeof raw !== 'object') return {}
+		const entries = Object.entries(raw as Record<string, unknown>)
+		const out: Record<string, readonly string[]> = {}
+		for (const [key, value] of entries) {
+			if (
+				Array.isArray(value) &&
+				value.every((v) => typeof v === 'string')
+			) {
+				out[key] = value
+			}
+		}
+		return out
 	}
 
 	getFooter(type: FooterTypes = 'core'): string {
@@ -85,13 +101,14 @@ export class FooterManager {
 		let pool: string[] = []
 
 		if (this.cache) {
+			const categories = this.getCachedCategories()
 			if (type === 'all') {
 				// Collect all texts from all categories
-				pool = Object.values(this.cache.categories).flat()
+				pool = Object.values(categories).flat()
 			} else {
-				const cachedCat = this.cache.categories[type]
+				const cachedCat = categories[type]
 				if (cachedCat && cachedCat.length > 0) {
-					pool = cachedCat
+					pool = [...cachedCat]
 				}
 			}
 		}
@@ -106,7 +123,6 @@ export class FooterManager {
 			return this.pickRandom(allFallback)
 		}
 
-		// @ts-ignore - Types should match but safety first
 		const fallbackArr = FALLBACK_FOOTERS[type]
 		return this.pickRandom(fallbackArr || FALLBACK_FOOTERS.core)
 	}
@@ -133,27 +149,37 @@ export class FooterManager {
 		}
 
 		// 2. Context-triggered categories (fast O(1) checks)
-		const betRatio = context.betAmount / context.balance
+		const betRatio =
+			context.balance > 0
+				? context.betAmount / context.balance
+				: context.betAmount > 0
+					? 1
+					: 0
+		if (context.balance > 0) {
+			if (betRatio >= 0.8) {
+				return (
+					this.pickFromCategory('highBetPlaced') ??
+					this.getFallback('highBetPlaced')
+				)
+			}
 
-		if (betRatio >= 0.8) {
+			if (betRatio <= 0.05) {
+				return (
+					this.pickFromCategory('lowBetPlaced') ??
+					this.getFallback('lowBetPlaced')
+				)
+			}
+		} else if (context.betAmount > 0) {
 			return (
 				this.pickFromCategory('highBetPlaced') ??
-				this.pickFromCategory('placedBet')
-			)
-		}
-
-		if (betRatio <= 0.05) {
-			return (
-				this.pickFromCategory('lowBetPlaced') ??
-				this.pickFromCategory('placedBet')
+				this.getFallback('highBetPlaced')
 			)
 		}
 
 		if (context.odds && context.odds >= 5.0) {
 			// Underdog bet - use betting category with underdog-themed footers
 			return (
-				this.pickFromCategory('betting') ??
-				this.pickFromCategory('placedBet')
+				this.pickFromCategory('betting') ?? this.getFallback('betting')
 			)
 		}
 
@@ -169,10 +195,9 @@ export class FooterManager {
 	 * @returns Random footer from category or null if empty
 	 */
 	private pickFromCategory(category: FooterTypes): string | null {
-		if (!this.cache) return null
-		const pool = (this.cache.categories as Record<string, string[]>)[
-			category
-		]
+		if (category === 'all') return null
+		const categories = this.getCachedCategories()
+		const pool = categories[category]
 		if (!pool || pool.length === 0) return null
 		return this.pickRandom(pool)
 	}
@@ -183,6 +208,10 @@ export class FooterManager {
 	 * @returns Fallback footer string
 	 */
 	private getFallback(type: FooterTypes): string {
+		if (type === 'all') {
+			const allFallback = Object.values(FALLBACK_FOOTERS).flat()
+			return this.pickRandom(allFallback)
+		}
 		const fallbackArr =
 			FALLBACK_FOOTERS[type as keyof typeof FALLBACK_FOOTERS]
 		return this.pickRandom(fallbackArr || FALLBACK_FOOTERS.core)
@@ -209,7 +238,7 @@ export class FooterManager {
 		const categoryCounts: Record<string, number> = {}
 		if (this.cache) {
 			for (const [category, footers] of Object.entries(
-				this.cache.categories,
+				this.getCachedCategories(),
 			)) {
 				categoryCounts[category] = footers.length
 			}
@@ -223,7 +252,7 @@ export class FooterManager {
 			categoryCounts,
 			hasAnnouncement: !!this.cache?.announcement?.isActive,
 			cacheSize: this.cache
-				? Object.values(this.cache.categories).reduce(
+				? Object.values(this.getCachedCategories()).reduce(
 						(sum, arr) => sum + arr.length,
 						0,
 					)
@@ -237,8 +266,9 @@ export class FooterManager {
 	 */
 	async forceRefresh(): Promise<boolean> {
 		try {
+			const previousLastRefresh = this.lastRefresh
 			await this.refreshConfig()
-			return this.cache !== null
+			return previousLastRefresh !== this.lastRefresh
 		} catch (error) {
 			logger.error({
 				message: 'Failed to force refresh footer cache',

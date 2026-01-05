@@ -115,7 +115,6 @@ export class MyBetsFormatterService {
 		const embed = new EmbedBuilder()
 			.setTitle('⏳ Pending Bets')
 			.setColor(embedColors.PlutoYellow)
-			.setFooter({ text: await helpfooter('betting') })
 
 		if (pendingBets.length === 0) {
 			embed.setDescription('You have no pending bets.')
@@ -134,13 +133,9 @@ export class MyBetsFormatterService {
 		groupedBets: BetsByDate[],
 		guild?: Guild,
 	): Promise<EmbedBuilder> {
-		const { page, totalPages } = historyPage
 		const embed = new EmbedBuilder()
 			.setTitle(`📜 Bet History`)
 			.setColor(embedColors.PlutoBlue)
-			.setFooter({
-				text: `Page ${page}/${totalPages} • ${await helpfooter('betting')}`,
-			})
 
 		if (historyPage.bets.length === 0) {
 			embed.setDescription(

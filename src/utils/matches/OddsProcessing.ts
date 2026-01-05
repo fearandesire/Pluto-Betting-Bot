@@ -128,7 +128,7 @@ export async function prepareAndFormat(
 	const options = {
 		includeOdds: true,
 		footer: {
-			text: `\`${count}\` upcoming matches | ${await helpfooter()}`,
+			text: `\`${count}\` upcoming matches | ${await helpfooter('general')}`,
 		},
 		thumbnail,
 		guildId,

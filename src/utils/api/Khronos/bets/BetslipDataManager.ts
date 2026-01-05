@@ -33,9 +33,6 @@ export default class BetslipDataManager {
 		const embed = new EmbedBuilder()
 			.setTitle('🎲 Active Bets')
 			.setColor(embedColors.PlutoYellow)
-			.setFooter({
-				text: await helpfooter('betting'),
-			})
 
 		if (bets.length === 0) {
 			embed
