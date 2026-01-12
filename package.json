@@ -135,7 +135,7 @@
 		"pkgroll": "^2.21.4",
 		"prettier": "^3.7.4",
 		"prettier-eslint-cli": "^8.0.1",
-		"release-it": "^19.2.2",
+		"release-it": "^19.2.3",
 		"release-it-changelogen": "^0.1.0",
 		"rimraf": "^6.1.2",
 		"ts-jest": "^29.4.6",
