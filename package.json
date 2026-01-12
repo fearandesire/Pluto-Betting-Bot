@@ -79,7 +79,7 @@
 		"dotenv-vault": "1.27.0",
 		"esm-module-alias": "^2.2.1",
 		"fetch-retry": "^6.0.0",
-		"ioredis": "^5.8.2",
+		"ioredis": "^5.9.1",
 		"koa": "^3.1.1",
 		"koa-basic-auth": "^4.0.0",
 		"koa-bodyparser": "^4.4.1",
