@@ -298,11 +298,11 @@ importers:
         specifier: ^8.0.1
         version: 8.0.1(prettier-eslint@16.4.2(typescript@5.9.3))(typescript@5.9.3)
       release-it:
-        specifier: ^19.2.2
-        version: 19.2.2(@types/node@25.0.3)
+        specifier: ^19.2.3
+        version: 19.2.3(@types/node@25.0.3)
       release-it-changelogen:
         specifier: ^0.1.0
-        version: 0.1.0(changelogen@0.5.7)(release-it@19.2.2(@types/node@25.0.3))(semver@7.7.3)
+        version: 0.1.0(changelogen@0.5.7)(release-it@19.2.3(@types/node@25.0.3))(semver@7.7.3)
       rimraf:
         specifier: ^6.1.2
         version: 6.1.2
@@ -5982,8 +5982,8 @@ packages:
       release-it: ^17.0.0
       semver: ^7.5.4
 
-  release-it@19.2.2:
-    resolution: {integrity: sha512-57TBUTBbBXLJsPufYS+Hsb1dSZKZ0ktiYgPkNc3Pmlq/QQtH9X0oD0SG2ib5CsXHTI11m19pyK60NXmvtE6cLg==}
+  release-it@19.2.3:
+    resolution: {integrity: sha512-GTSfrKb0cPmssEFliX0+WQBHC6NiDsMR/M8Y2tkvct/TO36BjB5XV6LO5BUTYV12C3+f78Y8aroku7jCyNiDeA==}
     engines: {node: ^20.12.0 || >=22.0.0}
     hasBin: true
 
@@ -6676,8 +6676,8 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
-  ufo@1.6.1:
-    resolution: {integrity: sha512-9a4/uxlTWJ4+a5i0ooc1rU7C7YOw3wT+UGqdeNNHWnOF9qcMBgLRS+4IYUqbczewFx4mLEig6gawh7X6mFlEkA==}
+  ufo@1.6.2:
+    resolution: {integrity: sha512-heMioaxBcG9+Znsda5Q8sQbWnLJSl98AFDXTO80wELWEzX3hordXsTdxrIfMQoO9IY1MEnoGoPjpoKpMj+Yx0Q==}
 
   uglify-js@3.19.3:
     resolution: {integrity: sha512-v3Xu+yuwBXisp6QYTcH4UbH+xYJXqnq2m/LtQVWKWzYc1iehYnLixoQDN9FH6/j9/oybfd6W9Ghwkl8+UMKTKQ==}
@@ -12274,7 +12274,7 @@ snapshots:
       acorn: 8.15.0
       pathe: 2.0.3
       pkg-types: 1.3.1
-      ufo: 1.6.1
+      ufo: 1.6.2
 
   module-alias@2.2.3: {}
 
@@ -12400,7 +12400,7 @@ snapshots:
       pathe: 2.0.3
       pkg-types: 1.3.1
       tinyexec: 0.3.2
-      ufo: 1.6.1
+      ufo: 1.6.2
 
   nypm@0.6.2:
     dependencies:
@@ -12433,7 +12433,7 @@ snapshots:
     dependencies:
       destr: 2.0.5
       node-fetch-native: 1.6.7
-      ufo: 1.6.1
+      ufo: 1.6.2
 
   ohash@1.1.6: {}
 
@@ -13080,7 +13080,7 @@ snapshots:
       gopd: 1.2.0
       set-function-name: 2.0.2
 
-  release-it-changelogen@0.1.0(changelogen@0.5.7)(release-it@19.2.2(@types/node@25.0.3))(semver@7.7.3):
+  release-it-changelogen@0.1.0(changelogen@0.5.7)(release-it@19.2.3(@types/node@25.0.3))(semver@7.7.3):
     dependencies:
       chalk: 5.6.0
       changelogen: 0.5.7
@@ -13088,11 +13088,11 @@ snapshots:
       dotenv: 16.6.1
       execa: 8.0.1
       pathe: 1.1.2
-      release-it: 19.2.2(@types/node@25.0.3)
+      release-it: 19.2.3(@types/node@25.0.3)
       semver: 7.7.3
       yargs-parser: 21.1.1
 
-  release-it@19.2.2(@types/node@25.0.3):
+  release-it@19.2.3(@types/node@25.0.3):
     dependencies:
       '@nodeutils/defaults-deep': 1.1.0
       '@octokit/rest': 22.0.1
@@ -13887,7 +13887,7 @@ snapshots:
 
   typescript@5.9.3: {}
 
-  ufo@1.6.1: {}
+  ufo@1.6.2: {}
 
   uglify-js@3.19.3:
     optional: true
