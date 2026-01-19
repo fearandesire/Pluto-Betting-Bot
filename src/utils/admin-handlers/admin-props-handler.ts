@@ -182,15 +182,6 @@ export class AdminPropsHandler {
 			return
 		}
 
-		// Debug: Log valid UUID before API call
-		logger.debug('Valid UUID received from autocomplete', {
-			propId,
-			propIdLength: propId.length,
-			hasDashes: propId.includes('-'),
-			user_id: interaction.user.id,
-			guild_id: interaction.guildId,
-		})
-
 		const propsApi = new PropsApiWrapper()
 
 		try {

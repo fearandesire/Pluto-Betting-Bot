@@ -101,7 +101,7 @@ export class UserCommand extends Command {
 
 		// Entries are already aggregated and sorted by the backend
 		// Calculate score using the formula: (correct * 10) + (incorrect * -2)
-		// Default values from ScoringService as per prediction-system.md
+		// Default values from ScoringService as per predictions/prediction-system.md
 		return leaderboardData.entries.map((entry, index) => {
 			const score =
 				entry.correct_predictions * LEADERBOARD_SCORING.CORRECT_POINTS +

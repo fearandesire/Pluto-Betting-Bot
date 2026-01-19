@@ -44,28 +44,6 @@ export class ActivePropsService {
 				})
 			const apiDuration = Date.now() - apiStartTime
 
-			// Debug: Log API response structure to verify data format
-			if (dateGroups.length > 0 && dateGroups[0].games.length > 0) {
-				const firstGame = dateGroups[0].games[0]
-				const firstProp = firstGame.props?.[0]
-				if (firstProp) {
-					logger.debug('API response structure check', {
-						guildId,
-						sampleProp: {
-							outcome_uuid: firstProp.outcome_uuid,
-							outcome_uuid_type: typeof firstProp.outcome_uuid,
-							outcome_uuid_length: firstProp.outcome_uuid?.length,
-							outcome_uuids: firstProp.outcome_uuids,
-							outcome_uuids_count:
-								firstProp.outcome_uuids?.length,
-							description: firstProp.description,
-							market_key: firstProp.market_key,
-							market_id: firstProp.market_id,
-						},
-					})
-				}
-			}
-
 			// Extract full outcome metadata from nested structure: DateGroup[] -> Game[] -> Prop[]
 			const cachedOutcomes: CachedProp[] = []
 			const invalidUuids: Array<{
@@ -162,23 +140,6 @@ export class ActivePropsService {
 				totalDuration: `${apiDuration + cacheDuration}ms`,
 				context: 'ActivePropsService.refreshActiveProps',
 			})
-
-			// Debug: Log sample cached outcomes to verify structure
-			if (cachedOutcomes.length > 0) {
-				logger.debug('Sample cached outcomes structure', {
-					guildId,
-					sampleOutcomes: cachedOutcomes
-						.slice(0, 2)
-						.map((outcome) => ({
-							outcome_uuid: outcome.outcome_uuid,
-							outcome_uuid_type: typeof outcome.outcome_uuid,
-							outcome_uuid_length: outcome.outcome_uuid?.length,
-							market_id: outcome.market_id,
-							description: outcome.description,
-							market_key: outcome.market_key,
-						})),
-				})
-			}
 
 			return cachedOutcomes
 		} catch (error) {
