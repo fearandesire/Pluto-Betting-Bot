@@ -168,14 +168,14 @@ importers:
         specifier: ^8.1.0
         version: 8.1.0
       pg:
-        specifier: ^8.13.3
-        version: 8.16.3
+        specifier: ^8.17.1
+        version: 8.17.1
       pg-monitor:
         specifier: ^3.1.0
         version: 3.1.0
       pg-promise:
         specifier: ^12.3.0
-        version: 12.3.0(pg-query-stream@4.10.3(pg@8.16.3))
+        version: 12.3.0(pg-query-stream@4.10.3(pg@8.17.1))
       puppeteer:
         specifier: ^24.35.0
         version: 24.35.0(typescript@5.9.3)
@@ -5498,11 +5498,11 @@ packages:
   perfect-debounce@2.0.0:
     resolution: {integrity: sha512-fkEH/OBiKrqqI/yIgjR92lMfs2K8105zt/VT6+7eTjNwisrsh47CeIED9z58zI7DfKdH3uHAn25ziRZn3kgAow==}
 
-  pg-cloudflare@1.2.7:
-    resolution: {integrity: sha512-YgCtzMH0ptvZJslLM1ffsY4EuGaU0cx4XSdXLRFae8bPP4dS5xL1tNB3k2o/N64cHJpwU7dxKli/nZ2lUa5fLg==}
+  pg-cloudflare@1.3.0:
+    resolution: {integrity: sha512-6lswVVSztmHiRtD6I8hw4qP/nDm1EJbKMRhf3HCYaqud7frGysPv7FYJ5noZQdhQtN2xJnimfMtvQq21pdbzyQ==}
 
-  pg-connection-string@2.9.1:
-    resolution: {integrity: sha512-nkc6NpDcvPVpZXxrreI/FOtX3XemeLl8E0qFr6F2Lrm/I8WOnaWNhIPK2Z7OHpw7gh5XJThi6j6ppgNoaT1w4w==}
+  pg-connection-string@2.10.0:
+    resolution: {integrity: sha512-ur/eoPKzDx2IjPaYyXS6Y8NSblxM7X64deV2ObV57vhjsWiwLvUD6meukAzogiOsu60GO8m/3Cb6FdJsWNjwXg==}
 
   pg-cursor@2.16.1:
     resolution: {integrity: sha512-ixa4eoGi2nAc3ZHn0xknrN5M9W4LHmzx+h+6J35aaU/lFAtNNqeldCfWTlxJFo2AUVbw0Wtse9SGZZ2OUes0Bg==}
@@ -5521,8 +5521,8 @@ packages:
     resolution: {integrity: sha512-giK0h52AOO/v8iu6hZCdZ/X9W8oAM9Dm1VReQQtki532X8g4z1LVIm4Z/3cGvDcETWW+Ty0FrtU8iTrGFYIZfA==}
     engines: {node: '>=16'}
 
-  pg-pool@3.10.1:
-    resolution: {integrity: sha512-Tu8jMlcX+9d8+QVzKIvM/uJtp07PKr82IUOYEphaWcoBhIYkoHpLXN3qO59nAI11ripznDsEzEv8nUxBVWajGg==}
+  pg-pool@3.11.0:
+    resolution: {integrity: sha512-MJYfvHwtGp870aeusDh+hg9apvOe2zmpZJpyt+BMtzUWlVqbhFmMK6bOBXLBUPd7iRtIF9fZplDc7KrPN3PN7w==}
     peerDependencies:
       pg: '>=8.0'
 
@@ -5532,8 +5532,8 @@ packages:
     peerDependencies:
       pg-query-stream: 4.10.3
 
-  pg-protocol@1.10.3:
-    resolution: {integrity: sha512-6DIBgBQaTKDJyxnXaLiLR8wBpQQcGWuAESkRBX/t6OwA8YsqP+iVSiond2EDy6Y/dsGk8rh/jtax3js5NeV7JQ==}
+  pg-protocol@1.11.0:
+    resolution: {integrity: sha512-pfsxk2M9M3BuGgDOfuy37VNRRX3jmKgMjcvAcWqNDpZSf4cUmv8HSOl5ViRQFsfARFn0KuUQTgLxVMbNq5NW3g==}
 
   pg-query-stream@4.10.3:
     resolution: {integrity: sha512-h2utrzpOIzeT9JfaqfvBbVuvCfBjH86jNfVrGGTbyepKAIOyTfDew0lAt8bbJjs9n/I5bGDl7S2sx6h5hPyJxw==}
@@ -5546,6 +5546,15 @@ packages:
 
   pg@8.16.3:
     resolution: {integrity: sha512-enxc1h0jA/aq5oSDMvqyW3q89ra6XIIDZgCX9vkMrnz5DFTw/Ny3Li2lFQ+pt3L6MCgm/5o2o8HW9hiJji+xvw==}
+    engines: {node: '>= 16.0.0'}
+    peerDependencies:
+      pg-native: '>=3.0.1'
+    peerDependenciesMeta:
+      pg-native:
+        optional: true
+
+  pg@8.17.1:
+    resolution: {integrity: sha512-EIR+jXdYNSMOrpRp7g6WgQr7SaZNZfS7IzZIO0oTNEeibq956JxeD15t3Jk3zZH0KH8DmOIx38qJfQenoE8bXQ==}
     engines: {node: '>= 16.0.0'}
     peerDependencies:
       pg-native: '>=3.0.1'
@@ -5623,8 +5632,8 @@ packages:
     resolution: {integrity: sha512-VpZrUqU5A69eQyW2c5CA1jtLecCsN2U/bD6VilrFDWq5+5UIEVO7nazS3TEcHf1zuPYO/sqGvUvW62g86RXZuA==}
     engines: {node: '>=4'}
 
-  postgres-bytea@1.0.0:
-    resolution: {integrity: sha512-xy3pmLuQqRBZBXDULy7KbaitYqLcmxigw14Q5sj8QBVLqEwXfeybIKVWiqAXTlcvdvb0+xkOtDbfQMOf4lST1w==}
+  postgres-bytea@1.0.1:
+    resolution: {integrity: sha512-5+5HqXnsZPE65IJZSMkZtURARZelel2oXUEO8rH83VS/hxH5vv1uHquPg5wZs8yMAfdv971IU+kcPUczi7NVBQ==}
     engines: {node: '>=0.10.0'}
 
   postgres-date@1.0.7:
@@ -12502,14 +12511,14 @@ snapshots:
 
   perfect-debounce@2.0.0: {}
 
-  pg-cloudflare@1.2.7:
+  pg-cloudflare@1.3.0:
     optional: true
 
-  pg-connection-string@2.9.1: {}
+  pg-connection-string@2.10.0: {}
 
-  pg-cursor@2.16.1(pg@8.16.3):
+  pg-cursor@2.16.1(pg@8.17.1):
     dependencies:
-      pg: 8.16.3
+      pg: 8.17.1
 
   pg-int8@1.0.1: {}
 
@@ -12519,44 +12528,58 @@ snapshots:
     dependencies:
       picocolors: 1.1.1
 
-  pg-pool@3.10.1(pg@8.16.3):
+  pg-pool@3.11.0(pg@8.16.3):
     dependencies:
       pg: 8.16.3
 
-  pg-promise@12.3.0(pg-query-stream@4.10.3(pg@8.16.3)):
+  pg-pool@3.11.0(pg@8.17.1):
+    dependencies:
+      pg: 8.17.1
+
+  pg-promise@12.3.0(pg-query-stream@4.10.3(pg@8.17.1)):
     dependencies:
       assert-options: 0.8.3
       pg: 8.16.3
       pg-minify: 1.8.0
-      pg-query-stream: 4.10.3(pg@8.16.3)
+      pg-query-stream: 4.10.3(pg@8.17.1)
       spex: 4.1.0
     transitivePeerDependencies:
       - pg-native
 
-  pg-protocol@1.10.3: {}
+  pg-protocol@1.11.0: {}
 
-  pg-query-stream@4.10.3(pg@8.16.3):
+  pg-query-stream@4.10.3(pg@8.17.1):
     dependencies:
-      pg: 8.16.3
-      pg-cursor: 2.16.1(pg@8.16.3)
+      pg: 8.17.1
+      pg-cursor: 2.16.1(pg@8.17.1)
 
   pg-types@2.2.0:
     dependencies:
       pg-int8: 1.0.1
       postgres-array: 2.0.0
-      postgres-bytea: 1.0.0
+      postgres-bytea: 1.0.1
       postgres-date: 1.0.7
       postgres-interval: 1.2.0
 
   pg@8.16.3:
     dependencies:
-      pg-connection-string: 2.9.1
-      pg-pool: 3.10.1(pg@8.16.3)
-      pg-protocol: 1.10.3
+      pg-connection-string: 2.10.0
+      pg-pool: 3.11.0(pg@8.16.3)
+      pg-protocol: 1.11.0
       pg-types: 2.2.0
       pgpass: 1.0.5
     optionalDependencies:
-      pg-cloudflare: 1.2.7
+      pg-cloudflare: 1.3.0
+
+  pg@8.17.1:
+    dependencies:
+      pg-connection-string: 2.10.0
+      pg-pool: 3.11.0(pg@8.17.1)
+      pg-protocol: 1.11.0
+      pg-types: 2.2.0
+      pgpass: 1.0.5
+    optionalDependencies:
+      pg-cloudflare: 1.3.0
 
   pgpass@1.0.5:
     dependencies:
@@ -12628,7 +12651,7 @@ snapshots:
 
   postgres-array@2.0.0: {}
 
-  postgres-bytea@1.0.0: {}
+  postgres-bytea@1.0.1: {}
 
   postgres-date@1.0.7: {}
 
