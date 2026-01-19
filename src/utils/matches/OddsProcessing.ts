@@ -52,17 +52,27 @@ export async function prepareAndFormat(
 		let legiblestart = ''
 		let dateofmatchup = ''
 
+		let tzone0 = (new Intl.DateTimeFormat().resolvedOptions()).timeZone
+		tzone0 = (tzone0 && tzone0.trim().length ? tzone0 : "Etc/UTC")
+	
 		if (match.commence_time) {
 			try {
 				const matchDate = parseISO(match.commence_time)
 				if (isValid(matchDate)) {
-					dateofmatchup = dateManager.toMMDDYYYY(matchDate)
-					legiblestart = format(matchDate, 'EEEE, h:mm a') // e.g., "Monday, 7:00 PM"
-					const commaIndex = legiblestart.indexOf(', ')
-					parsedStart =
-						commaIndex !== -1
-							? legiblestart.slice(commaIndex + 2)
-							: format(matchDate, 'h:mm a')
+					let usdate = matchDate.toLocaleString("en-US",{timeZone:tzone0})
+					let ushour24 = matchDate.toLocaleTimeString("en-US",{hour12:false,hour:"2-digit",minute:"2-digit",second:"2-digit",timeZone:tzone0})
+
+					dateofmatchup = usdate.split(", ")[0]
+					legiblestart = usdate.split(", ")[1].replace(/:\d\d /,"")
+					parsedStart = format(new Date(dateofmatchup),"y-MM-dd") + " " + ushour24
+					
+					//dateofmatchup = dateManager.toMMDDYYYY(matchDate)
+					//legiblestart = format(matchDate, 'EEEE, h:mm a') // e.g., "Monday, 7:00 PM"
+					//const commaIndex = legiblestart.indexOf(', ')
+					//parsedStart =
+					//	commaIndex !== -1
+					//		? legiblestart.slice(commaIndex + 2)
+					//		: format(matchDate, 'h:mm a')
 				}
 			} catch {
 				parsedStart = ''
@@ -91,7 +101,8 @@ export async function prepareAndFormat(
 	}
 
 	// Sort the oddsFields by actual date
-	const sortedOddsFields = _.orderBy(oddsFields, ['dates.mdy'], ['asc'])
+	const sortedOddsFields = _.orderBy(oddsFields, ['dates.start','teams.home_team.name'], ['asc','asc'])
+	//const sortedOddsFields = _.orderBy(oddsFields, ['dates.mdy'], ['asc'])
 
 	const count = sortedOddsFields.length
 	const options = {
@@ -101,6 +112,7 @@ export async function prepareAndFormat(
 		},
 		thumbnail,
 		guildId,
+		tzone0,
 	}
 
 	return await parseScheduledGames(sortedOddsFields, options)
