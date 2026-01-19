@@ -7,6 +7,8 @@ module.exports = {
       [
         'feat',
         'fix',
+        'patch',
+        'hotfix',
         'docs',
         'style',
         'refactor',
