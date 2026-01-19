@@ -18,6 +18,7 @@ import type {
  * @param {string} options.thumbnail - URL of the thumbnail image for the embed.
  * @param {string} options.footer - Footer text for the embed.
  * @param {string} options.guildId - Guild ID for server-specific customizations.
+ * @param {string} options.tzone0 - Time Zone of the user invoking request.
  * @returns {EmbedBuilder} - Discord Embed with the games formatted and scheduled.
  */
 export default async function parseScheduledGames(
@@ -27,9 +28,11 @@ export default async function parseScheduledGames(
 		thumbnail: string
 		footer: { text: string; iconURL?: string }
 		guildId?: string
+		tzone0?: string
 	},
 ) {
-	const { includeOdds, thumbnail, guildId } = options
+	const { includeOdds, thumbnail, guildId, tzone0 } = options
+	//const { includeOdds, thumbnail, guildId } = options
 
 	// Set initial title and color based on whether odds are included
 	const title = includeOdds ? 'Odds 🎲' : 'Scheduled Games'
@@ -69,15 +72,17 @@ export default async function parseScheduledGames(
 
 	// Fix async pattern: extract the function first, then map
 	const matchStrFn = await createMatchStr()
-
+	let cnt = 1
 	const fields = await Promise.all(
 		sortedDates.map(async (date) => {
 			try {
 				const gamesList = await Promise.all(
 					groupedGames[date].map(matchStrFn),
 				)
+				cnt--
 				return {
-					name: format(new Date(date), 'PP'), // Format date as 'MM/DD/YYYY'
+					name: format(new Date(date), 'PP') + (cnt ? "" : " TZ " + tzone0),
+					//name: format(new Date(date), 'PP'), // Format date as 'MM/DD/YYYY'
 					value: gamesList.join('\n'),
 				}
 			} catch (error) {
@@ -148,7 +153,8 @@ async function createMatchStr(): Promise<
 			? `${hTeam} \`(${teams.home_team.odds})\``
 			: `${hTeam} **\`(${teams.home_team.odds})\`**`
 
-		return `${awayTeamStr} @ ${homeTeamStr}`
+		return `${teams.dates.legible} - ${awayTeamStr} @ ${homeTeamStr}`
+		//return `${awayTeamStr} @ ${homeTeamStr}`
 	}
 }
 
