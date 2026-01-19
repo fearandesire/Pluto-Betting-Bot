@@ -75,7 +75,6 @@ export class ButtonHandler extends InteractionHandler {
 						)
 						.setColor(embedColors.PlutoRed)
 						.setThumbnail(interaction.user.displayAvatarURL())
-						.setFooter({ text: await helpfooter('betting') })
 
 					await interaction.editReply({
 						embeds: [cancelEmbed],

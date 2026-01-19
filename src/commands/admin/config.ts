@@ -5,6 +5,14 @@ import embedColors from '../../lib/colorsConfig.js'
 import { FooterManager } from '../../lib/footers/FooterManager.js'
 import { FALLBACK_FOOTERS } from '../../lib/footers/fallbackFooters.js'
 
+const FOOTER_CATEGORY_CHOICES = Object.keys(FALLBACK_FOOTERS).map((key) => ({
+	name: key
+		.replace(/([A-Z])/g, ' $1')
+		.replace(/^./, (str) => str.toUpperCase())
+		.trim(),
+	value: key,
+}))
+
 /**
  * Config command for managing bot settings
  *
@@ -36,7 +44,7 @@ export class ConfigCommand extends Subcommand {
 				builder
 					.setName(this.name)
 					.setDescription(this.description)
-					.setContexts(InteractionContextType.Guild)
+					.setContexts([InteractionContextType.Guild])
 					// Footer subcommand group
 					.addSubcommandGroup((group) =>
 						group
@@ -67,27 +75,7 @@ export class ConfigCommand extends Subcommand {
 												'Filter by category (optional)',
 											)
 											.addChoices(
-												{ name: 'Core', value: 'core' },
-												{
-													name: 'General',
-													value: 'general',
-												},
-												{
-													name: 'Betting',
-													value: 'betting',
-												},
-												{
-													name: 'Placed Bet',
-													value: 'placedBet',
-												},
-												{
-													name: 'High Bet',
-													value: 'highBetPlaced',
-												},
-												{
-													name: 'Low Bet',
-													value: 'lowBetPlaced',
-												},
+												...FOOTER_CATEGORY_CHOICES,
 											),
 									),
 							),
@@ -101,41 +89,61 @@ export class ConfigCommand extends Subcommand {
 	public async footerStatus(
 		interaction: Subcommand.ChatInputCommandInteraction,
 	) {
-		const manager = FooterManager.getInstance()
-		const status = manager.getCacheStatus()
+		try {
+			const manager = FooterManager.getInstance()
+			const status = manager.getCacheStatus()
 
-		const embed = new EmbedBuilder()
-			.setTitle('📋 Footer Cache Status')
-			.setColor(embedColors.PlutoYellow)
-			.addFields(
-				{
-					name: '⏰ Refresh Information',
-					value: `**Last Refresh:** ${status.lastRefresh ? `<t:${Math.floor(status.lastRefresh.getTime() / 1000)}:R>` : 'Never'}\n**Next Refresh:** ${status.nextRefresh ? `<t:${Math.floor(status.nextRefresh.getTime() / 1000)}:R>` : 'Unknown'}\n**TTL:** ${status.ttl}`,
-					inline: false,
-				},
-				{
-					name: '📊 Statistics',
-					value: `**Total Footers:** ${status.cacheSize}\n**Categories:** ${Object.keys(status.categoryCounts).length}\n**Announcement Active:** ${status.hasAnnouncement ? '✅ Yes' : '❌ No'}`,
-					inline: false,
-				},
-			)
-
-		// Add category counts
-		if (Object.keys(status.categoryCounts).length > 0) {
-			const categoryList = Object.entries(status.categoryCounts)
-				.map(
-					([category, count]) =>
-						`• **${category}:** ${count} footers`,
+			const embed = new EmbedBuilder()
+				.setTitle('📋 Footer Cache Status')
+				.setColor(embedColors.PlutoYellow)
+				.addFields(
+					{
+						name: '⏰ Refresh Information',
+						value: `**Last Refresh:** ${status.lastRefresh ? `<t:${Math.floor(status.lastRefresh.getTime() / 1000)}:R>` : 'Never'}\n**Next Refresh:** ${status.nextRefresh ? `<t:${Math.floor(status.nextRefresh.getTime() / 1000)}:R>` : 'Unknown'}\n**TTL:** ${status.ttl}`,
+						inline: false,
+					},
+					{
+						name: '📊 Statistics',
+						value: `**Total Footers:** ${status.cacheSize}\n**Categories:** ${Object.keys(status.categoryCounts).length}\n**Announcement Active:** ${status.hasAnnouncement ? '✅ Yes' : '❌ No'}`,
+						inline: false,
+					},
 				)
-				.join('\n')
-			embed.addFields({
-				name: '📁 Categories',
-				value: categoryList,
-				inline: false,
-			})
-		}
 
-		await interaction.reply({ embeds: [embed], ephemeral: true })
+			// Add category counts
+			if (Object.keys(status.categoryCounts).length > 0) {
+				const categoryList = Object.entries(status.categoryCounts)
+					.map(
+						([category, count]) =>
+							`• **${category}:** ${count} footers`,
+					)
+					.join('\n')
+				embed.addFields({
+					name: '📁 Categories',
+					value: categoryList,
+					inline: false,
+				})
+			}
+
+			await interaction.reply({ embeds: [embed], ephemeral: true })
+		} catch (error) {
+			this.container.logger.error(error)
+			const embed = new EmbedBuilder()
+				.setTitle('❌ Footer Status Error')
+				.setDescription(
+					'An error occurred while fetching footer cache status. Please try again.',
+				)
+				.setColor(embedColors.error)
+
+			if (interaction.deferred && !interaction.replied) {
+				await interaction.editReply({ embeds: [embed] })
+				return
+			}
+			if (interaction.replied || interaction.deferred) {
+				await interaction.followUp({ embeds: [embed], ephemeral: true })
+				return
+			}
+			await interaction.reply({ embeds: [embed], ephemeral: true })
+		}
 	}
 
 	public async footerRefresh(
@@ -143,63 +151,89 @@ export class ConfigCommand extends Subcommand {
 	) {
 		await interaction.deferReply({ ephemeral: true })
 
-		const manager = FooterManager.getInstance()
-		const success = await manager.forceRefresh()
+		try {
+			const manager = FooterManager.getInstance()
+			const success = await manager.forceRefresh()
 
-		const embed = new EmbedBuilder()
-			.setTitle(
-				success ? '✅ Footer Cache Refreshed' : '❌ Refresh Failed',
-			)
-			.setDescription(
-				success
-					? 'Footer cache has been successfully refreshed from Khronos.'
-					: 'Failed to refresh footer cache. Check logs for details.',
-			)
-			.setColor(success ? embedColors.success : embedColors.error)
+			const embed = new EmbedBuilder()
+				.setTitle(
+					success ? '✅ Footer Cache Refreshed' : '❌ Refresh Failed',
+				)
+				.setDescription(
+					success
+						? 'Footer cache has been successfully refreshed from Khronos.'
+						: 'Failed to refresh footer cache. Check logs for details.',
+				)
+				.setColor(success ? embedColors.success : embedColors.error)
 
-		await interaction.editReply({ embeds: [embed] })
+			await interaction.editReply({ embeds: [embed] })
+		} catch (error) {
+			this.container.logger.error(error)
+			const embed = new EmbedBuilder()
+				.setTitle('❌ Footer Refresh Error')
+				.setDescription(
+					'An error occurred while refreshing the footer cache. Please try again.',
+				)
+				.setColor(embedColors.error)
+			await interaction.editReply({ embeds: [embed] })
+		}
 	}
 
 	public async footerList(
 		interaction: Subcommand.ChatInputCommandInteraction,
 	) {
-		const category = interaction.options.getString('category') as
-			| keyof typeof FALLBACK_FOOTERS
-			| null
-		const manager = FooterManager.getInstance()
-		const status = manager.getCacheStatus()
+		try {
+			await interaction.deferReply({ ephemeral: true })
 
-		const embed = new EmbedBuilder()
-			.setTitle('📝 Footer List')
-			.setColor(embedColors.PlutoYellow)
+			const category = interaction.options.getString('category') as
+				| keyof typeof FALLBACK_FOOTERS
+				| null
+			const manager = FooterManager.getInstance()
+			const status = manager.getCacheStatus()
 
-		if (category) {
-			// Show specific category
-			const footers = status.categoryCounts[category] || 0
-			embed.setDescription(
-				`**Category:** ${category}\n**Count:** ${footers}`,
-			)
+			const embed = new EmbedBuilder()
+				.setTitle('📝 Footer List')
+				.setColor(embedColors.PlutoYellow)
 
-			// Note: We can't easily show actual footer text without exposing cache internals
-			// This is intentional to keep the command simple and focused on counts
-		} else {
-			// Show all categories
-			if (Object.keys(status.categoryCounts).length === 0) {
+			if (category) {
+				// Show specific category
+				const footers = status.categoryCounts[category] || 0
 				embed.setDescription(
-					'No footers cached. Try running `/config footer refresh`.',
+					`**Category:** ${category}\n**Count:** ${footers}`,
 				)
 			} else {
-				const categoryList = Object.entries(status.categoryCounts)
-					.map(([cat, count]) => `• **${cat}:** ${count} footers`)
-					.join('\n')
-				embed.setDescription(`**All Categories:**\n${categoryList}`)
+				// Show all categories
+				if (Object.keys(status.categoryCounts).length === 0) {
+					embed.setDescription(
+						'No footers cached. Try running `/config footer refresh`.',
+					)
+				} else {
+					const categoryList = Object.entries(status.categoryCounts)
+						.map(([cat, count]) => `• **${cat}:** ${count} footers`)
+						.join('\n')
+					embed.setDescription(`**All Categories:**\n${categoryList}`)
+				}
+			}
+
+			embed.setFooter({
+				text: `Total: ${status.cacheSize} footers cached`,
+			})
+
+			await interaction.editReply({ embeds: [embed] })
+		} catch (error) {
+			this.container.logger.error(error)
+			const embed = new EmbedBuilder()
+				.setTitle('❌ Footer List Error')
+				.setDescription(
+					'An error occurred while listing footer cache information. Please try again.',
+				)
+				.setColor(embedColors.error)
+
+			if (interaction.deferred) {
+				await interaction.editReply({ embeds: [embed] })
+			} else {
+				await interaction.reply({ embeds: [embed], ephemeral: true })
 			}
 		}
-
-		embed.setFooter({
-			text: `Total: ${status.cacheSize} footers cached`,
-		})
-
-		await interaction.reply({ embeds: [embed], ephemeral: true })
 	}
 }
