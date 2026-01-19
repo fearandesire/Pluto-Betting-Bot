@@ -76,23 +76,6 @@ export class PropsAutocompleteListener extends Listener {
 				)
 			const cacheDuration = Date.now() - cacheStartTime
 
-			// Debug: Log raw cached props structure before processing
-			if (activeProps.length > 0) {
-				this.container.logger.debug('Raw cached props sample', {
-					guildId,
-					fromCache,
-					sampleProps: activeProps.slice(0, 2).map((p) => ({
-						outcome_uuid: p.outcome_uuid,
-						outcome_uuid_type: typeof p.outcome_uuid,
-						outcome_uuid_length: p.outcome_uuid?.length,
-						market_id: p.market_id,
-						description: p.description,
-						market_key: p.market_key,
-					})),
-					totalProps: activeProps.length,
-				})
-			}
-
 			// Log cache performance
 			this.container.logger.info(
 				fromCache
@@ -111,34 +94,10 @@ export class PropsAutocompleteListener extends Listener {
 				query,
 			)
 
-			// Debug: Log filtering results
-			this.container.logger.debug('Props filtering results', {
-				guildId,
-				query: query || '(empty)',
-				totalProps: activeProps.length,
-				filteredCount: filtered.length,
-			})
-
 			// Convert to autocomplete choices (limit to 25 per Discord)
 			const choices = PropsAutocompleteFormatter.toAutocompleteChoices(
 				filtered.slice(0, 25),
 			)
-
-			// Debug logging: Log sample choices to verify UUID format and transformation
-			const sampleChoices = choices.slice(0, 3).map((choice, index) => {
-				const originalProp = filtered[index]
-				return {
-					choiceIndex: index,
-					name: choice.name.substring(0, 50),
-					nameLength: choice.name.length,
-					value: choice.value,
-					valueLength: choice.value.length,
-					valueType: typeof choice.value,
-					isValidUUID: UUID_REGEX.test(choice.value),
-					originalOutcomeUuid: originalProp?.outcome_uuid,
-					originalOutcomeUuidType: typeof originalProp?.outcome_uuid,
-				}
-			})
 
 			const totalDuration = Date.now() - startTime
 			this.container.logger.info('Props autocomplete response', {
@@ -148,7 +107,6 @@ export class PropsAutocompleteListener extends Listener {
 				filteredCount: filtered.length,
 				returnedCount: choices.length,
 				totalDuration: `${totalDuration}ms`,
-				sampleChoices,
 			})
 
 			// Validate all choices have valid UUIDs as values

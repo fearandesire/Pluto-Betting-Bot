@@ -56,7 +56,7 @@ export class UserCommand extends Subcommand {
 					description:
 						"You don't have enough betting history to display statistics.",
 					footer: {
-						text: await helpfooter(),
+						text: await helpfooter('general'),
 					},
 				}
 				return await interaction.editReply({ embeds: [noStatsEmbed] })
@@ -110,7 +110,7 @@ export class UserCommand extends Subcommand {
 				],
 				timestamp: new Date().toISOString(),
 				footer: {
-					text: await helpfooter(),
+					text: await helpfooter('general'),
 				},
 			}
 

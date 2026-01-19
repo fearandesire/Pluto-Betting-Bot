@@ -183,6 +183,7 @@ export class BetslipManager {
 				await this.announceBetPlaced(interaction, {
 					betOnTeam: chosenTeamStr,
 					amount: betslip.amount,
+					balance: (betslip.newBalance ?? 0) + betslip.amount,
 				})
 			} else {
 				const errEmbed = await ErrorEmbeds.internalErr(
@@ -250,8 +251,8 @@ export class BetslipManager {
 			.setColor(embedColors.success)
 			.setThumbnail(embedImg)
 			.setFooter({
-				text: `Bet ID: ${betslip.betid} | ${await betFooter({
-					balance: betslip.newBalance + betslip.amount,
+				text: `Bet ID: ${betslip.betid} | ${betFooter({
+					balance: (betslip.newBalance ?? 0) + betslip.amount,
 					betAmount: betslip.amount,
 				})}`,
 			})
@@ -270,7 +271,7 @@ export class BetslipManager {
 
 	private async announceBetPlaced(
 		interaction: CommandInteraction | ButtonInteraction,
-		betDetails: { betOnTeam: string; amount: number },
+		betDetails: { betOnTeam: string; amount: number; balance: number },
 	) {
 		try {
 			if (!interaction.guildId) {
@@ -286,7 +287,10 @@ export class BetslipManager {
 				)
 				.setColor(embedColors.success)
 				.setFooter({
-					text: await helpfooter('betting'),
+					text: betFooter({
+						balance: betDetails.balance,
+						betAmount: betDetails.amount,
+					}),
 				})
 
 			await guildWrapper.sendToBettingChannel(interaction.guildId, {
@@ -379,9 +383,6 @@ export class BetslipManager {
 				)
 				.setColor(embedColors.success)
 				.setThumbnail(interaction.user.displayAvatarURL())
-				.setFooter({
-					text: await helpfooter('betting'),
-				})
 			if (interaction.deferred || interaction.replied) {
 				return interaction.followUp({
 					embeds: [cancelledEmbed],
@@ -449,9 +450,6 @@ export class BetslipManager {
 			)
 			.setThumbnail(interaction.user.displayAvatarURL())
 			.setColor(embedColors.PlutoYellow)
-			.setFooter({
-				text: await helpfooter('betting'),
-			})
 		const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
 			new ButtonBuilder()
 				.setCustomId('matchup_btn_confirm')

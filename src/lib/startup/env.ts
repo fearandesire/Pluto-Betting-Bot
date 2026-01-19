@@ -83,4 +83,41 @@ const env = envSchema.parse({
 	MAINTENANCE_MODE: process.env.MAINTENANCE_MODE === 'true',
 })
 
+// Debug logging for environment validation (redacts sensitive values)
+const shouldLogDebug =
+	process.env.DEBUG === 'true' || process.env.LOG_LEVEL === 'Debug'
+
+if (shouldLogDebug) {
+	const _safeEnv = {
+		NODE_ENV: env.NODE_ENV,
+		PREFIX: env.PREFIX,
+		PROJECT_VERSION: env.PROJECT_VERSION,
+		KH_API_URL: env.KH_API_URL,
+		R_HOST: env.R_HOST,
+		R_PORT: env.R_PORT,
+		R_DB: env.R_DB,
+		API_PORT: env.API_PORT,
+		API_URL: env.API_URL,
+		LOG_LEVEL: env.LOG_LEVEL,
+		DEV_SERVER_ID: env.DEV_SERVER_ID,
+		PATREON_API_URL: env.PATREON_API_URL,
+		APP_OWNER_ID: env.APP_OWNER_ID,
+		AXIOM_DATASET: env.AXIOM_DATASET,
+		AXIOM_ORG_ID: env.AXIOM_ORG_ID,
+		LOKI_URL: env.LOKI_URL,
+		LOKI_USER: env.LOKI_USER,
+		MAINTENANCE_MODE: env.MAINTENANCE_MODE,
+		// Redacted sensitive fields
+		TOKEN: '[REDACTED]',
+		KH_API_TOKEN: '[REDACTED]',
+		R_PASS: '[REDACTED]',
+		KH_PLUTO_CLIENT_KEY: '[REDACTED]',
+		AXIOM_API_TOKEN: '[REDACTED]',
+		BULL_BOARD_USERNAME: '[REDACTED]',
+		BULL_BOARD_PASSWORD: '[REDACTED]',
+		API_KEY: '[REDACTED]',
+		LOKI_PASS: '[REDACTED]',
+	}
+}
+
 export default env

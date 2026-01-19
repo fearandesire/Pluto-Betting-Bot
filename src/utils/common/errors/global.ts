@@ -21,8 +21,8 @@ export class ErrorEmbeds {
 			.setColor(embedColors.error)
 			.setFooter({
 				text: extraData
-					? `${extraData.footerData} | ${await helpfooter()}`
-					: await helpfooter(),
+					? `${extraData.footerData} | ${await helpfooter('error')}`
+					: await helpfooter('error'),
 			})
 	}
 

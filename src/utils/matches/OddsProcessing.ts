@@ -4,6 +4,7 @@ import { format, isValid, parseISO } from 'date-fns'
 import _ from 'lodash'
 import parseScheduledGames from '../bot_res/parseScheduled.js'
 import { DateManager } from '../common/DateManager.js'
+import { logger } from '../logging/WinstonLogger.js'
 import { formatOdds } from './formatOdds.js'
 import type { IOddsField } from './matchups.interface.js'
 
@@ -15,8 +16,13 @@ export async function prepareAndFormat(
 	const oddsFields: IOddsField[] = []
 	const dateManager = new DateManager()
 
+	let _completedCount = 0
+	let _nullOddsCount = 0
+	let _formatErrorCount = 0
+
 	for (const match of matchups) {
 		if (match.status === 'completed') {
+			_completedCount++
 			continue
 		}
 		const hTeam = `${match.home_team}`
@@ -26,10 +32,20 @@ export async function prepareAndFormat(
 
 		// Skip matches with missing odds
 		if (hOdds == null || aOdds == null) {
+			_nullOddsCount++
 			continue
 		}
 
-		const { homeOdds, awayOdds } = await formatOdds(hOdds, aOdds)
+		let homeOdds: string
+		let awayOdds: string
+		try {
+			const formatted = await formatOdds(hOdds, aOdds)
+			homeOdds = formatted.homeOdds
+			awayOdds = formatted.awayOdds
+		} catch (_error) {
+			_formatErrorCount++
+			continue
+		}
 
 		// Parse commence_time to get date and time components
 		let parsedStart = ''
@@ -81,7 +97,7 @@ export async function prepareAndFormat(
 	const options = {
 		includeOdds: true,
 		footer: {
-			text: `\`${count}\` upcoming matches | ${await helpfooter()}`,
+			text: `\`${count}\` upcoming matches | ${await helpfooter('general')}`,
 		},
 		thumbnail,
 		guildId,
