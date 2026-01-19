@@ -16,18 +16,13 @@ export async function prepareAndFormat(
 	const oddsFields: IOddsField[] = []
 	const dateManager = new DateManager()
 
-	let completedCount = 0
-	let nullOddsCount = 0
-	let formatErrorCount = 0
-	
-	logger.debug('prepareAndFormat: starting', {
-		guildId,
-		totalMatches: matchups?.length ?? 0,
-	})
+	let _completedCount = 0
+	let _nullOddsCount = 0
+	let _formatErrorCount = 0
 
 	for (const match of matchups) {
 		if (match.status === 'completed') {
-			completedCount++
+			_completedCount++
 			continue
 		}
 		const hTeam = `${match.home_team}`
@@ -37,15 +32,7 @@ export async function prepareAndFormat(
 
 		// Skip matches with missing odds
 		if (hOdds == null || aOdds == null) {
-			nullOddsCount++
-			logger.debug('prepareAndFormat: skipping match with null odds', {
-				guildId,
-				matchId: match.id,
-				homeTeam: hTeam,
-				awayTeam: aTeam,
-				homeOdds: hOdds,
-				awayOdds: aOdds,
-			})
+			_nullOddsCount++
 			continue
 		}
 
@@ -55,17 +42,8 @@ export async function prepareAndFormat(
 			const formatted = await formatOdds(hOdds, aOdds)
 			homeOdds = formatted.homeOdds
 			awayOdds = formatted.awayOdds
-		} catch (error) {
-			formatErrorCount++
-			logger.debug('prepareAndFormat: formatOdds error', {
-				guildId,
-				matchId: match.id,
-				homeTeam: hTeam,
-				awayTeam: aTeam,
-				homeOdds: hOdds,
-				awayOdds: aOdds,
-				error,
-			})
+		} catch (_error) {
+			_formatErrorCount++
 			continue
 		}
 
@@ -125,15 +103,6 @@ export async function prepareAndFormat(
 	// Sort the oddsFields by actual date
 	const sortedOddsFields = _.orderBy(oddsFields, ['dates.start','teams.home_team.name'], ['asc','asc'])
 	//const sortedOddsFields = _.orderBy(oddsFields, ['dates.mdy'], ['asc'])
-
-	logger.debug('prepareAndFormat: filtering complete', {
-		guildId,
-		totalMatches: matchups?.length ?? 0,
-		completedCount,
-		nullOddsCount,
-		formatErrorCount,
-		validMatches: sortedOddsFields.length,
-	})
 
 	const count = sortedOddsFields.length
 	const options = {
