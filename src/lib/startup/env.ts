@@ -88,7 +88,7 @@ const shouldLogDebug =
 	process.env.DEBUG === 'true' || process.env.LOG_LEVEL === 'Debug'
 
 if (shouldLogDebug) {
-	const safeEnv = {
+	const _safeEnv = {
 		NODE_ENV: env.NODE_ENV,
 		PREFIX: env.PREFIX,
 		PROJECT_VERSION: env.PROJECT_VERSION,
@@ -118,8 +118,6 @@ if (shouldLogDebug) {
 		API_KEY: '[REDACTED]',
 		LOKI_PASS: '[REDACTED]',
 	}
-
-	console.debug('[ENV DEBUG] Loaded environment configuration:', safeEnv)
 }
 
 export default env

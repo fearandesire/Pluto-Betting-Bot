@@ -91,21 +91,6 @@ export class PropsAutocompleteFormatter {
 				name: formattedName,
 				value: prop.outcome_uuid,
 			})
-
-			// Debug: Log transformation for first few props
-			if (choices.length <= 3) {
-				logger.debug('Prop to autocomplete choice transformation', {
-					prop: {
-						outcome_uuid: prop.outcome_uuid,
-						description: prop.description,
-						market_key: prop.market_key,
-					},
-					choice: {
-						name: formattedName.substring(0, 50),
-						value: prop.outcome_uuid,
-					},
-				})
-			}
 		}
 
 		if (invalidProps.length > 0) {
