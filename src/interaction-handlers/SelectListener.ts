@@ -91,13 +91,15 @@ export class MenuHandler extends InteractionHandler {
 
 		// Format commence_time to a readable date string
 		const formattedDate = matchDetails.commence_time
-			? new Date(matchDetails.commence_time).toLocaleDateString('en-US', {
-					month: 'short',
-					day: 'numeric',
-					hour: 'numeric',
-					minute: '2-digit',
-					timeZoneName: 'short',
-				})
+			? new Date(matchDetails.commence_time)
+					.toLocaleDateString('en-US', {
+						month: 'short',
+						day: 'numeric',
+						hour: 'numeric',
+						minute: '2-digit',
+						timeZoneName: 'short',
+					})
+					.replace(/ ([A-Z]{3,5})$/, ' ($1)')
 			: 'TBD'
 
 		await betsCacheService.updateUserBet(interaction.user.id, {
