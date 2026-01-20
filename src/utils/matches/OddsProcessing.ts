@@ -1,6 +1,6 @@
 import type { MatchDetailDto } from '@kh-openapi'
 import { helpfooter } from '@pluto-config'
-import { format, isValid, parseISO } from 'date-fns'
+import { isValid, parseISO } from 'date-fns'
 import _ from 'lodash'
 import parseScheduledGames from '../bot_res/parseScheduled.js'
 import { logger } from '../logging/WinstonLogger.js'

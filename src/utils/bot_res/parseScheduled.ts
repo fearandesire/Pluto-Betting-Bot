@@ -84,10 +84,13 @@ export default async function parseScheduledGames(
 					.find((part) => part.type === 'timeZoneName')?.value || tz
 			)
 		} catch (error) {
-			logger.debug('getTimeZoneAbbreviation: error getting abbreviation', {
-				tz,
-				error,
-			})
+			logger.debug(
+				'getTimeZoneAbbreviation: error getting abbreviation',
+				{
+					tz,
+					error,
+				},
+			)
 			return tz
 		}
 	}
@@ -104,7 +107,7 @@ export default async function parseScheduledGames(
 				return {
 					name:
 						format(new Date(date), 'PP') +
-						(cnt ? '' : (tzAbbr ? ' ' + tzAbbr : '')),
+						(cnt ? '' : tzAbbr ? ' ' + tzAbbr : ''),
 					//name: format(new Date(date), 'PP'), // Format date as 'MM/DD/YYYY'
 					value: gamesList.join('\n'),
 				}
@@ -144,7 +147,6 @@ export default async function parseScheduledGames(
 
 /**
  * Creates a formatted string representation of a match.
- * @param {boolean} includeOdds - Whether to include odds information.
  * @returns {string} - Formatted string representing the match.
  */
 async function createMatchStr(): Promise<

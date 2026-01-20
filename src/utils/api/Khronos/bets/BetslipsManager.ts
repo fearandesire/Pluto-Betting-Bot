@@ -4,9 +4,8 @@ import type {
 	InitBetslipRespDTO,
 	PlaceBetDto,
 	PlacedBetslip,
-	PlacedBetslipDto,
 } from '@kh-openapi'
-import { betFooter, helpfooter, supportMessage } from '@pluto-config'
+import { betFooter, supportMessage } from '@pluto-config'
 import { format } from 'date-fns'
 import {
 	ActionRowBuilder,
