@@ -81,7 +81,9 @@ export default async function parseScheduledGames(
 				)
 				cnt--
 				return {
-					name: format(new Date(date), 'PP') + (cnt ? "" : " TZ " + tzone0),
+					name:
+						format(new Date(date), 'PP') +
+						(cnt ? '' : ' TZ ' + tzone0),
 					//name: format(new Date(date), 'PP'), // Format date as 'MM/DD/YYYY'
 					value: gamesList.join('\n'),
 				}
@@ -153,7 +155,7 @@ async function createMatchStr(): Promise<
 			? `${hTeam} \`(${teams.home_team.odds})\``
 			: `${hTeam} **\`(${teams.home_team.odds})\`**`
 
-		return `${teams.dates.legible} - ${awayTeamStr} @ ${homeTeamStr}`
+		return `${game.dates.legible} - ${awayTeamStr} @ ${homeTeamStr}`
 		//return `${awayTeamStr} @ ${homeTeamStr}`
 	}
 }

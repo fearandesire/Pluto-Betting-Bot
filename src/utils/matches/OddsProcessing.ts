@@ -3,7 +3,6 @@ import { helpfooter } from '@pluto-config'
 import { format, isValid, parseISO } from 'date-fns'
 import _ from 'lodash'
 import parseScheduledGames from '../bot_res/parseScheduled.js'
-import { DateManager } from '../common/DateManager.js'
 import { logger } from '../logging/WinstonLogger.js'
 import { formatOdds } from './formatOdds.js'
 import type { IOddsField } from './matchups.interface.js'
@@ -14,11 +13,13 @@ export async function prepareAndFormat(
 	guildId?: string,
 ) {
 	const oddsFields: IOddsField[] = []
-	const dateManager = new DateManager()
 
 	let _completedCount = 0
 	let _nullOddsCount = 0
 	let _formatErrorCount = 0
+
+	let tzone0 = new Intl.DateTimeFormat().resolvedOptions().timeZone
+	tzone0 = tzone0 && tzone0.trim().length ? tzone0 : 'Etc/UTC'
 
 	for (const match of matchups) {
 		if (match.status === 'completed') {
@@ -52,20 +53,18 @@ export async function prepareAndFormat(
 		let legiblestart = ''
 		let dateofmatchup = ''
 
-		let tzone0 = (new Intl.DateTimeFormat().resolvedOptions()).timeZone
-		tzone0 = (tzone0 && tzone0.trim().length ? tzone0 : "Etc/UTC")
-	
 		if (match.commence_time) {
 			try {
 				const matchDate = parseISO(match.commence_time)
 				if (isValid(matchDate)) {
-					let usdate = matchDate.toLocaleString("en-US",{timeZone:tzone0})
-					let ushour24 = matchDate.toLocaleTimeString("en-US",{hour12:false,hour:"2-digit",minute:"2-digit",second:"2-digit",timeZone:tzone0})
+					let usdate = matchDate.toLocaleString('en-US', {
+						timeZone: tzone0,
+					})
 
-					dateofmatchup = usdate.split(", ")[0]
-					legiblestart = usdate.split(", ")[1].replace(/:\d\d /,"")
-					parsedStart = format(new Date(dateofmatchup),"y-MM-dd") + " " + ushour24
-					
+					dateofmatchup = usdate.split(', ')[0]
+					legiblestart = usdate.split(', ')[1].replace(/:\d\d /, ' ')
+					parsedStart = match.commence_time
+
 					//dateofmatchup = dateManager.toMMDDYYYY(matchDate)
 					//legiblestart = format(matchDate, 'EEEE, h:mm a') // e.g., "Monday, 7:00 PM"
 					//const commaIndex = legiblestart.indexOf(', ')
@@ -101,7 +100,11 @@ export async function prepareAndFormat(
 	}
 
 	// Sort the oddsFields by actual date
-	const sortedOddsFields = _.orderBy(oddsFields, ['dates.start','teams.home_team.name'], ['asc','asc'])
+	const sortedOddsFields = _.orderBy(
+		oddsFields,
+		['dates.start', 'teams.home_team.name'],
+		['asc', 'asc'],
+	)
 	//const sortedOddsFields = _.orderBy(oddsFields, ['dates.mdy'], ['asc'])
 
 	const count = sortedOddsFields.length
