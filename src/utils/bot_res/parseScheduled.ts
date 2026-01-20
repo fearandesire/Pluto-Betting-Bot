@@ -11,15 +11,17 @@ import type {
 
 /**
  * Parses data of games to be displayed in a schedule.
- * Intended for embed in Discord platform.
+ * Intended for display within an embed on Discord.
  * @param {Array} scheduledArr - Array of games.
  * @param {Object} options - Additional options for formatting.
  * @param {boolean} options.includeOdds - Whether to include odds information in the output.
  * @param {string} options.thumbnail - URL of the thumbnail image for the embed.
  * @param {string} options.footer - Footer text for the embed.
  * @param {string} options.guildId - Guild ID for server-specific customizations.
- * @returns {EmbedBuilder} - Discord Embed with the games formatted and scheduled.
+ * @param {string} options.userTimezone - Time Zone of the user invoking request.
+ * @returns {Promise<EmbedBuilder>} - Discord Embed with the games formatted and scheduled.
  */
+
 export default async function parseScheduledGames(
 	scheduledArr: IOddsField[],
 	options: {
@@ -27,9 +29,10 @@ export default async function parseScheduledGames(
 		thumbnail: string
 		footer: { text: string; iconURL?: string }
 		guildId?: string
+		userTimezone?: string
 	},
-) {
-	const { includeOdds, thumbnail, guildId } = options
+): Promise<EmbedBuilder> {
+	const { includeOdds, thumbnail, guildId, userTimezone } = options
 
 	// Set initial title and color based on whether odds are included
 	const title = includeOdds ? 'Odds 🎲' : 'Scheduled Games'
@@ -67,8 +70,32 @@ export default async function parseScheduledGames(
 		(a, b) => new Date(a).getTime() - new Date(b).getTime(),
 	)
 
-	// Fix async pattern: extract the function first, then map
 	const matchStrFn = await createMatchStr()
+	let cnt = 1
+
+	const getTimeZoneAbbreviation = (tz: string) => {
+		try {
+			return (
+				new Intl.DateTimeFormat('en-US', {
+					timeZone: tz,
+					timeZoneName: 'short',
+				})
+					.formatToParts(new Date())
+					.find((part) => part.type === 'timeZoneName')?.value || tz
+			)
+		} catch (error) {
+			logger.debug(
+				'getTimeZoneAbbreviation: error getting abbreviation',
+				{
+					tz,
+					error,
+				},
+			)
+			return tz
+		}
+	}
+
+	const tzAbbr = userTimezone ? getTimeZoneAbbreviation(userTimezone) : ''
 
 	const fields = await Promise.all(
 		sortedDates.map(async (date) => {
@@ -76,8 +103,11 @@ export default async function parseScheduledGames(
 				const gamesList = await Promise.all(
 					groupedGames[date].map(matchStrFn),
 				)
+				cnt--
 				return {
-					name: format(new Date(date), 'PP'), // Format date as 'MM/DD/YYYY'
+					name:
+						format(new Date(date), 'PP') +
+						(cnt ? '' : tzAbbr ? ` (${tzAbbr})` : ''),
 					value: gamesList.join('\n'),
 				}
 			} catch (error) {
@@ -116,7 +146,6 @@ export default async function parseScheduledGames(
 
 /**
  * Creates a formatted string representation of a match.
- * @param {boolean} includeOdds - Whether to include odds information.
  * @returns {string} - Formatted string representing the match.
  */
 async function createMatchStr(): Promise<
@@ -148,7 +177,7 @@ async function createMatchStr(): Promise<
 			? `${hTeam} \`(${teams.home_team.odds})\``
 			: `${hTeam} **\`(${teams.home_team.odds})\`**`
 
-		return `${awayTeamStr} @ ${homeTeamStr}`
+		return `${game.dates.legible} - ${awayTeamStr} @ ${homeTeamStr}`
 	}
 }
 
