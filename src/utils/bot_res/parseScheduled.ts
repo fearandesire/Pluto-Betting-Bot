@@ -11,7 +11,7 @@ import type {
 
 /**
  * Parses data of games to be displayed in a schedule.
- * Intended for embed in Discord platform.
+ * Intended for display within an embed on Discord.
  * @param {Array} scheduledArr - Array of games.
  * @param {Object} options - Additional options for formatting.
  * @param {boolean} options.includeOdds - Whether to include odds information in the output.
@@ -19,7 +19,7 @@ import type {
  * @param {string} options.footer - Footer text for the embed.
  * @param {string} options.guildId - Guild ID for server-specific customizations.
  * @param {string} options.tzone0 - Time Zone of the user invoking request.
- * @returns {EmbedBuilder} - Discord Embed with the games formatted and scheduled.
+ * @returns {Promise<EmbedBuilder>} - Discord Embed with the games formatted and scheduled.
  */
 export default async function parseScheduledGames(
 	scheduledArr: IOddsField[],
@@ -30,7 +30,7 @@ export default async function parseScheduledGames(
 		guildId?: string
 		tzone0?: string
 	},
-) {
+): Promise<EmbedBuilder> {
 	const { includeOdds, thumbnail, guildId, tzone0 } = options
 	//const { includeOdds, thumbnail, guildId } = options
 
@@ -70,9 +70,30 @@ export default async function parseScheduledGames(
 		(a, b) => new Date(a).getTime() - new Date(b).getTime(),
 	)
 
-	// Fix async pattern: extract the function first, then map
 	const matchStrFn = await createMatchStr()
 	let cnt = 1
+
+	const getTimeZoneAbbreviation = (tz: string) => {
+		try {
+			return (
+				new Intl.DateTimeFormat('en-US', {
+					timeZone: tz,
+					timeZoneName: 'short',
+				})
+					.formatToParts(new Date())
+					.find((part) => part.type === 'timeZoneName')?.value || tz
+			)
+		} catch (error) {
+			logger.debug('getTimeZoneAbbreviation: error getting abbreviation', {
+				tz,
+				error,
+			})
+			return tz
+		}
+	}
+
+	const tzAbbr = tzone0 ? getTimeZoneAbbreviation(tzone0) : ''
+
 	const fields = await Promise.all(
 		sortedDates.map(async (date) => {
 			try {
@@ -83,7 +104,7 @@ export default async function parseScheduledGames(
 				return {
 					name:
 						format(new Date(date), 'PP') +
-						(cnt ? '' : ' TZ ' + tzone0),
+						(cnt ? '' : (tzAbbr ? ' ' + tzAbbr : '')),
 					//name: format(new Date(date), 'PP'), // Format date as 'MM/DD/YYYY'
 					value: gamesList.join('\n'),
 				}
