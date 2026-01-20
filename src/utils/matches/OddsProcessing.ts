@@ -119,7 +119,7 @@ export async function prepareAndFormat(
 		},
 		thumbnail,
 		guildId,
-		tzone0: userTimezone,
+		userTimezone: userTimezone,
 	}
 
 	return await parseScheduledGames(sortedOddsFields, options)

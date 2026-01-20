@@ -18,7 +18,7 @@ import type {
  * @param {string} options.thumbnail - URL of the thumbnail image for the embed.
  * @param {string} options.footer - Footer text for the embed.
  * @param {string} options.guildId - Guild ID for server-specific customizations.
- * @param {string} options.tzone0 - Time Zone of the user invoking request.
+ * @param {string} options.userTimezone - Time Zone of the user invoking request.
  * @returns {Promise<EmbedBuilder>} - Discord Embed with the games formatted and scheduled.
  */
 export default async function parseScheduledGames(
@@ -28,10 +28,10 @@ export default async function parseScheduledGames(
 		thumbnail: string
 		footer: { text: string; iconURL?: string }
 		guildId?: string
-		tzone0?: string
+		userTimezone?: string
 	},
 ): Promise<EmbedBuilder> {
-	const { includeOdds, thumbnail, guildId, tzone0 } = options
+	const { includeOdds, thumbnail, guildId, userTimezone } = options
 	//const { includeOdds, thumbnail, guildId } = options
 
 	// Set initial title and color based on whether odds are included
@@ -95,7 +95,7 @@ export default async function parseScheduledGames(
 		}
 	}
 
-	const tzAbbr = tzone0 ? getTimeZoneAbbreviation(tzone0) : ''
+	const tzAbbr = userTimezone ? getTimeZoneAbbreviation(userTimezone) : ''
 
 	const fields = await Promise.all(
 		sortedDates.map(async (date) => {

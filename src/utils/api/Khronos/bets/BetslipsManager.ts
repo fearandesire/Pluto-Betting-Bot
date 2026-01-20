@@ -314,13 +314,13 @@ export class BetslipManager {
 		dateInput: string | undefined,
 		betslip?: BetslipWithAggregationDTO,
 	): string {
-		let tzone0 = new Intl.DateTimeFormat().resolvedOptions().timeZone
-		tzone0 = tzone0 && tzone0.trim().length ? tzone0 : 'Etc/UTC'
+		let userTimezone = new Intl.DateTimeFormat().resolvedOptions().timeZone
+		userTimezone = userTimezone && userTimezone.trim().length ? userTimezone : 'Etc/UTC'
 
 		// Try to get commence_time from betslip.match if available
 		if (betslip?.match?.commence_time) {
 			const date = new Date(betslip.match.commence_time)
-			return date.toLocaleDateString('en-US', { timeZone: tzone0 })
+			return date.toLocaleDateString('en-US', { timeZone: userTimezone })
 			//return format(date, 'MM/dd/yy')
 		}
 
@@ -333,10 +333,10 @@ export class BetslipManager {
 					/^\d{4}-\d{2}-\d{2}/.test(dateInput)
 				) {
 					const date = new Date(dateInput)
-					if (dateInput.includes('T')) {
-						return date.toLocaleDateString('en-US', {
-							timeZone: tzone0,
-						})
+				if (dateInput.includes('T')) {
+					return date.toLocaleDateString('en-US', {
+						timeZone: userTimezone,
+					})
 					}
 					return format(date, 'M/d/y')
 					//return format(date, 'MM/dd/yy')
@@ -346,7 +346,7 @@ export class BetslipManager {
 				if (!isNaN(parsedDate.getTime())) {
 					if (dateInput.match(/T|:|[AP]M/)) {
 						return parsedDate.toLocaleDateString('en-US', {
-							timeZone: tzone0,
+							timeZone: userTimezone,
 						})
 					}
 					return format(parsedDate, 'M/d/y')
