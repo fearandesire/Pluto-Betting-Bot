@@ -107,7 +107,7 @@ export default async function parseScheduledGames(
 				return {
 					name:
 						format(new Date(date), 'PP') +
-						(cnt ? '' : tzAbbr ? ' ' + tzAbbr : ''),
+						(cnt ? '' : tzAbbr ? ` (${tzAbbr})` : ''),
 					//name: format(new Date(date), 'PP'), // Format date as 'MM/DD/YYYY'
 					value: gamesList.join('\n'),
 				}

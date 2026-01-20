@@ -3,7 +3,6 @@ import { helpfooter } from '@pluto-config'
 import { isValid, parseISO } from 'date-fns'
 import _ from 'lodash'
 import parseScheduledGames from '../bot_res/parseScheduled.js'
-import { logger } from '../logging/WinstonLogger.js'
 import { formatOdds } from './formatOdds.js'
 import type { IOddsField } from './matchups.interface.js'
 
@@ -18,21 +17,22 @@ export async function prepareAndFormat(
 	let _nullOddsCount = 0
 	let _formatErrorCount = 0
 
-	let tzone0 = new Intl.DateTimeFormat().resolvedOptions().timeZone
-	tzone0 = tzone0 && tzone0.trim().length ? tzone0 : 'Etc/UTC'
+	let userTimezone = new Intl.DateTimeFormat().resolvedOptions().timeZone
+	userTimezone =
+		userTimezone && userTimezone.trim().length ? userTimezone : 'Etc/UTC'
 
 	for (const match of matchups) {
 		if (match.status === 'completed') {
 			_completedCount++
 			continue
 		}
-		const hTeam = `${match.home_team}`
-		const aTeam = `${match.away_team}`
-		const hOdds = match.home_team_odds
-		const aOdds = match.away_team_odds
+		const homeTeam = `${match.home_team}`
+		const awayTeam = `${match.away_team}`
+		const homeOddsRaw = match.home_team_odds
+		const awayOddsRaw = match.away_team_odds
 
 		// Skip matches with missing odds
-		if (hOdds == null || aOdds == null) {
+		if (homeOddsRaw == null || awayOddsRaw == null) {
 			_nullOddsCount++
 			continue
 		}
@@ -40,7 +40,7 @@ export async function prepareAndFormat(
 		let homeOdds: string
 		let awayOdds: string
 		try {
-			const formatted = await formatOdds(hOdds, aOdds)
+			const formatted = await formatOdds(homeOddsRaw, awayOddsRaw)
 			homeOdds = formatted.homeOdds
 			awayOdds = formatted.awayOdds
 		} catch (_error) {
@@ -49,52 +49,56 @@ export async function prepareAndFormat(
 		}
 
 		// Parse commence_time to get date and time components
-		let parsedStart = ''
-		let legiblestart = ''
-		let dateofmatchup = ''
+		let commenceTime = ''
+		let matchTime = ''
+		let matchDay = ''
 
 		if (match.commence_time) {
 			try {
 				const matchDate = parseISO(match.commence_time)
 				if (isValid(matchDate)) {
-					let usdate = matchDate.toLocaleString('en-US', {
-						timeZone: tzone0,
+					let formattedDateTime = matchDate.toLocaleString('en-US', {
+						timeZone: userTimezone,
+						timeZoneName: 'short',
 					})
 
-					dateofmatchup = usdate.split(', ')[0]
-					legiblestart = usdate.split(', ')[1].replace(/:\d\d /, ' ')
-					parsedStart = match.commence_time
+					matchDay = formattedDateTime.split(', ')[0]
+					matchTime = formattedDateTime
+						.split(', ')[1]
+						.replace(/:\d\d /, ' ')
+						.replace(/ ([A-Z]{3,5})$/, ' ($1)')
+					commenceTime = match.commence_time
 
-					//dateofmatchup = dateManager.toMMDDYYYY(matchDate)
-					//legiblestart = format(matchDate, 'EEEE, h:mm a') // e.g., "Monday, 7:00 PM"
-					//const commaIndex = legiblestart.indexOf(', ')
-					//parsedStart =
+					//matchDay = dateManager.toMMDDYYYY(matchDate)
+					//matchTime = format(matchDate, 'EEEE, h:mm a') // e.g., "Monday, 7:00 PM"
+					//const commaIndex = matchTime.indexOf(', ')
+					//commenceTime =
 					//	commaIndex !== -1
-					//		? legiblestart.slice(commaIndex + 2)
+					//		? matchTime.slice(commaIndex + 2)
 					//		: format(matchDate, 'h:mm a')
 				}
 			} catch {
-				parsedStart = ''
-				legiblestart = ''
-				dateofmatchup = ''
+				commenceTime = ''
+				matchTime = ''
+				matchDay = ''
 			}
 		}
 
 		oddsFields.push({
 			teams: {
 				home_team: {
-					name: hTeam,
+					name: homeTeam,
 					odds: homeOdds,
 				},
 				away_team: {
-					name: aTeam,
+					name: awayTeam,
 					odds: awayOdds,
 				},
 			},
 			dates: {
-				mdy: dateofmatchup,
-				start: parsedStart,
-				legible: legiblestart,
+				mdy: matchDay,
+				start: commenceTime,
+				legible: matchTime,
 			},
 		})
 	}
@@ -115,7 +119,7 @@ export async function prepareAndFormat(
 		},
 		thumbnail,
 		guildId,
-		tzone0,
+		tzone0: userTimezone,
 	}
 
 	return await parseScheduledGames(sortedOddsFields, options)
