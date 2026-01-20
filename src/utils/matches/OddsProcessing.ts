@@ -68,14 +68,6 @@ export async function prepareAndFormat(
 						.replace(/:\d\d /, ' ')
 						.replace(/ ([A-Z]{3,5})$/, ' ($1)')
 					commenceTime = match.commence_time
-
-					//matchDay = dateManager.toMMDDYYYY(matchDate)
-					//matchTime = format(matchDate, 'EEEE, h:mm a') // e.g., "Monday, 7:00 PM"
-					//const commaIndex = matchTime.indexOf(', ')
-					//commenceTime =
-					//	commaIndex !== -1
-					//		? matchTime.slice(commaIndex + 2)
-					//		: format(matchDate, 'h:mm a')
 				}
 			} catch {
 				commenceTime = ''
@@ -109,7 +101,6 @@ export async function prepareAndFormat(
 		['dates.start', 'teams.home_team.name'],
 		['asc', 'asc'],
 	)
-	//const sortedOddsFields = _.orderBy(oddsFields, ['dates.mdy'], ['asc'])
 
 	const count = sortedOddsFields.length
 	const options = {

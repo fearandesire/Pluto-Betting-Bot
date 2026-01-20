@@ -21,6 +21,7 @@ import type {
  * @param {string} options.userTimezone - Time Zone of the user invoking request.
  * @returns {Promise<EmbedBuilder>} - Discord Embed with the games formatted and scheduled.
  */
+
 export default async function parseScheduledGames(
 	scheduledArr: IOddsField[],
 	options: {
@@ -32,7 +33,6 @@ export default async function parseScheduledGames(
 	},
 ): Promise<EmbedBuilder> {
 	const { includeOdds, thumbnail, guildId, userTimezone } = options
-	//const { includeOdds, thumbnail, guildId } = options
 
 	// Set initial title and color based on whether odds are included
 	const title = includeOdds ? 'Odds 🎲' : 'Scheduled Games'
@@ -108,7 +108,6 @@ export default async function parseScheduledGames(
 					name:
 						format(new Date(date), 'PP') +
 						(cnt ? '' : tzAbbr ? ` (${tzAbbr})` : ''),
-					//name: format(new Date(date), 'PP'), // Format date as 'MM/DD/YYYY'
 					value: gamesList.join('\n'),
 				}
 			} catch (error) {
@@ -179,7 +178,6 @@ async function createMatchStr(): Promise<
 			: `${hTeam} **\`(${teams.home_team.odds})\`**`
 
 		return `${game.dates.legible} - ${awayTeamStr} @ ${homeTeamStr}`
-		//return `${awayTeamStr} @ ${homeTeamStr}`
 	}
 }
 
