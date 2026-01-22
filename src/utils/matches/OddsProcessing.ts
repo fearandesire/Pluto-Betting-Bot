@@ -66,7 +66,7 @@ export async function prepareAndFormat(
 					matchTime = formattedDateTime
 						.split(', ')[1]
 						.replace(/:\d\d /, ' ')
-						.replace(/ ([A-Z]{3,5})$/, ' ($1)')
+						.replace(/ [A-Z]{3,5}$/, '') // Remove timezone - shown in date header
 					commenceTime = match.commence_time
 				}
 			} catch {
