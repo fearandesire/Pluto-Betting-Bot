@@ -12,8 +12,8 @@
 # ║  │ 'fix:', 'fix(scope):'                │ Deploy (emergency fix)           │ ║
 # ║  │ 'patch:', 'hotfix:'                  │ Deploy (emergency patch)         │ ║
 # ║  │ '--force-build'                      │ Deploy (force flag)              │ ║
-# ║  │ '--skip-ci'                          │ Skip entire workflow             │ ║
-# ║  │ '--skip-tests'                       │ Skip test phase only             │ ║
+# ║  │ '--skip-ci'                          │ Skip entire workflow (owner only)│ ║
+# ║  │ '--skip-tests'                       │ Skip test phase only (owner only)│ ║
 # ║  └─────────────────────────────────────┴──────────────────────────────────┘ ║
 # ║                                                                              ║
 # ║  DOCUMENTATION: Changes to .md, docs/, LICENSE, etc. are ignored.           ║
@@ -82,19 +82,23 @@ jobs:
   # VERIFICATION PHASE - Lint, Build, Commit Validation
   # ============================================================================
   # This job runs on every push/PR to validate code quality and conventional commits
-  # Skips for dependabot and when '--skip-ci' is in commit message
+  # Skips for dependabot and when '--skip-ci' is in commit message (owner only)
   check:
     name: Verification
     runs-on: ubuntu-latest
     if: >-
       ${{
         github.actor != 'dependabot[bot]' &&
-        !contains(github.event.head_commit.message, '--skip-ci') &&
-        !(github.event_name == 'workflow_dispatch' && inputs.skip_tests == true)
+        !(
+          contains(github.event.head_commit.message, '--skip-ci') &&
+          github.actor == github.repository_owner
+        )
       }}
 
     env:
-      SKIP_TESTS: ${{ contains(github.event.head_commit.message, '--skip-tests') }}
+      # Used to conditionally skip test steps (not the entire job)
+      # Commit message flag only works for repo owner; workflow_dispatch is already access-controlled
+      SKIP_TESTS: ${{ (contains(github.event.head_commit.message, '--skip-tests') && github.actor == github.repository_owner) || (github.event_name == 'workflow_dispatch' && inputs.skip_tests == true) }}
 
     steps:
       - name: Checkout
@@ -179,6 +183,7 @@ jobs:
 
     permissions:
       contents: read
+      pull-requests: read # Required for gh pr list in version resolution
       packages: write
       id-token: write
 
@@ -225,9 +230,9 @@ jobs:
             echo "📦 Version source: manual override"
           fi
 
-          # 2. Try package.json
+          # 2. Try package.json (using jq - pre-installed on GitHub runners)
           if [[ -z "${VERSION}" ]] && [[ -f "package.json" ]]; then
-            VERSION=$(node -p "require('./package.json').version" 2>/dev/null || echo "")
+            VERSION=$(jq -r '.version // empty' package.json 2>/dev/null || echo "")
             if [[ -n "${VERSION}" ]]; then
               echo "📦 Version source: package.json"
             fi
@@ -235,7 +240,7 @@ jobs:
 
           # 3. Try release-please manifest
           if [[ -z "${VERSION}" ]] && [[ -f ".release-please-manifest.json" ]]; then
-            VERSION=$(node -p "Object.values(require('./.release-please-manifest.json'))[0]" 2>/dev/null || echo "")
+            VERSION=$(jq -r 'to_entries[0].value // empty' .release-please-manifest.json 2>/dev/null || echo "")
             if [[ -n "${VERSION}" ]]; then
               echo "📦 Version source: .release-please-manifest.json"
             fi
