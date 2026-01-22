@@ -1,23 +1,8 @@
-# ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║                        PLUTO BETTING APP - CI/CD PIPELINE                     ║
-# ║                                                                              ║
-# ║  Builds, tests, and deploys Docker images to GitHub Container Registry.      ║
-# ║  Version derived from package.json / .release-please-manifest.json           ║
-# ║                                                                              ║
-# ║  COMMIT MESSAGE TRIGGERS:                                                   ║
-# ║  ┌─────────────────────────────────────┬──────────────────────────────────┐ ║
-# ║  │ Pattern                              │ Action                           │ ║
-# ║  ├─────────────────────────────────────┼──────────────────────────────────┤ ║
-# ║  │ 'chore(main): release X.Y.Z'         │ Deploy (automated release)       │ ║
-# ║  │ 'fix:', 'fix(scope):'                │ Deploy (emergency fix)           │ ║
-# ║  │ 'patch:', 'hotfix:'                  │ Deploy (emergency patch)         │ ║
-# ║  │ '--force-build'                      │ Deploy (force flag)              │ ║
-# ║  │ '--skip-ci'                          │ Skip entire workflow (owner only)│ ║
-# ║  │ '--skip-tests'                       │ Skip test phase only (owner only)│ ║
-# ║  └─────────────────────────────────────┴──────────────────────────────────┘ ║
-# ║                                                                              ║
-# ║  DOCUMENTATION: Changes to .md, docs/, LICENSE, etc. are ignored.           ║
-# ╚══════════════════════════════════════════════════════════════════════════════╝
+# CI/CD Pipeline - Pluto Betting Bot
+# Builds, verifies, and deploys Docker images to GHCR
+#
+# Deploy triggers: release event | fix/patch/hotfix commits | workflow_dispatch
+# Skip CI: Use native [skip ci] in commit message
 
 name: CI/CD Pipeline
 
@@ -25,36 +10,25 @@ on:
   workflow_dispatch:
     inputs:
       force_build:
-        description: "Force build and push (bypasses branch/event conditions)"
-        type: boolean
-        default: false
-      skip_tests:
-        description: "Skip test phase entirely"
+        description: "Force Docker build and push"
         type: boolean
         default: false
       version_override:
-        description: "Override version (e.g., 1.0.0-beta.1)"
-        type: string
-        required: false
-      pre_release_suffix:
-        description: "Pre-release suffix (e.g., beta, rc, alpha)"
+        description: "Override version (e.g., 1.0.0-rc.1)"
         type: string
         required: false
 
-  # Push events trigger CI/CD for code changes
   push:
     branches: [main]
     paths-ignore:
-      # Documentation changes are ignored - they don't trigger deployments
       - "**.md"
       - "docs/**"
       - "dev/**"
       - ".github/*.md"
       - "LICENSE"
       - ".gitignore"
-      - "!.github/workflows/**" # exec on workflow changes
+      - "!.github/workflows/**"
 
-  # PRs run verification but don't deploy
   pull_request:
     branches: [main]
     paths-ignore:
@@ -78,35 +52,20 @@ permissions:
   packages: write
 
 jobs:
-  # ============================================================================
-  # VERIFICATION PHASE - Lint, Build, Commit Validation
-  # ============================================================================
-  # This job runs on every push/PR to validate code quality and conventional commits
-  # Skips for dependabot and when '--skip-ci' is in commit message (owner only)
-  check:
-    name: Verification
+  # ===========================================================================
+  # VERIFY - Build validation and commit linting
+  # ===========================================================================
+  verify:
+    name: Verify
     runs-on: ubuntu-latest
-    if: >-
-      ${{
-        github.actor != 'dependabot[bot]' &&
-        !(
-          contains(github.event.head_commit.message, '--skip-ci') &&
-          github.actor == github.repository_owner
-        )
-      }}
-
-    env:
-      # Used to conditionally skip test steps (not the entire job)
-      # Commit message flag only works for repo owner; workflow_dispatch is already access-controlled
-      SKIP_TESTS: ${{ (contains(github.event.head_commit.message, '--skip-tests') && github.actor == github.repository_owner) || (github.event_name == 'workflow_dispatch' && inputs.skip_tests == true) }}
+    if: github.actor != 'dependabot[bot]'
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Required for git operations (commit validation)
+          fetch-depth: 0
 
-      # Setup Node.js environment with pnpm
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
@@ -116,18 +75,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: "pnpm"
+          cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Verify code compiles without errors
       - name: Build
         run: pnpm build
 
-      # Ensure commit messages follow conventional commit format
-      # This validates PRs and pushes for proper commit message structure
-      - name: Validate commit messages (conventional commits)
+      - name: Validate commit messages
         if: github.event_name == 'pull_request' || github.event_name == 'push'
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
@@ -143,165 +99,72 @@ jobs:
             npx commitlint --from "$FROM_SHA" --to HEAD --verbose
           fi
 
-  # ============================================================================
-  # BUILD AND PUSH - Build Docker image and push to GHCR
-  # ============================================================================
-  # This job only runs after verification passes and meets deployment criteria
-  # Deploys to GitHub Container Registry with version tags
-  docker:
-    name: Build and Push Docker Image
-    needs: check # Must pass verification first
+  # ===========================================================================
+  # DEPLOY - Build and push Docker image to GHCR
+  # Triggers: release | fix/patch/hotfix commits | workflow_dispatch force
+  # ===========================================================================
+  deploy:
+    name: Deploy
+    needs: verify
     runs-on: ubuntu-latest
-    # ┌─────────────────────────────────────────────────────────────────────────┐
-    # │ DEPLOYMENT TRIGGERS (any of these will deploy):                        │
-    # │ • 'chore(main): release X.Y.Z' → Automated release                      │
-    # │ • '--force-build' → Force deployment flag                               │
-    # │ • 'fix:', 'fix(scope):', 'patch:', 'hotfix:' → Emergency fixes         │
-    # │ • Manual workflow_dispatch with force_build=true                        │
-    # │ • GitHub release published                                              │
-    # │                                                                         │
-    # │ WHAT WON'T DEPLOY:                                                     │
-    # │ • Documentation changes (.md, docs/, LICENSE, etc.)                    │
-    # │ • Regular feature commits without special patterns                      │
-    # │ • Any changes that fail the 'check' job                                 │
-    # └─────────────────────────────────────────────────────────────────────────┘
-    if: |
-      always() &&
-      needs.check.result == 'success' &&
-      (
+    if: >-
+      needs.verify.result == 'success' && (
+        github.event_name == 'release' ||
+        (github.event_name == 'workflow_dispatch' && inputs.force_build) ||
         (github.event_name == 'push' && github.ref == 'refs/heads/main' && (
           startsWith(github.event.head_commit.message, 'chore(main): release') ||
-          contains(github.event.head_commit.message, '--force-build') ||
-          startsWith(github.event.head_commit.message, 'fix:') ||
-          startsWith(github.event.head_commit.message, 'fix(') ||
+          startsWith(github.event.head_commit.message, 'fix') ||
           startsWith(github.event.head_commit.message, 'patch:') ||
           startsWith(github.event.head_commit.message, 'hotfix:')
-        )) ||
-        (github.event_name == 'workflow_dispatch' && inputs.force_build == true) ||
-        github.event_name == 'release'
+        ))
       )
 
     permissions:
       contents: read
-      pull-requests: read # Required for gh pr list in version resolution
       packages: write
       id-token: write
 
     outputs:
       version: ${{ steps.version.outputs.version }}
       short_sha: ${{ steps.version.outputs.short_sha }}
-      image_tag: ${{ steps.version.outputs.image_tag }}
-      is_prerelease: ${{ steps.version.outputs.is_prerelease }}
+      image_tag: ${{ steps.version.outputs.version }}-${{ steps.version.outputs.short_sha }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Required for git tag inspection and version detection
+          fetch-depth: 0
 
-      # ┌─────────────────────────────────────────────────────────────────────────┐
-      # │ VERSION RESOLUTION (in order of precedence):                            │
-      # │ 1. workflow_dispatch version_override input (manual override)          │
-      # │ 2. package.json version field (standard Node.js versioning)            │
-      # │ 3. .release-please-manifest.json version (automated releases)          │
-      # │ 4. Latest git tag (vX.Y.Z or X.Y.Z format) fallback                     │
-      # │ 5. Fallback: 0.0.0 (if no version found anywhere)                      │
-      # │                                                                         │
-      # │ PRE-RELEASE DETECTION:                                                  │
-      # │ - Checks for open release-please PRs to create beta versions           │
-      # │ - Applies manual pre_release_suffix if provided                        │
-      # └─────────────────────────────────────────────────────────────────────────┘
       - name: Resolve version
         id: version
-        env:
-          GH_TOKEN: ${{ github.token }}
-          VERSION_OVERRIDE: ${{ inputs.version_override || '' }}
-          PRERELEASE_SUFFIX: ${{ inputs.pre_release_suffix || '' }}
         run: |
           set -euo pipefail
-
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-          IS_PRERELEASE="false"
-          VERSION=""
 
-          # 1. Check for manual override
-          if [[ -n "${VERSION_OVERRIDE}" ]]; then
-            VERSION="${VERSION_OVERRIDE}"
+          # 1. Manual override from workflow_dispatch
+          VERSION="${{ inputs.version_override }}"
+
+          # 2. package.json (primary source)
+          if [[ -z "$VERSION" ]]; then
+            VERSION=$(jq -r '.version' package.json)
+            echo "📦 Version source: package.json"
+          else
             echo "📦 Version source: manual override"
           fi
 
-          # 2. Try package.json (using jq - pre-installed on GitHub runners)
-          if [[ -z "${VERSION}" ]] && [[ -f "package.json" ]]; then
-            VERSION=$(jq -r '.version // empty' package.json 2>/dev/null || echo "")
-            if [[ -n "${VERSION}" ]]; then
-              echo "📦 Version source: package.json"
-            fi
-          fi
+          # 3. Fallback (should never happen)
+          VERSION="${VERSION:-0.0.0}"
 
-          # 3. Try release-please manifest
-          if [[ -z "${VERSION}" ]] && [[ -f ".release-please-manifest.json" ]]; then
-            VERSION=$(jq -r 'to_entries[0].value // empty' .release-please-manifest.json 2>/dev/null || echo "")
-            if [[ -n "${VERSION}" ]]; then
-              echo "📦 Version source: .release-please-manifest.json"
-            fi
-          fi
-
-          # 4. Try git tags
-          if [[ -z "${VERSION}" ]]; then
-            VERSION=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' || echo "")
-            if [[ -n "${VERSION}" ]]; then
-              echo "📦 Version source: git tag"
-            fi
-          fi
-
-          # 5. Fallback
-          if [[ -z "${VERSION}" ]]; then
-            VERSION="0.0.0"
-            echo "📦 Version source: fallback (no version found)"
-          fi
-
-          # Check for release-please PR to determine pre-release status
-          if [[ -z "${VERSION_OVERRIDE}" ]]; then
-            RELEASE_PR=$(gh pr list --state open --label "autorelease: pending" --json number,title --jq '.[0].title' 2>/dev/null || echo "")
-            if [[ -n "${RELEASE_PR}" ]]; then
-              NEXT_VERSION=$(echo "${RELEASE_PR}" | grep -oP '\d+\.\d+\.\d+' | head -1 || echo "")
-              if [[ -n "${NEXT_VERSION}" ]]; then
-                if [[ -n "${PRERELEASE_SUFFIX}" ]]; then
-                  VERSION="${NEXT_VERSION}-${PRERELEASE_SUFFIX}"
-                else
-                  VERSION="${NEXT_VERSION}-beta"
-                fi
-                IS_PRERELEASE="true"
-                echo "🚧 Pre-release detected from release-please PR"
-              fi
-            fi
-          fi
-
-          # Apply manual pre-release suffix if provided
-          if [[ "${IS_PRERELEASE}" == "false" ]] && [[ -n "${PRERELEASE_SUFFIX}" ]]; then
-            VERSION="${VERSION}-${PRERELEASE_SUFFIX}"
-            IS_PRERELEASE="true"
-          fi
-
-          IMAGE_TAG="${VERSION}-${SHORT_SHA}"
-
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "short_sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
-          echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
-          echo "is_prerelease=${IS_PRERELEASE}" >> $GITHUB_OUTPUT
-
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "📦 Version:      ${VERSION}"
-          echo "🔖 Short SHA:    ${SHORT_SHA}"
-          echo "🏷️  Image Tag:    ${IMAGE_TAG}"
-          echo "🚧 Pre-release:  ${IS_PRERELEASE}"
+          echo "📦 Version:   $VERSION"
+          echo "🔖 Short SHA: $SHORT_SHA"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-      # Setup Docker build environment with Buildx for advanced features
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # Authenticate with GitHub Container Registry (GHCR)
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -309,42 +172,37 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Downcase image name for Docker image naming (must be lowercase)
       - name: Set lowercase image name
         run: |
           echo "IMAGE_NAME=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
-      # Generate OCI-compliant metadata labels for the Docker image
-      # This creates standardized labels for image discovery and compliance
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=${{ steps.version.outputs.image_tag }}  # Version + SHA (unique)
-            type=raw,value=${{ steps.version.outputs.version }}    # Clean version
-            type=raw,value=${{ steps.version.outputs.short_sha }}  # Commit SHA
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}  # Latest on main
+            type=raw,value=${{ steps.version.outputs.version }}-${{ steps.version.outputs.short_sha }}
+            type=raw,value=${{ steps.version.outputs.version }}
+            type=raw,value=${{ steps.version.outputs.short_sha }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
           labels: |
             org.opencontainers.image.title=${{ env.IMAGE_TITLE }}
             org.opencontainers.image.description=${{ env.IMAGE_DESCRIPTION }}
             org.opencontainers.image.vendor=${{ env.IMAGE_VENDOR }}
             org.opencontainers.image.version=${{ steps.version.outputs.version }}
 
-      # Build multi-platform Docker image and push to GHCR
-      # Includes security scanning (SBOM) and provenance attestation
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
-          tags: ${{ steps.meta.outputs.tags }} # Multiple tags from metadata action
-          labels: ${{ steps.meta.outputs.labels }} # OCI-compliant labels
-          cache-from: type=gha # Use GitHub Actions cache for faster builds
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
           cache-to: type=gha,mode=max
-          provenance: true # Generate build provenance attestation
-          sbom: true # Generate Software Bill of Materials
+          provenance: true
+          sbom: true
 
       - name: Create deployment summary
         run: |
@@ -358,14 +216,13 @@ jobs:
           | **Image** | `${{ github.repository_owner }}/${{ env.IMAGE_NAME }}` |
           | **Version** | `${{ steps.version.outputs.version }}` |
           | **Commit** | `${{ steps.version.outputs.short_sha }}` |
-          | **Pre-release** | `${{ steps.version.outputs.is_prerelease }}` |
 
           ### Published Tags
           ```
           ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
           ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
           ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.short_sha }}
-          ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.image_tag }}
+          ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}-${{ steps.version.outputs.short_sha }}
           ```
 
           ### Quick Pull
