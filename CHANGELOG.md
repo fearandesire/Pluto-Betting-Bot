@@ -1,5 +1,22 @@
 # Changelog
 
+## [4.2.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.1.0...v4.2.0) (2026-01-20)
+
+
+### Features
+
+* add config command for footer management and context-aware bet footers ([c827d77](https://github.com/fearandesire/Pluto-Betting-Bot/commit/c827d77bcc508f1526681102c65ddc08e07769ee))
+* add config command for footer management and context-aware bet footers ([#313](https://github.com/fearandesire/Pluto-Betting-Bot/issues/313)) ([1561c5d](https://github.com/fearandesire/Pluto-Betting-Bot/commit/1561c5d6fa7cadf725905cecfe9793bbde2b3c1f))
+* Add pagination to /mybets command with retry logic improvements ([#268](https://github.com/fearandesire/Pluto-Betting-Bot/issues/268)) ([732426c](https://github.com/fearandesire/Pluto-Betting-Bot/commit/732426c3db4f8f18c3d82a48e8c7d40cd306394b))
+
+
+### Bug Fixes
+
+* **footers:** resolve type error in category access ([38ba99e](https://github.com/fearandesire/Pluto-Betting-Bot/commit/38ba99eb56c4b739593f85e359de39358cbabfc0))
+* method reference ([f5b80b4](https://github.com/fearandesire/Pluto-Betting-Bot/commit/f5b80b47ff99964abc205bfae4b3ee67798b6b02))
+* update environment variable validation ([#312](https://github.com/fearandesire/Pluto-Betting-Bot/issues/312)) ([957b00f](https://github.com/fearandesire/Pluto-Betting-Bot/commit/957b00fe2b9a10e092903f9a648ca53fd70c30fd))
+* update leaderboard API to v1 endpoint ([#304](https://github.com/fearandesire/Pluto-Betting-Bot/issues/304)) ([7a8bb82](https://github.com/fearandesire/Pluto-Betting-Bot/commit/7a8bb8269d003761c5b1eb3963f7394e6ad8ee0a))
+
 ## [4.1.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.0.0...v4.1.0) (2025-12-02)
 
 
