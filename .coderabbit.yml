@@ -12,14 +12,15 @@ reviews:
   collapse_walkthrough: true
   changed_files_summary: true
   sequence_diagrams: true
-  
+
   path_filters:
     - "src/**/*.ts"
     - "test/**/*.ts"
+    - ".github/**/*.yml"
     - "!dist/**"
     - "!node_modules/**"
     - "!**/*.spec.ts"
-  
+
   path_instructions:
     - path: "**/commands/**/*.ts"
       instructions: |
@@ -33,7 +34,7 @@ reviews:
         - Ensure ephemeral responses (ephemeral: true) are used for error messages and sensitive data
         - Validate autocomplete handlers return results within 3 seconds
         - Check that commands don't perform heavy computation - offload to BullMQ jobs instead
-    
+
     - path: "**/listeners/**/*.ts"
       instructions: |
         - Verify listeners extend Sapphire's Listener class
@@ -45,7 +46,7 @@ reviews:
         - Ensure interactionCreate listeners validate interaction types before handling
         - Verify messageCreate listeners ignore bots unless explicitly needed
         - Check that ready listener is used for one-time initialization, not recurring tasks
-    
+
     - path: "**/preconditions/**/*.ts"
       instructions: |
         - Verify preconditions extend Sapphire's Precondition class
@@ -55,7 +56,7 @@ reviews:
         - Check for proper permission checks using interaction.memberPermissions
         - Flag preconditions that perform async operations without proper error handling
         - Verify cooldown preconditions use appropriate bucket strategies
-    
+
     - path: "**/interactions/**/*.ts"
       instructions: |
         - Verify proper interaction type guards (isButton, isSelectMenu, isModalSubmit)
@@ -66,7 +67,7 @@ reviews:
         - Flag interactions that don't check interaction.replied before responding
         - Ensure button/select menu handlers validate user permissions before executing actions
         - Verify modal submit handlers validate and sanitize input fields
-    
+
     - path: "**/routes/**/*.ts"
       instructions: |
         - Verify Koa routes use proper HTTP methods (ctx.method checks)
@@ -79,7 +80,7 @@ reviews:
         - Verify CORS configuration is secure (don't use '*' in production)
         - Check that endpoints return consistent JSON structure
         - Validate proper logging of requests and errors
-    
+
     - path: "**/middleware/**/*.ts"
       instructions: |
         - Verify Koa middleware follows async (ctx, next) => pattern
@@ -89,7 +90,7 @@ reviews:
         - Check for proper timing/logging middleware placement
         - Flag middleware that performs heavy computation - offload to workers
         - Ensure authentication middleware sets ctx.state.user consistently
-    
+
     - path: "**/embeds/**/*.ts"
       instructions: |
         - Verify embeds use EmbedBuilder from Discord.js v14 (not MessageEmbed)
@@ -100,7 +101,7 @@ reviews:
         - Flag embeds with more than 25 fields (Discord limit)
         - Ensure thumbnail and image URLs are valid and accessible
         - Verify author fields include proper name and optional icon/url
-    
+
     - path: "**/utils/**/*.ts"
       instructions: |
         - Verify utility functions are pure and side-effect free where possible
@@ -110,7 +111,7 @@ reviews:
         - Check for proper null/undefined handling with optional chaining
         - Flag utils that perform API calls - use service layer instead
         - Ensure constants are properly typed and exported
-    
+
     - path: "**/services/**/*.ts"
       instructions: |
         - Verify services encapsulate business logic properly
@@ -121,7 +122,7 @@ reviews:
         - Flag services that directly manipulate DOM or Discord.js caches
         - Ensure database operations use transactions where appropriate
         - Verify services are testable with mockable dependencies
-    
+
     - path: "**/types/**/*.ts"
       instructions: |
         - Verify proper TypeScript type definitions (no 'any' unless documented why)
@@ -130,7 +131,7 @@ reviews:
         - Validate generic types are constrained appropriately
         - Check for proper discriminated unions for different interaction types
         - Flag overly complex types that should be simplified
-    
+
     - path: "**/api/**/*.ts"
       instructions: |
         - Verify proper HTTP client configuration (timeouts, retries)
@@ -140,7 +141,7 @@ reviews:
         - Check that API responses are properly typed
         - Flag API calls that don't implement exponential backoff for rate limits
         - Ensure proper handling of 429 (rate limit) responses
-    
+
     - path: "**/*.ts"
       instructions: |
         BULLMQ JOB PATTERNS (when Worker, Queue, or job processing is detected):
@@ -153,7 +154,7 @@ reviews:
         - Ensure jobs log errors with sufficient context for debugging
         - Verify jobs validate input data before processing
         - Check that jobs don't hold Discord.js client references - use API calls instead
-        
+
         ZOD VALIDATION (when z.object, z.string, or Zod schemas are detected):
         - Verify Zod schemas properly define all required fields
         - Check that validation errors include helpful messages using .describe() or custom error maps
@@ -168,19 +169,19 @@ reviews:
     enabled: true
     auto_incremental_review: true
     drafts: false
-  
+
   finishing_touches:
     docstrings:
       enabled: false
     unit_tests:
       enabled: true
-  
+
   pre_merge_checks:
     title:
       mode: "warning"
     issue_assessment:
       mode: "warning"
-  
+
   tools:
     eslint:
       enabled: true
