@@ -83,7 +83,6 @@ src/utils/bot_res/img-pup.ts
 docs/internal
 scripts/internal
 
-spec/**/*
 .frolic-session.json
 
 docs

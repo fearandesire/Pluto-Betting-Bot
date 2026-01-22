@@ -80,6 +80,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Setup Java for OpenAPI Generator
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Generate OpenAPI client
+        run: pnpm ci-gen-api
+
       - name: Build
         run: pnpm build
 
