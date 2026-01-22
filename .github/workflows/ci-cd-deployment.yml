@@ -1,0 +1,232 @@
+# CI/CD Pipeline - Pluto Betting Bot
+# Builds, verifies, and deploys Docker images to GHCR
+#
+# Deploy triggers: release event | fix/patch/hotfix commits | workflow_dispatch
+# Skip CI: Use native [skip ci] in commit message
+
+name: CI/CD Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_build:
+        description: "Force Docker build and push"
+        type: boolean
+        default: false
+      version_override:
+        description: "Override version (e.g., 1.0.0-rc.1)"
+        type: string
+        required: false
+
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - "dev/**"
+      - ".github/*.md"
+      - "LICENSE"
+      - ".gitignore"
+      - "!.github/workflows/**"
+
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - "dev/**"
+
+  release:
+    types: [published]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: pluto-betting-bot
+  IMAGE_TITLE: Pluto Betting Bot
+  IMAGE_DESCRIPTION: "Sports Betting Application for Discord"
+  IMAGE_VENDOR: fearandesire
+
+permissions:
+  contents: read
+  pull-requests: read
+  packages: write
+
+jobs:
+  # ===========================================================================
+  # VERIFY - Build validation and commit linting
+  # ===========================================================================
+  verify:
+    name: Verify
+    runs-on: ubuntu-latest
+    if: github.actor != 'dependabot[bot]'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Validate commit messages
+        if: github.event_name == 'pull_request' || github.event_name == 'push'
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            npx commitlint --from ${{ github.event.pull_request.base.sha }} --to HEAD --verbose
+          else
+            FROM_SHA="${{ github.event.before }}"
+            if ! git cat-file -e "$FROM_SHA" 2>/dev/null; then
+              echo "Commit $FROM_SHA not found (likely due to rebase), using origin/main as base"
+              git fetch origin main 2>/dev/null || true
+              MERGE_BASE=$(git merge-base HEAD origin/main 2>/dev/null || echo "origin/main")
+              FROM_SHA="$MERGE_BASE"
+            fi
+            npx commitlint --from "$FROM_SHA" --to HEAD --verbose
+          fi
+
+  # ===========================================================================
+  # DEPLOY - Build and push Docker image to GHCR
+  # Triggers: release | fix/patch/hotfix commits | workflow_dispatch force
+  # ===========================================================================
+  deploy:
+    name: Deploy
+    needs: verify
+    runs-on: ubuntu-latest
+    if: >-
+      needs.verify.result == 'success' && (
+        github.event_name == 'release' ||
+        (github.event_name == 'workflow_dispatch' && inputs.force_build) ||
+        (github.event_name == 'push' && github.ref == 'refs/heads/main' && (
+          startsWith(github.event.head_commit.message, 'chore(main): release') ||
+          startsWith(github.event.head_commit.message, 'fix') ||
+          startsWith(github.event.head_commit.message, 'patch:') ||
+          startsWith(github.event.head_commit.message, 'hotfix:')
+        ))
+      )
+
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      short_sha: ${{ steps.version.outputs.short_sha }}
+      image_tag: ${{ steps.version.outputs.version }}-${{ steps.version.outputs.short_sha }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve version
+        id: version
+        run: |
+          set -euo pipefail
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+
+          # 1. Manual override from workflow_dispatch
+          VERSION="${{ inputs.version_override }}"
+
+          # 2. package.json (primary source)
+          if [[ -z "$VERSION" ]]; then
+            VERSION=$(jq -r '.version' package.json)
+            echo "📦 Version source: package.json"
+          else
+            echo "📦 Version source: manual override"
+          fi
+
+          # 3. Fallback (should never happen)
+          VERSION="${VERSION:-0.0.0}"
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📦 Version:   $VERSION"
+          echo "🔖 Short SHA: $SHORT_SHA"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set lowercase image name
+        run: |
+          echo "IMAGE_NAME=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ steps.version.outputs.version }}-${{ steps.version.outputs.short_sha }}
+            type=raw,value=${{ steps.version.outputs.version }}
+            type=raw,value=${{ steps.version.outputs.short_sha }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+          labels: |
+            org.opencontainers.image.title=${{ env.IMAGE_TITLE }}
+            org.opencontainers.image.description=${{ env.IMAGE_DESCRIPTION }}
+            org.opencontainers.image.vendor=${{ env.IMAGE_VENDOR }}
+            org.opencontainers.image.version=${{ steps.version.outputs.version }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: true
+          sbom: true
+
+      - name: Create deployment summary
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << 'EOF'
+          ## 🚀 Deployment Summary
+
+          ### Image Details
+          | Property | Value |
+          |----------|-------|
+          | **Registry** | `${{ env.REGISTRY }}` |
+          | **Image** | `${{ github.repository_owner }}/${{ env.IMAGE_NAME }}` |
+          | **Version** | `${{ steps.version.outputs.version }}` |
+          | **Commit** | `${{ steps.version.outputs.short_sha }}` |
+
+          ### Published Tags
+          ```
+          ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
+          ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
+          ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.short_sha }}
+          ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}-${{ steps.version.outputs.short_sha }}
+          ```
+
+          ### Quick Pull
+          ```bash
+          docker pull ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
+          ```
+          EOF
