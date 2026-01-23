@@ -1,0 +1,139 @@
+# Sync Khronos Swagger Spec
+# Automatically fetches the latest Khronos swagger spec and regenerates the OpenAPI client
+#
+# Triggers:
+#   - repository_dispatch from Khronos CI (on every Khronos push to main)
+#   - workflow_dispatch for manual sync
+
+name: Sync Khronos Spec
+
+on:
+  repository_dispatch:
+    types: [khronos-spec-updated]
+  workflow_dispatch:
+    inputs:
+      force_regenerate:
+        description: "Force regenerate client even if spec unchanged"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  sync-spec:
+    name: Sync Swagger Spec
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Setup Java for OpenAPI Generator
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Fetch latest Khronos spec
+        id: fetch
+        run: |
+          set -euo pipefail
+          
+          SPEC_URL="https://raw.githubusercontent.com/fearandesire/khronos/main/spec/khronos-swagger-spec-v1.json"
+          SPEC_FILE="spec/khronos-swagger-spec-v1.json"
+          TEMP_SPEC="/tmp/khronos-swagger-spec-v1.json"
+          
+          echo "📥 Fetching spec from: $SPEC_URL"
+          curl -sSL "$SPEC_URL" -o "$TEMP_SPEC"
+          
+          # Calculate hashes
+          if [ -f "$SPEC_FILE" ]; then
+            OLD_HASH=$(sha256sum "$SPEC_FILE" | cut -d' ' -f1)
+            echo "old_hash=$OLD_HASH" >> $GITHUB_OUTPUT
+          else
+            echo "old_hash=none" >> $GITHUB_OUTPUT
+          fi
+          
+          NEW_HASH=$(sha256sum "$TEMP_SPEC" | cut -d' ' -f1)
+          echo "new_hash=$NEW_HASH" >> $GITHUB_OUTPUT
+          
+          # Move new spec into place
+          mkdir -p spec
+          mv "$TEMP_SPEC" "$SPEC_FILE"
+          
+          # Check if changed
+          if [ "$OLD_HASH" != "$NEW_HASH" ] || [ "${{ inputs.force_regenerate }}" = "true" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "✅ Spec changed (old: ${OLD_HASH:0:8}, new: ${NEW_HASH:0:8})"
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ Spec unchanged (hash: ${NEW_HASH:0:8})"
+          fi
+
+      - name: Install dependencies
+        if: steps.fetch.outputs.changed == 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Regenerate OpenAPI client
+        if: steps.fetch.outputs.changed == 'true'
+        run: |
+          echo "🔨 Regenerating OpenAPI client..."
+          pnpm ci-gen-api
+
+      - name: Configure Git
+        if: steps.fetch.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit and push changes
+        if: steps.fetch.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          
+          git add spec/khronos-swagger-spec-v1.json
+          git add src/openapi/khronos/
+          
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "ℹ️ No changes to commit after regeneration"
+            exit 0
+          fi
+          
+          SPEC_HASH="${{ steps.fetch.outputs.new_hash }}"
+          COMMIT_MSG="chore: sync Khronos swagger spec [${SPEC_HASH:0:8}] [skip ci]"
+          
+          git commit -m "$COMMIT_MSG"
+          git push origin main
+          
+          echo "✅ Changes committed and pushed to main"
+
+      - name: Create sync summary
+        if: always()
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << 'EOF'
+          ## 🔄 Swagger Spec Sync Summary
+          
+          | Property | Value |
+          |----------|-------|
+          | **Trigger** | `${{ github.event_name }}` |
+          | **Old Hash** | `${{ steps.fetch.outputs.old_hash }}` |
+          | **New Hash** | `${{ steps.fetch.outputs.new_hash }}` |
+          | **Changed** | `${{ steps.fetch.outputs.changed }}` |
+          | **Status** | ${{ steps.fetch.outputs.changed == 'true' && '✅ Updated' || 'ℹ️ No changes' }} |
+          EOF
