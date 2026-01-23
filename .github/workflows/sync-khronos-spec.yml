@@ -51,6 +51,8 @@ jobs:
 
       - name: Fetch latest Khronos spec
         id: fetch
+        env:
+          KHRONOS_PAT: ${{ secrets.KHRONOS_PAT }}
         run: |
           set -euo pipefail
           
@@ -59,7 +61,7 @@ jobs:
           TEMP_SPEC="/tmp/khronos-swagger-spec-v1.json"
           
           echo "📥 Fetching spec from: $SPEC_URL"
-          curl -sSL "$SPEC_URL" -o "$TEMP_SPEC"
+          curl -sSL -H "Authorization: token $KHRONOS_PAT" "$SPEC_URL" -o "$TEMP_SPEC"
           
           # Calculate hashes
           if [ -f "$SPEC_FILE" ]; then
