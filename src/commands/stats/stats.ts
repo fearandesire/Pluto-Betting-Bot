@@ -64,8 +64,10 @@ export class UserCommand extends Subcommand {
 
 			const formatValue = (value: number) =>
 				value === 0 ? 'N/A' : `$${value.toLocaleString()}`
+			const formatCount = (value: number) =>
+				value === 0 ? 'N/A' : value.toLocaleString()
 			const formatPercentage = (value: number) =>
-				value === 0 ? 'N/A' : `${(value * 100).toFixed(1)}%`
+				value === 0 ? 'N/A' : `${value.toFixed(1)}%`
 
 			const embed = {
 				color: Colors.Blue,
@@ -74,9 +76,9 @@ export class UserCommand extends Subcommand {
 					{
 						name: '📊 Totals',
 						value: [
-							`Bets: **${formatValue(overallStats.totalBets)}**`,
-							`Wins: **${formatValue(overallStats.totalWins)}**`,
-							`Losses: **${formatValue(overallStats.totalLosses)}**`,
+							`Bets: **${formatCount(overallStats.totalBets)}**`,
+							`Wins: **${formatCount(overallStats.totalWins)}**`,
+							`Losses: **${formatCount(overallStats.totalLosses)}**`,
 							`Win Rate: **${formatPercentage(overallStats.winRate)}**`,
 							`Highest Bet: **${formatValue(overallStats.highestBetAmount)}** 💰`,
 						].join('\n'),
