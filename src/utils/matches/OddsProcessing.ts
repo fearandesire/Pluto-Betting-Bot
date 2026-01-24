@@ -26,7 +26,7 @@ export async function prepareAndFormat(
 		catch { myTZ = new Date().toLocaleString('en-US',{timeZone:userTimezone,timeZoneName:'short'}) }
 	let mydate = myTZ.split(' ')
 	let mylen = mydate.length
-	userTimezone = mydate[mylen-1].match(/^[AP]M$/) ? userTZInput.trim() : mydate[mylen-1] }
+	userTimezone = mydate[mylen-1].match(/^[AP]M$/) ? userTZInput.trim() : mydate[mylen-1]
 		
 	for (const match of matchups) {
 		if (match.status === 'completed') {
