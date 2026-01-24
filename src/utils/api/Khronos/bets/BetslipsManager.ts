@@ -352,7 +352,7 @@ export class BetslipManager {
 						/* return parsedDate.toLocaleDateString('en-US', {
 							timeZone: userTimezone,
 						}) */
-						return parseDate.toLocaleString('en-US',{timeZone:userTimezone,timeZoneName:'short'}).replace(","," -").replace(/:\d\d /,' ')
+						return parsedDate.toLocaleString('en-US',{timeZone:userTimezone,timeZoneName:'short'}).replace(","," -").replace(/:\d\d /,' ')
 					}
 					return format(parsedDate, 'M/d/y')
 				}
