@@ -23,7 +23,7 @@ export async function prepareAndFormat(
 	if (userTZInput && userTZInput.trim().length)
 		try { myTZ = new Date().toLocaleString('en-US',{timeZone:userTZInput}) }
 		catch { myTZ = null }
-	userTimezone = myTZ ? userTZInput : 'Etc/UTC'
+	let userTimezone = myTZ ? userTZInput : 'Etc/UTC'
 		
 	for (const match of matchups) {
 		if (match.status === 'completed') {
