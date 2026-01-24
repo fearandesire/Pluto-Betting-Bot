@@ -20,7 +20,7 @@ export async function prepareAndFormat(
 
 	//let userTimezone = new Intl.DateTimeFormat().resolvedOptions().timeZone
 	let myTZ = ''
-	let userTimezone = 'Etc/UTC'
+	let userTimezone = 'America/New_York' // was Etc/UTC
 	if (userTZInput && userTZInput.trim().length)
 		try { myTZ = new Date().toLocaleString('en-US',{timeZone:userTZInput.trim(),timeZoneName:'short'})
 			  userTimezone = userTZInput.trim() }
