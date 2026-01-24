@@ -20,10 +20,13 @@ export async function prepareAndFormat(
 
 	//let userTimezone = new Intl.DateTimeFormat().resolvedOptions().timeZone
 	let myTZ = ''
+	let userTimezone = 'Etc/UTC'
 	if (userTZInput && userTZInput.trim().length)
-		try { myTZ = new Date().toLocaleString('en-US',{timeZone:userTZInput}) }
-		catch { myTZ = null }
-	let userTimezone = myTZ ? userTZInput : 'Etc/UTC'
+		try { myTZ = new Date().toLocaleString('en-US',{timeZone:userTZInput.trim(),timeZoneName:'short'}) }
+		catch { myTZ = new Date().toLocaleString('en-US',{timeZone:userTimezone,timeZoneName:'short'}) }
+	let mydate = myTZ.split(' ')
+	let mylen = mydate.length
+	userTimezone = mydate[mylen-1].match(/^[AP]M$/) ? userTZInput.trim() : mydate[mylen-1] }
 		
 	for (const match of matchups) {
 		if (match.status === 'completed') {
