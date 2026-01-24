@@ -325,7 +325,7 @@ export class BetslipManager {
 		if (betslip?.match?.commence_time) {
 			const date = new Date(betslip.match.commence_time)
 			//return date.toLocaleDateString('en-US', { timeZone: userTimezone })
-			return date.toLocaleDateString('en-US',{timeZone:userTimezone}) + ' - ' + date.toLocaleTimeString('en-US',{timeZone:userTimezone,timeZoneName:'short'}).replace(/:\d\d /,' ')
+			return date.toLocaleString('en-US',{timeZone:userTimezone,timeZoneName:'short'}).replace(","," -").replace(/:\d\d /,' ')
 		}
 
 		// If dateInput is an ISO date string (contains 'T' or matches ISO pattern), format it
@@ -341,7 +341,7 @@ export class BetslipManager {
 						/* return date.toLocaleDateString('en-US', {
 							timeZone: userTimezone,
 						}) */
-						return date.toLocaleDateString('en-US',{timeZone:userTimezone}) + ' - ' + date.toLocaleTimeString('en-US',{timeZone:userTimezone,timeZoneName:'short'}).replace(/:\d\d /,' ')
+						return date.toLocaleString('en-US',{timeZone:userTimezone,timeZoneName:'short'}).replace(","," -").replace(/:\d\d /,' ')
 					}
 					return format(date, 'M/d/y')
 				}
@@ -352,7 +352,7 @@ export class BetslipManager {
 						/* return parsedDate.toLocaleDateString('en-US', {
 							timeZone: userTimezone,
 						}) */
-						return parsedDate.toLocaleDateString('en-US',{timeZone:userTimezone}) + ' - ' + parsedDate.toLocaleTimeString('en-US',{timeZone:userTimezone,timeZoneName:'short'}).replace(/:\d\d /,' ')
+						return parseDate.toLocaleString('en-US',{timeZone:userTimezone,timeZoneName:'short'}).replace(","," -").replace(/:\d\d /,' ')
 					}
 					return format(parsedDate, 'M/d/y')
 				}
