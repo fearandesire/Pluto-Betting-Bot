@@ -22,11 +22,12 @@ export async function prepareAndFormat(
 	let myTZ = ''
 	let userTimezone = 'Etc/UTC'
 	if (userTZInput && userTZInput.trim().length)
-		try { myTZ = new Date().toLocaleString('en-US',{timeZone:userTZInput.trim(),timeZoneName:'short'}) }
+		try { myTZ = new Date().toLocaleString('en-US',{timeZone:userTZInput.trim(),timeZoneName:'short'})
+			  userTimezone = userTZInput.trim() }
 		catch { myTZ = new Date().toLocaleString('en-US',{timeZone:userTimezone,timeZoneName:'short'}) }
 	let mydate = myTZ.split(' ')
 	let mylen = mydate.length
-	userTimezone = mydate[mylen-1].match(/^[AP]M$/) ? userTZInput.trim() : mydate[mylen-1]
+	userTimezone = mydate[mylen-1].match(/^[AP]M$/) ? userTimezone : mydate[mylen-1]
 		
 	for (const match of matchups) {
 		if (match.status === 'completed') {
