@@ -19,7 +19,7 @@ export class UserCommand extends Command {
 			builder //
 				.setName(this.name)
 				.setDescription(this.description)
-				.setContexts(InteractionContextType.Guild),
+				.setContexts(InteractionContextType.Guild)
 				.addStringOption((option) =>
 					option
 						.setName('timezone')
