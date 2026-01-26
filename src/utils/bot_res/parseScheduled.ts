@@ -73,7 +73,7 @@ export default async function parseScheduledGames(
 	const matchStrFn = await createMatchStr()
 	let cnt = 1
 
-	/* const getTimeZoneAbbreviation = (tz: string) => {
+	const getTimeZoneAbbreviation = (tz: string) => {
 		try {
 			return (
 				new Intl.DateTimeFormat('en-US', {
@@ -95,8 +95,7 @@ export default async function parseScheduledGames(
 		}
 	}
 
-	const tzAbbr = userTimezone ? getTimeZoneAbbreviation(userTimezone) : '' */
-	const tzAbbr = userTimezone.split(",")[1].length ? userTimezone.split(",")[1] : userTimezone.split(",")[0]
+	const tzAbbr = userTimezone ? getTimeZoneAbbreviation(userTimezone) : ''
 
 	const fields = await Promise.all(
 		sortedDates.map(async (date) => {

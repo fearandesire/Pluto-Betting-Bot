@@ -10,7 +10,6 @@ export async function prepareAndFormat(
 	matchups: MatchDetailDto[],
 	thumbnail: string,
 	guildId?: string,
-    userTZInput?: string,
 ) {
 	const oddsFields: IOddsField[] = []
 
@@ -18,17 +17,10 @@ export async function prepareAndFormat(
 	let _nullOddsCount = 0
 	let _formatErrorCount = 0
 
-	//let userTimezone = new Intl.DateTimeFormat().resolvedOptions().timeZone
-	let myTZ = ''
-	let userTimezone = 'America/New_York' // was Etc/UTC
-	if (userTZInput && userTZInput.trim().length)
-		try { myTZ = new Date().toLocaleString('en-US',{timeZone:userTZInput.trim(),timeZoneName:'short'})
-			  userTimezone = userTZInput.trim() }
-		catch { myTZ = new Date().toLocaleString('en-US',{timeZone:userTimezone,timeZoneName:'short'}) }
-	let mydate = myTZ.split(' ')
-	let mylen = mydate.length
-	userTimezone = userTimezone + "," + (mydate[mylen-1].match(/^[AP]M$/) ? "" : mydate[mylen-1]) // IANA, Abbreviation
-		
+	let userTimezone = new Intl.DateTimeFormat().resolvedOptions().timeZone
+	userTimezone =
+		userTimezone && userTimezone.trim().length ? userTimezone : 'Etc/UTC'
+
 	for (const match of matchups) {
 		if (match.status === 'completed') {
 			_completedCount++
@@ -67,14 +59,14 @@ export async function prepareAndFormat(
 				if (isValid(matchDate)) {
 					let formattedDateTime = matchDate.toLocaleString('en-US', {
 						timeZone: userTimezone,
-						//timeZoneName: 'short', // Don't Add Time Zone
+						timeZoneName: 'short',
 					})
 
 					matchDay = formattedDateTime.split(', ')[0]
 					matchTime = formattedDateTime
 						.split(', ')[1]
 						.replace(/:\d\d /, ' ')
-						//.replace(/ [A-Z]{3,5}$/, '') // Remove timezone - shown in date header
+						.replace(/ [A-Z]{3,5}$/, '') // Remove timezone - shown in date header
 					commenceTime = match.commence_time
 				}
 			} catch {
