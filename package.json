@@ -112,7 +112,7 @@
 		"@biomejs/biome": "2.3.11",
 		"@biomejs/cli-win32-x64": "^2.3.11",
 		"@commitlint/cli": "^19.0.0",
-		"@commitlint/config-conventional": "^19.0.0",
+		"@commitlint/config-conventional": "^20.3.1",
 		"@sapphire/cli": "^1.9.3",
 		"@sapphire/prettier-config": "^2.0.0",
 		"@sapphire/ts-config": "^5.0.3",
