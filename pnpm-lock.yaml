@@ -96,8 +96,8 @@ importers:
         specifier: ^2.2.2
         version: 2.2.2
       bullmq:
-        specifier: ^5.66.5
-        version: 5.66.5
+        specifier: ^5.67.1
+        version: 5.67.1
       color:
         specifier: ^5.0.3
         version: 5.0.3
@@ -559,6 +559,7 @@ packages:
   '@biomejs/cli-win32-x64@2.3.11':
     resolution: {integrity: sha512-43VrG813EW+b5+YbDbz31uUsheX+qFKCpXeY9kfdAx+ww3naKxeVkTD9zLIWxUPfJquANMHrmW3wbe/037G0Qg==}
     engines: {node: '>=14.21.3'}
+    cpu: [x64]
     os: [win32]
 
   '@borewit/text-codec@0.2.1':
@@ -3113,8 +3114,8 @@ packages:
   buffer@5.7.1:
     resolution: {integrity: sha512-EHcyIPBQ4BSGlvjB16k5KgAJ27CIsHY/2JBmCRReo48y9rQ3MaUzWX3KVlBa4U7MyX02HdVj0K7C3WaB3ju7FQ==}
 
-  bullmq@5.66.5:
-    resolution: {integrity: sha512-DC1E7P03L+TfNHv+2SGxwNYvtb0oJPODWSKkWdfis0heU5zFW16vjM7fCjwlxMdGWw2w28EI3mTRfYLEHeQQSw==}
+  bullmq@5.67.1:
+    resolution: {integrity: sha512-ELJEAzwzesgFxk29emvnAakqrwdBEhEyfZREPQ8pbG4ALVz/mk/AhfuChzxkFpJ7SfL2qclPHbiUGBZzaqcLvg==}
 
   bundle-name@4.1.0:
     resolution: {integrity: sha512-tjwM5exMg6BGRI+kNmTntNsvdZS1X8BFYS6tnJ2hdH0kVxM6/eVZ2xy+FqStSWvYmtfFMDLIxurorHwDKfDz5Q==}
@@ -4437,10 +4438,6 @@ packages:
     resolution: {integrity: sha512-4gd7VpWNQNB4UKKCFFVcp1AVv+FMOgs9NKzjHKusc8jTMhd5eL1NqQqOpE0KzMds804/yHlglp3uxgluOqAPLw==}
     engines: {node: '>= 0.4'}
 
-  ioredis@5.9.1:
-    resolution: {integrity: sha512-BXNqFQ66oOsR82g9ajFFsR8ZKrjVvYCLyeML9IvSMAsP56XH2VXBdZjmI11p65nXXJxTEt1hie3J2QeFJVgrtQ==}
-    engines: {node: '>=12.22.0'}
-
   ioredis@5.9.2:
     resolution: {integrity: sha512-tAAg/72/VxOUW7RQSX1pIxJVucYKcjFjfvj60L57jrZpYCHC3XN0WCQ3sNYL4Gmvv+7GPvTAjc+KSdeNuE8oWQ==}
     engines: {node: '>=12.22.0'}
@@ -5686,8 +5683,8 @@ packages:
   pg-connection-string@2.10.0:
     resolution: {integrity: sha512-ur/eoPKzDx2IjPaYyXS6Y8NSblxM7X64deV2ObV57vhjsWiwLvUD6meukAzogiOsu60GO8m/3Cb6FdJsWNjwXg==}
 
-  pg-cursor@2.16.1:
-    resolution: {integrity: sha512-ixa4eoGi2nAc3ZHn0xknrN5M9W4LHmzx+h+6J35aaU/lFAtNNqeldCfWTlxJFo2AUVbw0Wtse9SGZZ2OUes0Bg==}
+  pg-cursor@2.16.2:
+    resolution: {integrity: sha512-OzGiSg/71d6h3ls//WRBLaCj3hMHBOuAqCNe8FvU4poZu36hR7y4ZKFVu+JfFIEAVr6CibHai5lg53QJlYZAJw==}
     peerDependencies:
       pg: ^8
 
@@ -9952,10 +9949,10 @@ snapshots:
       base64-js: 1.5.1
       ieee754: 1.2.1
 
-  bullmq@5.66.5:
+  bullmq@5.67.1:
     dependencies:
       cron-parser: 4.9.0
-      ioredis: 5.9.1
+      ioredis: 5.9.2
       msgpackr: 1.11.5
       node-abort-controller: 3.1.1
       semver: 7.7.3
@@ -11497,20 +11494,6 @@ snapshots:
       hasown: 2.0.2
       side-channel: 1.1.0
 
-  ioredis@5.9.1:
-    dependencies:
-      '@ioredis/commands': 1.5.0
-      cluster-key-slot: 1.1.2
-      debug: 4.4.3(supports-color@8.1.1)
-      denque: 2.1.0
-      lodash.defaults: 4.2.0
-      lodash.isarguments: 3.1.0
-      redis-errors: 1.2.0
-      redis-parser: 3.0.0
-      standard-as-callback: 2.1.0
-    transitivePeerDependencies:
-      - supports-color
-
   ioredis@5.9.2:
     dependencies:
       '@ioredis/commands': 1.5.0
@@ -12918,7 +12901,7 @@ snapshots:
 
   pg-connection-string@2.10.0: {}
 
-  pg-cursor@2.16.1(pg@8.17.1):
+  pg-cursor@2.16.2(pg@8.17.1):
     dependencies:
       pg: 8.17.1
 
@@ -12953,7 +12936,7 @@ snapshots:
   pg-query-stream@4.10.3(pg@8.17.1):
     dependencies:
       pg: 8.17.1
-      pg-cursor: 2.16.1(pg@8.17.1)
+      pg-cursor: 2.16.2(pg@8.17.1)
 
   pg-types@2.2.0:
     dependencies:
