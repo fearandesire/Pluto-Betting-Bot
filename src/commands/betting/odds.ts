@@ -67,7 +67,21 @@ export class UserCommand extends Command {
 				matchCount: matches?.length ?? 0,
 			})
 
-			let userTZInput = interaction.options.getString('timezone', false)
+			const userTZInput = interaction.options
+				.getString('timezone', false)
+				?.trim()
+			if (userTZInput) {
+				try {
+					new Date().toLocaleString('en-US', {
+						timeZone: userTZInput,
+					})
+				} catch {
+					return interaction.editReply({
+						content:
+							'Invalid timezone, please use an IANA format like America/New_York.',
+					})
+				}
+			}
 			let oddsEmbed
 			try {
 				oddsEmbed = await prepareAndFormat(
