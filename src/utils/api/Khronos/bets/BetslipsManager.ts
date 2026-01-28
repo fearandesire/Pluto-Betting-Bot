@@ -314,16 +314,24 @@ export class BetslipManager {
 		dateInput: string | undefined,
 		betslip?: BetslipWithAggregationDTO,
 	): string {
-		let userTimezone = new Intl.DateTimeFormat().resolvedOptions().timeZone
+		/* let userTimezone = new Intl.DateTimeFormat().resolvedOptions().timeZone
 		userTimezone =
 			userTimezone && userTimezone.trim().length
 				? userTimezone
-				: 'Etc/UTC'
+				: 'Etc/UTC' */
+		let userTimezone = 'America/New_York' // Force Eastern Time on Betslip
 
 		// Try to get commence_time from betslip.match if available
 		if (betslip?.match?.commence_time) {
 			const date = new Date(betslip.match.commence_time)
-			return date.toLocaleDateString('en-US', { timeZone: userTimezone })
+			//return date.toLocaleDateString('en-US', { timeZone: userTimezone })
+			return date
+				.toLocaleString('en-US', {
+					timeZone: userTimezone,
+					timeZoneName: 'short',
+				})
+				.replace(',', ' -')
+				.replace(/:\d\d /, ' ')
 		}
 
 		// If dateInput is an ISO date string (contains 'T' or matches ISO pattern), format it
@@ -336,9 +344,16 @@ export class BetslipManager {
 				) {
 					const date = new Date(dateInput)
 					if (dateInput.includes('T')) {
-						return date.toLocaleDateString('en-US', {
+						/* return date.toLocaleDateString('en-US', {
 							timeZone: userTimezone,
-						})
+						}) */
+						return date
+							.toLocaleString('en-US', {
+								timeZone: userTimezone,
+								timeZoneName: 'short',
+							})
+							.replace(',', ' -')
+							.replace(/:\d\d /, ' ')
 					}
 					return format(date, 'M/d/y')
 				}
@@ -346,9 +361,16 @@ export class BetslipManager {
 				const parsedDate = new Date(dateInput)
 				if (!isNaN(parsedDate.getTime())) {
 					if (dateInput.match(/T|:|[AP]M/)) {
-						return parsedDate.toLocaleDateString('en-US', {
+						/* return parsedDate.toLocaleDateString('en-US', {
 							timeZone: userTimezone,
-						})
+						}) */
+						return parsedDate
+							.toLocaleString('en-US', {
+								timeZone: userTimezone,
+								timeZoneName: 'short',
+							})
+							.replace(',', ' -')
+							.replace(/:\d\d /, ' ')
 					}
 					return format(parsedDate, 'M/d/y')
 				}

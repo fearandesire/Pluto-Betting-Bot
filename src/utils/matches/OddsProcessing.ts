@@ -10,6 +10,7 @@ export async function prepareAndFormat(
 	matchups: MatchDetailDto[],
 	thumbnail: string,
 	guildId?: string,
+	userTZInput?: string,
 ) {
 	const oddsFields: IOddsField[] = []
 
@@ -17,9 +18,38 @@ export async function prepareAndFormat(
 	let _nullOddsCount = 0
 	let _formatErrorCount = 0
 
-	let userTimezone = new Intl.DateTimeFormat().resolvedOptions().timeZone
-	userTimezone =
-		userTimezone && userTimezone.trim().length ? userTimezone : 'Etc/UTC'
+	//let userTimezone = new Intl.DateTimeFormat().resolvedOptions().timeZone
+	let myTZ = ''
+	let userTimezone = 'America/New_York' // was Etc/UTC
+
+	// Always compute myTZ, using default timezone if userTZInput is not provided
+	if (userTZInput && userTZInput.trim().length) {
+		try {
+			myTZ = new Date().toLocaleString('en-US', {
+				timeZone: userTZInput.trim(),
+				timeZoneName: 'short',
+			})
+			userTimezone = userTZInput.trim()
+		} catch {
+			myTZ = new Date().toLocaleString('en-US', {
+				timeZone: userTimezone,
+				timeZoneName: 'short',
+			})
+		}
+	} else {
+		myTZ = new Date().toLocaleString('en-US', {
+			timeZone: userTimezone,
+			timeZoneName: 'short',
+		})
+	}
+
+	// Extract timezone abbreviation safely
+	const mydate = myTZ.split(' ')
+	const abbreviation = mydate.pop()
+	// Only append abbreviation if it exists and is not AM/PM
+	if (abbreviation && !abbreviation.match(/^[AP]M$/)) {
+		userTimezone = `${userTimezone},${abbreviation}` // IANA, Abbreviation
+	}
 
 	for (const match of matchups) {
 		if (match.status === 'completed') {
@@ -58,15 +88,14 @@ export async function prepareAndFormat(
 				const matchDate = parseISO(match.commence_time)
 				if (isValid(matchDate)) {
 					let formattedDateTime = matchDate.toLocaleString('en-US', {
-						timeZone: userTimezone,
-						timeZoneName: 'short',
+						timeZone: userTimezone.split(',')[0],
 					})
 
 					matchDay = formattedDateTime.split(', ')[0]
 					matchTime = formattedDateTime
 						.split(', ')[1]
 						.replace(/:\d\d /, ' ')
-						.replace(/ [A-Z]{3,5}$/, '') // Remove timezone - shown in date header
+					//.replace(/ [A-Z]{3,5}$/, '') // Remove timezone - shown in date header // Time Zone Not Included
 					commenceTime = match.commence_time
 				}
 			} catch {
