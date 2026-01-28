@@ -96,9 +96,8 @@ export default async function parseScheduledGames(
 	}
 
 	const tzAbbr = userTimezone ? getTimeZoneAbbreviation(userTimezone) : '' */
-	const tzAbbr = userTimezone.split(',')[1].length
-		? userTimezone.split(',')[1]
-		: userTimezone.split(',')[0]
+	const parts = (userTimezone ?? '').split(',').map((p) => p.trim())
+	const tzAbbr = parts[1]?.length ? parts[1] : (parts[0] ?? '')
 
 	const fields = await Promise.all(
 		sortedDates.map(async (date) => {
