@@ -19,7 +19,15 @@ export class UserCommand extends Command {
 			builder //
 				.setName(this.name)
 				.setDescription(this.description)
-				.setContexts(InteractionContextType.Guild),
+				.setContexts(InteractionContextType.Guild)
+				.addStringOption((option) =>
+					option
+						.setName('timezone')
+						.setDescription(
+							'The time zone displayed for the matches, in IANA format (e.g., America/New_York)',
+						)
+						.setRequired(false),
+				),
 		)
 	}
 
@@ -59,12 +67,28 @@ export class UserCommand extends Command {
 				matchCount: matches?.length ?? 0,
 			})
 
+			const userTZInput = interaction.options
+				.getString('timezone', false)
+				?.trim()
+			if (userTZInput) {
+				try {
+					new Date().toLocaleString('en-US', {
+						timeZone: userTZInput,
+					})
+				} catch {
+					return interaction.editReply({
+						content:
+							'Invalid timezone, please use an IANA format like America/New_York.',
+					})
+				}
+			}
 			let oddsEmbed
 			try {
 				oddsEmbed = await prepareAndFormat(
 					matches,
 					embedThumbnail,
 					guildId,
+					userTZInput,
 				)
 			} catch (formatError) {
 				logger.debug('Odds command: error in prepareAndFormat', {
