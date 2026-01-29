@@ -1,5 +1,22 @@
 # Changelog
 
+## [4.3.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.2.0...v4.3.0) (2026-01-28)
+
+
+### Features
+
+* add timezone support to odds command and update dependencies ([#370](https://github.com/fearandesire/Pluto-Betting-Bot/issues/370)) ([3716406](https://github.com/fearandesire/Pluto-Betting-Bot/commit/3716406363950bcc5e513f4882469e50cd0aa199))
+* **ci:** add workflow to sync Khronos Swagger spec and regenerate OpenAPI client ([7f14adb](https://github.com/fearandesire/Pluto-Betting-Bot/commit/7f14adb36e0b414ff0a9b655c5ad948d1835b832))
+* **ci:** Upgrade CI/CD pipeline with enhanced versioning and deployment controls ([#345](https://github.com/fearandesire/Pluto-Betting-Bot/issues/345)) ([295a26d](https://github.com/fearandesire/Pluto-Betting-Bot/commit/295a26dc67b9856314df27604fecb94d10955ad7))
+
+
+### Bug Fixes
+
+* **ci:** track swagger spec and generate OpenAPI client in CI ([f2c493f](https://github.com/fearandesire/Pluto-Betting-Bot/commit/f2c493fae9384d613f6053b96ed697e964353a2e))
+* **ci:** update Khronos spec fetching to use authorization token ([c2f006b](https://github.com/fearandesire/Pluto-Betting-Bot/commit/c2f006b2b8c185c05364f99c4a7a460180405615))
+* standardize package names in pnpm-lock.yaml and update lodash version to 4.17.23 ([b40a265](https://github.com/fearandesire/Pluto-Betting-Bot/commit/b40a265102b74866a225327ebfe883674fe0950f))
+* update release-please config and remove timezone from odds display ([4d6a1a2](https://github.com/fearandesire/Pluto-Betting-Bot/commit/4d6a1a2b179caa0b7e02db6da9695b35bb7e01d2))
+
 ## [4.2.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.1.0...v4.2.0) (2026-01-20)
 
 
