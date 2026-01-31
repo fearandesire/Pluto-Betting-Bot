@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.3.1](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.3.0...v4.3.1) (2026-01-31)
+
+
+### Bug Fixes
+
+* attach user id to bet cancellation ([1db95b7](https://github.com/fearandesire/Pluto-Betting-Bot/commit/1db95b7c1effe174158c17ff7252a098cc45baa9))
+
 ## [4.3.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.2.0...v4.3.0) (2026-01-28)
 
 
