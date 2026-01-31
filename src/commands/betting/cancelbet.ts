@@ -40,6 +40,20 @@ export class UserCommand extends Command {
 
 		const userid = interaction.user.id
 		const betId = interaction.options.getInteger('betid')!
+
+		// New: Check Betid in Active Bets for User
+		const bets = await new BetslipWrapper().activeBetsForUser(userid)
+		if (!bets || !bets.length)
+			return interaction.editReply({content: 'You have no placed bets to cancel.'})
+		let found = false
+		for (const bet of bets)
+			if (betId === bet.betid) {
+				found = true
+				break
+			}
+		if (!found)
+			return interaction.editReply({content: 'Could not find betid in your current bets.'})
+		
 		return new BetslipManager(
 			new BetslipWrapper(),
 			new BetsCacheService(new CacheManager()),
