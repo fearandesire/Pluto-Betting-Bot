@@ -408,6 +408,7 @@ export class BetslipManager {
 				})
 			}
 			await this.betslipInstance.cancel({
+				userId: userid,
 				betId: betId,
 				patreonDataDto: {
 					patreonOverride,

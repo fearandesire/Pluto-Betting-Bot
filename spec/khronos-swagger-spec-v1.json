@@ -2369,10 +2369,19 @@
         ]
       }
     },
-    "/api/khronos/v1/betslips/cancel/{betId}": {
+    "/api/khronos/v1/betslips/cancel/{userId}/{betId}": {
       "delete": {
         "operationId": "cancelBetslip",
         "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "description": "The ID of the user.",
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "name": "betId",
             "required": true,
