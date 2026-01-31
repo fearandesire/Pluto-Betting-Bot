@@ -7,6 +7,7 @@ import { BetslipManager } from '../../utils/api/Khronos/bets/BetslipsManager.js'
 import BetslipWrapper from '../../utils/api/Khronos/bets/betslip-wrapper.js'
 import { CacheManager } from '../../utils/cache/cache-manager.js'
 import { ErrorEmbeds } from '../../utils/common/errors/global.js'
+import { MyBetsPaginationService } from '../../utils/api/Khronos/bets/mybets-pagination.service.js'
 
 @ApplyOptions<Command.Options>({
 	description:
@@ -42,7 +43,7 @@ export class UserCommand extends Command {
 		const betId = interaction.options.getInteger('betid')!
 
 		// New: Check Betid in Active Bets for User
-		const bets = await new BetslipWrapper().activeBetsForUser(userid)
+		const bets = await new MyBetsPaginationService().fetchUserBets(userid)?.pendingbets
 		if (!bets || !bets.length)
 			return interaction.editReply({content: 'You have no placed bets to cancel.'})
 		let found = false
