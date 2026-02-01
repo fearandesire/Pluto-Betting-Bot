@@ -5,9 +5,9 @@ import env from '../../lib/startup/env.js'
 import { BetsCacheService } from '../../utils/api/common/bets/BetsCacheService.js'
 import { BetslipManager } from '../../utils/api/Khronos/bets/BetslipsManager.js'
 import BetslipWrapper from '../../utils/api/Khronos/bets/betslip-wrapper.js'
+import { MyBetsPaginationService } from '../../utils/api/Khronos/bets/mybets-pagination.service.js'
 import { CacheManager } from '../../utils/cache/cache-manager.js'
 import { ErrorEmbeds } from '../../utils/common/errors/global.js'
-import { MyBetsPaginationService } from '../../utils/api/Khronos/bets/mybets-pagination.service.js'
 
 @ApplyOptions<Command.Options>({
 	description:
@@ -42,15 +42,40 @@ export class UserCommand extends Command {
 		const userid = interaction.user.id
 		const betId = interaction.options.getInteger('betid')!
 
-		// New: Check Betid in Active Bets for User
-		const bets = await new MyBetsPaginationService().fetchUserBets(userid)
-		const bet = bets.pendingBets?.find((result) => result.betid === betId)
-		if (!bet)
-			return interaction.editReply({content: 'Could not find betid in your current bets.'})
-		
-		return new BetslipManager(
-			new BetslipWrapper(),
-			new BetsCacheService(new CacheManager()),
-		).cancelBet(interaction, userid, betId)
+		try {
+			const betsData = await new MyBetsPaginationService().fetchUserBets(
+				userid,
+			)
+			const matchingBet = betsData.pendingBets.find(
+				(bet) => bet.betid === betId,
+			)
+			if (!matchingBet) {
+				const errEmbed = await ErrorEmbeds.betErr(
+					"We couldn't find an active (pending) bet with that ID. It may have already been cancelled or settled. Use **/mybets** to see your current bets.",
+				)
+				return interaction.editReply({ embeds: [errEmbed] })
+			}
+
+			return new BetslipManager(
+				new BetslipWrapper(),
+				new BetsCacheService(new CacheManager()),
+			).cancelBet(interaction, userid, betId)
+		} catch (error) {
+			this.container.logger.error({
+				message: 'Failed to fetch user bets for cancel',
+				metadata: {
+					source: this.chatInputRun.name,
+					userId: interaction.user.id,
+					betId,
+					error:
+						error instanceof Error ? error.message : String(error),
+				},
+			})
+
+			const errEmb = await ErrorEmbeds.accountErr(
+				'Unable to load your bets. Please try again later.',
+			)
+			return interaction.editReply({ embeds: [errEmb] })
+		}
 	}
 }
