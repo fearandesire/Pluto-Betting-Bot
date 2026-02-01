@@ -44,12 +44,12 @@ export class UserCommand extends Command {
 		const betId = interaction.options.getInteger('betid')!
 
 		// New: Check Betid in Active Bets for User
-		const bets = await new MyBetsPaginationService().fetchUserBets(userid).pendingBets?.find((result) => result.betid === betId)
-		const bets2 = await new MyBetsPaginationService().fetchUserBets(userid)
-						.historyBets?.find((result) =>
-										result.betid === betId && result.betresult !== PlacedBetslipBetresultEnum.Won &&
-										result.betresult !== PlacedBetslipBetresultEnum.Lost && result.betresult !== PlacedBetslipBetresultEnum.Push)
-		if (!bets && !bets2)
+		const thebets = await new MyBetsPaginationService().fetchUserBets(userid)
+		const bet1 = allbets.pendingBets?.find((result) => result.betid === betId)
+		const bet2 = allbets.historyBets?.find((result) =>
+								result.betid === betId && result.betresult !== PlacedBetslipBetresultEnum.Won &&
+								result.betresult !== PlacedBetslipBetresultEnum.Lost && result.betresult !== PlacedBetslipBetresultEnum.Push)
+		if (!bet1 && !bet2)
 			return interaction.editReply({content: 'betid is not a valid bet to cancel.'})
 		
 		return new BetslipManager(
