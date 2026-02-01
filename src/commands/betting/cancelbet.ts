@@ -44,25 +44,13 @@ export class UserCommand extends Command {
 		const betId = interaction.options.getInteger('betid')!
 
 		// New: Check Betid in Active Bets for User
-		const bets = await new MyBetsPaginationService().fetchUserBets(userid)?.pendingBets
-		const bets2 = await new MyBetsPaginationService().fetchUserBets(userid)?.historyBets
-		if ((!bets || !bets.length) && (!bets2 || !bets2.length))
-			return interaction.editReply({content: 'You have no placed bets to cancel.'})
-		let found = false
-		for (const bet of bets)
-			if (betId === bet.betid) {
-				found = true
-				break
-			}
-		if (!found)
-			for (const bet2 of bets2)
-				if (betId === bet2.betid && bet2.betresult !== PlacedBetslipBetresultEnum.Won &&
-					bet2.betresult !== PlacedBetslipBetresultEnum.Lost && bet2.betresult !== PlacedBetslipBetresultEnum.Push) {
-					found = true
-					break
-				}
-		if (!found)
-			return interaction.editReply({content: 'Could not find betid in your current bets.'})
+		const bets = await new MyBetsPaginationService().fetchUserBets(userid).pendingBets?.find((result) => result.betid === betId)
+		const bets2 = await new MyBetsPaginationService().fetchUserBets(userid)
+						.historyBets?.find((result) =>
+										result.betid === betId && result.betresult !== PlacedBetslipBetresultEnum.Won &&
+										result.betresult !== PlacedBetslipBetresultEnum.Lost && result.betresult !== PlacedBetslipBetresultEnum.Push)
+		if (!bets && !bets2)
+			return interaction.editReply({content: 'betid is not a valid bet to cancel.'})
 		
 		return new BetslipManager(
 			new BetslipWrapper(),
