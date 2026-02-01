@@ -45,7 +45,7 @@ export class UserCommand extends Command {
 
 		// New: Check Betid in Active Bets for User
 		const thebets = await new MyBetsPaginationService().fetchUserBets(userid)
-		const bet1 = allbets.pendingBets?.find((result) => result.betid === betId)
+		const bet1 = thebets.pendingBets?.find((result) => result.betid === betId)
 		//const bet2 = allbets.historyBets?.find((result) =>
 		//						result.betid === betId && result.betresult !== PlacedBetslipBetresultEnum.Won &&
 		//						result.betresult !== PlacedBetslipBetresultEnum.Lost && result.betresult !== PlacedBetslipBetresultEnum.Push)
