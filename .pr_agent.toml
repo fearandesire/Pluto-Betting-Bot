@@ -1,0 +1,125 @@
+[config]
+# Reference: https://raw.githubusercontent.com/qodo-ai/pr-agent/main/pr_agent/settings/configuration.toml
+
+# provider + output
+git_provider = "github"
+publish_output = true
+publish_output_progress = true
+verbosity_level = 0
+log_level = "INFO"
+response_language = "en-US"
+
+# models (set to org-approved models; these match Qodo's reference defaults)
+model = "gpt-5-2025-08-07"
+fallback_models = ["o4-mini"]
+
+# timeouts + token limits
+ai_timeout = 120
+max_model_tokens = 32000
+
+# better context around diffs/patches
+allow_dynamic_context = true
+max_extra_lines_before_dynamic_context = 10
+patch_extra_lines_before = 5
+patch_extra_lines_after = 1
+large_patch_policy = "clip"
+patch_extension_skip_types = [".md", ".txt"]
+
+# reduce “generic config” noise in outputs
+output_relevant_configurations = false
+duplicate_prompt_examples = false
+
+# codebase context: load repo metadata from canonical documentation
+add_repo_metadata = true
+add_repo_metadata_file_list = ["README.md", "docs/overview.md", "docs/architecture/command-handlers-and-errors.md"]
+
+# ignore logic (avoid reviewing bot PRs / WIP PRs)
+ignore_pr_title = ["^\\[WIP\\]", "^WIP", "^Draft", "^\\[Auto\\]", "^Auto"]
+ignore_pr_source_branches = ["^dependabot/", "^renovate/"]
+ignore_pr_authors = ["dependabot\\[bot\\]", "renovate\\[bot\\]"]
+ignore_pr_labels = ["skip-review", "do-not-review"]
+
+[github_app]
+# Run automatically on PR open/reopen/ready_for_review
+handle_pr_actions = ["opened", "reopened", "ready_for_review"]
+pr_commands = [
+  "/describe --pr_description.final_update_message=false",
+  "/review",
+  "/improve",
+]
+
+[pr_reviewer]
+require_tests_review = true
+require_security_review = true
+require_ticket_analysis_review = true
+
+publish_output_no_suggestions = false
+persistent_comment = true
+enable_help_text = false
+
+# a bit more actionable output than default (=3)
+num_max_findings = 5
+
+extra_instructions = """
+This repo is Pluto: a Discord bot (TypeScript, Sapphire Framework, discord.js). It talks to Khronos API for business logic; it does not run NestJS or own a DB.
+
+Use canonical docs strictly: README.md, docs/overview.md, docs/architecture/command-handlers-and-errors.md.
+
+Noise control — do NOT:
+- Add generic PII/compliance disclaimers; only flag secrets/PII when the diff shows tokens, creds, or personal data.
+- Nitpick style (Biome handles formatting) or suggest changes that don't affect correctness or Discord/API behavior.
+- Flag "best practice" items that are irrelevant to this stack (e.g. NestJS, TypeORM, server-side DB patterns).
+
+Review focus (high signal only):
+- TypeScript: types, nullability, runtime guards; strict mode compliance.
+- Discord & discord.js: interaction lifecycle (defer before >3s work; use editReply after defer, never reply(); ephemeral where appropriate); action row limits (5 buttons/row, 1 select/row, 25 options); customId length ≤100; autocomplete 3s + 25 choices; listener/handler parse vs run separation.
+- Sapphire: thin commands delegating to handlers; ApiErrorHandler for API failures, ErrorEmbeds for validation; preconditions and denial handling.
+- Security only when present: hardcoded secrets, auth bypass, sensitive data in logs.
+- Alignment with docs: Command → Handler → Service; no business logic in commands; Khronos as single source for user/bet data.
+"""
+
+[pr_description]
+enable_help_text = false
+enable_help_comment = false
+enable_pr_diagram = true
+enable_large_pr_handling = true
+max_ai_calls = 4
+async_ai_calls = true
+collapsible_file_list = "adaptive"
+collapsible_file_list_threshold = 6
+
+[pr_code_suggestions]
+focus_only_on_problems = true
+commitable_code_suggestions = false
+dual_publishing_score_threshold = -1
+
+persistent_comment = true
+enable_help_text = false
+enable_chat_text = false
+
+# cut noise: don't post “No suggestions” comments
+publish_output_no_suggestions = false
+
+# scoring: keep it strict but not so strict it clips relevant suggestions
+suggestions_score_threshold = 7
+new_score_mechanism = true
+new_score_mechanism_th_high = 9
+new_score_mechanism_th_medium = 7
+
+auto_extended_mode = true
+num_code_suggestions_per_chunk = 3
+num_best_practice_suggestions = 1
+max_number_of_calls = 3
+parallel_calls = true
+
+apply_suggestions_checkbox = true
+
+# Suggestion impact + acceptance tracking (if enabled in your plan)
+publish_post_process_suggestion_impact = true
+wiki_page_accepted_suggestions = true
+allow_thumbs_up_down = false
+
+extra_instructions = """
+Propose only changes that fix real issues in this stack: TypeScript (Sapphire + discord.js) Discord bot. Do not suggest style/nitpicks (Biome handles formatting) or generic PII/security boilerplate unless the diff shows concrete risk. Prioritize: interaction correctness (defer/editReply, action row limits, autocomplete constraints), type safety, and alignment with Command → Handler → Service and Khronos API usage.
+"""
+
