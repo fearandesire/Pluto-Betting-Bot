@@ -43,16 +43,9 @@ export class UserCommand extends Command {
 		const betId = interaction.options.getInteger('betid')!
 
 		// New: Check Betid in Active Bets for User
-		const bets = await new MyBetsPaginationService().fetchUserBets(userid)?.pendingBets
-		if (!bets || !bets.length)
-			return interaction.editReply({content: 'You have no placed bets to cancel.'})
-		let found = false
-		for (const bet of bets)
-			if (betId === bet.betid) {
-				found = true
-				break
-			}
-		if (!found)
+		const bets = await new MyBetsPaginationService().fetchUserBets(userid)
+		const bet = bets.pendingBets?.find((result) => result.betid === betId)
+		if (!bet)
 			return interaction.editReply({content: 'Could not find betid in your current bets.'})
 		
 		return new BetslipManager(
