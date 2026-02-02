@@ -94,7 +94,7 @@
 		"module-alias": "^2.2.3",
 		"numeral": "^2.0.6",
 		"p-timeout": "^7.0.1",
-		"package-directory": "^8.1.0",
+		"package-directory": "^8.2.0",
 		"pg": "^8.17.2",
 		"pg-monitor": "^3.1.0",
 		"pg-promise": "^12.3.0",
