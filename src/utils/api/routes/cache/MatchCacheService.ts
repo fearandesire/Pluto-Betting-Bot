@@ -24,6 +24,7 @@ export default class MatchCacheService {
 		logger.info({
 			message: 'Match Cache updated successfully.',
 			source: 'MatchCacheService:cacheMatches',
+			data: { matchCount: matches.length },
 		})
 	}
 
