@@ -56,9 +56,7 @@ export default class MatchCacheService {
 			return cachedMatch
 		}
 
-		const isLocked = await this.isRefreshLocked()
-		const shouldRefresh =
-			now - this.lastRefreshAt >= REFRESH_TTL_MS && !isLocked
+		const shouldRefresh = now - this.lastRefreshAt >= REFRESH_TTL_MS
 		if (!shouldRefresh) {
 			return null
 		}
@@ -133,12 +131,6 @@ export default class MatchCacheService {
 		} finally {
 			await this.releaseRefreshLock()
 		}
-	}
-
-	private async isRefreshLocked(): Promise<boolean> {
-		// cache.get() returns false when key doesn't exist (see CacheManager.get)
-		const lockValue = await this.cache.get(REFRESH_LOCK_KEY)
-		return lockValue !== false
 	}
 
 	private async acquireRefreshLock(): Promise<boolean> {
