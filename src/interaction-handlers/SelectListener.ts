@@ -45,7 +45,7 @@ export class MenuHandler extends InteractionHandler {
 		await interaction.deferReply()
 		const selectedMatchId = interaction.values[0]
 		// Get match details
-		const matchDetails = await new MatchCacheService(
+		const matchDetails = await MatchCacheService.getInstance(
 			new CacheManager(),
 		).getMatch(selectedMatchId)
 
@@ -129,7 +129,9 @@ export class MenuHandler extends InteractionHandler {
 		}
 		const { betslip, dateofmatchup, opponent, payData } = payload
 
-		const matchCacheService = new MatchCacheService(new CacheManager())
+		const matchCacheService = MatchCacheService.getInstance(
+			new CacheManager(),
+		)
 		const matchDetails = await matchCacheService.getMatch(
 			betslip.matchup_id,
 		)

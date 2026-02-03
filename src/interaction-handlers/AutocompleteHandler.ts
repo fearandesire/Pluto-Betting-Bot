@@ -17,7 +17,7 @@ export class AutocompleteHandler extends InteractionHandler {
 	public constructor(
 		ctx: InteractionHandler.LoaderContext,
 		options: InteractionHandler.Options,
-		matchCacheService: MatchCacheService = new MatchCacheService(
+		matchCacheService: MatchCacheService = MatchCacheService.getInstance(
 			new CacheManager(),
 		),
 		stringUtils: StringUtils = new StringUtils(),

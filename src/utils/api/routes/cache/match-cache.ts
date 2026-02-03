@@ -13,7 +13,9 @@ matchCache.post('/cache/matches', async (ctx: any) => {
 			}
 		}
 		const { matches } = ctx.request.body
-		await new MatchCacheService(new CacheManager()).cacheMatches(matches)
+		await MatchCacheService.getInstance(new CacheManager()).cacheMatches(
+			matches,
+		)
 		ctx.body = {
 			success: true,
 		}

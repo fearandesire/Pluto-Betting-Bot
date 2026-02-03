@@ -69,7 +69,9 @@ export class UserCommand extends Command {
 			)
 			return interaction.editReply({ embeds: [errEmbed] })
 		}
-		const matchCacheService = new MatchCacheService(new CacheManager())
+		const matchCacheService = MatchCacheService.getInstance(
+			new CacheManager(),
+		)
 		const selectedMatch = await matchCacheService.getMatch(matchSelection)
 		if (
 			!selectedMatch ||
@@ -82,8 +84,9 @@ export class UserCommand extends Command {
 			return interaction.editReply({ embeds: [errEmbed] })
 		}
 		const matchTeams = [selectedMatch.home_team, selectedMatch.away_team]
+		const normalizedTeamInput = teamInput.trim().toLowerCase()
 		const matchedTeam = matchTeams.find(
-			(team) => team.toLowerCase() === teamInput.toLowerCase(),
+			(team) => team.trim().toLowerCase() === normalizedTeamInput,
 		)
 		if (!matchedTeam) {
 			const errEmbed = await ErrorEmbeds.betErr(

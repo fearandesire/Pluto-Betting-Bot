@@ -7,7 +7,9 @@ import { logger } from '../../utils/logging/WinstonLogger.js'
  */
 async function initCache() {
 	try {
-		const matchCacheService = new MatchCacheService(new CacheManager())
+		const matchCacheService = MatchCacheService.getInstance(
+			new CacheManager(),
+		)
 		const data = await matchCacheService.requestMatches()
 		if (data?.matches && data.matches.length > 0) {
 			await matchCacheService.cacheMatches(data.matches)
