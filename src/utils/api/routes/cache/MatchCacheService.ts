@@ -7,9 +7,9 @@ const REFRESH_TTL_MS = 30 * 1000
 const MISSING_ID_TTL_MS = 30 * 1000
 
 export default class MatchCacheService {
-	private lastRefreshAt = 0
-	private missingIds = new Map<string, number>()
-	private refreshInFlight = false
+	private static lastRefreshAt = 0
+	private static missingIds = new Map<string, number>()
+	private static refreshInFlight = false
 
 	constructor(private cache: CacheManager) {}
 
@@ -40,11 +40,11 @@ export default class MatchCacheService {
 		}
 		const now = Date.now()
 		const toDelete: string[] = []
-		for (const [id, expiry] of this.missingIds) {
+		for (const [id, expiry] of MatchCacheService.missingIds) {
 			if (expiry <= now) toDelete.push(id)
 		}
-		for (const id of toDelete) this.missingIds.delete(id)
-		if (this.missingIds.has(matchid)) {
+		for (const id of toDelete) MatchCacheService.missingIds.delete(id)
+		if (MatchCacheService.missingIds.has(matchid)) {
 			return null
 		}
 		const cachedMatches = await this.getMatches()
@@ -56,17 +56,17 @@ export default class MatchCacheService {
 		}
 
 		const shouldRefresh =
-			now - this.lastRefreshAt >= REFRESH_TTL_MS && !this.refreshInFlight
+			now - MatchCacheService.lastRefreshAt >= REFRESH_TTL_MS &&
+			!MatchCacheService.refreshInFlight
 		if (!shouldRefresh) {
 			return null
 		}
-		const { matches: freshMatches, fromRefresh } = await this.refreshMatches()
+		const { matches: freshMatches, fromRefresh } =
+			await this.refreshMatches()
 		const match =
-			freshMatches?.find(
-				(m: MatchDetailDto) => m.id === matchid,
-			) ?? null
+			freshMatches?.find((m: MatchDetailDto) => m.id === matchid) ?? null
 		if (fromRefresh && !match) {
-			this.missingIds.set(matchid, now + MISSING_ID_TTL_MS)
+			MatchCacheService.missingIds.set(matchid, now + MISSING_ID_TTL_MS)
 		}
 		return match
 	}
@@ -75,16 +75,16 @@ export default class MatchCacheService {
 		matches: MatchDetailDto[] | null
 		fromRefresh: boolean
 	}> {
-		if (this.refreshInFlight) {
+		if (MatchCacheService.refreshInFlight) {
 			const cached = await this.getMatches()
 			return { matches: cached, fromRefresh: false }
 		}
-		if (Date.now() - this.lastRefreshAt < REFRESH_TTL_MS) {
+		if (Date.now() - MatchCacheService.lastRefreshAt < REFRESH_TTL_MS) {
 			const cached = await this.getMatches()
 			return { matches: cached, fromRefresh: false }
 		}
 
-		this.refreshInFlight = true
+		MatchCacheService.refreshInFlight = true
 		const maxRetries = 3
 		const baseDelayMs = 500
 
@@ -97,7 +97,7 @@ export default class MatchCacheService {
 						return { matches: null, fromRefresh: true }
 					}
 					await this.cacheMatches(matches)
-					this.lastRefreshAt = Date.now()
+					MatchCacheService.lastRefreshAt = Date.now()
 					return { matches, fromRefresh: true }
 				} catch (error) {
 					const isTransient = this.isTransientError(error)
@@ -109,7 +109,10 @@ export default class MatchCacheService {
 					}
 
 					if (isFinalAttempt) {
-						console.error('Failed to refresh matches cache after retries', error)
+						console.error(
+							'Failed to refresh matches cache after retries',
+							error,
+						)
 						return { matches: null, fromRefresh: true }
 					}
 
@@ -128,7 +131,7 @@ export default class MatchCacheService {
 			}
 			return { matches: null, fromRefresh: true }
 		} finally {
-			this.refreshInFlight = false
+			MatchCacheService.refreshInFlight = false
 		}
 	}
 
