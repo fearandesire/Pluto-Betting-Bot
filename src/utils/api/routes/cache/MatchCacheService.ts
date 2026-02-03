@@ -146,12 +146,16 @@ export default class MatchCacheService {
 	}
 
 	private async acquireRefreshLock(): Promise<boolean> {
-		const lockValue = await this.cache.get(REFRESH_LOCK_KEY)
-		if (lockValue !== false) {
-			return false
-		}
-		await this.cache.set(REFRESH_LOCK_KEY, Date.now(), REFRESH_LOCK_TTL_SECONDS)
-		return true
+		// Use Redis SETNX (SET if Not eXists) for atomic lock acquisition
+		// Returns 'OK' if the key was set, null if the key already exists
+		const result = await this.cache.cache.set(
+			REFRESH_LOCK_KEY,
+			Date.now().toString(),
+			'EX',
+			REFRESH_LOCK_TTL_SECONDS,
+			'NX',
+		)
+		return result === 'OK'
 	}
 
 	private async releaseRefreshLock(): Promise<void> {
