@@ -5,11 +5,12 @@ import MatchApiWrapper from '../../Khronos/matches/matchApiWrapper.js'
 
 const REFRESH_TTL_MS = 30 * 1000
 const MISSING_ID_TTL_MS = 30 * 1000
+const REFRESH_LOCK_KEY = 'match-cache-refresh-lock'
+const REFRESH_LOCK_TTL_SECONDS = 30
 
 export default class MatchCacheService {
 	private lastRefreshAt = 0
 	private missingIds = new Map<string, number>()
-	private refreshInFlight = false
 
 	constructor(private cache: CacheManager) {}
 
@@ -55,8 +56,9 @@ export default class MatchCacheService {
 			return cachedMatch
 		}
 
+		const isLocked = await this.isRefreshLocked()
 		const shouldRefresh =
-			now - this.lastRefreshAt >= REFRESH_TTL_MS && !this.refreshInFlight
+			now - this.lastRefreshAt >= REFRESH_TTL_MS && !isLocked
 		if (!shouldRefresh) {
 			return null
 		}
@@ -75,7 +77,8 @@ export default class MatchCacheService {
 		matches: MatchDetailDto[] | null
 		fromRefresh: boolean
 	}> {
-		if (this.refreshInFlight) {
+		const isLocked = await this.isRefreshLocked()
+		if (isLocked) {
 			const cached = await this.getMatches()
 			return { matches: cached, fromRefresh: false }
 		}
@@ -84,7 +87,12 @@ export default class MatchCacheService {
 			return { matches: cached, fromRefresh: false }
 		}
 
-		this.refreshInFlight = true
+		const lockAcquired = await this.acquireRefreshLock()
+		if (!lockAcquired) {
+			const cached = await this.getMatches()
+			return { matches: cached, fromRefresh: false }
+		}
+
 		const maxRetries = 3
 		const baseDelayMs = 500
 
@@ -128,8 +136,26 @@ export default class MatchCacheService {
 			}
 			return { matches: null, fromRefresh: true }
 		} finally {
-			this.refreshInFlight = false
+			await this.releaseRefreshLock()
 		}
+	}
+
+	private async isRefreshLocked(): Promise<boolean> {
+		const lockValue = await this.cache.get(REFRESH_LOCK_KEY)
+		return lockValue !== false
+	}
+
+	private async acquireRefreshLock(): Promise<boolean> {
+		const lockValue = await this.cache.get(REFRESH_LOCK_KEY)
+		if (lockValue !== false) {
+			return false
+		}
+		await this.cache.set(REFRESH_LOCK_KEY, Date.now(), REFRESH_LOCK_TTL_SECONDS)
+		return true
+	}
+
+	private async releaseRefreshLock(): Promise<void> {
+		await this.cache.remove(REFRESH_LOCK_KEY)
 	}
 
 	private isTransientError(error: unknown): boolean {
