@@ -1,6 +1,7 @@
 import type { MatchDetailDto } from '@kh-openapi'
 import { teamResolver } from 'resolve-team'
 import type { CacheManager } from '../../../cache/cache-manager.js'
+import { logger } from '../../../logging/WinstonLogger.js'
 import MatchApiWrapper from '../../Khronos/matches/matchApiWrapper.js'
 
 const REFRESH_TTL_MS = 30 * 1000
@@ -20,9 +21,10 @@ export default class MatchCacheService {
 
 	async cacheMatches(matches: MatchDetailDto[]) {
 		await this.cache.set('matches', matches, 86400)
-		console.log({
-			method: this.cacheMatches.name,
+		logger.info({
 			message: 'Match Cache updated successfully.',
+			source: 'MatchCacheService:cacheMatches',
+			data: { matchCount: matches.length },
 		})
 	}
 
@@ -60,11 +62,10 @@ export default class MatchCacheService {
 		if (!shouldRefresh) {
 			return null
 		}
-		const { matches: freshMatches, fromRefresh } = await this.refreshMatches()
+		const { matches: freshMatches, fromRefresh } =
+			await this.refreshMatches()
 		const match =
-			freshMatches?.find(
-				(m: MatchDetailDto) => m.id === matchid,
-			) ?? null
+			freshMatches?.find((m: MatchDetailDto) => m.id === matchid) ?? null
 		if (fromRefresh && !match) {
 			this.missingIds.set(matchid, now + MISSING_ID_TTL_MS)
 		}
@@ -104,12 +105,21 @@ export default class MatchCacheService {
 					const isFinalAttempt = attempt >= maxRetries
 
 					if (!isTransient) {
-						console.error('Failed to refresh matches cache', error)
+						logger.error({
+							message: 'Failed to refresh matches cache',
+							source: 'MatchCacheService:refreshMatches',
+							data: { error },
+						})
 						return { matches: null, fromRefresh: true }
 					}
 
 					if (isFinalAttempt) {
-						console.error('Failed to refresh matches cache after retries', error)
+						logger.error({
+							message:
+								'Failed to refresh matches cache after retries',
+							source: 'MatchCacheService:refreshMatches',
+							data: { error, attempt: maxRetries },
+						})
 						return { matches: null, fromRefresh: true }
 					}
 
@@ -117,10 +127,14 @@ export default class MatchCacheService {
 					const jitterMs = Math.floor(Math.random() * baseDelayMs)
 					const delayMs = backoffMs + jitterMs
 
-					console.warn('Retrying match cache refresh', {
-						attempt: attempt + 1,
-						maxRetries,
-						delayMs,
+					logger.warn({
+						message: 'Retrying match cache refresh',
+						source: 'MatchCacheService:refreshMatches',
+						data: {
+							attempt: attempt + 1,
+							maxRetries,
+							delayMs,
+						},
 					})
 
 					await new Promise((resolve) => setTimeout(resolve, delayMs))
