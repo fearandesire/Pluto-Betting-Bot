@@ -15,6 +15,13 @@ export default class MatchCacheService {
 
 	private constructor(private cache: CacheManager) {}
 
+	/**
+	 * Get the singleton instance of MatchCacheService.
+	 * The cache instance will be updated if a different CacheManager is provided,
+	 * but the refresh state (lastRefreshAt, missingIds, refreshInFlight) is preserved
+	 * across all getInstance() calls.
+	 * @param cache The CacheManager instance to use for caching operations
+	 */
 	public static getInstance(cache: CacheManager): MatchCacheService {
 		if (!MatchCacheService.instance) {
 			MatchCacheService.instance = new MatchCacheService(cache)
@@ -99,11 +106,11 @@ export default class MatchCacheService {
 		}
 
 		this.refreshInFlight = true
-		const maxRetries = 3
+		const maxAttempts = 3 // Total attempts: 1 initial + 2 retries
 		const baseDelayMs = 500
 
 		try {
-			for (let attempt = 0; attempt < maxRetries; attempt += 1) {
+			for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
 				try {
 					const response = await this.requestMatches()
 					const matches = response?.matches
@@ -115,7 +122,7 @@ export default class MatchCacheService {
 					return { matches, fromRefresh: true }
 				} catch (error) {
 					const isTransient = this.isTransientError(error)
-					const isFinalAttempt = attempt >= maxRetries - 1
+					const isFinalAttempt = attempt >= maxAttempts - 1
 
 					if (!isTransient) {
 						logger.error({
@@ -137,7 +144,7 @@ export default class MatchCacheService {
 								'Failed to refresh matches cache after retries',
 							metadata: {
 								source: 'MatchCacheService.refreshMatches',
-								attempts: maxRetries,
+								attempts: maxAttempts,
 								error:
 									error instanceof Error
 										? error.stack
@@ -156,7 +163,7 @@ export default class MatchCacheService {
 						metadata: {
 							source: 'MatchCacheService.refreshMatches',
 							attempt: attempt + 1,
-							maxRetries,
+							maxAttempts,
 							delayMs,
 						},
 					})
