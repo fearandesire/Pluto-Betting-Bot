@@ -89,8 +89,11 @@ export class AutocompleteHandler extends InteractionHandler {
 			case 'team': {
 				const matchSelection = interaction.options.getString(
 					'match',
-					true,
+					false,
 				)
+				if (!matchSelection) {
+					return this.none()
+				}
 				const selectedMatch = sportFilteredMatches.find(
 					(match: MatchDetailDto) => match.id === matchSelection,
 				)
