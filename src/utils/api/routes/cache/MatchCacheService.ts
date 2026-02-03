@@ -60,11 +60,10 @@ export default class MatchCacheService {
 		if (!shouldRefresh) {
 			return null
 		}
-		const { matches: freshMatches, fromRefresh } = await this.refreshMatches()
+		const { matches: freshMatches, fromRefresh } =
+			await this.refreshMatches()
 		const match =
-			freshMatches?.find(
-				(m: MatchDetailDto) => m.id === matchid,
-			) ?? null
+			freshMatches?.find((m: MatchDetailDto) => m.id === matchid) ?? null
 		if (fromRefresh && !match) {
 			this.missingIds.set(matchid, now + MISSING_ID_TTL_MS)
 		}
@@ -85,11 +84,11 @@ export default class MatchCacheService {
 		}
 
 		this.refreshInFlight = true
-		const maxRetries = 3
+		const maxAttempts = 3
 		const baseDelayMs = 500
 
 		try {
-			for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
+			for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
 				try {
 					const response = await this.requestMatches()
 					const matches = response?.matches
@@ -101,7 +100,7 @@ export default class MatchCacheService {
 					return { matches, fromRefresh: true }
 				} catch (error) {
 					const isTransient = this.isTransientError(error)
-					const isFinalAttempt = attempt >= maxRetries
+					const isFinalAttempt = attempt >= maxAttempts - 1
 
 					if (!isTransient) {
 						console.error('Failed to refresh matches cache', error)
@@ -109,7 +108,10 @@ export default class MatchCacheService {
 					}
 
 					if (isFinalAttempt) {
-						console.error('Failed to refresh matches cache after retries', error)
+						console.error(
+							'Failed to refresh matches cache after retries',
+							error,
+						)
 						return { matches: null, fromRefresh: true }
 					}
 
@@ -119,7 +121,7 @@ export default class MatchCacheService {
 
 					console.warn('Retrying match cache refresh', {
 						attempt: attempt + 1,
-						maxRetries,
+						maxAttempts,
 						delayMs,
 					})
 
