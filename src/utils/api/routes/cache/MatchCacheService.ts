@@ -77,11 +77,6 @@ export default class MatchCacheService {
 		matches: MatchDetailDto[] | null
 		fromRefresh: boolean
 	}> {
-		const isLocked = await this.isRefreshLocked()
-		if (isLocked) {
-			const cached = await this.getMatches()
-			return { matches: cached, fromRefresh: false }
-		}
 		if (Date.now() - this.lastRefreshAt < REFRESH_TTL_MS) {
 			const cached = await this.getMatches()
 			return { matches: cached, fromRefresh: false }
@@ -141,6 +136,7 @@ export default class MatchCacheService {
 	}
 
 	private async isRefreshLocked(): Promise<boolean> {
+		// cache.get() returns false when key doesn't exist (see CacheManager.get)
 		const lockValue = await this.cache.get(REFRESH_LOCK_KEY)
 		return lockValue !== false
 	}
@@ -159,6 +155,11 @@ export default class MatchCacheService {
 	}
 
 	private async releaseRefreshLock(): Promise<void> {
+		// Note: We don't verify lock ownership before releasing because:
+		// 1. All instances perform the same refresh operation (idempotent)
+		// 2. The lock has a TTL for automatic cleanup on crashes
+		// 3. Worst case: another instance releases early and triggers a duplicate refresh,
+		//    which is acceptable given the REFRESH_TTL_MS check prevents excessive refreshes
 		await this.cache.remove(REFRESH_LOCK_KEY)
 	}
 
