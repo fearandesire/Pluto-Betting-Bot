@@ -3,7 +3,14 @@ import { teamResolver } from 'resolve-team'
 import type { CacheManager } from '../../../cache/cache-manager.js'
 import MatchApiWrapper from '../../Khronos/matches/matchApiWrapper.js'
 
+const REFRESH_TTL_MS = 30 * 1000
+const MISSING_ID_TTL_MS = 30 * 1000
+
 export default class MatchCacheService {
+	private lastRefreshAt = 0
+	private missingIds = new Map<string, number>()
+	private refreshInFlight = false
+
 	constructor(private cache: CacheManager) {}
 
 	async requestMatches() {
@@ -31,6 +38,15 @@ export default class MatchCacheService {
 		if (!matchid) {
 			return null
 		}
+		const now = Date.now()
+		const toDelete: string[] = []
+		for (const [id, expiry] of this.missingIds) {
+			if (expiry <= now) toDelete.push(id)
+		}
+		for (const id of toDelete) this.missingIds.delete(id)
+		if (this.missingIds.has(matchid)) {
+			return null
+		}
 		const cachedMatches = await this.getMatches()
 		const cachedMatch = cachedMatches?.find(
 			(match: MatchDetailDto) => match.id === matchid,
@@ -39,27 +55,98 @@ export default class MatchCacheService {
 			return cachedMatch
 		}
 
-		const freshMatches = await this.refreshMatches()
-		return (
-			freshMatches?.find(
-				(match: MatchDetailDto) => match.id === matchid,
-			) ?? null
-		)
-	}
-
-	private async refreshMatches(): Promise<MatchDetailDto[] | null> {
-		try {
-			const response = await this.requestMatches()
-			const matches = response?.matches
-			if (!matches || !matches.length) {
-				return null
-			}
-			await this.cacheMatches(matches)
-			return matches
-		} catch (error) {
-			console.error('Failed to refresh matches cache', error)
+		const shouldRefresh =
+			now - this.lastRefreshAt >= REFRESH_TTL_MS && !this.refreshInFlight
+		if (!shouldRefresh) {
 			return null
 		}
+		const { matches: freshMatches, fromRefresh } = await this.refreshMatches()
+		const match =
+			freshMatches?.find(
+				(m: MatchDetailDto) => m.id === matchid,
+			) ?? null
+		if (fromRefresh && !match) {
+			this.missingIds.set(matchid, now + MISSING_ID_TTL_MS)
+		}
+		return match
+	}
+
+	private async refreshMatches(): Promise<{
+		matches: MatchDetailDto[] | null
+		fromRefresh: boolean
+	}> {
+		if (this.refreshInFlight) {
+			const cached = await this.getMatches()
+			return { matches: cached, fromRefresh: false }
+		}
+		if (Date.now() - this.lastRefreshAt < REFRESH_TTL_MS) {
+			const cached = await this.getMatches()
+			return { matches: cached, fromRefresh: false }
+		}
+
+		this.refreshInFlight = true
+		const maxRetries = 3
+		const baseDelayMs = 500
+
+		try {
+			for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
+				try {
+					const response = await this.requestMatches()
+					const matches = response?.matches
+					if (!Array.isArray(matches) || matches.length === 0) {
+						return { matches: null, fromRefresh: true }
+					}
+					await this.cacheMatches(matches)
+					this.lastRefreshAt = Date.now()
+					return { matches, fromRefresh: true }
+				} catch (error) {
+					const isTransient = this.isTransientError(error)
+					const isFinalAttempt = attempt >= maxRetries
+
+					if (!isTransient) {
+						console.error('Failed to refresh matches cache', error)
+						return { matches: null, fromRefresh: true }
+					}
+
+					if (isFinalAttempt) {
+						console.error('Failed to refresh matches cache after retries', error)
+						return { matches: null, fromRefresh: true }
+					}
+
+					const backoffMs = baseDelayMs * 2 ** attempt
+					const jitterMs = Math.floor(Math.random() * baseDelayMs)
+					const delayMs = backoffMs + jitterMs
+
+					console.warn('Retrying match cache refresh', {
+						attempt: attempt + 1,
+						maxRetries,
+						delayMs,
+					})
+
+					await new Promise((resolve) => setTimeout(resolve, delayMs))
+				}
+			}
+			return { matches: null, fromRefresh: true }
+		} finally {
+			this.refreshInFlight = false
+		}
+	}
+
+	private isTransientError(error: unknown): boolean {
+		const err = error as {
+			response?: { status?: number }
+			code?: string
+			request?: unknown
+			isAxiosError?: boolean
+		}
+		const status = err?.response?.status
+		if (typeof status === 'number') {
+			return status === 429 || status >= 500
+		}
+		if (err?.request || err?.code || err?.isAxiosError) {
+			return true
+		}
+		return false
 	}
 
 	async matchesByTeam(team: string) {
