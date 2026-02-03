@@ -84,16 +84,18 @@ export class UserCommand extends Command {
 			return interaction.editReply({ embeds: [errEmbed] })
 		}
 		const matchTeams = [selectedMatch.home_team, selectedMatch.away_team]
-		const normalizedInput = teamInput.trim().toLowerCase()
-		const matchedTeam = matchTeams.find(
-			(team) => team.trim().toLowerCase() === normalizedInput,
+		const normalizedTeams = matchTeams.map((team) =>
+			team.trim().toLowerCase(),
 		)
-		if (!matchedTeam) {
+		const normalizedInput = teamInput.trim().toLowerCase()
+		const matchedTeamIndex = normalizedTeams.indexOf(normalizedInput)
+		if (matchedTeamIndex === -1) {
 			const errEmbed = await ErrorEmbeds.betErr(
 				'Please select a team from the chosen match.',
 			)
 			return interaction.editReply({ embeds: [errEmbed] })
 		}
+		const matchedTeam = matchTeams[matchedTeamIndex]
 
 		const team = await this.identifyTeam(matchedTeam)
 		const betslipData = {
