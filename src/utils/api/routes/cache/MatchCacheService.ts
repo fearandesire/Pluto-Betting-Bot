@@ -20,21 +20,46 @@ export default class MatchCacheService {
 	}
 
 	async getMatches(): Promise<MatchDetailDto[] | null> {
-		return await this.cache.get('matches')
+		const cachedMatches = await this.cache.get('matches')
+		if (!cachedMatches || !Array.isArray(cachedMatches)) {
+			return null
+		}
+		return cachedMatches
 	}
 
 	async getMatch(matchid: string): Promise<MatchDetailDto | null> {
-		const allMatches = await this.getMatches()
-		if (!allMatches) {
+		if (!matchid) {
 			return null
 		}
-		const match = allMatches.find(
+		const cachedMatches = await this.getMatches()
+		const cachedMatch = cachedMatches?.find(
 			(match: MatchDetailDto) => match.id === matchid,
 		)
-		if (!match) {
+		if (cachedMatch) {
+			return cachedMatch
+		}
+
+		const freshMatches = await this.refreshMatches()
+		return (
+			freshMatches?.find(
+				(match: MatchDetailDto) => match.id === matchid,
+			) ?? null
+		)
+	}
+
+	private async refreshMatches(): Promise<MatchDetailDto[] | null> {
+		try {
+			const response = await this.requestMatches()
+			const matches = response?.matches
+			if (!matches || !matches.length) {
+				return null
+			}
+			await this.cacheMatches(matches)
+			return matches
+		} catch (error) {
+			console.error('Failed to refresh matches cache', error)
 			return null
 		}
-		return match
 	}
 
 	async matchesByTeam(team: string) {
