@@ -83,7 +83,7 @@ export class UserCommand extends Command {
 		}
 		const matchTeams = [selectedMatch.home_team, selectedMatch.away_team]
 		const matchedTeam = matchTeams.find(
-			(team) => team.toLowerCase() === teamInput.toLowerCase(),
+			(team) => this.normalizeTeamName(team) === this.normalizeTeamName(teamInput),
 		)
 		if (!matchedTeam) {
 			const errEmbed = await ErrorEmbeds.betErr(
@@ -104,6 +104,10 @@ export class UserCommand extends Command {
 			new BetslipWrapper(),
 			new BetsCacheService(new CacheManager()),
 		).initialize(interaction, interaction.user.id, betslipData)
+	}
+
+	private normalizeTeamName(teamName: string): string {
+		return teamName.trim().toLowerCase().replace(/\s+/g, ' ')
 	}
 
 	private async identifyTeam(team: string) {
