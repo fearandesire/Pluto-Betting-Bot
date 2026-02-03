@@ -55,16 +55,17 @@ export default class MatchCacheService {
 			return cachedMatch
 		}
 
+		const cacheIsEmpty = cachedMatches == null || cachedMatches.length === 0
 		const shouldRefresh =
-			now - this.lastRefreshAt >= REFRESH_TTL_MS && !this.refreshInFlight
+			(now - this.lastRefreshAt >= REFRESH_TTL_MS || cacheIsEmpty) &&
+			!this.refreshInFlight
 		if (!shouldRefresh) {
 			return null
 		}
-		const { matches: freshMatches, fromRefresh } = await this.refreshMatches()
+		const { matches: freshMatches, fromRefresh } =
+			await this.refreshMatches()
 		const match =
-			freshMatches?.find(
-				(m: MatchDetailDto) => m.id === matchid,
-			) ?? null
+			freshMatches?.find((m: MatchDetailDto) => m.id === matchid) ?? null
 		if (fromRefresh && !match) {
 			this.missingIds.set(matchid, now + MISSING_ID_TTL_MS)
 		}
@@ -109,7 +110,10 @@ export default class MatchCacheService {
 					}
 
 					if (isFinalAttempt) {
-						console.error('Failed to refresh matches cache after retries', error)
+						console.error(
+							'Failed to refresh matches cache after retries',
+							error,
+						)
 						return { matches: null, fromRefresh: true }
 					}
 
