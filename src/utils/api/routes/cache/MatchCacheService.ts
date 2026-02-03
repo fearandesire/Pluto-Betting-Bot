@@ -18,6 +18,9 @@ export default class MatchCacheService {
 	public static getInstance(cache: CacheManager): MatchCacheService {
 		if (!MatchCacheService.instance) {
 			MatchCacheService.instance = new MatchCacheService(cache)
+		} else {
+			// Update cache instance if a different one is provided
+			MatchCacheService.instance.cache = cache
 		}
 		return MatchCacheService.instance
 	}

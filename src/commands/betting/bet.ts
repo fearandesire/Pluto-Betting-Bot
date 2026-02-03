@@ -84,9 +84,9 @@ export class UserCommand extends Command {
 			return interaction.editReply({ embeds: [errEmbed] })
 		}
 		const matchTeams = [selectedMatch.home_team, selectedMatch.away_team]
-		const normalizedTeamInput = teamInput.trim().toLowerCase()
+		const normalizedInput = teamInput.trim().toLowerCase()
 		const matchedTeam = matchTeams.find(
-			(team) => team.trim().toLowerCase() === normalizedTeamInput,
+			(team) => team.trim().toLowerCase() === normalizedInput,
 		)
 		if (!matchedTeam) {
 			const errEmbed = await ErrorEmbeds.betErr(
