@@ -104,10 +104,13 @@ export class AutocompleteHandler extends InteractionHandler {
 						selectedMatch.away_team,
 					].filter((team): team is string => team !== undefined)
 					return this.some(
-						teams.map((team) => ({
-							name: team,
-							value: team,
-						})),
+						teams.map((team) => {
+							const normalizedTeam = team.trim()
+							return {
+								name: normalizedTeam,
+								value: normalizedTeam,
+							}
+						}),
 					)
 				}
 				return this.none()

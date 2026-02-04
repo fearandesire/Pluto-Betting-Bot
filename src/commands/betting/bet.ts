@@ -111,6 +111,10 @@ export class UserCommand extends Command {
 		).initialize(interaction, interaction.user.id, betslipData)
 	}
 
+	private normalizeTeamName(teamName: string): string {
+		return teamName.trim().toLowerCase().replace(/\s+/g, ' ')
+	}
+
 	private async identifyTeam(team: string) {
 		const teamInfo = await teamResolver.resolve(team)
 		return teamInfo
