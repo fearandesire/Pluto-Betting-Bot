@@ -4,6 +4,7 @@ import MatchApiWrapper from '../../api/Khronos/matches/matchApiWrapper.js'
 import { logger } from '../../logging/WinstonLogger.js'
 import { CacheManager } from '../cache-manager.js'
 import { REDIS_CONFIG } from '../data/config.js'
+import { isDuplicateJobError } from './match-refresh-utils.js'
 
 interface MatchRefreshJobData {
 	reason?: string
@@ -214,11 +215,11 @@ export class MatchRefreshQueue {
 	}
 
 	private isDuplicateJobError(error: unknown): boolean {
-		const message = error instanceof Error ? error.message : String(error)
-		return message.toLowerCase().includes('job') &&
-			message.toLowerCase().includes('already exists')
+		return isDuplicateJobError(error)
 	}
 }
+
+export { isDuplicateJobError } from './match-refresh-utils.js'
 
 // Singleton instance - lazily initialized
 let matchRefreshQueueInstance: MatchRefreshQueue | null = null
