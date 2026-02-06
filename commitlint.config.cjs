@@ -23,6 +23,8 @@ module.exports = {
 				'ci',
 				'chore',
 				'revert',
+				'hotfix',
+				'patch',
 			],
 		],
 		'subject-empty': [2, 'never'],
