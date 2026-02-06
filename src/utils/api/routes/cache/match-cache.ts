@@ -1,6 +1,6 @@
 import Router from '@koa/router'
 import { CacheManager } from '../../../cache/cache-manager.js'
-import MatchCacheService from './MatchCacheService.js'
+import MatchCacheService from './match-cache-service.js'
 
 export const matchCache = new Router()
 

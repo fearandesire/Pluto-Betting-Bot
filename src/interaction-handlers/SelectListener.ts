@@ -9,7 +9,7 @@ import { BetsCacheService } from '../utils/api/common/bets/BetsCacheService.js'
 import BetUtils from '../utils/api/common/bets/BetUtils.js'
 import { BetslipManager } from '../utils/api/Khronos/bets/BetslipsManager.js'
 import BetslipWrapper from '../utils/api/Khronos/bets/betslip-wrapper.js'
-import MatchCacheService from '../utils/api/routes/cache/MatchCacheService.js'
+import MatchCacheService from '../utils/api/routes/cache/match-cache-service.js'
 import { CacheManager } from '../utils/cache/cache-manager.js'
 import { ErrorEmbeds } from '../utils/common/errors/global.js'
 

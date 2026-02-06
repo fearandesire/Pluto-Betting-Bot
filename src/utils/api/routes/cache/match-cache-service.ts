@@ -1,6 +1,7 @@
 import type { MatchDetailDto } from '@kh-openapi'
 import { teamResolver } from 'resolve-team'
 import type { CacheManager } from '../../../cache/cache-manager.js'
+import { logger } from '../../../logging/WinstonLogger.js'
 import MatchApiWrapper from '../../Khronos/matches/matchApiWrapper.js'
 
 export default class MatchCacheService {
@@ -13,28 +14,30 @@ export default class MatchCacheService {
 
 	async cacheMatches(matches: MatchDetailDto[]) {
 		await this.cache.set('matches', matches, 86400)
-		console.log({
-			method: this.cacheMatches.name,
+		logger.info({
 			message: 'Match Cache updated successfully.',
+			source: 'MatchCacheService:cacheMatches',
+			data: { matchCount: matches.length },
 		})
 	}
 
 	async getMatches(): Promise<MatchDetailDto[] | null> {
-		return await this.cache.get('matches')
+		const cachedMatches = await this.cache.get('matches')
+		if (!cachedMatches || !Array.isArray(cachedMatches)) {
+			return null
+		}
+		return cachedMatches
 	}
 
 	async getMatch(matchid: string): Promise<MatchDetailDto | null> {
-		const allMatches = await this.getMatches()
-		if (!allMatches) {
+		if (!matchid) {
 			return null
 		}
-		const match = allMatches.find(
-			(match: MatchDetailDto) => match.id === matchid,
+		const cachedMatches = await this.getMatches()
+		return (
+			cachedMatches?.find((match: MatchDetailDto) => match.id === matchid) ??
+			null
 		)
-		if (!match) {
-			return null
-		}
-		return match
 	}
 
 	async matchesByTeam(team: string) {
