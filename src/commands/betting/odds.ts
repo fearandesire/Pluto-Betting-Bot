@@ -1,9 +1,13 @@
 import { ApplyOptions } from '@sapphire/decorators'
 import { Command } from '@sapphire/framework'
 import { InteractionContextType } from 'discord.js'
-import { ApiModules } from '../../lib/interfaces/api/api.interface.js'
+import {
+	ApiHttpErrorTypes,
+	ApiModules,
+} from '../../lib/interfaces/api/api.interface.js'
 import env from '../../lib/startup/env.js'
 import { ApiErrorHandler } from '../../utils/api/Khronos/error-handling/ApiErrorHandler.js'
+import { toKhronosApiError } from '../../utils/api/Khronos/error-handling/types.js'
 import GuildWrapper from '../../utils/api/Khronos/guild/guild-wrapper.js'
 import MatchApiWrapper from '../../utils/api/Khronos/matches/matchApiWrapper.js'
 import { ErrorEmbeds } from '../../utils/common/errors/global.js'
@@ -124,6 +128,17 @@ export class UserCommand extends Command {
 				guildId: interaction.guild?.id,
 				error,
 			})
+			const khronosError = await toKhronosApiError(error)
+			if (khronosError.exception === ApiHttpErrorTypes.MatchNotFound) {
+				const noOddsEmbed = await prepareAndFormat(
+					[],
+					embedThumbnail!,
+					guildId,
+				)
+				return interaction.editReply({
+					embeds: [noOddsEmbed],
+				})
+			}
 			await new ApiErrorHandler().handle(
 				interaction,
 				error,
