@@ -90,8 +90,8 @@ importers:
         specifier: ^0.4.1
         version: 0.4.1
       axios:
-        specifier: ^1.13.4
-        version: 1.13.4
+        specifier: ^1.13.5
+        version: 1.13.5
       body-parser:
         specifier: ^2.2.2
         version: 2.2.2
@@ -3091,6 +3091,9 @@ packages:
 
   axios@1.13.4:
     resolution: {integrity: sha512-1wVkUaAO6WyaYtCkcYCOx12ZgpGf9Zif+qXa4n+oYzK558YryKqiL6UWwd5DqiH3VRW0GYhTZQ/vlgJrCoNQlg==}
+
+  axios@1.13.5:
+    resolution: {integrity: sha512-cz4ur7Vb0xS4/KUN0tPWe44eqxrIu31me+fbang3ijiNscE129POzipJJA6zniq2C/Z6sJCjMimjS8Lc/GAs8Q==}
 
   b4a@1.7.3:
     resolution: {integrity: sha512-5Q2mfq2WfGuFp3uS//0s6baOJLMoVduPYVeNmDYxu5OUA1/cBfvr2RIS7vi62LdNj/urk1hfmj867I3qt6uZ7Q==}
@@ -10080,6 +10083,14 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
+  axios@1.13.5:
+    dependencies:
+      follow-redirects: 1.15.11
+      form-data: 4.0.5
+      proxy-from-env: 1.1.0
+    transitivePeerDependencies:
+      - debug
+
   b4a@1.7.3: {}
 
   babel-jest@30.2.0(@babel/core@7.28.4):
@@ -10843,7 +10854,7 @@ snapshots:
       '@oclif/plugin-not-found': 2.4.3(@swc/core@1.15.11)(@types/node@25.2.0)(typescript@5.9.3)
       '@oclif/plugin-update': 3.2.4(@swc/core@1.15.11)(@types/node@25.2.0)(typescript@5.9.3)
       '@oclif/plugin-warn-if-update-available': 2.1.1(@swc/core@1.15.11)(@types/node@25.2.0)(typescript@5.9.3)
-      axios: 1.13.4
+      axios: 1.13.5
       chalk: 4.1.2
       dotenv: 16.6.1
     transitivePeerDependencies:
