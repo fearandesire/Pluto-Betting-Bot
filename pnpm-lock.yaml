@@ -223,8 +223,8 @@ importers:
         specifier: 2.3.13
         version: 2.3.13
       '@biomejs/cli-win32-x64':
-        specifier: ^2.3.13
-        version: 2.3.13
+        specifier: ^2.3.14
+        version: 2.3.14
       '@commitlint/cli':
         specifier: ^20.3.1
         version: 20.3.1(@types/node@25.2.0)(typescript@5.9.3)
@@ -311,7 +311,7 @@ importers:
         version: 19.2.4(@types/node@25.2.0)
       release-it-changelogen:
         specifier: ^0.1.0
-        version: 0.1.0(changelogen@0.5.7)(release-it@19.2.4(@types/node@25.2.0))(semver@7.7.3)
+        version: 0.1.0(changelogen@0.5.7)(release-it@19.2.4(@types/node@25.2.0))(semver@7.7.4)
       rimraf:
         specifier: ^6.1.2
         version: 6.1.2
@@ -565,6 +565,12 @@ packages:
 
   '@biomejs/cli-win32-x64@2.3.13':
     resolution: {integrity: sha512-trDw2ogdM2lyav9WFQsdsfdVy1dvZALymRpgmWsvSez0BJzBjulhOT/t+wyKeh3pZWvwP3VMs1SoOKwO3wecMQ==}
+    engines: {node: '>=14.21.3'}
+    cpu: [x64]
+    os: [win32]
+
+  '@biomejs/cli-win32-x64@2.3.14':
+    resolution: {integrity: sha512-oizCjdyQ3WJEswpb3Chdngeat56rIdSYK12JI3iI11Mt5T5EXcZ7WLuowzEaFPNJ3zmOQFliMN8QY1Pi+qsfdQ==}
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [win32]
@@ -2417,8 +2423,8 @@ packages:
     resolution: {integrity: sha512-QGLdC9+pT74Zd7aaObqn0EUfq40c4dyTL65pFnkM6WO1QYN7Yg/s4CdH+CXmx0Zcu6wcfCWILSftXPMosJHP5A==}
     engines: {node: '>=v14.0.0'}
 
-  '@sinclair/typebox@0.27.8':
-    resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
+  '@sinclair/typebox@0.27.10':
+    resolution: {integrity: sha512-MTBk/3jGLNB2tVxv6uLlFh1iu64iYOQ2PbdOSK3NW8JZsmlaOh2q6sdtKowBhfw8QFLmYNzTW4/oK4uATIi6ZA==}
 
   '@sinclair/typebox@0.34.41':
     resolution: {integrity: sha512-6gS8pZzSXdyRHTIqoqSVknxolr1kzfy4/CeDnrzsVz8TTIWUbOBr6gnzOmTYJ3eXQNh4IYHIGi5aIL7sOZ2G/g==}
@@ -6449,6 +6455,11 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
+  semver@7.7.4:
+    resolution: {integrity: sha512-vFKC2IEtQnVhpT78h1Yp8wzwrf8CM+MzKMHGJZfBtzhZNycRFnXsHk6E5TxIkkMsgNS7mdX3AGB7x2QM2di4lA==}
+    engines: {node: '>=10'}
+    hasBin: true
+
   set-error-class@3.0.1:
     resolution: {integrity: sha512-VEsI0yEUMEnXmSkhfj+EwzNC1om7zGy2IdymNyi4FfGzmoxvXXIB1Nv09+DfRgsd7fS+u+FwTqCTSRhhNMcx8w==}
     engines: {node: '>=18.18.0'}
@@ -7581,7 +7592,10 @@ snapshots:
   '@biomejs/cli-win32-arm64@2.3.13':
     optional: true
 
-  '@biomejs/cli-win32-x64@2.3.13': {}
+  '@biomejs/cli-win32-x64@2.3.13':
+    optional: true
+
+  '@biomejs/cli-win32-x64@2.3.14': {}
 
   '@borewit/text-codec@0.2.1': {}
 
@@ -8337,7 +8351,7 @@ snapshots:
 
   '@jest/schemas@29.6.3':
     dependencies:
-      '@sinclair/typebox': 0.27.8
+      '@sinclair/typebox': 0.27.10
 
   '@jest/schemas@30.0.5':
     dependencies:
@@ -9377,7 +9391,7 @@ snapshots:
 
   '@sapphire/utilities@3.18.2': {}
 
-  '@sinclair/typebox@0.27.8': {}
+  '@sinclair/typebox@0.27.10': {}
 
   '@sinclair/typebox@0.34.41': {}
 
@@ -9752,7 +9766,7 @@ snapshots:
       globby: 11.1.0
       is-glob: 4.0.3
       minimatch: 9.0.3
-      semver: 7.7.3
+      semver: 7.7.4
       ts-api-utils: 1.4.3(typescript@5.9.3)
     optionalDependencies:
       typescript: 5.9.3
@@ -10401,7 +10415,7 @@ snapshots:
       pathe: 1.1.2
       pkg-types: 1.3.1
       scule: 1.3.0
-      semver: 7.7.3
+      semver: 7.7.4
       std-env: 3.10.0
       yaml: 2.8.2
     transitivePeerDependencies:
@@ -10879,7 +10893,7 @@ snapshots:
       '@one-ini/wasm': 0.1.1
       commander: 10.0.1
       minimatch: 9.0.1
-      semver: 7.7.3
+      semver: 7.7.4
 
   ee-first@1.1.1: {}
 
@@ -12771,7 +12785,7 @@ snapshots:
 
   make-dir@4.0.0:
     dependencies:
-      semver: 7.7.3
+      semver: 7.7.4
 
   make-error@1.3.6: {}
 
@@ -13724,7 +13738,7 @@ snapshots:
       gopd: 1.2.0
       set-function-name: 2.0.2
 
-  release-it-changelogen@0.1.0(changelogen@0.5.7)(release-it@19.2.4(@types/node@25.2.0))(semver@7.7.3):
+  release-it-changelogen@0.1.0(changelogen@0.5.7)(release-it@19.2.4(@types/node@25.2.0))(semver@7.7.4):
     dependencies:
       chalk: 5.6.0
       changelogen: 0.5.7
@@ -13733,7 +13747,7 @@ snapshots:
       execa: 8.0.1
       pathe: 1.1.2
       release-it: 19.2.4(@types/node@25.2.0)
-      semver: 7.7.3
+      semver: 7.7.4
       yargs-parser: 21.1.1
 
   release-it@19.2.4(@types/node@25.2.0):
@@ -13964,6 +13978,8 @@ snapshots:
   semver@6.3.1: {}
 
   semver@7.7.3: {}
+
+  semver@7.7.4: {}
 
   set-error-class@3.0.1:
     dependencies:
@@ -14693,7 +14709,7 @@ snapshots:
       espree: 9.6.1
       esquery: 1.7.0
       lodash: 4.17.23
-      semver: 7.7.3
+      semver: 7.7.4
     transitivePeerDependencies:
       - supports-color
 
