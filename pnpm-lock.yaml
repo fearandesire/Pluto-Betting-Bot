@@ -96,8 +96,8 @@ importers:
         specifier: ^2.2.2
         version: 2.2.2
       bullmq:
-        specifier: ^5.67.2
-        version: 5.67.2
+        specifier: ^5.67.3
+        version: 5.67.3
       color:
         specifier: ^5.0.3
         version: 5.0.3
@@ -3245,8 +3245,8 @@ packages:
   buffer@5.7.1:
     resolution: {integrity: sha512-EHcyIPBQ4BSGlvjB16k5KgAJ27CIsHY/2JBmCRReo48y9rQ3MaUzWX3KVlBa4U7MyX02HdVj0K7C3WaB3ju7FQ==}
 
-  bullmq@5.67.2:
-    resolution: {integrity: sha512-3KYqNqQptKcgksACO1li4YW9/jxEh6XWa1lUg4OFrHa80Pf0C7H9zeb6ssbQQDfQab/K3QCXopbZ40vrvcyrLw==}
+  bullmq@5.67.3:
+    resolution: {integrity: sha512-eeQobOJn8M0Rj8tcZCVFLrimZgJQallJH1JpclOoyut2nDNkDwTEPMVcZzLeSR2fGeIVbfJTjU96F563Qkge5A==}
 
   bundle-name@4.1.0:
     resolution: {integrity: sha512-tjwM5exMg6BGRI+kNmTntNsvdZS1X8BFYS6tnJ2hdH0kVxM6/eVZ2xy+FqStSWvYmtfFMDLIxurorHwDKfDz5Q==}
@@ -7710,7 +7710,7 @@ snapshots:
   '@commitlint/is-ignored@20.3.1':
     dependencies:
       '@commitlint/types': 20.4.0
-      semver: 7.7.3
+      semver: 7.7.4
 
   '@commitlint/lint@20.3.1':
     dependencies:
@@ -8804,7 +8804,7 @@ snapshots:
       natural-orderby: 2.0.3
       object-treeify: 1.1.33
       password-prompt: 1.1.3
-      semver: 7.7.3
+      semver: 7.7.4
       string-width: 4.2.3
       strip-ansi: 6.0.1
       supports-color: 8.1.1
@@ -8883,7 +8883,7 @@ snapshots:
       inquirer: 8.2.7(@types/node@25.2.0)
       lodash.throttle: 4.1.1
       log-chopper: 1.0.2
-      semver: 7.7.3
+      semver: 7.7.4
       tar-fs: 2.1.4
     transitivePeerDependencies:
       - '@swc/core'
@@ -8899,7 +8899,7 @@ snapshots:
       debug: 4.4.3(supports-color@8.1.1)
       http-call: 5.3.0
       lodash.template: 4.5.0
-      semver: 7.7.3
+      semver: 7.7.4
     transitivePeerDependencies:
       - '@swc/core'
       - '@swc/wasm'
@@ -9045,7 +9045,7 @@ snapshots:
       extract-zip: 2.0.1
       progress: 2.0.3
       proxy-agent: 6.5.0
-      semver: 7.7.3
+      semver: 7.7.4
       tar-fs: 3.1.1
       yargs: 17.7.2
     transitivePeerDependencies:
@@ -10192,7 +10192,7 @@ snapshots:
   bin-version-check@5.1.0:
     dependencies:
       bin-version: 6.0.0
-      semver: 7.7.3
+      semver: 7.7.4
       semver-truncate: 3.0.0
 
   bin-version@6.0.0:
@@ -10266,7 +10266,7 @@ snapshots:
       base64-js: 1.5.1
       ieee754: 1.2.1
 
-  bullmq@5.67.2:
+  bullmq@5.67.3:
     dependencies:
       cron-parser: 4.9.0
       ioredis: 5.9.2
@@ -12059,7 +12059,7 @@ snapshots:
       '@babel/parser': 7.28.4
       '@istanbuljs/schema': 0.1.3
       istanbul-lib-coverage: 3.2.2
-      semver: 7.7.3
+      semver: 7.7.4
     transitivePeerDependencies:
       - supports-color
 
@@ -12385,7 +12385,7 @@ snapshots:
       jest-message-util: 30.2.0
       jest-util: 30.2.0
       pretty-format: 30.2.0
-      semver: 7.7.3
+      semver: 7.7.4
       synckit: 0.11.11
     transitivePeerDependencies:
       - supports-color
@@ -13969,7 +13969,7 @@ snapshots:
 
   semver-truncate@3.0.0:
     dependencies:
-      semver: 7.7.3
+      semver: 7.7.4
 
   semver@5.7.2: {}
 
