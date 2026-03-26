@@ -15,6 +15,11 @@ const OUTPUT_FILE_PATH = path.resolve(
 	'spec',
 	'khronos-swagger-spec-v1.json',
 )
+const REPO_FALLBACK_SPEC_PATH = path.resolve(
+	process.cwd(),
+	'spec',
+	'khronos-swagger-spec-v1.json',
+)
 const LOCAL_SPEC_PATH = path.resolve(
 	process.cwd(),
 	'..',
@@ -58,6 +63,19 @@ async function tryLocalSpec() {
 	}
 }
 
+async function tryRepoFallbackSpec() {
+	try {
+		await access(REPO_FALLBACK_SPEC_PATH)
+		const fallbackSpec = await readFile(REPO_FALLBACK_SPEC_PATH, 'utf8')
+		if (!fallbackSpec.trim()) return false
+
+		await writeSpec(fallbackSpec, REPO_FALLBACK_SPEC_PATH)
+		return true
+	} catch {
+		return false
+	}
+}
+
 async function fetchRemoteSpec() {
 	const githubToken = process.env.KHRONOS_PAT || process.env.GITHUB_TOKEN
 	const headers = {
@@ -90,7 +108,19 @@ async function main() {
 	const localOk = await tryLocalSpec()
 	if (localOk) return
 
-	await fetchRemoteSpec()
+	try {
+		await fetchRemoteSpec()
+	} catch (error) {
+		const fallbackOk = await tryRepoFallbackSpec()
+		if (fallbackOk) {
+			console.warn(
+				`Remote Khronos spec fetch failed, using repo fallback instead: ${error.message}`,
+			)
+			return
+		}
+
+		throw error
+	}
 }
 
 main().catch((error) => {
