@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.3.2](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.3.1...v4.3.2) (2026-03-26)
+
+
+### Bug Fixes
+
+* **ci:** authenticate Khronos OpenAPI spec fetch ([8920048](https://github.com/fearandesire/Pluto-Betting-Bot/commit/89200487c7d25b1c9713806c434d73960cd9076f))
+* **ci:** pass Khronos spec token into Docker build ([faea893](https://github.com/fearandesire/Pluto-Betting-Bot/commit/faea8939c4ddd9c483953ba373e63150ba23a566))
+
 ## [4.3.1](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.3.0...v4.3.1) (2026-02-06)
 
 
