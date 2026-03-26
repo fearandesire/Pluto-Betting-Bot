@@ -25,7 +25,7 @@ COPY package.json pnpm-lock.yaml ./
 # Install dependencies
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
-# Copy the rest of the files including the downloaded spec
+# Copy project sources and scripts
 COPY . .
 
 # Generate OpenAPI code

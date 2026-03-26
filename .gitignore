@@ -70,6 +70,7 @@ assets.zip
 # More IDE Settings
 .idea/
 src/openapi/**/*
+generated/spec/**/*
 assets/**/*
 Writerside/**/*
 

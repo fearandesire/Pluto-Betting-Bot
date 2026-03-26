@@ -198,7 +198,7 @@ pnpm watch
 # Run linter
 pnpm lint
 
-# Generate API client from OpenAPI spec
+# Generate API client from Khronos canonical OpenAPI spec
 pnpm ci-gen-api
 
 # Create a new release

@@ -3,8 +3,6 @@ services:
     image: ghcr.io/fearandesire/pluto-betting-bot:latest
     build:
       context: .
-    volumes:
-    - ./spec/khronos-swagger-spec-v1.json:/app/spec/khronos-swagger-spec-v1.json
     ports:
       - 2090:2090
     networks:
