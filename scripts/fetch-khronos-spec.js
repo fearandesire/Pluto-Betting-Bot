@@ -21,6 +21,11 @@ const LOCAL_SPEC_PATH = path.resolve(
 	'khronos',
 	CANONICAL_SPEC_RELATIVE_PATH,
 )
+const REPO_SPEC_PATH = path.resolve(
+	process.cwd(),
+	'spec',
+	'khronos-swagger-spec-v1.json',
+)
 
 const DEFAULT_KHRONOS_REPO = 'fearandesire/khronos'
 const KHRONOS_REPO = process.env.KHRONOS_SPEC_REPO || DEFAULT_KHRONOS_REPO
@@ -58,6 +63,19 @@ async function tryLocalSpec() {
 	}
 }
 
+async function tryRepoSpec() {
+	try {
+		await access(REPO_SPEC_PATH)
+		const repoSpec = await readFile(REPO_SPEC_PATH, 'utf8')
+		if (!repoSpec.trim()) return false
+
+		await writeSpec(repoSpec, REPO_SPEC_PATH)
+		return true
+	} catch {
+		return false
+	}
+}
+
 async function fetchRemoteSpec() {
 	const githubToken = process.env.KHRONOS_PAT || process.env.GITHUB_TOKEN
 	const headers = {
@@ -89,6 +107,9 @@ async function fetchRemoteSpec() {
 async function main() {
 	const localOk = await tryLocalSpec()
 	if (localOk) return
+
+	const repoSpecOk = await tryRepoSpec()
+	if (repoSpecOk) return
 
 	await fetchRemoteSpec()
 }

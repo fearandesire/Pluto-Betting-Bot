@@ -88,15 +88,9 @@ jobs:
 
       - name: Generate OpenAPI client
         run: pnpm ci-gen-api
-        env:
-          # Cross-repo spec fetch needs an explicit token when Khronos is private.
-          # Create a fine-grained PAT with "Contents: Read" for fearandesire/khronos
-          # and store it in Pluto repo secrets as KHRONOS_SPEC_TOKEN.
-          KHRONOS_PAT: ${{ secrets.KHRONOS_SPEC_TOKEN }}
-          # Optional overrides (GitHub Actions variables)
-          KHRONOS_SPEC_URL: ${{ vars.KHRONOS_SPEC_URL }}
-          KHRONOS_SPEC_REPO: ${{ vars.KHRONOS_SPEC_REPO }}
-          KHRONOS_SPEC_REF: ${{ vars.KHRONOS_SPEC_REF }}
+
+      - name: Verify generated OpenAPI client is committed
+        run: git diff --exit-code -- src/openapi/khronos
 
       - name: Build
         run: pnpm build
@@ -221,8 +215,6 @@ jobs:
           cache-to: type=gha,mode=max
           provenance: true
           sbom: true
-          secrets: |
-            khronos_pat=${{ secrets.KHRONOS_SPEC_TOKEN }}
 
       - name: Create deployment summary
         run: |

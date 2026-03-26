@@ -12,27 +12,6 @@ RUN apt-get update && apt-get install -y apt-transport-https ca-certificates cur
     apt-get -y install doppler
 
 
-# OpenAPI generation stage
-FROM base AS openapi-generator
-WORKDIR /app
-
-# Install OpenJDK for OpenAPI generator
-RUN apt-get update && apt-get install -y openjdk-17-jdk
-
-# Copy package.json and pnpm-lock.yaml
-COPY package.json pnpm-lock.yaml ./
-
-# Install dependencies
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
-
-# Copy project sources and scripts
-COPY . .
-
-# Generate OpenAPI code (token injected via BuildKit secret, never persisted in layer)
-RUN --mount=type=secret,id=khronos_pat \
-    KHRONOS_PAT=$(cat /run/secrets/khronos_pat 2>/dev/null || true) \
-    pnpm ci-gen-api
-
 # Build stage
 # ? Uses data compiled from the base stage
 FROM base AS builder
@@ -46,7 +25,6 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --force
 
 # Copy the rest of the files and generated OpenAPI code
 COPY . .
-COPY --from=openapi-generator /app/src/openapi ./src/openapi
 
 # Build the application
 RUN pnpm build
