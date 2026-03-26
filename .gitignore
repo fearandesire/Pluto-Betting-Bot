@@ -78,6 +78,9 @@ src/utils/bot_res/img-pup.ts
 
 .cursor
 
+# Local Cursor/agent memory (do not commit)
+AGENTS.md
+
 .cursorignore
 
 docs/internal
