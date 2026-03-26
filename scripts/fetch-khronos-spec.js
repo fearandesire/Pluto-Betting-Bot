@@ -15,6 +15,11 @@ const OUTPUT_FILE_PATH = path.resolve(
 	'spec',
 	'khronos-swagger-spec-v1.json',
 )
+const BUNDLED_SPEC_PATH = path.resolve(
+	process.cwd(),
+	'spec',
+	'khronos-swagger-spec-v1.json',
+)
 const LOCAL_SPEC_PATH = path.resolve(
 	process.cwd(),
 	'..',
@@ -36,17 +41,25 @@ async function writeSpec(content, source) {
 	console.log(`Output: ${OUTPUT_FILE_PATH}`)
 }
 
-async function tryLocalSpec() {
+async function trySpecFile(specPath) {
 	try {
-		await access(LOCAL_SPEC_PATH)
-		const localSpec = await readFile(LOCAL_SPEC_PATH, 'utf8')
-		if (!localSpec.trim()) return false
+		await access(specPath)
+		const specContent = await readFile(specPath, 'utf8')
+		if (!specContent.trim()) return false
 
-		await writeSpec(localSpec, LOCAL_SPEC_PATH)
+		await writeSpec(specContent, specPath)
 		return true
 	} catch {
 		return false
 	}
+}
+
+async function tryLocalSpec() {
+	return trySpecFile(LOCAL_SPEC_PATH)
+}
+
+async function tryBundledSpec() {
+	return trySpecFile(BUNDLED_SPEC_PATH)
 }
 
 async function fetchRemoteSpec() {
@@ -74,7 +87,22 @@ async function main() {
 	const localOk = await tryLocalSpec()
 	if (localOk) return
 
-	await fetchRemoteSpec()
+	try {
+		await fetchRemoteSpec()
+		return
+	} catch (error) {
+		console.warn(
+			`Unable to fetch canonical Khronos spec from ${REMOTE_SPEC_URL}; falling back to bundled snapshot.`,
+		)
+		console.warn(error)
+	}
+
+	const bundledOk = await tryBundledSpec()
+	if (bundledOk) return
+
+	throw new Error(
+		`Unable to materialize Khronos spec from canonical source or bundled snapshot.`,
+	)
 }
 
 main().catch((error) => {
