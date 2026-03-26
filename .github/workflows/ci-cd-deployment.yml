@@ -221,6 +221,8 @@ jobs:
           cache-to: type=gha,mode=max
           provenance: true
           sbom: true
+          secrets: |
+            khronos_pat=${{ secrets.KHRONOS_SPEC_TOKEN }}
 
       - name: Create deployment summary
         run: |
