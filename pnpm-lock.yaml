@@ -16,7 +16,7 @@ importers:
         version: 6.20.6(@bull-board/ui@6.20.6)
       '@bull-board/koa':
         specifier: ^6.16.4
-        version: 6.16.4(@babel/core@7.28.4)(@types/koa@3.0.1)(handlebars@4.7.8)(lodash@4.17.23)
+        version: 6.16.4(@babel/core@7.28.4)(@types/koa@3.0.1)(handlebars@4.7.9)(lodash@4.17.23)
       '@bull-board/ui':
         specifier: ^6.17.0
         version: 6.20.6
@@ -3129,6 +3129,9 @@ packages:
   brace-expansion@2.0.2:
     resolution: {integrity: sha512-Jt0vHyM+jmUBqojB7E1NIYadt0vI0Qxjxd2TErW94wDz+E2LAm5vKMXXwg6ZZBTHPuUlDgQHKXvjGBdfcF1ZDQ==}
 
+  brace-expansion@2.0.3:
+    resolution: {integrity: sha512-MCV/fYJEbqx68aE58kv2cA/kiky1G8vux3OR6/jbS+jIMe/6fJWa0DTzJU7dqijOWYwHi1t29FlfYI9uytqlpA==}
+
   brace-expansion@5.0.5:
     resolution: {integrity: sha512-VZznLgtwhn+Mact9tfiwx64fA9erHH/MCXEUfB/0bX/6Fz6ny5EGTXYltMocqg4xFAQZtnO3DHWWXi8RiuN7cQ==}
     engines: {node: 18 || 20 || >=22}
@@ -4339,8 +4342,8 @@ packages:
   graphemer@1.4.0:
     resolution: {integrity: sha512-EtKwoO6kxCL9WO5xipiHTZlSzBm7WLT627TqC/uVRd0HKmq8NXyebnNYxDoBi7wt8eTWrUrKXCOVaFq9x1kgag==}
 
-  handlebars@4.7.8:
-    resolution: {integrity: sha512-vafaFqs8MZkRrSX7sFVUdo3ap/eNiLnb4IakshzvP56X5Nr1iGKAIqdX6tMlm6HcNRIkr6AxO5jFEoJzzpT8aQ==}
+  handlebars@4.7.9:
+    resolution: {integrity: sha512-4E71E0rpOaQuJR2A3xDZ+GM1HyWYv1clR58tC8emQNeQe3RH7MAzSbat+V0wG78LQBo6m6bzSG/L4pBuCsgnUQ==}
     engines: {node: '>=0.4.7'}
     hasBin: true
 
@@ -7528,12 +7531,12 @@ snapshots:
       '@bull-board/ui': 6.20.6
       redis-info: 3.1.0
 
-  '@bull-board/koa@6.16.4(@babel/core@7.28.4)(@types/koa@3.0.1)(handlebars@4.7.8)(lodash@4.17.23)':
+  '@bull-board/koa@6.16.4(@babel/core@7.28.4)(@types/koa@3.0.1)(handlebars@4.7.9)(lodash@4.17.23)':
     dependencies:
       '@bull-board/api': 6.16.4(@bull-board/ui@6.16.4)
       '@bull-board/ui': 6.16.4
       '@koa/bodyparser': 6.1.0(koa@3.1.2)
-      '@ladjs/koa-views': 9.0.0(@babel/core@7.28.4)(@types/koa@3.0.1)(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.23)
+      '@ladjs/koa-views': 9.0.0(@babel/core@7.28.4)(@types/koa@3.0.1)(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.17.23)
       ejs: 3.1.10
       koa: 3.1.2
       koa-mount: 4.2.0
@@ -8429,16 +8432,16 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@ladjs/consolidate@1.0.4(@babel/core@7.28.4)(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.23)':
+  '@ladjs/consolidate@1.0.4(@babel/core@7.28.4)(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.17.23)':
     optionalDependencies:
       '@babel/core': 7.28.4
       ejs: 3.1.10
-      handlebars: 4.7.8
+      handlebars: 4.7.9
       lodash: 4.17.23
 
-  '@ladjs/koa-views@9.0.0(@babel/core@7.28.4)(@types/koa@3.0.1)(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.23)':
+  '@ladjs/koa-views@9.0.0(@babel/core@7.28.4)(@types/koa@3.0.1)(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.17.23)':
     dependencies:
-      '@ladjs/consolidate': 1.0.4(@babel/core@7.28.4)(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.23)
+      '@ladjs/consolidate': 1.0.4(@babel/core@7.28.4)(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.17.23)
       debug: 4.4.3(supports-color@8.1.1)
       get-paths: 0.0.7
       koa-send: 5.0.1
@@ -10130,6 +10133,10 @@ snapshots:
     dependencies:
       balanced-match: 1.0.2
 
+  brace-expansion@2.0.3:
+    dependencies:
+      balanced-match: 1.0.2
+
   brace-expansion@5.0.5:
     dependencies:
       balanced-match: 4.0.4
@@ -11531,7 +11538,7 @@ snapshots:
 
   graphemer@1.4.0: {}
 
-  handlebars@4.7.8:
+  handlebars@4.7.9:
     dependencies:
       minimist: 1.2.8
       neo-async: 2.6.2
@@ -12763,7 +12770,7 @@ snapshots:
 
   minimatch@9.0.3:
     dependencies:
-      brace-expansion: 2.0.2
+      brace-expansion: 2.0.3
 
   minimatch@9.0.9:
     dependencies:
@@ -14303,7 +14310,7 @@ snapshots:
     dependencies:
       bs-logger: 0.2.6
       fast-json-stable-stringify: 2.1.0
-      handlebars: 4.7.8
+      handlebars: 4.7.9
       jest: 30.2.0(@types/node@25.2.0)(ts-node@11.0.0-beta.1(@swc/core@1.15.11)(@types/node@25.2.0)(typescript@5.9.3))
       json5: 2.2.3
       lodash.memoize: 4.1.2
