@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@axiomhq/winston':
-        specifier: ^1.4.0
-        version: 1.4.0
+        specifier: ^1.5.0
+        version: 1.5.0
       '@bull-board/api':
         specifier: ^6.17.0
         version: 6.20.6(@bull-board/ui@6.20.6)
@@ -339,12 +339,12 @@ importers:
 
 packages:
 
-  '@axiomhq/js@1.4.0':
-    resolution: {integrity: sha512-wC5x1ud/QJMstrjpicATkyY8+ZVWEl4WlXMtA5EZf7hkj0+b191yv4yynLxLEfr/MveXora9m6CWdJq4DsbcAg==}
+  '@axiomhq/js@1.5.0':
+    resolution: {integrity: sha512-7SkfgnrKpjRs86h4TIcoZQ1TltKG0+WcQtMkBa5N3iSuGT5+aIpnbLFrRfbfhwhxzysQkF01qNW4fNUtePqjDg==}
     engines: {node: '>=20'}
 
-  '@axiomhq/winston@1.4.0':
-    resolution: {integrity: sha512-fVHwkWROOOyCuzVSXanMMkw5EVYwwKMal7zk87l6R9Zn69RBvIWVIFC8iSYM9Ea3Cg7t1sJHaDdeKvO9O4NXUw==}
+  '@axiomhq/winston@1.5.0':
+    resolution: {integrity: sha512-yriWaitAgHztvr97xwYTFRYyPCZ7Hg5E0T0v+mbw+Z+wAJLAD1MK1JwwCNEnym0Zvx7+M7Qy/VdE374o8zCtjg==}
     engines: {node: '>=20'}
 
   '@babel/code-frame@7.27.1':
@@ -7275,13 +7275,13 @@ packages:
 
 snapshots:
 
-  '@axiomhq/js@1.4.0':
+  '@axiomhq/js@1.5.0':
     dependencies:
       fetch-retry: 6.0.0
 
-  '@axiomhq/winston@1.4.0':
+  '@axiomhq/winston@1.5.0':
     dependencies:
-      '@axiomhq/js': 1.4.0
+      '@axiomhq/js': 1.5.0
       winston-transport: 4.9.0
 
   '@babel/code-frame@7.27.1':
