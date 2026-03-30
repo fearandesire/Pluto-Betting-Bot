@@ -79,7 +79,7 @@
 		"cross-env": "^10.1.0",
 		"date-fns": "^4.1.0",
 		"date-fns-tz": "^3.2.0",
-		"discord-api-types": "^0.38.38",
+		"discord-api-types": "^0.38.43",
 		"discord.js": "^14.25.1",
 		"dotenv": "17.2.4",
 		"dotenv-vault": "1.27.0",
