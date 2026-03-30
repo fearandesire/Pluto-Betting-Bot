@@ -123,7 +123,7 @@
 		"@sapphire/prettier-config": "^2.0.0",
 		"@sapphire/ts-config": "^5.0.3",
 		"@swc/cli": "^0.8.0",
-		"@swc/core": "^1.15.11",
+		"@swc/core": "^1.15.21",
 		"@types/color": "^4.2.1",
 		"@types/jest": "^30.0.0",
 		"@types/koa": "^3.0.1",
