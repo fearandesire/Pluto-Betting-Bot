@@ -43,7 +43,7 @@
 		"#lib/*": "./dist/lib/*"
 	},
 	"dependencies": {
-		"@axiomhq/winston": "^1.5.0",
+		"@axiomhq/winston": "^1.6.0",
 		"@bull-board/api": "^6.17.0",
 		"@bull-board/koa": "^6.20.6",
 		"@bull-board/ui": "^6.17.0",
