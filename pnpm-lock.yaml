@@ -223,8 +223,8 @@ importers:
         specifier: 2.4.10
         version: 2.4.10
       '@biomejs/cli-win32-x64':
-        specifier: ^2.3.14
-        version: 2.4.9
+        specifier: ^2.4.10
+        version: 2.4.10
       '@commitlint/cli':
         specifier: ^20.5.0
         version: 20.5.0(@types/node@25.5.2)(conventional-commits-parser@6.4.0)(typescript@5.9.3)
@@ -565,12 +565,6 @@ packages:
 
   '@biomejs/cli-win32-x64@2.4.10':
     resolution: {integrity: sha512-aW/JU5GuyH4uxMrNYpoC2kjaHlyJGLgIa3XkhPEZI0uKhZhJZU8BuEyJmvgzSPQNGozBwWjC972RaNdcJ9KyJg==}
-    engines: {node: '>=14.21.3'}
-    cpu: [x64]
-    os: [win32]
-
-  '@biomejs/cli-win32-x64@2.4.9':
-    resolution: {integrity: sha512-NS4g/2G9SoQ4ktKtz31pvyc/rmgzlcIDCGU/zWbmHJAqx6gcRj2gj5Q/guXhoWTzCUaQZDIqiCQXHS7BcGYc0w==}
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [win32]
@@ -7592,10 +7586,7 @@ snapshots:
   '@biomejs/cli-win32-arm64@2.4.10':
     optional: true
 
-  '@biomejs/cli-win32-x64@2.4.10':
-    optional: true
-
-  '@biomejs/cli-win32-x64@2.4.9': {}
+  '@biomejs/cli-win32-x64@2.4.10': {}
 
   '@borewit/text-codec@0.2.1': {}
 
