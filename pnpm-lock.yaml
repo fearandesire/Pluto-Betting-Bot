@@ -15,8 +15,8 @@ importers:
         specifier: ^6.17.0
         version: 6.20.6(@bull-board/ui@6.20.6)
       '@bull-board/koa':
-        specifier: ^6.20.6
-        version: 6.20.6(@babel/core@7.29.0)(@types/koa@3.0.2)(handlebars@4.7.9)(lodash@4.18.1)
+        specifier: ^6.21.2
+        version: 6.21.2(@babel/core@7.29.0)(@types/koa@3.0.2)(handlebars@4.7.9)(lodash@4.18.1)
       '@bull-board/ui':
         specifier: ^6.17.0
         version: 6.20.6
@@ -577,11 +577,19 @@ packages:
     peerDependencies:
       '@bull-board/ui': 6.20.6
 
-  '@bull-board/koa@6.20.6':
-    resolution: {integrity: sha512-Hv6mMKi2hSyNBWKsDDk0eWA2fo9pXbgn5iU7zUWB6rNTMdMZcKu+gpJieUqC+hT40J3o9WTQ/+z5sld6u4jXGQ==}
+  '@bull-board/api@6.21.2':
+    resolution: {integrity: sha512-QmwZ9rQp1EToWXtNmjdvA/0wjrzfslfJz9v8zBBn9LAi+4jO2qkljJMspHNj8Vo7ZlfNCbFhHkCLMPZjkNPCiA==}
+    peerDependencies:
+      '@bull-board/ui': 6.21.2
+
+  '@bull-board/koa@6.21.2':
+    resolution: {integrity: sha512-h4iS6Optgv8RBcxj5+LQIcJ7Z0HWDA27P+Zq8+JPVEBr1VZE8ypVus4SffQOJKCFm48xbJwAIqRm141QIb5hJA==}
 
   '@bull-board/ui@6.20.6':
     resolution: {integrity: sha512-nEXRgMHHd48ssINgvDqT7b4p/+57XRf3CUcTGQ7UIJb4F7n/kRRj8+ZQvQmMFsYGdNmbNU2eNheQ05vXSYiqdQ==}
+
+  '@bull-board/ui@6.21.2':
+    resolution: {integrity: sha512-QNzJmyRiCAr8proFwLV2oAFZIBFVofzPgpUm4W9YA4RX7DhwjqwVV8CP6+BDGLvHyApAN30YacEe40+FFaV0ZA==}
 
   '@colors/colors@1.6.0':
     resolution: {integrity: sha512-Ir+AOibqzrIsL6ajt3Rz3LskB7OiMVHqltZmspbW/TJuTVuyOMirVqAkjfY6JISiLHgyNqicAC8AyHHGzNd/dA==}
@@ -3136,6 +3144,9 @@ packages:
   brace-expansion@2.0.3:
     resolution: {integrity: sha512-MCV/fYJEbqx68aE58kv2cA/kiky1G8vux3OR6/jbS+jIMe/6fJWa0DTzJU7dqijOWYwHi1t29FlfYI9uytqlpA==}
 
+  brace-expansion@2.1.0:
+    resolution: {integrity: sha512-TN1kCZAgdgweJhWWpgKYrQaMNHcDULHkWwQIspdtjV4Y5aurRdZpjAqn6yX3FPqTA9ngHCc4hJxMAMgGfve85w==}
+
   brace-expansion@5.0.5:
     resolution: {integrity: sha512-VZznLgtwhn+Mact9tfiwx64fA9erHH/MCXEUfB/0bX/6Fz6ny5EGTXYltMocqg4xFAQZtnO3DHWWXi8RiuN7cQ==}
     engines: {node: 18 || 20 || >=22}
@@ -3791,6 +3802,11 @@ packages:
   ejs@3.1.10:
     resolution: {integrity: sha512-UeJmFfOrAQS8OJWPZ4qtgHyWExa088/MtK5UEyoJGFH67cDEXkZSviOiKRCZ4Xij0zxI3JECgYs3oKx+AizQBA==}
     engines: {node: '>=0.10.0'}
+    hasBin: true
+
+  ejs@5.0.2:
+    resolution: {integrity: sha512-IpbUaI/CAW86l3f+T8zN0iggSc0LmMZLcIW5eRVStLVNCoTXkE0YlncbbH50fp8Cl6zHIky0sW2uUbhBqGw0Jw==}
+    engines: {node: '>=0.12.18'}
     hasBin: true
 
   electron-to-chromium@1.5.328:
@@ -5034,11 +5050,6 @@ packages:
   koa-mount@4.2.0:
     resolution: {integrity: sha512-2iHQc7vbA9qLeVq5gKAYh3m5DOMMlMfIKjW/REPAS18Mf63daCJHHVXY9nbu7ivrnYn5PiPC4CE523Tf5qvjeQ==}
     engines: {node: '>= 7.6.0'}
-
-  koa-router@14.0.0:
-    resolution: {integrity: sha512-Ue8f/PRsLLNm6b7y+eS6xkqvsG2xH11d2VB1HPcfdfW6p5736kCHf2pXaq8q9XPQ01x0Dk7V/P5Il9pe+tGTxA==}
-    engines: {node: '>= 20'}
-    deprecated: 'Please use @koa/router instead, starting from v9! '
 
   koa-send@5.0.1:
     resolution: {integrity: sha512-tmcyQ/wXXuxpDxyNXv5yNNkdAMdFRqwtegBXUaowiQzUKqJehttS0x2j0eOZDQAyloAth5w6wwBImnFzkUz3pQ==}
@@ -7456,16 +7467,21 @@ snapshots:
       '@bull-board/ui': 6.20.6
       redis-info: 3.1.0
 
-  '@bull-board/koa@6.20.6(@babel/core@7.29.0)(@types/koa@3.0.2)(handlebars@4.7.9)(lodash@4.18.1)':
+  '@bull-board/api@6.21.2(@bull-board/ui@6.21.2)':
     dependencies:
-      '@bull-board/api': 6.20.6(@bull-board/ui@6.20.6)
-      '@bull-board/ui': 6.20.6
+      '@bull-board/ui': 6.21.2
+      redis-info: 3.1.0
+
+  '@bull-board/koa@6.21.2(@babel/core@7.29.0)(@types/koa@3.0.2)(handlebars@4.7.9)(lodash@4.18.1)':
+    dependencies:
+      '@bull-board/api': 6.21.2(@bull-board/ui@6.21.2)
+      '@bull-board/ui': 6.21.2
       '@koa/bodyparser': 6.1.0(koa@3.2.0)
-      '@ladjs/koa-views': 9.0.0(@babel/core@7.29.0)(@types/koa@3.0.2)(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)
-      ejs: 3.1.10
+      '@koa/router': 15.4.0(koa@3.2.0)
+      '@ladjs/koa-views': 9.0.0(@babel/core@7.29.0)(@types/koa@3.0.2)(ejs@5.0.2)(handlebars@4.7.9)(lodash@4.18.1)
+      ejs: 5.0.2
       koa: 3.2.0
       koa-mount: 4.2.0
-      koa-router: 14.0.0
       koa-static: 5.0.0
     transitivePeerDependencies:
       - '@babel/core'
@@ -7521,6 +7537,10 @@ snapshots:
   '@bull-board/ui@6.20.6':
     dependencies:
       '@bull-board/api': 6.20.6(@bull-board/ui@6.20.6)
+
+  '@bull-board/ui@6.21.2':
+    dependencies:
+      '@bull-board/api': 6.21.2(@bull-board/ui@6.21.2)
 
   '@colors/colors@1.6.0': {}
 
@@ -8358,16 +8378,16 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@ladjs/consolidate@1.0.4(@babel/core@7.29.0)(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)':
+  '@ladjs/consolidate@1.0.4(@babel/core@7.29.0)(ejs@5.0.2)(handlebars@4.7.9)(lodash@4.18.1)':
     optionalDependencies:
       '@babel/core': 7.29.0
-      ejs: 3.1.10
+      ejs: 5.0.2
       handlebars: 4.7.9
       lodash: 4.18.1
 
-  '@ladjs/koa-views@9.0.0(@babel/core@7.29.0)(@types/koa@3.0.2)(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)':
+  '@ladjs/koa-views@9.0.0(@babel/core@7.29.0)(@types/koa@3.0.2)(ejs@5.0.2)(handlebars@4.7.9)(lodash@4.18.1)':
     dependencies:
-      '@ladjs/consolidate': 1.0.4(@babel/core@7.29.0)(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)
+      '@ladjs/consolidate': 1.0.4(@babel/core@7.29.0)(ejs@5.0.2)(handlebars@4.7.9)(lodash@4.18.1)
       debug: 4.4.3(supports-color@8.1.1)
       get-paths: 0.0.7
       koa-send: 5.0.1
@@ -10056,6 +10076,10 @@ snapshots:
     dependencies:
       balanced-match: 1.0.2
 
+  brace-expansion@2.1.0:
+    dependencies:
+      balanced-match: 1.0.2
+
   brace-expansion@5.0.5:
     dependencies:
       balanced-match: 4.0.4
@@ -10709,6 +10733,8 @@ snapshots:
   ejs@3.1.10:
     dependencies:
       jake: 10.9.4
+
+  ejs@5.0.2: {}
 
   electron-to-chromium@1.5.328: {}
 
@@ -12348,15 +12374,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  koa-router@14.0.0:
-    dependencies:
-      debug: 4.4.3(supports-color@8.1.1)
-      http-errors: 2.0.1
-      koa-compose: 4.1.0
-      path-to-regexp: 8.4.0
-    transitivePeerDependencies:
-      - supports-color
-
   koa-send@5.0.1:
     dependencies:
       debug: 4.4.3(supports-color@8.1.1)
@@ -12643,7 +12660,7 @@ snapshots:
 
   minimatch@9.0.3:
     dependencies:
-      brace-expansion: 2.0.3
+      brace-expansion: 2.1.0
 
   minimatch@9.0.9:
     dependencies:
