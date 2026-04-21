@@ -1,0 +1,1435 @@
+{
+    "schemes": [
+        "http",
+        "https"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "Sports data and odds collection microservice. Goracle is the single source of truth for sports events, betting odds, and outcome results.",
+        "title": "Goracle API",
+        "contact": {
+            "name": "fenix"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        },
+        "version": "1.0.0"
+    },
+    "host": "localhost:4036",
+    "basePath": "/api/goracle",
+    "paths": {
+        "/api/v1/collect": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Trigger manual odds collection for a specific sport (nba or nfl)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "collection"
+                ],
+                "summary": "Collect odds for a sport",
+                "operationId": "collectOdds",
+                "parameters": [
+                    {
+                        "enum": [
+                            "nba",
+                            "nfl"
+                        ],
+                        "type": "string",
+                        "description": "Sport key",
+                        "name": "sport",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Force collection bypassing freshness checks",
+                        "name": "force",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/http.CollectOddsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/http.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/collect/all": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Trigger manual odds collection for all supported sports",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "collection"
+                ],
+                "summary": "Collect odds for all sports",
+                "operationId": "collectAllOdds",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "Force collection bypassing freshness checks",
+                        "name": "force",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/http.CollectAllOddsResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/events/{eventId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Returns event with full details including all markets and outcomes. Use market query parameter to filter to specific market types (e.g., market=h2h for head-to-head only, market=spreads,totals for multiple markets). Defaults to H2H-only market filtering when no market parameter is provided. Completed events include computed winner field. H2H odds (home_team_odds and away_team_odds) are included when available in American odds format (e.g., -192 for favorites, +160 for underdogs). Odds fields are omitted from the response when unavailable.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "matches"
+                ],
+                "summary": "Get match details",
+                "operationId": "getMatchDetails",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Event ID",
+                        "name": "eventId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Market filter (e.g., 'h2h', 'spreads', 'totals', or comma-separated 'spreads,totals'). Defaults to 'h2h' if not provided.",
+                        "name": "market",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/http.EventDetail"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/http.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/events/{eventId}/manual-settle": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Manually settle an event with final scores for all H2H markets",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "events"
+                ],
+                "summary": "Manually settle an event",
+                "operationId": "manualSettleEvent",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Event ID",
+                        "name": "eventId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Settlement request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.ManualSettleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/http.ManualSettleEventResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/http.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/http.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/events/{eventId}/resolve-stale": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Trigger one-time API call to resolve a stale event by ID (NO RETRIES)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "events"
+                ],
+                "summary": "Manually resolve stale event",
+                "operationId": "resolveStaleEvent",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Event ID",
+                        "name": "eventId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/http.ResolveStaleEventResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/http.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/http.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/http.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/matches/{sport}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Returns matches within a specified time window with flexible sport matching and timezone handling. H2H odds are included at the top level when available.\n\n**Sport Matching (Flexible \u0026 Case-Insensitive):**\n- Accepts multiple formats: \"nba\", \"NBA\", \"basketball_nba\" all match NBA games\n- Accepts multiple formats: \"nfl\", \"NFL\", \"americanfootball_nfl\" all match NFL games\n- Matches against both sport_title and sport_key fields (case-insensitive)\n- Input is normalized (lowercase, trimmed whitespace) before matching\n\n**H2H Odds (Included When Available):**\n- home_team_odds and away_team_odds are included in each match when available\n- Odds use American odds format (e.g., -192 for favorites, +160 for underdogs)\n- Odds fields are omitted from the response when unavailable (e.g., event not yet published, market suspended)\n- Example: {\"home_team_odds\": -192, \"away_team_odds\": 160} or fields omitted entirely when unavailable\n\n**Timezone Handling (ISO 8601 Format):**\n- Input timestamps must be in ISO 8601 format (e.g., 2025-11-04T03:10:00Z)\n- Timestamps without timezone indicator are assumed to be UTC\n- Timestamps with timezone offset are converted to UTC (e.g., 2025-11-04T03:10:00-05:00)\n- Output timestamps are always returned in ISO 8601 format with UTC indicator (Z)\n- Example formats: \"2025-11-04T03:10:00Z\", \"2025-11-04T03:10:00.000Z\", \"2025-11-04T03:10:00-05:00\"\n\n**Performance \u0026 Limits:**\n- Maximum 1000 matches returned per request to prevent memory issues\n- Results ordered by commence_time ascending\n- Typical response time: \u003c 500ms for 1-hour to 7-day windows\n\n**Error Responses:**\n- 400 Bad Request: Missing required parameters (sport, from, to)\n- 400 Bad Request: Invalid ISO 8601 timestamp format\n- 400 Bad Request: 'from' timestamp is after 'to' timestamp\n- 500 Internal Server Error: Database or system errors",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "matches"
+                ],
+                "summary": "Get matches for a sport",
+                "operationId": "getMatches",
+                "parameters": [
+                    {
+                        "enum": [
+                            "basketball_nba",
+                            "americanfootball_nfl",
+                            "nba",
+                            "nfl"
+                        ],
+                        "type": "string",
+                        "description": "Sport key (case-insensitive, matches sport_title or sport_key). Examples: 'nba', 'NBA', 'basketball_nba', 'nfl', 'NFL', 'americanfootball_nfl'",
+                        "name": "sport",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start of time window in ISO 8601 format. UTC assumed if no timezone. Examples: '2025-11-04T03:10:00Z', '2025-11-04T03:10:00-05:00'. Defaults to now.",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End of time window in ISO 8601 format. UTC assumed if no timezone. Examples: '2025-11-04T04:10:00Z', '2025-11-04T04:10:00+00:00'. Defaults to 7 days from now.",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/http.GetMatchesResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid parameters: missing required fields, invalid timestamp format, or invalid time range",
+                        "schema": {
+                            "$ref": "#/definitions/http.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error: database or system failure",
+                        "schema": {
+                            "$ref": "#/definitions/http.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/matches/{sport}/bulk": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Returns multiple events with simplified details for efficient bulk queries (max 50)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "matches"
+                ],
+                "summary": "Get multiple match details",
+                "operationId": "getMultipleMatchDetails",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Sport key",
+                        "name": "sport",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma-separated event IDs",
+                        "name": "ids",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/http.GetMultipleMatchDetailsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/http.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/outcomes/event/{eventId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Returns all outcomes for a given event across all markets and bookmakers",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "outcomes"
+                ],
+                "summary": "Get outcomes by event",
+                "operationId": "getOutcomesByEvent",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Event ID",
+                        "name": "eventId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/http.GetOutcomesByEventResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/http.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/outcomes/{uuid}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Returns a single outcome by UUID - used by Khronos to validate predictions",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "outcomes"
+                ],
+                "summary": "Get outcome by UUID",
+                "operationId": "getOutcomeByUUID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Outcome UUID",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/http.OutcomeDetailResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/http.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/outcomes/{uuid}/settle": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Manually settles an outcome - used primarily for player props",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "outcomes"
+                ],
+                "summary": "Manually settle an outcome",
+                "operationId": "settleOutcome",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Outcome UUID",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Settlement request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.SettleOutcomeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/http.SettleOutcomeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/http.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/http.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/props/available": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Returns ALL available outcomes (no limit, no random) for caching purposes",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "props"
+                ],
+                "summary": "Get all available props",
+                "operationId": "getAvailableProps",
+                "parameters": [
+                    {
+                        "enum": [
+                            "nba",
+                            "nfl"
+                        ],
+                        "type": "string",
+                        "description": "Sport key",
+                        "name": "sport",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start date (ISO 8601)",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date (ISO 8601)",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/http.GetAvailablePropsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/http.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/http.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/props/random": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Returns all flat, denormalized outcome data for Khronos processing",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "props"
+                ],
+                "summary": "Get all random props",
+                "operationId": "getRandomProps",
+                "parameters": [
+                    {
+                        "enum": [
+                            "nba",
+                            "nfl"
+                        ],
+                        "type": "string",
+                        "description": "Sport key",
+                        "name": "sport",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start date (ISO 8601)",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date (ISO 8601)",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/http.GetRandomPropsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/http.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/http.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "description": "Check if the service is healthy",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Health check",
+                "operationId": "healthCheck",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/http.HealthCheckResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "domain.OutcomeType": {
+            "type": "string",
+            "enum": [
+                "OVER",
+                "UNDER",
+                "TEAM_HOME",
+                "TEAM_AWAY",
+                "YES",
+                "NO"
+            ],
+            "x-enum-comments": {
+                "OutcomeNo": "Future: binary props",
+                "OutcomeYes": "Future: binary props"
+            },
+            "x-enum-descriptions": [
+                "",
+                "",
+                "",
+                "",
+                "Future: binary props",
+                "Future: binary props"
+            ],
+            "x-enum-varnames": [
+                "OutcomeOver",
+                "OutcomeUnder",
+                "OutcomeTeamHome",
+                "OutcomeTeamAway",
+                "OutcomeYes",
+                "OutcomeNo"
+            ]
+        },
+        "http.BookmakerData": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string",
+                    "example": "draftkings"
+                },
+                "markets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/http.MarketData"
+                    }
+                }
+            }
+        },
+        "http.CollectAllOddsResponse": {
+            "type": "object",
+            "properties": {
+                "force": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Odds collection started for all sports"
+                },
+                "request_id": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "sports": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "nba",
+                        "nfl"
+                    ]
+                }
+            }
+        },
+        "http.CollectOddsResponse": {
+            "type": "object",
+            "properties": {
+                "force": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Odds collection started"
+                },
+                "request_id": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "sport": {
+                    "type": "string",
+                    "example": "basketball_nba"
+                }
+            }
+        },
+        "http.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "error description"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "http.EventContext": {
+            "type": "object",
+            "properties": {
+                "away_team": {
+                    "type": "string",
+                    "example": "Boston Celtics"
+                },
+                "commence_time": {
+                    "type": "string",
+                    "example": "2025-10-30T19:00:00Z"
+                },
+                "home_team": {
+                    "type": "string",
+                    "example": "Los Angeles Lakers"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "abc123event"
+                },
+                "sport": {
+                    "type": "string",
+                    "example": "basketball_nba"
+                },
+                "sport_title": {
+                    "type": "string",
+                    "example": "NBA"
+                }
+            }
+        },
+        "http.EventDetail": {
+            "type": "object",
+            "properties": {
+                "away_score": {
+                    "type": "integer",
+                    "example": 98
+                },
+                "away_team": {
+                    "type": "string",
+                    "example": "Boston Celtics"
+                },
+                "away_team_odds": {
+                    "type": "number",
+                    "example": 160
+                },
+                "bookmakers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/http.BookmakerData"
+                    }
+                },
+                "commence_time": {
+                    "type": "string",
+                    "example": "2025-10-30T19:00:00Z"
+                },
+                "home_score": {
+                    "type": "integer",
+                    "example": 105
+                },
+                "home_team": {
+                    "type": "string",
+                    "example": "Los Angeles Lakers"
+                },
+                "home_team_odds": {
+                    "type": "number",
+                    "example": -192
+                },
+                "id": {
+                    "type": "string",
+                    "example": "abc123event"
+                },
+                "sport": {
+                    "type": "string",
+                    "example": "basketball_nba"
+                },
+                "sport_title": {
+                    "type": "string",
+                    "example": "NBA"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "upcoming"
+                },
+                "winner": {
+                    "description": "Winner is the name of the winning team or \"Draw\" if scores are equal; populated when final scores are available",
+                    "type": "string",
+                    "example": "Los Angeles Lakers"
+                }
+            }
+        },
+        "http.GetAvailablePropsResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer",
+                    "example": 150
+                },
+                "from": {
+                    "type": "string",
+                    "example": "2025-10-28T00:00:00Z"
+                },
+                "props": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/http.RawPropResponse"
+                    }
+                },
+                "sport": {
+                    "type": "string",
+                    "example": "basketball_nba"
+                },
+                "to": {
+                    "type": "string",
+                    "example": "2025-11-04T00:00:00Z"
+                }
+            }
+        },
+        "http.GetMatchesResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "from": {
+                    "type": "string",
+                    "example": "2025-10-28T00:00:00Z"
+                },
+                "matches": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/http.MatchSummary"
+                    }
+                },
+                "sport": {
+                    "type": "string",
+                    "example": "basketball_nba"
+                },
+                "to": {
+                    "type": "string",
+                    "example": "2025-11-04T00:00:00Z"
+                }
+            }
+        },
+        "http.GetMultipleMatchDetailsResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "matches": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/http.EventDetail"
+                    }
+                },
+                "sport": {
+                    "type": "string",
+                    "example": "basketball_nba"
+                }
+            }
+        },
+        "http.GetOutcomesByEventResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer",
+                    "example": 25
+                },
+                "event_id": {
+                    "type": "string",
+                    "example": "abc123"
+                },
+                "outcomes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/http.OutcomeDetailResponse"
+                    }
+                }
+            }
+        },
+        "http.GetRandomPropsResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer",
+                    "example": 150
+                },
+                "from": {
+                    "type": "string",
+                    "example": "2025-10-28T00:00:00Z"
+                },
+                "props": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/http.RawPropResponse"
+                    }
+                },
+                "sport": {
+                    "type": "string",
+                    "example": "basketball_nba"
+                },
+                "to": {
+                    "type": "string",
+                    "example": "2025-11-04T00:00:00Z"
+                }
+            }
+        },
+        "http.HealthCheckResponse": {
+            "type": "object",
+            "properties": {
+                "service": {
+                    "type": "string",
+                    "example": "goracle"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "healthy"
+                }
+            }
+        },
+        "http.ManualSettleEventResponse": {
+            "type": "object",
+            "properties": {
+                "event_id": {
+                    "type": "string",
+                    "example": "abc123event"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Manual settlement process started"
+                }
+            }
+        },
+        "http.ManualSettleRequest": {
+            "type": "object",
+            "required": [
+                "away",
+                "home"
+            ],
+            "properties": {
+                "away": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 98
+                },
+                "home": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 105
+                }
+            }
+        },
+        "http.MarketData": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string",
+                    "example": "h2h"
+                },
+                "last_update": {
+                    "type": "string",
+                    "example": "2025-10-28T15:30:00Z"
+                },
+                "outcomes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/http.OutcomeData"
+                    }
+                },
+                "status": {
+                    "type": "string",
+                    "example": "active"
+                }
+            }
+        },
+        "http.MatchSummary": {
+            "type": "object",
+            "properties": {
+                "away_score": {
+                    "type": "integer",
+                    "example": 98
+                },
+                "away_team": {
+                    "type": "string",
+                    "example": "Boston Celtics"
+                },
+                "away_team_odds": {
+                    "type": "number",
+                    "example": 160
+                },
+                "commence_time": {
+                    "type": "string",
+                    "example": "2025-10-30T19:00:00Z"
+                },
+                "home_score": {
+                    "type": "integer",
+                    "example": 105
+                },
+                "home_team": {
+                    "type": "string",
+                    "example": "Los Angeles Lakers"
+                },
+                "home_team_odds": {
+                    "type": "number",
+                    "example": -192
+                },
+                "id": {
+                    "type": "string",
+                    "example": "abc123event"
+                },
+                "sport": {
+                    "type": "string",
+                    "example": "basketball_nba"
+                },
+                "sport_title": {
+                    "type": "string",
+                    "example": "NBA"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "upcoming"
+                }
+            }
+        },
+        "http.OutcomeData": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Moneyline"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Los Angeles Lakers"
+                },
+                "outcome_type": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.OutcomeType"
+                        }
+                    ],
+                    "example": "OVER"
+                },
+                "point": {
+                    "type": "number",
+                    "example": 5.5
+                },
+                "position": {
+                    "type": "string",
+                    "example": "home"
+                },
+                "price": {
+                    "type": "number",
+                    "example": 1.95
+                },
+                "result": {
+                    "type": "string",
+                    "example": "win"
+                },
+                "uuid": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                }
+            }
+        },
+        "http.OutcomeDetailRelatedOption": {
+            "type": "object",
+            "properties": {
+                "actual_value": {
+                    "type": "number",
+                    "example": 28
+                },
+                "completed_at": {
+                    "type": "string",
+                    "example": "2025-10-30T22:00:00Z"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "LeBron James Points"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Under"
+                },
+                "outcome_type": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.OutcomeType"
+                        }
+                    ],
+                    "example": "UNDER"
+                },
+                "point": {
+                    "type": "number",
+                    "example": 25.5
+                },
+                "position": {
+                    "type": "string",
+                    "example": "under"
+                },
+                "price": {
+                    "type": "number",
+                    "example": 1.95
+                },
+                "result": {
+                    "type": "string",
+                    "example": "loss"
+                },
+                "uuid": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440001"
+                }
+            }
+        },
+        "http.OutcomeDetailResponse": {
+            "type": "object",
+            "properties": {
+                "actual_value": {
+                    "type": "number",
+                    "example": 28
+                },
+                "bookmaker_key": {
+                    "type": "string",
+                    "example": "draftkings"
+                },
+                "completed_at": {
+                    "type": "string",
+                    "example": "2025-10-30T22:00:00Z"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "LeBron James Points"
+                },
+                "event_context": {
+                    "$ref": "#/definitions/http.EventContext"
+                },
+                "event_id": {
+                    "type": "string",
+                    "example": "abc123event"
+                },
+                "last_update": {
+                    "type": "string",
+                    "example": "2025-10-28T15:30:00Z"
+                },
+                "market_id": {
+                    "type": "integer",
+                    "example": 1964
+                },
+                "market_key": {
+                    "type": "string",
+                    "example": "player_points"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Over"
+                },
+                "outcome_type": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.OutcomeType"
+                        }
+                    ],
+                    "example": "OVER"
+                },
+                "outcomes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/http.OutcomeDetailRelatedOption"
+                    }
+                },
+                "point": {
+                    "type": "number",
+                    "example": 25.5
+                },
+                "position": {
+                    "type": "string",
+                    "example": "over"
+                },
+                "price": {
+                    "type": "number",
+                    "example": 1.9
+                },
+                "result": {
+                    "type": "string",
+                    "example": "win"
+                },
+                "uuid": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                }
+            }
+        },
+        "http.RawPropResponse": {
+            "type": "object",
+            "properties": {
+                "away_team": {
+                    "type": "string",
+                    "example": "Boston Celtics"
+                },
+                "bookmaker_key": {
+                    "type": "string",
+                    "example": "draftkings"
+                },
+                "commence_time": {
+                    "type": "string",
+                    "example": "2025-10-30T19:00:00Z"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Points"
+                },
+                "event_id": {
+                    "type": "string",
+                    "example": "abc123event"
+                },
+                "home_team": {
+                    "type": "string",
+                    "example": "Los Angeles Lakers"
+                },
+                "market_id": {
+                    "type": "string",
+                    "example": "12345"
+                },
+                "market_key": {
+                    "type": "string",
+                    "example": "player_points"
+                },
+                "outcome_name": {
+                    "type": "string",
+                    "example": "LeBron James"
+                },
+                "outcome_type": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.OutcomeType"
+                        }
+                    ],
+                    "example": "OVER"
+                },
+                "outcome_uuid": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "point": {
+                    "type": "number",
+                    "example": 25.5
+                },
+                "position": {
+                    "type": "string",
+                    "example": "over"
+                },
+                "price": {
+                    "type": "number",
+                    "example": 1.9
+                },
+                "sport_title": {
+                    "type": "string",
+                    "example": "NBA"
+                }
+            }
+        },
+        "http.ResolveStaleEventResponse": {
+            "type": "object",
+            "properties": {
+                "correlation_id": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "event_id": {
+                    "type": "string",
+                    "example": "abc123event"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Stale event resolution started (ONE attempt only)"
+                },
+                "note": {
+                    "type": "string",
+                    "example": "Check logs for resolution status. No automatic retries."
+                }
+            }
+        },
+        "http.SettleOutcomeRequest": {
+            "type": "object",
+            "required": [
+                "result"
+            ],
+            "properties": {
+                "actual_value": {
+                    "type": "number",
+                    "example": 28
+                },
+                "reason": {
+                    "type": "string",
+                    "example": "Player achieved 28 points"
+                },
+                "result": {
+                    "type": "string",
+                    "example": "win"
+                }
+            }
+        },
+        "http.SettleOutcomeResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Outcome settled successfully"
+                },
+                "outcome_uuid": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "result": {
+                    "type": "string",
+                    "example": "win"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "description": "API key for authentication",
+            "type": "apiKey",
+            "name": "X-API-Key",
+            "in": "header"
+        }
+    }
+}
