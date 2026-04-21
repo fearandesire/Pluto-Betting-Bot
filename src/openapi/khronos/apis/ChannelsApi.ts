@@ -16,6 +16,7 @@
 import * as runtime from '../runtime.js';
 import type {
   AllChannelsDto,
+  GameChannelControllerFindByIdV1404Response,
   RemoveAllChannelsDto,
   StoredChannelDto,
   UpdateChannelDto,
@@ -23,6 +24,8 @@ import type {
 import {
     AllChannelsDtoFromJSON,
     AllChannelsDtoToJSON,
+    GameChannelControllerFindByIdV1404ResponseFromJSON,
+    GameChannelControllerFindByIdV1404ResponseToJSON,
     RemoveAllChannelsDtoFromJSON,
     RemoveAllChannelsDtoToJSON,
     StoredChannelDtoFromJSON,
