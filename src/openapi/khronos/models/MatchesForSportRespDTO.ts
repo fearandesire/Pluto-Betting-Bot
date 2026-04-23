@@ -13,13 +13,13 @@
  */
 
 import { mapValues } from '../runtime.js';
-import type { MatchDetailDto } from './MatchDetailDto.js';
+import type { MatchesForSportRespDTOMatchesInner } from './MatchesForSportRespDTOMatchesInner.js';
 import {
-    MatchDetailDtoFromJSON,
-    MatchDetailDtoFromJSONTyped,
-    MatchDetailDtoToJSON,
-    MatchDetailDtoToJSONTyped,
-} from './MatchDetailDto.js';
+    MatchesForSportRespDTOMatchesInnerFromJSON,
+    MatchesForSportRespDTOMatchesInnerFromJSONTyped,
+    MatchesForSportRespDTOMatchesInnerToJSON,
+    MatchesForSportRespDTOMatchesInnerToJSONTyped,
+} from './MatchesForSportRespDTOMatchesInner.js';
 
 /**
  * 
@@ -35,10 +35,10 @@ export interface MatchesForSportRespDTO {
     statusCode: number;
     /**
      * List of matches for the specified sport from Goracle
-     * @type {Array<MatchDetailDto>}
+     * @type {Array<MatchesForSportRespDTOMatchesInner>}
      * @memberof MatchesForSportRespDTO
      */
-    matches: Array<MatchDetailDto>;
+    matches: Array<MatchesForSportRespDTOMatchesInner>;
 }
 
 /**
@@ -61,7 +61,7 @@ export function MatchesForSportRespDTOFromJSONTyped(json: any, ignoreDiscriminat
     return {
         
         'statusCode': json['statusCode'],
-        'matches': ((json['matches'] as Array<any>).map(MatchDetailDtoFromJSON)),
+        'matches': ((json['matches'] as Array<any>).map(MatchesForSportRespDTOMatchesInnerFromJSON)),
     };
 }
 
@@ -77,7 +77,7 @@ export function MatchesForSportRespDTOToJSONTyped(value?: MatchesForSportRespDTO
     return {
         
         'statusCode': value['statusCode'],
-        'matches': ((value['matches'] as Array<any>).map(MatchDetailDtoToJSON)),
+        'matches': ((value['matches'] as Array<any>).map(MatchesForSportRespDTOMatchesInnerToJSON)),
     };
 }
 

@@ -13,13 +13,6 @@
  */
 
 import { mapValues } from '../runtime.js';
-import type { SeriesScoreDto } from './SeriesScoreDto.js';
-import {
-    SeriesScoreDtoFromJSON,
-    SeriesScoreDtoFromJSONTyped,
-    SeriesScoreDtoToJSON,
-    SeriesScoreDtoToJSONTyped,
-} from './SeriesScoreDto.js';
 import type { BookmakerDataDto } from './BookmakerDataDto.js';
 import {
     BookmakerDataDtoFromJSON,
@@ -112,24 +105,6 @@ export interface MatchDetailDto {
      * @memberof MatchDetailDto
      */
     winner?: string;
-    /**
-     * Playoff round label (e.g., "First Round", "Finals")
-     * @type {string}
-     * @memberof MatchDetailDto
-     */
-    playoff_round?: string;
-    /**
-     * Human-readable playoff series summary
-     * @type {string}
-     * @memberof MatchDetailDto
-     */
-    series_summary?: string;
-    /**
-     * Current playoff series score
-     * @type {SeriesScoreDto}
-     * @memberof MatchDetailDto
-     */
-    series_score?: SeriesScoreDto;
 }
 
 /**
@@ -162,9 +137,6 @@ export function MatchDetailDtoFromJSONTyped(json: any, ignoreDiscriminator: bool
         'sport_title': json['sport_title'] == null ? undefined : json['sport_title'],
         'status': json['status'] == null ? undefined : json['status'],
         'winner': json['winner'] == null ? undefined : json['winner'],
-        'playoff_round': json['playoff_round'] == null ? undefined : json['playoff_round'],
-        'series_summary': json['series_summary'] == null ? undefined : json['series_summary'],
-        'series_score': json['series_score'] == null ? undefined : SeriesScoreDtoFromJSON(json['series_score']),
     };
 }
 
@@ -192,9 +164,6 @@ export function MatchDetailDtoToJSONTyped(value?: MatchDetailDto | null, ignoreD
         'sport_title': value['sport_title'],
         'status': value['status'],
         'winner': value['winner'],
-        'playoff_round': value['playoff_round'],
-        'series_summary': value['series_summary'],
-        'series_score': SeriesScoreDtoToJSON(value['series_score']),
     };
 }
 

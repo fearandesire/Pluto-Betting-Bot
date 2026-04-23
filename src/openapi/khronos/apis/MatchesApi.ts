@@ -50,7 +50,7 @@ export interface MatchInfoRequest {
 
 export interface MatchesForSportRequest {
     sport: string;
-    guildId?: string;
+    guildId: string;
 }
 
 /**
@@ -122,7 +122,7 @@ export interface MatchesApiInterface {
      * 
      * @summary Get all stored matches for a specific sport
      * @param {string} sport Sport to fetch stored matches for (e.g., nba, nfl, nba preseason)
-     * @param {string} [guildId] Guild ID to filter matches by preferred teams
+     * @param {string} guildId Guild ID to fetch matches for
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof MatchesApiInterface
@@ -179,9 +179,16 @@ export class MatchesApi extends runtime.BaseAPI implements MatchesApiInterface {
      * Identifies and archives matches that are complete and occurred before the current day
      * Clean up and archive stale matches
      */
-    async cleanupStaleMatches(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<CleanupStaleMatches200Response> {
+    async cleanupStaleMatches(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<CleanupStaleMatches200Response | null | undefined > {
         const response = await this.cleanupStaleMatchesRaw(initOverrides);
-        return await response.value();
+        switch (response.raw.status) {
+            case 200:
+                return await response.value();
+            case 201:
+                return null;
+            default:
+                return await response.value();
+        }
     }
 
     /**
@@ -283,11 +290,14 @@ export class MatchesApi extends runtime.BaseAPI implements MatchesApiInterface {
             );
         }
 
-        const queryParameters: any = {};
-
-        if (requestParameters['guildId'] != null) {
-            queryParameters['guildId'] = requestParameters['guildId'];
+        if (requestParameters['guildId'] == null) {
+            throw new runtime.RequiredError(
+                'guildId',
+                'Required parameter "guildId" was null or undefined when calling matchesForSport().'
+            );
         }
+
+        const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
 
@@ -296,7 +306,7 @@ export class MatchesApi extends runtime.BaseAPI implements MatchesApiInterface {
         }
 
         const response = await this.request({
-            path: `/api/khronos/v1/matches/by/sport`,
+            path: `/api/khronos/v1/matches/by/sport`.replace(`{${"guildId"}}`, encodeURIComponent(String(requestParameters['guildId']))),
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,

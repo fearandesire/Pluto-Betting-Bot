@@ -142,9 +142,16 @@ export class LeaderboardApi extends runtime.BaseAPI implements LeaderboardApiInt
     /**
      * Initialize season scheduled weeks for a given sport
      */
-    async leaderboardControllerInitializeWeeksV1(requestParameters: LeaderboardControllerInitializeWeeksV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<LeaderboardControllerInitializeWeeksV1200Response> {
+    async leaderboardControllerInitializeWeeksV1(requestParameters: LeaderboardControllerInitializeWeeksV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<LeaderboardControllerInitializeWeeksV1200Response | null | undefined > {
         const response = await this.leaderboardControllerInitializeWeeksV1Raw(requestParameters, initOverrides);
-        return await response.value();
+        switch (response.raw.status) {
+            case 200:
+                return await response.value();
+            case 201:
+                return null;
+            default:
+                return await response.value();
+        }
     }
 
 }

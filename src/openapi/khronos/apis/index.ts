@@ -7,7 +7,6 @@ export * from './CalendarApi.js';
 export * from './ChangelogsApi.js';
 export * from './ChannelsApi.js';
 export * from './DiscordConfigApi.js';
-export * from './ESPNNBAApi.js';
 export * from './FootersApi.js';
 export * from './GoracleApi.js';
 export * from './GuildsApi.js';

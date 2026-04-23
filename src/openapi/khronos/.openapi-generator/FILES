@@ -6,7 +6,6 @@ apis/CalendarApi.ts
 apis/ChangelogsApi.ts
 apis/ChannelsApi.ts
 apis/DiscordConfigApi.ts
-apis/ESPNNBAApi.ts
 apis/FootersApi.ts
 apis/GoracleApi.ts
 apis/GuildsApi.ts
@@ -59,7 +58,6 @@ models/DoubledBetslipDto.ts
 models/EventPredictionsDto.ts
 models/Footer.ts
 models/FooterConfigResponseDto.ts
-models/GameChannelControllerFindByIdV1404Response.ts
 models/GameDto.ts
 models/GetAllGuilds404Response.ts
 models/GetAllMatches404Response.ts
@@ -86,9 +84,7 @@ models/MatchDetailDto.ts
 models/MatchInfo400Response.ts
 models/MatchInfo404Response.ts
 models/MatchesForSportRespDTO.ts
-models/MatchupRecordsDto.ts
-models/MatchupSeriesInfoDto.ts
-models/MatchupTeamRecordsDto.ts
+models/MatchesForSportRespDTOMatchesInner.ts
 models/Modified.ts
 models/Monies.ts
 models/Odds.ts
@@ -116,7 +112,6 @@ models/RefundBetsResponseDto.ts
 models/RemoveAllChannelsDto.ts
 models/SeasonWeekDto.ts
 models/SendDailyMatches404Response.ts
-models/SeriesScoreDto.ts
 models/SetPropResultDto.ts
 models/SetPropResultResponseDto.ts
 models/SimpleLeaderboardEntryDto.ts
