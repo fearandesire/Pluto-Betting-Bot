@@ -26,6 +26,7 @@ import {
 	type PrepareMatchEmbed,
 } from '../../cache/data/schemas.js'
 import StringUtils from '../../common/string-utils.js'
+import { buildRecordsStr } from './matchEmbedUtils.js'
 
 /**
  * Handle interactions between Pluto API & Discord user interface/interactions
@@ -221,10 +222,7 @@ export default class ChannelManager {
 		const teamEmoji = (await findEmoji(args.favored)) ?? ''
 		const matchVersus = `${args.awayTeamShortName} @ ${args.homeTeamShortName}`
 
-		// Build records string if available
-		const recordsStr = args.records
-			? `\n\n🔵 **Team Records**\n${args.awayTeamShortName}: ${args.records.away_team.total_record}\n${args.homeTeamShortName}: ${args.records.home_team.total_record}`
-			: ''
+		const recordsStr = buildRecordsStr(args)
 
 		const matchEmbed = new EmbedBuilder()
 			.setColor(embedClr)
