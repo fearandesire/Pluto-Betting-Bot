@@ -281,14 +281,15 @@
             "in": "header",
             "description": "Sport to fetch stored matches for (e.g., nba, nfl, nba preseason)",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "example": "nba"
             }
           },
           {
             "name": "guildId",
-            "required": true,
-            "in": "path",
-            "description": "Guild ID to fetch matches for",
+            "required": false,
+            "in": "query",
+            "description": "Guild ID to filter matches by preferred teams",
             "schema": {
               "type": "string"
             }
@@ -306,7 +307,7 @@
             }
           },
           "400": {
-            "description": "Invalid sport provided in the header."
+            "description": "Missing required header: sport\n\nInvalid sport provided in the header."
           },
           "404": {
             "description": "The requested match could not be found.",
@@ -373,7 +374,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Successfully cleaned up stale matches",
+            "description": "A list of matches pending closure.\n\nSuccessfully cleaned up stale matches",
             "content": {
               "application/json": {
                 "schema": {
@@ -408,9 +409,6 @@
                 }
               }
             }
-          },
-          "201": {
-            "description": ""
           },
           "404": {
             "description": "No matches are available.",
@@ -515,16 +513,6 @@
                 }
               }
             }
-          },
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
           }
         },
         "security": [
@@ -556,16 +544,6 @@
         "responses": {
           "200": {
             "description": "Collect-all triggered successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "201": {
-            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -733,6 +711,363 @@
         "summary": "Get all betting channels",
         "tags": [
           "Discord Config"
+        ]
+      }
+    },
+    "/api/khronos/v1/espn/nba/scoreboard": {
+      "get": {
+        "operationId": "espnNbaScoreboard",
+        "parameters": [
+          {
+            "name": "date",
+            "required": true,
+            "in": "query",
+            "description": "Date in YYYYMMDD format (UTC)",
+            "schema": {
+              "example": "20260421",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scoreboard data for the date"
+          },
+          "400": {
+            "description": "Invalid date format or value"
+          },
+          "404": {
+            "description": "No scoreboard data available"
+          },
+          "503": {
+            "description": "ESPN upstream unavailable"
+          }
+        },
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ],
+        "summary": "Fetch the NBA scoreboard for a given date",
+        "tags": [
+          "ESPN NBA"
+        ]
+      }
+    },
+    "/api/khronos/v1/espn/nba/teams": {
+      "get": {
+        "operationId": "espnNbaTeams",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of teams with records"
+          },
+          "404": {
+            "description": "No team data available"
+          },
+          "503": {
+            "description": "ESPN upstream unavailable"
+          }
+        },
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ],
+        "summary": "List all NBA teams with current records",
+        "tags": [
+          "ESPN NBA"
+        ]
+      }
+    },
+    "/api/khronos/v1/espn/nba/teams/{teamId}": {
+      "get": {
+        "operationId": "espnNbaTeam",
+        "parameters": [
+          {
+            "name": "teamId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Team detail"
+          },
+          "404": {
+            "description": "Team not found"
+          },
+          "503": {
+            "description": "ESPN upstream unavailable"
+          }
+        },
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ],
+        "summary": "Fetch details for a single NBA team",
+        "tags": [
+          "ESPN NBA"
+        ]
+      }
+    },
+    "/api/khronos/v1/espn/nba/teams/{teamId}/roster": {
+      "get": {
+        "operationId": "espnNbaTeamRoster",
+        "parameters": [
+          {
+            "name": "teamId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Team roster"
+          },
+          "404": {
+            "description": "Roster not found"
+          },
+          "503": {
+            "description": "ESPN upstream unavailable"
+          }
+        },
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ],
+        "summary": "Fetch the roster for an NBA team",
+        "tags": [
+          "ESPN NBA"
+        ]
+      }
+    },
+    "/api/khronos/v1/espn/nba/teams/{teamId}/schedule": {
+      "get": {
+        "operationId": "espnNbaTeamSchedule",
+        "parameters": [
+          {
+            "name": "teamId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "season",
+            "required": false,
+            "in": "query",
+            "description": "Season year (e.g. 2026); defaults to current season",
+            "schema": {
+              "example": 2026,
+              "type": "number"
+            }
+          },
+          {
+            "name": "seasontype",
+            "required": false,
+            "in": "query",
+            "description": "1 = preseason, 2 = regular, 3 = postseason",
+            "schema": {
+              "example": 2,
+              "type": "number",
+              "enum": [
+                1,
+                2,
+                3
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Team schedule"
+          },
+          "400": {
+            "description": "Invalid season or seasontype value"
+          },
+          "404": {
+            "description": "Schedule not found"
+          },
+          "503": {
+            "description": "ESPN upstream unavailable"
+          }
+        },
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ],
+        "summary": "Fetch the schedule for an NBA team",
+        "tags": [
+          "ESPN NBA"
+        ]
+      }
+    },
+    "/api/khronos/v1/espn/nba/standings": {
+      "get": {
+        "operationId": "espnNbaStandings",
+        "parameters": [
+          {
+            "name": "season",
+            "required": false,
+            "in": "query",
+            "description": "Season year (e.g. 2026); defaults to current season",
+            "schema": {
+              "example": 2026,
+              "type": "number"
+            }
+          },
+          {
+            "name": "seasontype",
+            "required": false,
+            "in": "query",
+            "description": "1 = preseason, 2 = regular, 3 = postseason",
+            "schema": {
+              "example": 2,
+              "type": "number",
+              "enum": [
+                1,
+                2,
+                3
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "NBA standings"
+          },
+          "400": {
+            "description": "Invalid season or seasontype value"
+          },
+          "404": {
+            "description": "Standings not available"
+          },
+          "503": {
+            "description": "ESPN upstream unavailable"
+          }
+        },
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ],
+        "summary": "Fetch NBA standings",
+        "tags": [
+          "ESPN NBA"
+        ]
+      }
+    },
+    "/api/khronos/v1/espn/nba/summary/{eventId}": {
+      "get": {
+        "operationId": "espnNbaGameSummary",
+        "parameters": [
+          {
+            "name": "eventId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Game summary"
+          },
+          "404": {
+            "description": "Game summary not found"
+          },
+          "503": {
+            "description": "ESPN upstream unavailable"
+          }
+        },
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ],
+        "summary": "Fetch full game summary (boxscore, leaders, play-by-play) for an ESPN event",
+        "tags": [
+          "ESPN NBA"
+        ]
+      }
+    },
+    "/api/khronos/v1/espn/nba/records": {
+      "get": {
+        "description": "Returns total/home/away regular-season records for each team, playoff_record when available, and series info when `date` resolves to an active playoff series.",
+        "operationId": "espnNbaMatchupRecords",
+        "parameters": [
+          {
+            "name": "home",
+            "required": true,
+            "in": "query",
+            "description": "Home team name (any format resolve-team accepts)",
+            "schema": {
+              "example": "Boston Celtics",
+              "type": "string"
+            }
+          },
+          {
+            "name": "away",
+            "required": true,
+            "in": "query",
+            "description": "Away team name (any format resolve-team accepts)",
+            "schema": {
+              "example": "Los Angeles Lakers",
+              "type": "string"
+            }
+          },
+          {
+            "name": "date",
+            "required": false,
+            "in": "query",
+            "description": "Optional YYYYMMDD (UTC). When provided, series info is included if an active playoff series matches.",
+            "schema": {
+              "example": "20260421",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchupRecordsDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`home` and `away` are required; `date` must be YYYYMMDD"
+          },
+          "404": {
+            "description": "Could not resolve records for the given matchup"
+          },
+          "503": {
+            "description": "ESPN upstream unavailable"
+          }
+        },
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ],
+        "summary": "Resolve on-demand regular-season + playoff records for a matchup",
+        "tags": [
+          "ESPN NBA"
         ]
       }
     },
@@ -981,6 +1316,42 @@
             }
           },
           "404": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "ChannelNotFoundException": {
+                    "description": "Channel not found.",
+                    "value": {
+                      "statusCode": 404,
+                      "message": "Channel not found",
+                      "error": "Not Found"
+                    }
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "description": "Channel not found.",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number",
+                      "example": 404
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Channel not found"
+                    },
+                    "error": {
+                      "type": "string",
+                      "example": "Not Found"
+                    }
+                  },
+                  "required": [
+                    "statusCode",
+                    "message"
+                  ]
+                }
+              }
+            },
             "description": "Channel not found."
           }
         },
@@ -1418,9 +1789,6 @@
           "200": {
             "description": "Matchups synced successfully"
           },
-          "201": {
-            "description": ""
-          },
           "500": {
             "description": "Internal server error"
           }
@@ -1474,16 +1842,6 @@
               }
             }
           },
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ManualSettleMatchResponseDto"
-                }
-              }
-            }
-          },
           "400": {
             "description": "Invalid input, match not found, match already complete, or tie game"
           }
@@ -1518,9 +1876,6 @@
         "responses": {
           "200": {
             "description": "Reconciliation triggered"
-          },
-          "201": {
-            "description": ""
           },
           "400": {
             "description": "Failed to trigger reconciliation"
@@ -2062,16 +2417,6 @@
                 }
               }
             }
-          },
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ClearPendingResponseDto"
-                }
-              }
-            }
           }
         },
         "security": [
@@ -2102,16 +2447,6 @@
         "responses": {
           "200": {
             "description": "Outstanding bets closed successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CloseOutstandingResponseDto"
-                }
-              }
-            }
-          },
-          "201": {
-            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -2455,16 +2790,6 @@
         "responses": {
           "200": {
             "description": "Bets refunded successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RefundBetsResponseDto"
-                }
-              }
-            }
-          },
-          "201": {
-            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -3798,9 +4123,6 @@
               }
             }
           },
-          "201": {
-            "description": ""
-          },
           "400": {
             "description": "Invalid sport provided"
           },
@@ -4292,16 +4614,6 @@
         "responses": {
           "200": {
             "description": "Prop result set successfully, predictions processed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SetPropResultResponseDto"
-                }
-              }
-            }
-          },
-          "201": {
-            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -4846,12 +5158,7 @@
     "contact": {}
   },
   "tags": [],
-  "servers": [
-    {
-      "url": "http://localhost:2088/api/khronos/v1",
-      "description": "Khronos Server"
-    }
-  ],
+  "servers": [],
   "components": {
     "securitySchemes": {
       "api-key": {
@@ -4985,6 +5292,26 @@
           }
         }
       },
+      "SeriesScoreDto": {
+        "type": "object",
+        "properties": {
+          "home_wins": {
+            "type": "number",
+            "description": "Games won by the home team in the current series",
+            "example": 3
+          },
+          "away_wins": {
+            "type": "number",
+            "description": "Games won by the away team in the current series",
+            "example": 2
+          },
+          "total_games": {
+            "type": "number",
+            "description": "Total games in the series format (e.g., 7 for best-of-7)",
+            "example": 7
+          }
+        }
+      },
       "MatchDetailDto": {
         "type": "object",
         "properties": {
@@ -5055,6 +5382,29 @@
             "type": "string",
             "description": "Winning team name (only for completed matches)",
             "example": "Los Angeles Lakers"
+          },
+          "playoff_round": {
+            "type": "string",
+            "description": "Playoff round label (e.g., \"First Round\", \"Finals\")",
+            "example": "First Round"
+          },
+          "series_summary": {
+            "type": "string",
+            "description": "Human-readable playoff series summary",
+            "example": "LAL leads series 3-2"
+          },
+          "series_score": {
+            "description": "Current playoff series score",
+            "example": {
+              "home_wins": 3,
+              "away_wins": 2,
+              "total_games": 7
+            },
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SeriesScoreDto"
+              }
+            ]
           }
         }
       },
@@ -5168,56 +5518,10 @@
             "example": 200
           },
           "matches": {
-            "type": "array",
             "description": "List of matches for the specified sport from Goracle",
+            "type": "array",
             "items": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "string",
-                  "example": "abc123event"
-                },
-                "sport": {
-                  "type": "string",
-                  "example": "basketball_nba"
-                },
-                "sport_title": {
-                  "type": "string",
-                  "example": "NBA"
-                },
-                "home_team": {
-                  "type": "string",
-                  "example": "Los Angeles Lakers"
-                },
-                "away_team": {
-                  "type": "string",
-                  "example": "Boston Celtics"
-                },
-                "commence_time": {
-                  "type": "string",
-                  "example": "2025-10-30T19:00:00Z"
-                },
-                "home_score": {
-                  "type": "number",
-                  "example": 105
-                },
-                "away_score": {
-                  "type": "number",
-                  "example": 98
-                },
-                "status": {
-                  "type": "string",
-                  "example": "upcoming"
-                },
-                "home_team_odds": {
-                  "type": "number",
-                  "example": -192
-                },
-                "away_team_odds": {
-                  "type": "number",
-                  "example": 160
-                }
-              }
+              "$ref": "#/components/schemas/MatchDetailDto"
             }
           }
         },
@@ -5299,6 +5603,117 @@
           "guild_id",
           "setting_type",
           "setting_value"
+        ]
+      },
+      "MatchupTeamRecordsDto": {
+        "type": "object",
+        "properties": {
+          "display_name": {
+            "type": "string",
+            "example": "Boston Celtics",
+            "description": "Full team display name as returned by ESPN"
+          },
+          "abbreviation": {
+            "type": "string",
+            "example": "BOS",
+            "description": "Three-letter team abbreviation"
+          },
+          "total_record": {
+            "type": "string",
+            "nullable": true,
+            "example": "48-24",
+            "description": "Total regular-season record (wins-losses)"
+          },
+          "home_record": {
+            "type": "string",
+            "nullable": true,
+            "example": "26-11",
+            "description": "Home game record for the regular season"
+          },
+          "away_record": {
+            "type": "string",
+            "nullable": true,
+            "example": "22-13",
+            "description": "Away game record for the regular season"
+          },
+          "playoff_record": {
+            "type": "string",
+            "nullable": true,
+            "example": "4-3",
+            "description": "Postseason record; populated only during or after the playoffs"
+          }
+        },
+        "required": [
+          "display_name",
+          "total_record"
+        ]
+      },
+      "MatchupSeriesInfoDto": {
+        "type": "object",
+        "properties": {
+          "round": {
+            "type": "string",
+            "example": "First Round",
+            "description": "Playoff round label from ESPN (e.g. First Round, Conference Finals, Finals)"
+          },
+          "summary": {
+            "type": "string",
+            "example": "LAL leads series 3-2",
+            "description": "Human-readable series standing summary from ESPN"
+          },
+          "home_wins": {
+            "type": "number",
+            "example": 3,
+            "description": "Number of series wins for the home team"
+          },
+          "away_wins": {
+            "type": "number",
+            "example": 2,
+            "description": "Number of series wins for the away team"
+          },
+          "total_games": {
+            "type": "number",
+            "example": 7,
+            "description": "Maximum number of games in the series (typically 7)"
+          },
+          "completed": {
+            "type": "boolean",
+            "example": false,
+            "description": "Whether the playoff series has concluded"
+          }
+        }
+      },
+      "MatchupRecordsDto": {
+        "type": "object",
+        "properties": {
+          "home_team": {
+            "description": "Records for the home team",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MatchupTeamRecordsDto"
+              }
+            ]
+          },
+          "away_team": {
+            "description": "Records for the away team",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MatchupTeamRecordsDto"
+              }
+            ]
+          },
+          "series": {
+            "description": "Populated only when the matchup resolves to an active playoff series on ESPN for the supplied date.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MatchupSeriesInfoDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "home_team",
+          "away_team"
         ]
       },
       "AllChannelsDto": {
@@ -6476,6 +6891,7 @@
           },
           "pending_betslip": {
             "nullable": true,
+            "type": "object",
             "allOf": [
               {
                 "$ref": "#/components/schemas/BetslipPending"
@@ -8261,6 +8677,7 @@
         "properties": {
           "announcement": {
             "nullable": true,
+            "type": "object",
             "allOf": [
               {
                 "$ref": "#/components/schemas/AnnouncementDto"
