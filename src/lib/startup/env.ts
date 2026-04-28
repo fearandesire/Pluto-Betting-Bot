@@ -50,6 +50,10 @@ const envSchema = z.object({
 	LOKI_USER: z.string().min(1, { message: 'LOKI_USER is required' }),
 	LOKI_PASS: z.string().min(1, { message: 'LOKI_PASS is required' }),
 	MAINTENANCE_MODE: z.boolean(),
+	USE_MOCK_DATA: z.boolean().default(false),
+	MOCK_GUILD_BETTING_CHAN_ID: z.string().optional(),
+	MOCK_GUILD_GAMES_CATEGORY_ID: z.string().optional(),
+	MOCK_GUILD_SPORT: z.enum(['nba', 'nfl']).default('nba'),
 })
 
 // Parse and validate the environment variables
@@ -81,6 +85,10 @@ const env = envSchema.parse({
 	LOKI_USER: process.env.LOKI_USER,
 	LOKI_PASS: process.env.LOKI_PASS,
 	MAINTENANCE_MODE: process.env.MAINTENANCE_MODE === 'true',
+	USE_MOCK_DATA: process.env.USE_MOCK_DATA === 'true',
+	MOCK_GUILD_BETTING_CHAN_ID: process.env.MOCK_GUILD_BETTING_CHAN_ID,
+	MOCK_GUILD_GAMES_CATEGORY_ID: process.env.MOCK_GUILD_GAMES_CATEGORY_ID,
+	MOCK_GUILD_SPORT: process.env.MOCK_GUILD_SPORT || 'nba',
 })
 
 // Debug logging for environment validation (redacts sensitive values)
@@ -107,6 +115,10 @@ if (shouldLogDebug) {
 		LOKI_URL: env.LOKI_URL,
 		LOKI_USER: env.LOKI_USER,
 		MAINTENANCE_MODE: env.MAINTENANCE_MODE,
+		USE_MOCK_DATA: env.USE_MOCK_DATA,
+		MOCK_GUILD_BETTING_CHAN_ID: env.MOCK_GUILD_BETTING_CHAN_ID,
+		MOCK_GUILD_GAMES_CATEGORY_ID: env.MOCK_GUILD_GAMES_CATEGORY_ID,
+		MOCK_GUILD_SPORT: env.MOCK_GUILD_SPORT,
 		// Redacted sensitive fields
 		TOKEN: '[REDACTED]',
 		KH_API_TOKEN: '[REDACTED]',

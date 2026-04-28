@@ -10,6 +10,7 @@ import { SapDiscClient } from '../../../../index.js'
 import { ApiModules } from '../../../../lib/interfaces/api/api.interface.js'
 import { supportMessage } from '../../../../lib/PlutoConfig.js'
 import { ErrorEmbeds } from '../../../common/errors/global.js'
+import { isMockEnabled, MockBackend } from '../../../dev/index.js'
 import PaginationUtilities from '../../../embeds/pagination-utilities.js'
 import EmbedsSuccess from '../../../embeds/template/success-template.js'
 import GuildUtils from '../../../guilds/GuildUtils.js'
@@ -26,12 +27,15 @@ import PatreonFacade from '../../patreon/Patreon-Facade.js'
 export class AccountsWrapper {
 	private accountsApi: AccountsApi
 	private readonly khConfig: IKH_API_CONFIG = KH_API_CONFIG
+	private mock?: MockBackend
 
 	constructor() {
 		this.accountsApi = new AccountsApi(this.khConfig)
+		if (isMockEnabled()) this.mock = MockBackend.instance()
 	}
 
 	async createAccount(userid: string): Promise<any> {
+		if (this.mock) return this.mock.createAccount(userid)
 		// Assuming createAccount method returns the created account details
 		return await this.accountsApi.createAccount({
 			userid: userid,
@@ -39,6 +43,7 @@ export class AccountsWrapper {
 	}
 
 	async getAccountBalance(userid: string): Promise<Partial<GetBalanceDto>> {
+		if (this.mock) return this.mock.getAccountBalance(userid)
 		const res = await this.accountsApi.getBalance({
 			userid: userid,
 		})
@@ -46,12 +51,14 @@ export class AccountsWrapper {
 	}
 
 	async getProfile(userid: string): Promise<GetProfileDto> {
+		if (this.mock) return this.mock.getProfile(userid)
 		return await this.accountsApi.userProfile({
 			userid: userid,
 		})
 	}
 
 	async processClaim(userid: string, patreonOverride: boolean) {
+		if (this.mock) return this.mock.processClaim(userid)
 		const data = {
 			userid: userid,
 			dailyClaimBodyDto: {
@@ -62,6 +69,7 @@ export class AccountsWrapper {
 	}
 
 	async getLeaderboard(): Promise<GetLeaderboardDto[]> {
+		if (this.mock) return this.mock.getLeaderboard()
 		return await this.accountsApi.getLeaderboard()
 	}
 }

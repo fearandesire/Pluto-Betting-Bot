@@ -65,6 +65,8 @@ launch.json
 !.env.vault
 .env.*
 dev/
+!src/utils/dev/
+!src/utils/dev/**/*
 assets.zip
 
 # More IDE Settings

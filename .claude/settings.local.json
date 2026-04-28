@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm ci-gen-api *)",
+      "Bash(pnpm tsc *)",
+      "Bash(coderabbit review *)",
+      "Bash(pnpm test *)"
+    ]
+  }
+}

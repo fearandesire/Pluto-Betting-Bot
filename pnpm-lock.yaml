@@ -12,14 +12,17 @@ importers:
         specifier: ^1.6.0
         version: 1.6.0
       '@bull-board/api':
-        specifier: ^6.17.0
-        version: 6.20.6(@bull-board/ui@6.20.6)
+        specifier: ^6.21.3
+        version: 6.21.3(@bull-board/ui@6.21.3)
       '@bull-board/koa':
         specifier: ^6.21.2
         version: 6.21.3(@babel/core@7.28.4)(@types/koa@3.0.2)(handlebars@4.7.9)(lodash@4.18.1)
       '@bull-board/ui':
-        specifier: ^6.17.0
-        version: 6.20.6
+        specifier: ^6.21.3
+        version: 6.21.3
+      '@faker-js/faker':
+        specifier: ^10.4.0
+        version: 10.4.0
       '@favware/colorette-spinner':
         specifier: ^1.0.1
         version: 1.0.1
@@ -572,16 +575,10 @@ packages:
   '@biomejs/cli-win32-x64@2.4.13':
     resolution: {integrity: sha512-tTcMkXyBrmHi9BfrD2VNHs/5rYIUKETqsBlYOvSAABwBkJhSDVb5e7wPukftsQbO3WzQkXe6kaztC6WtUOXSoQ==}
     engines: {node: '>=14.21.3'}
-    cpu: [x64]
     os: [win32]
 
   '@borewit/text-codec@0.2.1':
     resolution: {integrity: sha512-k7vvKPbf7J2fZ5klGRD9AeKfUvojuZIQ3BT5u7Jfv+puwXkUBUT5PVyMDfJZpy30CBDXGMgw7fguK/lpOMBvgw==}
-
-  '@bull-board/api@6.20.6':
-    resolution: {integrity: sha512-B/9OlKWJ/He421Lyuc7htMpKN4R8hcNu5uoIRiyh9y9J0kMOfxfs82GKXdfR9R0595LvAcCOSvjn8EtWHXesTA==}
-    peerDependencies:
-      '@bull-board/ui': 6.20.6
 
   '@bull-board/api@6.21.3':
     resolution: {integrity: sha512-FoQO+0MgZsPrQX9WLZx0KpINamJY48FUU+OyMcZxx9mQWCwsdak45V/uBgQrTYB3GaF5oGA0SxPXEp4RHwj36A==}
@@ -590,9 +587,6 @@ packages:
 
   '@bull-board/koa@6.21.3':
     resolution: {integrity: sha512-JPGubXmAJgMqZTMqfBnHpNFdauNesthEmbnFCJed5JJwCT+AsPNCPjk5/87hRZdfnRr6do4j4iuBETBO1/g8UQ==}
-
-  '@bull-board/ui@6.20.6':
-    resolution: {integrity: sha512-nEXRgMHHd48ssINgvDqT7b4p/+57XRf3CUcTGQ7UIJb4F7n/kRRj8+ZQvQmMFsYGdNmbNU2eNheQ05vXSYiqdQ==}
 
   '@bull-board/ui@6.21.3':
     resolution: {integrity: sha512-s/PLBJab8cnoQAGVqjQb0v4oGe0KgB4aQ5G5g93doxzXB/D+wkXNL9P9+zLWLldBJXE57jL4CR99ttDCIiyNHw==}
@@ -1062,6 +1056,10 @@ packages:
   '@eslint/js@8.57.1':
     resolution: {integrity: sha512-d9zaMRSTIKDLhctzH12MtXvJKSSUhaHcjV+2Z+GK+EEY7XKpP5yR4x+N3TAcHTcu963nIr+TMcCb4DBCYX1z6Q==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+
+  '@faker-js/faker@10.4.0':
+    resolution: {integrity: sha512-sDBWI3yLy8EcDzgobvJTWq1MJYzAkQdpjXuPukga9wXonhpMRvd1Izuo2Qgwey2OiEoRIBr35RMU9HJRoOHzpw==}
+    engines: {node: ^20.19.0 || ^22.13.0 || ^23.5.0 || >=24.0.0, npm: '>=10'}
 
   '@fastify/merge-json-schemas@0.2.1':
     resolution: {integrity: sha512-OA3KGBCy6KtIvLf8DINC5880o5iBlDX4SxzLQS8HorJAbqluzLRn80UXU0bxZn7UOFhFgpRJDasfwn9nG4FG4A==}
@@ -3154,6 +3152,9 @@ packages:
   brace-expansion@2.0.2:
     resolution: {integrity: sha512-Jt0vHyM+jmUBqojB7E1NIYadt0vI0Qxjxd2TErW94wDz+E2LAm5vKMXXwg6ZZBTHPuUlDgQHKXvjGBdfcF1ZDQ==}
 
+  brace-expansion@2.1.0:
+    resolution: {integrity: sha512-TN1kCZAgdgweJhWWpgKYrQaMNHcDULHkWwQIspdtjV4Y5aurRdZpjAqn6yX3FPqTA9ngHCc4hJxMAMgGfve85w==}
+
   brace-expansion@5.0.5:
     resolution: {integrity: sha512-VZznLgtwhn+Mact9tfiwx64fA9erHH/MCXEUfB/0bX/6Fz6ny5EGTXYltMocqg4xFAQZtnO3DHWWXi8RiuN7cQ==}
     engines: {node: 18 || 20 || >=22}
@@ -3701,6 +3702,9 @@ packages:
 
   defu@6.1.4:
     resolution: {integrity: sha512-mEQCMmwJu317oSz8CwdIOdwf3xMif1ttiM8LTufzc3g6kR+9Pe236twL8j3IYT1F7GfRgGcW6MWxzZjLIkuHIg==}
+
+  defu@6.1.7:
+    resolution: {integrity: sha512-7z22QmUWiQ/2d0KkdYmANbRUVABpZ9SNYyH5vx6PZ+nE5bcC0l7uFvEfHlyld/HcGBFTL536ClDt3DEcSlEJAQ==}
 
   degenerator@5.0.1:
     resolution: {integrity: sha512-TllpMR/t0M5sqCXfj85i4XaAzxmS5tVA16dqvdkMwGmzI+dXLXnw3J+3Vdv7VKw+ThlTMboK6i9rnZ6Nntj5CQ==}
@@ -7544,11 +7548,6 @@ snapshots:
 
   '@borewit/text-codec@0.2.1': {}
 
-  '@bull-board/api@6.20.6(@bull-board/ui@6.20.6)':
-    dependencies:
-      '@bull-board/ui': 6.20.6
-      redis-info: 3.1.0
-
   '@bull-board/api@6.21.3(@bull-board/ui@6.21.3)':
     dependencies:
       '@bull-board/ui': 6.21.3
@@ -7615,10 +7614,6 @@ snapshots:
       - velocityjs
       - walrus
       - whiskers
-
-  '@bull-board/ui@6.20.6':
-    dependencies:
-      '@bull-board/api': 6.20.6(@bull-board/ui@6.20.6)
 
   '@bull-board/ui@6.21.3':
     dependencies:
@@ -8013,6 +8008,8 @@ snapshots:
       - supports-color
 
   '@eslint/js@8.57.1': {}
+
+  '@faker-js/faker@10.4.0': {}
 
   '@fastify/merge-json-schemas@0.2.1':
     dependencies:
@@ -10156,6 +10153,10 @@ snapshots:
     dependencies:
       balanced-match: 1.0.2
 
+  brace-expansion@2.1.0:
+    dependencies:
+      balanced-match: 1.0.2
+
   brace-expansion@5.0.5:
     dependencies:
       balanced-match: 4.0.4
@@ -10217,7 +10218,7 @@ snapshots:
     dependencies:
       chokidar: 3.6.0
       confbox: 0.1.8
-      defu: 6.1.4
+      defu: 6.1.7
       dotenv: 16.6.1
       giget: 1.2.5
       jiti: 1.21.7
@@ -10695,6 +10696,8 @@ snapshots:
       object-keys: 1.1.1
 
   defu@6.1.4: {}
+
+  defu@6.1.7: {}
 
   degenerator@5.0.1:
     dependencies:
@@ -11456,7 +11459,7 @@ snapshots:
     dependencies:
       citty: 0.1.6
       consola: 3.4.2
-      defu: 6.1.4
+      defu: 6.1.7
       node-fetch-native: 1.6.7
       nypm: 0.5.4
       pathe: 2.0.3
@@ -12781,7 +12784,7 @@ snapshots:
 
   minimatch@9.0.3:
     dependencies:
-      brace-expansion: 2.0.2
+      brace-expansion: 2.1.0
 
   minimatch@9.0.9:
     dependencies:
