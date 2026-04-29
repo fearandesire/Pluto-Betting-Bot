@@ -6,12 +6,7 @@ import {
 } from '@sapphire/framework'
 import '@sapphire/plugin-hmr/register'
 import { GatewayIntentBits, Partials } from 'discord.js'
-import './lib/startup/cache.js'
-import './lib/startup/env.js'
-import './utils/api/Khronos/KhronosInstances.js'
-import './utils/api/koa/index.js'
-import './utils/cache/queue/ChannelCreationQueue.js'
-import './utils/cron/index.js'
+import env from './lib/startup/env.js'
 import { logger } from './utils/logging/WinstonLogger.js'
 
 const SapDiscClient = new SapphireClient({
@@ -43,8 +38,27 @@ ApplicationCommandRegistries.setDefaultBehaviorWhenNotIdentical(
 logger.info({
 	message: 'Pluto is starting up',
 })
+
+const initializeStartupServices = async () => {
+	if (env.USE_MOCK_DATA) {
+		logger.info({
+			message:
+				'Mock data mode enabled; skipping Redis-backed startup services',
+			source: 'startup:mock-data',
+		})
+		return
+	}
+
+	await import('./lib/startup/cache.js')
+	await import('./utils/api/Khronos/KhronosInstances.js')
+	await import('./utils/api/koa/index.js')
+	await import('./utils/cache/queue/ChannelCreationQueue.js')
+	await import('./utils/cron/index.js')
+}
+
 const login = async () => {
 	try {
+		await initializeStartupServices()
 		await SapDiscClient.login(process.env.TOKEN)
 		logger.info('Pluto is up and running!')
 	} catch (error) {
