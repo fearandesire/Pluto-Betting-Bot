@@ -47,6 +47,16 @@ describe('buildRecordsStr', () => {
 			expect(result).not.toContain('Playoff Series')
 		})
 
+		it('uses Team Records header without playoff subtext', () => {
+			const result = buildRecordsStr({
+				...base,
+				records: regularSeasonRecords,
+			})
+			expect(result).toContain('🔵 **Team Records**')
+			expect(result).not.toContain('Teams Playoff Record')
+			expect(result).not.toContain('Current Playoffs')
+		})
+
 		it('shows — for a null total_record', () => {
 			const result = buildRecordsStr({
 				...base,
@@ -63,8 +73,11 @@ describe('buildRecordsStr', () => {
 	describe('playoffs (series present)', () => {
 		it('shows playoff_record instead of total_record', () => {
 			const result = buildRecordsStr({ ...base, records: playoffRecords })
-			expect(result).toContain('Lakers: 3-4 *(playoff)*')
-			expect(result).toContain('Celtics: 4-3 *(playoff)*')
+			expect(result).toContain('🔵 **Teams Playoff Record**')
+			expect(result).toContain('-# *Current Playoffs*')
+			expect(result).toContain('Lakers: 3-4')
+			expect(result).toContain('Celtics: 4-3')
+			expect(result).not.toContain('*(playoff)*')
 			expect(result).not.toContain('42-30')
 			expect(result).not.toContain('48-24')
 		})
@@ -76,8 +89,11 @@ describe('buildRecordsStr', () => {
 				series: { round: 'First Round', summary: 'LAL leads 2-0' },
 			}
 			const result = buildRecordsStr({ ...base, records })
-			expect(result).toContain('Lakers: 42-30 *(playoff)*')
-			expect(result).toContain('Celtics: 48-24 *(playoff)*')
+			expect(result).toContain('🔵 **Teams Playoff Record**')
+			expect(result).toContain('-# *Current Playoffs*')
+			expect(result).toContain('Lakers: 42-30')
+			expect(result).toContain('Celtics: 48-24')
+			expect(result).not.toContain('*(playoff)*')
 		})
 
 		it('appends a Playoff Series block with series.summary', () => {
@@ -123,9 +139,12 @@ describe('buildRecordsStr', () => {
 				series: { round: 'First Round', summary: 'BOS leads 1-0' },
 			}
 			const result = buildRecordsStr({ ...base, records })
-			// Falls back to total_record (no playoff_record), label should still show
-			expect(result).toContain('Lakers: 42-30 *(playoff)*')
-			expect(result).toContain('Celtics: 48-24 *(playoff)*')
+			// Falls back to total_record; playoff context is in header/subtext only
+			expect(result).toContain('🔵 **Teams Playoff Record**')
+			expect(result).toContain('-# *Current Playoffs*')
+			expect(result).toContain('Lakers: 42-30')
+			expect(result).toContain('Celtics: 48-24')
+			expect(result).not.toContain('*(playoff)*')
 		})
 
 		it('does not append playoff label when both record and fallback are null', () => {
@@ -136,6 +155,8 @@ describe('buildRecordsStr', () => {
 			}
 			const result = buildRecordsStr({ ...base, records })
 			// Null record → shows — without the *(playoff)* label
+			expect(result).toContain('🔵 **Teams Playoff Record**')
+			expect(result).toContain('-# *Current Playoffs*')
 			expect(result).toContain('Lakers: —')
 			expect(result).toContain('Celtics: —')
 			expect(result).not.toContain('*(playoff)*')

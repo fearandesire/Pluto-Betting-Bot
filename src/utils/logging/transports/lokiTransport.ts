@@ -1,6 +1,7 @@
 import winston from 'winston'
 import LokiTransport from 'winston-loki'
 import env from '#lib/startup/env.js'
+import { messageToMsg } from '../WinstonLogger.js'
 import {
 	createHttpTransportErrorHandler,
 	type HttpTransportBaseConfig,
@@ -16,26 +17,32 @@ interface LokiConfig extends HttpTransportBaseConfig {
 	readonly username: string
 	/** Basic auth password/API token */
 	readonly password: string
-	/** Service name for logging identification */
-	readonly serviceName?: string
 	/** Labels to attach to all logs */
 	readonly labels?: Record<string, string>
-	/** Additional custom labels to merge with default labels */
 	/**
 	 * Additional custom labels to merge with default labels.
 	 * Each label value can be a string, boolean, object, or array.
+	 *
+	 * NOTE: Loki labels must stay low-cardinality. Per-call dimensions
+	 * (userId, requestId, guildId, ...) belong in the JSON log fields, not
+	 * as labels.
 	 */
 	readonly customLabels?: Record<string, string | boolean | object | any[]>
 }
 
+const APP = process.env.APP_NAME ?? process.env.SERVICE_NAME ?? 'PLUTO-DISCORD'
+
 /**
- * Creates default configuration for Loki transport
- * @param serviceName - Optional service name override
- * @param customLabels - Additional custom labels to merge
- * @returns Default Loki configuration or null if credentials are missing
+ * Creates default configuration for Loki transport.
+ *
+ * Labels mirror the structured-logging identity contract (`app`, `env`,
+ * `version`) so dashboards can pivot on the same fields whether they read
+ * from a label index or the JSON payload. Placement fields like
+ * `component` are intentionally NOT included as global labels — they are
+ * set per-module via {@link createLogger} child loggers and travel in the
+ * log line itself.
  */
 const createDefaultConfig = (
-	serviceName = 'PLUTO-DISCORD',
 	customLabels: Record<string, string | boolean | object | any[]> = {},
 ): LokiConfig | null => {
 	const host = env.LOKI_URL
@@ -51,15 +58,13 @@ const createDefaultConfig = (
 		host,
 		username: user,
 		password: password,
-		serviceName,
 		environment: env.NODE_ENV,
 		labels: {
-			app: serviceName,
-			service: serviceName,
-			environment: env.NODE_ENV,
-			component: 'api', // Identifies this as API-related logs
-			log_type: 'application', // Distinguishes from system logs
-			...customLabels, // Merge any custom labels
+			app: APP,
+			env: env.NODE_ENV,
+			version: env.PROJECT_VERSION,
+			log_type: 'application',
+			...customLabels,
 		},
 	}
 }
@@ -70,9 +75,8 @@ const createDefaultConfig = (
  * @returns Configured Loki transport or null if credentials are missing
  */
 export const createLokiTransport = (config: Partial<LokiConfig> = {}) => {
-	const serviceName = config.serviceName || 'PLUTO-DISCORD'
 	const customLabels = config.customLabels || {}
-	const defaultConfig = createDefaultConfig(serviceName, customLabels)
+	const defaultConfig = createDefaultConfig(customLabels)
 
 	if (!defaultConfig) {
 		// Return null if Loki credentials are not configured
@@ -86,7 +90,9 @@ export const createLokiTransport = (config: Partial<LokiConfig> = {}) => {
 		basicAuth: `${lokiConfig.username}:${lokiConfig.password}`,
 		labels: lokiConfig.labels,
 		json: true,
-		format: winston.format.json(),
+		// `messageToMsg` aligns the JSON line with the structured-logging
+		// contract (`msg` rather than Winston's native `message`).
+		format: winston.format.combine(messageToMsg(), winston.format.json()),
 		replaceTimestamp: true,
 		onConnectionError: createHttpTransportErrorHandler('Loki'),
 	})

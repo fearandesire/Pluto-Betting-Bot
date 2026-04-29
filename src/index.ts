@@ -25,7 +25,7 @@ const SapDiscClient = new SapphireClient({
 	],
 	partials: [Partials.Channel],
 	logger: {
-		level: LogLevel.Info,
+		level: LogLevel.Debug,
 	},
 	typing: true,
 	loadMessageCommandListeners: true,

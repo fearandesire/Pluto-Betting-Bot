@@ -18,6 +18,7 @@ import type {
 	PlacedBetslip,
 	PlacedBetslipDto,
 } from '@kh-openapi'
+import { DEV_IDS } from '../../lib/configs/constants.js'
 import env from '../../lib/startup/env.js'
 import { DiscordConfigSettingTypeEnum } from '../../openapi/khronos/index.js'
 import { DiscordConfigEnums } from '../api/common/interfaces/kh-pluto/kh-pluto.interface.js'
@@ -73,22 +74,19 @@ export class MockBackend {
 
 	getGuild(guildId: string): Guild {
 		const config = []
-		if (env.MOCK_GUILD_BETTING_CHAN_ID) {
-			config.push({
-				id: `mock-${DiscordConfigEnums.BETTING_CHANNEL}`,
-				guild_id: guildId,
-				setting_type: DiscordConfigSettingTypeEnum.BettingChan,
-				setting_value: env.MOCK_GUILD_BETTING_CHAN_ID,
-			})
-		}
-		if (env.MOCK_GUILD_GAMES_CATEGORY_ID) {
-			config.push({
-				id: `mock-${DiscordConfigEnums.GAMES_CATEGORY}`,
-				guild_id: guildId,
-				setting_type: DiscordConfigSettingTypeEnum.GamesCategory,
-				setting_value: env.MOCK_GUILD_GAMES_CATEGORY_ID,
-			})
-		}
+		// Both IDs are startup-required when USE_MOCK_DATA is enabled
+		config.push({
+			id: `mock-${DiscordConfigEnums.BETTING_CHANNEL}`,
+			guild_id: guildId,
+			setting_type: DiscordConfigSettingTypeEnum.BettingChan,
+			setting_value: env.MOCK_GUILD_BETTING_CHAN_ID!,
+		})
+		config.push({
+			id: `mock-${DiscordConfigEnums.GAMES_CATEGORY}`,
+			guild_id: guildId,
+			setting_type: DiscordConfigSettingTypeEnum.GamesCategory,
+			setting_value: env.DEV_GUILD_GAMES_CATEGORY_ID!,
+		})
 
 		return {
 			guild_id: guildId,
@@ -102,7 +100,7 @@ export class MockBackend {
 	getGuildsForSportWithConfig(
 		params: GetGuildsBySportAndConfigTypeRequest,
 	): Guild[] {
-		const guildId = env.DEV_SERVER_ID
+		const guildId = DEV_IDS.guild
 		const guild = this.getGuild(guildId)
 		return guild.sport === params.sport ? [guild] : []
 	}

@@ -4,6 +4,7 @@ import {
 	Listener,
 	type UserError,
 } from '@sapphire/framework'
+import { MessageFlags } from 'discord.js'
 
 export class ChatInputCommandDenied extends Listener<
 	typeof Events.ChatInputCommandDenied
@@ -20,7 +21,7 @@ export class ChatInputCommandDenied extends Listener<
 
 		return interaction.reply({
 			content: error?.message || 'Authorization error.',
-			ephemeral: true,
+			flags: MessageFlags.Ephemeral,
 		})
 	}
 }

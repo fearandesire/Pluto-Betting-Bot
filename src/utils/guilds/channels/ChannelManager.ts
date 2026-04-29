@@ -149,11 +149,19 @@ export default class ChannelManager {
 
 		if (!locatedGuild) return null
 
-		const guildsGameCategory = await locatedGuild.channels.cache.get(
-			`${guild.gameCategoryId}`,
+		let guildsGameCategory = locatedGuild.channels.cache.get(
+			guild.gameCategoryId,
 		)
 		if (!guildsGameCategory) {
-			return
+			const fetched = await locatedGuild.channels
+				.fetch(guild.gameCategoryId)
+				.catch(() => null)
+			if (fetched) guildsGameCategory = fetched
+		}
+		if (!guildsGameCategory) {
+			throw new Error(
+				`Game category channel not found — verify the category exists and the bot has access to it. guildId=${guild.guildId} gameCategoryId=${guild.gameCategoryId} channelName=${channel.channelname}`,
+			)
 		}
 
 		const bettingChanId = guild.bettingChannelId

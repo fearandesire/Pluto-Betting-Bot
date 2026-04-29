@@ -19,9 +19,10 @@ export function buildRecordsStr(args: RecordsArgs): string {
 		? (home_team.playoff_record ?? home_team.total_record)
 		: home_team.total_record
 
-	const awayLabel = isPlayoffs && awayRecord ? ' *(playoff)*' : ''
-	const homeLabel = isPlayoffs && homeRecord ? ' *(playoff)*' : ''
-	const recordsBlock = `🔵 **Team Records**\n${args.awayTeamShortName}: ${awayRecord ?? '—'}${awayLabel}\n${args.homeTeamShortName}: ${homeRecord ?? '—'}${homeLabel}`
+	const recordsHeader = isPlayoffs
+		? '🔵 **Teams Playoff Record**\n-# *Current Playoffs*'
+		: '🔵 **Team Records**'
+	const recordsBlock = `${recordsHeader}\n${args.awayTeamShortName}: ${awayRecord ?? '—'}\n${args.homeTeamShortName}: ${homeRecord ?? '—'}`
 
 	if (!series) return `\n\n${recordsBlock}`
 
