@@ -26,6 +26,7 @@ import {
 	type PrepareMatchEmbed,
 } from '../../cache/data/schemas.js'
 import StringUtils from '../../common/string-utils.js'
+import { logger } from '../../logging/WinstonLogger.js'
 import { buildRecordsStr } from './matchEmbedUtils.js'
 
 /**
@@ -101,11 +102,20 @@ export default class ChannelManager {
 		const eligibleGuilds = guilds.filter((guild) => guild.sport === sport)
 
 		for (const guild of eligibleGuilds) {
-			await this.createChannelAndSendEmbed({
-				channel,
-				guild,
-				metadata: { favoredTeamInfo, matchImg, ...metadata },
-			})
+			try {
+				await this.createChannelAndSendEmbed({
+					channel,
+					guild,
+					metadata: { favoredTeamInfo, matchImg, ...metadata },
+				})
+			} catch (err) {
+				logger.error('Failed to create channel for guild', {
+					source: 'ChannelManager.processChannel',
+					guildId: guild.guildId,
+					channelName: channel.channelname,
+					error: err instanceof Error ? err.message : String(err),
+				})
+			}
 		}
 	}
 

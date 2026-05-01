@@ -56,6 +56,14 @@ const envSchema = z
 		MOCK_GUILD_SPORT: z.enum(['nba', 'nfl']).default('nba'),
 	})
 	.superRefine((data, ctx) => {
+		if (data.USE_MOCK_DATA && data.NODE_ENV === 'production') {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				path: ['USE_MOCK_DATA'],
+				message:
+					'USE_MOCK_DATA cannot be enabled when NODE_ENV=production',
+			})
+		}
 		if (data.USE_MOCK_DATA) {
 			if (!data.DEV_GUILD_GAMES_CATEGORY_ID) {
 				ctx.addIssue({

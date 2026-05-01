@@ -70,6 +70,12 @@ export class MockStore {
 
 	clearPending(userId: string): void {
 		const bets = this.getBets(userId)
+		const pendingBets = bets.filter(
+			(bet) => bet.betresult === PlacedBetslipBetresultEnum.Pending,
+		)
+		for (const bet of pendingBets) {
+			this.credit(userId, bet.amount)
+		}
 		this.betsByUser.set(
 			userId,
 			bets.filter(

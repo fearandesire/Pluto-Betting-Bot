@@ -9,7 +9,7 @@ class InMemoryRedis {
 	private readonly hashes = new Map<string, Map<string, string>>()
 	private readonly sets = new Map<string, Set<string>>()
 
-	async set(key: string, value: string) {
+	async set(key: string, value: string, ..._rest: unknown[]) {
 		this.values.set(key, value)
 		return 'OK'
 	}
@@ -90,6 +90,18 @@ class InMemoryRedis {
 		const pipeline = {
 			set: (key: string, value: string) => {
 				commands.push(() => this.set(key, value))
+				return pipeline
+			},
+			del: (...keys: string[]) => {
+				commands.push(() => this.del(...keys))
+				return pipeline
+			},
+			hset: (key: string, field: string, value: string) => {
+				commands.push(() => this.hset(key, field, value))
+				return pipeline
+			},
+			expire: (key: string, seconds: number) => {
+				commands.push(() => this.expire(key, seconds))
 				return pipeline
 			},
 			exec: async () => Promise.all(commands.map((command) => command())),
