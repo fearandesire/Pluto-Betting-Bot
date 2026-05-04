@@ -245,7 +245,7 @@ export default class ChannelManager {
 		const matchEmbed = new EmbedBuilder()
 			.setColor(embedClr)
 			.setDescription(
-				`## ${matchVersus}\n\n🔵 **Game Details**\nThe ${teamEmoji} **${args.favored}** are favored to win this match!${recordsStr}\n\n🔵 **Info**\n*Use \`/commands\` in <#${args.bettingChanId}> channel to place bets with Pluto*`,
+				`# ${matchVersus}\n\n> ${teamEmoji}  **${args.favored}** opens as the favorite.${recordsStr}\n\n**Place your bets** → \`/commands\` in <#${args.bettingChanId}>`,
 			)
 			.setFooter({
 				text: 'Pluto | Created by fenixforever',
