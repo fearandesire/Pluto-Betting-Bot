@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { buildRecordsStr } from '../matchEmbedUtils.js'
 
 const base = { awayTeamShortName: 'Lakers', homeTeamShortName: 'Celtics' }

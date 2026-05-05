@@ -1,6 +1,7 @@
 import Router from '@koa/router'
 import { CacheManager } from '../../../cache/cache-manager.js'
-import MatchCacheService from './MatchCacheService.js'
+import { logger } from '../../../logging/WinstonLogger.js'
+import MatchCacheService from './match-cache-service.js'
 
 export const matchCache = new Router()
 
@@ -18,7 +19,11 @@ matchCache.post('/cache/matches', async (ctx: any) => {
 			success: true,
 		}
 	} catch (error) {
-		console.error(error)
+		logger.error({
+			message: 'Failed to cache matches.',
+			source: 'matchCache:POST /cache/matches',
+			error,
+		})
 		ctx.body = {
 			success: false,
 			error,

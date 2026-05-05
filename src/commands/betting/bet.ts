@@ -6,9 +6,14 @@ import env from '../../lib/startup/env.js'
 import { BetsCacheService } from '../../utils/api/common/bets/BetsCacheService.js'
 import { BetslipManager } from '../../utils/api/Khronos/bets/BetslipsManager.js'
 import BetslipWrapper from '../../utils/api/Khronos/bets/betslip-wrapper.js'
+import MatchCacheService from '../../utils/api/routes/cache/match-cache-service.js'
+import { normalizeTeamName } from '../../utils/betting/autocomplete-choices.js'
 import BettingValidation from '../../utils/betting/betting-validation.js'
 import { CacheManager } from '../../utils/cache/cache-manager.js'
 import { ErrorEmbeds } from '../../utils/common/errors/global.js'
+
+// Module-level singleton so cache state persists across command invocations
+const matchCacheService = new MatchCacheService(new CacheManager())
 
 @ApplyOptions<Command.Options>({
 	description: '🎲 Place a bet on a match',
@@ -23,23 +28,23 @@ export class UserCommand extends Command {
 					.setContexts(InteractionContextType.Guild)
 					.addStringOption((option) =>
 						option
+							.setName('match')
+							.setDescription('The match you want to bet on')
+							.setRequired(true)
+							.setAutocomplete(true),
+					)
+					.addStringOption((option) =>
+						option
 							.setName('team')
 							.setDescription('The team you want to bet on')
 							.setRequired(true)
-							.setAutocomplete(false),
+							.setAutocomplete(true),
 					)
 					.addIntegerOption((option) =>
 						option
 							.setName('amount')
 							.setDescription('The amount you want to bet')
 							.setRequired(true),
-					)
-					.addStringOption((option) =>
-						option
-							.setName('match')
-							.setDescription('The match you want to bet on')
-							.setRequired(false)
-							.setAutocomplete(true),
 					),
 			{
 				idHints: ['1022572274546651337'],
@@ -57,7 +62,8 @@ export class UserCommand extends Command {
 			return interaction.editReply({ embeds: [errEmbed] })
 		}
 
-		let team = interaction.options.getString('team', true)
+		const matchSelection = interaction.options.getString('match', true)
+		const teamInput = interaction.options.getString('team', true)
 		const amount = interaction.options.getInteger('amount', true)
 		const validator = new BettingValidation()
 		const amountValid = validator.validateAmount(amount)
@@ -67,9 +73,29 @@ export class UserCommand extends Command {
 			)
 			return interaction.editReply({ embeds: [errEmbed] })
 		}
-		const matchSelection = interaction.options.getString('match', false)
+		const selectedMatch = await matchCacheService.getMatch(matchSelection)
+		if (
+			!selectedMatch ||
+			!selectedMatch.home_team ||
+			!selectedMatch.away_team
+		) {
+			const errEmbed = await ErrorEmbeds.betErr(
+				'The selected match is unavailable. Please choose another match.',
+			)
+			return interaction.editReply({ embeds: [errEmbed] })
+		}
+		const matchTeams = [selectedMatch.home_team, selectedMatch.away_team]
+		const matchedTeam = matchTeams.find(
+			(team) => normalizeTeamName(team) === normalizeTeamName(teamInput),
+		)
+		if (!matchedTeam) {
+			const errEmbed = await ErrorEmbeds.betErr(
+				'Please select a team from the chosen match.',
+			)
+			return interaction.editReply({ embeds: [errEmbed] })
+		}
 
-		team = await this.identifyTeam(team)
+		const team = await this.identifyTeam(matchedTeam)
 		const betslipData = {
 			team,
 			amount,

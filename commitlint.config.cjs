@@ -6,6 +6,13 @@ module.exports = {
 		(message) => /^(fixup|squash)!/.test(message),
 		(message) => message.includes('Signed-off-by: dependabot[bot]'),
 		(message) => message.includes('chore(release):'),
+		// PR-style subject line (e.g. "Replace X with Y in Z (#392)") without conventional type
+		(message) => {
+			const firstLine = (message || '').split('\n')[0] ?? '';
+			const endsWithPrRef = /\(#\d+\)\s*$/.test(firstLine);
+			const hasConventionalType = /^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([^)]*\))?!?:\s/.test(firstLine);
+			return endsWithPrRef && !hasConventionalType;
+		},
 	],
 	rules: {
 		'type-enum': [

@@ -84,6 +84,14 @@ src/utils/bot_res/img-pup.ts
 AGENTS.md
 CLAUDE.md
 
+# AI agent context docs (private, not for public repo)
+CONTEXT.md
+CONTEXT-MAP.md
+docs/agents/
+CLAUDE.md
+.claude/
+.cursor/
+
 .cursorignore
 
 docs/internal

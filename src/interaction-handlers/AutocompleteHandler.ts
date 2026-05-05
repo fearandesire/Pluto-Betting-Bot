@@ -6,7 +6,8 @@ import {
 import type { AutocompleteInteraction } from 'discord.js'
 import GuildWrapper from '../utils/api/Khronos/guild/guild-wrapper.js'
 import MatchApiWrapper from '../utils/api/Khronos/matches/matchApiWrapper.js'
-import MatchCacheService from '../utils/api/routes/cache/MatchCacheService.js'
+import MatchCacheService from '../utils/api/routes/cache/match-cache-service.js'
+import { getTeamChoicesForMatch } from '../utils/betting/autocomplete-choices.js'
 import { CacheManager } from '../utils/cache/cache-manager.js'
 import { DateManager } from '../utils/common/DateManager.js'
 import StringUtils from '../utils/common/string-utils.js'
@@ -89,25 +90,14 @@ export class AutocompleteHandler extends InteractionHandler {
 			case 'team': {
 				const matchSelection = interaction.options.getString(
 					'match',
-					true,
+					false,
 				)
-				const selectedMatch = sportFilteredMatches.find(
-					(match: MatchDetailDto) => match.id === matchSelection,
+				const choices = getTeamChoicesForMatch(
+					sportFilteredMatches,
+					matchSelection ?? null,
 				)
-
-				if (selectedMatch) {
-					const teams = [
-						selectedMatch.home_team,
-						selectedMatch.away_team,
-					].filter((team): team is string => team !== undefined)
-					return this.some(
-						teams.map((team) => ({
-							name: team,
-							value: team,
-						})),
-					)
-				}
-				return this.none()
+				if (choices.length === 0) return this.none()
+				return this.some(choices)
 			}
 			default:
 				return this.none()

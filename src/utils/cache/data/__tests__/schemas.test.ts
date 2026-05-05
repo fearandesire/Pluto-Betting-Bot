@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { teamRecordsResultSchema } from '../schemas.js'
 
 describe('teamRecordsResultSchema', () => {
