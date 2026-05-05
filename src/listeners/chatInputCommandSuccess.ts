@@ -120,6 +120,7 @@ export class ChatInputCommandSuccess extends Listener<
 		if (option.channel) return option.channel.id
 		if (option.role) return option.role.id
 		if (option.attachment) return option.attachment.id
+		if (typeof option.value === 'string') return '[redacted]'
 		return option.value ?? null
 	}
 }

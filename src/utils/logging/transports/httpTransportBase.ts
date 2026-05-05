@@ -1,3 +1,4 @@
+import type * as winston from 'winston'
 import {
 	createHttpBaseFormat,
 	DEFAULT_HTTP_METADATA,
@@ -36,7 +37,7 @@ export const createHttpTransportMetadata = (
  *
  * @returns Winston format combination optimized for HTTP transport destinations
  */
-export const createHttpTransportFormat = () => {
+export const createHttpTransportFormat = (): winston.Logform.Format => {
 	return createHttpBaseFormat()
 }
 

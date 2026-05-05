@@ -109,7 +109,13 @@ export class ChatInputCommandError extends Listener<
 				.map((line) => line.replace(cwd, '').trim())
 				.join('\n')
 
-			const stackBlock = `\`\`\`\n${rawStack}\n\`\`\``
+			// Trim rawStack to fit Discord's 1024-char embed field limit
+			const maxStackLength = 1016 // Account for code block overhead (```\n...\n```)
+			const trimmedStack =
+				rawStack.length > maxStackLength
+					? rawStack.slice(0, maxStackLength - 3) + '...'
+					: rawStack
+			const stackBlock = `\`\`\`\n${trimmedStack}\n\`\`\``
 
 			const embed = new EmbedBuilder()
 				.setColor(embedColors.error as `#${string}`)
