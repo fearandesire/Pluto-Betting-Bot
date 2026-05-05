@@ -99,8 +99,8 @@ export class MatchRefreshQueue {
 	private setupWorkerEvents(): void {
 		this.worker.on(
 			'completed',
-			async (job: Job<MatchRefreshJobData, MatchRefreshResult>) => {
-				const result = await job.returnvalue
+			(job: Job<MatchRefreshJobData, MatchRefreshResult>) => {
+				const result = job.returnvalue
 				if (!result?.success) {
 					return
 				}
@@ -119,7 +119,19 @@ export class MatchRefreshQueue {
 
 		this.worker.on(
 			'failed',
-			(job: Job<MatchRefreshJobData>, error: Error) => {
+			(
+				job: Job<MatchRefreshJobData> | undefined,
+				error: Error,
+				prev: string,
+			) => {
+				if (!job) {
+					logger.error({
+						message: 'Match refresh failed (job unavailable)',
+						source: 'MatchRefreshQueue:worker',
+						data: { error: error.message, prev },
+					})
+					return
+				}
 				logger.error({
 					message: 'Match refresh failed',
 					source: 'MatchRefreshQueue:worker',
@@ -128,6 +140,7 @@ export class MatchRefreshQueue {
 						reason: job.data?.reason,
 						error: error.message,
 						attempts: job.attemptsMade,
+						prev,
 					},
 				})
 			},

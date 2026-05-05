@@ -9,9 +9,9 @@ describe('match-refresh-utils', () => {
 					new Error('Job refresh-123 already exists'),
 				),
 			).toBe(true)
-			expect(isDuplicateJobError(new Error('job already exists'))).toBe(
-				true,
-			)
+			expect(
+				isDuplicateJobError(new Error('Job initial already exists')),
+			).toBe(true)
 		})
 
 		it('returns false for other errors', () => {
@@ -19,6 +19,20 @@ describe('match-refresh-utils', () => {
 				false,
 			)
 			expect(isDuplicateJobError(new Error('No matches returned'))).toBe(
+				false,
+			)
+		})
+
+		it('returns false for unrelated errors that mention "job" and "already exists"', () => {
+			// Previously the loose substring check matched any message
+			// containing both words. The tightened regex now requires
+			// BullMQ's exact "Job <id> already exists" format.
+			expect(
+				isDuplicateJobError(
+					new Error('the job entry already exists in the database'),
+				),
+			).toBe(false)
+			expect(isDuplicateJobError(new Error('job already exists'))).toBe(
 				false,
 			)
 		})
