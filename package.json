@@ -27,7 +27,6 @@
 		"ci-gen-api": "rimraf ./src/openapi ./generated/spec && pnpm gen-api && pnpm post-api-fix",
 		"dvault": "npx dotenv-vault@latest",
 		"dvault-prod": "npx dotenv-vault@latest push production",
-		"test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
 		"release": "release-it",
 		"docker:ci": "docker-compose build && docker-compose push",
 		"prepare": "husky",
