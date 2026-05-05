@@ -5,7 +5,7 @@ import {
 	type FooterTypes,
 } from './footers/fallbackFooters.js'
 
-export { type FooterTypes, type BetContext }
+export { type BetContext, type FooterTypes }
 
 /** Valid footer type keys for runtime validation */
 const VALID_FOOTER_TYPES = new Set<FooterTypes>([
@@ -66,4 +66,4 @@ function betFooter(context: BetContext): string {
 	}
 }
 
-export { randomFooter as helpfooter, betFooter, supportMessage }
+export { betFooter, randomFooter as helpfooter, supportMessage }

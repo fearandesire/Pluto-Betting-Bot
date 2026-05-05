@@ -12,6 +12,7 @@ import {
 	type MessageCreateOptions,
 	type TextChannel,
 } from 'discord.js'
+import { isMockEnabled, MockBackend } from '../../../dev/index.js'
 import { DiscordConfigEnums } from '../../common/interfaces/kh-pluto/kh-pluto.interface.js'
 import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js'
 
@@ -22,9 +23,11 @@ import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js'
 export default class GuildWrapper {
 	private guildsApi: GuildsApi
 	private readonly khConfig: IKH_API_CONFIG = KH_API_CONFIG
+	private mock?: MockBackend
 
 	constructor() {
 		this.guildsApi = new GuildsApi(this.khConfig)
+		if (isMockEnabled()) this.mock = MockBackend.instance()
 	}
 
 	/**
@@ -54,6 +57,7 @@ export default class GuildWrapper {
 	 * @throws Error if API request fails
 	 */
 	async getGuild(guildId: string): Promise<Guild> {
+		if (this.mock) return this.mock.getGuild(guildId)
 		try {
 			return await this.guildsApi.getGuildById({
 				id: guildId,
@@ -249,6 +253,7 @@ export default class GuildWrapper {
 	async getGuildsForSportWithConfig(
 		params: GetGuildsBySportAndConfigTypeRequest,
 	): Promise<Guild[]> {
+		if (this.mock) return this.mock.getGuildsForSportWithConfig(params)
 		const guilds =
 			await this.guildsApi.getGuildsBySportAndConfigType(params)
 		return guilds

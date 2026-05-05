@@ -26,6 +26,8 @@ import {
 	type PrepareMatchEmbed,
 } from '../../cache/data/schemas.js'
 import StringUtils from '../../common/string-utils.js'
+import { logger } from '../../logging/WinstonLogger.js'
+import { buildRecordsStr } from './matchEmbedUtils.js'
 
 /**
  * Handle interactions between Pluto API & Discord user interface/interactions
@@ -100,11 +102,21 @@ export default class ChannelManager {
 		const eligibleGuilds = guilds.filter((guild) => guild.sport === sport)
 
 		for (const guild of eligibleGuilds) {
-			await this.createChannelAndSendEmbed({
-				channel,
-				guild,
-				metadata: { favoredTeamInfo, matchImg, ...metadata },
-			})
+			try {
+				await this.createChannelAndSendEmbed({
+					channel,
+					guild,
+					metadata: { favoredTeamInfo, matchImg, ...metadata },
+				})
+			} catch (err) {
+				logger.error('Failed to create channel for guild', {
+					source: 'ChannelManager.processChannel',
+					guildId: guild.guildId,
+					channelName: channel.channelname,
+					error: err,
+				})
+				throw err
+			}
 		}
 	}
 
@@ -148,11 +160,24 @@ export default class ChannelManager {
 
 		if (!locatedGuild) return null
 
-		const guildsGameCategory = await locatedGuild.channels.cache.get(
-			`${guild.gameCategoryId}`,
+		let guildsGameCategory = locatedGuild.channels.cache.get(
+			guild.gameCategoryId,
 		)
 		if (!guildsGameCategory) {
-			return
+			const fetched = await locatedGuild.channels
+				.fetch(guild.gameCategoryId)
+				.catch(() => null)
+			if (fetched) guildsGameCategory = fetched
+		}
+		if (!guildsGameCategory) {
+			throw new Error(
+				`Game category channel not found — verify the category exists and the bot has access to it. guildId=${guild.guildId} gameCategoryId=${guild.gameCategoryId} channelName=${channel.channelname}`,
+			)
+		}
+		if (guildsGameCategory.type !== ChannelType.GuildCategory) {
+			throw new Error(
+				`Channel ${guild.gameCategoryId} is not a category channel. guildId=${guild.guildId} channelName=${channel.channelname}`,
+			)
 		}
 
 		const bettingChanId = guild.bettingChannelId
@@ -221,15 +246,12 @@ export default class ChannelManager {
 		const teamEmoji = (await findEmoji(args.favored)) ?? ''
 		const matchVersus = `${args.awayTeamShortName} @ ${args.homeTeamShortName}`
 
-		// Build records string if available
-		const recordsStr = args.records
-			? `\n\n🔵 **Team Records**\n${args.awayTeamShortName}: ${args.records.away_team.total_record}\n${args.homeTeamShortName}: ${args.records.home_team.total_record}`
-			: ''
+		const recordsStr = buildRecordsStr(args)
 
 		const matchEmbed = new EmbedBuilder()
 			.setColor(embedClr)
 			.setDescription(
-				`## ${matchVersus}\n\n🔵 **Game Details**\nThe ${teamEmoji} **${args.favored}** are favored to win this match!${recordsStr}\n\n🔵 **Info**\n*Use \`/commands\` in <#${args.bettingChanId}> channel to place bets with Pluto*`,
+				`# ${matchVersus}\n\n> ${teamEmoji}  **${args.favored}** opens as the favorite.${recordsStr}\n\n**Place your bets** → \`/commands\` in <#${args.bettingChanId}>`,
 			)
 			.setFooter({
 				text: 'Pluto | Created by fenixforever',

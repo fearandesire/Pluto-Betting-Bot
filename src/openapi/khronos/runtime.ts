@@ -13,7 +13,7 @@
  */
 
 
-export const BASE_PATH = "http://localhost:2088/api/khronos/v1".replace(/\/+$/, "");
+export const BASE_PATH = "http://localhost".replace(/\/+$/, "");
 
 export interface ConfigurationParameters {
     basePath?: string; // override base path

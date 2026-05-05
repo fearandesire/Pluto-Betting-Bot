@@ -20,12 +20,27 @@ export type ChannelDeletionJobData = z.infer<
 export type ChannelDeletionResult = z.infer<typeof channelDeletionResultSchema>
 
 export const teamRecordSchema = z.object({
-	total_record: z.string(),
+	display_name: z.string().optional(),
+	abbreviation: z.string().optional(),
+	total_record: z.string().nullable(),
+	home_record: z.string().nullable().optional(),
+	away_record: z.string().nullable().optional(),
+	playoff_record: z.string().nullable().optional(),
+})
+
+export const matchupSeriesSchema = z.object({
+	round: z.string().optional(),
+	summary: z.string().optional(),
+	home_wins: z.number().optional(),
+	away_wins: z.number().optional(),
+	total_games: z.number().optional(),
+	completed: z.boolean().optional(),
 })
 
 export const teamRecordsResultSchema = z.object({
 	home_team: teamRecordSchema,
 	away_team: teamRecordSchema,
+	series: matchupSeriesSchema.nullable().optional(),
 })
 
 export const channelDeletionEventSchema = z.object({
@@ -202,3 +217,4 @@ export type PrepareMatchEmbed = z.infer<typeof prepareMatchEmbedSchema>
 export type CreateChannelAndSendEmbed = z.infer<
 	typeof createChannelAndSendEmbedSchema
 >
+export type TeamMatchupRecords = z.infer<typeof teamRecordsResultSchema>

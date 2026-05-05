@@ -26,7 +26,6 @@ export async function setupKoaApp(): Promise<Koa> {
 	app.use(
 		logger({
 			transports: createLokiTransport({
-				serviceName: 'PLUTO-DISCORD',
 				customLabels: {
 					api: true,
 				},

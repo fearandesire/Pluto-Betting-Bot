@@ -15,12 +15,8 @@ const OUTPUT_FILE_PATH = path.resolve(
 	'spec',
 	'khronos-swagger-spec-v1.json',
 )
-const LOCAL_SPEC_PATH = path.resolve(
-	process.cwd(),
-	'..',
-	'khronos',
-	CANONICAL_SPEC_RELATIVE_PATH,
-)
+// The committed spec is the single source of truth for both CI and local dev.
+// Update spec/khronos-swagger-spec-v1.json to pick up Khronos changes.
 const REPO_SPEC_PATH = path.resolve(
 	process.cwd(),
 	'spec',
@@ -48,19 +44,6 @@ async function writeSpec(content, source) {
 	await writeFile(OUTPUT_FILE_PATH, content, 'utf8')
 	console.log(`Khronos spec written from ${source}`)
 	console.log(`Output: ${OUTPUT_FILE_PATH}`)
-}
-
-async function tryLocalSpec() {
-	try {
-		await access(LOCAL_SPEC_PATH)
-		const localSpec = await readFile(LOCAL_SPEC_PATH, 'utf8')
-		if (!localSpec.trim()) return false
-
-		await writeSpec(localSpec, LOCAL_SPEC_PATH)
-		return true
-	} catch {
-		return false
-	}
 }
 
 async function tryRepoSpec() {
@@ -105,9 +88,6 @@ async function fetchRemoteSpec() {
 }
 
 async function main() {
-	const localOk = await tryLocalSpec()
-	if (localOk) return
-
 	const repoSpecOk = await tryRepoSpec()
 	if (repoSpecOk) return
 

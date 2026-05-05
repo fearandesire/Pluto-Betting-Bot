@@ -27,6 +27,7 @@
 		"ci-gen-api": "rimraf ./src/openapi ./generated/spec && pnpm gen-api && pnpm post-api-fix",
 		"dvault": "npx dotenv-vault@latest",
 		"dvault-prod": "npx dotenv-vault@latest push production",
+		"test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
 		"release": "release-it",
 		"docker:ci": "docker-compose build && docker-compose push",
 		"prepare": "husky"
@@ -44,9 +45,10 @@
 	},
 	"dependencies": {
 		"@axiomhq/winston": "^1.6.0",
-		"@bull-board/api": "^6.17.0",
+		"@bull-board/api": "^6.21.3",
 		"@bull-board/koa": "^6.21.2",
-		"@bull-board/ui": "^6.17.0",
+		"@bull-board/ui": "^6.21.3",
+		"@faker-js/faker": "^10.4.0",
 		"@favware/colorette-spinner": "^1.0.1",
 		"@kaname-png/plugin-statcord": "^2.3.3",
 		"@koa/cors": "^5.0.0",
