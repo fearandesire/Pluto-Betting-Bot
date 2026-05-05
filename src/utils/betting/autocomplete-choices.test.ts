@@ -1,6 +1,9 @@
 import type { MatchDetailDto } from '@kh-openapi'
 import { describe, expect, it } from 'vitest'
-import { getTeamChoicesForMatch } from './autocomplete-choices.js'
+import {
+	getTeamChoicesForMatch,
+	normalizeTeamName,
+} from './autocomplete-choices.js'
 
 describe('getTeamChoicesForMatch', () => {
 	const matches: MatchDetailDto[] = [
@@ -54,5 +57,27 @@ describe('getTeamChoicesForMatch', () => {
 			{ name: 'Home', value: 'Home' },
 			{ name: 'Away', value: 'Away' },
 		])
+	})
+})
+
+describe('normalizeTeamName', () => {
+	it('trims leading and trailing whitespace and lowercases', () => {
+		expect(normalizeTeamName('  Los Angeles Lakers  ')).toBe(
+			'los angeles lakers',
+		)
+	})
+
+	it('collapses multiple internal spaces into one', () => {
+		expect(normalizeTeamName('Los  Angeles   Lakers')).toBe(
+			'los angeles lakers',
+		)
+	})
+
+	it('makes case-insensitive matching possible', () => {
+		expect(normalizeTeamName('Lakers')).toBe(normalizeTeamName('lakers'))
+	})
+
+	it('returns empty string unchanged', () => {
+		expect(normalizeTeamName('')).toBe('')
 	})
 })
