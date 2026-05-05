@@ -166,11 +166,7 @@ export class ChatInputCommandError extends Listener<
 
 		const payload = {
 			embeds: [embed],
-			flags: MessageFlags.Ephemeral as
-				| MessageFlags.Ephemeral
-				| MessageFlags.SuppressEmbeds
-				| MessageFlags.SuppressNotifications
-				| MessageFlags.IsComponentsV2,
+			flags: MessageFlags.Ephemeral,
 		}
 
 		try {
