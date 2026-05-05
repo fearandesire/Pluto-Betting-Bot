@@ -4,6 +4,8 @@ import { logger } from '../logging/WinstonLogger.js'
 
 const { R_HOST, R_PORT, R_PASS, R_DB } = process.env
 
+// InMemoryRedis is a mock Redis client for testing. Note: expire() is a stub
+// that always returns 1 and does not enforce TTL on keys.
 class InMemoryRedis {
 	private readonly values = new Map<string, string>()
 	private readonly hashes = new Map<string, Map<string, string>>()
@@ -49,7 +51,8 @@ class InMemoryRedis {
 		return next
 	}
 
-	async expire() {
+	async expire(_key: string, _seconds: number) {
+		// Stub for testing: always returns 1, does not actually expire keys
 		return 1
 	}
 
@@ -104,7 +107,17 @@ class InMemoryRedis {
 				commands.push(() => this.expire(key, seconds))
 				return pipeline
 			},
-			exec: async () => Promise.all(commands.map((command) => command())),
+			exec: async () =>
+				Promise.all(
+					commands.map(async (command) => {
+						try {
+							const result = await command()
+							return [null, result] as [null, unknown]
+						} catch (error) {
+							return [error, null] as [Error, null]
+						}
+					}),
+				),
 		}
 		return pipeline
 	}

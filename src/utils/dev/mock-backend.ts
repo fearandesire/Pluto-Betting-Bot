@@ -1,4 +1,5 @@
 import type {
+	Account,
 	CancelBetslipRequest,
 	ClearPendingBetsRequest,
 	DoubleDownBetRequest,
@@ -20,7 +21,10 @@ import type {
 } from '@kh-openapi'
 import { DEV_IDS } from '../../lib/configs/constants.js'
 import env from '../../lib/startup/env.js'
-import { DiscordConfigSettingTypeEnum } from '../../openapi/khronos/index.js'
+import {
+	DiscordConfigSettingTypeEnum,
+	PlacedBetslipBetresultEnum,
+} from '../../openapi/khronos/index.js'
 import { DiscordConfigEnums } from '../api/common/interfaces/kh-pluto/kh-pluto.interface.js'
 import {
 	makeBetslipWithAggregation,
@@ -73,19 +77,30 @@ export class MockBackend {
 	}
 
 	getGuild(guildId: string): Guild {
+		if (!env.MOCK_GUILD_BETTING_CHAN_ID) {
+			throw new Error(
+				'MOCK_GUILD_BETTING_CHAN_ID is required when USE_MOCK_DATA is enabled',
+			)
+		}
+		if (!env.DEV_GUILD_GAMES_CATEGORY_ID) {
+			throw new Error(
+				'DEV_GUILD_GAMES_CATEGORY_ID is required when USE_MOCK_DATA is enabled',
+			)
+		}
+
 		const config = []
 		// Both IDs are startup-required when USE_MOCK_DATA is enabled
 		config.push({
 			id: `mock-${DiscordConfigEnums.BETTING_CHANNEL}`,
 			guild_id: guildId,
 			setting_type: DiscordConfigSettingTypeEnum.BettingChan,
-			setting_value: env.MOCK_GUILD_BETTING_CHAN_ID!,
+			setting_value: env.MOCK_GUILD_BETTING_CHAN_ID,
 		})
 		config.push({
 			id: `mock-${DiscordConfigEnums.GAMES_CATEGORY}`,
 			guild_id: guildId,
 			setting_type: DiscordConfigSettingTypeEnum.GamesCategory,
-			setting_value: env.DEV_GUILD_GAMES_CATEGORY_ID!,
+			setting_value: env.DEV_GUILD_GAMES_CATEGORY_ID,
 		})
 
 		return {
@@ -154,7 +169,9 @@ export class MockBackend {
 	getActiveBetslips(request: GetActiveBetslipsRequest): PlacedBetslip[] {
 		return this.store
 			.getBets(request.userid)
-			.filter((bet) => bet.betresult === 'pending')
+			.filter(
+				(bet) => bet.betresult === PlacedBetslipBetresultEnum.Pending,
+			)
 	}
 
 	getUserBetslips(request: GetUserBetslipsRequest): PlacedBetslip[] {
@@ -199,9 +216,21 @@ export class MockBackend {
 		}
 	}
 
-	createAccount(userId: string): GetProfileDto {
-		this.store.setBalance(userId, this.store.getBalance(userId))
-		return this.getProfile(userId)
+	createAccount(userId: string): Account {
+		const balance = this.store.getBalance(userId)
+		this.store.setBalance(userId, balance)
+		return {
+			userid: userId,
+			lastclaimtime: null,
+			registerdate: new Date().toISOString(),
+			monies: {
+				id: `mock-monies-${userId}`,
+				balance,
+			} as Account['monies'],
+			xp: { userid: userId, xp: 0, level: 1 } as Account['xp'],
+			pending_betslip: null,
+			claimstoday: 0,
+		}
 	}
 
 	getAccountBalance(userId: string): GetBalanceDto {

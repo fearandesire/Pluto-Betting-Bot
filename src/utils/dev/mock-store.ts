@@ -12,11 +12,17 @@ export class MockStore {
 	}
 
 	setBalance(userId: string, balance: number): number {
+		if (!Number.isFinite(balance) || balance < 0) {
+			throw new Error(`Invalid balance: ${balance}`)
+		}
 		this.balancesByUser.set(userId, balance)
 		return balance
 	}
 
 	debit(userId: string, amount: number): number {
+		if (!Number.isFinite(amount) || amount <= 0) {
+			throw new Error(`Invalid debit amount: ${amount}`)
+		}
 		const balance = this.getBalance(userId)
 		if (balance < amount) {
 			throw new Error(
@@ -27,6 +33,9 @@ export class MockStore {
 	}
 
 	credit(userId: string, amount: number): number {
+		if (!Number.isFinite(amount) || amount < 0) {
+			throw new Error(`Invalid credit amount: ${amount}`)
+		}
 		return this.setBalance(userId, this.getBalance(userId) + amount)
 	}
 
@@ -49,19 +58,17 @@ export class MockStore {
 			)
 		}
 
+		const updatedBet = {
+			...bet,
+			betresult: PlacedBetslipBetresultEnum.Push,
+		}
+
 		this.betsByUser.set(
 			userId,
-			bets.map((item) =>
-				item.betid === betId
-					? {
-							...item,
-							betresult: PlacedBetslipBetresultEnum.Push,
-						}
-					: item,
-			),
+			bets.map((item) => (item.betid === betId ? updatedBet : item)),
 		)
 		this.credit(userId, bet.amount)
-		return bet
+		return updatedBet
 	}
 
 	getBets(userId: string): PlacedBetslip[] {
