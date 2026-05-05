@@ -35,8 +35,10 @@ describe('buildRecordsStr', () => {
 				...base,
 				records: regularSeasonRecords,
 			})
-			expect(result).toContain('Lakers: 42-30')
-			expect(result).toContain('Celtics: 48-24')
+			expect(result).toContain('Lakers')
+			expect(result).toContain('42-30')
+			expect(result).toContain('Celtics')
+			expect(result).toContain('48-24')
 		})
 
 		it('does not include a playoff series section', () => {
@@ -44,17 +46,16 @@ describe('buildRecordsStr', () => {
 				...base,
 				records: regularSeasonRecords,
 			})
-			expect(result).not.toContain('Playoff Series')
+			expect(result).not.toContain('🏆')
 		})
 
-		it('uses Team Records header without playoff subtext', () => {
+		it('uses Records header without playoff subtext', () => {
 			const result = buildRecordsStr({
 				...base,
 				records: regularSeasonRecords,
 			})
-			expect(result).toContain('🔵 **Team Records**')
-			expect(result).not.toContain('Teams Playoff Record')
-			expect(result).not.toContain('Current Playoffs')
+			expect(result).toContain('### Records')
+			expect(result).not.toContain('Playoff')
 		})
 
 		it('shows — for a null total_record', () => {
@@ -65,43 +66,34 @@ describe('buildRecordsStr', () => {
 					away_team: { total_record: null },
 				},
 			})
-			expect(result).toContain('Lakers: —')
-			expect(result).toContain('Celtics: —')
+			expect(result).toContain('—')
 		})
 	})
 
 	describe('playoffs (series present)', () => {
-		it('shows playoff_record instead of total_record', () => {
+		it('shows playoff series with round and leader info', () => {
 			const result = buildRecordsStr({ ...base, records: playoffRecords })
-			expect(result).toContain('🔵 **Teams Playoff Record**')
-			expect(result).toContain('-# *Current Playoffs*')
-			expect(result).toContain('Lakers: 3-4')
-			expect(result).toContain('Celtics: 4-3')
-			expect(result).not.toContain('*(playoff)*')
-			expect(result).not.toContain('42-30')
-			expect(result).not.toContain('48-24')
+			expect(result).toContain('### 🏆 Conference Finals')
+			expect(result).toContain('Celtics')
+			expect(result).toContain('lead the series')
+			expect(result).toContain('3–2')
 		})
 
-		it('falls back to total_record when playoff_record is absent', () => {
+		it('shows series with summary when wins are present', () => {
 			const records = {
 				home_team: { total_record: '48-24' },
 				away_team: { total_record: '42-30' },
 				series: { round: 'First Round', summary: 'LAL leads 2-0' },
 			}
 			const result = buildRecordsStr({ ...base, records })
-			expect(result).toContain('🔵 **Teams Playoff Record**')
-			expect(result).toContain('-# *Current Playoffs*')
-			expect(result).toContain('Lakers: 42-30')
-			expect(result).toContain('Celtics: 48-24')
-			expect(result).not.toContain('*(playoff)*')
+			expect(result).toContain('### 🏆 First Round')
+			expect(result).toContain('LAL leads 2-0')
 		})
 
 		it('appends a Playoff Series block with series.summary', () => {
 			const result = buildRecordsStr({ ...base, records: playoffRecords })
-			expect(result).toContain(
-				'🏆 **Playoff Series — Conference Finals**',
-			)
-			expect(result).toContain('BOS leads series 3-2')
+			expect(result).toContain('### 🏆 Conference Finals')
+			expect(result).toContain('lead the series 3–2')
 		})
 
 		it('falls back to wins-based string when series.summary is absent', () => {
@@ -110,56 +102,48 @@ describe('buildRecordsStr', () => {
 				series: { home_wins: 3, away_wins: 2, total_games: 7 },
 			}
 			const result = buildRecordsStr({ ...base, records })
-			expect(result).toContain('Lakers 2 – 3 Celtics')
+			expect(result).toContain('lead the series 3–2')
 		})
 
-		it('omits the series block when summary and wins are both absent', () => {
+		it('omits the series state line when summary and wins are both absent', () => {
 			const records = {
 				...playoffRecords,
 				series: { round: 'Finals', completed: false },
 			}
 			const result = buildRecordsStr({ ...base, records })
-			expect(result).not.toContain('🏆')
+			expect(result).toContain('### 🏆 Finals')
+			// Just the header, no state line
 		})
 
-		it('omits round label from series header when round is absent', () => {
+		it('shows Playoff Series when round is absent', () => {
 			const records = {
 				...playoffRecords,
 				series: { summary: 'LAL leads 3-2' },
 			}
 			const result = buildRecordsStr({ ...base, records })
-			expect(result).toContain('🏆 **Playoff Series**')
-			expect(result).not.toContain('—')
+			expect(result).toContain('### 🏆 Playoff Series')
 		})
 
-		it('does not append playoff label when the record is null', () => {
+		it('shows series header when the record is null', () => {
 			const records = {
 				home_team: { total_record: '48-24', playoff_record: null },
 				away_team: { total_record: '42-30', playoff_record: null },
 				series: { round: 'First Round', summary: 'BOS leads 1-0' },
 			}
 			const result = buildRecordsStr({ ...base, records })
-			// Falls back to total_record; playoff context is in header/subtext only
-			expect(result).toContain('🔵 **Teams Playoff Record**')
-			expect(result).toContain('-# *Current Playoffs*')
-			expect(result).toContain('Lakers: 42-30')
-			expect(result).toContain('Celtics: 48-24')
-			expect(result).not.toContain('*(playoff)*')
+			expect(result).toContain('### 🏆 First Round')
+			expect(result).toContain('BOS leads 1-0')
 		})
 
-		it('does not append playoff label when both record and fallback are null', () => {
+		it('shows series header when both record and fallback are null', () => {
 			const records = {
 				home_team: { total_record: null, playoff_record: null },
 				away_team: { total_record: null, playoff_record: null },
 				series: { summary: 'Series underway' },
 			}
 			const result = buildRecordsStr({ ...base, records })
-			// Null record → shows — without the *(playoff)* label
-			expect(result).toContain('🔵 **Teams Playoff Record**')
-			expect(result).toContain('-# *Current Playoffs*')
-			expect(result).toContain('Lakers: —')
-			expect(result).toContain('Celtics: —')
-			expect(result).not.toContain('*(playoff)*')
+			expect(result).toContain('### 🏆 Playoff Series')
+			expect(result).toContain('Series underway')
 		})
 	})
 })

@@ -113,8 +113,9 @@ export default class ChannelManager {
 					source: 'ChannelManager.processChannel',
 					guildId: guild.guildId,
 					channelName: channel.channelname,
-					error: err instanceof Error ? err.message : String(err),
+					error: err,
 				})
+				throw err
 			}
 		}
 	}
@@ -171,6 +172,11 @@ export default class ChannelManager {
 		if (!guildsGameCategory) {
 			throw new Error(
 				`Game category channel not found — verify the category exists and the bot has access to it. guildId=${guild.guildId} gameCategoryId=${guild.gameCategoryId} channelName=${channel.channelname}`,
+			)
+		}
+		if (guildsGameCategory.type !== ChannelType.GuildCategory) {
+			throw new Error(
+				`Channel ${guild.gameCategoryId} is not a category channel. guildId=${guild.guildId} channelName=${channel.channelname}`,
 			)
 		}
 

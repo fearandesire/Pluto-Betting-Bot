@@ -10,6 +10,12 @@ import { makeUpcomingGame } from './games.js'
 import { asMockSport } from './teams.js'
 
 export function calculateProfit(amount: number, odds: number): number {
+	if (!Number.isFinite(amount) || amount < 0) {
+		throw new Error('Invalid amount')
+	}
+	if (!Number.isFinite(odds) || odds === 0) {
+		throw new Error('Invalid odds')
+	}
 	const profit =
 		odds > 0 ? amount * (odds / 100) : amount * (100 / Math.abs(odds))
 	return Number(profit.toFixed(2))
@@ -19,14 +25,32 @@ function selectedOdds(
 	game: GetAllMatchesDtoMatchesInner,
 	team: string,
 ): number {
-	if (game.home_team?.toLowerCase() === team.toLowerCase()) {
+	const homeMatch = game.home_team?.toLowerCase() === team.toLowerCase()
+	const awayMatch = game.away_team?.toLowerCase() === team.toLowerCase()
+
+	if (!homeMatch && !awayMatch) {
+		throw new Error(
+			`Invalid team: "${team}" does not match home team "${game.home_team}" or away team "${game.away_team}"`,
+		)
+	}
+
+	if (homeMatch) {
 		return game.home_team_odds ?? -130
 	}
 	return game.away_team_odds ?? 110
 }
 
 function opponentFor(game: GetAllMatchesDtoMatchesInner, team: string): string {
-	if (game.home_team?.toLowerCase() === team.toLowerCase()) {
+	const homeMatch = game.home_team?.toLowerCase() === team.toLowerCase()
+	const awayMatch = game.away_team?.toLowerCase() === team.toLowerCase()
+
+	if (!homeMatch && !awayMatch) {
+		throw new Error(
+			`Invalid team: "${team}" does not match home team "${game.home_team}" or away team "${game.away_team}"`,
+		)
+	}
+
+	if (homeMatch) {
 		return game.away_team ?? 'Away Team'
 	}
 	return game.home_team ?? 'Home Team'

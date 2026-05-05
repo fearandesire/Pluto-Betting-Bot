@@ -34,7 +34,7 @@ export class AccountsWrapper {
 		if (isMockEnabled()) this.mock = MockBackend.instance()
 	}
 
-	async createAccount(userid: string): Promise<any> {
+	async createAccount(userid: string): Promise<GetProfileDto> {
 		if (this.mock) return this.mock.createAccount(userid)
 		// Assuming createAccount method returns the created account details
 		return await this.accountsApi.createAccount({
