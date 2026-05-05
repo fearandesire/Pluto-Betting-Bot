@@ -118,7 +118,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.4.10",
-		"@biomejs/cli-win32-x64": "^2.4.10",
+		"@biomejs/cli-win32-x64": "^2.4.14",
 		"@commitlint/cli": "^20.5.0",
 		"@commitlint/config-conventional": "^20.5.0",
 		"@sapphire/cli": "^1.9.3",
