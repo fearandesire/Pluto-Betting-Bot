@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.4.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.3.2...v4.4.0) (2026-05-05)
+
+
+### Features
+
+* **channels:** integrate Khronos team records and playoff series in game channels ([#507](https://github.com/fearandesire/Pluto-Betting-Bot/issues/507)) ([2e65ed7](https://github.com/fearandesire/Pluto-Betting-Bot/commit/2e65ed752dc247d9796dc28d7cf657e942b80c72))
+* **nba:** integrate Khronos team records and playoff series ([#478](https://github.com/fearandesire/Pluto-Betting-Bot/issues/478)) ([562933a](https://github.com/fearandesire/Pluto-Betting-Bot/commit/562933a986852f97d75757cc2b6aad8abda9b0a3))
+
 ## [4.3.2](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.3.1...v4.3.2) (2026-03-26)
 
 
