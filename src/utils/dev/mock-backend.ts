@@ -1,4 +1,5 @@
 import type {
+	Account,
 	CancelBetslipRequest,
 	ClearPendingBetsRequest,
 	DoubleDownBetRequest,
@@ -168,7 +169,9 @@ export class MockBackend {
 	getActiveBetslips(request: GetActiveBetslipsRequest): PlacedBetslip[] {
 		return this.store
 			.getBets(request.userid)
-			.filter((bet) => bet.betresult === PlacedBetslipBetresultEnum.Pending)
+			.filter(
+				(bet) => bet.betresult === PlacedBetslipBetresultEnum.Pending,
+			)
 	}
 
 	getUserBetslips(request: GetUserBetslipsRequest): PlacedBetslip[] {
@@ -213,9 +216,21 @@ export class MockBackend {
 		}
 	}
 
-	createAccount(userId: string): GetProfileDto {
-		this.store.setBalance(userId, this.store.getBalance(userId))
-		return this.getProfile(userId)
+	createAccount(userId: string): Account {
+		const balance = this.store.getBalance(userId)
+		this.store.setBalance(userId, balance)
+		return {
+			userid: userId,
+			lastclaimtime: null,
+			registerdate: new Date().toISOString(),
+			monies: {
+				id: `mock-monies-${userId}`,
+				balance,
+			} as Account['monies'],
+			xp: { userid: userId, xp: 0, level: 1 } as Account['xp'],
+			pending_betslip: null,
+			claimstoday: 0,
+		}
 	}
 
 	getAccountBalance(userId: string): GetBalanceDto {

@@ -1,4 +1,5 @@
 import {
+	type Account,
 	AccountsApi,
 	type GetBalanceDto,
 	type GetLeaderboardDto,
@@ -34,9 +35,8 @@ export class AccountsWrapper {
 		if (isMockEnabled()) this.mock = MockBackend.instance()
 	}
 
-	async createAccount(userid: string): Promise<GetProfileDto> {
+	async createAccount(userid: string): Promise<Account> {
 		if (this.mock) return this.mock.createAccount(userid)
-		// Assuming createAccount method returns the created account details
 		return await this.accountsApi.createAccount({
 			userid: userid,
 		})

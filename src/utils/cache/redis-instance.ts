@@ -51,7 +51,7 @@ class InMemoryRedis {
 		return next
 	}
 
-	async expire() {
+	async expire(_key: string, _seconds: number) {
 		// Stub for testing: always returns 1, does not actually expire keys
 		return 1
 	}
