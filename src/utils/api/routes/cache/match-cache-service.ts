@@ -23,7 +23,11 @@ export default class MatchCacheService {
 
 	async getMatches(): Promise<MatchDetailDto[] | null> {
 		const cachedMatches = await this.cache.get('matches')
-		if (!cachedMatches || !Array.isArray(cachedMatches)) {
+		if (
+			!cachedMatches ||
+			!Array.isArray(cachedMatches) ||
+			cachedMatches.length === 0
+		) {
 			return null
 		}
 		return cachedMatches
@@ -35,8 +39,9 @@ export default class MatchCacheService {
 		}
 		const cachedMatches = await this.getMatches()
 		return (
-			cachedMatches?.find((match: MatchDetailDto) => match.id === matchid) ??
-			null
+			cachedMatches?.find(
+				(match: MatchDetailDto) => match.id === matchid,
+			) ?? null
 		)
 	}
 

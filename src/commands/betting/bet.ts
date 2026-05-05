@@ -7,9 +7,13 @@ import { BetsCacheService } from '../../utils/api/common/bets/BetsCacheService.j
 import { BetslipManager } from '../../utils/api/Khronos/bets/BetslipsManager.js'
 import BetslipWrapper from '../../utils/api/Khronos/bets/betslip-wrapper.js'
 import MatchCacheService from '../../utils/api/routes/cache/match-cache-service.js'
+import { normalizeTeamName } from '../../utils/betting/autocomplete-choices.js'
 import BettingValidation from '../../utils/betting/betting-validation.js'
 import { CacheManager } from '../../utils/cache/cache-manager.js'
 import { ErrorEmbeds } from '../../utils/common/errors/global.js'
+
+// Module-level singleton so cache state persists across command invocations
+const matchCacheService = new MatchCacheService(new CacheManager())
 
 @ApplyOptions<Command.Options>({
 	description: '🎲 Place a bet on a match',
@@ -69,7 +73,6 @@ export class UserCommand extends Command {
 			)
 			return interaction.editReply({ embeds: [errEmbed] })
 		}
-		const matchCacheService = new MatchCacheService(new CacheManager())
 		const selectedMatch = await matchCacheService.getMatch(matchSelection)
 		if (
 			!selectedMatch ||
@@ -83,7 +86,7 @@ export class UserCommand extends Command {
 		}
 		const matchTeams = [selectedMatch.home_team, selectedMatch.away_team]
 		const matchedTeam = matchTeams.find(
-			(team) => this.normalizeTeamName(team) === this.normalizeTeamName(teamInput),
+			(team) => normalizeTeamName(team) === normalizeTeamName(teamInput),
 		)
 		if (!matchedTeam) {
 			const errEmbed = await ErrorEmbeds.betErr(
@@ -104,10 +107,6 @@ export class UserCommand extends Command {
 			new BetslipWrapper(),
 			new BetsCacheService(new CacheManager()),
 		).initialize(interaction, interaction.user.id, betslipData)
-	}
-
-	private normalizeTeamName(teamName: string): string {
-		return teamName.trim().toLowerCase().replace(/\s+/g, ' ')
 	}
 
 	private async identifyTeam(team: string) {

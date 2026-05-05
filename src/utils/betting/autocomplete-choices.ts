@@ -1,5 +1,9 @@
 import type { MatchDetailDto } from '@kh-openapi'
 
+export function normalizeTeamName(teamName: string): string {
+	return teamName.trim().toLowerCase().replace(/\s+/g, ' ')
+}
+
 /**
  * Returns team autocomplete choices for a selected match.
  * Returns empty array when no match is selected or match is not in the list.
