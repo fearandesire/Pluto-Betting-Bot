@@ -134,6 +134,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      attestations: write
       id-token: write
 
     outputs:
@@ -218,6 +219,7 @@ jobs:
             org.opencontainers.image.description=${{ env.IMAGE_DESCRIPTION }}
             org.opencontainers.image.vendor=${{ env.IMAGE_VENDOR }}
             org.opencontainers.image.version=${{ steps.version.outputs.version }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
