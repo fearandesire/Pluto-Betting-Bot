@@ -29,6 +29,7 @@
 		"dvault-prod": "npx dotenv-vault@latest push production",
 		"release": "release-it",
 		"docker:ci": "docker-compose build && docker-compose push",
+		"assets:upload": "bash scripts/upload-assets.sh",
 		"prepare": "husky",
 		"test": "vitest",
 		"test:run": "vitest run",
