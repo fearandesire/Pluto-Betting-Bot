@@ -41,11 +41,12 @@
    7. [Getting Started](#getting-started)
       1. [Prerequisites](#prerequisites)
       2. [Installation](#installation)
-   8. [Documentation](#documentation)
-   9. [Contributing](#contributing)
-      1. [Contributors](#contributors)
-   10. [License](#license)
-   11. [Support](#support)
+    8. [Assets](#assets)
+   9. [Documentation](#documentation)
+   10. [Contributing](#contributing)
+       1. [Contributors](#contributors)
+   11. [License](#license)
+   12. [Support](#support)
 
 ---
 
@@ -205,6 +206,29 @@ pnpm ci-gen-api
 pnpm release
 ```
 </details>
+
+## Assets
+
+Matchup images under `assets/matchupimages/` are proprietary and **not committed to git** (`assets/` is gitignored). The source of truth is a private Cloudflare R2 bucket: `pluto-assets`, key `matchupimages.tar.gz`.
+
+**CI behavior:** The `deploy` job in [`.github/workflows/ci-cd-deployment.yml`](.github/workflows/ci-cd-deployment.yml) hydrates the tarball from R2 (S3-compatible API) into the build context before the Docker build, so the existing `COPY` chain works unchanged. Required GitHub Actions secrets: `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_ACCOUNT_ID`.
+
+**Refreshing assets (local → R2):**
+
+1. Configure an AWS CLI profile pinned to R2 (one-time):
+   ```bash
+   aws configure --profile pluto-r2
+   # Access Key ID:     <R2 token key>
+   # Secret Access Key: <R2 token secret>
+   # Default region:    auto
+   ```
+2. Run from repo root with your account ID exported:
+   ```bash
+   export R2_ACCOUNT_ID=<your-cloudflare-account-id>
+   pnpm assets:upload
+   ```
+
+The script tars `assets/matchupimages/`, uploads to `s3://pluto-assets/matchupimages.tar.gz`, and cleans up. See [`scripts/upload-assets.sh`](scripts/upload-assets.sh).
 
 ## Documentation
 

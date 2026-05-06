@@ -134,6 +134,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      attestations: write
       id-token: write
 
     outputs:
@@ -174,6 +175,21 @@ jobs:
           echo "🔖 Short SHA: $SHORT_SHA"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
+      - name: Hydrate assets from R2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+        run: |
+          set -euo pipefail
+          aws s3 cp s3://pluto-assets/matchupimages.tar.gz /tmp/matchupimages.tar.gz \
+            --endpoint-url="$R2_ENDPOINT"
+          mkdir -p assets
+          tar -xzf /tmp/matchupimages.tar.gz -C assets/
+          rm /tmp/matchupimages.tar.gz
+          echo "Hydrated $(find assets/matchupimages -type f | wc -l) asset files"
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
@@ -203,6 +219,7 @@ jobs:
             org.opencontainers.image.description=${{ env.IMAGE_DESCRIPTION }}
             org.opencontainers.image.vendor=${{ env.IMAGE_VENDOR }}
             org.opencontainers.image.version=${{ steps.version.outputs.version }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
