@@ -16,8 +16,8 @@ import StringUtils from '../utils/common/string-utils.js'
 // so we never spend CPU on entries that would be discarded.
 const MAX_AUTOCOMPLETE_RESULTS = 25
 
-// Singletons hoisted out of the per-keystroke hot path; both are stateless
-// utilities so a single instance is reused across every autocomplete call.
+// `dateManager` is hoisted to module scope so a single instance is reused
+// across every autocomplete call rather than being recreated per-keystroke.
 const dateManager = new DateManager()
 
 export class AutocompleteHandler extends InteractionHandler {

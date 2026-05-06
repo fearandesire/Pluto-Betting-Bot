@@ -35,6 +35,11 @@ export async function getGuildSport(guildId: string): Promise<string> {
 	if (hit && hit.expiresAt > now) {
 		return hit.sport
 	}
+	if (hit) {
+		// Entry is expired — evict so the Map doesn't accumulate stale
+		// entries for inactive guilds indefinitely.
+		cache.delete(guildId)
+	}
 
 	const inflightHit = inflight.get(guildId)
 	if (inflightHit) return inflightHit
