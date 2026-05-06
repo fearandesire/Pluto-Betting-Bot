@@ -7,7 +7,6 @@ import { BetsCacheService } from '../../utils/api/common/bets/BetsCacheService.j
 import { BetslipManager } from '../../utils/api/Khronos/bets/BetslipsManager.js'
 import BetslipWrapper from '../../utils/api/Khronos/bets/betslip-wrapper.js'
 import MatchCacheService from '../../utils/api/routes/cache/match-cache-service.js'
-import { normalizeTeamName } from '../../utils/betting/autocomplete-choices.js'
 import BettingValidation from '../../utils/betting/betting-validation.js'
 import { CacheManager } from '../../utils/cache/cache-manager.js'
 import { ErrorEmbeds } from '../../utils/common/errors/global.js'
@@ -73,6 +72,10 @@ export class UserCommand extends Command {
 			)
 			return interaction.editReply({ embeds: [errEmbed] })
 		}
+		// Strict autocomplete-only enforcement: the `match` value must be a
+		// known match ID present in the cache. Anything the user typed by hand
+		// that didn't come from the autocomplete dropdown won't match a real
+		// ID and is rejected with a clear pick-from-the-list message.
 		const selectedMatch = await matchCacheService.getMatch(matchSelection)
 		if (
 			!selectedMatch ||
@@ -80,17 +83,21 @@ export class UserCommand extends Command {
 			!selectedMatch.away_team
 		) {
 			const errEmbed = await ErrorEmbeds.betErr(
-				'The selected match is unavailable. Please choose another match.',
+				'Please choose a match from the autocomplete list — typed input is not accepted.',
 			)
 			return interaction.editReply({ embeds: [errEmbed] })
 		}
-		const matchTeams = [selectedMatch.home_team, selectedMatch.away_team]
-		const matchedTeam = matchTeams.find(
-			(team) => normalizeTeamName(team) === normalizeTeamName(teamInput),
-		)
+		// Strict autocomplete-only enforcement for team. The autocomplete value
+		// is the trimmed home_team or away_team string verbatim, so the input
+		// must equal one of those exactly (after a defensive trim on each side).
+		const trimmedTeamInput = teamInput.trim()
+		const matchedTeam = [
+			selectedMatch.home_team,
+			selectedMatch.away_team,
+		].find((team) => team.trim() === trimmedTeamInput)
 		if (!matchedTeam) {
 			const errEmbed = await ErrorEmbeds.betErr(
-				'Please select a team from the chosen match.',
+				'Please choose a team from the autocomplete list — typed input is not accepted.',
 			)
 			return interaction.editReply({ embeds: [errEmbed] })
 		}

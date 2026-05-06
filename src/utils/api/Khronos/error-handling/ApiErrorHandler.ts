@@ -151,6 +151,10 @@ export class ApiErrorHandler {
 			return 'Your balance is insufficient to place this bet.'
 		}
 
+		if (apiError.exception === ApiHttpErrorTypes.MatchNotFound) {
+			return 'The match could not be located. Please choose another match and try again.'
+		}
+
 		return this.sanitizeErrorMessage(apiError.message)
 	}
 

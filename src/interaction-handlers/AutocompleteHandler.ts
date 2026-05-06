@@ -4,13 +4,22 @@ import {
 	InteractionHandlerTypes,
 } from '@sapphire/framework'
 import type { AutocompleteInteraction } from 'discord.js'
-import GuildWrapper from '../utils/api/Khronos/guild/guild-wrapper.js'
+import { getGuildSport } from '../utils/api/Khronos/guild/guild-sport-cache.js'
 import MatchApiWrapper from '../utils/api/Khronos/matches/matchApiWrapper.js'
 import MatchCacheService from '../utils/api/routes/cache/match-cache-service.js'
 import { getTeamChoicesForMatch } from '../utils/betting/autocomplete-choices.js'
 import { CacheManager } from '../utils/cache/cache-manager.js'
 import { DateManager } from '../utils/common/DateManager.js'
 import StringUtils from '../utils/common/string-utils.js'
+
+// Discord caps autocomplete responses at 25 results — slice before formatting
+// so we never spend CPU on entries that would be discarded.
+const MAX_AUTOCOMPLETE_RESULTS = 25
+
+// Singletons hoisted out of the per-keystroke hot path; both are stateless
+// utilities so a single instance is reused across every autocomplete call.
+const dateManager = new DateManager()
+
 export class AutocompleteHandler extends InteractionHandler {
 	private matchCacheService: MatchCacheService
 	private stringUtils: StringUtils
@@ -42,50 +51,56 @@ export class AutocompleteHandler extends InteractionHandler {
 		if (interaction?.commandName !== 'bet') return this.none()
 		const focusedOption = interaction.options.getFocused(true)
 
-		// Fetch matches and guild data in parallel
-		const [matches, guildData] = await Promise.all([
+		// Both lookups are independent. The guild sport read is in-process on
+		// cache hit (~0ms) — only a cold cache or the first call after TTL
+		// expiry incurs the Khronos round-trip.
+		const [matches, guildSport] = await Promise.all([
 			this.matchRetrieval(),
-			new GuildWrapper().getGuild(interaction.guildId),
+			getGuildSport(interaction.guildId!),
 		])
 
 		if (!matches) return this.none()
 
-		// Filter matches by sport
 		const sportFilteredMatches = matches.filter((match: MatchDetailDto) =>
-			match.sport?.includes(guildData.sport),
+			match.sport?.includes(guildSport),
 		)
 
 		if (!sportFilteredMatches.length) return this.none()
 
 		switch (focusedOption.name) {
 			case 'match': {
-				const currentInput = focusedOption.value as string
-				const searchResult = sportFilteredMatches.filter(
-					(match: MatchDetailDto) => {
-						const homeTeam = match.home_team?.toLowerCase() ?? ''
-						const awayTeam = match.away_team?.toLowerCase() ?? ''
-						return (
-							homeTeam.includes(currentInput.toLowerCase()) ||
-							awayTeam.includes(currentInput.toLowerCase())
-						)
-					},
-				)
+				const currentInput = (focusedOption.value as string)
+					.toLowerCase()
+					.trim()
 
-				// Filter out matches with missing essential fields before mapping
-				const validMatches = searchResult.filter(
-					(match: MatchDetailDto) =>
-						match.commence_time &&
-						match.id &&
-						match.home_team &&
-						match.away_team,
-				)
+				const choices: { name: string; value: string }[] = []
+				for (const match of sportFilteredMatches) {
+					if (
+						!match.id ||
+						!match.commence_time ||
+						!match.home_team ||
+						!match.away_team
+					) {
+						continue
+					}
+					if (currentInput.length > 0) {
+						const home = match.home_team.toLowerCase()
+						const away = match.away_team.toLowerCase()
+						if (
+							!home.includes(currentInput) &&
+							!away.includes(currentInput)
+						) {
+							continue
+						}
+					}
+					choices.push({
+						name: `${this.stringUtils.getShortName(match.away_team)} @ ${this.stringUtils.getShortName(match.home_team)} | ${dateManager.toMMDDYYYY(match.commence_time)}`,
+						value: match.id,
+					})
+					if (choices.length >= MAX_AUTOCOMPLETE_RESULTS) break
+				}
 
-				return this.some(
-					validMatches.map((match: MatchDetailDto) => ({
-						name: `${this.stringUtils.getShortName(match.away_team!)} @ ${this.stringUtils.getShortName(match.home_team!)} | ${new DateManager().toMMDDYYYY(match.commence_time!)}`,
-						value: match.id!,
-					})),
-				)
+				return this.some(choices)
 			}
 			case 'team': {
 				const matchSelection = interaction.options.getString(

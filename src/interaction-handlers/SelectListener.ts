@@ -103,6 +103,10 @@ export class MenuHandler extends InteractionHandler {
 			: 'TBD'
 
 		await betsCacheService.updateUserBet(interaction.user.id, {
+			// Populate both: `event_id` is the canonical identifier going forward,
+			// and `matchup_id` mirrors the same value for backward compatibility
+			// during the deprecation window.
+			event_id: matchDetails.id,
 			matchup_id: matchDetails.id,
 			opponent,
 			dateofmatchup: formattedDate,
