@@ -128,7 +128,7 @@
             }
           },
           "404": {
-            "description": "Match not found in Goracle. Continuing search in archive.",
+            "description": "Match could not be located by primary lookup. Continuing search in archive.",
             "content": {
               "application/json": {
                 "schema": {
@@ -142,7 +142,7 @@
                           "example": 404
                         },
                         "message": {
-                          "example": "Match not found in Goracle. Continuing search in archive."
+                          "example": "Match could not be located by primary lookup. Continuing search in archive."
                         },
                         "exception": {
                           "example": "GoracleMatchNotFound"
@@ -2214,6 +2214,14 @@
                       "message": "No match ID was provided",
                       "exception": "NO_MATCH_ID"
                     }
+                  },
+                  "example4": {
+                    "summary": "InvalidTeamForMatch",
+                    "value": {
+                      "statusCode": 400,
+                      "message": "The team you selected is not playing in this match!\nDouble-check your input",
+                      "exception": "InvalidTeamForMatch"
+                    }
                   }
                 }
               }
@@ -2228,27 +2236,19 @@
                 },
                 "examples": {
                   "example1": {
-                    "summary": "TEAM_NOT_FOUND",
-                    "value": {
-                      "statusCode": 404,
-                      "message": "Team not found",
-                      "exception": "TEAM_NOT_FOUND"
-                    }
-                  },
-                  "example2": {
-                    "summary": "NO_GAMES_FOR_TEAM",
-                    "value": {
-                      "statusCode": 404,
-                      "message": "No games found for the specified team",
-                      "exception": "NO_GAMES_FOR_TEAM"
-                    }
-                  },
-                  "example3": {
                     "summary": "AccountNotFound",
                     "value": {
                       "statusCode": 404,
                       "message": "The requested account could not be found.\nTry using `/register` first to instantly create an account.",
                       "exception": "AccountNotFound"
+                    }
+                  },
+                  "example2": {
+                    "summary": "MatchNotFound",
+                    "value": {
+                      "statusCode": 404,
+                      "message": "The requested match could not be found.",
+                      "exception": "MatchNotFound"
                     }
                   }
                 }
@@ -2335,6 +2335,22 @@
                       "message": "Game has already started",
                       "exception": "GAME_STARTED"
                     }
+                  },
+                  "example2": {
+                    "summary": "NO_MATCH_ID",
+                    "value": {
+                      "statusCode": 400,
+                      "message": "No match ID was provided",
+                      "exception": "NO_MATCH_ID"
+                    }
+                  },
+                  "example3": {
+                    "summary": "InvalidTeamForMatch",
+                    "value": {
+                      "statusCode": 400,
+                      "message": "The team you selected is not playing in this match!\nDouble-check your input",
+                      "exception": "InvalidTeamForMatch"
+                    }
                   }
                 }
               }
@@ -2354,6 +2370,14 @@
                       "statusCode": 404,
                       "message": "The requested account could not be found.\nTry using `/register` first to instantly create an account.",
                       "exception": "AccountNotFound"
+                    }
+                  },
+                  "example2": {
+                    "summary": "MatchNotFound",
+                    "value": {
+                      "statusCode": 404,
+                      "message": "The requested match could not be found.",
+                      "exception": "MatchNotFound"
                     }
                   }
                 }
@@ -6206,9 +6230,10 @@
           },
           "matchup_id": {
             "type": "string",
+            "nullable": true,
+            "description": "Deprecated. Use event_id for the required match identifier.",
             "example": "9768de636bd9b326cee827df527c6b0f",
-            "default": "9768de636bd9b326cee827df527c6b0f",
-            "description": "The Identifier for a match. This is & must be provided if there's multiple matches for the team, and the user submits the specific match they want to bet on."
+            "deprecated": true
           },
           "market_key": {
             "enum": [
@@ -6273,7 +6298,7 @@
             "type": "string",
             "example": "123e4567-e89b-12d3-a456-426614174000",
             "default": "123e4567-e89b-12d3-a456-426614174000",
-            "description": "The event ID from the source API"
+            "description": "Required match ID from the source API."
           }
         },
         "required": [
@@ -6442,8 +6467,15 @@
           },
           "matchup_id": {
             "type": "string",
-            "description": "The Identifier for a match. // aka event_id",
-            "example": "9768de636bd9b326cee827df527c6b0f"
+            "nullable": true,
+            "description": "Deprecated. Use event_id for the required match identifier.",
+            "example": "9768de636bd9b326cee827df527c6b0f",
+            "deprecated": true
+          },
+          "event_id": {
+            "type": "string",
+            "description": "Match ID from the source API. Must correspond to the selected team. Required unless the legacy `matchup_id` is provided.",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
           },
           "market_key": {
             "enum": [
@@ -6509,7 +6541,6 @@
           "team",
           "amount",
           "guild_id",
-          "matchup_id",
           "market_key"
         ]
       },

@@ -13,6 +13,15 @@ export interface CachedBetData {
 	userid: string
 	team: string
 	amount: number
+	/**
+	 * Canonical match identifier — same value as the upstream provider's event ID.
+	 */
+	event_id: string
+	/**
+	 * Legacy alias for `event_id`. Kept populated for backward compatibility with
+	 * older Khronos endpoints that still accept the deprecated `matchup_id` field.
+	 * TODO: Remove once Pluto fully migrates off `matchup_id` (target: 2026-Q3).
+	 */
 	matchup_id: string
 	opponent: string
 	dateofmatchup: string
@@ -46,11 +55,14 @@ export class BetsCacheService {
 			throw new Error('Match ID not found in betslip data')
 		}
 
-		// Store simplified structure with only essential data
+		// Store simplified structure with only essential data.
+		// `event_id` is the canonical match identifier; `matchup_id` is the legacy
+		// alias kept populated for backward compatibility with older Khronos endpoints.
 		const cachedData: CachedBetData = {
 			userid: betData.userid,
 			team: betData.team,
 			amount: betData.amount,
+			event_id: matchId,
 			matchup_id: matchId,
 			opponent: betData.opponent,
 			dateofmatchup: betData.dateofmatchup,
@@ -98,14 +110,16 @@ export class BetsCacheService {
 	}
 
 	/**
-	 * Prepare bet data for Khronos API finalization
-	 * Now simply returns the cached data as PlaceBetDto since we store it in the right format
+	 * Prepare bet data for Khronos API finalization.
+	 * Sends `event_id` as the canonical match identifier and keeps `matchup_id`
+	 * populated alongside it for backward compatibility during the deprecation window.
 	 */
 	async sanitize(betData: CachedBetData): Promise<PlaceBetDto> {
 		return {
 			userid: betData.userid,
 			team: betData.team,
 			amount: betData.amount,
+			event_id: betData.event_id,
 			matchup_id: betData.matchup_id,
 			guild_id: betData.guild_id,
 			market_key: betData.market_key,

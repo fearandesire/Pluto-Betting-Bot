@@ -44,11 +44,12 @@ export interface InitBetslipDTO {
      */
     guild_id: string;
     /**
-     * The Identifier for a match. This is & must be provided if there's multiple matches for the team, and the user submits the specific match they want to bet on.
+     * Deprecated. Use event_id for the required match identifier.
      * @type {string}
      * @memberof InitBetslipDTO
+     * @deprecated
      */
-    matchup_id?: string;
+    matchup_id?: string | null;
     /**
      * The market key for the bet
      * @type {string}
@@ -56,7 +57,7 @@ export interface InitBetslipDTO {
      */
     market_key: InitBetslipDTOMarketKeyEnum;
     /**
-     * The event ID from the source API
+     * Required match ID from the source API.
      * @type {string}
      * @memberof InitBetslipDTO
      */

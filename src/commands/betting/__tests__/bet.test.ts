@@ -112,7 +112,7 @@ describe('UserCommand (bet)', () => {
 		)
 
 		expect(mockBetErr).toHaveBeenCalledWith(
-			expect.stringContaining('unavailable'),
+			expect.stringContaining('autocomplete list'),
 		)
 		expect(interaction.editReply).toHaveBeenCalledWith({
 			embeds: [expect.objectContaining({ type: 'bet-error' })],
@@ -137,7 +137,7 @@ describe('UserCommand (bet)', () => {
 		)
 
 		expect(mockBetErr).toHaveBeenCalledWith(
-			expect.stringContaining('team from the chosen match'),
+			expect.stringContaining('autocomplete list'),
 		)
 		expect(mockInitialize).not.toHaveBeenCalled()
 	})
@@ -190,7 +190,7 @@ describe('UserCommand (bet)', () => {
 		)
 	})
 
-	it('matches teams case-insensitively via normalizeTeamName', async () => {
+	it('rejects team input whose casing differs from the autocomplete value', async () => {
 		mockGetMatch.mockResolvedValue({
 			id: 'match-2',
 			home_team: 'Los Angeles Lakers',
@@ -198,10 +198,36 @@ describe('UserCommand (bet)', () => {
 			commence_time: '2025-02-05T00:00:00Z',
 			sport: 'basketball_nba',
 		})
-		// Provide team with different casing — should still match
+		// Lowercase free-text input should NOT be accepted — the autocomplete
+		// emits the team name verbatim and that's the only valid value.
 		const interaction = makeInteraction({
 			matchSelection: 'match-2',
 			team: 'los angeles lakers',
+		})
+
+		await command.chatInputRun(
+			interaction as unknown as Parameters<
+				typeof command.chatInputRun
+			>[0],
+		)
+
+		expect(mockBetErr).toHaveBeenCalledWith(
+			expect.stringContaining('autocomplete list'),
+		)
+		expect(mockInitialize).not.toHaveBeenCalled()
+	})
+
+	it('accepts team input that exactly matches the autocomplete value', async () => {
+		mockGetMatch.mockResolvedValue({
+			id: 'match-2',
+			home_team: 'Los Angeles Lakers',
+			away_team: 'Boston Celtics',
+			commence_time: '2025-02-05T00:00:00Z',
+			sport: 'basketball_nba',
+		})
+		const interaction = makeInteraction({
+			matchSelection: 'match-2',
+			team: 'Los Angeles Lakers',
 		})
 
 		await command.chatInputRun(

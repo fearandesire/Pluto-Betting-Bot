@@ -44,11 +44,18 @@ export interface PlaceBetDto {
      */
     guild_id: string;
     /**
-     * The Identifier for a match. // aka event_id
+     * Deprecated. Use event_id for the required match identifier.
+     * @type {string}
+     * @memberof PlaceBetDto
+     * @deprecated
+     */
+    matchup_id?: string | null;
+    /**
+     * Match ID from the source API. Must correspond to the selected team. Required unless the legacy `matchup_id` is provided.
      * @type {string}
      * @memberof PlaceBetDto
      */
-    matchup_id: string;
+    event_id?: string;
     /**
      * The prop type the match & bet belongs to.
      * @type {string}
@@ -125,7 +132,6 @@ export function instanceOfPlaceBetDto(value: object): value is PlaceBetDto {
     if (!('team' in value) || value['team'] === undefined) return false;
     if (!('amount' in value) || value['amount'] === undefined) return false;
     if (!('guild_id' in value) || value['guild_id'] === undefined) return false;
-    if (!('matchup_id' in value) || value['matchup_id'] === undefined) return false;
     if (!('market_key' in value) || value['market_key'] === undefined) return false;
     return true;
 }
@@ -144,7 +150,8 @@ export function PlaceBetDtoFromJSONTyped(json: any, ignoreDiscriminator: boolean
         'team': json['team'],
         'amount': json['amount'],
         'guild_id': json['guild_id'],
-        'matchup_id': json['matchup_id'],
+        'matchup_id': json['matchup_id'] == null ? undefined : json['matchup_id'],
+        'event_id': json['event_id'] == null ? undefined : json['event_id'],
         'market_key': json['market_key'],
     };
 }
@@ -165,6 +172,7 @@ export function PlaceBetDtoToJSONTyped(value?: PlaceBetDto | null, ignoreDiscrim
         'amount': value['amount'],
         'guild_id': value['guild_id'],
         'matchup_id': value['matchup_id'],
+        'event_id': value['event_id'],
         'market_key': value['market_key'],
     };
 }
