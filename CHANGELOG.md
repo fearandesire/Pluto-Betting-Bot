@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.5.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.4.0...v4.5.0) (2026-05-06)
+
+
+### Features
+
+* **betting:** strict autocomplete + faster autocomplete + event_id thread-through ([#509](https://github.com/fearandesire/Pluto-Betting-Bot/issues/509)) ([6aafd85](https://github.com/fearandesire/Pluto-Betting-Bot/commit/6aafd85a537ad5165f4123f234f59e39bfcf8d1a))
+* **ci:** hydrate matchup image assets from Cloudflare R2 ([#510](https://github.com/fearandesire/Pluto-Betting-Bot/issues/510)) ([9ffe2d3](https://github.com/fearandesire/Pluto-Betting-Bot/commit/9ffe2d382102feaf2e11f789304f0542e90975b5))
+
 ## [4.4.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.3.2...v4.4.0) (2026-05-05)
 
 
