@@ -199,14 +199,36 @@ pnpm watch
 # Run linter
 pnpm lint
 
-# Bump the Khronos API client (normally automated via repository_dispatch
-# from Khronos releases — see .github/workflows/khronos-client-update.yml)
-pnpm add @pluto-khronos/api-client@latest
+# Bump @pluto-khronos/* (normally automated via repository_dispatch from
+# Khronos releases — see .github/workflows/khronos-client-update.yml)
+pnpm add @pluto-khronos/api-client@latest @pluto-khronos/types@latest
 
 # Create a new release
 pnpm release
 ```
 </details>
+
+### Local development against Khronos
+
+When iterating on changes that span Pluto and Khronos (e.g. new endpoint, new event payload type), use [yalc](https://github.com/wclr/yalc) to link the local `@pluto-khronos/*` package builds without publishing to npm.
+
+**One-time setup per machine:** `npm i -g yalc`
+
+```bash
+# In Pluto (one-time per session): switch to local linked builds
+pnpm dev:link-khronos
+
+# In Khronos (every change): rebuild + push to all consumers
+pnpm dev:push-all
+
+# In Pluto (every change): verify
+pnpm typecheck     # or: pnpm test:run, pnpm dev
+
+# When done: restore npm versions
+pnpm dev:unlink-khronos
+```
+
+A pre-commit hook aborts the commit if `yalc.lock` is present — prevents accidentally committing a linked state. If you see it fire, run `pnpm dev:unlink-khronos` first.
 
 ## Assets
 

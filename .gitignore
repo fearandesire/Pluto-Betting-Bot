@@ -99,3 +99,8 @@ scripts/internal
 .frolic-session.json
 
 docs
+
+# yalc — local cross-repo linking against Khronos
+# (see "Local development against Khronos" in README)
+.yalc/
+yalc.lock

@@ -1,1 +1,8 @@
+if [ -f yalc.lock ]; then
+  echo "❌ yalc.lock present — local @pluto-khronos/* link is active."
+  echo "   Run: pnpm dev:unlink-khronos"
+  echo "   Then re-stage and commit."
+  exit 1
+fi
+
 lint-staged

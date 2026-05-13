@@ -27,9 +27,12 @@
 		"docker:ci": "docker-compose build && docker-compose push",
 		"assets:upload": "bash scripts/upload-assets.sh",
 		"prepare": "husky",
+		"typecheck": "tsc --noEmit",
 		"test": "vitest",
 		"test:run": "vitest run",
-		"test:coverage": "vitest run --coverage"
+		"test:coverage": "vitest run --coverage",
+		"dev:link-khronos": "yalc add @pluto-khronos/api-client && yalc add @pluto-khronos/types && pnpm install",
+		"dev:unlink-khronos": "yalc remove @pluto-khronos/api-client && yalc remove @pluto-khronos/types && pnpm install"
 	},
 	"lint-staged": {
 		"*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [

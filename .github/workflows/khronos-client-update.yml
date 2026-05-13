@@ -2,19 +2,25 @@
 #
 # Triggered by Khronos's `publish_client` job (in fearandesire/khronos
 # .github/workflows/ci-cd-deployment.yml) after each stable release publishes
-# a new @pluto-khronos/api-client to npm.
+# new @pluto-khronos/api-client AND @pluto-khronos/types versions to npm.
+#
+# Both packages always ship at the same version (= Khronos root version).
 #
 # Flow:
 #   1. Receive repository_dispatch (event_type: khronos-release)
-#   2. Bump @pluto-khronos/api-client to the dispatched version
-#   3. Run `pnpm test:run` — if tests fail, no PR is opened
-#   4. Open a PR with the bump
-#   5. Enable auto-merge on the PR (squash)
+#   2. Bump BOTH @pluto-khronos/api-client AND @pluto-khronos/types in lockstep
+#   3. Verify: pnpm typecheck && pnpm build && pnpm test:run
+#   4. Open PR — DRAFT if verify failed; ready-for-review if green
+#   5. Human reviews + clicks merge (NO auto-merge)
+#
+# Re-dispatch behavior: uses a static branch name (`chore/khronos-update`),
+# so a newer release updates the existing PR rather than opening a duplicate
+# or orphaning the prior draft.
 #
 # Manual trigger (testing):
 #   gh api repos/fearandesire/Pluto-Betting-Bot/dispatches \
 #     -f event_type=khronos-release \
-#     -f 'client_payload[version]=3.2.0' \
+#     -f 'client_payload[khronos_version]=3.2.0' \
 #     -f 'client_payload[sha]=$(git rev-parse HEAD)'
 
 name: Khronos client update
@@ -29,17 +35,17 @@ permissions:
 
 jobs:
   bump:
-    name: Bump @pluto-khronos/api-client
+    name: Bump @pluto-khronos/* packages
     runs-on: ubuntu-latest
 
     steps:
       - name: Validate dispatch payload
         run: |
-          if [[ -z "${{ github.event.client_payload.version }}" ]]; then
-            echo "::error::client_payload.version is required"
+          if [[ -z "${{ github.event.client_payload.khronos_version }}" ]]; then
+            echo "::error::client_payload.khronos_version is required"
             exit 1
           fi
-          echo "📦 Bumping to @pluto-khronos/api-client@${{ github.event.client_payload.version }}"
+          echo "📦 Bumping @pluto-khronos/api-client + @pluto-khronos/types to ${{ github.event.client_payload.khronos_version }}"
           echo "🔗 Khronos commit: ${{ github.event.client_payload.sha }}"
 
       - name: Checkout
@@ -59,15 +65,26 @@ jobs:
           node-version: 22.x
           cache: pnpm
 
-      - name: Bump dependency
+      - name: Bump dependencies (lockstep)
         run: |
-          pnpm add "@pluto-khronos/api-client@${{ github.event.client_payload.version }}"
+          pnpm add \
+            "@pluto-khronos/api-client@${{ github.event.client_payload.khronos_version }}" \
+            "@pluto-khronos/types@${{ github.event.client_payload.khronos_version }}"
 
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Run tests
-        run: pnpm test:run
+      - name: Verify (build + test)
+        id: verify
+        continue-on-error: true
+        run: |
+          set -e
+          pnpm build
+          pnpm test:run
+        # NOTE: pnpm typecheck is NOT in the gate yet — the codebase has
+        # pre-existing tsc errors that swc-build silently ignores. Once those
+        # are cleaned up, add `pnpm typecheck` as the first command above so
+        # type-level breakage from upstream packages also surfaces here.
 
       - name: Detect changes
         id: diff
@@ -85,27 +102,28 @@ jobs:
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.PLUTO_BOT_PAT }}
-          branch: chore/bump-khronos-${{ github.event.client_payload.version }}
-          delete-branch: true
-          title: "chore(deps): bump @pluto-khronos/api-client to ${{ github.event.client_payload.version }}"
-          commit-message: "chore(deps): bump @pluto-khronos/api-client to ${{ github.event.client_payload.version }}"
+          branch: chore/khronos-update
+          delete-branch: false
+          title: "chore(deps): bump @pluto-khronos/* to ${{ github.event.client_payload.khronos_version }}"
+          commit-message: "chore(deps): bump @pluto-khronos/* to ${{ github.event.client_payload.khronos_version }}"
+          draft: ${{ steps.verify.outcome == 'failure' }}
           body: |
             Automated bump triggered by Khronos release.
 
-            - **Version:** `${{ github.event.client_payload.version }}`
-            - **Khronos commit:** [`${{ github.event.client_payload.sha }}`](https://github.com/fearandesire/khronos/commit/${{ github.event.client_payload.sha }})
-            - **npm:** https://www.npmjs.com/package/@pluto-khronos/api-client/v/${{ github.event.client_payload.version }}
+            ## Versions
+            - `@pluto-khronos/api-client@${{ github.event.client_payload.khronos_version }}`
+            - `@pluto-khronos/types@${{ github.event.client_payload.khronos_version }}`
 
-            Tests passed in the dispatch workflow before this PR was opened.
-            Auto-merge will engage on green.
+            ## Source
+            - **Khronos commit:** [`${{ github.event.client_payload.sha }}`](https://github.com/fearandesire/khronos/commit/${{ github.event.client_payload.sha }})
+            - **api-client npm:** https://www.npmjs.com/package/@pluto-khronos/api-client/v/${{ github.event.client_payload.khronos_version }}
+            - **types npm:** https://www.npmjs.com/package/@pluto-khronos/types/v/${{ github.event.client_payload.khronos_version }}
+
+            ## Quality gate
+            **Verify (build + test):** `${{ steps.verify.outcome }}`
+
+            ${{ steps.verify.outcome == 'failure' && '⚠️ Opened as DRAFT — fix consumers in this branch before marking ready. Then merge manually.' || '✅ All checks passed — ready for review. Click merge when you''ve scanned the diff.' }}
           labels: |
             dependencies
             automated
-
-      - name: Enable auto-merge
-        if: steps.cpr.outputs.pull-request-number
-        env:
-          GH_TOKEN: ${{ secrets.PLUTO_BOT_PAT }}
-        run: |
-          gh pr merge --auto --squash "${{ steps.cpr.outputs.pull-request-number }}"
-          echo "::notice::Auto-merge enabled on PR #${{ steps.cpr.outputs.pull-request-number }}"
+            khronos-bump
