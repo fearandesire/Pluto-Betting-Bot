@@ -57,7 +57,7 @@
 		"@koa/cors": "^5.0.0",
 		"@koa/router": "^15.4.0",
 		"@openapitools/openapi-generator-cli": "^2.31.1",
-		"@pluto-khronos/types": "^0.2.4",
+		"@pluto-khronos/types": "^0.3.0",
 		"@sapphire/decorators": "^6.1.1",
 		"@sapphire/discord-utilities": "^4.0.0",
 		"@sapphire/discord.js-utilities": "^7.3.2",
