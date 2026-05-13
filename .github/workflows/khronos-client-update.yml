@@ -74,17 +74,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Verify (build + test)
+      - name: Verify (typecheck + build + test)
         id: verify
         continue-on-error: true
         run: |
           set -e
+          pnpm typecheck
           pnpm build
           pnpm test:run
-        # NOTE: pnpm typecheck is NOT in the gate yet — the codebase has
-        # pre-existing tsc errors that swc-build silently ignores. Once those
-        # are cleaned up, add `pnpm typecheck` as the first command above so
-        # type-level breakage from upstream packages also surfaces here.
 
       - name: Detect changes
         id: diff
@@ -120,7 +117,7 @@ jobs:
             - **types npm:** https://www.npmjs.com/package/@pluto-khronos/types/v/${{ github.event.client_payload.khronos_version }}
 
             ## Quality gate
-            **Verify (build + test):** `${{ steps.verify.outcome }}`
+            **Verify (typecheck + build + test):** `${{ steps.verify.outcome }}`
 
             ${{ steps.verify.outcome == 'failure' && '⚠️ Opened as DRAFT — fix consumers in this branch before marking ready. Then merge manually.' || '✅ All checks passed — ready for review. Click merge when you''ve scanned the diff.' }}
           labels: |
