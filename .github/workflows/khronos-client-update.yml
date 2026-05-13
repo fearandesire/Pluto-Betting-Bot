@@ -40,13 +40,16 @@ jobs:
 
     steps:
       - name: Validate dispatch payload
+        env:
+          KHRONOS_VERSION: ${{ github.event.client_payload.khronos_version }}
+          KHRONOS_SHA: ${{ github.event.client_payload.sha }}
         run: |
-          if [[ -z "${{ github.event.client_payload.khronos_version }}" ]]; then
+          if [[ -z "$KHRONOS_VERSION" ]]; then
             echo "::error::client_payload.khronos_version is required"
             exit 1
           fi
-          echo "📦 Bumping @pluto-khronos/api-client + @pluto-khronos/types to ${{ github.event.client_payload.khronos_version }}"
-          echo "🔗 Khronos commit: ${{ github.event.client_payload.sha }}"
+          echo "📦 Bumping @pluto-khronos/api-client + @pluto-khronos/types to $KHRONOS_VERSION"
+          echo "🔗 Khronos commit: $KHRONOS_SHA"
 
       - name: Checkout
         uses: actions/checkout@v6
@@ -66,10 +69,12 @@ jobs:
           cache: pnpm
 
       - name: Bump dependencies (lockstep)
+        env:
+          KHRONOS_VERSION: ${{ github.event.client_payload.khronos_version }}
         run: |
           pnpm add \
-            "@pluto-khronos/api-client@${{ github.event.client_payload.khronos_version }}" \
-            "@pluto-khronos/types@${{ github.event.client_payload.khronos_version }}"
+            "@pluto-khronos/api-client@$KHRONOS_VERSION" \
+            "@pluto-khronos/types@$KHRONOS_VERSION"
 
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
