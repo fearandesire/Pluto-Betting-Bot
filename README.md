@@ -199,8 +199,9 @@ pnpm watch
 # Run linter
 pnpm lint
 
-# Generate API client from Khronos canonical OpenAPI spec
-pnpm ci-gen-api
+# Bump the Khronos API client (normally automated via repository_dispatch
+# from Khronos releases — see .github/workflows/khronos-client-update.yml)
+pnpm add @pluto-khronos/api-client@latest
 
 # Create a new release
 pnpm release

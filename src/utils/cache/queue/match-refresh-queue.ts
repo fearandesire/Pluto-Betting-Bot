@@ -1,4 +1,4 @@
-import type { MatchDetailDto } from '@kh-openapi'
+import type { MatchDetailDto } from '@pluto-khronos/api-client'
 import { type Job, Queue, Worker } from 'bullmq'
 import MatchApiWrapper from '../../api/Khronos/matches/matchApiWrapper.js'
 import { logger } from '../../logging/WinstonLogger.js'

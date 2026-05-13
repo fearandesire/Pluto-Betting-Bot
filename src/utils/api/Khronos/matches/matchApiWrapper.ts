@@ -1,4 +1,7 @@
-import { MatchesApi, type MatchesForSportRequest } from '@kh-openapi'
+import {
+	MatchesApi,
+	type MatchesForSportRequest,
+} from '@pluto-khronos/api-client'
 import { isMockEnabled, MockBackend } from '../../../dev/index.js'
 import { KH_API_CONFIG } from '../KhronosInstances.js'
 

@@ -1,4 +1,4 @@
-import { WeekManagerApi } from '../../../../openapi/khronos/apis/WeekManagerApi.js'
+import { WeekManagerApi } from '@pluto-khronos/api-client'
 import { KH_API_CONFIG } from '../KhronosInstances.js'
 
 export default class WeekManagerWrapper {

@@ -2,7 +2,7 @@
 // Active Props Service - Fetches active outcomes from Khronos
 // ============================================================================
 
-import type { DateGroupDto } from '@kh-openapi'
+import type { DateGroupDto } from '@pluto-khronos/api-client'
 import type PredictionApiWrapper from '../api/Khronos/prediction/predictionApiWrapper.js'
 import { isValidUUID } from '../common/uuid-validation.js'
 import { logger } from '../logging/WinstonLogger.js'

@@ -1,6 +1,6 @@
 /**
  * @deprecated This interface is no longer needed. Khronos now returns pre-paired props.
- * Use ProcessedPropDto directly from @kh-openapi instead.
+ * Use ProcessedPropDto directly from @pluto-khronos/api-client instead.
  */
 export interface PropPair {
 	event_id: string

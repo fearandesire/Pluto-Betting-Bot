@@ -4,7 +4,7 @@ import type {
 	GetProfileDto,
 	InitBetslipRespDTO,
 	PlacedBetslipDto,
-} from '@kh-openapi'
+} from '@pluto-khronos/api-client'
 import { z } from 'zod'
 import { logger } from '../../logging/WinstonLogger.js'
 

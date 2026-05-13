@@ -2,7 +2,7 @@ import type {
 	BetslipWithAggregationDTO,
 	PlaceBetDto,
 	PlaceBetDtoMarketKeyEnum,
-} from '@kh-openapi'
+} from '@pluto-khronos/api-client'
 import type { CacheManager } from '../../../cache/cache-manager.js'
 
 /**

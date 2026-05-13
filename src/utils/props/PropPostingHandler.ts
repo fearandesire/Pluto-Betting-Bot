@@ -1,4 +1,4 @@
-import type { ProcessedPropDto } from '@kh-openapi'
+import type { ProcessedPropDto } from '@pluto-khronos/api-client'
 import { format } from 'date-fns'
 import {
 	ActionRowBuilder,

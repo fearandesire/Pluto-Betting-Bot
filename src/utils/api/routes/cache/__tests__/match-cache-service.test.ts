@@ -1,4 +1,4 @@
-import type { MatchDetailDto } from '@kh-openapi'
+import type { MatchDetailDto } from '@pluto-khronos/api-client'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CacheManager } from '../../../../cache/cache-manager.js'
 

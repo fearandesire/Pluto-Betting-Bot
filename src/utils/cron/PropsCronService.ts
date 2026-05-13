@@ -2,7 +2,7 @@
 // Props Cron Service - Scheduled caching of props from Khronos
 // ============================================================================
 
-import type { PropDto } from '@kh-openapi'
+import type { PropDto } from '@pluto-khronos/api-client'
 import type PropsApiWrapper from '../api/Khronos/props/props-api-wrapper.js'
 import { logger } from '../logging/WinstonLogger.js'
 import type { ActivePropsService } from '../props/ActivePropsService.js'

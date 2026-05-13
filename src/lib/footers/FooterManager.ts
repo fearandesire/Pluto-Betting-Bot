@@ -1,4 +1,4 @@
-import { type FooterConfigResponseDto } from '@kh-openapi'
+import { type FooterConfigResponseDto } from '@pluto-khronos/api-client'
 import {
 	createFooterService,
 	FooterService,

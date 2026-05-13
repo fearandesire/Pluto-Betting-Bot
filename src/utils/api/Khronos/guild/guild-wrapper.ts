@@ -2,7 +2,7 @@ import {
 	type GetGuildsBySportAndConfigTypeRequest,
 	type Guild,
 	GuildsApi,
-} from '@kh-openapi'
+} from '@pluto-khronos/api-client'
 import { container } from '@sapphire/framework'
 import { isAxiosError } from 'axios'
 import {

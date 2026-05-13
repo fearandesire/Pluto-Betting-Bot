@@ -71,7 +71,6 @@ assets.zip
 
 # More IDE Settings
 .idea/
-generated/spec/**/*
 assets/**/*
 Writerside/**/*
 

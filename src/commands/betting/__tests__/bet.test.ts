@@ -1,4 +1,4 @@
-import type { MatchDetailDto } from '@kh-openapi'
+import type { MatchDetailDto } from '@pluto-khronos/api-client'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // Must be hoisted above imports so module-level `new MatchCacheService()` gets the mock

@@ -2,10 +2,10 @@ import {
 	type ProcessedPropDto,
 	type PropDto,
 	PropsApi,
+	ResponseError,
 	type SetPropResultDto,
 	type SetPropResultResponseDto,
-} from '@kh-openapi'
-import { ResponseError } from '@khronos-index'
+} from '@pluto-khronos/api-client'
 import pTimeout from 'p-timeout'
 import { z } from 'zod'
 import { logger } from '../../../logging/WinstonLogger.js'

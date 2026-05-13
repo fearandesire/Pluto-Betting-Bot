@@ -1,6 +1,6 @@
-import type { PlacedBetslip } from '@kh-openapi'
+import type { PlacedBetslip } from '@pluto-khronos/api-client'
+import { PlacedBetslipBetresultEnum } from '@pluto-khronos/api-client'
 import { format, isValid, parseISO } from 'date-fns'
-import { PlacedBetslipBetresultEnum } from '../../../../openapi/khronos/index.js'
 import { logger } from '../../../logging/WinstonLogger.js'
 import BetslipWrapper from './betslip-wrapper.js'
 

@@ -1,4 +1,4 @@
-import type { MatchDetailDto } from '@kh-openapi'
+import type { MatchDetailDto } from '@pluto-khronos/api-client'
 import { container } from '@sapphire/framework'
 import { AxiosKhronosInstance } from '../common/axios-config.js'
 import { OutgoingEndpoints } from '../common/endpoints.js'
