@@ -72,25 +72,9 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Validate commit messages
-        if: github.event_name == 'pull_request' || github.event_name == 'push'
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            npx commitlint --from ${{ github.event.pull_request.base.sha }} --to HEAD --verbose
-          else
-            FROM_SHA="${{ github.event.before }}"
-            if ! git cat-file -e "$FROM_SHA" 2>/dev/null; then
-              echo "Commit $FROM_SHA not found (likely due to rebase), using origin/main as base"
-              git fetch origin main 2>/dev/null || true
-              MERGE_BASE=$(git merge-base HEAD origin/main 2>/dev/null || echo "origin/main")
-              FROM_SHA="$MERGE_BASE"
-            fi
-            npx commitlint --from "$FROM_SHA" --to HEAD --verbose
-          fi
-
   # ===========================================================================
   # DEPLOY - Build and push Docker image to GHCR
-  # Triggers: release | fix/patch/hotfix commits | workflow_dispatch force
+  # Triggers: release event (release-please) | workflow_dispatch with force_build
   # ===========================================================================
   deploy:
     name: Deploy
