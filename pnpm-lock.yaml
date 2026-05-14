@@ -33,8 +33,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       '@koa/router':
-        specifier: ^15.4.0
-        version: 15.4.0(koa@3.2.0)
+        specifier: ^15.5.0
+        version: 15.5.0(koa@3.2.0)
       '@openapitools/openapi-generator-cli':
         specifier: ^2.31.1
         version: 2.31.1
@@ -1391,8 +1391,8 @@ packages:
     resolution: {integrity: sha512-x/iUDjcS90W69PryLDIMgFyV21YLTnG9zOpPXS7Bkt2b8AsY3zZsIpOLBkYr9fBcF3HbkKaER5hOBZLfpLgYNw==}
     engines: {node: '>= 14.0.0'}
 
-  '@koa/router@15.4.0':
-    resolution: {integrity: sha512-vKYlXtoCfcAN8z4dHiveYX55rTYOgHEYJNumK1WM9ZAwaArhreGVkyC1LTMGfUQUJyIO/SbwRFBOHeOCY8/MaQ==}
+  '@koa/router@15.5.0':
+    resolution: {integrity: sha512-KSC0oG/5t6ITu5wqX4lJseA/dngoj14hEaohrLZEXtlUT2RRyJvwaJ0KV+5uQoaWrY3A8ClHOrBEU4g8dujn8Q==}
     engines: {node: '>= 20'}
     peerDependencies:
       koa: ^2.0.0 || ^3.0.0
@@ -7728,7 +7728,7 @@ snapshots:
       '@bull-board/api': 6.21.3(@bull-board/ui@6.21.3)
       '@bull-board/ui': 6.21.3
       '@koa/bodyparser': 6.1.0(koa@3.2.0)
-      '@koa/router': 15.4.0(koa@3.2.0)
+      '@koa/router': 15.5.0(koa@3.2.0)
       '@ladjs/koa-views': 9.0.0(@babel/core@7.29.0)(@types/koa@3.0.2)(ejs@5.0.2)(handlebars@4.7.9)(lodash@4.18.1)
       ejs: 5.0.2
       koa: 3.2.0
@@ -8639,7 +8639,7 @@ snapshots:
     dependencies:
       vary: 1.1.2
 
-  '@koa/router@15.4.0(koa@3.2.0)':
+  '@koa/router@15.5.0(koa@3.2.0)':
     dependencies:
       debug: 4.4.3(supports-color@8.1.1)
       http-errors: 2.0.1
