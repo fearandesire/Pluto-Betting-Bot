@@ -18,17 +18,6 @@ on:
         type: string
         required: false
 
-  push:
-    branches: [main]
-    paths-ignore:
-      - "**.md"
-      - "docs/**"
-      - "dev/**"
-      - ".github/*.md"
-      - "LICENSE"
-      - ".gitignore"
-      - "!.github/workflows/**"
-
   pull_request:
     branches: [main]
     paths-ignore:
@@ -110,13 +99,7 @@ jobs:
     if: >-
       needs.verify.result == 'success' && (
         github.event_name == 'release' ||
-        (github.event_name == 'workflow_dispatch' && inputs.force_build) ||
-        (github.event_name == 'push' && github.ref == 'refs/heads/main' && (
-          startsWith(github.event.head_commit.message, 'chore(main): release') ||
-          startsWith(github.event.head_commit.message, 'fix') ||
-          startsWith(github.event.head_commit.message, 'patch:') ||
-          startsWith(github.event.head_commit.message, 'hotfix:')
-        ))
+        (github.event_name == 'workflow_dispatch' && inputs.force_build)
       )
 
     permissions:
