@@ -1,4 +1,4 @@
-import type { MatchDetailDto } from '@kh-openapi'
+import type { MatchDetailDto } from '@pluto-khronos/api-client'
 import { describe, expect, it } from 'vitest'
 import {
 	getTeamChoicesForMatch,

@@ -1,5 +1,6 @@
-import type { PlacedBetslip } from '@kh-openapi'
 import { helpfooter } from '@pluto-config'
+import type { PlacedBetslip } from '@pluto-khronos/api-client'
+import { PlacedBetslipBetresultEnum } from '@pluto-khronos/api-client'
 import {
 	ActionRowBuilder,
 	ButtonBuilder,
@@ -16,7 +17,6 @@ import {
 	buildMyBetsNavCustomId,
 	mybetsNavPageId,
 } from '../../../../lib/interfaces/interaction-handlers/interaction-handlers.interface.js'
-import { PlacedBetslipBetresultEnum } from '../../../../openapi/khronos/index.js'
 import type { BetsByDate, HistoryPage } from './mybets-pagination.service.js'
 
 export interface MyBetsDisplayData {

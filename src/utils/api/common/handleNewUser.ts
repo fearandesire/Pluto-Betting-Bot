@@ -4,7 +4,7 @@ import type {
 	GetProfileDto,
 	InitBetslipRespDTO,
 	PlacedBetslipDto,
-} from '@kh-openapi'
+} from '@pluto-khronos/api-client'
 import { container } from '@sapphire/framework'
 import { CacheManager } from '../../cache/cache-manager.js'
 import { logger } from '../../logging/WinstonLogger.js'

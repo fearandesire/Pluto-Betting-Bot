@@ -2,7 +2,7 @@ import { faker } from '@faker-js/faker'
 import type {
 	GetAllMatchesDto,
 	GetAllMatchesDtoMatchesInner,
-} from '@kh-openapi'
+} from '@pluto-khronos/api-client'
 import { type MockSport, pickMatchup } from './teams.js'
 
 function makeOdds(): { home: number; away: number } {

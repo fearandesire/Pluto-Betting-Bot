@@ -1,4 +1,4 @@
-import { type Account, AccountsApi } from '@kh-openapi'
+import { type Account, AccountsApi } from '@pluto-khronos/api-client'
 import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js'
 
 export default class AccountsWrapper {

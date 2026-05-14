@@ -18,13 +18,13 @@ import type {
 	PlaceBetslipRequest,
 	PlacedBetslip,
 	PlacedBetslipDto,
-} from '@kh-openapi'
-import { DEV_IDS } from '../../lib/configs/constants.js'
-import env from '../../lib/startup/env.js'
+} from '@pluto-khronos/api-client'
 import {
 	DiscordConfigSettingTypeEnum,
 	PlacedBetslipBetresultEnum,
-} from '../../openapi/khronos/index.js'
+} from '@pluto-khronos/api-client'
+import { DEV_IDS } from '../../lib/configs/constants.js'
+import env from '../../lib/startup/env.js'
 import { DiscordConfigEnums } from '../api/common/interfaces/kh-pluto/kh-pluto.interface.js'
 import {
 	makeBetslipWithAggregation,

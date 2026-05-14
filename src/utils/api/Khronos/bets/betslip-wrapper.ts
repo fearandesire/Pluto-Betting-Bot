@@ -9,7 +9,7 @@ import {
 	type PlaceBetslipRequest,
 	type PlacedBetslip,
 	type PlacedBetslipDto,
-} from '@kh-openapi'
+} from '@pluto-khronos/api-client'
 import { isMockEnabled, MockBackend } from '../../../dev/index.js'
 import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js'
 

@@ -1,4 +1,4 @@
-import type { MatchDetailDto } from '@kh-openapi'
+import type { MatchDetailDto } from '@pluto-khronos/api-client'
 import { teamResolver } from 'resolve-team'
 import type { CacheManager } from '../../../cache/cache-manager.js'
 import { logger } from '../../../logging/WinstonLogger.js'

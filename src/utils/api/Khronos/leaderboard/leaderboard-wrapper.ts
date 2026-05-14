@@ -1,8 +1,8 @@
+import type { SimpleLeaderboardResponseDto } from '@pluto-khronos/api-client'
 import {
 	LeaderboardApi,
 	type LeaderboardControllerGetLeaderboardV1Request,
-} from '../../../../openapi/khronos/apis/LeaderboardApi.js'
-import type { SimpleLeaderboardResponseDto } from '../../../../openapi/khronos/models/index.js'
+} from '@pluto-khronos/api-client'
 import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js'
 
 export default class LeaderboardWrapper {

@@ -1,3 +1,7 @@
+import {
+	type AllUserPredictionsDto,
+	GetAllPredictionsFilteredStatusEnum,
+} from '@pluto-khronos/api-client'
 import { ApplyOptions } from '@sapphire/decorators'
 import { PaginatedMessageEmbedFields } from '@sapphire/discord.js-utilities'
 import { Command } from '@sapphire/framework'
@@ -5,10 +9,6 @@ import type { User } from 'discord.js'
 import { EmbedBuilder, InteractionContextType } from 'discord.js'
 import _ from 'lodash'
 import embedColors from '../../lib/colorsConfig.js'
-import {
-	type AllUserPredictionsDto,
-	GetAllPredictionsFilteredStatusEnum,
-} from '../../openapi/khronos/index.js'
 import { MarketKeyAbbreviations } from '../../utils/api/common/interfaces/market-abbreviations.js'
 import PredictionApiWrapper from '../../utils/api/Khronos/prediction/predictionApiWrapper.js'
 import PropsApiWrapper from '../../utils/api/Khronos/props/props-api-wrapper.js'

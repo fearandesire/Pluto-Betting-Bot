@@ -1,8 +1,3 @@
-import fetchRetry from 'fetch-retry'
-import { readFileSync } from 'fs'
-import { dirname, join } from 'path'
-import { fileURLToPath } from 'url'
-import env from '../../../lib/startup/env.js'
 /**
  * @module KhronosApi
  * @readonly
@@ -18,7 +13,12 @@ import {
 	DiscordConfigApi,
 	GuildsApi,
 	MatchesApi,
-} from '../../../openapi/khronos/index.js'
+} from '@pluto-khronos/api-client'
+import fetchRetry from 'fetch-retry'
+import { readFileSync } from 'fs'
+import { dirname, join } from 'path'
+import { fileURLToPath } from 'url'
+import env from '../../../lib/startup/env.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)

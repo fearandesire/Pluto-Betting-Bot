@@ -2,7 +2,7 @@ import {
 	type GetOverallH2hBettingStatsRequest,
 	type OverallStatsDto,
 	StatsApi,
-} from '../../../../openapi/khronos/index.js'
+} from '@pluto-khronos/api-client'
 import { KH_API_CONFIG } from '../KhronosInstances.js'
 
 export default class StatsWraps {

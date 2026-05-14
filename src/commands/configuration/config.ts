@@ -1,3 +1,4 @@
+import { DiscordConfigSettingTypeEnum } from '@pluto-khronos/api-client'
 import { ApplyOptions } from '@sapphire/decorators'
 import { Command } from '@sapphire/framework'
 import {
@@ -6,7 +7,6 @@ import {
 	PermissionFlagsBits,
 } from 'discord.js'
 import embedColors from '../../lib/colorsConfig.js'
-import { DiscordConfigSettingTypeEnum } from '../../openapi/khronos/models/DiscordConfig.js'
 import GuildConfigWrapper from '../../utils/api/Khronos/guild/guild-config.wrapper.js'
 import GuildWrapper from '../../utils/api/Khronos/guild/guild-wrapper.js'
 import StringUtils from '../../utils/common/string-utils.js'

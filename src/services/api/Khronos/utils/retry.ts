@@ -4,7 +4,7 @@
  * Builds on existing error handling from utils/api/Khronos/error-handling/
  */
 
-import { ResponseError } from '@khronos-index'
+import { ResponseError } from '@pluto-khronos/api-client'
 import {
 	type KhronosApiError,
 	toKhronosApiError,

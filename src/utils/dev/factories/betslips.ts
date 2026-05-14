@@ -4,8 +4,8 @@ import type {
 	GetAllMatchesDtoMatchesInner,
 	PlaceBetDto,
 	PlacedBetslip,
-} from '@kh-openapi'
-import { PlacedBetslipBetresultEnum } from '../../../openapi/khronos/index.js'
+} from '@pluto-khronos/api-client'
+import { PlacedBetslipBetresultEnum } from '@pluto-khronos/api-client'
 import { makeUpcomingGame } from './games.js'
 import { asMockSport } from './teams.js'
 

@@ -1,4 +1,4 @@
-import { ResponseError } from '@khronos-index'
+import { ResponseError } from '@pluto-khronos/api-client'
 import { ApiHttpErrorTypes } from '../../../../lib/interfaces/api/api.interface.js'
 
 /**

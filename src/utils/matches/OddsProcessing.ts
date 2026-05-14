@@ -1,5 +1,5 @@
-import type { MatchDetailDto } from '@kh-openapi'
 import { helpfooter } from '@pluto-config'
+import type { MatchDetailDto } from '@pluto-khronos/api-client'
 import { isValid, parseISO } from 'date-fns'
 import _ from 'lodash'
 import parseScheduledGames from '../bot_res/parseScheduled.js'

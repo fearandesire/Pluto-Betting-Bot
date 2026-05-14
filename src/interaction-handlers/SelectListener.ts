@@ -1,4 +1,7 @@
-import type { BetslipWithAggregationDTO, MatchDetailDto } from '@kh-openapi'
+import type {
+	BetslipWithAggregationDTO,
+	MatchDetailDto,
+} from '@pluto-khronos/api-client'
 import {
 	InteractionHandler,
 	InteractionHandlerTypes,

@@ -1,4 +1,7 @@
-import { type CreateConfigDto, DiscordConfigApi } from '@khronos-index'
+import {
+	type CreateConfigDto,
+	DiscordConfigApi,
+} from '@pluto-khronos/api-client'
 import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js'
 
 export default class GuildConfigWrapper {

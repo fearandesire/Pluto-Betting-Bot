@@ -1,4 +1,4 @@
-import type { SetPropResultResponseDto } from '@kh-openapi'
+import type { SetPropResultResponseDto } from '@pluto-khronos/api-client'
 import { PaginatedMessageEmbedFields } from '@sapphire/discord.js-utilities'
 import { container } from '@sapphire/framework'
 import type { Subcommand } from '@sapphire/plugin-subcommands'

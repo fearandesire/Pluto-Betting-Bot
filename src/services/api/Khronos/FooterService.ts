@@ -5,9 +5,12 @@
  * exponential backoff, and typed error handling.
  */
 
-import { type FooterConfigResponseDto, FootersApi } from '@kh-openapi'
+import type { Configuration } from '@pluto-khronos/api-client'
+import {
+	type FooterConfigResponseDto,
+	FootersApi,
+} from '@pluto-khronos/api-client'
 import type { Logger } from 'winston'
-import type { Configuration } from '../../../openapi/khronos/index.js'
 import { ApiServiceError, err, ok, type Result } from './types/api-errors.js'
 import { type RetryConfig, withRetry } from './utils/retry.js'
 

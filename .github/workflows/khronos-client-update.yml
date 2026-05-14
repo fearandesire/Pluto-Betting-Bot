@@ -1,0 +1,111 @@
+# Khronos client update
+#
+# Triggered by Khronos's `publish_client` job (in fearandesire/khronos
+# .github/workflows/ci-cd-deployment.yml) after each stable release publishes
+# a new @pluto-khronos/api-client to npm.
+#
+# Flow:
+#   1. Receive repository_dispatch (event_type: khronos-release)
+#   2. Bump @pluto-khronos/api-client to the dispatched version
+#   3. Run `pnpm test:run` — if tests fail, no PR is opened
+#   4. Open a PR with the bump
+#   5. Enable auto-merge on the PR (squash)
+#
+# Manual trigger (testing):
+#   gh api repos/fearandesire/Pluto-Betting-Bot/dispatches \
+#     -f event_type=khronos-release \
+#     -f 'client_payload[version]=3.2.0' \
+#     -f 'client_payload[sha]=$(git rev-parse HEAD)'
+
+name: Khronos client update
+
+on:
+  repository_dispatch:
+    types: [khronos-release]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump:
+    name: Bump @pluto-khronos/api-client
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate dispatch payload
+        run: |
+          if [[ -z "${{ github.event.client_payload.version }}" ]]; then
+            echo "::error::client_payload.version is required"
+            exit 1
+          fi
+          echo "📦 Bumping to @pluto-khronos/api-client@${{ github.event.client_payload.version }}"
+          echo "🔗 Khronos commit: ${{ github.event.client_payload.sha }}"
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.PLUTO_BOT_PAT }}
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10.27.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+          cache: pnpm
+
+      - name: Bump dependency
+        run: |
+          pnpm add "@pluto-khronos/api-client@${{ github.event.client_payload.version }}"
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Run tests
+        run: pnpm test:run
+
+      - name: Detect changes
+        id: diff
+        run: |
+          if git diff --quiet package.json pnpm-lock.yaml; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No dependency changes — already on this version"
+          else
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open pull request
+        if: steps.diff.outputs.has_changes == 'true'
+        id: cpr
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.PLUTO_BOT_PAT }}
+          branch: chore/bump-khronos-${{ github.event.client_payload.version }}
+          delete-branch: true
+          title: "chore(deps): bump @pluto-khronos/api-client to ${{ github.event.client_payload.version }}"
+          commit-message: "chore(deps): bump @pluto-khronos/api-client to ${{ github.event.client_payload.version }}"
+          body: |
+            Automated bump triggered by Khronos release.
+
+            - **Version:** `${{ github.event.client_payload.version }}`
+            - **Khronos commit:** [`${{ github.event.client_payload.sha }}`](https://github.com/fearandesire/khronos/commit/${{ github.event.client_payload.sha }})
+            - **npm:** https://www.npmjs.com/package/@pluto-khronos/api-client/v/${{ github.event.client_payload.version }}
+
+            Tests passed in the dispatch workflow before this PR was opened.
+            Auto-merge will engage on green.
+          labels: |
+            dependencies
+            automated
+
+      - name: Enable auto-merge
+        if: steps.cpr.outputs.pull-request-number
+        env:
+          GH_TOKEN: ${{ secrets.PLUTO_BOT_PAT }}
+        run: |
+          gh pr merge --auto --squash "${{ steps.cpr.outputs.pull-request-number }}"
+          echo "::notice::Auto-merge enabled on PR #${{ steps.cpr.outputs.pull-request-number }}"

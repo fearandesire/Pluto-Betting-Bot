@@ -1,11 +1,11 @@
+import { betFooter, supportMessage } from '@pluto-config'
 import type {
 	BetslipWithAggregationDTO,
 	DoubleDownDto,
 	InitBetslipRespDTO,
 	PlaceBetDto,
 	PlacedBetslip,
-} from '@kh-openapi'
-import { betFooter, supportMessage } from '@pluto-config'
+} from '@pluto-khronos/api-client'
 import { format } from 'date-fns'
 import {
 	ActionRowBuilder,

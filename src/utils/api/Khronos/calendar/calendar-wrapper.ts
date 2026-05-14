@@ -1,4 +1,7 @@
-import { CalendarApi, type GetSeasonYearRequest } from '@kh-openapi'
+import {
+	CalendarApi,
+	type GetSeasonYearRequest,
+} from '@pluto-khronos/api-client'
 import { isAxiosError } from 'axios'
 import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js'
 

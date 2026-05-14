@@ -1,4 +1,4 @@
-import type { DateGroupDto } from '@kh-openapi'
+import type { DateGroupDto } from '@pluto-khronos/api-client'
 import {
 	type AllUserPredictionsDto,
 	type CreatePredictionRequest,
@@ -11,7 +11,7 @@ import {
 	PredictionApi,
 	type RemovePredictionByIdRequest,
 	type RemovePredictionRequest,
-} from '@kh-openapi'
+} from '@pluto-khronos/api-client'
 import { KH_API_CONFIG } from '../KhronosInstances.js'
 
 // Re-export generated types for convenience

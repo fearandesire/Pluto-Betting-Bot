@@ -4,7 +4,7 @@ import {
 	type GetBalanceDto,
 	type GetLeaderboardDto,
 	type GetProfileDto,
-} from '@kh-openapi'
+} from '@pluto-khronos/api-client'
 import type { CommandInteraction, GuildMember } from 'discord.js'
 import _ from 'lodash'
 import { SapDiscClient } from '../../../../index.js'

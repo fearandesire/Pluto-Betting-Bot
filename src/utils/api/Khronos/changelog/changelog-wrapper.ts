@@ -1,5 +1,5 @@
-import { GetLatestChangelogAppEnum } from '../../../../openapi/khronos/index.js'
-import type { Changelog } from '../../../../openapi/khronos/models/index.js'
+import type { Changelog } from '@pluto-khronos/api-client'
+import { GetLatestChangelogAppEnum } from '@pluto-khronos/api-client'
 import { ChangelogsInstance } from '../KhronosInstances.js'
 
 export class ChangelogWrapper {

@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import type { GetAllMatchesDtoMatchesInner } from '@kh-openapi'
+import type { GetAllMatchesDtoMatchesInner } from '@pluto-khronos/api-client'
 import type {
 	IncomingChannelData,
 	TeamMatchupRecords,

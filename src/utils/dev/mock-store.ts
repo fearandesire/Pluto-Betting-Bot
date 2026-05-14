@@ -1,5 +1,5 @@
-import type { PlacedBetslip } from '@kh-openapi'
-import { PlacedBetslipBetresultEnum } from '../../openapi/khronos/index.js'
+import type { PlacedBetslip } from '@pluto-khronos/api-client'
+import { PlacedBetslipBetresultEnum } from '@pluto-khronos/api-client'
 
 const DEFAULT_BALANCE = 10_000
 
