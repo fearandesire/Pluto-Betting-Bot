@@ -40,13 +40,16 @@ jobs:
 
     steps:
       - name: Validate dispatch payload
+        env:
+          KHRONOS_VERSION: ${{ github.event.client_payload.khronos_version }}
+          KHRONOS_SHA: ${{ github.event.client_payload.sha }}
         run: |
-          if [[ -z "${{ github.event.client_payload.khronos_version }}" ]]; then
+          if [[ -z "$KHRONOS_VERSION" ]]; then
             echo "::error::client_payload.khronos_version is required"
             exit 1
           fi
-          echo "📦 Bumping @pluto-khronos/api-client + @pluto-khronos/types to ${{ github.event.client_payload.khronos_version }}"
-          echo "🔗 Khronos commit: ${{ github.event.client_payload.sha }}"
+          echo "📦 Bumping @pluto-khronos/api-client + @pluto-khronos/types to $KHRONOS_VERSION"
+          echo "🔗 Khronos commit: $KHRONOS_SHA"
 
       - name: Checkout
         uses: actions/checkout@v6
@@ -66,25 +69,24 @@ jobs:
           cache: pnpm
 
       - name: Bump dependencies (lockstep)
+        env:
+          KHRONOS_VERSION: ${{ github.event.client_payload.khronos_version }}
         run: |
           pnpm add \
-            "@pluto-khronos/api-client@${{ github.event.client_payload.khronos_version }}" \
-            "@pluto-khronos/types@${{ github.event.client_payload.khronos_version }}"
+            "@pluto-khronos/api-client@$KHRONOS_VERSION" \
+            "@pluto-khronos/types@$KHRONOS_VERSION"
 
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Verify (build + test)
+      - name: Verify (typecheck + build + test)
         id: verify
         continue-on-error: true
         run: |
           set -e
+          pnpm typecheck
           pnpm build
           pnpm test:run
-        # NOTE: pnpm typecheck is NOT in the gate yet — the codebase has
-        # pre-existing tsc errors that swc-build silently ignores. Once those
-        # are cleaned up, add `pnpm typecheck` as the first command above so
-        # type-level breakage from upstream packages also surfaces here.
 
       - name: Detect changes
         id: diff
@@ -120,7 +122,7 @@ jobs:
             - **types npm:** https://www.npmjs.com/package/@pluto-khronos/types/v/${{ github.event.client_payload.khronos_version }}
 
             ## Quality gate
-            **Verify (build + test):** `${{ steps.verify.outcome }}`
+            **Verify (typecheck + build + test):** `${{ steps.verify.outcome }}`
 
             ${{ steps.verify.outcome == 'failure' && '⚠️ Opened as DRAFT — fix consumers in this branch before marking ready. Then merge manually.' || '✅ All checks passed — ready for review. Click merge when you''ve scanned the diff.' }}
           labels: |

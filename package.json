@@ -46,7 +46,7 @@
 	"dependencies": {
 		"@axiomhq/winston": "^1.6.1",
 		"@bull-board/api": "^7.0.0",
-		"@bull-board/koa": "^6.21.2",
+		"@bull-board/koa": "^7.0.0",
 		"@bull-board/ui": "^7.0.0",
 		"@faker-js/faker": "^10.4.0",
 		"@favware/colorette-spinner": "^1.0.1",

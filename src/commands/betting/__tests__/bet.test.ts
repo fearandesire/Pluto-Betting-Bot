@@ -2,7 +2,7 @@ import type { MatchDetailDto } from '@pluto-khronos/api-client'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // Must be hoisted above imports so module-level `new MatchCacheService()` gets the mock
-const mockGetMatch = vi.fn<[string], Promise<MatchDetailDto | null>>()
+const mockGetMatch = vi.fn<(id: string) => Promise<MatchDetailDto | null>>()
 
 vi.mock('../../../utils/api/routes/cache/match-cache-service.js', () => ({
 	default: vi.fn().mockImplementation(() => ({ getMatch: mockGetMatch })),
