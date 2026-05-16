@@ -10,9 +10,13 @@ on:
   workflow_dispatch:
     inputs:
       force_build:
-        description: "Force Docker build and push"
+        description: "Run the Docker deploy job manually"
         type: boolean
         default: false
+      dry_run:
+        description: "Build and load the Docker image without pushing it"
+        type: boolean
+        default: true
       version_override:
         description: "Override version (e.g., 1.0.0-rc.1)"
         type: string
@@ -159,6 +163,24 @@ jobs:
         run: |
           echo "IMAGE_NAME=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
+      - name: Resolve deploy mode
+        id: deploy_mode
+        run: |
+          set -euo pipefail
+          DRY_RUN="${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}"
+
+          if [[ "$DRY_RUN" == "true" ]]; then
+            echo "dry_run=true" >> "$GITHUB_OUTPUT"
+            echo "push=false" >> "$GITHUB_OUTPUT"
+            echo "load=true" >> "$GITHUB_OUTPUT"
+            echo "mode=Dry run (build only)" >> "$GITHUB_OUTPUT"
+          else
+            echo "dry_run=false" >> "$GITHUB_OUTPUT"
+            echo "push=true" >> "$GITHUB_OUTPUT"
+            echo "load=false" >> "$GITHUB_OUTPUT"
+            echo "mode=Publish" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v6
@@ -176,41 +198,63 @@ jobs:
             org.opencontainers.image.version=${{ steps.version.outputs.version }}
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
 
-      - name: Build and push Docker image
+      - name: Build Docker image
         uses: docker/build-push-action@v6
         with:
           context: .
-          push: true
+          push: ${{ steps.deploy_mode.outputs.push }}
+          load: ${{ steps.deploy_mode.outputs.load }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          provenance: true
-          sbom: true
+          provenance: ${{ steps.deploy_mode.outputs.push }}
+          sbom: ${{ steps.deploy_mode.outputs.push }}
+
+      - name: Inspect dry-run image
+        if: steps.deploy_mode.outputs.dry_run == 'true'
+        run: |
+          docker image inspect \
+            "${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}-${{ steps.version.outputs.short_sha }}" \
+            --format='Loaded image {{ .Id }} with {{ len .RootFS.Layers }} layers'
 
       - name: Create deployment summary
         run: |
-          cat >> $GITHUB_STEP_SUMMARY << 'EOF'
-          ## 🚀 Deployment Summary
+          if [[ "${{ steps.deploy_mode.outputs.dry_run }}" == "true" ]]; then
+            PUBLISH_NOTE="Dry run: image was built and loaded on the runner, but no GHCR push was performed."
+            QUICK_PULL="Not available from this dry-run build."
+            TAGS_HEADING="Built Tags"
+          else
+            PUBLISH_NOTE="Image was pushed to GHCR."
+            QUICK_PULL="docker pull ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}"
+            TAGS_HEADING="Published Tags"
+          fi
 
-          ### Image Details
-          | Property | Value |
-          |----------|-------|
-          | **Registry** | `${{ env.REGISTRY }}` |
-          | **Image** | `${{ github.repository_owner }}/${{ env.IMAGE_NAME }}` |
-          | **Version** | `${{ steps.version.outputs.version }}` |
-          | **Commit** | `${{ steps.version.outputs.short_sha }}` |
-
-          ### Published Tags
-          ```
-          ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
-          ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
-          ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.short_sha }}
-          ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}-${{ steps.version.outputs.short_sha }}
-          ```
-
-          ### Quick Pull
-          ```bash
-          docker pull ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
-          ```
-          EOF
+          {
+            echo "## 🚀 Deployment Summary"
+            echo
+            echo "### Image Details"
+            echo "| Property | Value |"
+            echo "|----------|-------|"
+            echo "| **Registry** | \`${{ env.REGISTRY }}\` |"
+            echo "| **Image** | \`${{ github.repository_owner }}/${{ env.IMAGE_NAME }}\` |"
+            echo "| **Version** | \`${{ steps.version.outputs.version }}\` |"
+            echo "| **Commit** | \`${{ steps.version.outputs.short_sha }}\` |"
+            echo "| **Mode** | \`${{ steps.deploy_mode.outputs.mode }}\` |"
+            echo "| **Pushed** | \`${{ steps.deploy_mode.outputs.push }}\` |"
+            echo
+            echo "$PUBLISH_NOTE"
+            echo
+            echo "### $TAGS_HEADING"
+            echo '```'
+            echo "${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest"
+            echo "${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}"
+            echo "${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.short_sha }}"
+            echo "${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}-${{ steps.version.outputs.short_sha }}"
+            echo '```'
+            echo
+            echo "### Quick Pull"
+            echo '```bash'
+            echo "$QUICK_PULL"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
