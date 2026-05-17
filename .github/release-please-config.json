@@ -11,7 +11,7 @@
       "changelog-path": "CHANGELOG.md",
       "changelog-sections": [
         { "type": "feat", "section": "Features" },
-        { "type": "fix", "section": "Bug Fixes" },
+        { "type": "fix", "section": "Fixes & Updates" },
         { "type": "hotfix", "section": "Hotfixes" },
         { "type": "patch", "section": "Patches" },
         { "type": "perf", "section": "Performance" },
@@ -20,7 +20,7 @@
         { "type": "deps", "section": "Dependencies" },
         { "type": "docs", "section": "Documentation", "hidden": true },
         { "type": "style", "section": "Styles", "hidden": true },
-        { "type": "chore", "section": "Miscellaneous" },
+        { "type": "chore", "section": "Miscellaneous", "hidden": true },
         { "type": "test", "section": "Tests", "hidden": true },
         { "type": "build", "section": "Build System", "hidden": true },
         { "type": "ci", "section": "CI", "hidden": true }
