@@ -42,7 +42,6 @@ env:
 permissions:
   contents: read
   pull-requests: read
-  packages: write
 
 jobs:
   # ===========================================================================
