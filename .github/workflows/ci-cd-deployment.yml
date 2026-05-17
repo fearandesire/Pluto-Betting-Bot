@@ -126,9 +126,11 @@ jobs:
 
           # 3. Fallback (should never happen)
           VERSION="${VERSION:-0.0.0}"
+          ENABLE_LATEST="${{ github.ref == 'refs/heads/main' }}"
 
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+          echo "enable_latest=$ENABLE_LATEST" >> $GITHUB_OUTPUT
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "📦 Version:   $VERSION"
           echo "🔖 Short SHA: $SHORT_SHA"
@@ -190,7 +192,7 @@ jobs:
             type=raw,value=${{ steps.version.outputs.version }}-${{ steps.version.outputs.short_sha }}
             type=raw,value=${{ steps.version.outputs.version }}
             type=raw,value=${{ steps.version.outputs.short_sha }}
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=latest,enable=${{ steps.version.outputs.enable_latest }}
           labels: |
             org.opencontainers.image.title=${{ env.IMAGE_TITLE }}
             org.opencontainers.image.description=${{ env.IMAGE_DESCRIPTION }}
@@ -247,7 +249,9 @@ jobs:
             echo
             echo "### $TAGS_HEADING"
             echo '```'
-            echo "${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest"
+            if [[ "${{ steps.version.outputs.enable_latest }}" == "true" ]]; then
+              echo "${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest"
+            fi
             echo "${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}"
             echo "${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.short_sha }}"
             echo "${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}-${{ steps.version.outputs.short_sha }}"
