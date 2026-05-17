@@ -201,6 +201,7 @@ jobs:
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
 
       - name: Build Docker image
+        id: build
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -222,13 +223,21 @@ jobs:
 
       - name: Create deployment summary
         run: |
+          IMMUTABLE_IMAGE="${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}-${{ steps.version.outputs.short_sha }}"
+          IMAGE_DIGEST="${{ steps.build.outputs.digest }}"
+          DIGEST_IMAGE=""
+
+          if [[ -n "$IMAGE_DIGEST" ]]; then
+            DIGEST_IMAGE="${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}@$IMAGE_DIGEST"
+          fi
+
           if [[ "${{ steps.deploy_mode.outputs.dry_run }}" == "true" ]]; then
             PUBLISH_NOTE="Dry run: image was built and loaded on the runner, but no GHCR push was performed."
             QUICK_PULL="Not available from this dry-run build."
             TAGS_HEADING="Built Tags"
           else
             PUBLISH_NOTE="Image was pushed to GHCR."
-            QUICK_PULL="docker pull ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}"
+            QUICK_PULL="docker pull $IMMUTABLE_IMAGE"
             TAGS_HEADING="Published Tags"
           fi
 
@@ -244,8 +253,13 @@ jobs:
             echo "| **Commit** | \`${{ steps.version.outputs.short_sha }}\` |"
             echo "| **Mode** | \`${{ steps.deploy_mode.outputs.mode }}\` |"
             echo "| **Pushed** | \`${{ steps.deploy_mode.outputs.push }}\` |"
+            echo "| **Deploy / Rollback Tag** | \`$IMMUTABLE_IMAGE\` |"
+            if [[ -n "$DIGEST_IMAGE" ]]; then
+              echo "| **Image Digest** | \`$DIGEST_IMAGE\` |"
+            fi
             echo
             echo "$PUBLISH_NOTE"
+            echo "Use the deploy / rollback tag, or the digest when available, for production rollbacks. Treat latest as a convenience pointer only."
             echo
             echo "### $TAGS_HEADING"
             echo '```'
