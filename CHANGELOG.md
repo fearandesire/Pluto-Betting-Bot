@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.6.2](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.6.1...v4.6.2) (2026-05-17)
+
+
+### Bug Fixes
+
+* **ci:** use PLUTO_BOT_PAT for GHCR login ([#540](https://github.com/fearandesire/Pluto-Betting-Bot/issues/540)) ([4e725c4](https://github.com/fearandesire/Pluto-Betting-Bot/commit/4e725c4d701c6a58ac9624ab19a2be9c936eb5ed))
+
 ## [4.6.1](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.6.0...v4.6.1) (2026-05-17)
 
 
