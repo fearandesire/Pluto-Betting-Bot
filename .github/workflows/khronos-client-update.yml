@@ -13,9 +13,13 @@
 #   4. Open PR — DRAFT if verify failed; ready-for-review if green
 #   5. Human reviews + clicks merge (NO auto-merge)
 #
-# Re-dispatch behavior: uses a static branch name (`chore/khronos-update`),
+# Re-dispatch behavior: uses a static branch name (`deps/khronos-update`),
 # so a newer release updates the existing PR rather than opening a duplicate
 # or orphaning the prior draft.
+#
+# BEGIN_COMMIT_OVERRIDE in the PR body tells release-please to treat the
+# merged squash commit as fix(khronos) instead of deps(khronos), triggering
+# a patch version bump and changelog entry under "Fixes & Updates".
 #
 # Manual trigger (testing):
 #   gh api repos/fearandesire/Pluto-Betting-Bot/dispatches \
@@ -104,10 +108,10 @@ jobs:
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.PLUTO_BOT_PAT }}
-          branch: chore/khronos-update
+          branch: deps/khronos-update
           delete-branch: false
-          title: "chore(deps): bump @pluto-khronos/* to ${{ github.event.client_payload.khronos_version }}"
-          commit-message: "chore(deps): bump @pluto-khronos/* to ${{ github.event.client_payload.khronos_version }}"
+          title: "deps(khronos): bump @pluto-khronos/* to ${{ github.event.client_payload.khronos_version }}"
+          commit-message: "deps(khronos): bump @pluto-khronos/* to ${{ github.event.client_payload.khronos_version }}"
           draft: ${{ steps.verify.outcome == 'failure' }}
           body: |
             Automated bump triggered by Khronos release.
@@ -125,6 +129,10 @@ jobs:
             **Verify (typecheck + build + test):** `${{ steps.verify.outcome }}`
 
             ${{ steps.verify.outcome == 'failure' && '⚠️ Opened as DRAFT — fix consumers in this branch before marking ready. Then merge manually.' || '✅ All checks passed — ready for review. Click merge when you''ve scanned the diff.' }}
+
+            BEGIN_COMMIT_OVERRIDE
+            fix(khronos): bump @pluto-khronos/* to ${{ github.event.client_payload.khronos_version }}
+            END_COMMIT_OVERRIDE
           labels: |
             dependencies
             automated
