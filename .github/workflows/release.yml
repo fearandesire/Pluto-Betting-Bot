@@ -16,6 +16,11 @@ jobs:
       - name: Release Please
         uses: googleapis/release-please-action@v5
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # Must be a PAT, not GITHUB_TOKEN. GitHub does not trigger new
+          # workflow runs from events created with the default GITHUB_TOKEN,
+          # so a release published with it would never fire the
+          # `release: published` trigger in ci-cd-deployment.yml and Deploy
+          # would never run. PLUTO_BOT_PAT lets the release event cascade.
+          token: ${{ secrets.PLUTO_BOT_PAT }}
           release-type: node
           config-file: .github/release-please-config.json
