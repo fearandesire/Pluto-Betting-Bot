@@ -36,10 +36,10 @@ importers:
         specifier: ^15.5.0
         version: 15.5.0(koa@3.2.0)
       '@pluto-khronos/api-client':
-        specifier: ^3.3.0
+        specifier: 3.3.0
         version: 3.3.0
       '@pluto-khronos/types':
-        specifier: ^3.3.0
+        specifier: 3.3.0
         version: 3.3.0(discord.js@14.26.3)
       '@sapphire/decorators':
         specifier: ^6.1.1
