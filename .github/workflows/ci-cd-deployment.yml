@@ -1,7 +1,7 @@
 # CI/CD Pipeline - Pluto Betting Bot
 # Builds, verifies, and deploys Docker images to GHCR
 #
-# Deploy triggers: release event | fix/patch/hotfix commits | workflow_dispatch
+# Deploy triggers: release event | workflow_dispatch (force_build)
 # Skip CI: Use native [skip ci] in commit message
 
 name: CI/CD Pipeline
@@ -16,7 +16,7 @@ on:
       dry_run:
         description: "Build and load the Docker image without pushing it"
         type: boolean
-        default: true
+        default: false
       version_override:
         description: "Override version (e.g., 1.0.0-rc.1)"
         type: string
