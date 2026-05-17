@@ -39,6 +39,17 @@
 			"biome check --write --no-errors-on-unmatched"
 		]
 	},
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"@swc/core",
+			"core-js",
+			"esbuild",
+			"msgpackr-extract",
+			"protobufjs",
+			"puppeteer",
+			"unrs-resolver"
+		]
+	},
 	"imports": {
 		"@pluto-config": "./dist/lib/PlutoConfig.js",
 		"#lib/*": "./dist/lib/*"

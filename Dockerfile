@@ -1,8 +1,9 @@
 # Build stage
 FROM node:26-slim AS base
+ARG PNPM_VERSION=10.27.0
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN npm install -g pnpm
+RUN npm install -g pnpm@${PNPM_VERSION}
 
 # Install Doppler
 RUN apt-get update && apt-get install -y apt-transport-https ca-certificates curl gnupg && \
@@ -17,7 +18,7 @@ RUN apt-get update && apt-get install -y apt-transport-https ca-certificates cur
 FROM base AS builder
 WORKDIR /app
 
-# Copy package.json and pnpm-lock.yaml
+# Copy package metadata and pnpm build-script approvals
 COPY package.json pnpm-lock.yaml ./
 
 # Install dependencies
