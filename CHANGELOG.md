@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.6.1](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.6.0...v4.6.1) (2026-05-17)
+
+
+### Bug Fixes
+
+* **ci:** deploy on every release-please release (PAT token) ([#537](https://github.com/fearandesire/Pluto-Betting-Bot/issues/537)) ([5100708](https://github.com/fearandesire/Pluto-Betting-Bot/commit/51007080912b49d5d9c41b4e0e8d2b71dbdb8c4c))
+
 ## [4.6.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.5.0...v4.6.0) (2026-05-17)
 
 
