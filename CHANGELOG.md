@@ -1,5 +1,23 @@
 # Changelog
 
+## [4.6.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.5.0...v4.6.0) (2026-05-17)
+
+
+### Features
+
+* migrate to @pluto-khronos/api-client published package ([9af379b](https://github.com/fearandesire/Pluto-Betting-Bot/commit/9af379bcc4181a47a1ad8b5ded94024cf7129b6b))
+* **receiver:** single-version cascade + yalc local-dev loop ([0682ac1](https://github.com/fearandesire/Pluto-Betting-Bot/commit/0682ac17b6d7a49c1d86367b85569438b1511025))
+* **receiver:** single-version cascade + yalc local-dev loop ([#530](https://github.com/fearandesire/Pluto-Betting-Bot/issues/530)) ([46350d1](https://github.com/fearandesire/Pluto-Betting-Bot/commit/46350d1c9fbdfa582a894a58d9f1e59eeaab1617))
+
+
+### Bug Fixes
+
+* **ci:** add dry-run Docker deploy path ([#533](https://github.com/fearandesire/Pluto-Betting-Bot/issues/533)) ([73ba90f](https://github.com/fearandesire/Pluto-Betting-Bot/commit/73ba90f554f5dbd827affce81589cf0720662f70))
+* **ci:** prevent script injection in khronos-client-update workflow ([2ae2f82](https://github.com/fearandesire/Pluto-Betting-Bot/commit/2ae2f8235636bbaea147b30f1cd2a119d13be13a))
+* **typecheck:** resolve 2 tsc errors and promote typecheck into CI gate ([6d6643f](https://github.com/fearandesire/Pluto-Betting-Bot/commit/6d6643f56cc53fc815de241205704274dfeefe8d))
+* **typecheck:** resolve 2 tsc errors and promote typecheck into CI gate ([#528](https://github.com/fearandesire/Pluto-Betting-Bot/issues/528)) ([9acd6b7](https://github.com/fearandesire/Pluto-Betting-Bot/commit/9acd6b7fa12149822feaade933b1df9b7097c774))
+* unhide `chore` commits from release-please so khronos bumps trigger a release ([#535](https://github.com/fearandesire/Pluto-Betting-Bot/issues/535)) ([19b9949](https://github.com/fearandesire/Pluto-Betting-Bot/commit/19b9949e775ecab1b383e204ed46c73cdd5f8a2d))
+
 ## [4.5.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.4.0...v4.5.0) (2026-05-06)
 
 
