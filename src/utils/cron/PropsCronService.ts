@@ -10,6 +10,7 @@ import type {
 	CachedProp,
 	PropsCacheService,
 } from '../props/PropCacheService.js'
+import { convertFlatPropsToCachedProps } from './props-conversion.js'
 
 /**
  * Service for running scheduled prop caching jobs
@@ -128,41 +129,7 @@ export class PropsCronService {
 	 * Flattens outcomes array into individual cached props
 	 */
 	private convertFlatPropsToCachedProps(props: PropDto[]): CachedProp[] {
-		const EXCLUDED_MARKETS = [
-			'h2h',
-			'spreads',
-			'totals',
-			'team_totals',
-			'player_anytime_td',
-		]
-		const cached: CachedProp[] = []
-
-		for (const prop of props) {
-			// Skip non-player props
-			if (EXCLUDED_MARKETS.includes(prop.market_key)) {
-				continue
-			}
-
-			// Skip if missing required fields
-			if (!prop.outcomes || !prop.event_context) {
-				continue
-			}
-
-			// Flatten each outcome into a separate cached prop
-			for (const outcome of prop.outcomes) {
-				cached.push({
-					outcome_uuid: outcome.outcome_uuid,
-					description: outcome.description || 'Unknown',
-					market_key: prop.market_key,
-					point: outcome.point || null,
-					home_team: prop.event_context.home_team,
-					away_team: prop.event_context.away_team,
-					commence_time: prop.event_context.commence_time,
-				})
-			}
-		}
-
-		return cached
+		return convertFlatPropsToCachedProps(props)
 	}
 
 	/**
