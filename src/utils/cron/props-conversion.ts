@@ -30,7 +30,7 @@ export function convertFlatPropsToCachedProps(props: PropDto[]): CachedProp[] {
 				market_id: prop.market_id ?? null,
 				description: outcome.description || 'Unknown',
 				market_key: prop.market_key,
-				point: outcome.point || null,
+				point: outcome.point ?? null,
 				home_team: prop.event_context.home_team,
 				away_team: prop.event_context.away_team,
 				commence_time: prop.event_context.commence_time,
