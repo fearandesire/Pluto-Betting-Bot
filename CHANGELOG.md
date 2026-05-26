@@ -1,5 +1,14 @@
 # Changelog
 
+## [4.6.2](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.6.1...v4.6.2) (2026-05-26)
+
+
+### Bug Fixes
+
+* **ci:** unblock dependabot auto-merge and validate bumps ([#554](https://github.com/fearandesire/Pluto-Betting-Bot/issues/554)) ([967f2f3](https://github.com/fearandesire/Pluto-Betting-Bot/commit/967f2f3d451481314208641b3f9dd58f39bbeff1))
+* **ci:** use PLUTO_BOT_PAT for GHCR login ([#540](https://github.com/fearandesire/Pluto-Betting-Bot/issues/540)) ([4e725c4](https://github.com/fearandesire/Pluto-Betting-Bot/commit/4e725c4d701c6a58ac9624ab19a2be9c936eb5ed))
+* **khronos:** bump @pluto-khronos/* to 3.4.3 ([9db5a1b](https://github.com/fearandesire/Pluto-Betting-Bot/commit/9db5a1bf254faa4506bcfb13c70d014f90f1adf6))
+
 ## [4.6.1](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.6.0...v4.6.1) (2026-05-17)
 
 
