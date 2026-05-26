@@ -33,6 +33,7 @@ jobs:
             build
             ci
             chore
+            deps
             revert
             hotfix
             patch
