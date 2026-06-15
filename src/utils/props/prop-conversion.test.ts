@@ -60,6 +60,14 @@ describe('convertFlatPropsToCachedProps', () => {
 		expect(result.every((o) => o.market_id === null)).toBe(true)
 	})
 
+	it('preserves a point of 0 instead of coercing it to null', () => {
+		const prop = buildProp()
+		prop.outcomes[0].point = 0
+
+		const [outcome] = convertFlatPropsToCachedProps([prop])
+		expect(outcome.point).toBe(0)
+	})
+
 	it('keeps distinct market_ids so cron outcomes are groupable by prop', () => {
 		const result = convertFlatPropsToCachedProps([
 			buildProp({ market_id: 111 }),
