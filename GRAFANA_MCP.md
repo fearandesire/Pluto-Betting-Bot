@@ -30,8 +30,22 @@ on the Claude Code environment that runs this repo:
   variables under environment variables / secrets. See
   https://code.claude.com/docs/en/claude-code-on-the-web for where the
   environment is configured.
-- **Local CLI**: export them in your shell (or your shell profile) before
-  launching Claude Code:
+- **Local CLI (recommended)**: put them in `.claude/settings.local.json` under
+  an `env` block. That file is gitignored (`.claude/` is in `.gitignore`), so
+  the token never enters git history, and Claude Code injects the vars into the
+  session so `.mcp.json`'s `${GRAFANA_URL}` / `${GRAFANA_SERVICE_ACCOUNT_TOKEN}`
+  resolve:
+
+  ```json
+  {
+    "env": {
+      "GRAFANA_URL": "https://<org>.grafana.net",
+      "GRAFANA_SERVICE_ACCOUNT_TOKEN": "glsa_..."
+    }
+  }
+  ```
+
+  Alternatively, export them in your shell before launching Claude Code:
 
   ```bash
   export GRAFANA_URL="https://<org>.grafana.net"
