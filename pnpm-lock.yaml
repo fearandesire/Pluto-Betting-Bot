@@ -36,8 +36,8 @@ importers:
         specifier: ^15.5.0
         version: 15.5.0(koa@3.2.0)
       '@pluto-khronos/api-client':
-        specifier: 3.4.3
-        version: 3.4.3
+        specifier: 3.5.1
+        version: 3.5.1
       '@pluto-khronos/types':
         specifier: 3.5.1
         version: 3.5.1(discord.js@14.26.3)
@@ -1839,8 +1839,8 @@ packages:
     resolution: {integrity: sha512-QNqXyfVS2wm9hweSYD2O7F0G06uurj9kZ96TRQE5Y9hU7+tgdZwIkbAKc5Ocy1HxEY2kuDQa6cQ1WRs/O5LFKA==}
     engines: {node: ^12.20.0 || ^14.18.0 || >=16.0.0}
 
-  '@pluto-khronos/api-client@3.4.3':
-    resolution: {integrity: sha512-5r387yyxvpmJpbq+3K+OGHrEEo7VrYftTm94TCFz0AdypLIU5YxMpW2B8wVXcfCQwS+WFNtYRPtkr+bacx45dg==}
+  '@pluto-khronos/api-client@3.5.1':
+    resolution: {integrity: sha512-0H3lMEj8XinB5H6xEBxcWi3COh1AzudIsfXPBPdkC8jNuf0MpydSDRIQV5TkOX/FAjvUGHXKVLHxWuCB9a0/CA==}
 
   '@pluto-khronos/types@3.5.1':
     resolution: {integrity: sha512-yRV2ckWCVAGlOcb42ugy6/77LNSlnFvwBWS17jA3i9Jup1j6ruLUeFvKwfe7qEcc5XMUognWwhcp0ZpjdqwXAg==}
@@ -8703,7 +8703,7 @@ snapshots:
 
   '@pkgr/core@0.2.9': {}
 
-  '@pluto-khronos/api-client@3.4.3': {}
+  '@pluto-khronos/api-client@3.5.1': {}
 
   '@pluto-khronos/types@3.5.1(discord.js@14.26.3)':
     dependencies:
