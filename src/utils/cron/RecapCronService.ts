@@ -8,6 +8,7 @@ import { buildWeeklyRecapEmbeds } from '../embeds/weekly-recap.embed.js'
 import { logger } from '../logging/WinstonLogger.js'
 
 const RECAP_DEDUP_TTL_SECONDS = 8 * 24 * 60 * 60
+const RECAP_CLAIM_TTL_SECONDS = 5 * 60
 
 export interface RecapChannelResolver {
 	getBettingChannel(guildId: string): Promise<TextChannel>
@@ -201,14 +202,14 @@ export class RecapCronService {
 			return await this.cache.setIfAbsent(
 				key,
 				{ status: 'processing' },
-				RECAP_DEDUP_TTL_SECONDS,
+				RECAP_CLAIM_TTL_SECONDS,
 			)
 		}
 		if (await this.cache.get(key)) return false
 		await this.cache.set(
 			key,
 			{ status: 'processing' },
-			RECAP_DEDUP_TTL_SECONDS,
+			RECAP_CLAIM_TTL_SECONDS,
 		)
 		return true
 	}
