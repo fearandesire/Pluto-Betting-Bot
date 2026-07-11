@@ -122,12 +122,6 @@ export default class NotificationService {
 	}
 
 	private buildParlayEmbed(data: ParlayResultNotification): EmbedBuilder {
-		const legs = data.legs
-			.map((leg) => {
-				const glyph = this.parlayLegGlyph(leg.result)
-				return `${glyph} ${leg.selection_display} (${this.formatAmericanOdds(leg.odds_american)})`
-			})
-			.join('\n')
 		const combinedOdds = this.formatAmericanOdds(
 			data.combined_odds_american,
 		)
@@ -135,11 +129,6 @@ export default class NotificationService {
 		const embed = new EmbedBuilder()
 			.setTimestamp()
 			.setFooter({ text: `Pluto | Parlay ID: ${data.parlay_id}` })
-			.addFields({
-				name: '🧾 Legs',
-				value: legs,
-				inline: false,
-			})
 			.addFields({
 				name: '📈 Combined Odds',
 				value: combinedOdds,
@@ -160,7 +149,7 @@ export default class NotificationService {
 						{
 							name: '🏆 Payout',
 							value: MoneyFormatter.toUSD(
-								data.actual_payout ?? 0,
+								data.actual_payout ?? data.payout ?? 0,
 							),
 							inline: true,
 						},
@@ -195,7 +184,9 @@ export default class NotificationService {
 					.addFields({
 						name: '💵 Refunded Amount',
 						value: MoneyFormatter.toUSD(
-							data.refund_amount ?? data.actual_payout,
+							data.refund_amount ??
+								data.actual_payout ??
+								data.stake,
 						),
 						inline: true,
 					})
@@ -207,7 +198,55 @@ export default class NotificationService {
 				break
 		}
 
+		for (const field of this.buildParlayLegFields(data)) {
+			embed.addFields(field)
+		}
+
 		return embed
+	}
+
+	private buildParlayLegFields(
+		data: ParlayResultNotification,
+	): Array<{ name: string; value: string; inline: false }> {
+		const maxFieldLength = 900
+		const maxSelectionLength = 400
+		const fields: Array<{ name: string; value: string; inline: false }> = []
+		let currentLines: string[] = []
+		let currentLength = 0
+
+		const flush = () => {
+			if (currentLines.length === 0) return
+			fields.push({
+				name:
+					fields.length === 0
+						? '🧾 Legs'
+						: `🧾 Legs (${fields.length + 1})`,
+				value: currentLines.join('\n'),
+				inline: false,
+			})
+			currentLines = []
+			currentLength = 0
+		}
+
+		for (const leg of data.legs) {
+			const selection = leg.selection_display
+			const shortenedSelection =
+				selection.length > maxSelectionLength
+					? `${selection.slice(0, maxSelectionLength - 1)}…`
+					: selection
+			const line = `${this.parlayLegGlyph(leg.result)} ${shortenedSelection} (${this.formatAmericanOdds(leg.odds_american)})`
+			if (
+				currentLines.length > 0 &&
+				currentLength + line.length + 1 > maxFieldLength
+			) {
+				flush()
+			}
+			currentLines.push(line)
+			currentLength += line.length + 1
+		}
+		flush()
+
+		return fields.slice(0, 25)
 	}
 
 	private parlayLegGlyph(

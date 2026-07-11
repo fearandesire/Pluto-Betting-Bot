@@ -123,4 +123,45 @@ describe('NotificationService.processParlayResult', () => {
 			}),
 		)
 	})
+
+	it('falls back to payout and stake when nullable amounts are absent', async () => {
+		const payload = {
+			...makePayload('won'),
+			actual_payout: null,
+			payout: 47.7,
+		}
+		await new NotificationService().processParlayResult(payload)
+		const embed = (
+			mocks.send.mock.calls[0][0].embeds[0] as {
+				toJSON: () => { fields: Array<{ name: string; value: string }> }
+			}
+		).toJSON()
+		expect(embed.fields).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({ name: '🏆 Payout', value: '$47.70' }),
+			]),
+		)
+	})
+
+	it('keeps every leg field within Discord limits', async () => {
+		const payload = {
+			...makePayload('won'),
+			legs: Array.from({ length: 30 }, (_, index) => ({
+				...baseLeg,
+				id: `leg-${index}`,
+				selection_display: 'A'.repeat(1200),
+			})),
+		}
+		await new NotificationService().processParlayResult(payload)
+		const embed = (
+			mocks.send.mock.calls[0][0].embeds[0] as {
+				toJSON: () => { fields: Array<{ name: string; value: string }> }
+			}
+		).toJSON()
+		for (const field of embed.fields.filter((field) =>
+			field.name.startsWith('🧾 Legs'),
+		)) {
+			expect(field.value.length).toBeLessThanOrEqual(1024)
+		}
+	})
 })
