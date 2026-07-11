@@ -54,6 +54,13 @@ const envSchema = z
 		MOCK_GUILD_BETTING_CHAN_ID: z.string().optional(),
 		DEV_GUILD_GAMES_CATEGORY_ID: z.string().optional(),
 		MOCK_GUILD_SPORT: z.enum(['nba', 'nfl']).default('nba'),
+		ANNOUNCE_PAYOUT_THRESHOLD: z
+			.number()
+			.finite()
+			.nonnegative()
+			.default(100),
+		ANNOUNCE_MAX_PER_HOUR: z.number().int().positive().default(5),
+		BIG_WIN_ANNOUNCEMENTS_ENABLED: z.boolean().default(true),
 	})
 	.superRefine((data, ctx) => {
 		if (data.USE_MOCK_DATA && data.NODE_ENV === 'production') {
@@ -116,6 +123,15 @@ const env = envSchema.parse({
 	MOCK_GUILD_BETTING_CHAN_ID: process.env.MOCK_GUILD_BETTING_CHAN_ID,
 	DEV_GUILD_GAMES_CATEGORY_ID: process.env.DEV_GUILD_GAMES_CATEGORY_ID,
 	MOCK_GUILD_SPORT: process.env.MOCK_GUILD_SPORT || 'nba',
+	ANNOUNCE_PAYOUT_THRESHOLD: Number.parseFloat(
+		process.env.ANNOUNCE_PAYOUT_THRESHOLD || '100',
+	),
+	ANNOUNCE_MAX_PER_HOUR: Number.parseInt(
+		process.env.ANNOUNCE_MAX_PER_HOUR || '5',
+		10,
+	),
+	BIG_WIN_ANNOUNCEMENTS_ENABLED:
+		process.env.BIG_WIN_ANNOUNCEMENTS_ENABLED !== 'false',
 })
 
 // Debug logging for environment validation (redacts sensitive values)
@@ -145,6 +161,9 @@ if (shouldLogDebug) {
 		MOCK_GUILD_BETTING_CHAN_ID: env.MOCK_GUILD_BETTING_CHAN_ID,
 		DEV_GUILD_GAMES_CATEGORY_ID: env.DEV_GUILD_GAMES_CATEGORY_ID,
 		MOCK_GUILD_SPORT: env.MOCK_GUILD_SPORT,
+		ANNOUNCE_PAYOUT_THRESHOLD: env.ANNOUNCE_PAYOUT_THRESHOLD,
+		ANNOUNCE_MAX_PER_HOUR: env.ANNOUNCE_MAX_PER_HOUR,
+		BIG_WIN_ANNOUNCEMENTS_ENABLED: env.BIG_WIN_ANNOUNCEMENTS_ENABLED,
 		// Redacted sensitive fields
 		TOKEN: '[REDACTED]',
 		KH_API_TOKEN: '[REDACTED]',

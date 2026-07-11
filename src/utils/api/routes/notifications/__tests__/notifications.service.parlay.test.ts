@@ -164,4 +164,26 @@ describe('NotificationService.processParlayResult', () => {
 			expect(field.value.length).toBeLessThanOrEqual(1024)
 		}
 	})
+
+	it('forwards winning parlays with guild context to big-win announcements', async () => {
+		const announceParlayWin = vi.fn().mockResolvedValue(true)
+		const bigWinService = { announceParlayWin }
+		const payload = {
+			...makePayload('won'),
+			guild_id: 'guild-1',
+		}
+
+		await new NotificationService(
+			bigWinService as never,
+		).processParlayResult(payload)
+
+		expect(announceParlayWin).toHaveBeenCalledWith(
+			expect.objectContaining({
+				parlayId: payload.parlay_id,
+				guildId: 'guild-1',
+				payout: 47.7,
+				legs: 2,
+			}),
+		)
+	})
 })

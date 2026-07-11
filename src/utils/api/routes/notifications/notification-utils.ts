@@ -23,10 +23,12 @@ export function validateNotifyBetUsers(
 	return {
 		winners: (result.data.winners ?? []).map((winner) => ({
 			...winner,
+			guildId: winner.guildId ?? winner.guild_id,
 			result: { ...winner.result, outcome: 'won' as const },
 		})),
 		losers: (result.data.losers ?? []).map((loser) => ({
 			...loser,
+			guildId: loser.guildId ?? loser.guild_id,
 			result: { ...loser.result, outcome: 'lost' as const },
 		})),
 		pushes: (result.data.pushes ?? []).map((push) => {
