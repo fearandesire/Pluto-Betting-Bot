@@ -8,6 +8,7 @@ import {
 } from 'discord.js'
 import { MarketKeyTranslations } from '../api/common/interfaces/market-translations.js'
 import GuildWrapper from '../api/Khronos/guild/guild-wrapper.js'
+import redisCache from '../cache/redis-instance.js'
 import StringUtils from '../common/string-utils.js'
 import TeamInfo from '../common/TeamInfo.js'
 import { logger } from '../logging/WinstonLogger.js'
@@ -46,6 +47,8 @@ export interface PostingResult {
  * ```
  */
 export class PropPostingHandler {
+	private static readonly DELIVERY_TTL_SECONDS = 7 * 24 * 60 * 60
+	private static readonly DELIVERY_LOCK_TTL_SECONDS = 5 * 60
 	private guildWrapper: GuildWrapper
 
 	constructor() {
@@ -80,6 +83,13 @@ export class PropPostingHandler {
 
 		// 1 Embed:1 Pair
 		for (const prop of props) {
+			const deliveryKey = this.getDeliveryKey(guildId, channelId, prop)
+			const deliveryState = await this.claimDelivery(deliveryKey)
+			if (deliveryState === 'sent' || deliveryState === 'claimed') {
+				result.filtered++
+				continue
+			}
+
 			try {
 				const embed = await this.createPropEmbed(prop, sport)
 				const buttons = this.createPropButtons(prop)
@@ -99,9 +109,15 @@ export class PropPostingHandler {
 						messageOptions,
 					)
 				}
+				await redisCache.setex(
+					deliveryKey,
+					PropPostingHandler.DELIVERY_TTL_SECONDS,
+					'1',
+				)
 
 				result.posted++
 			} catch (error) {
+				await redisCache.del(this.getDeliveryLockKey(deliveryKey))
 				logger.error('Failed to post prop pair', {
 					event_id: prop.event_id,
 					market_key: prop.market_key,
@@ -115,6 +131,50 @@ export class PropPostingHandler {
 		}
 
 		return result
+	}
+
+	private getDeliveryKey(
+		guildId: string,
+		channelId: string | undefined,
+		prop: ProcessedPropDto,
+	): string {
+		const destination = channelId ?? 'configured'
+		return [
+			'props:delivery',
+			guildId,
+			destination,
+			prop.over.outcome_uuid,
+			prop.under.outcome_uuid,
+		].join(':')
+	}
+
+	private getDeliveryLockKey(deliveryKey: string): string {
+		return `${deliveryKey}:lock`
+	}
+
+	private async claimDelivery(
+		deliveryKey: string,
+	): Promise<'available' | 'sent' | 'claimed'> {
+		try {
+			if ((await redisCache.exists(deliveryKey)) > 0) return 'sent'
+
+			const lock = await redisCache.set(
+				this.getDeliveryLockKey(deliveryKey),
+				'1',
+				'EX',
+				PropPostingHandler.DELIVERY_LOCK_TTL_SECONDS,
+				'NX',
+			)
+			return lock === 'OK' ? 'available' : 'claimed'
+		} catch (error) {
+			logger.warn({
+				method: 'PropPostingHandler',
+				event: 'props_delivery_idempotency_unavailable',
+				deliveryKey,
+				error: error instanceof Error ? error.message : String(error),
+			})
+			return 'available'
+		}
 	}
 
 	/**

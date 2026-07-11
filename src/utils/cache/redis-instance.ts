@@ -11,7 +11,13 @@ class InMemoryRedis {
 	private readonly hashes = new Map<string, Map<string, string>>()
 	private readonly sets = new Map<string, Set<string>>()
 
-	async set(key: string, value: string, ..._rest: unknown[]) {
+	async set(key: string, value: string, ...rest: unknown[]) {
+		if (
+			rest.includes('NX') &&
+			(this.values.has(key) || this.hashes.has(key) || this.sets.has(key))
+		) {
+			return null
+		}
 		this.values.set(key, value)
 		return 'OK'
 	}
