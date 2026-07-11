@@ -48,6 +48,7 @@ export interface PostingResult {
  */
 export class PropPostingHandler {
 	private static readonly DELIVERY_TTL_SECONDS = 7 * 24 * 60 * 60
+	private static readonly DELIVERY_CLAIM_TTL_SECONDS = 5 * 60
 	private guildWrapper: GuildWrapper
 
 	constructor() {
@@ -112,6 +113,7 @@ export class PropPostingHandler {
 						messageOptions,
 					)
 				}
+				await this.markDelivered(deliveryKey)
 				result.posted++
 			} catch (error) {
 				logger.error('Failed to post prop pair', {
@@ -149,13 +151,15 @@ export class PropPostingHandler {
 		deliveryKey: string,
 	): Promise<'available' | 'sent' | 'claimed' | 'unavailable'> {
 		try {
-			if ((await redisCache.exists(deliveryKey)) > 0) return 'sent'
+			const existing = await redisCache.get(deliveryKey)
+			if (existing === 'sent') return 'sent'
+			if (existing === 'processing') return 'claimed'
 
 			const lock = await redisCache.set(
 				deliveryKey,
-				'claimed',
+				'processing',
 				'EX',
-				PropPostingHandler.DELIVERY_TTL_SECONDS,
+				PropPostingHandler.DELIVERY_CLAIM_TTL_SECONDS,
 				'NX',
 			)
 			return lock === 'OK' ? 'available' : 'claimed'
@@ -167,6 +171,23 @@ export class PropPostingHandler {
 				error: error instanceof Error ? error.message : String(error),
 			})
 			return 'unavailable'
+		}
+	}
+
+	private async markDelivered(deliveryKey: string): Promise<void> {
+		try {
+			await redisCache.setex(
+				deliveryKey,
+				PropPostingHandler.DELIVERY_TTL_SECONDS,
+				'sent',
+			)
+		} catch (error) {
+			logger.error({
+				method: 'PropPostingHandler',
+				event: 'props_delivery_marker_write_failed',
+				deliveryKey,
+				error: error instanceof Error ? error.message : String(error),
+			})
 		}
 	}
 

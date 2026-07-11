@@ -2,7 +2,7 @@ import type { ProcessedPropDto } from '@pluto-khronos/api-client'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
-	exists: vi.fn(),
+	get: vi.fn(),
 	set: vi.fn(),
 	setex: vi.fn(),
 	del: vi.fn(),
@@ -29,7 +29,7 @@ vi.mock('../../common/TeamInfo.js', () => ({
 
 vi.mock('../../cache/redis-instance.js', () => ({
 	default: {
-		exists: mocks.exists,
+		get: mocks.get,
 		set: mocks.set,
 		setex: mocks.setex,
 		del: mocks.del,
@@ -65,7 +65,7 @@ const prop = {
 describe('PropPostingHandler delivery idempotency', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
-		mocks.exists.mockResolvedValue(0)
+		mocks.get.mockResolvedValue(null)
 		mocks.set.mockResolvedValue('OK')
 		mocks.setex.mockResolvedValue('OK')
 		mocks.del.mockResolvedValue(1)
@@ -85,7 +85,7 @@ describe('PropPostingHandler delivery idempotency', () => {
 			'nba',
 			'channel-1',
 		)
-		mocks.exists.mockResolvedValue(1)
+		mocks.get.mockResolvedValue('sent')
 		const second = await handler.postPropsToChannel(
 			'guild-1',
 			[prop],
@@ -141,6 +141,62 @@ describe('PropPostingHandler delivery idempotency', () => {
 		expect(mocks.logger.warn).toHaveBeenCalledWith(
 			expect.objectContaining({
 				event: 'props_delivery_idempotency_unavailable',
+			}),
+		)
+	})
+
+	it('allows an interrupted processing claim to retry after its lease expires', async () => {
+		const handler = new PropPostingHandler()
+		mocks.get.mockResolvedValueOnce('processing')
+
+		const inFlight = await handler.postPropsToChannel(
+			'guild-1',
+			[prop],
+			'nba',
+			'channel-1',
+		)
+		mocks.get.mockResolvedValueOnce(null)
+		const retry = await handler.postPropsToChannel(
+			'guild-1',
+			[prop],
+			'nba',
+			'channel-1',
+		)
+
+		expect(inFlight).toEqual({
+			posted: 0,
+			filtered: 1,
+			failed: 0,
+			total: 1,
+		})
+		expect(retry).toEqual({ posted: 1, filtered: 0, failed: 0, total: 1 })
+		expect(mocks.sendToChannel).toHaveBeenCalledTimes(1)
+	})
+
+	it('keeps an in-flight claim when the post-send marker cannot be persisted', async () => {
+		const handler = new PropPostingHandler()
+		mocks.setex.mockRejectedValue(new Error('Redis unavailable'))
+
+		const result = await handler.postPropsToChannel(
+			'guild-1',
+			[prop],
+			'nba',
+			'channel-1',
+		)
+		mocks.get.mockResolvedValue('processing')
+		const retry = await handler.postPropsToChannel(
+			'guild-1',
+			[prop],
+			'nba',
+			'channel-1',
+		)
+
+		expect(result).toEqual({ posted: 1, filtered: 0, failed: 0, total: 1 })
+		expect(retry).toEqual({ posted: 0, filtered: 1, failed: 0, total: 1 })
+		expect(mocks.sendToChannel).toHaveBeenCalledTimes(1)
+		expect(mocks.logger.error).toHaveBeenCalledWith(
+			expect.objectContaining({
+				event: 'props_delivery_marker_write_failed',
 			}),
 		)
 	})
