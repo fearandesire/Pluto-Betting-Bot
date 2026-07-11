@@ -205,6 +205,7 @@ export default class GuildWrapper {
 	async sendToChannel(
 		channelId: string,
 		options: MessageCreateOptions,
+		expectedGuildId?: string,
 	): Promise<Message> {
 		let channel: Channel | null
 		try {
@@ -221,7 +222,14 @@ export default class GuildWrapper {
 			)
 		}
 
-		return await (channel as TextChannel).send(options)
+		const textChannel = channel as TextChannel
+		if (expectedGuildId && textChannel.guild.id !== expectedGuildId) {
+			throw new Error(
+				`Target channel ${channelId} does not belong to guild ${expectedGuildId}`,
+			)
+		}
+
+		return await textChannel.send(options)
 	}
 
 	/**

@@ -106,6 +106,7 @@ export class PropPostingHandler {
 					await this.guildWrapper.sendToChannel(
 						channelId,
 						messageOptions,
+						guildId,
 					)
 				} else {
 					await this.guildWrapper.sendToPredictionChannel(
@@ -113,7 +114,13 @@ export class PropPostingHandler {
 						messageOptions,
 					)
 				}
-				await this.markDelivered(deliveryKey)
+				const markerPersisted = await this.markDelivered(deliveryKey)
+				if (!markerPersisted) {
+					// Discord has already accepted the message. Keep a durable
+					// processing lease when the final marker write fails so a
+					// producer retry cannot post the same message a second time.
+					await this.retainDeliveryClaim(deliveryKey)
+				}
 				result.posted++
 			} catch (error) {
 				logger.error('Failed to post prop pair', {
@@ -174,17 +181,36 @@ export class PropPostingHandler {
 		}
 	}
 
-	private async markDelivered(deliveryKey: string): Promise<void> {
+	private async markDelivered(deliveryKey: string): Promise<boolean> {
 		try {
 			await redisCache.setex(
 				deliveryKey,
 				PropPostingHandler.DELIVERY_TTL_SECONDS,
 				'sent',
 			)
+			return true
 		} catch (error) {
 			logger.error({
 				method: 'PropPostingHandler',
 				event: 'props_delivery_marker_write_failed',
+				deliveryKey,
+				error: error instanceof Error ? error.message : String(error),
+			})
+			return false
+		}
+	}
+
+	private async retainDeliveryClaim(deliveryKey: string): Promise<void> {
+		try {
+			await redisCache.setex(
+				deliveryKey,
+				PropPostingHandler.DELIVERY_TTL_SECONDS,
+				'processing',
+			)
+		} catch (error) {
+			logger.error({
+				method: 'PropPostingHandler',
+				event: 'props_delivery_claim_retention_failed',
 				deliveryKey,
 				error: error instanceof Error ? error.message : String(error),
 			})

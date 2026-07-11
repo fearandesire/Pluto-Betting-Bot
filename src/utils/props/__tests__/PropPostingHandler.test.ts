@@ -194,6 +194,12 @@ describe('PropPostingHandler delivery idempotency', () => {
 		expect(result).toEqual({ posted: 1, filtered: 0, failed: 0, total: 1 })
 		expect(retry).toEqual({ posted: 0, filtered: 1, failed: 0, total: 1 })
 		expect(mocks.sendToChannel).toHaveBeenCalledTimes(1)
+		expect(mocks.setex).toHaveBeenNthCalledWith(
+			2,
+			expect.any(String),
+			7 * 24 * 60 * 60,
+			'processing',
+		)
 		expect(mocks.logger.error).toHaveBeenCalledWith(
 			expect.objectContaining({
 				event: 'props_delivery_marker_write_failed',
