@@ -240,7 +240,7 @@ export class UserCommand extends Subcommand {
 				})
 			} catch (error) {
 				// Keep stats usable while a mixed-version Khronos deployment rolls
-				// out, without presenting stale leaderboard streaks as personal stats.
+				// out without presenting stale leaderboard streaks as personal stats.
 				this.container.logger.warn(
 					'Prediction streak stats unavailable; using leaderboard fallback.',
 					error,
