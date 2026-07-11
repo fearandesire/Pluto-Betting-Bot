@@ -23,6 +23,21 @@ export class CacheManager {
 		return true
 	}
 
+	/** Atomically claims a key when it is absent, with a bounded TTL. */
+	async setIfAbsent(key: string, data: unknown, TTL?: number) {
+		if (!key) {
+			throw new Error('No key was provided to save into cache')
+		}
+		const result = await this.cache.set(
+			key,
+			JSON.stringify(data),
+			'EX',
+			TTL || 1800,
+			'NX',
+		)
+		return result === 'OK'
+	}
+
 	async get(key: string) {
 		if (!key) {
 			throw new Error('No key was provided to save into cache')

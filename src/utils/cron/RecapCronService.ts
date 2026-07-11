@@ -20,6 +20,13 @@ export interface RecapCronOptions {
 	weekOffset?: number
 }
 
+interface RecapCache {
+	get(key: string): Promise<unknown>
+	set(key: string, value: unknown, ttl?: number): Promise<unknown>
+	setIfAbsent?(key: string, value: unknown, ttl?: number): Promise<boolean>
+	del?(key: string): Promise<unknown>
+}
+
 export interface RecapRunResult {
 	posted: number
 	skipped: number
@@ -54,7 +61,7 @@ function dedupKey(
  */
 export class RecapCronService {
 	private readonly recapApi: Pick<RecapWrapper, 'getWeeklyRecap'>
-	private readonly cache: Pick<CacheManager, 'get' | 'set'>
+	private readonly cache: RecapCache
 	private readonly channelResolver: RecapChannelResolver
 	private readonly options: Required<
 		Pick<RecapCronOptions, 'guildIds' | 'enabled' | 'weekOffset'>
@@ -97,7 +104,8 @@ export class RecapCronService {
 				)
 				const key = dedupKey(guildId, recap, now)
 
-				if (await this.cache.get(key)) {
+				const claimed = await this.claimDelivery(key)
+				if (!claimed) {
 					result.skipped++
 					await logger.info({
 						message: 'weekly_recap_skipped',
@@ -107,8 +115,29 @@ export class RecapCronService {
 				}
 
 				const channel = await this.getRecapChannel(guildId)
-				await channel.send({ embeds: buildWeeklyRecapEmbeds(recap) })
-				await this.cache.set(key, true, RECAP_DEDUP_TTL_SECONDS)
+				try {
+					await channel.send({
+						embeds: buildWeeklyRecapEmbeds(recap),
+					})
+				} catch (error) {
+					await this.releaseDeliveryClaim(key)
+					throw error
+				}
+				try {
+					await this.cache.set(key, true, RECAP_DEDUP_TTL_SECONDS)
+				} catch (error) {
+					await logger.warn({
+						message: 'weekly_recap_dedup_persist_failed',
+						metadata: {
+							guild_id: guildId,
+							key,
+							error:
+								error instanceof Error
+									? error.message
+									: String(error),
+						},
+					})
+				}
 				result.posted++
 
 				await logger.info({
@@ -153,11 +182,49 @@ export class RecapCronService {
 			)
 		}
 		if (channel.guild.id !== guildId) {
-			throw new Error(
-				`Recap channel ${this.options.channelId} does not belong to guild ${guildId}`,
-			)
+			await logger.warn({
+				message: 'weekly_recap_channel_override_mismatch',
+				metadata: {
+					guild_id: guildId,
+					channel_id: this.options.channelId,
+					channel_guild_id: channel.guild.id,
+				},
+			})
+			return await this.channelResolver.getBettingChannel(guildId)
 		}
 		return channel
+	}
+
+	private async claimDelivery(key: string): Promise<boolean> {
+		if (this.cache.setIfAbsent) {
+			return await this.cache.setIfAbsent(
+				key,
+				{ status: 'processing' },
+				RECAP_DEDUP_TTL_SECONDS,
+			)
+		}
+		if (await this.cache.get(key)) return false
+		await this.cache.set(
+			key,
+			{ status: 'processing' },
+			RECAP_DEDUP_TTL_SECONDS,
+		)
+		return true
+	}
+
+	private async releaseDeliveryClaim(key: string): Promise<void> {
+		try {
+			if (this.cache.del) await this.cache.del(key)
+		} catch (error) {
+			await logger.warn({
+				message: 'weekly_recap_claim_release_failed',
+				metadata: {
+					key,
+					error:
+						error instanceof Error ? error.message : String(error),
+				},
+			})
+		}
 	}
 
 	private getErrorStatus(error: unknown): number | undefined {

@@ -105,7 +105,7 @@ export function buildWeeklyRecapEmbeds(
 				name: 'Totals',
 				value: [
 					`Predictions: **${data.total_predictions}**`,
-					`Correct: **${data.correct_predictions}** · Incorrect: **${data.incorrect_predictions}`,
+					`Correct: **${data.correct_predictions}** · Incorrect: **${data.incorrect_predictions}**`,
 					`Accuracy: **${accuracy.toFixed(1)}%** (${formatDelta(data.accuracy_delta)})`,
 				].join('\n'),
 			},

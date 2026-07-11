@@ -21,6 +21,64 @@ export function matchesCronExpression(expression: string, date: Date): boolean {
 	)
 }
 
+export function isValidCronExpression(expression: string): boolean {
+	const fields = expression.trim().split(/\s+/)
+	if (fields.length !== 5) return false
+	return fields.every((field, index) =>
+		isValidCronField(
+			field,
+			index === 0
+				? 0
+				: index === 1
+					? 0
+					: index === 2
+						? 1
+						: index === 3
+							? 1
+							: 0,
+			index === 0
+				? 59
+				: index === 1
+					? 23
+					: index === 2
+						? 31
+						: index === 3
+							? 12
+							: 6,
+		),
+	)
+}
+
+function isValidCronField(
+	field: string,
+	minimum: number,
+	maximum: number,
+): boolean {
+	return field.split(',').every((part) => {
+		const [rangePart, stepPart] = part.split('/')
+		const step = stepPart ? Number.parseInt(stepPart, 10) : 1
+		if (
+			!Number.isInteger(step) ||
+			step < 1 ||
+			(stepPart && !/^\d+$/.test(stepPart))
+		)
+			return false
+		if (rangePart === '*') return true
+		const [startText, endText] = rangePart.includes('-')
+			? rangePart.split('-')
+			: [rangePart, rangePart]
+		const start = Number.parseInt(startText, 10)
+		const end = Number.parseInt(endText, 10)
+		return (
+			Number.isInteger(start) &&
+			Number.isInteger(end) &&
+			start >= minimum &&
+			end <= maximum &&
+			start <= end
+		)
+	})
+}
+
 function matchesCronField(
 	field: string,
 	value: number,
@@ -60,15 +118,24 @@ function matchesCronField(
 export class RecapCronScheduler {
 	private interval: NodeJS.Timeout | null = null
 	private lastRunMinute: string | null = null
+	private readonly validExpression: boolean
 
 	constructor(
 		private readonly recapService: Pick<RecapCronService, 'runWeeklyRecap'>,
 		private readonly expression: string,
 		private readonly pollIntervalMs = POLL_INTERVAL_MS,
-	) {}
+	) {
+		this.validExpression = isValidCronExpression(expression)
+		if (!this.validExpression) {
+			logger.error({
+				message: 'Weekly recap scheduler disabled: invalid RECAP_CRON',
+				metadata: { expression },
+			})
+		}
+	}
 
 	start(): void {
-		if (this.interval) return
+		if (this.interval || !this.validExpression) return
 		this.tick(new Date(), true).catch((error) => {
 			logger.error({
 				message: 'Weekly recap scheduler startup tick failed',
@@ -94,6 +161,7 @@ export class RecapCronScheduler {
 	}
 
 	async tick(now = new Date(), allowCatchUp = false): Promise<boolean> {
+		if (!this.validExpression) return false
 		if (
 			!matchesCronExpression(this.expression, now) &&
 			!(allowCatchUp && isCronDueToday(this.expression, now))
