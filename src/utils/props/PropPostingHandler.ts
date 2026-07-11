@@ -48,7 +48,12 @@ export interface PostingResult {
  */
 export class PropPostingHandler {
 	private static readonly DELIVERY_TTL_SECONDS = 7 * 24 * 60 * 60
-	private static readonly DELIVERY_CLAIM_TTL_SECONDS = 5 * 60
+	// The claim is intentionally held for the full idempotency window. Discord
+	// does not provide a transaction that can atomically commit a message and a
+	// Redis marker, so a process crash after Discord accepts the send must remain
+	// conservatively claimed rather than becoming a duplicate on retry.
+	private static readonly DELIVERY_CLAIM_TTL_SECONDS =
+		PropPostingHandler.DELIVERY_TTL_SECONDS
 	private guildWrapper: GuildWrapper
 
 	constructor() {
