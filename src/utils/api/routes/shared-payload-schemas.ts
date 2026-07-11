@@ -6,6 +6,21 @@ const notificationEntryBaseSchema = z.object({
 	betId: z.number().int().nonnegative(),
 })
 
+const legacyPushSchema = z.object({
+	userid: z.string().min(1),
+	amount: z.number().nonnegative(),
+	betid: z.number().int().nonnegative(),
+	team: z.string().min(1),
+})
+
+const typedPushSchema = notificationEntryBaseSchema.extend({
+	result: z.object({
+		team: z.string().min(1),
+		betAmount: z.number().nonnegative(),
+		refunded: z.number().finite().nonnegative(),
+	}),
+})
+
 const fallbackNotificationBetResultsSchema = z.object({
 	winners: z
 		.array(
@@ -31,17 +46,7 @@ const fallbackNotificationBetResultsSchema = z.object({
 			}),
 		)
 		.nullable(),
-	pushes: z
-		.array(
-			notificationEntryBaseSchema.extend({
-				result: z.object({
-					team: z.string().min(1),
-					betAmount: z.number().nonnegative(),
-					refunded: z.number().finite().nonnegative(),
-				}),
-			}),
-		)
-		.optional(),
+	pushes: z.array(z.union([typedPushSchema, legacyPushSchema])).optional(),
 })
 
 const dailyPropOutcomeSchema = z.object({

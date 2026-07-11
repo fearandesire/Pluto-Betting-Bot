@@ -29,10 +29,24 @@ export function validateNotifyBetUsers(
 			...loser,
 			result: { ...loser.result, outcome: 'lost' as const },
 		})),
-		pushes: (result.data.pushes ?? []).map((push) => ({
-			...push,
-			result: { ...push.result, outcome: 'push' as const },
-		})),
+		pushes: (result.data.pushes ?? []).map((push) => {
+			if ('userid' in push) {
+				return {
+					userId: push.userid,
+					betId: push.betid,
+					result: {
+						outcome: 'push' as const,
+						team: push.team,
+						betAmount: push.amount,
+					},
+				}
+			}
+
+			return {
+				...push,
+				result: { ...push.result, outcome: 'push' as const },
+			}
+		}),
 	}
 }
 

@@ -64,6 +64,24 @@ describe('notification payload validators', () => {
 		)
 	})
 
+	it('normalizes legacy flat push entries from the published package', () => {
+		const result = validateNotifyBetUsers({
+			winners: [],
+			losers: [],
+			pushes: [
+				{ userid: 'user-2', amount: 15, betid: 202, team: 'Away' },
+			],
+		})
+
+		expect(result?.pushes).toEqual([
+			{
+				userId: 'user-2',
+				betId: 202,
+				result: { outcome: 'push', team: 'Away', betAmount: 15 },
+			},
+		])
+	})
+
 	it('accepts a realistic daily props payload', () => {
 		const result = validateDailyPropsPayload({
 			props: [
