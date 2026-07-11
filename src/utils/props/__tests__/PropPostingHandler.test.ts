@@ -116,4 +116,24 @@ describe('PropPostingHandler delivery idempotency', () => {
 			'props:delivery:guild-1:channel-1:550e8400-e29b-41d4-a716-446655440000:550e8400-e29b-41d4-a716-446655440001:lock',
 		)
 	})
+
+	it('does not report a retryable failure after Discord accepts but marker storage fails', async () => {
+		const handler = new PropPostingHandler()
+		mocks.setex.mockRejectedValue(new Error('Redis unavailable'))
+
+		const result = await handler.postPropsToChannel(
+			'guild-1',
+			[prop],
+			'nba',
+			'channel-1',
+		)
+
+		expect(result).toEqual({ posted: 1, filtered: 0, failed: 0, total: 1 })
+		expect(mocks.del).not.toHaveBeenCalled()
+		expect(mocks.logger.error).toHaveBeenCalledWith(
+			expect.objectContaining({
+				event: 'props_delivery_marker_write_failed',
+			}),
+		)
+	})
 })

@@ -90,6 +90,7 @@ export class PropPostingHandler {
 				continue
 			}
 
+			let releaseLock = true
 			try {
 				const embed = await this.createPropEmbed(prop, sport)
 				const buttons = this.createPropButtons(prop)
@@ -109,11 +110,12 @@ export class PropPostingHandler {
 						messageOptions,
 					)
 				}
-				await redisCache.setex(
-					deliveryKey,
-					PropPostingHandler.DELIVERY_TTL_SECONDS,
-					'1',
-				)
+				if (!(await this.markDelivered(deliveryKey))) {
+					// Discord accepted the message, so returning a retryable
+					// failure would replay it. Keep the claim lock as a best-effort
+					// fallback until the durable marker can be written or expires.
+					releaseLock = false
+				}
 
 				result.posted++
 			} catch (error) {
@@ -127,7 +129,9 @@ export class PropPostingHandler {
 				})
 				result.failed++
 			} finally {
-				await this.releaseDeliveryLock(deliveryKey)
+				if (releaseLock) {
+					await this.releaseDeliveryLock(deliveryKey)
+				}
 			}
 		}
 
@@ -188,6 +192,42 @@ export class PropPostingHandler {
 				deliveryKey,
 				error: error instanceof Error ? error.message : String(error),
 			})
+		}
+	}
+
+	private async markDelivered(deliveryKey: string): Promise<boolean> {
+		try {
+			await redisCache.setex(
+				deliveryKey,
+				PropPostingHandler.DELIVERY_TTL_SECONDS,
+				'1',
+			)
+			return true
+		} catch (error) {
+			logger.error({
+				method: 'PropPostingHandler',
+				event: 'props_delivery_marker_write_failed',
+				deliveryKey,
+				error: error instanceof Error ? error.message : String(error),
+			})
+			try {
+				await redisCache.setex(
+					this.getDeliveryLockKey(deliveryKey),
+					PropPostingHandler.DELIVERY_TTL_SECONDS,
+					'sent-fallback',
+				)
+			} catch (fallbackError) {
+				logger.error({
+					method: 'PropPostingHandler',
+					event: 'props_delivery_fallback_lock_failed',
+					deliveryKey,
+					error:
+						fallbackError instanceof Error
+							? fallbackError.message
+							: String(fallbackError),
+				})
+			}
+			return false
 		}
 	}
 
