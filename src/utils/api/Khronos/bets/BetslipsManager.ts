@@ -300,6 +300,42 @@ export class BetslipManager {
 		}
 	}
 
+	/**
+	 * Announce a successfully placed parlay through the same guild betting
+	 * channel pathway used by singles.
+	 */
+	public async announceParlayPlaced(
+		interaction: CommandInteraction | ButtonInteraction,
+		details: {
+			parlayId: string
+			legCount: number
+			stake: number
+			potentialPayout: number
+		},
+	): Promise<void> {
+		try {
+			if (!interaction.guildId) {
+				logger.warn('Cannot announce parlay - no guild context')
+				return
+			}
+
+			const publicEmbed = new EmbedBuilder()
+				.setDescription(
+					`<@${interaction.user.id}> placed a **${details.legCount}-leg parlay** for **\`$${details.stake.toFixed(2)}\`**!`,
+				)
+				.setColor(embedColors.success)
+				.setFooter({
+					text: `Potential payout: $${details.potentialPayout.toFixed(2)} • Parlay ${details.parlayId.slice(0, 8)}`,
+				})
+
+			await new GuildWrapper().sendToBettingChannel(interaction.guildId, {
+				embeds: [publicEmbed],
+			})
+		} catch (error) {
+			logger.warn('Failed to announce parlay placed', { error })
+		}
+	}
+
 	private formatBetStr(betAmount: string, payout: string, profit: string) {
 		const b = '**'
 		const formattedBetData = `${b}${betAmount}${b} -> ${b}${payout}${b}\n${b}Profit:${b} ${b}${profit}${b}`
