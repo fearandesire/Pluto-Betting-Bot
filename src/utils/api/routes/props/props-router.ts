@@ -53,6 +53,25 @@ PropsRouter.post('/props/daily', async (ctx) => {
 				),
 			),
 		)
+		const failed = results.reduce(
+			(total, result) => total + result.failed,
+			0,
+		)
+		if (failed > 0) {
+			logger.error({
+				method: 'PropsRouter',
+				event: 'props_daily_delivery_failed',
+				failed,
+				results,
+			})
+			ctx.status = 500
+			ctx.body = {
+				success: false,
+				error: 'Failed to deliver one or more daily props.',
+				results,
+			}
+			return
+		}
 
 		ctx.status = 200
 		ctx.body = {

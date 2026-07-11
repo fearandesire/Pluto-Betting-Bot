@@ -125,4 +125,28 @@ describe('POST /props/daily', () => {
 			}),
 		)
 	})
+
+	it('returns a retryable failure when a guild cannot receive props', async () => {
+		postPropsToChannel.mockResolvedValue({
+			posted: 0,
+			filtered: 0,
+			failed: 1,
+			total: 1,
+		})
+
+		const response = await request(validPayload)
+
+		expect(response.status).toBe(500)
+		expect(await response.json()).toEqual({
+			success: false,
+			error: 'Failed to deliver one or more daily props.',
+			results: [{ posted: 0, filtered: 0, failed: 1, total: 1 }],
+		})
+		expect(logger.error).toHaveBeenCalledWith(
+			expect.objectContaining({
+				event: 'props_daily_delivery_failed',
+				failed: 1,
+			}),
+		)
+	})
 })
