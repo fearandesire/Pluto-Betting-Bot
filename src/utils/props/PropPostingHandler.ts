@@ -48,12 +48,8 @@ export interface PostingResult {
  */
 export class PropPostingHandler {
 	private static readonly DELIVERY_TTL_SECONDS = 7 * 24 * 60 * 60
-	// The claim is intentionally held for the full idempotency window. Discord
-	// does not provide a transaction that can atomically commit a message and a
-	// Redis marker, so a process crash after Discord accepts the send must remain
-	// conservatively claimed rather than becoming a duplicate on retry.
-	private static readonly DELIVERY_CLAIM_TTL_SECONDS =
-		PropPostingHandler.DELIVERY_TTL_SECONDS
+	private static readonly DELIVERY_CLAIM_TTL_SECONDS = 5 * 60
+	private static readonly DELIVERY_RELEASE_RETRY_TTL_SECONDS = 5
 	private guildWrapper: GuildWrapper
 
 	constructor() {
@@ -166,6 +162,19 @@ export class PropPostingHandler {
 			const existing = await redisCache.get(deliveryKey)
 			if (existing === 'sent') return 'sent'
 			if (existing === 'processing') return 'claimed'
+			if (existing === 'retry') {
+				try {
+					const reclaimed = await redisCache.set(
+						deliveryKey,
+						'processing',
+						'EX',
+						PropPostingHandler.DELIVERY_CLAIM_TTL_SECONDS,
+					)
+					return reclaimed === 'OK' ? 'available' : 'claimed'
+				} catch {
+					return 'claimed'
+				}
+			}
 
 			const lock = await redisCache.set(
 				deliveryKey,
@@ -232,6 +241,36 @@ export class PropPostingHandler {
 				deliveryKey,
 				error: error instanceof Error ? error.message : String(error),
 			})
+			try {
+				await redisCache.setex(
+					deliveryKey,
+					PropPostingHandler.DELIVERY_RELEASE_RETRY_TTL_SECONDS,
+					'retry',
+				)
+			} catch (fallbackError) {
+				try {
+					await redisCache.set(deliveryKey, 'retry')
+				} catch (lastError) {
+					logger.error({
+						method: 'PropPostingHandler',
+						event: 'props_delivery_claim_cleanup_failed',
+						deliveryKey,
+						error:
+							lastError instanceof Error
+								? lastError.message
+								: String(lastError),
+					})
+				}
+				logger.warn({
+					method: 'PropPostingHandler',
+					event: 'props_delivery_claim_retry_marker_failed',
+					deliveryKey,
+					error:
+						fallbackError instanceof Error
+							? fallbackError.message
+							: String(fallbackError),
+				})
+			}
 		}
 	}
 
