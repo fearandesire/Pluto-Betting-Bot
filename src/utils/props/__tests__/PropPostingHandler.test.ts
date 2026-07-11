@@ -110,6 +110,7 @@ describe('PropPostingHandler message references and idempotency', () => {
 		expect(mocks.sendToChannel).toHaveBeenCalledWith(
 			'channel-1',
 			expect.objectContaining({ embeds: expect.any(Array) }),
+			'guild-1',
 		)
 	})
 
@@ -129,6 +130,37 @@ describe('PropPostingHandler message references and idempotency', () => {
 		expect(result.filtered).toBe(1)
 		expect(result.results).toEqual([])
 		expect(mocks.sendToChannel).toHaveBeenCalledTimes(1)
+	})
+
+	it('recovers durable outcome references for a sent pair', async () => {
+		const references = [
+			{
+				outcome_uuid: prop.over.outcome_uuid,
+				guild_id: 'guild-1',
+				channel_id: 'channel-1',
+				message_id: 'message-1',
+			},
+			{
+				outcome_uuid: prop.under.outcome_uuid,
+				guild_id: 'guild-1',
+				channel_id: 'channel-1',
+				message_id: 'message-1',
+			},
+		]
+		mocks.get.mockResolvedValue(
+			JSON.stringify({ status: 'sent', results: references }),
+		)
+
+		const result = await new PropPostingHandler().postPropsToChannel(
+			'guild-1',
+			[prop],
+			'nba',
+			'channel-1',
+		)
+
+		expect(result).toMatchObject({ posted: 1, filtered: 0, failed: 0 })
+		expect(result.results).toEqual(references)
+		expect(mocks.sendToChannel).not.toHaveBeenCalled()
 	})
 
 	it('keeps partial failures explicit and releases failed claims', async () => {

@@ -71,7 +71,7 @@ const sharedPayloadExports = KhronosTypes as unknown as SharedPayloadExports
 function isUsableSchema<T>(
 	schema: z.ZodType<T> | undefined,
 ): schema is z.ZodType<T> {
-	return schema?._def?.type !== 'never'
+	return schema !== undefined && schema._def?.type !== 'never'
 }
 
 /**

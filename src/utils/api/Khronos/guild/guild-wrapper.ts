@@ -206,6 +206,7 @@ export default class GuildWrapper {
 	async sendToChannel(
 		channelId: string,
 		options: MessageCreateOptions,
+		expectedGuildId?: string,
 	): Promise<Message> {
 		this.validateSnowflake(channelId, 'prediction', 'unknown')
 
@@ -221,6 +222,11 @@ export default class GuildWrapper {
 		if (!channel || channel.type !== ChannelType.GuildText) {
 			throw new Error(
 				`Prediction channel ${channelId} could not be found or is not a text channel`,
+			)
+		}
+		if (expectedGuildId && channel.guild?.id !== expectedGuildId) {
+			throw new Error(
+				`Prediction channel ${channelId} does not belong to guild ${expectedGuildId}`,
 			)
 		}
 
