@@ -117,7 +117,6 @@ export class PropPostingHandler {
 
 				result.posted++
 			} catch (error) {
-				await redisCache.del(this.getDeliveryLockKey(deliveryKey))
 				logger.error('Failed to post prop pair', {
 					event_id: prop.event_id,
 					market_key: prop.market_key,
@@ -127,6 +126,8 @@ export class PropPostingHandler {
 					error,
 				})
 				result.failed++
+			} finally {
+				await this.releaseDeliveryLock(deliveryKey)
 			}
 		}
 
@@ -174,6 +175,19 @@ export class PropPostingHandler {
 				error: error instanceof Error ? error.message : String(error),
 			})
 			return 'available'
+		}
+	}
+
+	private async releaseDeliveryLock(deliveryKey: string): Promise<void> {
+		try {
+			await redisCache.del(this.getDeliveryLockKey(deliveryKey))
+		} catch (error) {
+			logger.warn({
+				method: 'PropPostingHandler',
+				event: 'props_delivery_lock_release_failed',
+				deliveryKey,
+				error: error instanceof Error ? error.message : String(error),
+			})
 		}
 	}
 
