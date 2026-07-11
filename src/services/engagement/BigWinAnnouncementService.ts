@@ -19,7 +19,9 @@ export interface BigWinAnnouncementRedis {
 		...args: Array<string | number>
 	): Promise<string | null>
 	incr(key: string): Promise<number>
+	decr(key: string): Promise<number>
 	expire(key: string, seconds: number): Promise<number>
+	del(key: string): Promise<number>
 }
 
 export interface BigWinAnnouncementSender {
@@ -169,6 +171,7 @@ export class BigWinAnnouncementService {
 
 		const dedupKey = `${BIG_WIN_DEDUP_KEY_PREFIX}:${input.kind}:${input.id}`
 		const rateKey = `${BIG_WIN_RATE_KEY_PREFIX}:${input.guildId}`
+		let rateCounted = false
 
 		try {
 			const reserved = await this.redis.set(
@@ -181,13 +184,29 @@ export class BigWinAnnouncementService {
 			if (reserved !== 'OK') return false
 
 			const count = await this.redis.incr(rateKey)
+			rateCounted = true
 			if (count === 1) {
-				await this.redis.expire(
-					rateKey,
-					BIG_WIN_ANNOUNCEMENT_TTL_SECONDS,
-				)
+				try {
+					await this.redis.expire(
+						rateKey,
+						BIG_WIN_ANNOUNCEMENT_TTL_SECONDS,
+					)
+				} catch (error) {
+					await this.compensateRateCounter(rateKey)
+					await this.releaseReservation(dedupKey)
+					logger.error({
+						event: 'big_win.announcement_rate_expiry_failed',
+						guild_id: input.guildId,
+						error:
+							error instanceof Error
+								? error.message
+								: String(error),
+					})
+					return false
+				}
 			}
 			if (count > this.maxPerHour) {
+				await this.releaseReservation(dedupKey)
 				logger.info({
 					event: 'big_win.announcement_rate_limited',
 					guild_id: input.guildId,
@@ -204,6 +223,10 @@ export class BigWinAnnouncementService {
 			})
 			return true
 		} catch (error) {
+			await this.releaseReservation(dedupKey)
+			if (rateCounted) {
+				await this.compensateRateCounter(rateKey)
+			}
 			logger.error({
 				event: 'big_win.announcement_failed',
 				guild_id: input.guildId,
@@ -213,6 +236,38 @@ export class BigWinAnnouncementService {
 				error: error instanceof Error ? error.message : String(error),
 			})
 			return false
+		}
+	}
+
+	private async releaseReservation(dedupKey: string): Promise<void> {
+		try {
+			await this.redis.del(dedupKey)
+		} catch (error) {
+			logger.warn({
+				event: 'big_win.announcement_reservation_cleanup_failed',
+				dedup_key: dedupKey,
+				error: error instanceof Error ? error.message : String(error),
+			})
+		}
+	}
+
+	private async compensateRateCounter(rateKey: string): Promise<void> {
+		try {
+			const remaining = await this.redis.decr(rateKey)
+			if (remaining <= 0) {
+				await this.redis.del(rateKey)
+			} else {
+				await this.redis.expire(
+					rateKey,
+					BIG_WIN_ANNOUNCEMENT_TTL_SECONDS,
+				)
+			}
+		} catch (error) {
+			logger.warn({
+				event: 'big_win.announcement_rate_cleanup_failed',
+				rate_key: rateKey,
+				error: error instanceof Error ? error.message : String(error),
+			})
 		}
 	}
 

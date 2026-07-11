@@ -4,7 +4,9 @@ const mocks = vi.hoisted(() => ({
 	redis: {
 		set: vi.fn(),
 		incr: vi.fn(),
+		decr: vi.fn(),
 		expire: vi.fn(),
+		del: vi.fn(),
 	},
 	sendToBettingChannel: vi.fn(),
 	logger: {
@@ -49,7 +51,9 @@ describe('BigWinAnnouncementService', () => {
 		vi.clearAllMocks()
 		mocks.redis.set.mockResolvedValue('OK')
 		mocks.redis.incr.mockResolvedValue(1)
+		mocks.redis.decr.mockResolvedValue(0)
 		mocks.redis.expire.mockResolvedValue(1)
+		mocks.redis.del.mockResolvedValue(1)
 		mocks.sendToBettingChannel.mockResolvedValue({})
 	})
 
@@ -152,6 +156,38 @@ describe('BigWinAnnouncementService', () => {
 					value: '$250.00',
 				}),
 			]),
+		)
+	})
+
+	it('releases reservations and rate capacity when delivery fails', async () => {
+		mocks.sendToBettingChannel.mockRejectedValueOnce(
+			new Error('Discord unavailable'),
+		)
+		const service = new BigWinAnnouncementService(mocks.redis, {
+			sendToBettingChannel: mocks.sendToBettingChannel,
+		})
+
+		await expect(service.announceParlayWin(parlay)).resolves.toBe(false)
+		expect(mocks.redis.del).toHaveBeenCalledWith(
+			'pluto:big-win-announcement:sent:parlay:parlay-1',
+		)
+		expect(mocks.redis.decr).toHaveBeenCalledWith(
+			'pluto:big-win-announcement:rate:guild-1',
+		)
+	})
+
+	it('does not reserve a failed rate window when expiry fails', async () => {
+		mocks.redis.expire.mockRejectedValueOnce(new Error('Redis unavailable'))
+		const service = new BigWinAnnouncementService(mocks.redis, {
+			sendToBettingChannel: mocks.sendToBettingChannel,
+		})
+
+		await expect(service.announceParlayWin(parlay)).resolves.toBe(false)
+		expect(mocks.redis.del).toHaveBeenCalledWith(
+			'pluto:big-win-announcement:sent:parlay:parlay-1',
+		)
+		expect(mocks.redis.decr).toHaveBeenCalledWith(
+			'pluto:big-win-announcement:rate:guild-1',
 		)
 	})
 })
