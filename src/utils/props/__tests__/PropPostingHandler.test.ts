@@ -211,4 +211,22 @@ describe('PropPostingHandler message references and idempotency', () => {
 			'processing',
 		)
 	})
+
+	it('persists a sent ledger with plain SET when SETEX fails', async () => {
+		mocks.setex.mockRejectedValueOnce(
+			new Error('Redis command unavailable'),
+		)
+
+		await new PropPostingHandler().postPropsToChannel(
+			'guild-1',
+			[prop],
+			'nba',
+			'channel-1',
+		)
+
+		expect(mocks.set).toHaveBeenLastCalledWith(
+			'props:delivery:guild-1:channel-1:550e8400-e29b-41d4-a716-446655440000:550e8400-e29b-41d4-a716-446655440001',
+			expect.stringContaining('"status":"sent"'),
+		)
+	})
 })

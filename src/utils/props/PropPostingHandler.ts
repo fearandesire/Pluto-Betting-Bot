@@ -295,6 +295,28 @@ export class PropPostingHandler {
 				deliveryKey,
 				error: error instanceof Error ? error.message : String(error),
 			})
+			try {
+				// Some Redis-compatible test/degraded clients do not implement
+				// SETEX. A plain SET still records the durable sent ledger and is
+				// preferable to leaving a processing claim that can later replay.
+				await redisCache.set(
+					deliveryKey,
+					JSON.stringify({
+						status: 'sent',
+						results,
+					} satisfies DeliveredMarker),
+				)
+			} catch (fallbackError) {
+				logger.error({
+					method: 'PropPostingHandler',
+					event: 'props_delivery_marker_fallback_failed',
+					deliveryKey,
+					error:
+						fallbackError instanceof Error
+							? fallbackError.message
+							: String(fallbackError),
+				})
+			}
 		}
 	}
 
