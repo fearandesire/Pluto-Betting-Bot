@@ -182,10 +182,25 @@ export class PropPostingHandler {
 					channel_id: postedChannelId,
 					message_id: message.id,
 				}))
-				await this.markDelivered(deliveryKey, references)
+				const markerPersisted = await this.markDelivered(
+					deliveryKey,
+					references,
+				)
 				result.results.push(...references)
 
-				result.posted++
+				if (markerPersisted) {
+					result.posted++
+				} else {
+					result.failed++
+					result.failures.push({
+						guild_id: guildId,
+						channel_id: postedChannelId,
+						outcome_uuids: references.map(
+							(reference) => reference.outcome_uuid,
+						),
+						error: 'Discord message posted but durable delivery marker was unavailable',
+					})
+				}
 			} catch (error) {
 				logger.error('Failed to post prop pair', {
 					event_id: prop.event_id,
@@ -241,7 +256,15 @@ export class PropPostingHandler {
 			if (existing === 'processing') return { status: 'claimed' }
 			if (existing === 'retry') {
 				try {
-					await redisCache.del(deliveryKey)
+					const reclaimed = await redisCache.set(
+						deliveryKey,
+						'processing',
+						'EX',
+						PropPostingHandler.DELIVERY_CLAIM_TTL_SECONDS,
+					)
+					return reclaimed === 'OK'
+						? { status: 'available' }
+						: { status: 'claimed' }
 				} catch {
 					return { status: 'claimed' }
 				}
@@ -285,7 +308,7 @@ export class PropPostingHandler {
 	private async markDelivered(
 		deliveryKey: string,
 		results: PostedPropReference[],
-	): Promise<void> {
+	): Promise<boolean> {
 		try {
 			await redisCache.setex(
 				deliveryKey,
@@ -295,6 +318,7 @@ export class PropPostingHandler {
 					results,
 				} satisfies DeliveredMarker),
 			)
+			return true
 		} catch (error) {
 			logger.error({
 				method: 'PropPostingHandler',
@@ -313,6 +337,7 @@ export class PropPostingHandler {
 						results,
 					} satisfies DeliveredMarker),
 				)
+				return true
 			} catch (fallbackError) {
 				logger.error({
 					method: 'PropPostingHandler',
@@ -323,6 +348,7 @@ export class PropPostingHandler {
 							? fallbackError.message
 							: String(fallbackError),
 				})
+				return false
 			}
 		}
 	}
