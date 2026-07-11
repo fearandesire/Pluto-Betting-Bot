@@ -44,7 +44,7 @@ describe('notification payload validators', () => {
 		expect(logger.error).not.toHaveBeenCalled()
 	})
 
-	it('rejects a winner without a bet id and logs the schema issues', () => {
+	it('accepts a winner without a bet id from the current shared contract', () => {
 		const result = validateNotifyBetUsers({
 			winners: [
 				{
@@ -55,13 +55,10 @@ describe('notification payload validators', () => {
 			losers: [],
 		})
 
-		expect(result).toBeNull()
-		expect(logger.error).toHaveBeenCalledWith(
-			expect.objectContaining({
-				event: 'push_payload_rejected',
-				schema: 'notificationBetResults',
-			}),
-		)
+		expect(result?.winners).toHaveLength(1)
+		expect(result?.winners[0].betId).toBeUndefined()
+		expect(result?.winners[0].result.outcome).toBe('won')
+		expect(logger.error).not.toHaveBeenCalled()
 	})
 
 	it('normalizes legacy flat push entries from the published package', () => {
