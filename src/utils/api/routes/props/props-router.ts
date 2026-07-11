@@ -1,15 +1,26 @@
 import Router from '@koa/router'
 import { PropsController } from '../../controllers/props.controller.js'
+import { validateDailyPropsPayload } from '../notifications/notification-utils.js'
 import type { ReqBodyPropsEmbedsData } from './props-route.interface.js'
 
 const PropsRouter = new Router()
 const propsController = new PropsController()
 
 PropsRouter.post('/props/daily', async (ctx) => {
+	const validatedPayload = validateDailyPropsPayload(ctx.request.body || {})
+	if (!validatedPayload) {
+		ctx.status = 422
+		ctx.body = {
+			success: false,
+			error: 'Invalid props payload. Failed Zod validation.',
+		}
+		return
+	}
+
 	ctx.status = 200
 	ctx.body = { message: 'Received req to process props for embed generation' }
 	await propsController.processPropsForPredictionEmbeds(
-		ctx.request.body as ReqBodyPropsEmbedsData,
+		validatedPayload as unknown as ReqBodyPropsEmbedsData,
 	)
 })
 

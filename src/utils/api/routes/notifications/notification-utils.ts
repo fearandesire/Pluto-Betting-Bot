@@ -1,8 +1,9 @@
-import { notificationBetResultsSchema } from '@pluto-khronos/types'
-import type {
-	BetNotificationPush,
-	NotifyBetUsers,
-} from './notifications.interface.js'
+import { logger } from '../../../logging/WinstonLogger.js'
+import {
+	dailyPropsPayloadSchema,
+	notificationBetResultsSchema,
+} from '../shared-payload-schemas.js'
+import type { NotifyBetUsers } from './notifications.interface.js'
 
 export function validateNotifyBetUsers(
 	payload: unknown,
@@ -10,30 +11,43 @@ export function validateNotifyBetUsers(
 	const result = notificationBetResultsSchema.safeParse(payload)
 
 	if (!result.success) {
-		console.error({
+		logger.error({
 			method: 'validateNotifyBetUsers',
-			message: 'Invalid notification payload',
+			event: 'push_payload_rejected',
+			schema: 'notificationBetResults',
 			errors: result.error.issues,
 		})
 		return null
 	}
 
-	// Transform Zod output to match our internal types
-	// Transform pushes from IBetslipPush[] to BetNotificationPush[]
-	const transformedPushes: BetNotificationPush[] | undefined =
-		result.data.pushes?.map((push) => ({
-			userId: push.userid,
-			betId: push.betid,
-			result: {
-				outcome: 'push' as const,
-				team: push.team,
-				betAmount: push.amount,
-			},
-		}))
-
 	return {
-		winners: result.data.winners || [],
-		losers: result.data.losers || [],
-		pushes: transformedPushes || [],
+		winners: (result.data.winners ?? []).map((winner) => ({
+			...winner,
+			result: { ...winner.result, outcome: 'won' as const },
+		})),
+		losers: (result.data.losers ?? []).map((loser) => ({
+			...loser,
+			result: { ...loser.result, outcome: 'lost' as const },
+		})),
+		pushes: (result.data.pushes ?? []).map((push) => ({
+			...push,
+			result: { ...push.result, outcome: 'push' as const },
+		})),
 	}
+}
+
+export function validateDailyPropsPayload(payload: unknown) {
+	const result = dailyPropsPayloadSchema.safeParse(payload)
+
+	if (!result.success) {
+		logger.error({
+			method: 'validateDailyPropsPayload',
+			event: 'push_payload_rejected',
+			schema: 'dailyPropsPayload',
+			errors: result.error.issues,
+		})
+		return null
+	}
+
+	return result.data
 }
