@@ -229,4 +229,24 @@ describe('PropPostingHandler message references and idempotency', () => {
 			expect.stringContaining('"status":"sent"'),
 		)
 	})
+
+	it('leaves a retry marker when claim release commands fail', async () => {
+		mocks.sendToChannel.mockRejectedValueOnce(
+			new Error('Discord unavailable'),
+		)
+		mocks.del.mockRejectedValueOnce(new Error('Redis unavailable'))
+		mocks.setex.mockRejectedValueOnce(new Error('Redis unavailable'))
+
+		await new PropPostingHandler().postPropsToChannel(
+			'guild-1',
+			[prop],
+			'nba',
+			'channel-1',
+		)
+
+		expect(mocks.set).toHaveBeenLastCalledWith(
+			'props:delivery:guild-1:channel-1:550e8400-e29b-41d4-a716-446655440000:550e8400-e29b-41d4-a716-446655440001',
+			'retry',
+		)
+	})
 })

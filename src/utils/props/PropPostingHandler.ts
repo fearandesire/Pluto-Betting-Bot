@@ -239,6 +239,13 @@ export class PropPostingHandler {
 			const existing = await redisCache.get(deliveryKey)
 			if (existing === 'sent') return { status: 'sent', results: [] }
 			if (existing === 'processing') return { status: 'claimed' }
+			if (existing === 'retry') {
+				try {
+					await redisCache.del(deliveryKey)
+				} catch {
+					return { status: 'claimed' }
+				}
+			}
 			if (existing) {
 				try {
 					const marker = JSON.parse(existing) as DeliveredMarker
@@ -348,6 +355,21 @@ export class PropPostingHandler {
 							? fallbackError.message
 							: String(fallbackError),
 				})
+				try {
+					// Last-resort retry marker for clients where DEL and SETEX are
+					// unavailable. A recovered client removes it before re-claiming.
+					await redisCache.set(deliveryKey, 'retry')
+				} catch (lastError) {
+					logger.error({
+						method: 'PropPostingHandler',
+						event: 'props_delivery_claim_last_resort_failed',
+						deliveryKey,
+						error:
+							lastError instanceof Error
+								? lastError.message
+								: String(lastError),
+					})
+				}
 			}
 		}
 	}
