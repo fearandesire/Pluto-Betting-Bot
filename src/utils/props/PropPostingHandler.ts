@@ -49,6 +49,7 @@ export interface PostingResult {
 export class PropPostingHandler {
 	private static readonly DELIVERY_TTL_SECONDS = 7 * 24 * 60 * 60
 	private static readonly DELIVERY_LOCK_TTL_SECONDS = 5 * 60
+	private static readonly localDeliveryMarkers = new Map<string, number>()
 	private guildWrapper: GuildWrapper
 
 	constructor() {
@@ -161,6 +162,7 @@ export class PropPostingHandler {
 		deliveryKey: string,
 	): Promise<'available' | 'sent' | 'claimed'> {
 		try {
+			if (this.hasLocalDeliveryMarker(deliveryKey)) return 'sent'
 			if ((await redisCache.exists(deliveryKey)) > 0) return 'sent'
 
 			const lock = await redisCache.set(
@@ -182,6 +184,24 @@ export class PropPostingHandler {
 		}
 	}
 
+	private hasLocalDeliveryMarker(deliveryKey: string): boolean {
+		const deliveredAt =
+			PropPostingHandler.localDeliveryMarkers.get(deliveryKey)
+		if (deliveredAt === undefined) return false
+		if (
+			Date.now() - deliveredAt >=
+			PropPostingHandler.DELIVERY_TTL_SECONDS * 1000
+		) {
+			PropPostingHandler.localDeliveryMarkers.delete(deliveryKey)
+			return false
+		}
+		return true
+	}
+
+	private rememberLocalDelivery(deliveryKey: string): void {
+		PropPostingHandler.localDeliveryMarkers.set(deliveryKey, Date.now())
+	}
+
 	private async releaseDeliveryLock(deliveryKey: string): Promise<void> {
 		try {
 			await redisCache.del(this.getDeliveryLockKey(deliveryKey))
@@ -196,6 +216,7 @@ export class PropPostingHandler {
 	}
 
 	private async markDelivered(deliveryKey: string): Promise<boolean> {
+		this.rememberLocalDelivery(deliveryKey)
 		try {
 			await redisCache.setex(
 				deliveryKey,

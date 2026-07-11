@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import type { ProcessedPropDto } from '@pluto-khronos/api-client'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -74,6 +75,8 @@ describe('PropPostingHandler delivery idempotency', () => {
 			color: 0x123456,
 			resolvedTeamData: { abbrev: 'HOM' },
 		})
+		prop.over.outcome_uuid = randomUUID()
+		prop.under.outcome_uuid = randomUUID()
 	})
 
 	it('does not repost a prop already delivered to the same destination', async () => {
@@ -113,7 +116,7 @@ describe('PropPostingHandler delivery idempotency', () => {
 
 		expect(result).toEqual({ posted: 0, filtered: 0, failed: 1, total: 1 })
 		expect(mocks.del).toHaveBeenCalledWith(
-			'props:delivery:guild-1:channel-1:550e8400-e29b-41d4-a716-446655440000:550e8400-e29b-41d4-a716-446655440001:lock',
+			expect.stringContaining('props:delivery:guild-1:channel-1:'),
 		)
 	})
 
@@ -127,8 +130,16 @@ describe('PropPostingHandler delivery idempotency', () => {
 			'nba',
 			'channel-1',
 		)
+		const retry = await handler.postPropsToChannel(
+			'guild-1',
+			[prop],
+			'nba',
+			'channel-1',
+		)
 
 		expect(result).toEqual({ posted: 1, filtered: 0, failed: 0, total: 1 })
+		expect(retry).toEqual({ posted: 0, filtered: 1, failed: 0, total: 1 })
+		expect(mocks.sendToChannel).toHaveBeenCalledTimes(1)
 		expect(mocks.del).not.toHaveBeenCalled()
 		expect(mocks.logger.error).toHaveBeenCalledWith(
 			expect.objectContaining({
