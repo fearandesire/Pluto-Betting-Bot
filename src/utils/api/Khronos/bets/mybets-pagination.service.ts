@@ -49,7 +49,7 @@ export class MyBetsPaginationService {
 		try {
 			const [betsResult, parlaysResult] = await Promise.allSettled([
 				this.betslipWrapper.getUserBetslips({ userid: userId }),
-				this.parlayWrapper.getUserParlays(userId, { limit: 100 }),
+				this.fetchAllUserParlays(userId),
 			])
 			if (betsResult.status === 'rejected') throw betsResult.reason
 			const allBets = betsResult.value
@@ -107,6 +107,28 @@ export class MyBetsPaginationService {
 
 			throw error
 		}
+	}
+
+	private async fetchAllUserParlays(userId: string): Promise<{
+		parlays: UserParlay[]
+	}> {
+		const pageSize = 100
+		const firstPage = await this.parlayWrapper.getUserParlays(userId, {
+			page: 1,
+			limit: pageSize,
+		})
+		const totalPages = Math.max(1, firstPage.total_pages || 1)
+		const parlays = [...firstPage.parlays]
+
+		for (let page = 2; page <= totalPages; page++) {
+			const nextPage = await this.parlayWrapper.getUserParlays(userId, {
+				page,
+				limit: pageSize,
+			})
+			parlays.push(...nextPage.parlays)
+		}
+
+		return { parlays }
 	}
 
 	private splitBetsByStatus(bets: PlacedBetslip[]): {

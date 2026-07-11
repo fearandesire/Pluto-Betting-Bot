@@ -201,26 +201,50 @@ export class MyBetsFormatterService {
 			.setTitle(`📜 Bet History`)
 			.setColor(embedColors.PlutoBlue)
 
-		if (historyPage.bets.length === 0) {
+		if (historyPage.entries.length === 0) {
 			embed.setDescription(
 				'No bet history found. Place some bets to see them here!',
 			)
 			return embed
 		}
 
-		const lines: string[] = []
+		embed.setDescription(
+			this.buildChronologicalHistoryLines(
+				historyPage,
+				groupedBets,
+				guild,
+			).join('\n\n'),
+		)
+		return embed
+	}
+
+	private buildChronologicalHistoryLines(
+		historyPage: HistoryPage,
+		groupedBets: BetsByDate[],
+		guild?: Guild,
+	): string[] {
+		const dateByBet = new Map<PlacedBetslip, string>()
 		for (const group of groupedBets) {
-			lines.push(`**${group.date}**`)
-			for (const bet of group.bets) {
-				lines.push(this.formatHistoryBetLine(bet, guild))
-			}
-		}
-		for (const parlay of historyPage.parlays) {
-			lines.push(this.formatHistoryParlayLine(parlay))
+			for (const bet of group.bets) dateByBet.set(bet, group.date)
 		}
 
-		embed.setDescription(lines.join('\n\n'))
-		return embed
+		const lines: string[] = []
+		let lastDate: string | undefined
+		for (const entry of historyPage.entries) {
+			if (entry.kind === 'parlay') {
+				lines.push(this.formatHistoryParlayLine(entry.parlay))
+				continue
+			}
+
+			const date = dateByBet.get(entry.bet)
+			if (date && date !== lastDate) {
+				lines.push(`**${date}**`)
+				lastDate = date
+			}
+			lines.push(this.formatHistoryBetLine(entry.bet, guild))
+		}
+
+		return lines
 	}
 
 	buildPaginationButtons(
@@ -304,19 +328,13 @@ export class MyBetsFormatterService {
 				),
 			)
 		} else {
-			for (const group of data.groupedBets) {
+			for (const line of this.buildChronologicalHistoryLines(
+				data.historyPage,
+				data.groupedBets,
+				guild,
+			)) {
 				container.addTextDisplayComponents((text) =>
-					text.setContent(`### ${group.date}`),
-				)
-				for (const bet of group.bets) {
-					container.addTextDisplayComponents((text) =>
-						text.setContent(this.formatHistoryBetLine(bet, guild)),
-					)
-				}
-			}
-			for (const parlay of data.historyPage.parlays) {
-				container.addTextDisplayComponents((text) =>
-					text.setContent(this.formatHistoryParlayLine(parlay)),
+					text.setContent(line),
 				)
 			}
 		}
@@ -372,15 +390,20 @@ export class MyBetsFormatterService {
 		const cancellable = data.pendingParlays.filter((parlay) =>
 			this.canCancelParlay(parlay),
 		)
-		for (let index = 0; index < cancellable.length; index += 5) {
+		const hasNavigation = data.historyPage.totalPages > 1
+		const maxCancellationRows = hasNavigation ? 4 : 5
+		const visibleCancellable = cancellable.slice(0, maxCancellationRows * 5)
+		for (let index = 0; index < visibleCancellable.length; index += 5) {
 			components.push(
 				new ActionRowBuilder<ButtonBuilder>().addComponents(
-					...cancellable.slice(index, index + 5).map((parlay) =>
-						new ButtonBuilder()
-							.setCustomId(`parlay_cancel_${parlay.id}`)
-							.setLabel(`Cancel ${parlay.id.slice(0, 6)}`)
-							.setStyle(ButtonStyle.Danger),
-					),
+					...visibleCancellable
+						.slice(index, index + 5)
+						.map((parlay) =>
+							new ButtonBuilder()
+								.setCustomId(`parlay_cancel_${parlay.id}`)
+								.setLabel(`Cancel ${parlay.id.slice(0, 6)}`)
+								.setStyle(ButtonStyle.Danger),
+						),
 				),
 			)
 		}

@@ -171,6 +171,55 @@ describe('MyBetsPaginationService parlay history', () => {
 		expect(result.historyParlays).toHaveLength(1)
 	})
 
+	it('loads every parlay API page before local history pagination', async () => {
+		const betsWrapper = {
+			getUserBetslips: vi.fn().mockResolvedValue([]),
+		}
+		const parlaysWrapper = {
+			getUserParlays: vi
+				.fn()
+				.mockResolvedValueOnce({
+					parlays: [parlay({ id: 'page-1', status: 'lost' })],
+					page: 1,
+					limit: 100,
+					total: 201,
+					total_pages: 3,
+				})
+				.mockResolvedValueOnce({
+					parlays: [parlay({ id: 'page-2', status: 'lost' })],
+					page: 2,
+					limit: 100,
+					total: 201,
+					total_pages: 3,
+				})
+				.mockResolvedValueOnce({
+					parlays: [parlay({ id: 'page-3', status: 'lost' })],
+					page: 3,
+					limit: 100,
+					total: 201,
+					total_pages: 3,
+				}),
+		}
+		const service = new MyBetsPaginationService(
+			betsWrapper as never,
+			parlaysWrapper as never,
+		)
+
+		const result = await service.fetchUserBets('user-1')
+
+		expect(parlaysWrapper.getUserParlays).toHaveBeenNthCalledWith(
+			1,
+			'user-1',
+			{ page: 1, limit: 100 },
+		)
+		expect(parlaysWrapper.getUserParlays).toHaveBeenNthCalledWith(
+			3,
+			'user-1',
+			{ page: 3, limit: 100 },
+		)
+		expect(result.historyParlays).toHaveLength(3)
+	})
+
 	it('paginates singles and parlays together in date order', () => {
 		const service = new MyBetsPaginationService(
 			{ getUserBetslips: vi.fn() } as never,
@@ -194,5 +243,75 @@ describe('MyBetsPaginationService parlay history', () => {
 		expect(page.entries).toHaveLength(2)
 		expect(page.entries[0]?.kind).toBe('parlay')
 		expect(page.entries[1]?.kind).toBe('bet')
+	})
+
+	it('keeps mixed history chronology in the rendered embed', async () => {
+		const service = new MyBetsPaginationService(
+			{ getUserBetslips: vi.fn() } as never,
+			{ getUserParlays: vi.fn() } as never,
+		)
+		const formatter = new MyBetsFormatterService()
+		const bet = {
+			betid: 1,
+			betresult: 'won',
+			team: 'SINGLE',
+			amount: 10,
+			payout: 20,
+			profit: 10,
+			dateofbet: '2026-07-10T00:00:00.000Z',
+		} as never
+		const newerParlay = parlay({
+			created_at: '2026-07-11T00:00:00.000Z',
+			status: 'lost',
+		})
+		const historyPage = service.getHistoryPage([bet], 1, [newerParlay])
+
+		const embed = await formatter.buildHistoryEmbed(
+			historyPage,
+			service.groupBetsByDate(historyPage.bets),
+		)
+		const description = embed.toJSON().description ?? ''
+
+		expect(description.indexOf('3-leg Parlay')).toBeLessThan(
+			description.indexOf('SINGLE'),
+		)
+	})
+
+	it('reserves the navigation row when capping cancellation buttons', async () => {
+		const formatter = new MyBetsFormatterService()
+		const pendingParlays = Array.from({ length: 21 }, (_, index) =>
+			parlay({
+				id: `parlay-${index}`,
+				legs: parlay().legs.map((leg) => ({
+					...leg,
+					commence_time: '2099-01-01T00:00:00.000Z',
+				})),
+			}),
+		)
+		const response = await formatter.buildEmbedResponse({
+			userId: 'user-1',
+			pendingBets: [],
+			pendingParlays,
+			historyParlays: [],
+			historyPage: {
+				bets: [],
+				parlays: [],
+				entries: [],
+				page: 1,
+				totalPages: 2,
+			},
+			groupedBets: [],
+		})
+		const components = response.components as unknown as ReadonlyArray<{
+			components?: Array<{ data?: { custom_id?: string } }>
+		}>
+		const cancelButtons = components
+			.flatMap((row) => row.components ?? [])
+			.filter((button) =>
+				button.data?.custom_id?.startsWith('parlay_cancel_'),
+			)
+
+		expect(components).toHaveLength(5)
+		expect(cancelButtons).toHaveLength(20)
 	})
 })
