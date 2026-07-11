@@ -173,7 +173,7 @@ describe('PropPostingHandler delivery idempotency', () => {
 		expect(mocks.sendToChannel).toHaveBeenCalledTimes(1)
 	})
 
-	it('keeps an in-flight claim when the post-send marker cannot be persisted', async () => {
+	it('does not send when the durable sent reservation cannot be persisted', async () => {
 		const handler = new PropPostingHandler()
 		mocks.setex.mockRejectedValue(new Error('Redis unavailable'))
 
@@ -183,23 +183,8 @@ describe('PropPostingHandler delivery idempotency', () => {
 			'nba',
 			'channel-1',
 		)
-		mocks.get.mockResolvedValue('processing')
-		const retry = await handler.postPropsToChannel(
-			'guild-1',
-			[prop],
-			'nba',
-			'channel-1',
-		)
-
-		expect(result).toEqual({ posted: 1, filtered: 0, failed: 0, total: 1 })
-		expect(retry).toEqual({ posted: 0, filtered: 1, failed: 0, total: 1 })
-		expect(mocks.sendToChannel).toHaveBeenCalledTimes(1)
-		expect(mocks.setex).toHaveBeenNthCalledWith(
-			2,
-			expect.any(String),
-			7 * 24 * 60 * 60,
-			'processing',
-		)
+		expect(result).toEqual({ posted: 0, filtered: 0, failed: 1, total: 1 })
+		expect(mocks.sendToChannel).not.toHaveBeenCalled()
 		expect(mocks.logger.error).toHaveBeenCalledWith(
 			expect.objectContaining({
 				event: 'props_delivery_marker_write_failed',

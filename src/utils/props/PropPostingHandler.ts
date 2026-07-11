@@ -96,6 +96,14 @@ export class PropPostingHandler {
 			}
 
 			try {
+				// Reserve the durable sent state before Discord delivery. This
+				// closes the crash window between Discord accepting a message and
+				// the marker write; the workflow is intentionally at-most-once.
+				if (!(await this.markDelivered(deliveryKey))) {
+					result.failed++
+					await this.releaseDeliveryClaim(deliveryKey)
+					continue
+				}
 				const embed = await this.createPropEmbed(prop, sport)
 				const buttons = this.createPropButtons(prop)
 
@@ -114,13 +122,6 @@ export class PropPostingHandler {
 						guildId,
 						messageOptions,
 					)
-				}
-				const markerPersisted = await this.markDelivered(deliveryKey)
-				if (!markerPersisted) {
-					// Discord has already accepted the message. Keep a durable
-					// processing lease when the final marker write fails so a
-					// producer retry cannot post the same message a second time.
-					await this.retainDeliveryClaim(deliveryKey)
 				}
 				result.posted++
 			} catch (error) {
@@ -211,23 +212,6 @@ export class PropPostingHandler {
 				error: error instanceof Error ? error.message : String(error),
 			})
 			return false
-		}
-	}
-
-	private async retainDeliveryClaim(deliveryKey: string): Promise<void> {
-		try {
-			await redisCache.setex(
-				deliveryKey,
-				PropPostingHandler.DELIVERY_TTL_SECONDS,
-				'processing',
-			)
-		} catch (error) {
-			logger.error({
-				method: 'PropPostingHandler',
-				event: 'props_delivery_claim_retention_failed',
-				deliveryKey,
-				error: error instanceof Error ? error.message : String(error),
-			})
 		}
 	}
 
