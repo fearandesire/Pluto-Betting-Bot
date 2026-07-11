@@ -196,6 +196,38 @@ export default class GuildWrapper {
 	}
 
 	/**
+	 * Sends a message to an explicitly supplied Discord text channel.
+	 *
+	 * Khronos includes the resolved prediction channel in its daily props
+	 * payload. Using that channel here keeps the message reference returned to
+	 * Khronos authoritative even when guild configuration changes between
+	 * payload creation and delivery.
+	 */
+	async sendToChannel(
+		channelId: string,
+		options: MessageCreateOptions,
+	): Promise<Message> {
+		this.validateSnowflake(channelId, 'prediction', 'unknown')
+
+		let channel: Channel | null
+		try {
+			channel = await container.client.channels.fetch(channelId)
+		} catch (error) {
+			throw new Error(
+				`Failed to fetch prediction channel ${channelId}: ${error instanceof Error ? error.message : String(error)}`,
+			)
+		}
+
+		if (!channel || channel.type !== ChannelType.GuildText) {
+			throw new Error(
+				`Prediction channel ${channelId} could not be found or is not a text channel`,
+			)
+		}
+
+		return await channel.send(options)
+	}
+
+	/**
 	 * Retrieves the configured betting channel for a guild
 	 * @param guildId - Discord guild ID
 	 * @returns TextChannel for posting bets
