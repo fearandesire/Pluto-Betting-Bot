@@ -135,3 +135,8 @@ export default class ParlayApiWrapper {
 		return response.data
 	}
 }
+
+/** Alias used by mybets surfaces (TF-969). */
+export type UserParlay = ParlayResponse
+/** Alias used by mybets leg formatting (TF-969). */
+export type ParlayLeg = PlacedParlayLeg
