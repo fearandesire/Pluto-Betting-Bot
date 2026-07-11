@@ -1,9 +1,15 @@
 // Import interfaces and potentially the Discord client type
 import { container } from '@sapphire/framework'
 import { EmbedBuilder } from 'discord.js'
+import type {
+	BigWinAnnouncementService,
+	BigWinParlayInput,
+	BigWinSingleBetInput,
+} from '../../../../services/engagement/BigWinAnnouncementService.js'
 import { logger } from '../../../logging/WinstonLogger.js'
 import MoneyFormatter from '../../common/money-formatting/money-format.js'
 import type {
+	BetNotificationWon,
 	DisplayBetNotification,
 	DisplayBetNotificationLost,
 	DisplayBetNotificationPush,
@@ -16,6 +22,12 @@ import type {
 import type { ParlayResultNotification } from './parlay-notification-contract.js'
 
 export default class NotificationService {
+	private bigWinAnnouncementService?: BigWinAnnouncementService
+
+	constructor(bigWinAnnouncementService?: BigWinAnnouncementService) {
+		this.bigWinAnnouncementService = bigWinAnnouncementService
+	}
+
 	async processBetResults(data: NotifyBetUsers): Promise<void> {
 		const hasWinners = data.winners && data.winners.length > 0
 		const hasLosers = data.losers && data.losers.length > 0
@@ -71,6 +83,7 @@ export default class NotificationService {
 
 				// Use displayWinner for user notifications
 				await this.notifyUser(displayWinner)
+				await this.announceSingleBetWin(winner)
 			}
 		}
 
@@ -124,6 +137,55 @@ export default class NotificationService {
 	async processParlayResult(data: ParlayResultNotification): Promise<void> {
 		const embeds = this.buildParlayEmbeds(data)
 		await this.sendParlayEmbeds(data.user_id, data, embeds)
+		await this.announceParlayWin(data)
+	}
+
+	private async announceParlayWin(
+		data: ParlayResultNotification,
+	): Promise<void> {
+		if (data.kind !== 'won' || !data.guild_id) return
+
+		const payout = data.actual_payout ?? data.payout
+		if (payout === undefined) return
+
+		const input: BigWinParlayInput = {
+			parlayId: data.parlay_id,
+			guildId: data.guild_id,
+			userId: data.user_id,
+			payout,
+			stake: data.stake,
+			combinedOddsAmerican: data.combined_odds_american,
+			legs: data.legs.length,
+		}
+		const service = await this.getBigWinAnnouncementService()
+		await service.announceParlayWin(input)
+	}
+
+	private async announceSingleBetWin(
+		winner: BetNotificationWon,
+	): Promise<void> {
+		if (!winner.guildId) return
+
+		const input: BigWinSingleBetInput = {
+			betId: winner.betId,
+			guildId: winner.guildId,
+			userId: winner.userId,
+			payout: winner.result.payout,
+			betAmount: winner.result.betAmount,
+			team: winner.result.team,
+		}
+		const service = await this.getBigWinAnnouncementService()
+		await service.announceSingleBetWin(input)
+	}
+
+	private async getBigWinAnnouncementService(): Promise<BigWinAnnouncementService> {
+		if (!this.bigWinAnnouncementService) {
+			const module = await import(
+				'../../../../services/engagement/BigWinAnnouncementService.js'
+			)
+			this.bigWinAnnouncementService = new module.default()
+		}
+		return this.bigWinAnnouncementService
 	}
 
 	private buildParlayEmbeds(data: ParlayResultNotification): EmbedBuilder[] {

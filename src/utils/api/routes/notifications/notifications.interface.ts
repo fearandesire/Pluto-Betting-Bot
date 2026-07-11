@@ -29,6 +29,8 @@ export interface ResultPush {
 export interface BetNotificationBase {
 	userId: string
 	betId: number
+	/** Optional until Khronos includes guild context in bet-result callbacks. */
+	guildId?: string
 }
 
 export interface BetNotificationWon extends BetNotificationBase {

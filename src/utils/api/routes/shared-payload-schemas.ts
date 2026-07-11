@@ -4,6 +4,9 @@ import { z } from 'zod'
 const notificationEntryBaseSchema = z.object({
 	userId: z.string().min(1),
 	betId: z.number().int().nonnegative(),
+	/** Optional until Khronos includes guild context on bet-result callbacks. */
+	guildId: z.string().min(1).optional(),
+	guild_id: z.string().min(1).optional(),
 })
 
 const legacyPushSchema = z.object({

@@ -57,6 +57,12 @@ class InMemoryRedis {
 		return next
 	}
 
+	async decr(key: string) {
+		const next = Number(this.values.get(key) ?? 0) - 1
+		this.values.set(key, String(next))
+		return next
+	}
+
 	async expire(_key: string, _seconds: number) {
 		// Stub for testing: always returns 1, does not actually expire keys
 		return 1
