@@ -7,25 +7,20 @@ const NotificationRouter = new Router()
 
 NotificationRouter.post('/notifications/bets/results', async (ctx) => {
 	const rawPayload = ctx.request.body || {}
-	console.debug({
-		method: 'NotificationRouter',
-		message: 'Notification data received.',
-		data: rawPayload,
-	})
 
 	const validatedData = validateNotifyBetUsers(rawPayload)
 
 	if (!validatedData) {
-		console.debug({
+		logger.warn({
 			method: 'NotificationRouter',
-			message: 'Invalid notification data was received.',
-			data: rawPayload,
+			event: 'push_payload_rejected',
+			schema: 'notificationBetResults',
 		})
 		ctx.body = {
 			success: false,
 			error: 'Invalid notification data. Failed Zod validation.',
 		}
-		ctx.status = 400
+		ctx.status = 422
 		return
 	}
 

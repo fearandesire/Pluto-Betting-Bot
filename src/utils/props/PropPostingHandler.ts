@@ -8,6 +8,7 @@ import {
 } from 'discord.js'
 import { MarketKeyTranslations } from '../api/common/interfaces/market-translations.js'
 import GuildWrapper from '../api/Khronos/guild/guild-wrapper.js'
+import redisCache from '../cache/redis-instance.js'
 import StringUtils from '../common/string-utils.js'
 import TeamInfo from '../common/TeamInfo.js'
 import { logger } from '../logging/WinstonLogger.js'
@@ -46,6 +47,9 @@ export interface PostingResult {
  * ```
  */
 export class PropPostingHandler {
+	private static readonly DELIVERY_TTL_SECONDS = 7 * 24 * 60 * 60
+	private static readonly DELIVERY_CLAIM_TTL_SECONDS = 5 * 60
+	private static readonly DELIVERY_RELEASE_RETRY_TTL_SECONDS = 5
 	private guildWrapper: GuildWrapper
 
 	constructor() {
@@ -69,6 +73,7 @@ export class PropPostingHandler {
 		guildId: string,
 		props: ProcessedPropDto[],
 		sport: 'nfl' | 'nba',
+		channelId?: string,
 	): Promise<PostingResult> {
 		const result: PostingResult = {
 			posted: 0,
@@ -79,15 +84,45 @@ export class PropPostingHandler {
 
 		// 1 Embed:1 Pair
 		for (const prop of props) {
+			const deliveryKey = this.getDeliveryKey(guildId, channelId, prop)
+			const deliveryState = await this.claimDelivery(deliveryKey)
+			if (deliveryState === 'sent' || deliveryState === 'claimed') {
+				result.filtered++
+				continue
+			}
+			if (deliveryState === 'unavailable') {
+				result.failed++
+				continue
+			}
+
 			try {
+				// Reserve the durable sent state before Discord delivery. This
+				// closes the crash window between Discord accepting a message and
+				// the marker write; the workflow is intentionally at-most-once.
+				if (!(await this.markDelivered(deliveryKey))) {
+					result.failed++
+					await this.releaseDeliveryClaim(deliveryKey)
+					continue
+				}
 				const embed = await this.createPropEmbed(prop, sport)
 				const buttons = this.createPropButtons(prop)
 
-				await this.guildWrapper.sendToPredictionChannel(guildId, {
+				const messageOptions = {
 					embeds: [embed],
 					components: [buttons],
-				})
-
+				}
+				if (channelId) {
+					await this.guildWrapper.sendToChannel(
+						channelId,
+						messageOptions,
+						guildId,
+					)
+				} else {
+					await this.guildWrapper.sendToPredictionChannel(
+						guildId,
+						messageOptions,
+					)
+				}
 				result.posted++
 			} catch (error) {
 				logger.error('Failed to post prop pair', {
@@ -99,10 +134,137 @@ export class PropPostingHandler {
 					error,
 				})
 				result.failed++
+				await this.releaseDeliveryClaim(deliveryKey)
 			}
 		}
 
 		return result
+	}
+
+	private getDeliveryKey(
+		guildId: string,
+		channelId: string | undefined,
+		prop: ProcessedPropDto,
+	): string {
+		const destination = channelId ?? 'configured'
+		return [
+			'props:delivery',
+			guildId,
+			destination,
+			prop.over.outcome_uuid,
+			prop.under.outcome_uuid,
+		].join(':')
+	}
+
+	private async claimDelivery(
+		deliveryKey: string,
+	): Promise<'available' | 'sent' | 'claimed' | 'unavailable'> {
+		try {
+			const existing = await redisCache.get(deliveryKey)
+			if (existing === 'sent') return 'sent'
+			if (existing === 'processing') return 'claimed'
+			if (existing === 'retry') {
+				try {
+					const redis = redisCache as unknown as {
+						eval?: (
+							script: string,
+							numKeys: number,
+							...args: Array<string | number>
+						) => Promise<unknown>
+					}
+					if (!redis.eval) return 'claimed'
+					const reclaimed = await redis.eval(
+						"if redis.call('get', KEYS[1]) == 'retry' then return redis.call('set', KEYS[1], ARGV[1], 'EX', ARGV[2]) else return nil end",
+						1,
+						deliveryKey,
+						'processing',
+						PropPostingHandler.DELIVERY_CLAIM_TTL_SECONDS,
+					)
+					return reclaimed === 'OK' ? 'available' : 'claimed'
+				} catch {
+					return 'claimed'
+				}
+			}
+
+			const lock = await redisCache.set(
+				deliveryKey,
+				'processing',
+				'EX',
+				PropPostingHandler.DELIVERY_CLAIM_TTL_SECONDS,
+				'NX',
+			)
+			return lock === 'OK' ? 'available' : 'claimed'
+		} catch (error) {
+			logger.warn({
+				method: 'PropPostingHandler',
+				event: 'props_delivery_idempotency_unavailable',
+				deliveryKey,
+				error: error instanceof Error ? error.message : String(error),
+			})
+			return 'unavailable'
+		}
+	}
+
+	private async markDelivered(deliveryKey: string): Promise<boolean> {
+		try {
+			await redisCache.setex(
+				deliveryKey,
+				PropPostingHandler.DELIVERY_TTL_SECONDS,
+				'sent',
+			)
+			return true
+		} catch (error) {
+			logger.error({
+				method: 'PropPostingHandler',
+				event: 'props_delivery_marker_write_failed',
+				deliveryKey,
+				error: error instanceof Error ? error.message : String(error),
+			})
+			return false
+		}
+	}
+
+	private async releaseDeliveryClaim(deliveryKey: string): Promise<void> {
+		try {
+			await redisCache.del(deliveryKey)
+		} catch (error) {
+			logger.warn({
+				method: 'PropPostingHandler',
+				event: 'props_delivery_claim_release_failed',
+				deliveryKey,
+				error: error instanceof Error ? error.message : String(error),
+			})
+			try {
+				await redisCache.setex(
+					deliveryKey,
+					PropPostingHandler.DELIVERY_RELEASE_RETRY_TTL_SECONDS,
+					'retry',
+				)
+			} catch (fallbackError) {
+				try {
+					await redisCache.set(deliveryKey, 'retry')
+				} catch (lastError) {
+					logger.error({
+						method: 'PropPostingHandler',
+						event: 'props_delivery_claim_cleanup_failed',
+						deliveryKey,
+						error:
+							lastError instanceof Error
+								? lastError.message
+								: String(lastError),
+					})
+				}
+				logger.warn({
+					method: 'PropPostingHandler',
+					event: 'props_delivery_claim_retry_marker_failed',
+					deliveryKey,
+					error:
+						fallbackError instanceof Error
+							? fallbackError.message
+							: String(fallbackError),
+				})
+			}
+		}
 	}
 
 	/**

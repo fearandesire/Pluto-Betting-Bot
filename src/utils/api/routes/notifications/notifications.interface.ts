@@ -10,8 +10,8 @@ export interface ResultWon {
 	betAmount: number
 	payout: number
 	profit: number
-	newBalance: number
-	oldBalance: number
+	newBalance?: number
+	oldBalance?: number
 }
 
 export interface ResultLost {

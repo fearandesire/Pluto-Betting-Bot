@@ -28,12 +28,15 @@ export default class NotificationService {
 		// Process winners (only if not null and has items)
 		if (hasWinners) {
 			for (const winner of data.winners!) {
-				if (!winner.result.oldBalance || !winner.result.newBalance) {
-					logger.error({
+				if (
+					winner.result.oldBalance === undefined ||
+					winner.result.newBalance === undefined
+				) {
+					logger.warn({
 						method: this.processBetResults.name,
-						message: `Missing balance data for user ${winner.userId}`,
+						event: 'notification_balance_unavailable',
+						message: `Missing balance data for user ${winner.userId}; sending notification without balance delta`,
 					})
-					continue
 				}
 
 				const formattedAmounts = await MoneyFormatter.formatAmounts({
@@ -51,12 +54,14 @@ export default class NotificationService {
 					displayBetAmount,
 					displayPayout,
 					displayProfit,
-					displayNewBalance: MoneyFormatter.toUSD(
-						winner.result.newBalance,
-					),
-					displayOldBalance: MoneyFormatter.toUSD(
-						winner.result.oldBalance,
-					),
+					displayNewBalance:
+						winner.result.newBalance === undefined
+							? 'Unavailable'
+							: MoneyFormatter.toUSD(winner.result.newBalance),
+					displayOldBalance:
+						winner.result.oldBalance === undefined
+							? 'Unavailable'
+							: MoneyFormatter.toUSD(winner.result.oldBalance),
 				}
 				const displayWinner: DisplayBetNotificationWon = {
 					...winner,
