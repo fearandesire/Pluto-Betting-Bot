@@ -11,13 +11,12 @@ import { sendPredictionCommandDeprecation } from '../../utils/commands/predictio
 })
 export class UserCommand extends Command {
 	public override registerApplicationCommands(registry: Command.Registry) {
-		registry.registerChatInputCommand(
-			(builder) =>
-				builder
-					.setName(this.name)
-					.setDescription(this.description)
-					.setContexts(InteractionContextType.Guild),
-			{ idHints: ['1298280482123026536'] },
+		// No id hint: the former history hint was shared with /prediction.
+		registry.registerChatInputCommand((builder) =>
+			builder
+				.setName(this.name)
+				.setDescription(this.description)
+				.setContexts(InteractionContextType.Guild),
 		)
 	}
 

@@ -127,8 +127,8 @@ describe('/predictions', () => {
 			total_users: 1,
 		})
 		mockGetActivePredictionsForUser.mockResolvedValue([
-			{ id: 'pending-1' },
-			{ id: 'pending-2' },
+			{ id: 'pending-1', guild_id: 'guild-1' },
+			{ id: 'pending-2', guild_id: 'guild-1' },
 		])
 
 		const interaction = makeInteraction()
@@ -163,6 +163,20 @@ describe('/predictions', () => {
 	it('returns friendly empty copy when server stats and pending data are empty', async () => {
 		mockGetLeaderboard.mockResolvedValue({ entries: [], total_users: 0 })
 		mockGetActivePredictionsForUser.mockResolvedValue([])
+
+		const interaction = makeInteraction()
+		await command.handleStats(interaction as never)
+
+		expect(interaction.editReply).toHaveBeenCalledWith({
+			content: "You haven't made any predictions yet.",
+		})
+	})
+
+	it('does not count pending predictions from another guild', async () => {
+		mockGetLeaderboard.mockResolvedValue({ entries: [], total_users: 0 })
+		mockGetActivePredictionsForUser.mockResolvedValue([
+			{ id: 'pending-other-guild', guild_id: 'guild-2' },
+		])
 
 		const interaction = makeInteraction()
 		await command.handleStats(interaction as never)

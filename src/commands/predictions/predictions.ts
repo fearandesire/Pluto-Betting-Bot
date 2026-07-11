@@ -198,12 +198,15 @@ export class UserCommand extends Subcommand {
 		}
 
 		try {
-			const [leaderboard, pending] = await Promise.all([
+			const [leaderboard, allPending] = await Promise.all([
 				new LeaderboardWrapper().getLeaderboard({ guildId }),
 				new PredictionApiWrapper().getActivePredictionsForUser({
 					userId: interaction.user.id,
 				}),
 			])
+			const pending = allPending.filter(
+				(prediction) => prediction.guild_id === guildId,
+			)
 
 			const entry = leaderboard.entries.find(
 				(candidate) => candidate.user_id === interaction.user.id,
