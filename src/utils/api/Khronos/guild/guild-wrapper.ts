@@ -196,17 +196,21 @@ export default class GuildWrapper {
 	}
 
 	/**
-	 * Sends a message to an explicitly supplied text channel.
+	 * Sends a message to an explicitly supplied Discord text channel.
 	 *
-	 * This is used by trusted cross-service payloads that carry a channel
-	 * snapshot (for example, the Khronos daily-props delivery contract). The
-	 * configured prediction-channel helper remains the default for commands.
+	 * Trusted cross-service payloads can carry a resolved channel snapshot
+	 * (for example, Khronos daily props delivery). Using that channel keeps
+	 * returned message references authoritative even if guild configuration
+	 * changes before delivery. The configured prediction helper remains the
+	 * default for command-driven posting.
 	 */
 	async sendToChannel(
 		channelId: string,
 		options: MessageCreateOptions,
 		expectedGuildId?: string,
 	): Promise<Message> {
+		this.validateSnowflake(channelId, 'target', expectedGuildId ?? 'unknown')
+
 		let channel: Channel | null
 		try {
 			channel = await container.client.channels.fetch(channelId)

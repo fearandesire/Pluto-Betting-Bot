@@ -1,7 +1,7 @@
 import Router from '@koa/router'
 import { logger } from '../../../logging/WinstonLogger.js'
 import { PropPostingHandler } from '../../../props/PropPostingHandler.js'
-import { validateDailyPropsPayload } from '../notifications/notification-utils.js'
+import { dailyPropsPayloadSchema } from '../shared-payload-schemas.js'
 
 const PropsRouter = new Router()
 const propPostingHandler = new PropPostingHandler()
@@ -9,17 +9,27 @@ const propPostingHandler = new PropPostingHandler()
 const supportedSports = new Set(['nba', 'nfl'])
 
 PropsRouter.post('/props/daily', async (ctx) => {
-	const validatedPayload = validateDailyPropsPayload(ctx.request.body || {})
-	if (!validatedPayload) {
+	const parsedPayload = dailyPropsPayloadSchema.safeParse(
+		ctx.request.body ?? {},
+	)
+
+	if (!parsedPayload.success) {
+		logger.warn({
+			method: 'PropsRouter',
+			event: 'push_payload_rejected',
+			schema: 'dailyPropsPayload',
+			issues: parsedPayload.error.issues,
+		})
 		ctx.status = 422
 		ctx.body = {
 			success: false,
 			error: 'Invalid props payload. Failed Zod validation.',
+			issues: parsedPayload.error.issues,
 		}
 		return
 	}
 
-	const unsupportedSport = validatedPayload.guilds.find(
+	const unsupportedSport = parsedPayload.data.guilds.find(
 		(guild) => !supportedSports.has(guild.sport.toLowerCase()),
 	)
 	if (unsupportedSport) {
@@ -43,41 +53,45 @@ PropsRouter.post('/props/daily', async (ctx) => {
 	}
 
 	try {
-		const results = await Promise.all(
-			validatedPayload.guilds.map((guild) =>
+		const postingResults = await Promise.all(
+			parsedPayload.data.guilds.map((guild) =>
 				propPostingHandler.postPropsToChannel(
 					guild.guild_id,
-					validatedPayload.props,
+					parsedPayload.data.props,
 					guild.sport.toLowerCase() as 'nba' | 'nfl',
 					guild.channel_id,
 				),
 			),
 		)
-		const failed = results.reduce(
+		const references = postingResults.flatMap((result) => result.results)
+		const failures = postingResults.flatMap((result) => result.failures)
+		const failed = postingResults.reduce(
 			(total, result) => total + result.failed,
 			0,
 		)
+
 		if (failed > 0) {
 			logger.error({
 				method: 'PropsRouter',
 				event: 'props_daily_delivery_failed',
-				failed,
-				results,
+				posted_count: references.length,
+				failed_count: failed,
+				failures,
+				results: postingResults,
 			})
+			ctx.set('X-Props-Failed', String(failed))
 			ctx.status = 500
 			ctx.body = {
 				success: false,
 				error: 'Failed to deliver one or more daily props.',
-				results,
+				posted: references,
+				failures,
 			}
 			return
 		}
 
 		ctx.status = 200
-		ctx.body = {
-			success: true,
-			results,
-		}
+		ctx.body = references
 	} catch (error) {
 		logger.error({
 			method: 'PropsRouter',

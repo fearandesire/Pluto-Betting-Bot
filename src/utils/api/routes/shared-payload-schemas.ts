@@ -80,31 +80,86 @@ const fallbackDailyPropsPayloadSchema = z.object({
 	),
 })
 
+const fallbackPropSettledNotificationSchema = z.object({
+	outcome_uuid: z.string().uuid(),
+	result: z.enum(['won', 'lost', 'push', 'void']),
+	winning_side_display: z.string().optional(),
+	actual_value: z.number().finite().nullable().optional(),
+	market_key: z.string().min(1),
+	description: z.string().min(1),
+	point: z.number().finite().nullable().optional(),
+	tallies: z.object({
+		correct: z.number().int().nonnegative(),
+		incorrect: z.number().int().nonnegative(),
+		total: z.number().int().nonnegative(),
+	}),
+	messages: z
+		.array(
+			z.object({
+				guild_id: z.string().min(1),
+				channel_id: z.string().min(1),
+				message_id: z.string().min(1),
+			}),
+		)
+		.min(1),
+})
+
 export type NotificationBetResults = z.infer<
 	typeof fallbackNotificationBetResultsSchema
 >
 export type DailyPropsPayload = z.infer<typeof fallbackDailyPropsPayloadSchema>
+export type PropSettledNotification = z.infer<
+	typeof fallbackPropSettledNotificationSchema
+>
 
 type SharedPayloadExports = {
-	betNotificationWonSchema?: unknown
 	notificationBetResultsSchema?: z.ZodType<NotificationBetResults>
 	dailyPropsPayloadSchema?: z.ZodType<DailyPropsPayload>
+	propSettledNotificationSchema?: z.ZodType<PropSettledNotification>
 }
 
 const sharedPayloadExports = KhronosTypes as unknown as SharedPayloadExports
 
-/**
- * Use the published shared schemas when available. The fallback is a strict
- * compatibility bridge for deployments whose package bump precedes TF-939's
- * schema release; it can be removed once all supported versions export the
- * new contracts.
- */
-export const notificationBetResultsSchema =
-	(sharedPayloadExports.betNotificationWonSchema
-		? sharedPayloadExports.notificationBetResultsSchema
-		: fallbackNotificationBetResultsSchema) ??
-	fallbackNotificationBetResultsSchema
+const legacyNotificationBetResultsProbe: NotificationBetResults = {
+	winners: [],
+	losers: [],
+	pushes: [{ userid: 'probe', amount: 1, betid: 1, team: 'probe-team' }],
+}
 
-export const dailyPropsPayloadSchema =
-	sharedPayloadExports.dailyPropsPayloadSchema ??
-	fallbackDailyPropsPayloadSchema
+function isUsableSchema<T>(
+	schema: z.ZodType<T> | undefined,
+): schema is z.ZodType<T> {
+	return schema !== undefined && schema._def?.type !== 'never'
+}
+
+function supportsLegacyNotificationPushes(
+	schema: z.ZodType<NotificationBetResults> | undefined,
+): schema is z.ZodType<NotificationBetResults> {
+	return (
+		isUsableSchema(schema) &&
+		schema.safeParse(legacyNotificationBetResultsProbe).success
+	)
+}
+
+/**
+ * Consume the published Khronos contracts when available while keeping strict
+ * compatibility bridges for deployments that have not yet received the schema
+ * releases backing these payloads.
+ */
+export const notificationBetResultsSchema = supportsLegacyNotificationPushes(
+	sharedPayloadExports.notificationBetResultsSchema,
+)
+	? sharedPayloadExports.notificationBetResultsSchema
+	: fallbackNotificationBetResultsSchema
+
+export const dailyPropsPayloadSchema = isUsableSchema(
+	sharedPayloadExports.dailyPropsPayloadSchema,
+)
+	? sharedPayloadExports.dailyPropsPayloadSchema
+	: fallbackDailyPropsPayloadSchema
+
+export const propSettledNotificationSchema = isUsableSchema(
+	sharedPayloadExports.propSettledNotificationSchema,
+)
+	? sharedPayloadExports.propSettledNotificationSchema
+	: fallbackPropSettledNotificationSchema
