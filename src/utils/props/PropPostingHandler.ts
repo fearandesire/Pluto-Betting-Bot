@@ -48,8 +48,6 @@ export interface PostingResult {
  */
 export class PropPostingHandler {
 	private static readonly DELIVERY_TTL_SECONDS = 7 * 24 * 60 * 60
-	private static readonly DELIVERY_LOCK_TTL_SECONDS = 5 * 60
-	private static readonly localDeliveryMarkers = new Map<string, number>()
 	private guildWrapper: GuildWrapper
 
 	constructor() {
@@ -90,8 +88,11 @@ export class PropPostingHandler {
 				result.filtered++
 				continue
 			}
+			if (deliveryState === 'unavailable') {
+				result.failed++
+				continue
+			}
 
-			let releaseLock = true
 			try {
 				const embed = await this.createPropEmbed(prop, sport)
 				const buttons = this.createPropButtons(prop)
@@ -111,13 +112,6 @@ export class PropPostingHandler {
 						messageOptions,
 					)
 				}
-				if (!(await this.markDelivered(deliveryKey))) {
-					// Discord accepted the message, so returning a retryable
-					// failure would replay it. Keep the claim lock as a best-effort
-					// fallback until the durable marker can be written or expires.
-					releaseLock = false
-				}
-
 				result.posted++
 			} catch (error) {
 				logger.error('Failed to post prop pair', {
@@ -129,10 +123,7 @@ export class PropPostingHandler {
 					error,
 				})
 				result.failed++
-			} finally {
-				if (releaseLock) {
-					await this.releaseDeliveryLock(deliveryKey)
-				}
+				await this.releaseDeliveryClaim(deliveryKey)
 			}
 		}
 
@@ -154,22 +145,17 @@ export class PropPostingHandler {
 		].join(':')
 	}
 
-	private getDeliveryLockKey(deliveryKey: string): string {
-		return `${deliveryKey}:lock`
-	}
-
 	private async claimDelivery(
 		deliveryKey: string,
-	): Promise<'available' | 'sent' | 'claimed'> {
+	): Promise<'available' | 'sent' | 'claimed' | 'unavailable'> {
 		try {
-			if (this.hasLocalDeliveryMarker(deliveryKey)) return 'sent'
 			if ((await redisCache.exists(deliveryKey)) > 0) return 'sent'
 
 			const lock = await redisCache.set(
-				this.getDeliveryLockKey(deliveryKey),
-				'1',
+				deliveryKey,
+				'claimed',
 				'EX',
-				PropPostingHandler.DELIVERY_LOCK_TTL_SECONDS,
+				PropPostingHandler.DELIVERY_TTL_SECONDS,
 				'NX',
 			)
 			return lock === 'OK' ? 'available' : 'claimed'
@@ -180,75 +166,20 @@ export class PropPostingHandler {
 				deliveryKey,
 				error: error instanceof Error ? error.message : String(error),
 			})
-			return 'available'
+			return 'unavailable'
 		}
 	}
 
-	private hasLocalDeliveryMarker(deliveryKey: string): boolean {
-		const deliveredAt =
-			PropPostingHandler.localDeliveryMarkers.get(deliveryKey)
-		if (deliveredAt === undefined) return false
-		if (
-			Date.now() - deliveredAt >=
-			PropPostingHandler.DELIVERY_TTL_SECONDS * 1000
-		) {
-			PropPostingHandler.localDeliveryMarkers.delete(deliveryKey)
-			return false
-		}
-		return true
-	}
-
-	private rememberLocalDelivery(deliveryKey: string): void {
-		PropPostingHandler.localDeliveryMarkers.set(deliveryKey, Date.now())
-	}
-
-	private async releaseDeliveryLock(deliveryKey: string): Promise<void> {
+	private async releaseDeliveryClaim(deliveryKey: string): Promise<void> {
 		try {
-			await redisCache.del(this.getDeliveryLockKey(deliveryKey))
+			await redisCache.del(deliveryKey)
 		} catch (error) {
 			logger.warn({
 				method: 'PropPostingHandler',
-				event: 'props_delivery_lock_release_failed',
+				event: 'props_delivery_claim_release_failed',
 				deliveryKey,
 				error: error instanceof Error ? error.message : String(error),
 			})
-		}
-	}
-
-	private async markDelivered(deliveryKey: string): Promise<boolean> {
-		this.rememberLocalDelivery(deliveryKey)
-		try {
-			await redisCache.setex(
-				deliveryKey,
-				PropPostingHandler.DELIVERY_TTL_SECONDS,
-				'1',
-			)
-			return true
-		} catch (error) {
-			logger.error({
-				method: 'PropPostingHandler',
-				event: 'props_delivery_marker_write_failed',
-				deliveryKey,
-				error: error instanceof Error ? error.message : String(error),
-			})
-			try {
-				await redisCache.setex(
-					this.getDeliveryLockKey(deliveryKey),
-					PropPostingHandler.DELIVERY_TTL_SECONDS,
-					'sent-fallback',
-				)
-			} catch (fallbackError) {
-				logger.error({
-					method: 'PropPostingHandler',
-					event: 'props_delivery_fallback_lock_failed',
-					deliveryKey,
-					error:
-						fallbackError instanceof Error
-							? fallbackError.message
-							: String(fallbackError),
-				})
-			}
-			return false
 		}
 	}
 
