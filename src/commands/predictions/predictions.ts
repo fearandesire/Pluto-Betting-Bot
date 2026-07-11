@@ -1,7 +1,4 @@
-import type {
-	AllUserPredictionsDto,
-	SimpleLeaderboardResponseDto,
-} from '@pluto-khronos/api-client'
+import type { AllUserPredictionsDto } from '@pluto-khronos/api-client'
 import { GetAllPredictionsFilteredStatusEnum } from '@pluto-khronos/api-client'
 import { ApplyOptions } from '@sapphire/decorators'
 import { PaginatedMessageEmbedFields } from '@sapphire/discord.js-utilities'
@@ -16,13 +13,23 @@ import _ from 'lodash'
 import { teamResolver } from 'resolve-team'
 import embedColors from '../../lib/colorsConfig.js'
 import { LEADERBOARD_SCORING } from '../../lib/scoring-constants.js'
-import LeaderboardWrapper from '../../utils/api/Khronos/leaderboard/leaderboard-wrapper.js'
+import LeaderboardWrapper, {
+	type LeaderboardResponseWithStreaks,
+} from '../../utils/api/Khronos/leaderboard/leaderboard-wrapper.js'
 import PredictionApiWrapper from '../../utils/api/Khronos/prediction/predictionApiWrapper.js'
 import PropsApiWrapper from '../../utils/api/Khronos/props/props-api-wrapper.js'
+import StatsWrapper, {
+	type PredictionStats,
+} from '../../utils/api/Khronos/stats/stats-wrapper.js'
 import ClientTools from '../../utils/bot_res/ClientTools.js'
 import { DateManager } from '../../utils/common/DateManager.js'
 import TeamInfo from '../../utils/common/TeamInfo.js'
 import Pagination from '../../utils/embeds/pagination.js'
+import {
+	formatBadge,
+	formatStreakLine,
+	type StreakBadgeTier,
+} from '../../utils/predictions/streak-display.js'
 
 /**
  * Reserved command id for the consolidated group. Legacy aliases retain their
@@ -30,6 +37,27 @@ import Pagination from '../../utils/embeds/pagination.js'
  * the migration window.
  */
 const PREDICTIONS_COMMAND_ID_HINTS = ['1298280482123026537']
+
+/** Resolve display badge from the current streak when older API payloads omit it. */
+export function resolveStreakBadgeTier(
+	currentStreak: number,
+	reportedTier: StreakBadgeTier = null,
+): StreakBadgeTier {
+	if (reportedTier !== null) return reportedTier
+	if (currentStreak >= 10) return 10
+	if (currentStreak >= 5) return 5
+	if (currentStreak >= 3) return 3
+	return null
+}
+
+/** Keep leaderboard marker copy consistent across pages and future clients. */
+export function formatStreakBadge(
+	currentStreak: number,
+	reportedTier: StreakBadgeTier = null,
+): string {
+	const tier = resolveStreakBadgeTier(currentStreak, reportedTier)
+	return formatBadge(tier)
+}
 
 @ApplyOptions<Subcommand.Options>({
 	name: 'predictions',
@@ -204,6 +232,20 @@ export class UserCommand extends Subcommand {
 					userId: interaction.user.id,
 				}),
 			])
+			let predictionStats: PredictionStats | null = null
+			try {
+				predictionStats = await new StatsWrapper().getPredictionStats({
+					userId: interaction.user.id,
+					guildId,
+				})
+			} catch (error) {
+				// Keep stats usable while a mixed-version Khronos deployment rolls
+				// out, without presenting stale leaderboard streaks as personal stats.
+				this.container.logger.warn(
+					'Prediction streak stats unavailable; using leaderboard fallback.',
+					error,
+				)
+			}
 			const pending = allPending.filter(
 				(prediction) => prediction.guild_id === guildId,
 			)
@@ -221,10 +263,18 @@ export class UserCommand extends Subcommand {
 			const correctPredictions = entry?.correct_predictions ?? 0
 			const incorrectPredictions = entry?.incorrect_predictions ?? 0
 			const winRate = entry?.success_rate ?? 0
+			const currentStreak = predictionStats?.current_streak ?? 0
+			const bestStreak = predictionStats?.best_streak ?? 0
+			const badgeTier = resolveStreakBadgeTier(
+				currentStreak,
+				predictionStats?.badge_tier ?? null,
+			)
 			const embed = new EmbedBuilder()
 				.setTitle('📊 Prediction Statistics')
 				.setColor(embedColors.PlutoBlue)
-				.setDescription(`Server stats for ${interaction.user.username}`)
+				.setDescription(
+					`Server stats for ${interaction.user.username}\n\n${formatStreakLine(currentStreak, bestStreak)}`,
+				)
 				.addFields(
 					{
 						name: 'Total Predictions',
@@ -252,9 +302,27 @@ export class UserCommand extends Subcommand {
 						value: `\`${pending.length}\``,
 						inline: true,
 					},
+					{
+						name: '🔥 Current Streak',
+						value: `\`${currentStreak}\``,
+						inline: true,
+					},
+					{
+						name: '🏆 Best Streak',
+						value: `\`${bestStreak}\``,
+						inline: true,
+					},
+					{
+						name: '🏅 Streak Badge',
+						value:
+							badgeTier === null
+								? '`None yet`'
+								: `\`🔥${badgeTier}\``,
+						inline: true,
+					},
 				)
 				.setFooter({
-					text: 'Streaks will appear here after the engagement rollout.',
+					text: "Use /predictions leaderboard to compare your streak • voids/pushes don't break streaks.",
 				})
 				.setTimestamp()
 
@@ -362,7 +430,7 @@ export class UserCommand extends Subcommand {
 	}
 
 	private parseLeaderboardData(
-		leaderboard: SimpleLeaderboardResponseDto,
+		leaderboard: LeaderboardResponseWithStreaks,
 	): ParsedLeaderboardEntry[] {
 		return leaderboard.entries.map((entry, index) => ({
 			userId: entry.user_id,
@@ -373,6 +441,9 @@ export class UserCommand extends Subcommand {
 					LEADERBOARD_SCORING.INCORRECT_PENALTY,
 			correctPredictions: entry.correct_predictions,
 			incorrectPredictions: entry.incorrect_predictions,
+			currentStreak: entry.current_streak,
+			bestStreak: entry.best_streak,
+			badgeTier: entry.badge_tier,
 		}))
 	}
 
@@ -389,7 +460,11 @@ export class UserCommand extends Subcommand {
 				const username = member?.username ?? entry.userId
 				const total =
 					entry.correctPredictions + entry.incorrectPredictions
-				return `${entry.position}. ${username} - **\`${entry.score}\`** *(${entry.correctPredictions}/${total})*`
+				const streakBadge = formatStreakBadge(
+					entry.currentStreak,
+					entry.badgeTier,
+				)
+				return `${entry.position}. ${username}${streakBadge} - **\`${entry.score}\`** *(${entry.correctPredictions}/${total})*`
 			}),
 		)
 
@@ -398,7 +473,7 @@ export class UserCommand extends Subcommand {
 			.setColor(embedColors.PlutoBlue)
 			.setDescription(description.join('\n'))
 			.setFooter({
-				text: `Page ${currentPage} of ${totalPages} | Total Entries: ${leaderboard.length}`,
+				text: `Page ${currentPage} of ${totalPages} | Total Entries: ${leaderboard.length} | 🔥3/5/10 = streak badge`,
 			})
 	}
 
@@ -478,4 +553,7 @@ interface ParsedLeaderboardEntry {
 	score: number
 	correctPredictions: number
 	incorrectPredictions: number
+	currentStreak: number
+	bestStreak: number
+	badgeTier: StreakBadgeTier
 }

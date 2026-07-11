@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockGetLeaderboard = vi.fn()
 const mockGetActivePredictionsForUser = vi.fn()
+const mockGetPredictionStats = vi.fn()
 
 vi.mock(
 	'../../../utils/api/Khronos/leaderboard/leaderboard-wrapper.js',
@@ -22,6 +23,12 @@ vi.mock(
 		}),
 	}),
 )
+
+vi.mock('../../../utils/api/Khronos/stats/stats-wrapper.js', () => ({
+	default: vi.fn().mockImplementation(function () {
+		return { getPredictionStats: mockGetPredictionStats }
+	}),
+}))
 
 vi.mock('../../../utils/api/Khronos/props/props-api-wrapper.js', () => ({
 	default: vi.fn().mockImplementation(function () {
@@ -55,7 +62,7 @@ vi.mock('@sapphire/discord.js-utilities', () => ({
 }))
 
 const { SlashCommandBuilder } = await import('discord.js')
-const { UserCommand } = await import('../predictions.js')
+const { formatStreakBadge, UserCommand } = await import('../predictions.js')
 
 function makeInteraction() {
 	return {
@@ -122,6 +129,9 @@ describe('/predictions', () => {
 					correct_predictions: 9,
 					incorrect_predictions: 3,
 					success_rate: 75,
+					current_streak: 0,
+					best_streak: 0,
+					badge_tier: null,
 				},
 			],
 			total_users: 1,
@@ -158,6 +168,103 @@ describe('/predictions', () => {
 				expect.objectContaining({ name: '⏳ Pending', value: '`2`' }),
 			]),
 		)
+	})
+
+	it('renders current and best streak from the Khronos stats contract', async () => {
+		mockGetLeaderboard.mockResolvedValue({
+			entries: [
+				{
+					user_id: 'user-1',
+					total_predictions: 12,
+					correct_predictions: 9,
+					incorrect_predictions: 3,
+					success_rate: 75,
+					current_streak: 4,
+					best_streak: 7,
+					badge_tier: 3,
+				},
+			],
+			total_users: 1,
+		})
+		mockGetActivePredictionsForUser.mockResolvedValue([])
+		mockGetPredictionStats.mockResolvedValue({
+			user_id: 'user-1',
+			correct_predictions: 9,
+			incorrect_predictions: 3,
+			total_predictions: 12,
+			success_rate: 75,
+			current_streak: 4,
+			best_streak: 7,
+			badge_tier: 3,
+		})
+
+		const interaction = makeInteraction()
+		await command.handleStats(interaction as never)
+
+		expect(mockGetPredictionStats).toHaveBeenCalledWith({
+			userId: 'user-1',
+			guildId: 'guild-1',
+		})
+		const [{ embeds }] = interaction.editReply.mock.calls.find(
+			([payload]) => payload.embeds,
+		) as [{ embeds: Array<{ toJSON: () => unknown }> }]
+		const embed = embeds[0].toJSON() as {
+			fields?: Array<{ name: string; value: string }>
+		}
+		expect(embed.fields).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({
+					name: '🔥 Current Streak',
+					value: '`4`',
+				}),
+				expect.objectContaining({
+					name: '🏆 Best Streak',
+					value: '`7`',
+				}),
+				expect.objectContaining({
+					name: '🏅 Streak Badge',
+					value: '`🔥3`',
+				}),
+			]),
+		)
+	})
+
+	it.each([
+		[0, ''],
+		[2, ''],
+		[3, ' 🔥3'],
+		[5, ' 🔥5'],
+		[10, ' 🔥10'],
+	] as const)('formats streak marker at threshold %i', (streak, expected) => {
+		expect(formatStreakBadge(streak)).toBe(expected)
+	})
+
+	it('renders a fire marker in leaderboard rows at the reported tier', async () => {
+		const createLeaderboardEmbed = (
+			command as unknown as {
+				createLeaderboardEmbed: (
+					entries: unknown[],
+					page: number,
+				) => Promise<{ toJSON: () => { description?: string } }>
+			}
+		).createLeaderboardEmbed.bind(command)
+		const embed = await createLeaderboardEmbed(
+			[
+				{
+					position: 1,
+					userId: 'user-1',
+					score: 88,
+					correctPredictions: 10,
+					incorrectPredictions: 2,
+					currentStreak: 5,
+					bestStreak: 6,
+					badgeTier: 5,
+				},
+			],
+			1,
+		)
+
+		expect(embed.toJSON().description).toContain('user-1 🔥5')
 	})
 
 	it('returns friendly empty copy when server stats and pending data are empty', async () => {
