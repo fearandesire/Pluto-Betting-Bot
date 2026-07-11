@@ -21,16 +21,28 @@ export function validateNotifyBetUsers(
 	}
 
 	return {
-		winners: (result.data.winners ?? []).map((winner) => ({
-			...winner,
-			guildId: winner.guildId ?? winner.guild_id,
-			result: { ...winner.result, outcome: 'won' as const },
-		})),
-		losers: (result.data.losers ?? []).map((loser) => ({
-			...loser,
-			guildId: loser.guildId ?? loser.guild_id,
-			result: { ...loser.result, outcome: 'lost' as const },
-		})),
+		winners: (result.data.winners ?? []).map((winner) => {
+			const withGuild = winner as typeof winner & {
+				guildId?: string
+				guild_id?: string
+			}
+			return {
+				...winner,
+				guildId: withGuild.guildId ?? withGuild.guild_id,
+				result: { ...winner.result, outcome: 'won' as const },
+			}
+		}),
+		losers: (result.data.losers ?? []).map((loser) => {
+			const withGuild = loser as typeof loser & {
+				guildId?: string
+				guild_id?: string
+			}
+			return {
+				...loser,
+				guildId: withGuild.guildId ?? withGuild.guild_id,
+				result: { ...loser.result, outcome: 'lost' as const },
+			}
+		}),
 		pushes: (result.data.pushes ?? []).map((push) => {
 			if ('userid' in push) {
 				return {
