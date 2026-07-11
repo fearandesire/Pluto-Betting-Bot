@@ -63,6 +63,9 @@ vi.mock('@sapphire/discord.js-utilities', () => ({
 
 const { SlashCommandBuilder } = await import('discord.js')
 const { formatStreakBadge, UserCommand } = await import('../predictions.js')
+const { formatStreakLine } = await import(
+	'../../../utils/predictions/streak-display.js'
+)
 
 function makeInteraction() {
 	return {
@@ -237,6 +240,52 @@ describe('/predictions', () => {
 		[10, ' 🔥10'],
 	] as const)('formats streak marker at threshold %i', (streak, expected) => {
 		expect(formatStreakBadge(streak)).toBe(expected)
+	})
+
+	it('does not present unavailable stats as a broken zero streak', async () => {
+		mockGetLeaderboard.mockResolvedValue({
+			entries: [
+				{
+					user_id: 'user-1',
+					total_predictions: 12,
+					correct_predictions: 9,
+					incorrect_predictions: 3,
+					success_rate: 75,
+					current_streak: 4,
+					best_streak: 7,
+					badge_tier: 3,
+				},
+			],
+			total_users: 1,
+		})
+		mockGetActivePredictionsForUser.mockResolvedValue([])
+		mockGetPredictionStats.mockRejectedValue(
+			new Error('stats endpoint unavailable'),
+		)
+
+		const interaction = makeInteraction()
+		await command.handleStats(interaction as never)
+
+		const [{ embeds }] = interaction.editReply.mock.calls.find(
+			([payload]) => payload.embeds,
+		) as [{ embeds: Array<{ toJSON: () => unknown }> }]
+		const embed = embeds[0].toJSON() as {
+			description?: string
+			fields?: Array<{ name: string; value: string }>
+		}
+		expect(embed.description).toContain(formatStreakLine(null, null))
+		expect(embed.fields).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({
+					name: '🔥 Current Streak',
+					value: '`Unavailable`',
+				}),
+				expect.objectContaining({
+					name: '🏅 Streak Badge',
+					value: '`Unavailable`',
+				}),
+			]),
+		)
 	})
 
 	it('renders a fire marker in leaderboard rows at the reported tier', async () => {

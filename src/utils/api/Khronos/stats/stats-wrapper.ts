@@ -31,26 +31,33 @@ export function parsePredictionStats(payload: unknown): PredictionStats {
 	}
 
 	const value = payload as Record<string, unknown>
+	const readField = (snakeCase: string, camelCase: string) =>
+		Object.prototype.hasOwnProperty.call(value, snakeCase)
+			? value[snakeCase]
+			: value[camelCase]
+	const userId = readField('user_id', 'userId')
 	const numericFields = [
-		'correct_predictions',
-		'incorrect_predictions',
-		'total_predictions',
-		'success_rate',
-		'current_streak',
-		'best_streak',
+		['correct_predictions', 'correctPredictions'],
+		['incorrect_predictions', 'incorrectPredictions'],
+		['total_predictions', 'totalPredictions'],
+		['success_rate', 'successRate'],
+		['current_streak', 'currentStreak'],
+		['best_streak', 'bestStreak'],
 	] as const
 	if (
-		typeof value.user_id !== 'string' ||
-		numericFields.some(
-			(field) =>
-				typeof value[field] !== 'number' ||
-				!Number.isFinite(value[field]),
-		)
+		typeof userId !== 'string' ||
+		numericFields.some(([snakeCase, camelCase]) => {
+			const field = readField(snakeCase, camelCase)
+			return typeof field !== 'number' || !Number.isFinite(field)
+		})
 	) {
 		throw new Error('Khronos returned an invalid prediction stats payload')
 	}
 
-	const badgeTier = value.badge_tier as PredictionStats['badge_tier']
+	const badgeTier = readField(
+		'badge_tier',
+		'badgeTier',
+	) as PredictionStats['badge_tier']
 	if (
 		badgeTier !== null &&
 		badgeTier !== 3 &&
@@ -61,15 +68,24 @@ export function parsePredictionStats(payload: unknown): PredictionStats {
 			'Khronos returned an invalid prediction stats badge tier',
 		)
 	}
-	const correctPredictions = value.correct_predictions as number
-	const incorrectPredictions = value.incorrect_predictions as number
-	const totalPredictions = value.total_predictions as number
-	const successRate = value.success_rate as number
-	const currentStreak = value.current_streak as number
-	const bestStreak = value.best_streak as number
+	const correctPredictions = readField(
+		'correct_predictions',
+		'correctPredictions',
+	) as number
+	const incorrectPredictions = readField(
+		'incorrect_predictions',
+		'incorrectPredictions',
+	) as number
+	const totalPredictions = readField(
+		'total_predictions',
+		'totalPredictions',
+	) as number
+	const successRate = readField('success_rate', 'successRate') as number
+	const currentStreak = readField('current_streak', 'currentStreak') as number
+	const bestStreak = readField('best_streak', 'bestStreak') as number
 
 	return {
-		user_id: value.user_id,
+		user_id: userId,
 		correct_predictions: correctPredictions,
 		incorrect_predictions: incorrectPredictions,
 		total_predictions: totalPredictions,

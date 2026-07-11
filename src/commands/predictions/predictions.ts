@@ -40,9 +40,10 @@ const PREDICTIONS_COMMAND_ID_HINTS = ['1298280482123026537']
 
 /** Resolve display badge from the current streak when older API payloads omit it. */
 export function resolveStreakBadgeTier(
-	currentStreak: number,
+	currentStreak: number | null,
 	reportedTier: StreakBadgeTier = null,
 ): StreakBadgeTier {
+	if (currentStreak === null) return null
 	if (reportedTier !== null) return reportedTier
 	if (currentStreak >= 10) return 10
 	if (currentStreak >= 5) return 5
@@ -263,8 +264,8 @@ export class UserCommand extends Subcommand {
 			const correctPredictions = entry?.correct_predictions ?? 0
 			const incorrectPredictions = entry?.incorrect_predictions ?? 0
 			const winRate = entry?.success_rate ?? 0
-			const currentStreak = predictionStats?.current_streak ?? 0
-			const bestStreak = predictionStats?.best_streak ?? 0
+			const currentStreak = predictionStats?.current_streak ?? null
+			const bestStreak = predictionStats?.best_streak ?? null
 			const badgeTier = resolveStreakBadgeTier(
 				currentStreak,
 				predictionStats?.badge_tier ?? null,
@@ -304,20 +305,28 @@ export class UserCommand extends Subcommand {
 					},
 					{
 						name: '🔥 Current Streak',
-						value: `\`${currentStreak}\``,
+						value:
+							currentStreak === null
+								? '`Unavailable`'
+								: `\`${currentStreak}\``,
 						inline: true,
 					},
 					{
 						name: '🏆 Best Streak',
-						value: `\`${bestStreak}\``,
+						value:
+							bestStreak === null
+								? '`Unavailable`'
+								: `\`${bestStreak}\``,
 						inline: true,
 					},
 					{
 						name: '🏅 Streak Badge',
 						value:
-							badgeTier === null
-								? '`None yet`'
-								: `\`🔥${badgeTier}\``,
+							predictionStats === null
+								? '`Unavailable`'
+								: badgeTier === null
+									? '`None yet`'
+									: `\`🔥${badgeTier}\``,
 						inline: true,
 					},
 				)
