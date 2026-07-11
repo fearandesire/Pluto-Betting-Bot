@@ -61,6 +61,10 @@ const envSchema = z
 			.default(100),
 		ANNOUNCE_MAX_PER_HOUR: z.number().int().positive().default(5),
 		BIG_WIN_ANNOUNCEMENTS_ENABLED: z.boolean().default(true),
+		RECAP_CRON: z.string().default('0 9 * * 1'),
+		RECAP_CHANNEL_ID: z.string().optional(),
+		RECAP_ENABLED: z.boolean().default(true),
+		RECAP_GUILD_IDS: z.string().default(''),
 	})
 	.superRefine((data, ctx) => {
 		if (data.USE_MOCK_DATA && data.NODE_ENV === 'production') {
@@ -132,6 +136,10 @@ const env = envSchema.parse({
 	),
 	BIG_WIN_ANNOUNCEMENTS_ENABLED:
 		process.env.BIG_WIN_ANNOUNCEMENTS_ENABLED !== 'false',
+	RECAP_CRON: process.env.RECAP_CRON,
+	RECAP_CHANNEL_ID: process.env.RECAP_CHANNEL_ID,
+	RECAP_ENABLED: process.env.RECAP_ENABLED !== 'false',
+	RECAP_GUILD_IDS: process.env.RECAP_GUILD_IDS || process.env.GUILD_ID || '',
 })
 
 // Debug logging for environment validation (redacts sensitive values)
@@ -164,6 +172,10 @@ if (shouldLogDebug) {
 		ANNOUNCE_PAYOUT_THRESHOLD: env.ANNOUNCE_PAYOUT_THRESHOLD,
 		ANNOUNCE_MAX_PER_HOUR: env.ANNOUNCE_MAX_PER_HOUR,
 		BIG_WIN_ANNOUNCEMENTS_ENABLED: env.BIG_WIN_ANNOUNCEMENTS_ENABLED,
+		RECAP_CRON: env.RECAP_CRON,
+		RECAP_CHANNEL_ID: env.RECAP_CHANNEL_ID,
+		RECAP_ENABLED: env.RECAP_ENABLED,
+		RECAP_GUILD_IDS: env.RECAP_GUILD_IDS,
 		// Redacted sensitive fields
 		TOKEN: '[REDACTED]',
 		KH_API_TOKEN: '[REDACTED]',

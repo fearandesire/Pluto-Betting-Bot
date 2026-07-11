@@ -1,0 +1,282 @@
+import { container } from '@sapphire/framework'
+import { getISOWeek, getISOWeekYear } from 'date-fns'
+import { ChannelType, type TextChannel } from 'discord.js'
+import type RecapWrapper from '../api/Khronos/recap/recap-wrapper.js'
+import type { WeeklyRecapResponse } from '../api/Khronos/recap/recap-wrapper.js'
+import type { CacheManager } from '../cache/cache-manager.js'
+import { buildWeeklyRecapEmbeds } from '../embeds/weekly-recap.embed.js'
+import { logger } from '../logging/WinstonLogger.js'
+
+const RECAP_DEDUP_TTL_SECONDS = 8 * 24 * 60 * 60
+const RECAP_CLAIM_TTL_SECONDS = 5 * 60
+
+export interface RecapChannelResolver {
+	getBettingChannel(guildId: string): Promise<TextChannel>
+}
+
+export interface RecapCronOptions {
+	guildIds: string[]
+	enabled?: boolean
+	channelId?: string
+	weekOffset?: number
+}
+
+interface RecapCache {
+	get(key: string): Promise<unknown>
+	set(key: string, value: unknown, ttl?: number): Promise<unknown>
+	setIfAbsent?(key: string, value: unknown, ttl?: number): Promise<boolean>
+	del?(key: string): Promise<unknown>
+}
+
+export interface RecapRunResult {
+	posted: number
+	skipped: number
+	failed: number
+}
+
+function resolveWeekIdentity(
+	data: WeeklyRecapResponse,
+	now: Date,
+): { seasonYear: number; weekNumber: number } {
+	const startDate = new Date(data.window.start_date)
+	const fallbackDate = Number.isNaN(startDate.valueOf()) ? now : startDate
+	return {
+		seasonYear: data.window.season_year ?? getISOWeekYear(fallbackDate),
+		weekNumber: data.window.week_number ?? getISOWeek(fallbackDate),
+	}
+}
+
+function dedupKey(
+	guildId: string,
+	data: WeeklyRecapResponse,
+	now: Date,
+): string {
+	const { seasonYear, weekNumber } = resolveWeekIdentity(data, now)
+	return `recap:posted:${guildId}:${seasonYear}:${weekNumber}`
+}
+
+/**
+ * Pulls a weekly recap from Khronos and delivers one digest per configured
+ * guild. The service owns idempotency and failure isolation; the scheduler
+ * only decides when this method runs.
+ */
+export class RecapCronService {
+	private readonly recapApi: Pick<RecapWrapper, 'getWeeklyRecap'>
+	private readonly cache: RecapCache
+	private readonly channelResolver: RecapChannelResolver
+	private readonly options: Required<
+		Pick<RecapCronOptions, 'guildIds' | 'enabled' | 'weekOffset'>
+	> &
+		Pick<RecapCronOptions, 'channelId'>
+
+	constructor(
+		recapApi: Pick<RecapWrapper, 'getWeeklyRecap'>,
+		cache: Pick<CacheManager, 'get' | 'set'>,
+		channelResolver: RecapChannelResolver,
+		options: RecapCronOptions,
+	) {
+		this.recapApi = recapApi
+		this.cache = cache
+		this.channelResolver = channelResolver
+		this.options = {
+			guildIds: options.guildIds.filter(Boolean),
+			enabled: options.enabled ?? true,
+			channelId: options.channelId,
+			weekOffset: options.weekOffset ?? -1,
+		}
+	}
+
+	async runWeeklyRecap(
+		now = new Date(),
+		allowProcessingReclaim = false,
+	): Promise<RecapRunResult> {
+		const result: RecapRunResult = { posted: 0, skipped: 0, failed: 0 }
+
+		if (!this.options.enabled) {
+			await logger.info({
+				message: 'weekly_recap_skipped',
+				metadata: { reason: 'disabled' },
+			})
+			return result
+		}
+
+		for (const guildId of this.options.guildIds) {
+			try {
+				const recap = await this.recapApi.getWeeklyRecap(
+					guildId,
+					this.options.weekOffset,
+				)
+				const key = dedupKey(guildId, recap, now)
+
+				const claimed = await this.claimDelivery(
+					key,
+					allowProcessingReclaim,
+				)
+				if (!claimed) {
+					result.skipped++
+					await logger.info({
+						message: 'weekly_recap_skipped',
+						metadata: { reason: 'dedup', guild_id: guildId, key },
+					})
+					continue
+				}
+
+				let channel: TextChannel
+				try {
+					channel = await this.getRecapChannel(guildId)
+					await channel.send({
+						embeds: buildWeeklyRecapEmbeds(recap),
+					})
+				} catch (error) {
+					await this.releaseDeliveryClaim(key)
+					throw error
+				}
+				try {
+					await this.cache.set(key, true, RECAP_DEDUP_TTL_SECONDS)
+				} catch (error) {
+					await logger.warn({
+						message: 'weekly_recap_dedup_persist_failed',
+						metadata: {
+							guild_id: guildId,
+							key,
+							error:
+								error instanceof Error
+									? error.message
+									: String(error),
+						},
+					})
+					try {
+						// Keep a durable sent marker lease when the first marker write
+						// fails. This closes the post-send crash/retry window without
+						// ever treating a failed Discord send as delivered.
+						await this.cache.set(
+							key,
+							{ status: 'sent' },
+							RECAP_DEDUP_TTL_SECONDS,
+						)
+					} catch (fallbackError) {
+						await logger.error({
+							message: 'weekly_recap_dedup_fallback_failed',
+							metadata: {
+								guild_id: guildId,
+								key,
+								error:
+									fallbackError instanceof Error
+										? fallbackError.message
+										: String(fallbackError),
+							},
+						})
+					}
+				}
+				result.posted++
+
+				await logger.info({
+					message: 'weekly_recap_posted',
+					metadata: {
+						guild_id: guildId,
+						week_number: recap.window.week_number,
+						channel_id: channel.id,
+					},
+				})
+			} catch (error) {
+				result.failed++
+				await logger.error({
+					message: 'weekly_recap_skipped',
+					metadata: {
+						reason: 'error',
+						guild_id: guildId,
+						status: this.getErrorStatus(error),
+						error:
+							error instanceof Error
+								? error.message
+								: String(error),
+					},
+				})
+			}
+		}
+
+		return result
+	}
+
+	private async getRecapChannel(guildId: string): Promise<TextChannel> {
+		if (!this.options.channelId) {
+			return await this.channelResolver.getBettingChannel(guildId)
+		}
+
+		const channel = await container.client.channels.fetch(
+			this.options.channelId,
+		)
+		if (!channel || channel.type !== ChannelType.GuildText) {
+			throw new Error(
+				`Recap channel ${this.options.channelId} is missing or not a text channel`,
+			)
+		}
+		if (channel.guild.id !== guildId) {
+			await logger.warn({
+				message: 'weekly_recap_channel_override_mismatch',
+				metadata: {
+					guild_id: guildId,
+					channel_id: this.options.channelId,
+					channel_guild_id: channel.guild.id,
+				},
+			})
+			return await this.channelResolver.getBettingChannel(guildId)
+		}
+		return channel
+	}
+
+	private async claimDelivery(
+		key: string,
+		allowProcessingReclaim: boolean,
+	): Promise<boolean> {
+		if (allowProcessingReclaim) {
+			const existing = await this.cache.get(key)
+			const isProcessing =
+				typeof existing === 'object' &&
+				existing !== null &&
+				(existing as { status?: unknown }).status === 'processing'
+			if (isProcessing) {
+				if (!this.cache.del) return false
+				await this.cache.del(key)
+			}
+		}
+
+		if (this.cache.setIfAbsent) {
+			return await this.cache.setIfAbsent(
+				key,
+				{ status: 'processing' },
+				RECAP_CLAIM_TTL_SECONDS,
+			)
+		}
+		if (await this.cache.get(key)) return false
+		await this.cache.set(
+			key,
+			{ status: 'processing' },
+			RECAP_CLAIM_TTL_SECONDS,
+		)
+		return true
+	}
+
+	private async releaseDeliveryClaim(key: string): Promise<void> {
+		try {
+			if (this.cache.del) await this.cache.del(key)
+		} catch (error) {
+			await logger.warn({
+				message: 'weekly_recap_claim_release_failed',
+				metadata: {
+					key,
+					error:
+						error instanceof Error ? error.message : String(error),
+				},
+			})
+		}
+	}
+
+	private getErrorStatus(error: unknown): number | undefined {
+		if (!error || typeof error !== 'object') return undefined
+		const response = (error as { response?: { status?: unknown } }).response
+		return typeof response?.status === 'number'
+			? response.status
+			: undefined
+	}
+}
