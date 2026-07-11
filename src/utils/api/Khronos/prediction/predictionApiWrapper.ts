@@ -55,6 +55,14 @@ export default class PredictionApiWrapper {
 		await this.predictionApi.removePrediction(params)
 	}
 
+	/**
+	 * @deprecated Use deletePredictionByEvent so the event-based route is
+	 * explicit. Keep this alias while downstream consumers migrate.
+	 */
+	async deletePrediction(params: RemovePredictionRequest) {
+		return this.deletePredictionByEvent(params)
+	}
+
 	async getPredictionsFiltered(
 		params: GetAllPredictionsFilteredRequest,
 	): Promise<AllUserPredictionsDto[]> {

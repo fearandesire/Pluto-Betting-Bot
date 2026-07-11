@@ -59,6 +59,15 @@ describe('PredictionApiWrapper deletion routes', () => {
 		expect(mocks.removePredictionById).not.toHaveBeenCalled()
 	})
 
+	it('keeps the deprecated event-based deletion alias compatible', async () => {
+		const wrapper = new PredictionApiWrapper()
+		const params = { id: 'event-1', userId: 'user-1' }
+
+		await wrapper.deletePrediction(params)
+
+		expect(mocks.removePrediction).toHaveBeenCalledWith(params)
+	})
+
 	it('uses the prediction-id DELETE route explicitly', async () => {
 		const wrapper = new PredictionApiWrapper()
 		const params = { predictionId: 'prediction-1', userId: 'user-1' }
