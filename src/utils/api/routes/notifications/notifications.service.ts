@@ -1,6 +1,6 @@
 // Import interfaces and potentially the Discord client type
 import { container } from '@sapphire/framework'
-import { EmbedBuilder } from 'discord.js'
+import { EmbedBuilder, type Message } from 'discord.js'
 import type {
 	BigWinAnnouncementService,
 	BigWinParlayInput,
@@ -8,6 +8,7 @@ import type {
 } from '../../../../services/engagement/BigWinAnnouncementService.js'
 import { logger } from '../../../logging/WinstonLogger.js'
 import MoneyFormatter from '../../common/money-formatting/money-format.js'
+import type { PropSettledNotification } from '../shared-payload-schemas.js'
 import type {
 	BetNotificationWon,
 	DisplayBetNotification,
@@ -138,6 +139,157 @@ export default class NotificationService {
 		const embeds = this.buildParlayEmbeds(data)
 		await this.sendParlayEmbeds(data.user_id, data, embeds)
 		await this.announceParlayWin(data)
+	}
+
+	/**
+	 * Apply one Khronos prop settlement to every original Discord post in the
+	 * posting ledger. A missing/deleted message is a delivery warning, not a
+	 * failed settlement: Khronos has already committed the outcome and can
+	 * safely retry the callback later.
+	 */
+	async processPropSettled(data: PropSettledNotification): Promise<void> {
+		const client = container.client
+		if (!client) {
+			logger.error({
+				method: this.processPropSettled.name,
+				event: 'prop.notification.delivery_failed',
+				message:
+					'Discord client not available for prop settlement update',
+				critical: true,
+				outcome_uuid: data.outcome_uuid,
+			})
+			return
+		}
+
+		const processedMessages = new Set<string>()
+		for (const reference of data.messages) {
+			const messageKey = `${reference.guild_id}:${reference.channel_id}:${reference.message_id}`
+			if (processedMessages.has(messageKey)) continue
+			processedMessages.add(messageKey)
+
+			try {
+				const channel = await client.channels.fetch(
+					reference.channel_id,
+				)
+				if (
+					!channel ||
+					!channel.isTextBased() ||
+					!('guildId' in channel) ||
+					channel.guildId !== reference.guild_id
+				) {
+					throw new Error(
+						`Channel ${reference.channel_id} is missing, not text-based, or belongs to another guild`,
+					)
+				}
+
+				const message = await channel.messages.fetch(
+					reference.message_id,
+				)
+				const updatedEmbeds = message.embeds.map((embed, index) =>
+					index === 0
+						? this.buildPropSettlementEmbed(message, data)
+						: EmbedBuilder.from(embed),
+				)
+
+				if (updatedEmbeds.length === 0) {
+					throw new Error(
+						'Original prop message has no embed to update',
+					)
+				}
+
+				await message.edit({
+					embeds: updatedEmbeds,
+					// The settlement is terminal. Removing components prevents stale
+					// buttons from being clicked while keeping the edit idempotent.
+					components: [],
+				})
+			} catch (error) {
+				logger.warn({
+					method: this.processPropSettled.name,
+					event: 'prop.notification.message_update_failed',
+					message:
+						'Unable to update original prop message after settlement',
+					guild_id: reference.guild_id,
+					channel_id: reference.channel_id,
+					message_id: reference.message_id,
+					outcome_uuid: data.outcome_uuid,
+					error:
+						error instanceof Error ? error.message : String(error),
+				})
+			}
+		}
+	}
+
+	private buildPropSettlementEmbed(
+		message: Message,
+		data: PropSettledNotification,
+	): EmbedBuilder {
+		const originalEmbed = message.embeds[0]
+		if (!originalEmbed) {
+			throw new Error('Original prop message has no embed to update')
+		}
+
+		const embed = EmbedBuilder.from(originalEmbed)
+		const fields = [...(embed.data.fields ?? [])]
+		const resultFieldName = '🎯 Result'
+		const tallyFieldName = '📊 Prediction results'
+		const resultField = {
+			name: resultFieldName,
+			value: this.formatPropResult(data),
+			inline: false,
+		}
+		const tallyField = {
+			name: tallyFieldName,
+			value: this.formatPropTallies(data),
+			inline: false,
+		}
+
+		const resultIndex = fields.findIndex(
+			(field) => field.name === resultFieldName,
+		)
+		if (resultIndex === -1) fields.push(resultField)
+		else fields[resultIndex] = resultField
+
+		const tallyIndex = fields.findIndex(
+			(field) => field.name === tallyFieldName,
+		)
+		if (tallyIndex === -1) fields.push(tallyField)
+		else fields[tallyIndex] = tallyField
+
+		return embed.setFields(fields)
+	}
+
+	private formatPropResult(data: PropSettledNotification): string {
+		const iconByResult: Record<PropSettledNotification['result'], string> =
+			{
+				won: '✅',
+				lost: '❌',
+				push: '➖',
+				void: '🚫',
+			}
+		const label =
+			data.winning_side_display?.trim() ||
+			(
+				{
+					won: 'Won',
+					lost: 'Lost',
+					push: 'Push',
+					void: 'Voided',
+				} satisfies Record<PropSettledNotification['result'], string>
+			)[data.result]
+		const actualValue =
+			data.actual_value === null || data.actual_value === undefined
+				? ''
+				: ` — ${data.actual_value}`
+
+		return `**Result: ${label} ${iconByResult[data.result]}${actualValue}**`
+	}
+
+	private formatPropTallies(data: PropSettledNotification): string {
+		const { correct, incorrect, total } = data.tallies
+		const percentage = total === 0 ? 0 : Math.round((correct / total) * 100)
+		const predictorLabel = total === 1 ? 'predictor' : 'predictors'
+		return `${percentage}% of ${total} ${predictorLabel} got it right (${correct} correct, ${incorrect} incorrect).`
 	}
 
 	private async announceParlayWin(
