@@ -1,10 +1,12 @@
 import Router from '@koa/router'
-import { PropsController } from '../../controllers/props.controller.js'
+import { logger } from '../../../logging/WinstonLogger.js'
+import { PropPostingHandler } from '../../../props/PropPostingHandler.js'
 import { validateDailyPropsPayload } from '../notifications/notification-utils.js'
-import type { ReqBodyPropsEmbedsData } from './props-route.interface.js'
 
 const PropsRouter = new Router()
-const propsController = new PropsController()
+const propPostingHandler = new PropPostingHandler()
+
+const supportedSports = new Set(['nba', 'nfl'])
 
 PropsRouter.post('/props/daily', async (ctx) => {
 	const validatedPayload = validateDailyPropsPayload(ctx.request.body || {})
@@ -17,11 +19,57 @@ PropsRouter.post('/props/daily', async (ctx) => {
 		return
 	}
 
-	ctx.status = 200
-	ctx.body = { message: 'Received req to process props for embed generation' }
-	await propsController.processPropsForPredictionEmbeds(
-		validatedPayload as unknown as ReqBodyPropsEmbedsData,
+	const unsupportedSport = validatedPayload.guilds.find(
+		(guild) => !supportedSports.has(guild.sport.toLowerCase()),
 	)
+	if (unsupportedSport) {
+		logger.warn({
+			method: 'PropsRouter',
+			event: 'push_payload_rejected',
+			schema: 'dailyPropsPayload',
+			issues: [
+				{
+					path: ['guilds', 'sport'],
+					message: `Unsupported sport: ${unsupportedSport.sport}`,
+				},
+			],
+		})
+		ctx.status = 422
+		ctx.body = {
+			success: false,
+			error: 'Invalid props payload. Unsupported sport.',
+		}
+		return
+	}
+
+	try {
+		const results = await Promise.all(
+			validatedPayload.guilds.map((guild) =>
+				propPostingHandler.postPropsToChannel(
+					guild.guild_id,
+					validatedPayload.props,
+					guild.sport.toLowerCase() as 'nba' | 'nfl',
+				),
+			),
+		)
+
+		ctx.status = 200
+		ctx.body = {
+			success: true,
+			results,
+		}
+	} catch (error) {
+		logger.error({
+			method: 'PropsRouter',
+			event: 'props_daily_processing_failed',
+			error: error instanceof Error ? error.message : String(error),
+		})
+		ctx.status = 500
+		ctx.body = {
+			success: false,
+			error: 'Failed to process daily props.',
+		}
+	}
 })
 
 PropsRouter.post('/props/stats/post-start', async (ctx) => {

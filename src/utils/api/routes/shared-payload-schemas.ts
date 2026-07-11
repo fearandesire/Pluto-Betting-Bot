@@ -86,7 +86,7 @@ type SharedPayloadExports = {
 	dailyPropsPayloadSchema?: z.ZodType<DailyPropsPayload>
 }
 
-const sharedPayloadExports = KhronosTypes as SharedPayloadExports
+const sharedPayloadExports = KhronosTypes as unknown as SharedPayloadExports
 
 /**
  * Use the published shared schemas when available. The fallback is a strict
