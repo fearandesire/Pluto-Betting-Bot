@@ -114,8 +114,9 @@ export class RecapCronService {
 					continue
 				}
 
-				const channel = await this.getRecapChannel(guildId)
+				let channel: TextChannel
 				try {
+					channel = await this.getRecapChannel(guildId)
 					await channel.send({
 						embeds: buildWeeklyRecapEmbeds(recap),
 					})
