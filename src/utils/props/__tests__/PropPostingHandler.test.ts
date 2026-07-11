@@ -191,4 +191,24 @@ describe('PropPostingHandler message references and idempotency', () => {
 			'props:delivery:guild-1:channel-1:550e8400-e29b-41d4-a716-446655440000:550e8400-e29b-41d4-a716-446655440001',
 		)
 	})
+
+	it('shortens a failed claim when Redis release fails', async () => {
+		mocks.sendToChannel.mockRejectedValueOnce(
+			new Error('Discord unavailable'),
+		)
+		mocks.del.mockRejectedValueOnce(new Error('Redis unavailable'))
+
+		await new PropPostingHandler().postPropsToChannel(
+			'guild-1',
+			[prop],
+			'nba',
+			'channel-1',
+		)
+
+		expect(mocks.setex).toHaveBeenLastCalledWith(
+			'props:delivery:guild-1:channel-1:550e8400-e29b-41d4-a716-446655440000:550e8400-e29b-41d4-a716-446655440001',
+			5,
+			'processing',
+		)
+	})
 })

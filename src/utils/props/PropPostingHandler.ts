@@ -71,6 +71,7 @@ interface DeliveredMarker {
  */
 export class PropPostingHandler {
 	private static readonly DELIVERY_TTL_SECONDS = 7 * 24 * 60 * 60
+	private static readonly DELIVERY_RELEASE_RETRY_TTL_SECONDS = 5
 	// Keep the claim for the full idempotency window. Discord does not provide
 	// a transaction that atomically commits a message and its Redis marker, so
 	// a crash after Discord accepts a send must remain conservatively claimed.
@@ -307,6 +308,25 @@ export class PropPostingHandler {
 				deliveryKey,
 				error: error instanceof Error ? error.message : String(error),
 			})
+			try {
+				// If DEL failed, shorten the failed-send claim so a retry can
+				// recover promptly instead of remaining blocked for seven days.
+				await redisCache.setex(
+					deliveryKey,
+					PropPostingHandler.DELIVERY_RELEASE_RETRY_TTL_SECONDS,
+					'processing',
+				)
+			} catch (fallbackError) {
+				logger.error({
+					method: 'PropPostingHandler',
+					event: 'props_delivery_claim_fallback_failed',
+					deliveryKey,
+					error:
+						fallbackError instanceof Error
+							? fallbackError.message
+							: String(fallbackError),
+				})
+			}
 		}
 	}
 
