@@ -3,6 +3,7 @@ export class Endpoints {
 		bets: {},
 		notifiy: {
 			betResults: '/notifications/bets/results',
+			parlayResults: '/notifications/parlays/results',
 		},
 		channels: {
 			incoming: '/channels/incoming',

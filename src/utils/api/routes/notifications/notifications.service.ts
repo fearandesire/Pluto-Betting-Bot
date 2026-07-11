@@ -13,6 +13,7 @@ import type {
 	DisplayResultWon,
 	NotifyBetUsers,
 } from './notifications.interface.js'
+import type { ParlayResultNotification } from './parlay-notification-contract.js'
 
 export default class NotificationService {
 	async processBetResults(data: NotifyBetUsers): Promise<void> {
@@ -104,6 +105,166 @@ export default class NotificationService {
 
 				await this.notifyUser(displayPush)
 			}
+		}
+	}
+
+	/**
+	 * Deliver one multi-leg parlay resolution to its owner.
+	 *
+	 * Discord delivery failures are intentionally swallowed after structured
+	 * logging, matching the singles notification route's no-retry-storm
+	 * behavior. Khronos still receives a successful HTTP response when Discord
+	 * is unavailable.
+	 */
+	async processParlayResult(data: ParlayResultNotification): Promise<void> {
+		const embed = this.buildParlayEmbed(data)
+		await this.sendParlayEmbed(data.user_id, data, embed)
+	}
+
+	private buildParlayEmbed(data: ParlayResultNotification): EmbedBuilder {
+		const legs = data.legs
+			.map((leg) => {
+				const glyph = this.parlayLegGlyph(leg.result)
+				return `${glyph} ${leg.selection_display} (${this.formatAmericanOdds(leg.odds_american)})`
+			})
+			.join('\n')
+		const combinedOdds = this.formatAmericanOdds(
+			data.combined_odds_american,
+		)
+
+		const embed = new EmbedBuilder()
+			.setTimestamp()
+			.setFooter({ text: `Pluto | Parlay ID: ${data.parlay_id}` })
+			.addFields({
+				name: '🧾 Legs',
+				value: legs,
+				inline: false,
+			})
+			.addFields({
+				name: '📈 Combined Odds',
+				value: combinedOdds,
+				inline: true,
+			})
+
+		switch (data.kind) {
+			case 'won': {
+				embed
+					.setTitle('🎉 Parlay Won! 🎉')
+					.setColor('#57f287')
+					.addFields(
+						{
+							name: '💰 Stake',
+							value: MoneyFormatter.toUSD(data.stake),
+							inline: true,
+						},
+						{
+							name: '🏆 Payout',
+							value: MoneyFormatter.toUSD(
+								data.actual_payout ?? 0,
+							),
+							inline: true,
+						},
+					)
+				if (
+					data.old_balance !== undefined &&
+					data.new_balance !== undefined
+				) {
+					embed.addFields({
+						name: '📊 Balance Update',
+						value: `${MoneyFormatter.toUSD(data.old_balance)} → ${MoneyFormatter.toUSD(data.new_balance)}`,
+						inline: false,
+					})
+				}
+				break
+			}
+			case 'busted':
+			case 'lost':
+				embed
+					.setTitle('❌ Parlay Busted')
+					.setColor('#ff6961')
+					.addFields({
+						name: '💸 Lost',
+						value: MoneyFormatter.toUSD(data.stake),
+						inline: true,
+					})
+				break
+			case 'push_refunded':
+				embed
+					.setTitle('🔄 Parlay Refunded')
+					.setColor('#ffa500')
+					.addFields({
+						name: '💵 Refunded Amount',
+						value: MoneyFormatter.toUSD(
+							data.refund_amount ?? data.actual_payout,
+						),
+						inline: true,
+					})
+					.addFields({
+						name: 'ℹ️ Reason',
+						value: 'All eligible legs pushed or were voided. Your stake has been refunded.',
+						inline: false,
+					})
+				break
+		}
+
+		return embed
+	}
+
+	private parlayLegGlyph(
+		result: ParlayResultNotification['legs'][number]['result'],
+	): string {
+		switch (result) {
+			case 'won':
+				return '✅'
+			case 'lost':
+				return '❌'
+			case 'pending':
+				return '⏳'
+			case 'push':
+			case 'void':
+				return '➖'
+		}
+	}
+
+	private formatAmericanOdds(odds: number): string {
+		return odds > 0 ? `+${odds}` : `${odds}`
+	}
+
+	private async sendParlayEmbed(
+		userId: string,
+		data: ParlayResultNotification,
+		embed: EmbedBuilder,
+	): Promise<void> {
+		const client = container.client
+
+		if (!client) {
+			logger.error({
+				method: this.sendParlayEmbed.name,
+				event: 'parlay.notification.delivery_failed',
+				message: 'Discord client not available for parlay notification',
+				critical: true,
+				kind: data.kind,
+				parlay_id: data.parlay_id,
+				user_id: userId,
+			})
+			return
+		}
+
+		try {
+			const user = await client.users.fetch(userId)
+			await user.send({ embeds: [embed] })
+		} catch (error) {
+			logger.error({
+				method: this.sendParlayEmbed.name,
+				event: 'parlay.notification.delivery_failed',
+				message: 'Unable to send parlay result Discord DM',
+				critical: true,
+				kind: data.kind,
+				parlay_id: data.parlay_id,
+				user_id: userId,
+				error: error instanceof Error ? error.message : String(error),
+				stack: error instanceof Error ? error.stack : undefined,
+			})
 		}
 	}
 
