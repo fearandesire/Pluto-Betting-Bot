@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
 	set: vi.fn(),
 	setex: vi.fn(),
 	del: vi.fn(),
+	eval: vi.fn(),
 	sendToChannel: vi.fn(),
 	sendToPredictionChannel: vi.fn(),
 	getTeamInfo: vi.fn(),
@@ -33,6 +34,7 @@ vi.mock('../../cache/redis-instance.js', () => ({
 		set: mocks.set,
 		setex: mocks.setex,
 		del: mocks.del,
+		eval: mocks.eval,
 	},
 }))
 
@@ -68,6 +70,7 @@ describe('PropPostingHandler delivery idempotency', () => {
 		mocks.get.mockResolvedValue(null)
 		mocks.set.mockResolvedValue('OK')
 		mocks.setex.mockResolvedValue('OK')
+		mocks.eval.mockResolvedValue('OK')
 		mocks.del.mockResolvedValue(1)
 		mocks.sendToChannel.mockResolvedValue(undefined)
 		mocks.getTeamInfo.mockResolvedValue({
@@ -171,6 +174,27 @@ describe('PropPostingHandler delivery idempotency', () => {
 		})
 		expect(retry).toEqual({ posted: 1, filtered: 0, failed: 0, total: 1 })
 		expect(mocks.sendToChannel).toHaveBeenCalledTimes(1)
+	})
+
+	it('reclaims a retry marker with an atomic Redis transition', async () => {
+		const handler = new PropPostingHandler()
+		mocks.get.mockResolvedValueOnce('retry')
+
+		const result = await handler.postPropsToChannel(
+			'guild-1',
+			[prop],
+			'nba',
+			'channel-1',
+		)
+
+		expect(result).toEqual({ posted: 1, filtered: 0, failed: 0, total: 1 })
+		expect(mocks.eval).toHaveBeenCalledWith(
+			expect.stringContaining("redis.call('get', KEYS[1]) == 'retry'"),
+			1,
+			expect.stringContaining('props:delivery:guild-1:channel-1'),
+			'processing',
+			300,
+		)
 	})
 
 	it('does not send when the durable sent reservation cannot be persisted', async () => {

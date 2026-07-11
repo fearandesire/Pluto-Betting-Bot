@@ -165,10 +165,19 @@ export class PropPostingHandler {
 			if (existing === 'processing') return 'claimed'
 			if (existing === 'retry') {
 				try {
-					const reclaimed = await redisCache.set(
+					const redis = redisCache as unknown as {
+						eval?: (
+							script: string,
+							numKeys: number,
+							...args: Array<string | number>
+						) => Promise<unknown>
+					}
+					if (!redis.eval) return 'claimed'
+					const reclaimed = await redis.eval(
+						"if redis.call('get', KEYS[1]) == 'retry' then return redis.call('set', KEYS[1], ARGV[1], 'EX', ARGV[2]) else return nil end",
+						1,
 						deliveryKey,
 						'processing',
-						'EX',
 						PropPostingHandler.DELIVERY_CLAIM_TTL_SECONDS,
 					)
 					return reclaimed === 'OK' ? 'available' : 'claimed'
