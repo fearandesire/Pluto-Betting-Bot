@@ -62,5 +62,12 @@ describe('validateParlayResultNotification', () => {
 				],
 			}),
 		).toBeNull()
+		expect(
+			validateParlayResultNotification({
+				...validPayload,
+				payout: undefined,
+				actual_payout: null,
+			}),
+		).toBeNull()
 	})
 })

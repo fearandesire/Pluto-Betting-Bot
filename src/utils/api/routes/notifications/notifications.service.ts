@@ -117,16 +117,16 @@ export default class NotificationService {
 	 * is unavailable.
 	 */
 	async processParlayResult(data: ParlayResultNotification): Promise<void> {
-		const embed = this.buildParlayEmbed(data)
-		await this.sendParlayEmbed(data.user_id, data, embed)
+		const embeds = this.buildParlayEmbeds(data)
+		await this.sendParlayEmbeds(data.user_id, data, embeds)
 	}
 
-	private buildParlayEmbed(data: ParlayResultNotification): EmbedBuilder {
+	private buildParlayEmbeds(data: ParlayResultNotification): EmbedBuilder[] {
 		const combinedOdds = this.formatAmericanOdds(
 			data.combined_odds_american,
 		)
 
-		const embed = new EmbedBuilder()
+		const baseEmbed = new EmbedBuilder()
 			.setTimestamp()
 			.setFooter({ text: `Pluto | Parlay ID: ${data.parlay_id}` })
 			.addFields({
@@ -137,7 +137,7 @@ export default class NotificationService {
 
 		switch (data.kind) {
 			case 'won': {
-				embed
+				baseEmbed
 					.setTitle('🎉 Parlay Won! 🎉')
 					.setColor('#57f287')
 					.addFields(
@@ -158,7 +158,7 @@ export default class NotificationService {
 					data.old_balance !== undefined &&
 					data.new_balance !== undefined
 				) {
-					embed.addFields({
+					baseEmbed.addFields({
 						name: '📊 Balance Update',
 						value: `${MoneyFormatter.toUSD(data.old_balance)} → ${MoneyFormatter.toUSD(data.new_balance)}`,
 						inline: false,
@@ -168,7 +168,7 @@ export default class NotificationService {
 			}
 			case 'busted':
 			case 'lost':
-				embed
+				baseEmbed
 					.setTitle('❌ Parlay Busted')
 					.setColor('#ff6961')
 					.addFields({
@@ -178,7 +178,7 @@ export default class NotificationService {
 					})
 				break
 			case 'push_refunded':
-				embed
+				baseEmbed
 					.setTitle('🔄 Parlay Refunded')
 					.setColor('#ffa500')
 					.addFields({
@@ -198,55 +198,90 @@ export default class NotificationService {
 				break
 		}
 
-		for (const field of this.buildParlayLegFields(data)) {
-			embed.addFields(field)
-		}
-
-		return embed
+		const groups = this.buildParlayLegFieldGroups(data)
+		if (groups.length === 0) return [baseEmbed]
+		return groups.map((fields, index) => {
+			const embed =
+				index === 0
+					? baseEmbed
+					: new EmbedBuilder()
+							.setTitle('🧾 Parlay Legs (continued)')
+							.setTimestamp()
+							.setFooter({
+								text: `Pluto | Parlay ID: ${data.parlay_id}`,
+							})
+			embed.addFields(...fields)
+			return embed
+		})
 	}
 
-	private buildParlayLegFields(
+	private buildParlayLegFieldGroups(
 		data: ParlayResultNotification,
-	): Array<{ name: string; value: string; inline: false }> {
-		const maxFieldLength = 900
-		const maxSelectionLength = 400
-		const fields: Array<{ name: string; value: string; inline: false }> = []
+	): Array<Array<{ name: string; value: string; inline: false }>> {
+		const maxFieldLength = 800
+		const maxFieldsPerEmbed = 20
+		const maxLegCharactersPerEmbed = 4500
+		const groups: Array<
+			Array<{ name: string; value: string; inline: false }>
+		> = []
+		let currentGroup: Array<{
+			name: string
+			value: string
+			inline: false
+		}> = []
 		let currentLines: string[] = []
-		let currentLength = 0
+		let currentFieldLength = 0
+		let currentGroupLength = 0
 
-		const flush = () => {
+		const flushField = () => {
 			if (currentLines.length === 0) return
-			fields.push({
+			currentGroup.push({
 				name:
-					fields.length === 0
+					currentGroup.length === 0
 						? '🧾 Legs'
-						: `🧾 Legs (${fields.length + 1})`,
+						: `🧾 Legs (${currentGroup.length + 1})`,
 				value: currentLines.join('\n'),
 				inline: false,
 			})
 			currentLines = []
-			currentLength = 0
+			currentFieldLength = 0
+		}
+		const flushGroup = () => {
+			flushField()
+			if (currentGroup.length === 0) return
+			groups.push(currentGroup)
+			currentGroup = []
+			currentGroupLength = 0
 		}
 
 		for (const leg of data.legs) {
 			const selection = leg.selection_display
 			const shortenedSelection =
-				selection.length > maxSelectionLength
-					? `${selection.slice(0, maxSelectionLength - 1)}…`
+				selection.length > 350
+					? `${selection.slice(0, 349)}…`
 					: selection
 			const line = `${this.parlayLegGlyph(leg.result)} ${shortenedSelection} (${this.formatAmericanOdds(leg.odds_american)})`
 			if (
 				currentLines.length > 0 &&
-				currentLength + line.length + 1 > maxFieldLength
+				currentFieldLength + line.length + 1 > maxFieldLength
 			) {
-				flush()
+				flushField()
+			}
+			if (
+				currentGroup.length >= maxFieldsPerEmbed ||
+				(currentGroupLength > 0 &&
+					currentGroupLength + line.length + 1 >
+						maxLegCharactersPerEmbed)
+			) {
+				flushGroup()
 			}
 			currentLines.push(line)
-			currentLength += line.length + 1
+			currentFieldLength += line.length + 1
+			currentGroupLength += line.length + 1
 		}
-		flush()
+		flushGroup()
 
-		return fields.slice(0, 25)
+		return groups
 	}
 
 	private parlayLegGlyph(
@@ -269,16 +304,16 @@ export default class NotificationService {
 		return odds > 0 ? `+${odds}` : `${odds}`
 	}
 
-	private async sendParlayEmbed(
+	private async sendParlayEmbeds(
 		userId: string,
 		data: ParlayResultNotification,
-		embed: EmbedBuilder,
+		embeds: EmbedBuilder[],
 	): Promise<void> {
 		const client = container.client
 
 		if (!client) {
 			logger.error({
-				method: this.sendParlayEmbed.name,
+				method: this.sendParlayEmbeds.name,
 				event: 'parlay.notification.delivery_failed',
 				message: 'Discord client not available for parlay notification',
 				critical: true,
@@ -291,10 +326,12 @@ export default class NotificationService {
 
 		try {
 			const user = await client.users.fetch(userId)
-			await user.send({ embeds: [embed] })
+			for (const embed of embeds) {
+				await user.send({ embeds: [embed] })
+			}
 		} catch (error) {
 			logger.error({
-				method: this.sendParlayEmbed.name,
+				method: this.sendParlayEmbeds.name,
 				event: 'parlay.notification.delivery_failed',
 				message: 'Unable to send parlay result Discord DM',
 				critical: true,
