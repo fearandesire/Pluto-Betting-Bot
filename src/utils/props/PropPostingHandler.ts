@@ -69,6 +69,7 @@ export class PropPostingHandler {
 		guildId: string,
 		props: ProcessedPropDto[],
 		sport: 'nfl' | 'nba',
+		channelId?: string,
 	): Promise<PostingResult> {
 		const result: PostingResult = {
 			posted: 0,
@@ -83,10 +84,21 @@ export class PropPostingHandler {
 				const embed = await this.createPropEmbed(prop, sport)
 				const buttons = this.createPropButtons(prop)
 
-				await this.guildWrapper.sendToPredictionChannel(guildId, {
+				const messageOptions = {
 					embeds: [embed],
 					components: [buttons],
-				})
+				}
+				if (channelId) {
+					await this.guildWrapper.sendToChannel(
+						channelId,
+						messageOptions,
+					)
+				} else {
+					await this.guildWrapper.sendToPredictionChannel(
+						guildId,
+						messageOptions,
+					)
+				}
 
 				result.posted++
 			} catch (error) {

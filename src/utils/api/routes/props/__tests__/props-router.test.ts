@@ -104,6 +104,7 @@ describe('POST /props/daily', () => {
 			'guild-1',
 			validPayload.props,
 			'nba',
+			'channel-1',
 		)
 	})
 

@@ -49,6 +49,7 @@ PropsRouter.post('/props/daily', async (ctx) => {
 					guild.guild_id,
 					validatedPayload.props,
 					guild.sport.toLowerCase() as 'nba' | 'nfl',
+					guild.channel_id,
 				),
 			),
 		)
