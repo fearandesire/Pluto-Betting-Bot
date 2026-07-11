@@ -38,6 +38,10 @@ function makeHarness() {
 			values.set(key, value)
 			return true
 		}),
+		del: vi.fn(async (key: string) => {
+			values.delete(key)
+			return 1
+		}),
 	}
 	const channel = {
 		id: 'recap-channel',
@@ -118,5 +122,58 @@ describe('RecapCronService', () => {
 			failed: 0,
 		})
 		expect(harness.recapApi.getWeeklyRecap).not.toHaveBeenCalled()
+	})
+
+	it('retains a sent marker lease when the first dedup write fails', async () => {
+		const harness = makeHarness()
+		harness.cache.set
+			.mockResolvedValueOnce(true)
+			.mockRejectedValueOnce(new Error('Redis write failed'))
+			.mockResolvedValueOnce(true)
+		const service = new RecapCronService(
+			harness.recapApi,
+			harness.cache,
+			harness.channelResolver,
+			{ guildIds: ['guild-1'] },
+		)
+
+		expect(await service.runWeeklyRecap()).toEqual({
+			posted: 1,
+			skipped: 0,
+			failed: 0,
+		})
+		expect(harness.cache.set).toHaveBeenLastCalledWith(
+			'recap:posted:guild-1:2026:19',
+			{ status: 'sent' },
+			691200,
+		)
+	})
+
+	it('reclaims a processing marker during startup catch-up', async () => {
+		const harness = makeHarness()
+		await harness.cache.set('recap:posted:guild-1:2026:19', {
+			status: 'processing',
+		})
+		const service = new RecapCronService(
+			harness.recapApi,
+			harness.cache,
+			harness.channelResolver,
+			{ guildIds: ['guild-1'] },
+		)
+
+		expect(
+			await service.runWeeklyRecap(
+				new Date('2026-07-13T10:15:00.000Z'),
+				true,
+			),
+		).toEqual({
+			posted: 1,
+			skipped: 0,
+			failed: 0,
+		})
+		expect(harness.cache.del).toHaveBeenCalledWith(
+			'recap:posted:guild-1:2026:19',
+		)
+		expect(harness.channel.send).toHaveBeenCalledTimes(1)
 	})
 })

@@ -172,7 +172,7 @@ export class RecapCronScheduler {
 		if (this.lastRunMinute === minuteKey) return false
 
 		this.lastRunMinute = minuteKey
-		await this.recapService.runWeeklyRecap(now)
+		await this.recapService.runWeeklyRecap(now, allowCatchUp)
 		return true
 	}
 

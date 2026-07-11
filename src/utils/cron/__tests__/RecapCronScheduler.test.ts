@@ -66,5 +66,9 @@ describe('RecapCronScheduler', () => {
 			await scheduler.tick(new Date('2026-07-13T10:15:00.000Z'), true),
 		).toBe(true)
 		expect(runWeeklyRecap).toHaveBeenCalledTimes(1)
+		expect(runWeeklyRecap).toHaveBeenCalledWith(
+			new Date('2026-07-13T10:15:00.000Z'),
+			true,
+		)
 	})
 })

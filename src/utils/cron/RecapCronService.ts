@@ -86,7 +86,10 @@ export class RecapCronService {
 		}
 	}
 
-	async runWeeklyRecap(now = new Date()): Promise<RecapRunResult> {
+	async runWeeklyRecap(
+		now = new Date(),
+		allowProcessingReclaim = false,
+	): Promise<RecapRunResult> {
 		const result: RecapRunResult = { posted: 0, skipped: 0, failed: 0 }
 
 		if (!this.options.enabled) {
@@ -105,7 +108,10 @@ export class RecapCronService {
 				)
 				const key = dedupKey(guildId, recap, now)
 
-				const claimed = await this.claimDelivery(key)
+				const claimed = await this.claimDelivery(
+					key,
+					allowProcessingReclaim,
+				)
 				if (!claimed) {
 					result.skipped++
 					await logger.info({
@@ -139,6 +145,28 @@ export class RecapCronService {
 									: String(error),
 						},
 					})
+					try {
+						// Keep a durable sent marker lease when the first marker write
+						// fails. This closes the post-send crash/retry window without
+						// ever treating a failed Discord send as delivered.
+						await this.cache.set(
+							key,
+							{ status: 'sent' },
+							RECAP_DEDUP_TTL_SECONDS,
+						)
+					} catch (fallbackError) {
+						await logger.error({
+							message: 'weekly_recap_dedup_fallback_failed',
+							metadata: {
+								guild_id: guildId,
+								key,
+								error:
+									fallbackError instanceof Error
+										? fallbackError.message
+										: String(fallbackError),
+							},
+						})
+					}
 				}
 				result.posted++
 
@@ -197,7 +225,22 @@ export class RecapCronService {
 		return channel
 	}
 
-	private async claimDelivery(key: string): Promise<boolean> {
+	private async claimDelivery(
+		key: string,
+		allowProcessingReclaim: boolean,
+	): Promise<boolean> {
+		if (allowProcessingReclaim) {
+			const existing = await this.cache.get(key)
+			const isProcessing =
+				typeof existing === 'object' &&
+				existing !== null &&
+				(existing as { status?: unknown }).status === 'processing'
+			if (isProcessing) {
+				if (!this.cache.del) return false
+				await this.cache.del(key)
+			}
+		}
+
 		if (this.cache.setIfAbsent) {
 			return await this.cache.setIfAbsent(
 				key,
