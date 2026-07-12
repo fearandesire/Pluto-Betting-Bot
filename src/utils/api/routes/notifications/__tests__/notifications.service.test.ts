@@ -53,4 +53,40 @@ describe('NotificationService', () => {
 			}),
 		)
 	})
+
+	it('does not forward winners without bet IDs to single-bet announcements', async () => {
+		const service = new NotificationService()
+		const notifyUser = vi
+			.spyOn(service, 'notifyUser')
+			.mockResolvedValue(undefined)
+		const getBigWinAnnouncementService = vi
+			.spyOn(
+				service as unknown as {
+					getBigWinAnnouncementService: () => Promise<unknown>
+				},
+				'getBigWinAnnouncementService',
+			)
+			.mockResolvedValue({})
+
+		await service.processBetResults({
+			winners: [
+				{
+					userId: 'user-1',
+					guildId: 'guild-1',
+					result: {
+						outcome: 'won',
+						team: 'Home',
+						betAmount: 10,
+						payout: 20,
+						profit: 10,
+					},
+				},
+			],
+			losers: [],
+			pushes: [],
+		})
+
+		expect(notifyUser).toHaveBeenCalledOnce()
+		expect(getBigWinAnnouncementService).not.toHaveBeenCalled()
+	})
 })

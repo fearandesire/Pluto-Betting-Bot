@@ -135,12 +135,20 @@ describe('NotificationService.processPropSettled', () => {
 	})
 
 	it('logs missing messages and continues without throwing', async () => {
-		mocks.fetchChannel.mockRejectedValue(new Error('Unknown Message'))
+		const channel = {
+			guildId: 'guild-1',
+			isTextBased: () => true,
+			messages: {
+				fetch: vi.fn().mockRejectedValue(new Error('Unknown Message')),
+			},
+		}
+		mocks.fetchChannel.mockResolvedValue(channel)
 
 		await expect(
 			new NotificationService().processPropSettled(payload),
 		).resolves.toBeUndefined()
 
+		expect(channel.messages.fetch).toHaveBeenCalledWith('message-1')
 		expect(mocks.logger.warn).toHaveBeenCalledWith(
 			expect.objectContaining({
 				event: 'prop.notification.message_update_failed',

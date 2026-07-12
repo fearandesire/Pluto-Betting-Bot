@@ -316,7 +316,7 @@ export default class NotificationService {
 	private async announceSingleBetWin(
 		winner: BetNotificationWon,
 	): Promise<void> {
-		if (!winner.guildId) return
+		if (!winner.guildId || winner.betId === undefined) return
 
 		const input: BigWinSingleBetInput = {
 			betId: winner.betId,
@@ -565,6 +565,8 @@ export default class NotificationService {
 
 	async notifyUser(betData: DisplayBetNotification) {
 		const { userId, betId, result, displayResult } = betData
+		const betIdLabel =
+			betId === undefined ? 'Bet ID unavailable' : `Bet ID: ${betId}`
 
 		switch (result.outcome) {
 			case 'won': {
@@ -605,7 +607,7 @@ export default class NotificationService {
 					)
 					.setTimestamp()
 					.setFooter({
-						text: `Pluto | Bet ID: ${betId}`,
+						text: `Pluto | ${betIdLabel}`,
 					})
 
 				await this.sendEmbed(userId, betId, embed)
@@ -634,7 +636,7 @@ export default class NotificationService {
 					)
 					.setTimestamp()
 					.setFooter({
-						text: `Pluto | Bet ID: ${betId}`,
+						text: `Pluto | ${betIdLabel}`,
 					})
 
 				await this.sendEmbed(userId, betId, embed)
@@ -658,7 +660,7 @@ export default class NotificationService {
 					)
 					.setTimestamp()
 					.setFooter({
-						text: `Pluto | Bet ID: ${betId}`,
+						text: `Pluto | ${betIdLabel}`,
 					})
 
 				await this.sendEmbed(userId, betId, embed)
@@ -669,7 +671,7 @@ export default class NotificationService {
 
 	private async sendEmbed(
 		userId: string,
-		betId: number,
+		betId: number | undefined,
 		embed: EmbedBuilder,
 	): Promise<void> {
 		const client = container.client

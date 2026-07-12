@@ -72,6 +72,24 @@ describe('POST /notifications/props/settled', () => {
 		expect(ctx.body).toEqual({ success: true })
 	})
 
+	it('returns 500 when settlement processing fails', async () => {
+		processPropSettled.mockRejectedValueOnce(new Error('delivery failed'))
+		const ctx = {
+			request: { body: validPayload },
+			body: undefined as unknown,
+			status: 200,
+			state: { apiKeyAuthenticated: true },
+		}
+
+		await getPropSettlementRoute()(ctx as never, async () => undefined)
+
+		expect(ctx.status).toBe(500)
+		expect(ctx.body).toEqual({
+			success: false,
+			error: 'Failed to process prop settlement notification',
+		})
+	})
+
 	it('returns 422 and skips delivery for malformed payloads', async () => {
 		const ctx = {
 			request: { body: { ...validPayload, outcome_uuid: 'not-a-uuid' } },

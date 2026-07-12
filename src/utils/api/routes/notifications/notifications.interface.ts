@@ -28,7 +28,8 @@ export interface ResultPush {
 
 export interface BetNotificationBase {
 	userId: string
-	betId: number
+	/** Optional for shared-contract winners that are not tied to a single bet. */
+	betId?: number
 	/** Optional until Khronos includes guild context in bet-result callbacks. */
 	guildId?: string
 }
