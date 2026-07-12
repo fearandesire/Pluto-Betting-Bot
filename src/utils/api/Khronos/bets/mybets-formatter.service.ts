@@ -27,6 +27,8 @@ export interface MyBetsDisplayData {
 	historyParlays: UserParlay[]
 	historyPage: HistoryPage
 	groupedBets: BetsByDate[]
+	parlayFetchWarning?: string
+	cancellationPage?: number
 }
 
 export class MyBetsFormatterService {
@@ -170,18 +172,24 @@ export class MyBetsFormatterService {
 		pendingBets: PlacedBetslip[],
 		guild?: Guild,
 		pendingParlays: UserParlay[] = [],
+		parlayFetchWarning?: string,
 	): Promise<EmbedBuilder> {
 		const embed = new EmbedBuilder()
 			.setTitle('⏳ Pending Bets')
 			.setColor(embedColors.PlutoYellow)
 
-		if (pendingBets.length === 0 && pendingParlays.length === 0) {
+		if (
+			pendingBets.length === 0 &&
+			pendingParlays.length === 0 &&
+			!parlayFetchWarning
+		) {
 			embed.setDescription('You have no pending bets.')
 			return embed
 		}
 
-		const lines = pendingBets.map((bet) =>
-			this.formatPendingBetLine(bet, guild),
+		const lines = parlayFetchWarning ? [`⚠️ ${parlayFetchWarning}`] : []
+		lines.push(
+			...pendingBets.map((bet) => this.formatPendingBetLine(bet, guild)),
 		)
 		lines.push(
 			...pendingParlays.map((parlay) =>
@@ -281,6 +289,40 @@ export class MyBetsFormatterService {
 		return row
 	}
 
+	private buildCancellationPaginationButtons(
+		currentPage: number,
+		totalPages: number,
+	): ActionRowBuilder<ButtonBuilder> {
+		const button = (
+			action: 'first' | 'prev' | 'next' | 'last',
+			label: string,
+			style: ButtonStyle,
+			disabled: boolean,
+		) =>
+			new ButtonBuilder()
+				.setCustomId(`parlay_cancel_nav_${action}_${currentPage}`)
+				.setLabel(label)
+				.setStyle(style)
+				.setDisabled(disabled)
+
+		return new ActionRowBuilder<ButtonBuilder>().addComponents(
+			button('first', '⏮', ButtonStyle.Secondary, currentPage <= 1),
+			button('prev', '◀', ButtonStyle.Primary, currentPage <= 1),
+			new ButtonBuilder()
+				.setCustomId(`parlay_cancel_nav_page_${currentPage}`)
+				.setLabel(`Cancel ${currentPage}/${totalPages}`)
+				.setStyle(ButtonStyle.Secondary)
+				.setDisabled(true),
+			button('next', '▶', ButtonStyle.Primary, currentPage >= totalPages),
+			button(
+				'last',
+				'⏭',
+				ButtonStyle.Secondary,
+				currentPage >= totalPages,
+			),
+		)
+	}
+
 	async buildComponentsV2Response(
 		data: MyBetsDisplayData,
 		guild?: Guild,
@@ -308,6 +350,11 @@ export class MyBetsFormatterService {
 
 			container.addSeparatorComponents((sep) =>
 				sep.setSpacing(SeparatorSpacingSize.Large).setDivider(true),
+			)
+		}
+		if (data.parlayFetchWarning) {
+			container.addTextDisplayComponents((text) =>
+				text.setContent(`⚠️ ${data.parlayFetchWarning}`),
 			)
 		}
 
@@ -366,6 +413,7 @@ export class MyBetsFormatterService {
 			data.pendingBets,
 			guild,
 			data.pendingParlays,
+			data.parlayFetchWarning,
 		)
 		embeds.push(pendingEmbed)
 
@@ -391,8 +439,35 @@ export class MyBetsFormatterService {
 			this.canCancelParlay(parlay),
 		)
 		const hasNavigation = data.historyPage.totalPages > 1
-		const maxCancellationRows = hasNavigation ? 4 : 5
-		const visibleCancellable = cancellable.slice(0, maxCancellationRows * 5)
+		const maxRowsWithoutCancellationNavigation = hasNavigation ? 4 : 5
+		const needsCancellationNavigation =
+			cancellable.length > maxRowsWithoutCancellationNavigation * 5
+		const maxCancellationRows = Math.max(
+			1,
+			maxRowsWithoutCancellationNavigation -
+				(needsCancellationNavigation ? 1 : 0),
+		)
+		const cancellationPageSize = maxCancellationRows * 5
+		const cancellationTotalPages = Math.max(
+			1,
+			Math.ceil(cancellable.length / cancellationPageSize),
+		)
+		const cancellationPage = Math.max(
+			1,
+			Math.min(data.cancellationPage ?? 1, cancellationTotalPages),
+		)
+		if (needsCancellationNavigation) {
+			components.push(
+				this.buildCancellationPaginationButtons(
+					cancellationPage,
+					cancellationTotalPages,
+				),
+			)
+		}
+		const visibleCancellable = cancellable.slice(
+			(cancellationPage - 1) * cancellationPageSize,
+			cancellationPage * cancellationPageSize,
+		)
 		for (let index = 0; index < visibleCancellable.length; index += 5) {
 			components.push(
 				new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -400,7 +475,9 @@ export class MyBetsFormatterService {
 						.slice(index, index + 5)
 						.map((parlay) =>
 							new ButtonBuilder()
-								.setCustomId(`parlay_cancel_${parlay.id}`)
+								.setCustomId(
+									`parlay_cancel_${encodeURIComponent(parlay.id)}_${cancellationPage}`,
+								)
 								.setLabel(`Cancel ${parlay.id.slice(0, 6)}`)
 								.setStyle(ButtonStyle.Danger),
 						),

@@ -49,6 +49,7 @@ export class UserCommand extends Command {
 				historyParlays: betsData.historyParlays,
 				historyPage,
 				groupedBets,
+				parlayFetchWarning: betsData.parlayFetchWarning,
 			}
 
 			const response = await this.formatterService.buildEmbedResponse(

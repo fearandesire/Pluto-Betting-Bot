@@ -138,7 +138,30 @@ describe('MyBetsFormatterService parlays', () => {
 		})
 
 		expect(JSON.stringify(response.components)).toContain(
-			'parlay_cancel_parlay-123456',
+			'parlay_cancel_parlay-123456_1',
+		)
+	})
+
+	it('surfaces partial parlay retrieval warnings in the pending embed', async () => {
+		const response = await formatter.buildEmbedResponse({
+			userId: 'user-1',
+			pendingBets: [],
+			pendingParlays: [],
+			historyParlays: [],
+			parlayFetchWarning:
+				'Some parlays could not be loaded. Refresh /mybets to try again.',
+			historyPage: {
+				bets: [],
+				parlays: [],
+				entries: [],
+				page: 1,
+				totalPages: 1,
+			},
+			groupedBets: [],
+		})
+
+		expect(response.embeds?.[0]?.toJSON().description).toContain(
+			'Some parlays could not be loaded',
 		)
 	})
 })
@@ -218,6 +241,40 @@ describe('MyBetsPaginationService parlay history', () => {
 			{ page: 3, limit: 100 },
 		)
 		expect(result.historyParlays).toHaveLength(3)
+	})
+
+	it('keeps successful parlay pages and warns when a later page fails', async () => {
+		const betsWrapper = {
+			getUserBetslips: vi.fn().mockResolvedValue([]),
+		}
+		const parlaysWrapper = {
+			getUserParlays: vi
+				.fn()
+				.mockResolvedValueOnce({
+					parlays: [parlay({ id: 'page-1', status: 'lost' })],
+					total_pages: 3,
+				})
+				.mockResolvedValueOnce({
+					parlays: [parlay({ id: 'page-2', status: 'lost' })],
+					total_pages: 3,
+				})
+				.mockRejectedValueOnce(new Error('page 3 unavailable')),
+		}
+		const service = new MyBetsPaginationService(
+			betsWrapper as never,
+			parlaysWrapper as never,
+		)
+
+		const result = await service.fetchUserBets('user-1')
+
+		expect(result.historyParlays).toHaveLength(2)
+		expect(result.historyParlays.map((item) => item.id)).toEqual([
+			'page-1',
+			'page-2',
+		])
+		expect(result.parlayFetchWarning).toContain(
+			'Some parlays could not be loaded',
+		)
 	})
 
 	it('paginates singles and parlays together in date order', () => {
@@ -307,11 +364,35 @@ describe('MyBetsPaginationService parlay history', () => {
 		}>
 		const cancelButtons = components
 			.flatMap((row) => row.components ?? [])
-			.filter((button) =>
-				button.data?.custom_id?.startsWith('parlay_cancel_'),
+			.filter(
+				(button) =>
+					button.data?.custom_id?.startsWith('parlay_cancel_') &&
+					!button.data?.custom_id?.startsWith('parlay_cancel_nav_'),
 			)
 
 		expect(components).toHaveLength(5)
-		expect(cancelButtons).toHaveLength(20)
+		expect(cancelButtons).toHaveLength(15)
+		expect(JSON.stringify(response.components)).toContain(
+			'parlay_cancel_nav_next_1',
+		)
+
+		const secondPageResponse = await formatter.buildEmbedResponse({
+			userId: 'user-1',
+			pendingBets: [],
+			pendingParlays,
+			historyParlays: [],
+			historyPage: {
+				bets: [],
+				parlays: [],
+				entries: [],
+				page: 1,
+				totalPages: 2,
+			},
+			groupedBets: [],
+			cancellationPage: 2,
+		})
+		expect(JSON.stringify(secondPageResponse.components)).toContain(
+			'parlay_cancel_parlay-20_2',
+		)
 	})
 })
