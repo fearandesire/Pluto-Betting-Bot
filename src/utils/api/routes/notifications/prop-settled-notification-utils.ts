@@ -20,5 +20,18 @@ export function validatePropSettledNotification(
 		return null
 	}
 
+	const { correct, incorrect, total } = result.data.tallies
+	if (correct + incorrect !== total) {
+		logger.warn({
+			method: 'validatePropSettledNotification',
+			event: 'prop.notification.tally_invariant_failed',
+			message: 'Prop settlement tallies must sum to total',
+			correct,
+			incorrect,
+			total,
+		})
+		return null
+	}
+
 	return result.data
 }

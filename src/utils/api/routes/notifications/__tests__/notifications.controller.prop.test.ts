@@ -38,7 +38,18 @@ function getPropSettlementRoute() {
 	)
 	if (!route)
 		throw new Error('Prop settlement notification route not registered')
-	return route.stack[0]
+	return async (ctx: unknown, next: () => Promise<void>) => {
+		let index = -1
+		const dispatch = async (current: number): Promise<void> => {
+			if (current <= index)
+				throw new Error('next() called multiple times')
+			index = current
+			const middleware = route.stack[current]
+			if (!middleware) return await next()
+			await middleware(ctx as never, () => dispatch(current + 1))
+		}
+		await dispatch(0)
+	}
 }
 
 describe('POST /notifications/props/settled', () => {
@@ -51,6 +62,7 @@ describe('POST /notifications/props/settled', () => {
 			request: { body: validPayload },
 			body: undefined as unknown,
 			status: 200,
+			state: { apiKeyAuthenticated: true },
 		}
 
 		await getPropSettlementRoute()(ctx as never, async () => undefined)
@@ -65,6 +77,7 @@ describe('POST /notifications/props/settled', () => {
 			request: { body: { ...validPayload, outcome_uuid: 'not-a-uuid' } },
 			body: undefined as unknown,
 			status: 200,
+			state: { apiKeyAuthenticated: true },
 		}
 
 		await getPropSettlementRoute()(ctx as never, async () => undefined)
@@ -75,5 +88,38 @@ describe('POST /notifications/props/settled', () => {
 			success: false,
 			error: 'Invalid prop settlement notification data. Failed Zod validation.',
 		})
+	})
+
+	it('rejects mathematically inconsistent settlement tallies', async () => {
+		const ctx = {
+			request: {
+				body: {
+					...validPayload,
+					tallies: { correct: 2, incorrect: 0, total: 1 },
+				},
+			},
+			body: undefined as unknown,
+			status: 200,
+			state: { apiKeyAuthenticated: true },
+		}
+
+		await getPropSettlementRoute()(ctx as never, async () => undefined)
+
+		expect(processPropSettled).not.toHaveBeenCalled()
+		expect(ctx.status).toBe(422)
+	})
+
+	it('rejects direct router calls without app-level API authentication', async () => {
+		const ctx = {
+			request: { body: validPayload },
+			body: undefined as unknown,
+			status: 200,
+			state: {},
+		}
+
+		await getPropSettlementRoute()(ctx as never, async () => undefined)
+
+		expect(processPropSettled).not.toHaveBeenCalled()
+		expect(ctx.status).toBe(401)
 	})
 })
