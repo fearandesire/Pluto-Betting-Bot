@@ -117,7 +117,7 @@ export default class StatsWrapper {
 		const query = new URLSearchParams({ guild_id: params.guildId })
 		const fetchApi = KH_API_CONFIG.fetchApi ?? fetch
 		const response = await fetchApi(
-			`${KH_API_CONFIG.basePath}${path}?${query.toString()}`,
+			`${KH_API_CONFIG.basePath.replace(/\/$/, '')}${path}?${query.toString()}`,
 			{
 				method: 'GET',
 				headers: {
