@@ -44,6 +44,7 @@ export function createApiKeyAuthMiddleware() {
 			return
 		}
 
+		ctx.state.apiKeyAuthenticated = true
 		await next()
 	}
 }
