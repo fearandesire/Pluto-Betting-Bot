@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto'
+import { randomBytes, randomUUID } from 'node:crypto'
 import {
 	ActionRowBuilder,
 	ButtonBuilder,
@@ -31,8 +31,91 @@ export interface ParlayBuilderLeg extends ParlayLegInput {
 }
 
 export interface ParlayBuilderSession {
+	sessionId: string
+	revision: number
 	legs: ParlayBuilderLeg[]
 	stake: number | null
+}
+
+export type ParlayBuilderIdentity = Pick<
+	ParlayBuilderSession,
+	'sessionId' | 'revision'
+>
+
+export type ParlayButtonAction =
+	| 'add'
+	| 'stake'
+	| 'confirm'
+	| 'cancel'
+	| 'remove'
+
+export type ParlayModalKind = 'add-leg' | 'stake'
+
+export const STALE_PARLAY_BUILDER_MESSAGE =
+	'This parlay builder is no longer current. Use the latest builder or run `/parlay` again.'
+
+const SESSION_ID_PATTERN = /^[A-Za-z0-9_-]{12}$/
+const BUTTON_ID_PATTERN =
+	/^parlay\.btn\.([A-Za-z0-9_-]{12})\.(0|[1-9]\d*)\.(add|stake|confirm|cancel|remove)(?:\.(0|[1-9]\d*))?$/
+const MODAL_ID_PATTERN =
+	/^parlay\.modal\.([A-Za-z0-9_-]{12})\.(0|[1-9]\d*)\.(add-leg|stake)$/
+
+export function parlayIdentity(
+	session: ParlayBuilderSession,
+): ParlayBuilderIdentity {
+	return { sessionId: session.sessionId, revision: session.revision }
+}
+
+export function buildParlayButtonId(
+	identity: ParlayBuilderIdentity,
+	action: ParlayButtonAction,
+	index?: number,
+): string {
+	if (action === 'remove') {
+		if (!Number.isSafeInteger(index) || Number(index) < 0) {
+			throw new Error('Remove controls require a nonnegative leg index.')
+		}
+		return `parlay.btn.${identity.sessionId}.${identity.revision}.${action}.${index}`
+	}
+	return `parlay.btn.${identity.sessionId}.${identity.revision}.${action}`
+}
+
+export function parseParlayButtonId(customId: string):
+	| (ParlayBuilderIdentity & {
+			action: ParlayButtonAction
+			index?: number
+	  })
+	| null {
+	const match = BUTTON_ID_PATTERN.exec(customId)
+	if (!match) return null
+	const action = match[3] as ParlayButtonAction
+	const index = match[4] === undefined ? undefined : Number(match[4])
+	if ((action === 'remove') !== (index !== undefined)) return null
+	return {
+		sessionId: match[1],
+		revision: Number(match[2]),
+		action,
+		...(index === undefined ? {} : { index }),
+	}
+}
+
+export function buildParlayModalId(
+	identity: ParlayBuilderIdentity,
+	kind: ParlayModalKind,
+): string {
+	return `parlay.modal.${identity.sessionId}.${identity.revision}.${kind}`
+}
+
+export function parseParlayModalId(
+	customId: string,
+): (ParlayBuilderIdentity & { kind: ParlayModalKind }) | null {
+	const match = MODAL_ID_PATTERN.exec(customId)
+	if (!match) return null
+	return {
+		sessionId: match[1],
+		revision: Number(match[2]),
+		kind: match[3] as ParlayModalKind,
+	}
 }
 
 export type ParlaySide = 'home' | 'away' | 'over' | 'under'
@@ -75,8 +158,17 @@ export class ParlayBuilderService {
 		const value = await this.cache.get(parlayBuilderKey(userId, guildId))
 		if (!value || typeof value !== 'object') return null
 		const session = value as Partial<ParlayBuilderSession>
-		if (!Array.isArray(session.legs)) return null
+		if (
+			!SESSION_ID_PATTERN.test(session.sessionId ?? '') ||
+			!Number.isSafeInteger(session.revision) ||
+			Number(session.revision) < 0 ||
+			!Array.isArray(session.legs)
+		) {
+			return null
+		}
 		return {
+			sessionId: session.sessionId!,
+			revision: session.revision!,
 			legs: session.legs as ParlayBuilderLeg[],
 			stake: typeof session.stake === 'number' ? session.stake : null,
 		}
@@ -88,7 +180,12 @@ export class ParlayBuilderService {
 	): Promise<ParlayBuilderSession> {
 		return this.withSessionLock(userId, guildId, async () => {
 			await this.ensureNotReserved(userId, guildId)
-			const session: ParlayBuilderSession = { legs: [], stake: null }
+			const session: ParlayBuilderSession = {
+				sessionId: randomBytes(9).toString('base64url'),
+				revision: 0,
+				legs: [],
+				stake: null,
+			}
 			await this.saveUnlocked(userId, guildId, session)
 			return session
 		})
@@ -106,8 +203,17 @@ export class ParlayBuilderService {
 		)
 	}
 
-	async clear(userId: string, guildId: string): Promise<void> {
-		await this.clearWithPlacementToken(userId, guildId)
+	async clear(
+		userId: string,
+		guildId: string,
+		expected: ParlayBuilderIdentity,
+	): Promise<void> {
+		await this.withSessionLock(userId, guildId, async () => {
+			await this.ensureNotReserved(userId, guildId)
+			const session = await this.requireSession(userId, guildId)
+			this.assertIdentity(session, expected)
+			await this.cache.remove(parlayBuilderKey(userId, guildId))
+		})
 	}
 
 	async clearWithPlacementToken(
@@ -140,12 +246,13 @@ export class ParlayBuilderService {
 	async setStake(
 		userId: string,
 		guildId: string,
+		expected: ParlayBuilderIdentity,
 		stake: number,
 	): Promise<ParlayBuilderSession> {
 		if (!Number.isSafeInteger(stake) || stake <= 0) {
 			throw new Error('Stake must be a whole number greater than $0.')
 		}
-		return this.mutateSession(userId, guildId, (session) => ({
+		return this.mutateSession(userId, guildId, expected, (session) => ({
 			...session,
 			stake,
 		}))
@@ -154,9 +261,10 @@ export class ParlayBuilderService {
 	async removeLeg(
 		userId: string,
 		guildId: string,
+		expected: ParlayBuilderIdentity,
 		index: number,
 	): Promise<ParlayBuilderSession> {
-		return this.mutateSession(userId, guildId, (session) => {
+		return this.mutateSession(userId, guildId, expected, (session) => {
 			if (index < 0 || index >= session.legs.length) {
 				throw new Error('That parlay leg is no longer available.')
 			}
@@ -170,20 +278,30 @@ export class ParlayBuilderService {
 	async addLeg(
 		userId: string,
 		guildId: string,
+		expected: ParlayBuilderIdentity,
 		selection: AddParlayLegSelection,
 	): Promise<ParlayBuilderSession> {
-		return this.mutateSession(userId, guildId, async (session) => {
-			if (session.legs.length >= PARLAY_BUILDER_MAX_LEGS) {
-				throw new Error('A parlay can contain at most 6 legs.')
-			}
-			if (
-				session.legs.some((item) => item.event_id === selection.matchId)
-			) {
-				throw new Error('Each parlay leg must use a different game.')
-			}
-			const leg = await this.resolveLeg(selection)
-			return { ...session, legs: [...session.legs, leg] }
-		})
+		return this.mutateSession(
+			userId,
+			guildId,
+			expected,
+			async (session) => {
+				if (session.legs.length >= PARLAY_BUILDER_MAX_LEGS) {
+					throw new Error('A parlay can contain at most 6 legs.')
+				}
+				if (
+					session.legs.some(
+						(item) => item.event_id === selection.matchId,
+					)
+				) {
+					throw new Error(
+						'Each parlay leg must use a different game.',
+					)
+				}
+				const leg = await this.resolveLeg(selection)
+				return { ...session, legs: [...session.legs, leg] }
+			},
+		)
 	}
 
 	/**
@@ -193,31 +311,42 @@ export class ParlayBuilderService {
 	async reserveForPlacement(
 		userId: string,
 		guildId: string,
+		expected: ParlayBuilderIdentity,
 	): Promise<{ session: ParlayBuilderSession; token: string } | null> {
-		const reservationKey = parlayBuilderPlacementKey(userId, guildId)
-		if (localPlacementReservations.has(reservationKey)) return null
-		const token = randomUUID()
-		localPlacementReservations.set(reservationKey, token)
-		let acquired = !this.cache.setIfAbsent
-		let sessionFound = false
-		try {
-			if (this.cache.setIfAbsent) {
-				acquired = await this.cache.setIfAbsent(
-					reservationKey,
-					token,
-					120,
-				)
-				if (!acquired) return null
+		return this.withSessionLock(userId, guildId, async () => {
+			const reservationKey = parlayBuilderPlacementKey(userId, guildId)
+			if (localPlacementReservations.has(reservationKey)) return null
+			const session = await this.requireSession(userId, guildId)
+			this.assertIdentity(session, expected)
+			const token = randomUUID()
+			localPlacementReservations.set(reservationKey, token)
+			let acquired = !this.cache.setIfAbsent
+			try {
+				if (this.cache.setIfAbsent) {
+					acquired = await this.cache.setIfAbsent(
+						reservationKey,
+						token,
+						120,
+					)
+					if (!acquired) return null
+				}
+				return { session, token }
+			} finally {
+				if (!acquired) {
+					await this.releasePlacement(userId, guildId, token)
+				}
 			}
-			const session = await this.get(userId, guildId)
-			if (!session) return null
-			sessionFound = true
-			return { session, token }
-		} finally {
-			if (!acquired || !sessionFound) {
-				await this.releasePlacement(userId, guildId, token)
-			}
-		}
+		})
+	}
+
+	async assertCurrent(
+		userId: string,
+		guildId: string,
+		expected: ParlayBuilderIdentity,
+	): Promise<ParlayBuilderSession> {
+		const session = await this.requireSession(userId, guildId)
+		this.assertIdentity(session, expected)
+		return session
 	}
 
 	async releasePlacement(
@@ -255,21 +384,49 @@ export class ParlayBuilderService {
 	private async mutateSession(
 		userId: string,
 		guildId: string,
+		expected: ParlayBuilderIdentity,
 		mutator: (
 			session: ParlayBuilderSession,
 		) => ParlayBuilderSession | Promise<ParlayBuilderSession>,
 	): Promise<ParlayBuilderSession> {
 		return this.withSessionLock(userId, guildId, async () => {
 			await this.ensureNotReserved(userId, guildId)
-			const session = await this.get(userId, guildId)
-			if (!session)
-				throw new Error(
-					'Your parlay builder expired. Run `/parlay` to start again.',
-				)
+			const session = await this.requireSession(userId, guildId)
+			this.assertIdentity(session, expected)
 			const updated = await mutator(session)
-			await this.saveUnlocked(userId, guildId, updated)
-			return updated
+			const versioned: ParlayBuilderSession = {
+				...updated,
+				sessionId: session.sessionId,
+				revision: session.revision + 1,
+			}
+			await this.saveUnlocked(userId, guildId, versioned)
+			return versioned
 		})
+	}
+
+	private async requireSession(
+		userId: string,
+		guildId: string,
+	): Promise<ParlayBuilderSession> {
+		const session = await this.get(userId, guildId)
+		if (!session) {
+			throw new Error(
+				'Your parlay builder expired. Run `/parlay` to start again.',
+			)
+		}
+		return session
+	}
+
+	private assertIdentity(
+		session: ParlayBuilderSession,
+		expected: ParlayBuilderIdentity,
+	): void {
+		if (
+			session.sessionId !== expected.sessionId ||
+			session.revision !== expected.revision
+		) {
+			throw new Error(STALE_PARLAY_BUILDER_MESSAGE)
+		}
 	}
 
 	private async ensureNotReserved(
@@ -484,7 +641,9 @@ export class ParlayBuilderService {
 				)
 				.setButtonAccessory(
 					new ButtonBuilder()
-						.setCustomId(`parlay_btn_remove_${index}`)
+						.setCustomId(
+							buildParlayButtonId(session, 'remove', index),
+						)
 						.setLabel('Remove')
 						.setStyle(ButtonStyle.Danger),
 				)
@@ -505,22 +664,22 @@ export class ParlayBuilderService {
 		container.addActionRowComponents((row) =>
 			row.addComponents(
 				new ButtonBuilder()
-					.setCustomId('parlay_btn_add')
+					.setCustomId(buildParlayButtonId(session, 'add'))
 					.setLabel('Add Leg')
 					.setStyle(ButtonStyle.Primary),
 				new ButtonBuilder()
-					.setCustomId('parlay_btn_stake')
+					.setCustomId(buildParlayButtonId(session, 'stake'))
 					.setLabel('Set Stake')
 					.setStyle(ButtonStyle.Secondary),
 				new ButtonBuilder()
-					.setCustomId('parlay_btn_confirm')
+					.setCustomId(buildParlayButtonId(session, 'confirm'))
 					.setLabel('Confirm')
 					.setStyle(ButtonStyle.Success)
 					.setDisabled(
 						session.legs.length < 2 || session.stake === null,
 					),
 				new ButtonBuilder()
-					.setCustomId('parlay_btn_cancel')
+					.setCustomId(buildParlayButtonId(session, 'cancel'))
 					.setLabel('Cancel')
 					.setStyle(ButtonStyle.Danger),
 			),

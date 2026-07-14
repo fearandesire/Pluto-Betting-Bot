@@ -12,9 +12,13 @@ import {
 	TextInputStyle,
 } from 'discord.js'
 import {
+	buildParlayModalId,
 	getParlayErrorMessage,
 	logParlayBuilderError,
+	type ParlayBuilderIdentity,
 	ParlayBuilderService,
+	parseParlayButtonId,
+	STALE_PARLAY_BUILDER_MESSAGE,
 } from '../services/ParlayBuilderService.js'
 import { BetsCacheService } from '../utils/api/common/bets/BetsCacheService.js'
 import { BetslipManager } from '../utils/api/Khronos/bets/BetslipsManager.js'
@@ -22,8 +26,6 @@ import BetslipWrapper from '../utils/api/Khronos/bets/betslip-wrapper.js'
 import ParlayApiWrapper from '../utils/api/Khronos/parlays/ParlayApiWrapper.js'
 import MatchCacheService from '../utils/api/routes/cache/match-cache-service.js'
 import { CacheManager } from '../utils/cache/cache-manager.js'
-
-const removeId = /^parlay_btn_remove_(\d+)$/
 
 export class ParlayButtonHandler extends InteractionHandler {
 	private readonly builderService = new ParlayBuilderService()
@@ -41,44 +43,64 @@ export class ParlayButtonHandler extends InteractionHandler {
 	}
 
 	public override async parse(interaction: ButtonInteraction) {
-		if (!interaction.customId.startsWith('parlay_btn_')) return this.none()
-		if (interaction.customId === 'parlay_btn_add') {
-			try {
-				await interaction.showModal(await this.buildAddLegModal())
-			} catch (error) {
-				logParlayBuilderError(error, {
-					action: 'open_add_leg_modal',
-					userId: interaction.user.id,
-				})
+		const control = parseParlayButtonId(interaction.customId)
+		if (!control) {
+			if (interaction.customId.startsWith('parlay_btn_')) {
 				await interaction.reply({
-					content:
-						error instanceof Error
-							? error.message
-							: 'No upcoming games are available right now.',
-					ephemeral: true,
+					content: STALE_PARLAY_BUILDER_MESSAGE,
+					flags: MessageFlags.Ephemeral,
 				})
 			}
 			return this.none()
 		}
-		if (interaction.customId === 'parlay_btn_stake') {
-			await interaction.showModal(this.buildStakeModal())
+		const identity = {
+			sessionId: control.sessionId,
+			revision: control.revision,
+		}
+		if (control.action === 'add' || control.action === 'stake') {
+			try {
+				if (!interaction.guildId) {
+					throw new Error(
+						'Parlays can only be built inside a server.',
+					)
+				}
+				await this.builderService.assertCurrent(
+					interaction.user.id,
+					interaction.guildId,
+					identity,
+				)
+				await interaction.showModal(
+					control.action === 'add'
+						? await this.buildAddLegModal(identity)
+						: this.buildStakeModal(identity),
+				)
+			} catch (error) {
+				logParlayBuilderError(error, {
+					action: `open_${control.action}_modal`,
+					userId: interaction.user.id,
+				})
+				await interaction.reply({
+					content: getParlayErrorMessage(error),
+					flags: MessageFlags.Ephemeral,
+				})
+			}
 			return this.none()
 		}
-		const removeMatch = removeId.exec(interaction.customId)
-		if (removeMatch) {
+		if (control.action === 'remove') {
 			await interaction.deferUpdate()
 			return this.some({
 				action: 'remove',
-				index: Number(removeMatch[1]),
+				index: control.index!,
+				...identity,
 			})
 		}
-		if (interaction.customId === 'parlay_btn_cancel') {
+		if (control.action === 'cancel') {
 			await interaction.deferUpdate()
-			return this.some({ action: 'cancel' })
+			return this.some({ action: 'cancel', ...identity })
 		}
-		if (interaction.customId === 'parlay_btn_confirm') {
+		if (control.action === 'confirm') {
 			await interaction.deferUpdate()
-			return this.some({ action: 'confirm' })
+			return this.some({ action: 'confirm', ...identity })
 		}
 		return this.none()
 	}
@@ -86,18 +108,22 @@ export class ParlayButtonHandler extends InteractionHandler {
 	public async run(
 		interaction: ButtonInteraction,
 		payload:
-			| { action: 'remove'; index: number }
-			| { action: 'cancel' }
-			| { action: 'confirm' },
+			| ({ action: 'remove'; index: number } & ParlayBuilderIdentity)
+			| ({ action: 'cancel' } & ParlayBuilderIdentity)
+			| ({ action: 'confirm' } & ParlayBuilderIdentity),
 	) {
 		const userId = interaction.user.id
 		const guildId = interaction.guildId
+		const expected = {
+			sessionId: payload.sessionId,
+			revision: payload.revision,
+		}
 		try {
 			if (!guildId) {
 				throw new Error('Parlays can only be built inside a server.')
 			}
 			if (payload.action === 'cancel') {
-				await this.builderService.clear(userId, guildId)
+				await this.builderService.clear(userId, guildId, expected)
 				return interaction.editReply(
 					this.builderService.renderMessage(
 						'Parlay builder cancelled.',
@@ -108,6 +134,7 @@ export class ParlayButtonHandler extends InteractionHandler {
 				const session = await this.builderService.removeLeg(
 					userId,
 					guildId,
+					expected,
 					payload.index,
 				)
 				return interaction.editReply(
@@ -117,6 +144,7 @@ export class ParlayButtonHandler extends InteractionHandler {
 			const reservation = await this.builderService.reserveForPlacement(
 				userId,
 				guildId,
+				expected,
 			)
 			if (!reservation) {
 				throw new Error(
@@ -209,7 +237,9 @@ export class ParlayButtonHandler extends InteractionHandler {
 		}
 	}
 
-	private async buildAddLegModal(): Promise<ModalBuilder> {
+	private async buildAddLegModal(
+		identity: ParlayBuilderIdentity,
+	): Promise<ModalBuilder> {
 		const matches = ((await this.matchCache.getMatches()) ?? [])
 			.filter((match) => match.id && match.home_team && match.away_team)
 			.filter(
@@ -245,7 +275,7 @@ export class ParlayButtonHandler extends InteractionHandler {
 				})),
 			)
 		return new ModalBuilder()
-			.setCustomId('parlay_modal_add_leg')
+			.setCustomId(buildParlayModalId(identity, 'add-leg'))
 			.setTitle('Add a parlay leg')
 			.addLabelComponents(
 				new LabelBuilder()
@@ -286,9 +316,9 @@ export class ParlayButtonHandler extends InteractionHandler {
 			)
 	}
 
-	private buildStakeModal(): ModalBuilder {
+	private buildStakeModal(identity: ParlayBuilderIdentity): ModalBuilder {
 		return new ModalBuilder()
-			.setCustomId('parlay_modal_stake')
+			.setCustomId(buildParlayModalId(identity, 'stake'))
 			.setTitle('Set parlay stake')
 			.addLabelComponents(
 				new LabelBuilder()
