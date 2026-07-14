@@ -30,6 +30,8 @@ type CacheStub = {
 	get: ReturnType<typeof vi.fn>
 	set: ReturnType<typeof vi.fn>
 	remove: ReturnType<typeof vi.fn>
+	setIfAbsent?: ReturnType<typeof vi.fn>
+	compareAndRemove?: ReturnType<typeof vi.fn>
 }
 
 const makeCache = (): CacheStub => ({
@@ -69,10 +71,10 @@ describe('ParlayBuilderService', () => {
 	})
 
 	it('stores one user session with the 15 minute TTL', async () => {
-		await service.start('user-1')
+		await service.start('user-1', 'guild-1')
 
 		expect(cache.set).toHaveBeenCalledWith(
-			'parlay-builder:user-1',
+			'parlay-builder:guild-1:user-1',
 			{ legs: [], stake: null },
 			PARLAY_BUILDER_TTL_SECONDS,
 		)
@@ -81,7 +83,7 @@ describe('ParlayBuilderService', () => {
 	it('rejects duplicate events and the seventh leg', async () => {
 		cache.get.mockResolvedValue(makeSession(1))
 		await expect(
-			service.addLeg('user-1', {
+			service.addLeg('user-1', 'guild-1', {
 				matchId: 'event-0',
 				marketKey: 'h2h',
 				side: 'home',
@@ -90,7 +92,7 @@ describe('ParlayBuilderService', () => {
 
 		cache.get.mockResolvedValue(makeSession(PARLAY_BUILDER_MAX_LEGS))
 		await expect(
-			service.addLeg('user-1', {
+			service.addLeg('user-1', 'guild-1', {
 				matchId: 'event-new',
 				marketKey: 'h2h',
 				side: 'home',
@@ -116,7 +118,7 @@ describe('ParlayBuilderService', () => {
 			},
 		])
 
-		const result = await service.addLeg('user-1', {
+		const result = await service.addLeg('user-1', 'guild-1', {
 			matchId: 'event-1',
 			marketKey: 'h2h',
 			side: 'home',
@@ -129,10 +131,45 @@ describe('ParlayBuilderService', () => {
 			odds_american: -110,
 		})
 		expect(cache.set).toHaveBeenLastCalledWith(
-			'parlay-builder:user-1',
+			'parlay-builder:guild-1:user-1',
 			expect.objectContaining({ legs: expect.any(Array) }),
 			PARLAY_BUILDER_TTL_SECONDS,
 		)
+	})
+
+	it('rejects matches without sport metadata instead of defaulting to NBA', async () => {
+		cache.get.mockResolvedValue(makeSession())
+		matchCache.getMatch.mockResolvedValue({
+			id: 'event-no-sport',
+			home_team: 'Home Team',
+			away_team: 'Away Team',
+			commence_time: '2099-01-01T00:00:00.000Z',
+		})
+
+		await expect(
+			service.addLeg('user-1', 'guild-1', {
+				matchId: 'event-no-sport',
+				marketKey: 'h2h',
+				side: 'home',
+			}),
+		).rejects.toThrow('missing sport information')
+		expect(parlayApi.getEventOutcomes).not.toHaveBeenCalled()
+	})
+
+	it('reserves a session so concurrent confirmation can only place once', async () => {
+		cache.get.mockResolvedValue({ ...makeSession(2), stake: 10 })
+		cache.setIfAbsent = vi.fn().mockResolvedValue(true)
+		cache.compareAndRemove = vi.fn().mockResolvedValue(true)
+
+		const first = await service.reserveForPlacement('user-1', 'guild-1')
+		const second = await service.reserveForPlacement('user-1', 'guild-1')
+
+		expect(first).not.toBeNull()
+		expect(second).toBeNull()
+		await service.releasePlacement('user-1', 'guild-1', first?.token)
+		const third = await service.reserveForPlacement('user-1', 'guild-1')
+		expect(third).not.toBeNull()
+		await service.releasePlacement('user-1', 'guild-1', third?.token)
 	})
 
 	it('calculates combined odds and stake-aware payout', async () => {

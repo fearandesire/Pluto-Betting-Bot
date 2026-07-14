@@ -38,6 +38,17 @@ export class CacheManager {
 		return result === 'OK'
 	}
 
+	/** Remove a lock only when it is still owned by the caller. */
+	async compareAndRemove(key: string, value: string): Promise<boolean> {
+		const result = await this.cache.eval(
+			`if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end`,
+			1,
+			key,
+			value,
+		)
+		return result === 1
+	}
+
 	async get(key: string) {
 		if (!key) {
 			throw new Error('No key was provided to save into cache')

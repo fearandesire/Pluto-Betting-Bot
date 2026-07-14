@@ -2,7 +2,7 @@ import {
 	InteractionHandler,
 	InteractionHandlerTypes,
 } from '@sapphire/framework'
-import { type ModalSubmitInteraction } from 'discord.js'
+import { MessageFlags, type ModalSubmitInteraction } from 'discord.js'
 import {
 	getParlayErrorMessage,
 	logParlayBuilderError,
@@ -39,8 +39,30 @@ export class ParlayModalHandler extends InteractionHandler {
 		interaction: ModalSubmitInteraction,
 		payload: { kind: 'add_leg' | 'stake' },
 	) {
-		await interaction.deferReply({ ephemeral: true })
 		const userId = interaction.user.id
+		const guildId = interaction.guildId
+		if (!guildId) {
+			return interaction.reply({
+				content: 'Parlays can only be built inside a server.',
+				flags: MessageFlags.Ephemeral,
+			})
+		}
+		const updateBuilder = async (
+			options: ReturnType<ParlayBuilderService['render']>,
+			confirmation = 'Parlay builder updated.',
+		) => {
+			if (interaction.isFromMessage() && interaction.message) {
+				await interaction.message.edit(options)
+				return interaction.reply({
+					content: confirmation,
+					flags: MessageFlags.Ephemeral,
+				})
+			}
+			if (!interaction.deferred && !interaction.replied) {
+				await interaction.deferReply({ ephemeral: true })
+			}
+			return interaction.editReply(options)
+		}
 		try {
 			if (payload.kind === 'stake') {
 				const rawStake = interaction.fields
@@ -50,11 +72,10 @@ export class ParlayModalHandler extends InteractionHandler {
 					throw new Error('Stake must be a whole number. Try again.')
 				const session = await this.builderService.setStake(
 					userId,
+					guildId,
 					Number(rawStake),
 				)
-				return interaction.editReply(
-					this.builderService.render(session),
-				)
+				return updateBuilder(this.builderService.render(session))
 			}
 
 			const gameId =
@@ -86,16 +107,17 @@ export class ParlayModalHandler extends InteractionHandler {
 			) {
 				throw new Error('Totals require Over or Under.')
 			}
-			const session = await this.builderService.addLeg(userId, {
+			const session = await this.builderService.addLeg(userId, guildId, {
 				matchId: gameId,
 				marketKey,
 				side,
 			})
-			return interaction.editReply(this.builderService.render(session))
+			return updateBuilder(this.builderService.render(session))
 		} catch (error) {
 			logParlayBuilderError(error, { userId, modal: payload.kind })
-			return interaction.editReply(
+			return updateBuilder(
 				this.builderService.renderMessage(getParlayErrorMessage(error)),
+				'Unable to update parlay builder.',
 			)
 		}
 	}

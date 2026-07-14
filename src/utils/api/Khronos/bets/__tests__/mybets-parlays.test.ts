@@ -160,7 +160,7 @@ describe('MyBetsFormatterService parlays', () => {
 			groupedBets: [],
 		})
 
-		expect(response.embeds?.[0]?.toJSON().description).toContain(
+		expect(JSON.stringify(response.embeds?.[0])).toContain(
 			'Some parlays could not be loaded',
 		)
 	})

@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import type {
 	Account,
 	CancelBetslipRequest,
@@ -26,6 +27,13 @@ import {
 import { DEV_IDS } from '../../lib/configs/constants.js'
 import env from '../../lib/startup/env.js'
 import { DiscordConfigEnums } from '../api/common/interfaces/kh-pluto/kh-pluto.interface.js'
+import type {
+	EventOutcome,
+	InitParlayRequest,
+	InitParlayResponse,
+	ParlayResponse,
+	UserParlaysResponse,
+} from '../api/Khronos/parlays/ParlayApiWrapper.js'
 import {
 	makeBetslipWithAggregation,
 	makePlacedBetslip,
@@ -42,6 +50,12 @@ export class MockBackend {
 		GetAllMatchesDto['matches']
 	>()
 	private nextBetId = 10_000
+	private nextParlayId = 20_000
+	private readonly pendingParlays = new Map<
+		string,
+		{ request: InitParlayRequest; preview: InitParlayResponse }
+	>()
+	private readonly parlays = new Map<string, ParlayResponse>()
 
 	private constructor() {
 		if (env.NODE_ENV === 'production') {
@@ -178,6 +192,164 @@ export class MockBackend {
 		return this.store.getBets(request.userid)
 	}
 
+	initParlay(request: InitParlayRequest): InitParlayResponse {
+		const legs = request.legs.map((leg) => ({
+			event_id: leg.event_id,
+			outcome_uuid: leg.outcome_uuid,
+			market_key: 'h2h' as const,
+			selection_display: `Mock selection ${leg.outcome_uuid.slice(0, 8)}`,
+			odds_american: -110,
+			point: null,
+			commence_time: new Date(Date.now() + 6 * 3_600_000).toISOString(),
+		}))
+		const decimal = Math.pow(210 / 110, legs.length)
+		const preview: InitParlayResponse = {
+			init_token: randomUUID(),
+			combined_odds_american: Math.round((decimal - 1) * 100),
+			potential_payout: Math.round(request.stake * decimal * 100) / 100,
+			legs,
+			expires_at: new Date(Date.now() + 5 * 60_000).toISOString(),
+		}
+		this.pendingParlays.set(preview.init_token, { request, preview })
+		return preview
+	}
+
+	placeParlay(initToken: string): ParlayResponse {
+		const pending = this.pendingParlays.get(initToken)
+		if (!pending) throw new Error('Mock parlay initialization expired.')
+		this.pendingParlays.delete(initToken)
+		const { request, preview } = pending
+		const id = `mock-parlay-${this.nextParlayId++}`
+		const parlay: ParlayResponse = {
+			id,
+			user_id: request.user_id,
+			guild_id: request.guild_id,
+			stake: request.stake,
+			combined_odds_american: preview.combined_odds_american,
+			potential_payout: preview.potential_payout,
+			actual_payout: null,
+			status: 'pending',
+			leg_count: preview.legs.length,
+			created_at: new Date().toISOString(),
+			settled_at: null,
+			legs: preview.legs.map((leg, index) => ({
+				...leg,
+				id: `${id}-leg-${index + 1}`,
+				result: 'pending',
+				settled_at: null,
+			})),
+		}
+		this.parlays.set(id, parlay)
+		return parlay
+	}
+
+	getUserParlays(
+		userId: string,
+		options: { page?: number; limit?: number; status?: string } = {},
+	): UserParlaysResponse {
+		const limit = options.limit ?? 10
+		const page = options.page ?? 1
+		const all = [...this.parlays.values()].filter(
+			(parlay) =>
+				parlay.user_id === userId &&
+				(!options.status || parlay.status === options.status),
+		)
+		const start = (page - 1) * limit
+		return {
+			parlays: all.slice(start, start + limit),
+			page,
+			limit,
+			total: all.length,
+			total_pages: Math.max(1, Math.ceil(all.length / limit)),
+		}
+	}
+
+	cancelParlay(parlayId: string, userId: string): ParlayResponse {
+		const parlay = this.parlays.get(parlayId)
+		if (!parlay || parlay.user_id !== userId) {
+			throw new Error('Mock parlay was not found for this user.')
+		}
+		if (parlay.status !== 'pending') {
+			throw new Error('Mock parlay is no longer cancellable.')
+		}
+		const cancelled = { ...parlay, status: 'cancelled' as const }
+		this.parlays.set(parlayId, cancelled)
+		return cancelled
+	}
+
+	getEventOutcomes(sport: string, eventId: string): EventOutcome[] {
+		const game = this.findGameById(eventId)
+		if (!game?.home_team || !game.away_team) return []
+		const context = {
+			home_team: game.home_team,
+			away_team: game.away_team,
+		}
+		return [
+			{
+				uuid: `${eventId}-home`,
+				event_id: eventId,
+				market_key: 'h2h',
+				name: game.home_team,
+				price: -110,
+				position: 'home',
+				outcome_type: 'team_home',
+				event_context: context,
+			},
+			{
+				uuid: `${eventId}-away`,
+				event_id: eventId,
+				market_key: 'h2h',
+				name: game.away_team,
+				price: 100,
+				position: 'away',
+				outcome_type: 'team_away',
+				event_context: context,
+			},
+			{
+				uuid: `${eventId}-spread-home`,
+				event_id: eventId,
+				market_key: 'spreads',
+				name: game.home_team,
+				price: -110,
+				point: -1.5,
+				position: 'home',
+				outcome_type: 'team_home',
+				event_context: context,
+			},
+			{
+				uuid: `${eventId}-spread-away`,
+				event_id: eventId,
+				market_key: 'spreads',
+				name: game.away_team,
+				price: 100,
+				point: 1.5,
+				position: 'away',
+				outcome_type: 'team_away',
+				event_context: context,
+			},
+			{
+				uuid: `${eventId}-total-over`,
+				event_id: eventId,
+				market_key: 'totals',
+				name: 'Over',
+				price: -110,
+				point: 220.5,
+				outcome_type: 'over',
+				event_context: context,
+			},
+			{
+				uuid: `${eventId}-total-under`,
+				event_id: eventId,
+				market_key: 'totals',
+				name: 'Under',
+				price: -110,
+				point: 220.5,
+				outcome_type: 'under',
+				event_context: context,
+			},
+		]
+	}
+
 	clearPendingBets(request: ClearPendingBetsRequest) {
 		this.store.clearPending(request.userid)
 		return { statusCode: 200, message: 'Mock pending bet cleared' }
@@ -275,6 +447,9 @@ export class MockBackend {
 		this.store.reset()
 		this.matchesBySport.clear()
 		this.nextBetId = 10_000
+		this.nextParlayId = 20_000
+		this.pendingParlays.clear()
+		this.parlays.clear()
 	}
 
 	private findGameForBet(

@@ -91,9 +91,13 @@ export class ParlayButtonHandler extends InteractionHandler {
 			| { action: 'confirm' },
 	) {
 		const userId = interaction.user.id
+		const guildId = interaction.guildId
 		try {
+			if (!guildId) {
+				throw new Error('Parlays can only be built inside a server.')
+			}
 			if (payload.action === 'cancel') {
-				await this.builderService.clear(userId)
+				await this.builderService.clear(userId, guildId)
 				return interaction.editReply(
 					this.builderService.renderMessage(
 						'Parlay builder cancelled.',
@@ -103,44 +107,66 @@ export class ParlayButtonHandler extends InteractionHandler {
 			if (payload.action === 'remove') {
 				const session = await this.builderService.removeLeg(
 					userId,
+					guildId,
 					payload.index,
 				)
 				return interaction.editReply(
 					this.builderService.render(session),
 				)
 			}
-			const session = await this.builderService.get(userId)
-			if (!session)
-				throw new Error(
-					'Your parlay builder expired. Run `/parlay` to start again.',
-				)
-			this.builderService.validateForPlacement(session)
-			const initialized = await this.parlayApi.init({
-				legs: session.legs.map(({ event_id, outcome_uuid }) => ({
-					event_id,
-					outcome_uuid,
-				})),
-				stake: session.stake!,
-				guild_id: interaction.guildId!,
-				user_id: userId,
-			})
-			const placed = await this.parlayApi.place(initialized.init_token)
-			await new BetslipManager(
-				new BetslipWrapper(),
-				new BetsCacheService(new CacheManager()),
-			).announceParlayPlaced(interaction, {
-				parlayId: placed.id,
-				legCount: placed.leg_count,
-				stake: Number(placed.stake),
-				potentialPayout: Number(placed.potential_payout),
-			})
-			await this.builderService.clear(userId)
-			return interaction.editReply(
-				this.builderService.renderMessage(
-					`## ✅ Parlay placed\n**${placed.leg_count} legs** • **$${Number(placed.stake).toFixed(2)}** at **${placed.combined_odds_american > 0 ? '+' : ''}${placed.combined_odds_american}**\nPotential payout: **$${Number(placed.potential_payout).toFixed(2)}**\nParlay ID: \`${placed.id}\``,
-					0x57f287,
-				),
+			const reservation = await this.builderService.reserveForPlacement(
+				userId,
+				guildId,
 			)
+			if (!reservation) {
+				throw new Error(
+					'Your parlay is already being placed. Please wait for the result.',
+				)
+			}
+			const { session, token } = reservation
+			try {
+				this.builderService.validateForPlacement(session)
+				const initialized = await this.parlayApi.init({
+					legs: session.legs.map(({ event_id, outcome_uuid }) => ({
+						event_id,
+						outcome_uuid,
+					})),
+					stake: session.stake!,
+					guild_id: guildId,
+					user_id: userId,
+				})
+				const placed = await this.parlayApi.place(
+					initialized.init_token,
+				)
+				await new BetslipManager(
+					new BetslipWrapper(),
+					new BetsCacheService(new CacheManager()),
+				).announceParlayPlaced(interaction, {
+					parlayId: placed.id,
+					legCount: placed.leg_count,
+					stake: Number(placed.stake),
+					potentialPayout: Number(placed.potential_payout),
+				})
+				await this.builderService.clear(userId, guildId)
+				await this.builderService.releasePlacement(
+					userId,
+					guildId,
+					token,
+				)
+				return interaction.editReply(
+					this.builderService.renderMessage(
+						`## ✅ Parlay placed\n**${placed.leg_count} legs** • **$${Number(placed.stake).toFixed(2)}** at **${placed.combined_odds_american > 0 ? '+' : ''}${placed.combined_odds_american}**\nPotential payout: **$${Number(placed.potential_payout).toFixed(2)}**\nParlay ID: \`${placed.id}\``,
+						0x57f287,
+					),
+				)
+			} catch (error) {
+				await this.builderService.releasePlacement(
+					userId,
+					guildId,
+					token,
+				)
+				throw error
+			}
 		} catch (error) {
 			logParlayBuilderError(error, { action: payload.action, userId })
 			const message = getParlayErrorMessage(error)
