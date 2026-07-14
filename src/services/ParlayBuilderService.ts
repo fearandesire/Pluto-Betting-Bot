@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import {
 	ActionRowBuilder,
 	ButtonBuilder,
@@ -42,18 +43,36 @@ export interface AddParlayLegSelection {
 	side: ParlaySide
 }
 
-export const parlayBuilderKey = (userId: string): string =>
-	`parlay-builder:${userId}`
+export const parlayBuilderKey = (userId: string, guildId: string): string =>
+	`parlay-builder:${guildId}:${userId}`
+
+const parlayBuilderLockKey = (userId: string, guildId: string): string =>
+	`${parlayBuilderKey(userId, guildId)}:lock`
+
+const parlayBuilderPlacementKey = (userId: string, guildId: string): string =>
+	`${parlayBuilderKey(userId, guildId)}:placement`
+
+type BuilderCache = Pick<CacheManager, 'get' | 'set' | 'remove'> & {
+	setIfAbsent?: CacheManager['setIfAbsent']
+	compareAndRemove?: CacheManager['compareAndRemove']
+	refreshIfOwned?: CacheManager['refreshIfOwned']
+}
+
+const mutationQueues = new Map<string, Promise<unknown>>()
+const localPlacementReservations = new Map<string, string>()
 
 export class ParlayBuilderService {
 	constructor(
-		private readonly cache: CacheManager = new CacheManager(),
+		private readonly cache: BuilderCache = new CacheManager(),
 		private readonly matchCache = new MatchCacheService(new CacheManager()),
 		private readonly parlayApi = new ParlayApiWrapper(),
 	) {}
 
-	async get(userId: string): Promise<ParlayBuilderSession | null> {
-		const value = await this.cache.get(parlayBuilderKey(userId))
+	async get(
+		userId: string,
+		guildId: string,
+	): Promise<ParlayBuilderSession | null> {
+		const value = await this.cache.get(parlayBuilderKey(userId, guildId))
 		if (!value || typeof value !== 'object') return null
 		const session = value as Partial<ParlayBuilderSession>
 		if (!Array.isArray(session.legs)) return null
@@ -63,81 +82,258 @@ export class ParlayBuilderService {
 		}
 	}
 
-	async start(userId: string): Promise<ParlayBuilderSession> {
-		const session: ParlayBuilderSession = { legs: [], stake: null }
-		await this.save(userId, session)
-		return session
+	async start(
+		userId: string,
+		guildId: string,
+	): Promise<ParlayBuilderSession> {
+		return this.withSessionLock(userId, guildId, async () => {
+			await this.ensureNotReserved(userId, guildId)
+			const session: ParlayBuilderSession = { legs: [], stake: null }
+			await this.saveUnlocked(userId, guildId, session)
+			return session
+		})
 	}
 
-	async save(userId: string, session: ParlayBuilderSession): Promise<void> {
+	private async saveUnlocked(
+		userId: string,
+		guildId: string,
+		session: ParlayBuilderSession,
+	): Promise<void> {
 		await this.cache.set(
-			parlayBuilderKey(userId),
+			parlayBuilderKey(userId, guildId),
 			session,
 			PARLAY_BUILDER_TTL_SECONDS,
 		)
 	}
 
-	async clear(userId: string): Promise<void> {
-		await this.cache.remove(parlayBuilderKey(userId))
+	async clear(userId: string, guildId: string): Promise<void> {
+		await this.clearWithPlacementToken(userId, guildId)
+	}
+
+	async clearWithPlacementToken(
+		userId: string,
+		guildId: string,
+		placementToken?: string,
+	): Promise<void> {
+		await this.withSessionLock(userId, guildId, async () => {
+			const reservationKey = parlayBuilderPlacementKey(userId, guildId)
+			const localOwner = localPlacementReservations.get(reservationKey)
+			if (localOwner && localOwner !== placementToken) {
+				throw new Error(
+					'Your parlay is already being placed. Please wait for the result.',
+				)
+			}
+			if (this.cache.setIfAbsent) {
+				const active = await this.cache.get(reservationKey)
+				if (
+					placementToken ? active !== placementToken : Boolean(active)
+				) {
+					throw new Error(
+						'Your parlay is already being placed. Please wait for the result.',
+					)
+				}
+			}
+			await this.cache.remove(parlayBuilderKey(userId, guildId))
+		})
 	}
 
 	async setStake(
 		userId: string,
+		guildId: string,
 		stake: number,
 	): Promise<ParlayBuilderSession> {
 		if (!Number.isSafeInteger(stake) || stake <= 0) {
 			throw new Error('Stake must be a whole number greater than $0.')
 		}
-		const session = await this.get(userId)
-		if (!session)
-			throw new Error(
-				'Your parlay builder expired. Run `/parlay` to start again.',
-			)
-		const updated = { ...session, stake }
-		await this.save(userId, updated)
-		return updated
+		return this.mutateSession(userId, guildId, (session) => ({
+			...session,
+			stake,
+		}))
 	}
 
 	async removeLeg(
 		userId: string,
+		guildId: string,
 		index: number,
 	): Promise<ParlayBuilderSession> {
-		const session = await this.get(userId)
-		if (!session)
-			throw new Error(
-				'Your parlay builder expired. Run `/parlay` to start again.',
-			)
-		if (index < 0 || index >= session.legs.length) {
-			throw new Error('That parlay leg is no longer available.')
-		}
-		const updated = {
-			...session,
-			legs: session.legs.filter((_, i) => i !== index),
-		}
-		await this.save(userId, updated)
-		return updated
+		return this.mutateSession(userId, guildId, (session) => {
+			if (index < 0 || index >= session.legs.length) {
+				throw new Error('That parlay leg is no longer available.')
+			}
+			return {
+				...session,
+				legs: session.legs.filter((_, i) => i !== index),
+			}
+		})
 	}
 
 	async addLeg(
 		userId: string,
+		guildId: string,
 		selection: AddParlayLegSelection,
 	): Promise<ParlayBuilderSession> {
-		const session = await this.get(userId)
-		if (!session)
-			throw new Error(
-				'Your parlay builder expired. Run `/parlay` to start again.',
-			)
-		if (session.legs.length >= PARLAY_BUILDER_MAX_LEGS) {
-			throw new Error('A parlay can contain at most 6 legs.')
-		}
-		if (session.legs.some((leg) => leg.event_id === selection.matchId)) {
-			throw new Error('Each parlay leg must use a different game.')
-		}
+		return this.mutateSession(userId, guildId, async (session) => {
+			if (session.legs.length >= PARLAY_BUILDER_MAX_LEGS) {
+				throw new Error('A parlay can contain at most 6 legs.')
+			}
+			if (
+				session.legs.some((item) => item.event_id === selection.matchId)
+			) {
+				throw new Error('Each parlay leg must use a different game.')
+			}
+			const leg = await this.resolveLeg(selection)
+			return { ...session, legs: [...session.legs, leg] }
+		})
+	}
 
-		const leg = await this.resolveLeg(selection)
-		const updated = { ...session, legs: [...session.legs, leg] }
-		await this.save(userId, updated)
-		return updated
+	/**
+	 * Reserve a builder before calling Khronos. The Redis NX boundary keeps
+	 * duplicate confirm interactions from placing the same wager twice.
+	 */
+	async reserveForPlacement(
+		userId: string,
+		guildId: string,
+	): Promise<{ session: ParlayBuilderSession; token: string } | null> {
+		const reservationKey = parlayBuilderPlacementKey(userId, guildId)
+		if (localPlacementReservations.has(reservationKey)) return null
+		const token = randomUUID()
+		localPlacementReservations.set(reservationKey, token)
+		let acquired = !this.cache.setIfAbsent
+		let sessionFound = false
+		try {
+			if (this.cache.setIfAbsent) {
+				acquired = await this.cache.setIfAbsent(
+					reservationKey,
+					token,
+					120,
+				)
+				if (!acquired) return null
+			}
+			const session = await this.get(userId, guildId)
+			if (!session) return null
+			sessionFound = true
+			return { session, token }
+		} finally {
+			if (!acquired || !sessionFound) {
+				await this.releasePlacement(userId, guildId, token)
+			}
+		}
+	}
+
+	async releasePlacement(
+		userId: string,
+		guildId: string,
+		token?: string,
+	): Promise<void> {
+		const reservationKey = parlayBuilderPlacementKey(userId, guildId)
+		if (token && this.cache.compareAndRemove) {
+			await this.cache.compareAndRemove(reservationKey, token)
+		} else {
+			await this.cache.remove(reservationKey)
+		}
+		if (
+			!token ||
+			localPlacementReservations.get(reservationKey) === token
+		) {
+			localPlacementReservations.delete(reservationKey)
+		}
+	}
+
+	async refreshPlacement(
+		userId: string,
+		guildId: string,
+		token: string,
+	): Promise<boolean> {
+		if (!this.cache.refreshIfOwned) return true
+		return this.cache.refreshIfOwned(
+			parlayBuilderPlacementKey(userId, guildId),
+			token,
+			120,
+		)
+	}
+
+	private async mutateSession(
+		userId: string,
+		guildId: string,
+		mutator: (
+			session: ParlayBuilderSession,
+		) => ParlayBuilderSession | Promise<ParlayBuilderSession>,
+	): Promise<ParlayBuilderSession> {
+		return this.withSessionLock(userId, guildId, async () => {
+			await this.ensureNotReserved(userId, guildId)
+			const session = await this.get(userId, guildId)
+			if (!session)
+				throw new Error(
+					'Your parlay builder expired. Run `/parlay` to start again.',
+				)
+			const updated = await mutator(session)
+			await this.saveUnlocked(userId, guildId, updated)
+			return updated
+		})
+	}
+
+	private async ensureNotReserved(
+		userId: string,
+		guildId: string,
+	): Promise<void> {
+		const reservationKey = parlayBuilderPlacementKey(userId, guildId)
+		if (localPlacementReservations.has(reservationKey)) {
+			throw new Error(
+				'Your parlay is already being placed. Please wait for the result.',
+			)
+		}
+		if (this.cache.setIfAbsent && (await this.cache.get(reservationKey))) {
+			throw new Error(
+				'Your parlay is already being placed. Please wait for the result.',
+			)
+		}
+	}
+
+	private async withSessionLock<T>(
+		userId: string,
+		guildId: string,
+		operation: () => Promise<T>,
+	): Promise<T> {
+		const scope = parlayBuilderKey(userId, guildId)
+		const previous = mutationQueues.get(scope) ?? Promise.resolve()
+		const current = previous
+			.catch(() => undefined)
+			.then(async () => {
+				const token = randomUUID()
+				const lockKey = parlayBuilderLockKey(userId, guildId)
+				let locked = false
+				if (this.cache.setIfAbsent) {
+					for (let attempt = 0; attempt < 40; attempt += 1) {
+						if (await this.cache.setIfAbsent(lockKey, token, 120)) {
+							locked = true
+							break
+						}
+						await new Promise((resolve) => setTimeout(resolve, 25))
+					}
+					if (!locked)
+						throw new Error(
+							'Your parlay builder is busy. Please try again in a moment.',
+						)
+				}
+				try {
+					return await operation()
+				} finally {
+					if (locked) {
+						if (this.cache.compareAndRemove) {
+							await this.cache.compareAndRemove(lockKey, token)
+						} else {
+							await this.cache.remove(lockKey)
+						}
+					}
+				}
+			})
+		mutationQueues.set(scope, current)
+		try {
+			return await current
+		} finally {
+			if (mutationQueues.get(scope) === current)
+				mutationQueues.delete(scope)
+		}
 	}
 
 	async resolveLeg(
@@ -155,9 +351,14 @@ export class ParlayBuilderService {
 				'That game has already started. Choose another game.',
 			)
 		}
+		if (!match.sport) {
+			throw new Error(
+				'That game is missing sport information. Please try again.',
+			)
+		}
 
 		const outcomes = await this.parlayApi.getEventOutcomes(
-			match.sport ?? 'nba',
+			match.sport,
 			match.id,
 		)
 		const marketOutcomes = outcomes.filter(

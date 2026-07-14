@@ -1,4 +1,5 @@
 import type { AxiosRequestConfig } from 'axios'
+import type { MockBackend } from '../../../dev/mock-backend.js'
 import { AxiosKhronosInstance } from '../../common/axios-config.js'
 
 export type ParlayMarketKey = 'h2h' | 'spreads' | 'totals'
@@ -83,8 +84,20 @@ export default class ParlayApiWrapper {
 	private readonly requestConfig: AxiosRequestConfig = {
 		validateStatus: (status) => status >= 200 && status < 300,
 	}
+	private readonly mockPromise: Promise<MockBackend | undefined>
+
+	constructor() {
+		this.mockPromise =
+			process.env.USE_MOCK_DATA === 'true'
+				? import('../../../dev/index.js').then(({ MockBackend }) =>
+						MockBackend.instance(),
+					)
+				: Promise.resolve(undefined)
+	}
 
 	async init(payload: InitParlayRequest): Promise<InitParlayResponse> {
+		const mock = await this.mockPromise
+		if (mock) return mock.initParlay(payload)
 		const response = await AxiosKhronosInstance.post<InitParlayResponse>(
 			'/parlays/init',
 			payload,
@@ -94,6 +107,8 @@ export default class ParlayApiWrapper {
 	}
 
 	async place(initToken: string): Promise<ParlayResponse> {
+		const mock = await this.mockPromise
+		if (mock) return mock.placeParlay(initToken)
 		const response = await AxiosKhronosInstance.post<ParlayResponse>(
 			'/parlays/place',
 			{ init_token: initToken },
@@ -106,6 +121,8 @@ export default class ParlayApiWrapper {
 		userId: string,
 		options: { page?: number; limit?: number; status?: string } = {},
 	): Promise<UserParlaysResponse> {
+		const mock = await this.mockPromise
+		if (mock) return mock.getUserParlays(userId, options)
 		const response = await AxiosKhronosInstance.get<UserParlaysResponse>(
 			`/parlays/user/${encodeURIComponent(userId)}`,
 			{ ...this.requestConfig, params: options },
@@ -114,6 +131,8 @@ export default class ParlayApiWrapper {
 	}
 
 	async cancel(parlayId: string, userId: string): Promise<ParlayResponse> {
+		const mock = await this.mockPromise
+		if (mock) return mock.cancelParlay(parlayId, userId)
 		const response = await AxiosKhronosInstance.delete<ParlayResponse>(
 			`/parlays/${encodeURIComponent(parlayId)}`,
 			{
@@ -128,6 +147,8 @@ export default class ParlayApiWrapper {
 		sport: string,
 		eventId: string,
 	): Promise<EventOutcome[]> {
+		const mock = await this.mockPromise
+		if (mock) return mock.getEventOutcomes(sport, eventId)
 		const response = await AxiosKhronosInstance.get<EventOutcome[]>(
 			`/outcomes/event/${encodeURIComponent(sport)}/${encodeURIComponent(eventId)}`,
 			this.requestConfig,

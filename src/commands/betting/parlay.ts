@@ -29,7 +29,10 @@ export class UserCommand extends Command {
 		await interaction.deferReply({ flags: MessageFlags.Ephemeral })
 		try {
 			const service = this.getService()
-			const session = await service.start(interaction.user.id)
+			const session = await service.start(
+				interaction.user.id,
+				interaction.guildId!,
+			)
 			return interaction.editReply(service.render(session))
 		} catch (error) {
 			this.container.logger.error({
