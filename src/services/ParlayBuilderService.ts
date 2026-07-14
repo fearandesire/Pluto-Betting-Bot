@@ -55,10 +55,11 @@ const parlayBuilderPlacementKey = (userId: string, guildId: string): string =>
 type BuilderCache = Pick<CacheManager, 'get' | 'set' | 'remove'> & {
 	setIfAbsent?: CacheManager['setIfAbsent']
 	compareAndRemove?: CacheManager['compareAndRemove']
+	refreshIfOwned?: CacheManager['refreshIfOwned']
 }
 
 const mutationQueues = new Map<string, Promise<unknown>>()
-const localPlacementReservations = new Set<string>()
+const localPlacementReservations = new Map<string, string>()
 
 export class ParlayBuilderService {
 	constructor(
@@ -106,7 +107,30 @@ export class ParlayBuilderService {
 	}
 
 	async clear(userId: string, guildId: string): Promise<void> {
+		await this.clearWithPlacementToken(userId, guildId)
+	}
+
+	async clearWithPlacementToken(
+		userId: string,
+		guildId: string,
+		placementToken?: string,
+	): Promise<void> {
 		await this.withSessionLock(userId, guildId, async () => {
+			const reservationKey = parlayBuilderPlacementKey(userId, guildId)
+			const localOwner = localPlacementReservations.get(reservationKey)
+			if (localOwner && localOwner !== placementToken) {
+				throw new Error(
+					'Your parlay is already being placed. Please wait for the result.',
+				)
+			}
+			if (this.cache.setIfAbsent) {
+				const active = await this.cache.get(reservationKey)
+				if (active && active !== placementToken) {
+					throw new Error(
+						'Your parlay is already being placed. Please wait for the result.',
+					)
+				}
+			}
 			await this.cache.remove(parlayBuilderKey(userId, guildId))
 		})
 	}
@@ -170,8 +194,8 @@ export class ParlayBuilderService {
 	): Promise<{ session: ParlayBuilderSession; token: string } | null> {
 		const reservationKey = parlayBuilderPlacementKey(userId, guildId)
 		if (localPlacementReservations.has(reservationKey)) return null
-		localPlacementReservations.add(reservationKey)
 		const token = randomUUID()
+		localPlacementReservations.set(reservationKey, token)
 		let acquired = !this.cache.setIfAbsent
 		let sessionFound = false
 		try {
@@ -205,7 +229,25 @@ export class ParlayBuilderService {
 		} else {
 			await this.cache.remove(reservationKey)
 		}
-		localPlacementReservations.delete(reservationKey)
+		if (
+			!token ||
+			localPlacementReservations.get(reservationKey) === token
+		) {
+			localPlacementReservations.delete(reservationKey)
+		}
+	}
+
+	async refreshPlacement(
+		userId: string,
+		guildId: string,
+		token: string,
+	): Promise<boolean> {
+		if (!this.cache.refreshIfOwned) return true
+		return this.cache.refreshIfOwned(
+			parlayBuilderPlacementKey(userId, guildId),
+			token,
+			120,
+		)
 	}
 
 	private async mutateSession(
@@ -232,8 +274,13 @@ export class ParlayBuilderService {
 		userId: string,
 		guildId: string,
 	): Promise<void> {
-		if (!this.cache.setIfAbsent) return
-		if (await this.cache.get(parlayBuilderPlacementKey(userId, guildId))) {
+		const reservationKey = parlayBuilderPlacementKey(userId, guildId)
+		if (localPlacementReservations.has(reservationKey)) {
+			throw new Error(
+				'Your parlay is already being placed. Please wait for the result.',
+			)
+		}
+		if (this.cache.setIfAbsent && (await this.cache.get(reservationKey))) {
 			throw new Error(
 				'Your parlay is already being placed. Please wait for the result.',
 			)

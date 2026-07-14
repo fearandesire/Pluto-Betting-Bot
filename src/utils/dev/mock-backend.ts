@@ -193,15 +193,38 @@ export class MockBackend {
 	}
 
 	initParlay(request: InitParlayRequest): InitParlayResponse {
-		const legs = request.legs.map((leg) => ({
-			event_id: leg.event_id,
-			outcome_uuid: leg.outcome_uuid,
-			market_key: 'h2h' as const,
-			selection_display: `Mock selection ${leg.outcome_uuid.slice(0, 8)}`,
-			odds_american: -110,
-			point: null,
-			commence_time: new Date(Date.now() + 6 * 3_600_000).toISOString(),
-		}))
+		const legs = request.legs.map((leg) => {
+			const market_key = leg.outcome_uuid.includes('-spread-')
+				? ('spreads' as const)
+				: leg.outcome_uuid.includes('-total-')
+					? ('totals' as const)
+					: ('h2h' as const)
+			const isHome = leg.outcome_uuid.endsWith('-home')
+			const isOver = leg.outcome_uuid.endsWith('-over')
+			return {
+				event_id: leg.event_id,
+				outcome_uuid: leg.outcome_uuid,
+				market_key,
+				selection_display:
+					market_key === 'totals'
+						? isOver
+							? 'Over 220.5'
+							: 'Under 220.5'
+						: `Mock ${isHome ? 'home' : 'away'} selection`,
+				odds_american: -110,
+				point:
+					market_key === 'spreads'
+						? isHome
+							? -1.5
+							: 1.5
+						: market_key === 'totals'
+							? 220.5
+							: null,
+				commence_time: new Date(
+					Date.now() + 6 * 3_600_000,
+				).toISOString(),
+			}
+		})
 		const decimal = Math.pow(210 / 110, legs.length)
 		const preview: InitParlayResponse = {
 			init_token: randomUUID(),

@@ -115,6 +115,12 @@ export class ParlayModalHandler extends InteractionHandler {
 			return updateBuilder(this.builderService.render(session))
 		} catch (error) {
 			logParlayBuilderError(error, { userId, modal: payload.kind })
+			if (interaction.isFromMessage() && interaction.message) {
+				return interaction.reply({
+					content: getParlayErrorMessage(error),
+					flags: MessageFlags.Ephemeral,
+				})
+			}
 			return updateBuilder(
 				this.builderService.renderMessage(getParlayErrorMessage(error)),
 				'Unable to update parlay builder.',

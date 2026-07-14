@@ -32,6 +32,7 @@ type CacheStub = {
 	remove: ReturnType<typeof vi.fn>
 	setIfAbsent?: ReturnType<typeof vi.fn>
 	compareAndRemove?: ReturnType<typeof vi.fn>
+	refreshIfOwned?: ReturnType<typeof vi.fn>
 }
 
 const makeCache = (): CacheStub => ({
@@ -170,6 +171,35 @@ describe('ParlayBuilderService', () => {
 		const third = await service.reserveForPlacement('user-1', 'guild-1')
 		expect(third).not.toBeNull()
 		await service.releasePlacement('user-1', 'guild-1', third?.token)
+	})
+
+	it('rejects cancellation while placement owns the builder', async () => {
+		cache.setIfAbsent = vi.fn().mockResolvedValue(true)
+		cache.get.mockImplementation((key: string) =>
+			key.endsWith(':placement')
+				? Promise.resolve('active-token')
+				: Promise.resolve({ ...makeSession(2), stake: 10 }),
+		)
+
+		await expect(service.clear('user-1', 'guild-1')).rejects.toThrow(
+			'already being placed',
+		)
+		expect(cache.remove).not.toHaveBeenCalledWith(
+			'parlay-builder:guild-1:user-1',
+		)
+	})
+
+	it('refreshes a placement lease through the cache owner check', async () => {
+		cache.refreshIfOwned = vi.fn().mockResolvedValue(true)
+
+		await expect(
+			service.refreshPlacement('user-1', 'guild-1', 'owner-token'),
+		).resolves.toBe(true)
+		expect(cache.refreshIfOwned).toHaveBeenCalledWith(
+			'parlay-builder:guild-1:user-1:placement',
+			'owner-token',
+			120,
+		)
 	})
 
 	it('calculates combined odds and stake-aware payout', async () => {

@@ -44,7 +44,23 @@ export class CacheManager {
 			`if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end`,
 			1,
 			key,
-			value,
+			JSON.stringify(value),
+		)
+		return result === 1
+	}
+
+	/** Extend a lock or reservation only while the caller still owns it. */
+	async refreshIfOwned(
+		key: string,
+		value: string,
+		seconds: number,
+	): Promise<boolean> {
+		const result = await this.cache.eval(
+			`if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('expire', KEYS[1], ARGV[2]) else return 0 end`,
+			1,
+			key,
+			JSON.stringify(value),
+			seconds,
 		)
 		return result === 1
 	}

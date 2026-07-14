@@ -124,6 +124,17 @@ export class ParlayButtonHandler extends InteractionHandler {
 				)
 			}
 			const { session, token } = reservation
+			const leaseHeartbeat = setInterval(() => {
+				void this.builderService
+					.refreshPlacement(userId, guildId, token)
+					.catch((error) =>
+						logParlayBuilderError(error, {
+							action: 'refresh_placement_reservation',
+							userId,
+						}),
+					)
+			}, 30_000)
+			leaseHeartbeat.unref?.()
 			try {
 				this.builderService.validateForPlacement(session)
 				const initialized = await this.parlayApi.init({
@@ -147,8 +158,7 @@ export class ParlayButtonHandler extends InteractionHandler {
 					stake: Number(placed.stake),
 					potentialPayout: Number(placed.potential_payout),
 				})
-				await this.builderService.clear(userId, guildId)
-				await this.builderService.releasePlacement(
+				await this.builderService.clearWithPlacementToken(
 					userId,
 					guildId,
 					token,
@@ -160,12 +170,14 @@ export class ParlayButtonHandler extends InteractionHandler {
 					),
 				)
 			} catch (error) {
+				throw error
+			} finally {
+				clearInterval(leaseHeartbeat)
 				await this.builderService.releasePlacement(
 					userId,
 					guildId,
 					token,
 				)
-				throw error
 			}
 		} catch (error) {
 			logParlayBuilderError(error, { action: payload.action, userId })
