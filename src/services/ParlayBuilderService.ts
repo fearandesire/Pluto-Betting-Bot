@@ -125,7 +125,9 @@ export class ParlayBuilderService {
 			}
 			if (this.cache.setIfAbsent) {
 				const active = await this.cache.get(reservationKey)
-				if (active && active !== placementToken) {
+				if (
+					placementToken ? active !== placementToken : Boolean(active)
+				) {
 					throw new Error(
 						'Your parlay is already being placed. Please wait for the result.',
 					)

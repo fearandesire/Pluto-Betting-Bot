@@ -202,6 +202,19 @@ describe('ParlayBuilderService', () => {
 		)
 	})
 
+	it('reports a lost placement lease instead of fencing a new owner', async () => {
+		cache.setIfAbsent = vi.fn().mockResolvedValue(true)
+		cache.refreshIfOwned = vi.fn().mockResolvedValue(false)
+		await expect(
+			service.refreshPlacement('user-1', 'guild-1', 'owner-token'),
+		).resolves.toBe(false)
+
+		cache.get.mockResolvedValue(false)
+		await expect(
+			service.clearWithPlacementToken('user-1', 'guild-1', 'owner-token'),
+		).rejects.toThrow('already being placed')
+	})
+
 	it('calculates combined odds and stake-aware payout', async () => {
 		const session = {
 			...makeSession(2),

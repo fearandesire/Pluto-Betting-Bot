@@ -124,18 +124,36 @@ export class ParlayButtonHandler extends InteractionHandler {
 				)
 			}
 			const { session, token } = reservation
-			const leaseHeartbeat = setInterval(() => {
-				void this.builderService
-					.refreshPlacement(userId, guildId, token)
-					.catch((error) =>
-						logParlayBuilderError(error, {
-							action: 'refresh_placement_reservation',
-							userId,
-						}),
+			let leaseLost = false
+			const assertPlacementLease = async () => {
+				if (leaseLost) {
+					throw new Error(
+						'Parlay placement lost its reservation. Please try again.',
 					)
+				}
+				const refreshed = await this.builderService.refreshPlacement(
+					userId,
+					guildId,
+					token,
+				)
+				if (!refreshed) {
+					leaseLost = true
+					throw new Error(
+						'Parlay placement lost its reservation. Please try again.',
+					)
+				}
+			}
+			const leaseHeartbeat = setInterval(() => {
+				void assertPlacementLease().catch((error) =>
+					logParlayBuilderError(error, {
+						action: 'refresh_placement_reservation',
+						userId,
+					}),
+				)
 			}, 30_000)
 			leaseHeartbeat.unref?.()
 			try {
+				await assertPlacementLease()
 				this.builderService.validateForPlacement(session)
 				const initialized = await this.parlayApi.init({
 					legs: session.legs.map(({ event_id, outcome_uuid }) => ({
@@ -146,9 +164,11 @@ export class ParlayButtonHandler extends InteractionHandler {
 					guild_id: guildId,
 					user_id: userId,
 				})
+				await assertPlacementLease()
 				const placed = await this.parlayApi.place(
 					initialized.init_token,
 				)
+				await assertPlacementLease()
 				await new BetslipManager(
 					new BetslipWrapper(),
 					new BetsCacheService(new CacheManager()),
