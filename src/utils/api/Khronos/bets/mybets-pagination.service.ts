@@ -13,6 +13,7 @@ export interface MyBetsData {
 	pendingParlays: UserParlay[]
 	historyParlays: UserParlay[]
 	totalPages: number
+	parlayFetchWarning?: string
 }
 
 export type HistoryEntry =
@@ -32,6 +33,11 @@ export interface BetsByDate {
 	bets: PlacedBetslip[]
 }
 
+interface ParlayFetchResult {
+	parlays: UserParlay[]
+	warning?: string
+}
+
 export class MyBetsPaginationService {
 	private readonly PAGE_SIZE = 10
 	private betslipWrapper: BetslipWrapper
@@ -49,14 +55,18 @@ export class MyBetsPaginationService {
 		try {
 			const [betsResult, parlaysResult] = await Promise.allSettled([
 				this.betslipWrapper.getUserBetslips({ userid: userId }),
-				this.parlayWrapper.getUserParlays(userId, { limit: 100 }),
+				this.fetchAllUserParlays(userId),
 			])
 			if (betsResult.status === 'rejected') throw betsResult.reason
 			const allBets = betsResult.value
 			const parlayResponse =
 				parlaysResult.status === 'fulfilled'
 					? parlaysResult.value
-					: { parlays: [] }
+					: {
+							parlays: [],
+							warning:
+								'Some parlays could not be loaded. Refresh /mybets to try again.',
+						}
 			if (parlaysResult.status === 'rejected') {
 				logger.warn(
 					'Failed to fetch user parlays; showing singles only',
@@ -95,6 +105,7 @@ export class MyBetsPaginationService {
 				pendingParlays,
 				historyParlays: sortedHistoryParlays,
 				totalPages,
+				parlayFetchWarning: parlayResponse.warning,
 			}
 		} catch (error) {
 			logger.error('Failed to fetch user betslips', {
@@ -107,6 +118,47 @@ export class MyBetsPaginationService {
 
 			throw error
 		}
+	}
+
+	private async fetchAllUserParlays(
+		userId: string,
+	): Promise<ParlayFetchResult> {
+		const pageSize = 100
+		const firstPage = await this.parlayWrapper.getUserParlays(userId, {
+			page: 1,
+			limit: pageSize,
+		})
+		const totalPages = Math.max(1, firstPage.total_pages || 1)
+		const parlays = [...firstPage.parlays]
+
+		for (let page = 2; page <= totalPages; page++) {
+			try {
+				const nextPage = await this.parlayWrapper.getUserParlays(
+					userId,
+					{
+						page,
+						limit: pageSize,
+					},
+				)
+				parlays.push(...nextPage.parlays)
+			} catch (error) {
+				logger.warn('Failed to fetch a later user parlay page', {
+					source: this.fetchAllUserParlays.name,
+					userId,
+					page,
+					totalPages,
+					error:
+						error instanceof Error ? error.message : String(error),
+				})
+				return {
+					parlays,
+					warning:
+						'Some parlays could not be loaded. Refresh /mybets to try again.',
+				}
+			}
+		}
+
+		return { parlays }
 	}
 
 	private splitBetsByStatus(bets: PlacedBetslip[]): {

@@ -116,6 +116,7 @@ export class MyBetsPaginationHandler extends InteractionHandler {
 				historyParlays: betsData.historyParlays,
 				historyPage,
 				groupedBets,
+				parlayFetchWarning: betsData.parlayFetchWarning,
 			}
 
 			const response = await this.formatterService.buildEmbedResponse(
