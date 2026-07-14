@@ -23,7 +23,7 @@ on:
         required: false
 
   pull_request:
-    branches: [main]
+    branches: [main, dev/parlays-props]
     paths-ignore:
       - "**.md"
       - "docs/**"
@@ -51,6 +51,17 @@ jobs:
     name: Verify
     runs-on: ubuntu-latest
 
+    services:
+      redis:
+        image: redis:7.4-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -70,6 +81,15 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test with required Redis contract
+        run: pnpm test:run
+        env:
+          PLUTO_REQUIRE_REDIS_TESTS: "1"
+          PLUTO_TEST_REDIS_URL: redis://localhost:6379/15
 
       - name: Build
         run: pnpm build

@@ -6,7 +6,7 @@ const mocks = vi.hoisted(() => ({
 	set: vi.fn(),
 	setex: vi.fn(),
 	del: vi.fn(),
-	eval: vi.fn(),
+	transitionIfValue: vi.fn(),
 	sendToChannel: vi.fn(),
 	sendToPredictionChannel: vi.fn(),
 	getTeamInfo: vi.fn(),
@@ -34,7 +34,7 @@ vi.mock('../../cache/redis-instance.js', () => ({
 		set: mocks.set,
 		setex: mocks.setex,
 		del: mocks.del,
-		eval: mocks.eval,
+		transitionIfValue: mocks.transitionIfValue,
 	},
 }))
 
@@ -88,7 +88,7 @@ describe('PropPostingHandler message references and idempotency', () => {
 		mocks.get.mockResolvedValue(null)
 		mocks.set.mockResolvedValue('OK')
 		mocks.setex.mockResolvedValue('OK')
-		mocks.eval.mockResolvedValue('OK')
+		mocks.transitionIfValue.mockResolvedValue(true)
 		mocks.del.mockResolvedValue(1)
 		mocks.sendToChannel.mockResolvedValue(sentMessage)
 		mocks.sendToPredictionChannel.mockResolvedValue(sentMessage)
@@ -214,10 +214,9 @@ describe('PropPostingHandler message references and idempotency', () => {
 
 		expect(result.posted).toBe(1)
 		expect(result.results).toEqual(references)
-		expect(mocks.eval).toHaveBeenCalledWith(
-			expect.stringContaining("redis.call('get', KEYS[1]) == 'retry'"),
-			1,
+		expect(mocks.transitionIfValue).toHaveBeenCalledWith(
 			deliveryKey,
+			'retry',
 			'processing',
 			7 * 24 * 60 * 60,
 		)
@@ -241,7 +240,12 @@ describe('PropPostingHandler message references and idempotency', () => {
 			'channel-1',
 		)
 
-		expect(result).toMatchObject({ posted: 0, filtered: 0, failed: 1, total: 1 })
+		expect(result).toMatchObject({
+			posted: 0,
+			filtered: 0,
+			failed: 1,
+			total: 1,
+		})
 		expect(retry.posted).toBe(1)
 		expect(retry.results).toEqual(references)
 		expect(mocks.sendToChannel).toHaveBeenCalledTimes(1)
@@ -253,7 +257,9 @@ describe('PropPostingHandler message references and idempotency', () => {
 	})
 
 	it('keeps partial failures explicit and releases failed claims', async () => {
-		mocks.sendToChannel.mockRejectedValueOnce(new Error('Discord unavailable'))
+		mocks.sendToChannel.mockRejectedValueOnce(
+			new Error('Discord unavailable'),
+		)
 
 		const result = await new PropPostingHandler().postPropsToChannel(
 			'guild-1',
@@ -267,7 +273,10 @@ describe('PropPostingHandler message references and idempotency', () => {
 			expect.objectContaining({
 				guild_id: 'guild-1',
 				channel_id: 'channel-1',
-				outcome_uuids: [prop.over.outcome_uuid, prop.under.outcome_uuid],
+				outcome_uuids: [
+					prop.over.outcome_uuid,
+					prop.under.outcome_uuid,
+				],
 				error: 'Discord unavailable',
 			}),
 		])
@@ -275,7 +284,9 @@ describe('PropPostingHandler message references and idempotency', () => {
 	})
 
 	it('shortens a failed claim when Redis release fails', async () => {
-		mocks.sendToChannel.mockRejectedValueOnce(new Error('Discord unavailable'))
+		mocks.sendToChannel.mockRejectedValueOnce(
+			new Error('Discord unavailable'),
+		)
 		mocks.del.mockRejectedValueOnce(new Error('Redis unavailable'))
 
 		await new PropPostingHandler().postPropsToChannel(
@@ -285,13 +296,19 @@ describe('PropPostingHandler message references and idempotency', () => {
 			'channel-1',
 		)
 
-		expect(mocks.setex).toHaveBeenLastCalledWith(deliveryKey, 5, 'processing')
+		expect(mocks.setex).toHaveBeenLastCalledWith(
+			deliveryKey,
+			5,
+			'processing',
+		)
 	})
 
 	it('persists a sent ledger with plain SET when SETEX fails', async () => {
 		mocks.set.mockReset()
 		mocks.set.mockResolvedValueOnce('OK').mockResolvedValueOnce('OK')
-		mocks.setex.mockRejectedValueOnce(new Error('Redis command unavailable'))
+		mocks.setex.mockRejectedValueOnce(
+			new Error('Redis command unavailable'),
+		)
 
 		await new PropPostingHandler().postPropsToChannel(
 			'guild-1',
@@ -307,7 +324,9 @@ describe('PropPostingHandler message references and idempotency', () => {
 	})
 
 	it('leaves a retry marker when claim release commands fail', async () => {
-		mocks.sendToChannel.mockRejectedValueOnce(new Error('Discord unavailable'))
+		mocks.sendToChannel.mockRejectedValueOnce(
+			new Error('Discord unavailable'),
+		)
 		mocks.del.mockRejectedValueOnce(new Error('Redis unavailable'))
 		mocks.setex.mockRejectedValueOnce(new Error('Redis unavailable'))
 
@@ -323,7 +342,9 @@ describe('PropPostingHandler message references and idempotency', () => {
 
 	it('reports a marker persistence failure after Discord accepts the message', async () => {
 		mocks.set.mockReset()
-		mocks.set.mockResolvedValueOnce('OK').mockRejectedValueOnce(new Error('Redis unavailable'))
+		mocks.set
+			.mockResolvedValueOnce('OK')
+			.mockRejectedValueOnce(new Error('Redis unavailable'))
 		mocks.setex.mockRejectedValueOnce(new Error('Redis unavailable'))
 
 		const result = await new PropPostingHandler().postPropsToChannel(
@@ -333,15 +354,22 @@ describe('PropPostingHandler message references and idempotency', () => {
 			'channel-1',
 		)
 
-		expect(result).toMatchObject({ posted: 0, filtered: 0, failed: 1, total: 1 })
+		expect(result).toMatchObject({
+			posted: 0,
+			filtered: 0,
+			failed: 1,
+			total: 1,
+		})
 		expect(result.results).toEqual([])
 		expect(result.failures).toEqual([
 			expect.objectContaining({
 				guild_id: 'guild-1',
 				channel_id: 'channel-1',
-				outcome_uuids: [prop.over.outcome_uuid, prop.under.outcome_uuid],
-				error:
-					'Discord message posted but durable delivery marker was unavailable',
+				outcome_uuids: [
+					prop.over.outcome_uuid,
+					prop.under.outcome_uuid,
+				],
+				error: 'Discord message posted but durable delivery marker was unavailable',
 			}),
 		])
 		expect(mocks.sendToChannel).toHaveBeenCalledTimes(1)

@@ -197,8 +197,7 @@ export class PropPostingHandler {
 						outcome_uuids: references.map(
 							(reference) => reference.outcome_uuid,
 						),
-						error:
-							'Discord message posted but durable delivery marker was unavailable',
+						error: 'Discord message posted but durable delivery marker was unavailable',
 					})
 				}
 			} catch (error) {
@@ -256,22 +255,13 @@ export class PropPostingHandler {
 			if (existing === 'processing') return { status: 'claimed' }
 			if (existing === 'retry') {
 				try {
-					const redis = redisCache as unknown as {
-						eval?: (
-							script: string,
-							numKeys: number,
-							...args: Array<string | number>
-						) => Promise<unknown>
-					}
-					if (!redis.eval) return { status: 'claimed' }
-					const reclaimed = await redis.eval(
-						"if redis.call('get', KEYS[1]) == 'retry' then return redis.call('set', KEYS[1], ARGV[1], 'EX', ARGV[2]) else return nil end",
-						1,
+					const reclaimed = await redisCache.transitionIfValue(
 						deliveryKey,
+						'retry',
 						'processing',
 						PropPostingHandler.DELIVERY_CLAIM_TTL_SECONDS,
 					)
-					return reclaimed === 'OK'
+					return reclaimed
 						? { status: 'available' }
 						: { status: 'claimed' }
 				} catch {
