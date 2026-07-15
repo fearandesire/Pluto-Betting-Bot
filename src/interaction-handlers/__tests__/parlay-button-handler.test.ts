@@ -103,7 +103,7 @@ describe('ParlayButtonHandler', () => {
 				{ event_id: 'event-2', outcome_uuid: 'outcome-2' },
 			],
 			stake: 10,
-			placementId: '7b5971d4-2f0d-4cd6-a4e5-5fdab70c701b',
+			placementId: '00000000-0000-4000-8000-000000000001',
 			placementPhase: 'editing',
 			lastPlacementResponse: null,
 		}
@@ -301,10 +301,10 @@ describe('ParlayButtonHandler', () => {
 
 		expect(parlayApi.place).toHaveBeenCalledWith(
 			'init-token',
-			'7b5971d4-2f0d-4cd6-a4e5-5fdab70c701b',
+			'00000000-0000-4000-8000-000000000001',
 		)
 		expect(parlayApi.findByPlacement).toHaveBeenCalledWith(
-			'7b5971d4-2f0d-4cd6-a4e5-5fdab70c701b',
+			'00000000-0000-4000-8000-000000000001',
 		)
 		expect(builderService.setPlacementState).toHaveBeenCalledWith(
 			'user-1',
@@ -367,7 +367,7 @@ describe('ParlayButtonHandler', () => {
 						{ event_id: 'event-2', outcome_uuid: 'outcome-2' },
 					],
 					stake: 10,
-					placementId: '7b5971d4-2f0d-4cd6-a4e5-5fdab70c701b',
+					placementId: '00000000-0000-4000-8000-000000000001',
 					placementPhase: 'placing',
 					lastPlacementResponse: null,
 				},
@@ -403,7 +403,7 @@ describe('ParlayButtonHandler', () => {
 		builderService.assertCurrent.mockResolvedValueOnce({
 			sessionId: 'sessionA0001',
 			revision: 2,
-			placementId: '7b5971d4-2f0d-4cd6-a4e5-5fdab70c701b',
+			placementId: '00000000-0000-4000-8000-000000000001',
 			placementPhase: 'unknown',
 			lastPlacementResponse: null,
 		})
@@ -422,7 +422,7 @@ describe('ParlayButtonHandler', () => {
 		})
 
 		expect(parlayApi.findByPlacement).toHaveBeenCalledWith(
-			'7b5971d4-2f0d-4cd6-a4e5-5fdab70c701b',
+			'00000000-0000-4000-8000-000000000001',
 		)
 		expect(builderService.setPlacementState).toHaveBeenCalledWith(
 			'user-1',

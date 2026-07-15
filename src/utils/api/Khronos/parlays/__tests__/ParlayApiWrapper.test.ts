@@ -52,22 +52,22 @@ describe('ParlayApiWrapper', () => {
 		const api = new ParlayApiWrapper()
 
 		await expect(
-			api.place('init-token', '7b5971d4-2f0d-4cd6-a4e5-5fdab70c701b'),
+			api.place('init-token', '00000000-0000-4000-8000-000000000001'),
 		).resolves.toMatchObject({ id: 'parlay-1' })
 		await expect(
-			api.findByPlacement('7b5971d4-2f0d-4cd6-a4e5-5fdab70c701b'),
+			api.findByPlacement('00000000-0000-4000-8000-000000000001'),
 		).resolves.toMatchObject({ id: 'parlay-1' })
 
 		expect(post).toHaveBeenCalledWith(
 			'/parlays/place',
 			{
 				init_token: 'init-token',
-				placement_id: '7b5971d4-2f0d-4cd6-a4e5-5fdab70c701b',
+				placement_id: '00000000-0000-4000-8000-000000000001',
 			},
 			expect.any(Object),
 		)
 		expect(get).toHaveBeenCalledWith(
-			'/parlays/placements/7b5971d4-2f0d-4cd6-a4e5-5fdab70c701b',
+			'/parlays/placements/00000000-0000-4000-8000-000000000001',
 			expect.any(Object),
 		)
 	})
@@ -77,7 +77,7 @@ describe('ParlayApiWrapper', () => {
 
 		await expect(
 			new ParlayApiWrapper().findByPlacement(
-				'7b5971d4-2f0d-4cd6-a4e5-5fdab70c701b',
+				'00000000-0000-4000-8000-000000000001',
 			),
 		).resolves.toBeNull()
 	})

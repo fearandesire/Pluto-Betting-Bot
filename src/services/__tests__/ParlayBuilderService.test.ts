@@ -58,7 +58,7 @@ const makeSession = (legs = 0, revision = 0) => ({
 		commence_time: '2099-01-01T00:00:00.000Z',
 	})),
 	stake: null,
-	placementId: '7b5971d4-2f0d-4cd6-a4e5-5fdab70c701b',
+	placementId: '00000000-0000-4000-8000-000000000001',
 	placementPhase: 'editing' as const,
 	lastPlacementResponse: null,
 })
