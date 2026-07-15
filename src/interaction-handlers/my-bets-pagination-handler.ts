@@ -103,6 +103,7 @@ export class MyBetsPaginationHandler extends InteractionHandler {
 			const historyPage = this.paginationService.getHistoryPage(
 				betsData.historyBets,
 				targetPage,
+				betsData.historyParlays,
 			)
 			const groupedBets = this.paginationService.groupBetsByDate(
 				historyPage.bets,
@@ -111,8 +112,11 @@ export class MyBetsPaginationHandler extends InteractionHandler {
 			const displayData: MyBetsDisplayData = {
 				userId,
 				pendingBets: betsData.pendingBets,
+				pendingParlays: betsData.pendingParlays,
+				historyParlays: betsData.historyParlays,
 				historyPage,
 				groupedBets,
+				parlayFetchWarning: betsData.parlayFetchWarning,
 			}
 
 			const response = await this.formatterService.buildEmbedResponse(

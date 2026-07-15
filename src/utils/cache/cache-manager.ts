@@ -1,12 +1,12 @@
 import { format } from 'date-fns'
-import type { ChainableCommander, Redis } from 'ioredis'
-import redisCache from './redis-instance.js'
+import type { ChainableCommander } from 'ioredis'
+import redisCache, { type RedisCacheClient } from './redis-instance.js'
 
 export class CacheManager {
-	cache: Redis
+	cache: RedisCacheClient
 
-	constructor() {
-		this.cache = redisCache
+	constructor(cache: RedisCacheClient = redisCache) {
+		this.cache = cache
 	}
 
 	async set(key: string, data: unknown, TTL?: number) {
@@ -21,6 +21,49 @@ export class CacheManager {
 			TTL || MAX_EXPIRATION,
 		)
 		return true
+	}
+
+	/** Atomically claims a key when it is absent, with a bounded TTL. */
+	async setIfAbsent(key: string, data: unknown, TTL?: number) {
+		if (!key) {
+			throw new Error('No key was provided to save into cache')
+		}
+		const result = await this.cache.set(
+			key,
+			JSON.stringify(data),
+			'EX',
+			TTL || 1800,
+			'NX',
+		)
+		return result === 'OK'
+	}
+
+	/** Remove a lock only when it is still owned by the caller. */
+	async compareAndRemove(key: string, value: string): Promise<boolean> {
+		return this.cache.compareAndRemove(key, JSON.stringify(value))
+	}
+
+	/** Extend a lock or reservation only while the caller still owns it. */
+	async refreshIfOwned(
+		key: string,
+		value: string,
+		seconds: number,
+	): Promise<boolean> {
+		return this.cache.refreshIfOwned(key, JSON.stringify(value), seconds)
+	}
+
+	async transitionIfValue(
+		key: string,
+		expectedValue: unknown,
+		nextValue: unknown,
+		seconds?: number,
+	): Promise<boolean> {
+		return this.cache.transitionIfValue(
+			key,
+			JSON.stringify(expectedValue),
+			JSON.stringify(nextValue),
+			seconds,
+		)
 	}
 
 	async get(key: string) {

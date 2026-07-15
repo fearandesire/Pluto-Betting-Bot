@@ -7,6 +7,7 @@ import { pageNotFound } from '../../requests/middleware.js'
 import { createApiKeyAuthMiddleware } from './apiKeyAuth.js'
 import { setupBullBoard } from './bullBoard.js'
 import { createErrorHandler } from './errorHandler.js'
+import { createHealthMiddleware } from './health.js'
 import { captureRequestIdentity } from './logging.js'
 import { createRequestIdMiddleware } from './requestId.js'
 
@@ -28,6 +29,9 @@ export async function setupKoaApp(): Promise<Koa> {
 			transports: [createConsoleTransport()],
 		}),
 	)
+
+	// Internal harness readiness endpoint; mutation routes remain API-key protected.
+	app.use(createHealthMiddleware())
 
 	// Add API key authentication middleware
 	app.use(createApiKeyAuthMiddleware())

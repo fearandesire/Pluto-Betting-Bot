@@ -17,13 +17,18 @@ import {
 	buildMyBetsNavCustomId,
 	mybetsNavPageId,
 } from '../../../../lib/interfaces/interaction-handlers/interaction-handlers.interface.js'
+import type { UserParlay } from '../parlays/ParlayApiWrapper.js'
 import type { BetsByDate, HistoryPage } from './mybets-pagination.service.js'
 
 export interface MyBetsDisplayData {
 	userId: string
 	pendingBets: PlacedBetslip[]
+	pendingParlays: UserParlay[]
+	historyParlays: UserParlay[]
 	historyPage: HistoryPage
 	groupedBets: BetsByDate[]
+	parlayFetchWarning?: string
+	cancellationPage?: number
 }
 
 export class MyBetsFormatterService {
@@ -73,6 +78,61 @@ export class MyBetsFormatterService {
 		return `${teamEmoji} ${shortName}`.trim()
 	}
 
+	private getParlayLegGlyph(
+		result: UserParlay['legs'][number]['result'],
+	): string {
+		switch (result) {
+			case 'won':
+				return '✅'
+			case 'lost':
+				return '❌'
+			case 'push':
+			case 'void':
+				return '➖'
+			default:
+				return '⏳'
+		}
+	}
+
+	private formatParlayLegs(parlay: UserParlay): string {
+		return [...parlay.legs]
+			.sort(
+				(a, b) =>
+					new Date(a.commence_time).getTime() -
+					new Date(b.commence_time).getTime(),
+			)
+			.map((leg) => {
+				const busted = parlay.status === 'lost' && leg.result === 'lost'
+				return `${this.getParlayLegGlyph(leg.result)} ${busted ? `**${leg.selection_display} (busted)**` : leg.selection_display} • ${leg.market_key} • <t:${Math.floor(new Date(leg.commence_time).getTime() / 1000)}:d>`
+			})
+			.join('\n')
+	}
+
+	formatPendingParlayLine(parlay: UserParlay): string {
+		return `**🎲 ${parlay.leg_count}-leg Parlay**\nStake: \`$${Number(parlay.stake).toFixed(2)}\` • Odds: \`${parlay.combined_odds_american > 0 ? '+' : ''}${parlay.combined_odds_american}\` • Potential: \`$${Number(parlay.potential_payout).toFixed(2)}\`\n${this.formatParlayLegs(parlay)}`
+	}
+
+	formatHistoryParlayLine(parlay: UserParlay): string {
+		const payout =
+			parlay.actual_payout === null
+				? 'N/A'
+				: `$${Number(parlay.actual_payout).toFixed(2)}`
+		const status = parlay.status.replace('_', ' ')
+		return `**${parlay.status === 'won' ? '✅' : parlay.status === 'lost' ? '❌' : '➖'} ${parlay.leg_count}-leg Parlay — ${status}**\nStake: \`$${Number(parlay.stake).toFixed(2)}\` • Actual payout: \`${payout}\`\n${this.formatParlayLegs(parlay)}`
+	}
+
+	canCancelParlay(parlay: UserParlay, now = Date.now()): boolean {
+		return (
+			parlay.status === 'pending' &&
+			parlay.legs.length > 0 &&
+			Math.min(
+				...parlay.legs.map((leg) =>
+					new Date(leg.commence_time).getTime(),
+				),
+			) > now
+		)
+	}
+
 	formatPendingBetLine(bet: PlacedBetslip, guild?: Guild): string {
 		const team = this.formatTeamName(bet.team ?? 'Unknown', guild)
 		const amount = this.formatMoney(bet.amount)
@@ -111,18 +171,30 @@ export class MyBetsFormatterService {
 	async buildPendingEmbed(
 		pendingBets: PlacedBetslip[],
 		guild?: Guild,
+		pendingParlays: UserParlay[] = [],
+		parlayFetchWarning?: string,
 	): Promise<EmbedBuilder> {
 		const embed = new EmbedBuilder()
 			.setTitle('⏳ Pending Bets')
 			.setColor(embedColors.PlutoYellow)
 
-		if (pendingBets.length === 0) {
+		if (
+			pendingBets.length === 0 &&
+			pendingParlays.length === 0 &&
+			!parlayFetchWarning
+		) {
 			embed.setDescription('You have no pending bets.')
 			return embed
 		}
 
-		const lines = pendingBets.map((bet) =>
-			this.formatPendingBetLine(bet, guild),
+		const lines = parlayFetchWarning ? [`⚠️ ${parlayFetchWarning}`] : []
+		lines.push(
+			...pendingBets.map((bet) => this.formatPendingBetLine(bet, guild)),
+		)
+		lines.push(
+			...pendingParlays.map((parlay) =>
+				this.formatPendingParlayLine(parlay),
+			),
 		)
 		embed.setDescription(lines.join('\n\n'))
 		return embed
@@ -137,23 +209,50 @@ export class MyBetsFormatterService {
 			.setTitle(`📜 Bet History`)
 			.setColor(embedColors.PlutoBlue)
 
-		if (historyPage.bets.length === 0) {
+		if (historyPage.entries.length === 0) {
 			embed.setDescription(
 				'No bet history found. Place some bets to see them here!',
 			)
 			return embed
 		}
 
-		const lines: string[] = []
+		embed.setDescription(
+			this.buildChronologicalHistoryLines(
+				historyPage,
+				groupedBets,
+				guild,
+			).join('\n\n'),
+		)
+		return embed
+	}
+
+	private buildChronologicalHistoryLines(
+		historyPage: HistoryPage,
+		groupedBets: BetsByDate[],
+		guild?: Guild,
+	): string[] {
+		const dateByBet = new Map<PlacedBetslip, string>()
 		for (const group of groupedBets) {
-			lines.push(`**${group.date}**`)
-			for (const bet of group.bets) {
-				lines.push(this.formatHistoryBetLine(bet, guild))
-			}
+			for (const bet of group.bets) dateByBet.set(bet, group.date)
 		}
 
-		embed.setDescription(lines.join('\n\n'))
-		return embed
+		const lines: string[] = []
+		let lastDate: string | undefined
+		for (const entry of historyPage.entries) {
+			if (entry.kind === 'parlay') {
+				lines.push(this.formatHistoryParlayLine(entry.parlay))
+				continue
+			}
+
+			const date = dateByBet.get(entry.bet)
+			if (date && date !== lastDate) {
+				lines.push(`**${date}**`)
+				lastDate = date
+			}
+			lines.push(this.formatHistoryBetLine(entry.bet, guild))
+		}
+
+		return lines
 	}
 
 	buildPaginationButtons(
@@ -190,6 +289,40 @@ export class MyBetsFormatterService {
 		return row
 	}
 
+	private buildCancellationPaginationButtons(
+		currentPage: number,
+		totalPages: number,
+	): ActionRowBuilder<ButtonBuilder> {
+		const button = (
+			action: 'first' | 'prev' | 'next' | 'last',
+			label: string,
+			style: ButtonStyle,
+			disabled: boolean,
+		) =>
+			new ButtonBuilder()
+				.setCustomId(`parlay_cancel_nav_${action}_${currentPage}`)
+				.setLabel(label)
+				.setStyle(style)
+				.setDisabled(disabled)
+
+		return new ActionRowBuilder<ButtonBuilder>().addComponents(
+			button('first', '⏮', ButtonStyle.Secondary, currentPage <= 1),
+			button('prev', '◀', ButtonStyle.Primary, currentPage <= 1),
+			new ButtonBuilder()
+				.setCustomId(`parlay_cancel_nav_page_${currentPage}`)
+				.setLabel(`Cancel ${currentPage}/${totalPages}`)
+				.setStyle(ButtonStyle.Secondary)
+				.setDisabled(true),
+			button('next', '▶', ButtonStyle.Primary, currentPage >= totalPages),
+			button(
+				'last',
+				'⏭',
+				ButtonStyle.Secondary,
+				currentPage >= totalPages,
+			),
+		)
+	}
+
 	async buildComponentsV2Response(
 		data: MyBetsDisplayData,
 		guild?: Guild,
@@ -199,7 +332,7 @@ export class MyBetsFormatterService {
 		)
 
 		// Pending Bets Section
-		if (data.pendingBets.length > 0) {
+		if (data.pendingBets.length > 0 || data.pendingParlays.length > 0) {
 			container.addTextDisplayComponents((text) =>
 				text.setContent('## ⏳ Pending Bets'),
 			)
@@ -209,9 +342,19 @@ export class MyBetsFormatterService {
 					text.setContent(this.formatPendingBetLine(bet, guild)),
 				)
 			}
+			for (const parlay of data.pendingParlays) {
+				container.addTextDisplayComponents((text) =>
+					text.setContent(this.formatPendingParlayLine(parlay)),
+				)
+			}
 
 			container.addSeparatorComponents((sep) =>
 				sep.setSpacing(SeparatorSpacingSize.Large).setDivider(true),
+			)
+		}
+		if (data.parlayFetchWarning) {
+			container.addTextDisplayComponents((text) =>
+				text.setContent(`⚠️ ${data.parlayFetchWarning}`),
 			)
 		}
 
@@ -222,22 +365,24 @@ export class MyBetsFormatterService {
 			),
 		)
 
-		if (data.historyPage.bets.length === 0) {
+		if (
+			data.historyPage.bets.length === 0 &&
+			data.historyPage.parlays.length === 0
+		) {
 			container.addTextDisplayComponents((text) =>
 				text.setContent(
 					'*No bet history found. Place some bets to see them here!*',
 				),
 			)
 		} else {
-			for (const group of data.groupedBets) {
+			for (const line of this.buildChronologicalHistoryLines(
+				data.historyPage,
+				data.groupedBets,
+				guild,
+			)) {
 				container.addTextDisplayComponents((text) =>
-					text.setContent(`### ${group.date}`),
+					text.setContent(line),
 				)
-				for (const bet of group.bets) {
-					container.addTextDisplayComponents((text) =>
-						text.setContent(this.formatHistoryBetLine(bet, guild)),
-					)
-				}
 			}
 		}
 
@@ -267,6 +412,8 @@ export class MyBetsFormatterService {
 		const pendingEmbed = await this.buildPendingEmbed(
 			data.pendingBets,
 			guild,
+			data.pendingParlays,
+			data.parlayFetchWarning,
 		)
 		embeds.push(pendingEmbed)
 
@@ -285,6 +432,55 @@ export class MyBetsFormatterService {
 				this.buildPaginationButtons(
 					data.historyPage.page,
 					data.historyPage.totalPages,
+				),
+			)
+		}
+		const cancellable = data.pendingParlays.filter((parlay) =>
+			this.canCancelParlay(parlay),
+		)
+		const hasNavigation = data.historyPage.totalPages > 1
+		const maxRowsWithoutCancellationNavigation = hasNavigation ? 4 : 5
+		const needsCancellationNavigation =
+			cancellable.length > maxRowsWithoutCancellationNavigation * 5
+		const maxCancellationRows = Math.max(
+			1,
+			maxRowsWithoutCancellationNavigation -
+				(needsCancellationNavigation ? 1 : 0),
+		)
+		const cancellationPageSize = maxCancellationRows * 5
+		const cancellationTotalPages = Math.max(
+			1,
+			Math.ceil(cancellable.length / cancellationPageSize),
+		)
+		const cancellationPage = Math.max(
+			1,
+			Math.min(data.cancellationPage ?? 1, cancellationTotalPages),
+		)
+		if (needsCancellationNavigation) {
+			components.push(
+				this.buildCancellationPaginationButtons(
+					cancellationPage,
+					cancellationTotalPages,
+				),
+			)
+		}
+		const visibleCancellable = cancellable.slice(
+			(cancellationPage - 1) * cancellationPageSize,
+			cancellationPage * cancellationPageSize,
+		)
+		for (let index = 0; index < visibleCancellable.length; index += 5) {
+			components.push(
+				new ActionRowBuilder<ButtonBuilder>().addComponents(
+					...visibleCancellable
+						.slice(index, index + 5)
+						.map((parlay) =>
+							new ButtonBuilder()
+								.setCustomId(
+									`parlay_cancel_${encodeURIComponent(parlay.id)}_${cancellationPage}`,
+								)
+								.setLabel(`Cancel ${parlay.id.slice(0, 6)}`)
+								.setStyle(ButtonStyle.Danger),
+						),
 				),
 			)
 		}

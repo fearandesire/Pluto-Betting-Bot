@@ -196,6 +196,51 @@ export default class GuildWrapper {
 	}
 
 	/**
+	 * Sends a message to an explicitly supplied Discord text channel.
+	 *
+	 * Trusted cross-service payloads can carry a resolved channel snapshot
+	 * (for example, Khronos daily props delivery). Using that channel keeps
+	 * returned message references authoritative even if guild configuration
+	 * changes before delivery. The configured prediction helper remains the
+	 * default for command-driven posting.
+	 */
+	async sendToChannel(
+		channelId: string,
+		options: MessageCreateOptions,
+		expectedGuildId?: string,
+	): Promise<Message> {
+		this.validateSnowflake(
+			channelId,
+			'target',
+			expectedGuildId ?? 'unknown',
+		)
+
+		let channel: Channel | null
+		try {
+			channel = await container.client.channels.fetch(channelId)
+		} catch (error) {
+			throw new Error(
+				`Failed to fetch target channel ${channelId}: ${error instanceof Error ? error.message : String(error)}`,
+			)
+		}
+
+		if (!channel || channel.type !== ChannelType.GuildText) {
+			throw new Error(
+				`Target channel ${channelId} could not be found or is not a text channel`,
+			)
+		}
+
+		const textChannel = channel as TextChannel
+		if (expectedGuildId && textChannel.guild.id !== expectedGuildId) {
+			throw new Error(
+				`Target channel ${channelId} does not belong to guild ${expectedGuildId}`,
+			)
+		}
+
+		return await textChannel.send(options)
+	}
+
+	/**
 	 * Retrieves the configured betting channel for a guild
 	 * @param guildId - Discord guild ID
 	 * @returns TextChannel for posting bets
