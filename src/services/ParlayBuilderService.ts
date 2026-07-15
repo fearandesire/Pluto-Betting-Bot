@@ -13,6 +13,7 @@ import ParlayApiWrapper, {
 	type EventOutcome,
 	type ParlayLegInput,
 	type ParlayMarketKey,
+	type ParlayResponse,
 } from '../utils/api/Khronos/parlays/ParlayApiWrapper.js'
 import MatchCacheService from '../utils/api/routes/cache/match-cache-service.js'
 import { combineAmericanOdds } from '../utils/betting/american-odds.js'
@@ -35,7 +36,12 @@ export interface ParlayBuilderSession {
 	revision: number
 	legs: ParlayBuilderLeg[]
 	stake: number | null
+	placementId: string
+	placementPhase: ParlayPlacementPhase
+	lastPlacementResponse: ParlayResponse | null
 }
+
+export type ParlayPlacementPhase = 'editing' | 'placing' | 'placed' | 'unknown'
 
 export type ParlayBuilderIdentity = Pick<
 	ParlayBuilderSession,
@@ -55,10 +61,21 @@ export const STALE_PARLAY_BUILDER_MESSAGE =
 	'This parlay builder is no longer current. Use the latest builder or run `/parlay` again.'
 
 const SESSION_ID_PATTERN = /^[A-Za-z0-9_-]{12}$/
+const PLACEMENT_ID_PATTERN =
+	/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const BUTTON_ID_PATTERN =
 	/^parlay\.btn\.([A-Za-z0-9_-]{12})\.(0|[1-9]\d*)\.(add|stake|confirm|cancel|remove)(?:\.(0|[1-9]\d*))?$/
 const MODAL_ID_PATTERN =
 	/^parlay\.modal\.([A-Za-z0-9_-]{12})\.(0|[1-9]\d*)\.(add-leg|stake)$/
+
+function isPlacementPhase(value: unknown): value is ParlayPlacementPhase {
+	return (
+		value === 'editing' ||
+		value === 'placing' ||
+		value === 'placed' ||
+		value === 'unknown'
+	)
+}
 
 export function parlayIdentity(
 	session: ParlayBuilderSession,
@@ -162,7 +179,11 @@ export class ParlayBuilderService {
 			!SESSION_ID_PATTERN.test(session.sessionId ?? '') ||
 			!Number.isSafeInteger(session.revision) ||
 			Number(session.revision) < 0 ||
-			!Array.isArray(session.legs)
+			!Array.isArray(session.legs) ||
+			!PLACEMENT_ID_PATTERN.test(session.placementId ?? '') ||
+			!isPlacementPhase(session.placementPhase) ||
+			(session.lastPlacementResponse !== null &&
+				typeof session.lastPlacementResponse !== 'object')
 		) {
 			return null
 		}
@@ -171,6 +192,10 @@ export class ParlayBuilderService {
 			revision: session.revision!,
 			legs: session.legs as ParlayBuilderLeg[],
 			stake: typeof session.stake === 'number' ? session.stake : null,
+			placementId: session.placementId!,
+			placementPhase: session.placementPhase!,
+			lastPlacementResponse:
+				session.lastPlacementResponse as ParlayResponse | null,
 		}
 	}
 
@@ -185,6 +210,9 @@ export class ParlayBuilderService {
 				revision: 0,
 				legs: [],
 				stake: null,
+				placementId: randomUUID(),
+				placementPhase: 'editing',
+				lastPlacementResponse: null,
 			}
 			await this.saveUnlocked(userId, guildId, session)
 			return session
@@ -318,9 +346,11 @@ export class ParlayBuilderService {
 			if (localPlacementReservations.has(reservationKey)) return null
 			const session = await this.requireSession(userId, guildId)
 			this.assertIdentity(session, expected)
+			if (session.placementPhase !== 'editing') return null
 			const token = randomUUID()
 			localPlacementReservations.set(reservationKey, token)
 			let acquired = !this.cache.setIfAbsent
+			let reserved = false
 			try {
 				if (this.cache.setIfAbsent) {
 					acquired = await this.cache.setIfAbsent(
@@ -330,12 +360,38 @@ export class ParlayBuilderService {
 					)
 					if (!acquired) return null
 				}
-				return { session, token }
+				const placingSession: ParlayBuilderSession = {
+					...session,
+					placementPhase: 'placing',
+				}
+				await this.saveUnlocked(userId, guildId, placingSession)
+				reserved = true
+				return { session: placingSession, token }
 			} finally {
-				if (!acquired) {
+				if (!reserved) {
 					await this.releasePlacement(userId, guildId, token)
 				}
 			}
+		})
+	}
+
+	async setPlacementState(
+		userId: string,
+		guildId: string,
+		expected: ParlayBuilderIdentity,
+		placementPhase: ParlayPlacementPhase,
+		lastPlacementResponse: ParlayResponse | null = null,
+	): Promise<ParlayBuilderSession> {
+		return this.withSessionLock(userId, guildId, async () => {
+			const session = await this.requireSession(userId, guildId)
+			this.assertIdentity(session, expected)
+			const updated: ParlayBuilderSession = {
+				...session,
+				placementPhase,
+				lastPlacementResponse,
+			}
+			await this.saveUnlocked(userId, guildId, updated)
+			return updated
 		})
 	}
 

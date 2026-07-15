@@ -58,6 +58,9 @@ const makeSession = (legs = 0, revision = 0) => ({
 		commence_time: '2099-01-01T00:00:00.000Z',
 	})),
 	stake: null,
+	placementId: '7b5971d4-2f0d-4cd6-a4e5-5fdab70c701b',
+	placementPhase: 'editing' as const,
+	lastPlacementResponse: null,
 })
 
 const identityOf = (session: ReturnType<typeof makeSession>) => ({
@@ -108,10 +111,25 @@ describe('ParlayBuilderService', () => {
 				revision: 0,
 				legs: [],
 				stake: null,
+				placementId: expect.stringMatching(/^[0-9a-f-]{36}$/i),
+				placementPhase: 'editing',
+				lastPlacementResponse: null,
 			},
 			PARLAY_BUILDER_TTL_SECONDS,
 		)
 		expect(session.revision).toBe(0)
+	})
+
+	it('persists one stable placement identity for the builder lifecycle', async () => {
+		const session = await service.start('user-1', 'guild-1')
+
+		expect(session).toMatchObject({
+			placementPhase: 'editing',
+			lastPlacementResponse: null,
+		})
+		expect(session.placementId).toMatch(
+			/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+		)
 	})
 
 	it('replaces the previous builder identity and expires legacy sessions', async () => {
