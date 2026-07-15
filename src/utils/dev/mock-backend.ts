@@ -32,6 +32,7 @@ import type {
 	InitParlayRequest,
 	InitParlayResponse,
 	ParlayResponse,
+	PlacedParlayLeg,
 	UserParlaysResponse,
 } from '../api/Khronos/parlays/ParlayApiWrapper.js'
 import {
@@ -42,6 +43,28 @@ import { makeMatchesForSport, makeUpcomingGame } from './factories/games.js'
 import { asMockSport, MOCK_SPORTS, type MockSport } from './factories/teams.js'
 import { MockStore } from './mock-store.js'
 
+const PARLAY_INIT_TTL_MS = 15 * 60 * 1000
+const PARLAY_MIN_LEGS = 2
+const PARLAY_MAX_LEGS = 6
+const PARLAY_MIN_STAKE = 1
+const PARLAY_MAX_STAKE = 10_000
+const PARLAY_MAX_PAYOUT = 1_000_000
+
+type PendingParlay = {
+	request: InitParlayRequest
+	preview: InitParlayResponse
+	expiresAt: number
+}
+
+type TerminalParlayResult = Exclude<PlacedParlayLeg['result'], 'pending'>
+const TERMINAL_RESULTS = new Set<TerminalParlayResult>([
+	'won',
+	'lost',
+	'push',
+	'void',
+])
+export type MockParlayTerminalListener = (parlay: ParlayResponse) => void
+
 export class MockBackend {
 	private static backend: MockBackend | undefined
 	private readonly store = new MockStore()
@@ -51,11 +74,9 @@ export class MockBackend {
 	>()
 	private nextBetId = 10_000
 	private nextParlayId = 20_000
-	private readonly pendingParlays = new Map<
-		string,
-		{ request: InitParlayRequest; preview: InitParlayResponse }
-	>()
+	private readonly pendingParlays = new Map<string, PendingParlay>()
 	private readonly parlays = new Map<string, ParlayResponse>()
+	private readonly terminalListeners = new Set<MockParlayTerminalListener>()
 
 	private constructor() {
 		if (env.NODE_ENV === 'production') {
@@ -193,12 +214,9 @@ export class MockBackend {
 	}
 
 	initParlay(request: InitParlayRequest): InitParlayResponse {
+		this.validateParlayRequest(request)
 		const legs = request.legs.map((leg) => {
-			const market_key = leg.outcome_uuid.includes('-spread-')
-				? ('spreads' as const)
-				: leg.outcome_uuid.includes('-total-')
-					? ('totals' as const)
-					: ('h2h' as const)
+			const market_key = this.marketKeyForOutcome(leg.outcome_uuid)
 			const isHome = leg.outcome_uuid.endsWith('-home')
 			const isOver = leg.outcome_uuid.endsWith('-over')
 			return {
@@ -225,23 +243,40 @@ export class MockBackend {
 				).toISOString(),
 			}
 		})
-		const decimal = Math.pow(210 / 110, legs.length)
+		const decimal = legs.reduce(
+			(product, leg) => product * this.decimalOdds(leg.odds_american),
+			1,
+		)
+		const expiresAt = Date.now() + PARLAY_INIT_TTL_MS
 		const preview: InitParlayResponse = {
 			init_token: randomUUID(),
 			combined_odds_american: Math.round((decimal - 1) * 100),
 			potential_payout: Math.round(request.stake * decimal * 100) / 100,
 			legs,
-			expires_at: new Date(Date.now() + 5 * 60_000).toISOString(),
+			expires_at: new Date(expiresAt).toISOString(),
 		}
-		this.pendingParlays.set(preview.init_token, { request, preview })
+		if (preview.potential_payout > PARLAY_MAX_PAYOUT) {
+			throw new Error(
+				`Parlay potential payout cannot exceed ${PARLAY_MAX_PAYOUT}.`,
+			)
+		}
+		this.pendingParlays.set(preview.init_token, {
+			request,
+			preview,
+			expiresAt,
+		})
 		return preview
 	}
 
 	placeParlay(initToken: string): ParlayResponse {
 		const pending = this.pendingParlays.get(initToken)
-		if (!pending) throw new Error('Mock parlay initialization expired.')
+		if (!pending || pending.expiresAt <= Date.now()) {
+			this.pendingParlays.delete(initToken)
+			throw new Error('Mock parlay initialization expired.')
+		}
 		this.pendingParlays.delete(initToken)
 		const { request, preview } = pending
+		this.store.debit(request.user_id, request.stake)
 		const id = `mock-parlay-${this.nextParlayId++}`
 		const parlay: ParlayResponse = {
 			id,
@@ -295,9 +330,97 @@ export class MockBackend {
 		if (parlay.status !== 'pending') {
 			throw new Error('Mock parlay is no longer cancellable.')
 		}
-		const cancelled = { ...parlay, status: 'cancelled' as const }
+		const earliestCommence = parlay.legs.reduce(
+			(earliest, leg) =>
+				new Date(leg.commence_time).getTime() < earliest
+					? new Date(leg.commence_time).getTime()
+					: earliest,
+			Number.POSITIVE_INFINITY,
+		)
+		if (earliestCommence <= Date.now()) {
+			throw new Error('Mock parlay cancellation window has closed.')
+		}
+		const cancelled = {
+			...parlay,
+			status: 'cancelled' as const,
+			actual_payout: parlay.stake,
+			settled_at: new Date().toISOString(),
+		}
+		this.store.credit(userId, parlay.stake)
 		this.parlays.set(parlayId, cancelled)
+		this.notifyTerminal(cancelled)
 		return cancelled
+	}
+
+	/** Register the in-process sink used by hermetic notification tests. */
+	onParlayTerminal(listener: MockParlayTerminalListener): () => void {
+		this.terminalListeners.add(listener)
+		return () => this.terminalListeners.delete(listener)
+	}
+
+	/** Apply one immutable outcome result and resolve the parlay when terminal. */
+	settleParlayLeg(
+		parlayId: string,
+		outcomeUuid: string,
+		result: TerminalParlayResult,
+	): ParlayResponse {
+		const parlay = this.parlays.get(parlayId)
+		if (!parlay) throw new Error('Mock parlay was not found.')
+		if (parlay.status !== 'pending') {
+			throw new Error('Mock parlay is already terminal.')
+		}
+		if (!TERMINAL_RESULTS.has(result)) {
+			throw new Error(`Unsupported mock parlay result: ${result}.`)
+		}
+		const leg = parlay.legs.find(
+			(candidate) => candidate.outcome_uuid === outcomeUuid,
+		)
+		if (!leg) throw new Error('Mock parlay leg was not found.')
+		if (leg.result !== 'pending') {
+			throw new Error('Mock parlay leg is already settled.')
+		}
+
+		const legs = parlay.legs.map((candidate) =>
+			candidate.outcome_uuid === outcomeUuid
+				? { ...candidate, result, settled_at: new Date().toISOString() }
+				: candidate,
+		)
+		const next: ParlayResponse = { ...parlay, legs }
+		if (legs.some((candidate) => candidate.result === 'lost')) {
+			next.status = 'lost'
+			next.actual_payout = 0
+			next.settled_at = new Date().toISOString()
+		} else if (legs.some((candidate) => candidate.result === 'pending')) {
+			this.parlays.set(parlayId, next)
+			return next
+		} else {
+			const winningLegs = legs.filter(
+				(candidate) => candidate.result === 'won',
+			)
+			next.status = winningLegs.length > 0 ? 'won' : 'push_refunded'
+			next.actual_payout =
+				winningLegs.length > 0
+					? this.roundCurrency(
+							parlay.stake *
+								winningLegs.reduce(
+									(product, candidate) =>
+										product *
+										this.decimalOdds(
+											candidate.odds_american,
+										),
+									1,
+								),
+						)
+					: parlay.stake
+			next.settled_at = new Date().toISOString()
+		}
+
+		if ((next.actual_payout ?? 0) > 0) {
+			this.store.credit(parlay.user_id, next.actual_payout ?? 0)
+		}
+		this.parlays.set(parlayId, next)
+		this.notifyTerminal(next)
+		return next
 	}
 
 	getEventOutcomes(sport: string, eventId: string): EventOutcome[] {
@@ -473,6 +596,62 @@ export class MockBackend {
 		this.nextParlayId = 20_000
 		this.pendingParlays.clear()
 		this.parlays.clear()
+		this.terminalListeners.clear()
+	}
+
+	private validateParlayRequest(request: InitParlayRequest): void {
+		if (
+			!Array.isArray(request.legs) ||
+			request.legs.length < PARLAY_MIN_LEGS ||
+			request.legs.length > PARLAY_MAX_LEGS
+		) {
+			throw new Error(
+				`Parlays must contain between ${PARLAY_MIN_LEGS} and ${PARLAY_MAX_LEGS} legs.`,
+			)
+		}
+		if (
+			!Number.isFinite(request.stake) ||
+			request.stake < PARLAY_MIN_STAKE ||
+			request.stake > PARLAY_MAX_STAKE
+		) {
+			throw new Error(
+				`Parlay stake must be between ${PARLAY_MIN_STAKE} and ${PARLAY_MAX_STAKE}.`,
+			)
+		}
+		if (
+			new Set(request.legs.map((leg) => leg.event_id)).size !==
+			request.legs.length
+		) {
+			throw new Error('Parlay legs must reference distinct events.')
+		}
+	}
+
+	private marketKeyForOutcome(
+		outcomeUuid: string,
+	): 'h2h' | 'spreads' | 'totals' {
+		if (outcomeUuid.includes('-spread-')) return 'spreads'
+		if (outcomeUuid.includes('-total-')) return 'totals'
+		if (outcomeUuid.endsWith('-home') || outcomeUuid.endsWith('-away')) {
+			return 'h2h'
+		}
+		throw new Error(`Market in outcome ${outcomeUuid} is not supported.`)
+	}
+
+	private decimalOdds(american: number): number {
+		return american >= 0 ? 1 + american / 100 : 1 + 100 / Math.abs(american)
+	}
+
+	private roundCurrency(value: number): number {
+		return Math.round((value + Number.EPSILON) * 100) / 100
+	}
+
+	private notifyTerminal(parlay: ParlayResponse): void {
+		for (const listener of this.terminalListeners) {
+			listener({
+				...parlay,
+				legs: parlay.legs.map((leg) => ({ ...leg })),
+			})
+		}
 	}
 
 	private findGameForBet(
