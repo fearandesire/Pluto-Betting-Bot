@@ -3,7 +3,8 @@ import 'winston-transport'
 import { fullFormat } from 'winston-error-format'
 import env from '#lib/startup/env.js'
 import { createConsoleTransport } from './transports/consoleTransport.js'
-import { createLokiTransport } from './transports/lokiTransport.js'
+// Loki direct-ship removed: Docker stdout → Alloy is the sole production path
+// (fnx-observability contract v1 / Pluto#580).
 
 /**
  * Renames Winston's `message` field to `msg` so JSON output matches the
@@ -41,16 +42,8 @@ const createBaseFormat = () => {
 	)
 }
 
-const createTransports = (customLabels: Record<string, string> = {}) => {
-	const transports = [
-		createConsoleTransport(),
-		createLokiTransport({ customLabels }),
-	]
-
-	return transports.filter(
-		(transport): transport is NonNullable<typeof transport> =>
-			transport !== null,
-	)
+const createTransports = (_customLabels: Record<string, string> = {}) => {
+	return [createConsoleTransport()]
 }
 
 /**
@@ -99,9 +92,12 @@ export const createRootLogger = (config: LoggerConfig = {}) => {
 		level: resolveLogLevel(),
 		format: createBaseFormat(),
 		defaultMeta: {
+			service: APP.toLowerCase().includes('pluto') ? 'pluto' : APP,
 			app: APP,
+			component: 'bot',
 			version: VERSION,
 			env: ENV,
+			environment: ENV,
 		},
 		transports: createTransports(config.customLabels),
 	})

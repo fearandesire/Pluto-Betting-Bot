@@ -2,7 +2,7 @@ import cors from '@koa/cors'
 import Koa from 'koa'
 import bodyParser from 'koa-bodyparser'
 import { logger } from 'koa2-winston'
-import { createLokiTransport } from './../../../logging/transports/lokiTransport.js'
+import { createConsoleTransport } from './../../../logging/transports/consoleTransport.js'
 import { pageNotFound } from '../../requests/middleware.js'
 import { createApiKeyAuthMiddleware } from './apiKeyAuth.js'
 import { setupBullBoard } from './bullBoard.js'
@@ -26,11 +26,7 @@ export async function setupKoaApp(): Promise<Koa> {
 	// Add logging middleware
 	app.use(
 		logger({
-			transports: createLokiTransport({
-				customLabels: {
-					api: true,
-				},
-			}),
+			transports: [createConsoleTransport()],
 		}),
 	)
 

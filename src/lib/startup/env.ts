@@ -46,9 +46,10 @@ const envSchema = z
 		BULL_BOARD_USERNAME: requiredString('BULL_BOARD_USERNAME is required'),
 		BULL_BOARD_PASSWORD: requiredString('BULL_BOARD_PASSWORD is required'),
 		API_KEY: requiredString('API_KEY is required for API authentication'),
-		LOKI_URL: z.string(),
-		LOKI_USER: requiredString('LOKI_USER is required'),
-		LOKI_PASS: requiredString('LOKI_PASS is required'),
+		// Optional legacy; Alloy scrapes Docker stdout — do not require direct Loki
+		LOKI_URL: z.string().optional().default(''),
+		LOKI_USER: z.string().optional().default(''),
+		LOKI_PASS: z.string().optional().default(''),
 		MAINTENANCE_MODE: z.boolean(),
 		USE_MOCK_DATA: z.boolean().default(false),
 		MOCK_GUILD_BETTING_CHAN_ID: z.string().optional(),
