@@ -97,6 +97,8 @@ Pluto powers the betting experience for some of Discord's largest sports communi
 
 Pluto's autonomous betting lifecycle — from odds ingestion to bet settlement — is powered by a distributed microservices architecture:
 
+For current architecture notes and cross-service context, start with the [Pluto docs hub](docs/README.md) and the [Khronos cross-service overview](https://github.com/fearandesire/khronos/blob/main/docs/architecture/cross-service-overview.md).
+
 ```mermaid
 flowchart LR
     subgraph Client ["Pluto Client (Open Source)"]
@@ -132,6 +134,13 @@ flowchart LR
 
 > [!NOTE]
 > This repository contains only the open-source Discord bot client; backend services remain private.
+
+Architecture references:
+
+- [ADR 001: Durable notification receiver](docs/architecture/decisions/001-durable-notification-receiver.md)
+- [ADR 002: Atomic cache operations](docs/architecture/decisions/002-atomic-cache-operations.md)
+- [Durable notification receiver feature guide](docs/features/durable-notification-receiver.md)
+- [Khronos client update CI](docs/ci-cd-khronos-client-update.md)
 
 ## Tech Stack
 
@@ -255,9 +264,13 @@ The script tars `assets/matchupimages/`, uploads to `s3://pluto-assets/matchupim
 
 ## Documentation
 
-For comprehensive guides, API references, and configuration details:
-
-**[Pluto Documentation](https://docs.pluto.fearandesire.com)**
+- [Pluto docs hub](docs/README.md)
+- [ADR 001: Durable notification receiver](docs/architecture/decisions/001-durable-notification-receiver.md)
+- [ADR 002: Atomic cache operations](docs/architecture/decisions/002-atomic-cache-operations.md)
+- [Durable notification receiver feature guide](docs/features/durable-notification-receiver.md)
+- [Khronos client update CI](docs/ci-cd-khronos-client-update.md)
+- [Khronos cross-service overview](https://github.com/fearandesire/khronos/blob/main/docs/architecture/cross-service-overview.md)
+- [Hosted Pluto Documentation](https://docs.pluto.fearandesire.com)
 
 ## Contributing
 
