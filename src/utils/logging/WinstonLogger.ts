@@ -3,36 +3,12 @@ import 'winston-transport'
 import { fullFormat } from 'winston-error-format'
 import env from '#lib/startup/env.js'
 import { createConsoleTransport } from './transports/consoleTransport.js'
-import { createLokiTransport } from './transports/lokiTransport.js'
-
-/**
- * Renames Winston's `message` field to `msg` so JSON output matches the
- * Pino-compatible structured-logging contract used across our services.
- *
- * Applied at the transport level (console-prod and Loki) so the dev
- * console renderer is left untouched.
- */
-export const messageToMsg = winston.format((info) => {
-	if (info.message != null && info.msg == null) {
-		info.msg = info.message as string
-		delete info.message
-	}
-	return info
-})
 
 /**
  * Logger-level format: shared, transport-agnostic transformations only.
  *
  * Encoding (json, colorize, padLevels, consoleFormat) is intentionally NOT
- * applied here — each transport owns its own encoding pipeline. Putting
- * `winston.format.json()` at the logger level mutates `info[Symbol(MESSAGE)]`
- * before transport formats run, which silently breaks the pretty dev
- * console renderer (`winston-console-format`) for any log carrying
- * structured metadata.
- *
- * `errors({ stack: true })` normalizes thrown Error instances passed via
- * the `err` field; `fullFormat()` (winston-error-format) walks nested
- * errors and serializes their full property bag.
+ * applied here — each transport owns its own encoding pipeline.
  */
 const createBaseFormat = () => {
 	return winston.format.combine(
@@ -41,16 +17,8 @@ const createBaseFormat = () => {
 	)
 }
 
-const createTransports = (customLabels: Record<string, string> = {}) => {
-	const transports = [
-		createConsoleTransport(),
-		createLokiTransport({ customLabels }),
-	]
-
-	return transports.filter(
-		(transport): transport is NonNullable<typeof transport> =>
-			transport !== null,
-	)
+const createTransports = () => {
+	return [createConsoleTransport()]
 }
 
 /**
@@ -76,34 +44,41 @@ const resolveLogLevel = (): string => {
 }
 
 export interface LoggerConfig {
-	/** Custom labels to add to Loki transport (low cardinality only). */
+	/** Optional placement overrides for child loggers. */
 	readonly customLabels?: Record<string, string>
 }
 
-const APP = process.env.APP_NAME ?? process.env.SERVICE_NAME ?? 'PLUTO-DISCORD'
+const SERVICE =
+	process.env.OTEL_SERVICE_NAME ?? process.env.SERVICE_NAME ?? 'pluto'
+const APP = process.env.APP_NAME ?? SERVICE
 const VERSION = env.PROJECT_VERSION
 const ENV = env.NODE_ENV
+const COMPONENT = process.env.COMPONENT ?? 'bot'
 
 /**
  * Creates the root Winston logger.
  *
- * Identity fields (`app`, `version`, `env`) are bound on `defaultMeta` so
- * every log line carries them automatically. Per the structured-logging
- * contract, callers attach **placement** (`component` + one of
- * `command`/`handler`/`job`/`route`) via {@link createLogger} child
- * loggers at module boundaries, and **operation** (`event = domain.action`)
- * per call.
+ * Identity fields follow fnx-observability contract v1 (`service`, `app`,
+ * `component`, `environment`). Prod path is JSON stdout → Alloy only —
+ * do not reintroduce winston-loki dual-ship.
  */
-export const createRootLogger = (config: LoggerConfig = {}) => {
+export const createRootLogger = (_config: LoggerConfig = {}) => {
 	return winston.createLogger({
 		level: resolveLogLevel(),
 		format: createBaseFormat(),
 		defaultMeta: {
+			service: SERVICE,
 			app: APP,
+			component: COMPONENT,
+			environment: ENV,
 			version: VERSION,
-			env: ENV,
+			deployment: {
+				service: SERVICE,
+				version: VERSION,
+				environment: ENV,
+			},
 		},
-		transports: createTransports(config.customLabels),
+		transports: createTransports(),
 	})
 }
 
@@ -116,16 +91,9 @@ export const logger = createRootLogger()
 /**
  * Creates a child logger bound with placement context.
  *
- * @example
- * ```ts
- * const log = createLogger({ component: 'event', handler: 'chatInputCommandSuccess' })
- * log.info('Chat input command completed', { event: 'command.success', durationMs: 23 })
- * ```
- *
  * @param context Placement fields. Should include `component` and one of
  *   `command` | `handler` | `job` | `route` per the structured-logging
- *   field taxonomy. Avoid putting per-call dimensions (userId, requestId,
- *   etc.) here — pass those on the log call or via a further `.child()`.
+ *   field taxonomy.
  */
 export const createLogger = (context: Record<string, string>): winston.Logger =>
 	logger.child(context)

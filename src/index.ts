@@ -6,8 +6,11 @@ import {
 } from '@sapphire/framework'
 import '@sapphire/plugin-hmr/register'
 import { GatewayIntentBits, Partials } from 'discord.js'
+import { bootstrapOtelPlaceholder } from './lib/observability/otel-wiring.js'
 import env from './lib/startup/env.js'
 import { logger } from './utils/logging/WinstonLogger.js'
+
+bootstrapOtelPlaceholder()
 
 const SapDiscClient = new SapphireClient({
 	caseInsensitiveCommands: true,

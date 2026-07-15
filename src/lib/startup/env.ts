@@ -46,9 +46,11 @@ const envSchema = z
 		API_KEY: z
 			.string()
 			.min(1, { message: 'API_KEY is required for API authentication' }),
-		LOKI_URL: z.string(),
-		LOKI_USER: z.string().min(1, { message: 'LOKI_USER is required' }),
-		LOKI_PASS: z.string().min(1, { message: 'LOKI_PASS is required' }),
+		// Optional legacy: direct Loki dual-ship removed (Alloy path only).
+		// Keep keys optional so existing Doppler secrets do not fail boot.
+		LOKI_URL: z.string().optional().default(''),
+		LOKI_USER: z.string().optional().default(''),
+		LOKI_PASS: z.string().optional().default(''),
 		MAINTENANCE_MODE: z.boolean(),
 		USE_MOCK_DATA: z.boolean().default(false),
 		MOCK_GUILD_BETTING_CHAN_ID: z.string().optional(),

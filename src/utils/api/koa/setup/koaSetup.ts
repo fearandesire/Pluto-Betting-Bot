@@ -1,17 +1,19 @@
 import cors from '@koa/cors'
 import Koa from 'koa'
 import bodyParser from 'koa-bodyparser'
-import { logger } from 'koa2-winston'
-import { createLokiTransport } from './../../../logging/transports/lokiTransport.js'
 import { pageNotFound } from '../../requests/middleware.js'
 import { createApiKeyAuthMiddleware } from './apiKeyAuth.js'
 import { setupBullBoard } from './bullBoard.js'
 import { createErrorHandler } from './errorHandler.js'
-import { captureRequestIdentity } from './logging.js'
+import {
+	captureRequestIdentity,
+	createHttpWideEventMiddleware,
+} from './logging.js'
 import { createRequestIdMiddleware } from './requestId.js'
 
 /**
- * Sets up and configures the Koa application with all middleware and plugins
+ * Sets up and configures the Koa application with all middleware and plugins.
+ * Logs: nested wide-event JSON via Winston console → Alloy (no winston-loki).
  */
 export async function setupKoaApp(): Promise<Koa> {
 	const app = new Koa()
@@ -22,16 +24,8 @@ export async function setupKoaApp(): Promise<Koa> {
 	// Capture request identity (User-Agent, X-Service-Name) for logging
 	app.use(captureRequestIdentity())
 
-	// Add logging middleware
-	app.use(
-		logger({
-			transports: createLokiTransport({
-				customLabels: {
-					api: true,
-				},
-			}),
-		}),
-	)
+	// Nested wide-event HTTP logs (stdout → Alloy)
+	app.use(createHttpWideEventMiddleware())
 
 	// Add API key authentication middleware
 	app.use(createApiKeyAuthMiddleware())
