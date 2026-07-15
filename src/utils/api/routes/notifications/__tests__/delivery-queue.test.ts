@@ -5,6 +5,8 @@ import {
 	type DeliveryDispatcher,
 	type DeliveryQueuePort,
 	NotificationDeliveryQueue,
+	SYSTEM_DISCORD_BASE_URL,
+	SystemDiscordDeliveryDispatcher,
 } from '../delivery-queue.js'
 import { RedisDeliveryStore } from '../delivery-store.js'
 
@@ -86,6 +88,7 @@ describe('notification delivery queue', () => {
 
 	afterEach(async () => {
 		await queue?.close()
+		vi.unstubAllGlobals()
 	})
 
 	it('tracks destinations independently and retries only transient failures', async () => {
@@ -154,5 +157,40 @@ describe('notification delivery queue', () => {
 		expect(record?.state).toBe('retryable_failed')
 		expect(record?.destinations[0]?.state).toBe('delivered')
 		expect(record?.destinations[0]?.receipt).toEqual([])
+	})
+
+	it('routes system prop-post delivery only to fake-discord', async () => {
+		const fetchMock = vi.fn<typeof fetch>(
+			async () =>
+				new Response(JSON.stringify({ id: 'fake-message-1' }), {
+					status: 200,
+					headers: { 'content-type': 'application/json' },
+				}),
+		)
+		vi.stubGlobal('fetch', fetchMock)
+
+		const receipt = await new SystemDiscordDeliveryDispatcher().deliver(
+			propPostEnvelope,
+			'prop-post:guild-1:channel-1:550e8400-e29b-41d4-a716-446655440005:550e8400-e29b-41d4-a716-446655440006',
+		)
+
+		expect(fetchMock).toHaveBeenCalledOnce()
+		expect(fetchMock.mock.calls[0]?.[0]).toBe(
+			`${SYSTEM_DISCORD_BASE_URL}/channels/channel-1/messages`,
+		)
+		expect(receipt).toEqual([
+			{
+				outcome_uuid: '550e8400-e29b-41d4-a716-446655440005',
+				guild_id: 'guild-1',
+				channel_id: 'channel-1',
+				message_id: 'fake-message-1',
+			},
+			{
+				outcome_uuid: '550e8400-e29b-41d4-a716-446655440006',
+				guild_id: 'guild-1',
+				channel_id: 'channel-1',
+				message_id: 'fake-message-1',
+			},
+		])
 	})
 })

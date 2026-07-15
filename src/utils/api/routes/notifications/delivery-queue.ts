@@ -15,6 +15,7 @@ import {
 import type NotificationService from './notifications.service.js'
 
 export const NOTIFICATION_DELIVERY_QUEUE = 'notification-delivery-v1'
+export const SYSTEM_DISCORD_BASE_URL = 'http://fake-discord:8080'
 
 // Keep queue construction lazy and environment-only. Importing notification
 // routes in unit tests must not force Pluto's full startup env schema.
@@ -108,6 +109,109 @@ class DiscordDeliveryDispatcher implements DeliveryDispatcher {
 			reference,
 		)
 	}
+}
+
+export class SystemDiscordDeliveryDispatcher implements DeliveryDispatcher {
+	async deliver(envelope: DeliveryEnvelope, destinationId: string) {
+		if (envelope.kind === 'parlay_result') {
+			if (!destinationId.startsWith('dm:'))
+				throw new Error(`Invalid parlay destination ${destinationId}`)
+			return sendToFakeDiscord(
+				`/users/${encodeURIComponent(envelope.payload.user_id)}/messages`,
+				'POST',
+				{ destination_id: destinationId, envelope },
+			)
+		}
+
+		if (envelope.kind === 'prop_post') {
+			const destination = parsePropPostDestination(destinationId)
+			const prop = envelope.payload.props.find(
+				(candidate) =>
+					candidate.over.outcome_uuid ===
+						destination.over_outcome_uuid &&
+					candidate.under.outcome_uuid ===
+						destination.under_outcome_uuid,
+			)
+			if (!prop)
+				throw new Error(
+					`Unknown prop-post destination ${destinationId}`,
+				)
+			const response = await sendToFakeDiscord(
+				`/channels/${encodeURIComponent(destination.channel_id)}/messages`,
+				'POST',
+				{ destination_id: destinationId, envelope, prop },
+			)
+			const messageId =
+				fakeDiscordMessageId(response) ??
+				`fake-${envelope.delivery_id}-${destination.channel_id}`
+			return [
+				{
+					outcome_uuid: destination.over_outcome_uuid,
+					guild_id: destination.guild_id,
+					channel_id: destination.channel_id,
+					message_id: messageId,
+				},
+				{
+					outcome_uuid: destination.under_outcome_uuid,
+					guild_id: destination.guild_id,
+					channel_id: destination.channel_id,
+					message_id: messageId,
+				},
+			]
+		}
+
+		const reference = envelope.payload.messages.find(
+			(candidate) =>
+				`prop:${candidate.guild_id}:${candidate.channel_id}:${candidate.message_id}` ===
+				destinationId,
+		)
+		if (!reference)
+			throw new Error(`Unknown prop destination ${destinationId}`)
+		return sendToFakeDiscord(
+			`/channels/${encodeURIComponent(reference.channel_id)}/messages/${encodeURIComponent(reference.message_id)}`,
+			'PATCH',
+			{ destination_id: destinationId, envelope },
+		)
+	}
+}
+
+async function sendToFakeDiscord(
+	path: string,
+	method: 'POST' | 'PATCH',
+	body: unknown,
+): Promise<unknown> {
+	const response = await fetch(`${SYSTEM_DISCORD_BASE_URL}${path}`, {
+		method,
+		headers: { 'content-type': 'application/json' },
+		body: JSON.stringify(body),
+	})
+	const payload = await readJsonResponse(response)
+	if (!response.ok) {
+		const error = new Error(
+			`fake-discord returned ${response.status} for ${method} ${path}`,
+		)
+		Object.assign(error, { status: response.status, payload })
+		throw error
+	}
+	return payload
+}
+
+async function readJsonResponse(response: Response): Promise<unknown> {
+	const text = await response.text()
+	if (!text) return undefined
+	try {
+		return JSON.parse(text)
+	} catch {
+		return text
+	}
+}
+
+function fakeDiscordMessageId(response: unknown): string | undefined {
+	if (!response || typeof response !== 'object') return undefined
+	const candidate = response as Record<string, unknown>
+	if (typeof candidate.id === 'string') return candidate.id
+	if (typeof candidate.message_id === 'string') return candidate.message_id
+	return undefined
 }
 
 class RetryableDeliveryError extends Error {
@@ -395,6 +499,24 @@ function updateDestination(
 }
 
 let defaultQueue: NotificationDeliveryQueue | undefined
+
+export function setNotificationDeliveryQueue(
+	queue: NotificationDeliveryQueue,
+): void {
+	defaultQueue = queue
+}
+
+export function resetNotificationDeliveryQueue(): void {
+	defaultQueue = undefined
+}
+
+export function configureSystemNotificationDelivery(): NotificationDeliveryQueue {
+	const queue = new NotificationDeliveryQueue({
+		dispatcher: new SystemDiscordDeliveryDispatcher(),
+	})
+	setNotificationDeliveryQueue(queue)
+	return queue
+}
 
 export function getNotificationDeliveryQueue(): NotificationDeliveryQueue {
 	if (!defaultQueue) defaultQueue = new NotificationDeliveryQueue()
