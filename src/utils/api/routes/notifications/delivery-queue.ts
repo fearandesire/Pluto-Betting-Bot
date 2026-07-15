@@ -242,7 +242,9 @@ export class NotificationDeliveryQueue {
 
 		for (const destination of record.destinations) {
 			if (
-				destination.state === 'delivered' ||
+				(destination.state === 'delivered' &&
+					(record.kind !== 'prop_post' ||
+						hasPropPostReceiptPair(destination))) ||
 				destination.state === 'permanent_failed'
 			)
 				continue
@@ -352,6 +354,14 @@ function parsePropPostDestination(destinationId: string): PropPostDestination {
 		over_outcome_uuid,
 		under_outcome_uuid,
 	}
+}
+
+function hasPropPostReceiptPair(
+	destination: DeliveryRecord['destinations'][number],
+): boolean {
+	return (
+		Array.isArray(destination.receipt) && destination.receipt.length === 2
+	)
 }
 
 function isDuplicateQueueError(error: unknown): boolean {
