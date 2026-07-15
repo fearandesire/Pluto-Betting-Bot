@@ -1,12 +1,12 @@
 import { format } from 'date-fns'
-import type { ChainableCommander, Redis } from 'ioredis'
-import redisCache from './redis-instance.js'
+import type { ChainableCommander } from 'ioredis'
+import redisCache, { type RedisCacheClient } from './redis-instance.js'
 
 export class CacheManager {
-	cache: Redis
+	cache: RedisCacheClient
 
-	constructor() {
-		this.cache = redisCache
+	constructor(cache: RedisCacheClient = redisCache) {
+		this.cache = cache
 	}
 
 	async set(key: string, data: unknown, TTL?: number) {
@@ -40,13 +40,7 @@ export class CacheManager {
 
 	/** Remove a lock only when it is still owned by the caller. */
 	async compareAndRemove(key: string, value: string): Promise<boolean> {
-		const result = await this.cache.eval(
-			`if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end`,
-			1,
-			key,
-			JSON.stringify(value),
-		)
-		return result === 1
+		return this.cache.compareAndRemove(key, JSON.stringify(value))
 	}
 
 	/** Extend a lock or reservation only while the caller still owns it. */
@@ -55,14 +49,21 @@ export class CacheManager {
 		value: string,
 		seconds: number,
 	): Promise<boolean> {
-		const result = await this.cache.eval(
-			`if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('expire', KEYS[1], ARGV[2]) else return 0 end`,
-			1,
+		return this.cache.refreshIfOwned(key, JSON.stringify(value), seconds)
+	}
+
+	async transitionIfValue(
+		key: string,
+		expectedValue: unknown,
+		nextValue: unknown,
+		seconds?: number,
+	): Promise<boolean> {
+		return this.cache.transitionIfValue(
 			key,
-			JSON.stringify(value),
+			JSON.stringify(expectedValue),
+			JSON.stringify(nextValue),
 			seconds,
 		)
-		return result === 1
 	}
 
 	async get(key: string) {

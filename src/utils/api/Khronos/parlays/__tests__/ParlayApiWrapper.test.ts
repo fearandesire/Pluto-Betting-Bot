@@ -2,9 +2,10 @@ import { describe, expect, it, vi } from 'vitest'
 
 const get = vi.fn()
 const del = vi.fn()
+const post = vi.fn()
 
 vi.mock('../../../common/axios-config.js', () => ({
-	AxiosKhronosInstance: { get, delete: del },
+	AxiosKhronosInstance: { get, post, delete: del },
 }))
 
 const { default: ParlayApiWrapper } = await import('../ParlayApiWrapper.js')
@@ -39,5 +40,45 @@ describe('ParlayApiWrapper', () => {
 			'/parlays/parlay%2F1',
 			expect.objectContaining({ data: { user_id: 'user-1' } }),
 		)
+	})
+
+	it('sends the stable placement id and reconciles a committed placement', async () => {
+		post.mockResolvedValueOnce({
+			data: { id: 'parlay-1', status: 'pending' },
+		})
+		get.mockResolvedValueOnce({
+			data: { id: 'parlay-1', status: 'pending' },
+		})
+		const api = new ParlayApiWrapper()
+
+		await expect(
+			api.place('init-token', '00000000-0000-4000-8000-000000000001'),
+		).resolves.toMatchObject({ id: 'parlay-1' })
+		await expect(
+			api.findByPlacement('00000000-0000-4000-8000-000000000001'),
+		).resolves.toMatchObject({ id: 'parlay-1' })
+
+		expect(post).toHaveBeenCalledWith(
+			'/parlays/place',
+			{
+				init_token: 'init-token',
+				placement_id: '00000000-0000-4000-8000-000000000001',
+			},
+			expect.any(Object),
+		)
+		expect(get).toHaveBeenCalledWith(
+			'/parlays/placements/00000000-0000-4000-8000-000000000001',
+			expect.any(Object),
+		)
+	})
+
+	it('treats a missing placement as a completed reconciliation', async () => {
+		get.mockRejectedValueOnce({ response: { status: 404 } })
+
+		await expect(
+			new ParlayApiWrapper().findByPlacement(
+				'00000000-0000-4000-8000-000000000001',
+			),
+		).resolves.toBeNull()
 	})
 })

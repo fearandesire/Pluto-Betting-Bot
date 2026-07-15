@@ -12,18 +12,22 @@ import {
 	TextInputStyle,
 } from 'discord.js'
 import {
+	buildParlayModalId,
 	getParlayErrorMessage,
 	logParlayBuilderError,
+	type ParlayBuilderIdentity,
 	ParlayBuilderService,
+	parseParlayButtonId,
+	STALE_PARLAY_BUILDER_MESSAGE,
 } from '../services/ParlayBuilderService.js'
 import { BetsCacheService } from '../utils/api/common/bets/BetsCacheService.js'
 import { BetslipManager } from '../utils/api/Khronos/bets/BetslipsManager.js'
 import BetslipWrapper from '../utils/api/Khronos/bets/betslip-wrapper.js'
-import ParlayApiWrapper from '../utils/api/Khronos/parlays/ParlayApiWrapper.js'
+import ParlayApiWrapper, {
+	type ParlayResponse,
+} from '../utils/api/Khronos/parlays/ParlayApiWrapper.js'
 import MatchCacheService from '../utils/api/routes/cache/match-cache-service.js'
 import { CacheManager } from '../utils/cache/cache-manager.js'
-
-const removeId = /^parlay_btn_remove_(\d+)$/
 
 export class ParlayButtonHandler extends InteractionHandler {
 	private readonly builderService = new ParlayBuilderService()
@@ -41,44 +45,64 @@ export class ParlayButtonHandler extends InteractionHandler {
 	}
 
 	public override async parse(interaction: ButtonInteraction) {
-		if (!interaction.customId.startsWith('parlay_btn_')) return this.none()
-		if (interaction.customId === 'parlay_btn_add') {
-			try {
-				await interaction.showModal(await this.buildAddLegModal())
-			} catch (error) {
-				logParlayBuilderError(error, {
-					action: 'open_add_leg_modal',
-					userId: interaction.user.id,
-				})
+		const control = parseParlayButtonId(interaction.customId)
+		if (!control) {
+			if (interaction.customId.startsWith('parlay_btn_')) {
 				await interaction.reply({
-					content:
-						error instanceof Error
-							? error.message
-							: 'No upcoming games are available right now.',
-					ephemeral: true,
+					content: STALE_PARLAY_BUILDER_MESSAGE,
+					flags: MessageFlags.Ephemeral,
 				})
 			}
 			return this.none()
 		}
-		if (interaction.customId === 'parlay_btn_stake') {
-			await interaction.showModal(this.buildStakeModal())
+		const identity = {
+			sessionId: control.sessionId,
+			revision: control.revision,
+		}
+		if (control.action === 'add' || control.action === 'stake') {
+			try {
+				if (!interaction.guildId) {
+					throw new Error(
+						'Parlays can only be built inside a server.',
+					)
+				}
+				await this.builderService.assertCurrent(
+					interaction.user.id,
+					interaction.guildId,
+					identity,
+				)
+				await interaction.showModal(
+					control.action === 'add'
+						? await this.buildAddLegModal(identity)
+						: this.buildStakeModal(identity),
+				)
+			} catch (error) {
+				logParlayBuilderError(error, {
+					action: `open_${control.action}_modal`,
+					userId: interaction.user.id,
+				})
+				await interaction.reply({
+					content: getParlayErrorMessage(error),
+					flags: MessageFlags.Ephemeral,
+				})
+			}
 			return this.none()
 		}
-		const removeMatch = removeId.exec(interaction.customId)
-		if (removeMatch) {
+		if (control.action === 'remove') {
 			await interaction.deferUpdate()
 			return this.some({
 				action: 'remove',
-				index: Number(removeMatch[1]),
+				index: control.index!,
+				...identity,
 			})
 		}
-		if (interaction.customId === 'parlay_btn_cancel') {
+		if (control.action === 'cancel') {
 			await interaction.deferUpdate()
-			return this.some({ action: 'cancel' })
+			return this.some({ action: 'cancel', ...identity })
 		}
-		if (interaction.customId === 'parlay_btn_confirm') {
+		if (control.action === 'confirm') {
 			await interaction.deferUpdate()
-			return this.some({ action: 'confirm' })
+			return this.some({ action: 'confirm', ...identity })
 		}
 		return this.none()
 	}
@@ -86,18 +110,57 @@ export class ParlayButtonHandler extends InteractionHandler {
 	public async run(
 		interaction: ButtonInteraction,
 		payload:
-			| { action: 'remove'; index: number }
-			| { action: 'cancel' }
-			| { action: 'confirm' },
+			| ({ action: 'remove'; index: number } & ParlayBuilderIdentity)
+			| ({ action: 'cancel' } & ParlayBuilderIdentity)
+			| ({ action: 'confirm' } & ParlayBuilderIdentity),
 	) {
 		const userId = interaction.user.id
 		const guildId = interaction.guildId
+		const expected = {
+			sessionId: payload.sessionId,
+			revision: payload.revision,
+		}
+		let placementToken: string | undefined
+		let leaseHeartbeat: NodeJS.Timeout | undefined
 		try {
 			if (!guildId) {
 				throw new Error('Parlays can only be built inside a server.')
 			}
 			if (payload.action === 'cancel') {
-				await this.builderService.clear(userId, guildId)
+				const session = await this.builderService.assertCurrent(
+					userId,
+					guildId,
+					expected,
+				)
+				if (
+					session.placementPhase === 'placing' ||
+					session.placementPhase === 'unknown'
+				) {
+					const placed = await this.parlayApi.findByPlacement(
+						session.placementId,
+					)
+					if (placed) {
+						return this.finishPlacement(
+							interaction,
+							userId,
+							guildId,
+							expected,
+							placed,
+						)
+					}
+					if (session.placementPhase === 'placing') {
+						throw new Error(
+							'Your parlay placement is still being reconciled. Please wait for the result.',
+						)
+					}
+					await this.builderService.setPlacementState(
+						userId,
+						guildId,
+						expected,
+						'editing',
+					)
+				}
+				await this.builderService.clear(userId, guildId, expected)
 				return interaction.editReply(
 					this.builderService.renderMessage(
 						'Parlay builder cancelled.',
@@ -108,15 +171,59 @@ export class ParlayButtonHandler extends InteractionHandler {
 				const session = await this.builderService.removeLeg(
 					userId,
 					guildId,
+					expected,
 					payload.index,
 				)
 				return interaction.editReply(
 					this.builderService.render(session),
 				)
 			}
+			let current = await this.builderService.assertCurrent(
+				userId,
+				guildId,
+				expected,
+			)
+			if (
+				current.placementPhase === 'placed' &&
+				current.lastPlacementResponse
+			) {
+				return this.finishPlacement(
+					interaction,
+					userId,
+					guildId,
+					expected,
+					current.lastPlacementResponse,
+				)
+			}
+			if (current.placementPhase === 'unknown') {
+				const placed = await this.parlayApi.findByPlacement(
+					current.placementId,
+				)
+				if (placed) {
+					return this.finishPlacement(
+						interaction,
+						userId,
+						guildId,
+						expected,
+						placed,
+					)
+				}
+				current = await this.builderService.setPlacementState(
+					userId,
+					guildId,
+					expected,
+					'editing',
+				)
+			}
+			if (current.placementPhase === 'placing') {
+				throw new Error(
+					'Your parlay is already being placed. Please wait for the result.',
+				)
+			}
 			const reservation = await this.builderService.reserveForPlacement(
 				userId,
 				guildId,
+				expected,
 			)
 			if (!reservation) {
 				throw new Error(
@@ -124,6 +231,7 @@ export class ParlayButtonHandler extends InteractionHandler {
 				)
 			}
 			const { session, token } = reservation
+			placementToken = token
 			let leaseLost = false
 			const assertPlacementLease = async () => {
 				if (leaseLost) {
@@ -143,7 +251,7 @@ export class ParlayButtonHandler extends InteractionHandler {
 					)
 				}
 			}
-			const leaseHeartbeat = setInterval(() => {
+			leaseHeartbeat = setInterval(() => {
 				void assertPlacementLease().catch((error) =>
 					logParlayBuilderError(error, {
 						action: 'refresh_placement_reservation',
@@ -152,6 +260,7 @@ export class ParlayButtonHandler extends InteractionHandler {
 				)
 			}, 30_000)
 			leaseHeartbeat.unref?.()
+			let placementRequested = false
 			try {
 				await assertPlacementLease()
 				this.builderService.validateForPlacement(session)
@@ -165,39 +274,67 @@ export class ParlayButtonHandler extends InteractionHandler {
 					user_id: userId,
 				})
 				await assertPlacementLease()
+				placementRequested = true
 				const placed = await this.parlayApi.place(
 					initialized.init_token,
+					session.placementId,
 				)
-				await assertPlacementLease()
-				await new BetslipManager(
-					new BetslipWrapper(),
-					new BetsCacheService(new CacheManager()),
-				).announceParlayPlaced(interaction, {
-					parlayId: placed.id,
-					legCount: placed.leg_count,
-					stake: Number(placed.stake),
-					potentialPayout: Number(placed.potential_payout),
-				})
-				await this.builderService.clearWithPlacementToken(
+				return this.finishPlacement(
+					interaction,
 					userId,
 					guildId,
+					expected,
+					placed,
 					token,
 				)
-				return interaction.editReply(
-					this.builderService.renderMessage(
-						`## ✅ Parlay placed\n**${placed.leg_count} legs** • **$${Number(placed.stake).toFixed(2)}** at **${placed.combined_odds_american > 0 ? '+' : ''}${placed.combined_odds_american}**\nPotential payout: **$${Number(placed.potential_payout).toFixed(2)}**\nParlay ID: \`${placed.id}\``,
-						0x57f287,
-					),
-				)
 			} catch (error) {
+				if (!placementRequested) {
+					await this.builderService.setPlacementState(
+						userId,
+						guildId,
+						expected,
+						'editing',
+					)
+					throw error
+				}
+				await this.builderService.setPlacementState(
+					userId,
+					guildId,
+					expected,
+					'unknown',
+				)
+				try {
+					const placed = await this.parlayApi.findByPlacement(
+						session.placementId,
+					)
+					if (placed) {
+						return this.finishPlacement(
+							interaction,
+							userId,
+							guildId,
+							expected,
+							placed,
+							token,
+						)
+					}
+				} catch (reconciliationError) {
+					logParlayBuilderError(reconciliationError, {
+						action: 'reconcile_placement',
+						userId,
+					})
+					throw new Error(
+						'Your parlay placement is still being reconciled. Do not confirm again yet.',
+					)
+				}
+				await this.builderService.setPlacementState(
+					userId,
+					guildId,
+					expected,
+					'editing',
+				)
 				throw error
 			} finally {
 				clearInterval(leaseHeartbeat)
-				await this.builderService.releasePlacement(
-					userId,
-					guildId,
-					token,
-				)
 			}
 		} catch (error) {
 			logParlayBuilderError(error, { action: payload.action, userId })
@@ -206,10 +343,88 @@ export class ParlayButtonHandler extends InteractionHandler {
 				...this.builderService.renderMessage(message),
 				flags: MessageFlags.IsComponentsV2,
 			})
+		} finally {
+			if (leaseHeartbeat) clearInterval(leaseHeartbeat)
+			if (placementToken) {
+				try {
+					await this.builderService.releasePlacement(
+						userId,
+						guildId!,
+						placementToken,
+					)
+				} catch (error) {
+					logParlayBuilderError(error, {
+						action: 'release_placement_reservation',
+						userId,
+					})
+				}
+			}
 		}
 	}
 
-	private async buildAddLegModal(): Promise<ModalBuilder> {
+	private async finishPlacement(
+		interaction: ButtonInteraction,
+		userId: string,
+		guildId: string,
+		expected: ParlayBuilderIdentity,
+		placed: ParlayResponse,
+		placementToken?: string,
+	) {
+		try {
+			await this.builderService.setPlacementState(
+				userId,
+				guildId,
+				expected,
+				'placed',
+				placed,
+			)
+		} catch (error) {
+			logParlayBuilderError(error, {
+				action: 'persist_placed_parlay',
+				userId,
+			})
+		}
+		try {
+			await new BetslipManager(
+				new BetslipWrapper(),
+				new BetsCacheService(new CacheManager()),
+			).announceParlayPlaced(interaction, {
+				parlayId: placed.id,
+				legCount: placed.leg_count,
+				stake: Number(placed.stake),
+				potentialPayout: Number(placed.potential_payout),
+			})
+		} catch (error) {
+			logParlayBuilderError(error, {
+				action: 'announce_placed_parlay',
+				userId,
+			})
+		}
+		if (placementToken) {
+			try {
+				await this.builderService.clearWithPlacementToken(
+					userId,
+					guildId,
+					placementToken,
+				)
+			} catch (error) {
+				logParlayBuilderError(error, {
+					action: 'clear_placed_parlay_builder',
+					userId,
+				})
+			}
+		}
+		return interaction.editReply(
+			this.builderService.renderMessage(
+				`## ✅ Parlay placed\n**${placed.leg_count} legs** • **$${Number(placed.stake).toFixed(2)}** at **${placed.combined_odds_american > 0 ? '+' : ''}${placed.combined_odds_american}**\nPotential payout: **$${Number(placed.potential_payout).toFixed(2)}**\nParlay ID: \`${placed.id}\``,
+				0x57f287,
+			),
+		)
+	}
+
+	private async buildAddLegModal(
+		identity: ParlayBuilderIdentity,
+	): Promise<ModalBuilder> {
 		const matches = ((await this.matchCache.getMatches()) ?? [])
 			.filter((match) => match.id && match.home_team && match.away_team)
 			.filter(
@@ -245,7 +460,7 @@ export class ParlayButtonHandler extends InteractionHandler {
 				})),
 			)
 		return new ModalBuilder()
-			.setCustomId('parlay_modal_add_leg')
+			.setCustomId(buildParlayModalId(identity, 'add-leg'))
 			.setTitle('Add a parlay leg')
 			.addLabelComponents(
 				new LabelBuilder()
@@ -286,9 +501,9 @@ export class ParlayButtonHandler extends InteractionHandler {
 			)
 	}
 
-	private buildStakeModal(): ModalBuilder {
+	private buildStakeModal(identity: ParlayBuilderIdentity): ModalBuilder {
 		return new ModalBuilder()
-			.setCustomId('parlay_modal_stake')
+			.setCustomId(buildParlayModalId(identity, 'stake'))
 			.setTitle('Set parlay stake')
 			.addLabelComponents(
 				new LabelBuilder()

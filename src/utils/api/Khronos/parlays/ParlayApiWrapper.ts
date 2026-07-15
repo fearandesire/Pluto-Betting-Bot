@@ -106,15 +106,42 @@ export default class ParlayApiWrapper {
 		return response.data
 	}
 
-	async place(initToken: string): Promise<ParlayResponse> {
+	async place(
+		initToken: string,
+		placementId: string,
+	): Promise<ParlayResponse> {
 		const mock = await this.mockPromise
 		if (mock) return mock.placeParlay(initToken)
 		const response = await AxiosKhronosInstance.post<ParlayResponse>(
 			'/parlays/place',
-			{ init_token: initToken },
+			{ init_token: initToken, placement_id: placementId },
 			this.requestConfig,
 		)
 		return response.data
+	}
+
+	async findByPlacement(placementId: string): Promise<ParlayResponse | null> {
+		const mock = await this.mockPromise
+		if (mock) return null
+		try {
+			const response = await AxiosKhronosInstance.get<ParlayResponse>(
+				`/parlays/placements/${encodeURIComponent(placementId)}`,
+				this.requestConfig,
+			)
+			return response.data
+		} catch (error) {
+			const status =
+				typeof error === 'object' &&
+				error !== null &&
+				'response' in error &&
+				typeof error.response === 'object' &&
+				error.response !== null &&
+				'status' in error.response
+					? error.response.status
+					: undefined
+			if (status === 404) return null
+			throw error
+		}
 	}
 
 	async getUserParlays(

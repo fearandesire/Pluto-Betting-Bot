@@ -6,7 +6,11 @@ import { MessageFlags, type ModalSubmitInteraction } from 'discord.js'
 import {
 	getParlayErrorMessage,
 	logParlayBuilderError,
+	type ParlayBuilderIdentity,
 	ParlayBuilderService,
+	type ParlayModalKind,
+	parseParlayModalId,
+	STALE_PARLAY_BUILDER_MESSAGE,
 } from '../services/ParlayBuilderService.js'
 import MatchCacheService from '../utils/api/routes/cache/match-cache-service.js'
 import { CacheManager } from '../utils/cache/cache-manager.js'
@@ -26,19 +30,26 @@ export class ParlayModalHandler extends InteractionHandler {
 	}
 
 	public override parse(interaction: ModalSubmitInteraction) {
-		if (!interaction.customId.startsWith('parlay_modal_'))
-			return this.none()
-		const kind = interaction.customId.replace('parlay_modal_', '')
-		if (kind !== 'add_leg' && kind !== 'stake') return this.none()
-		return this.some({
-			kind,
-		})
+		const parsed = parseParlayModalId(interaction.customId)
+		if (parsed) return this.some(parsed)
+		if (interaction.customId.startsWith('parlay_modal_')) {
+			return this.some({ kind: 'legacy' as const })
+		}
+		return this.none()
 	}
 
 	public async run(
 		interaction: ModalSubmitInteraction,
-		payload: { kind: 'add_leg' | 'stake' },
+		payload:
+			| ({ kind: ParlayModalKind } & ParlayBuilderIdentity)
+			| { kind: 'legacy' },
 	) {
+		if (payload.kind === 'legacy') {
+			return interaction.reply({
+				content: STALE_PARLAY_BUILDER_MESSAGE,
+				flags: MessageFlags.Ephemeral,
+			})
+		}
 		const userId = interaction.user.id
 		const guildId = interaction.guildId
 		if (!guildId) {
@@ -64,6 +75,10 @@ export class ParlayModalHandler extends InteractionHandler {
 			return interaction.editReply(options)
 		}
 		try {
+			const expected = {
+				sessionId: payload.sessionId,
+				revision: payload.revision,
+			}
 			if (payload.kind === 'stake') {
 				const rawStake = interaction.fields
 					.getTextInputValue('parlay_stake')
@@ -73,6 +88,7 @@ export class ParlayModalHandler extends InteractionHandler {
 				const session = await this.builderService.setStake(
 					userId,
 					guildId,
+					expected,
 					Number(rawStake),
 				)
 				return updateBuilder(this.builderService.render(session))
@@ -107,11 +123,16 @@ export class ParlayModalHandler extends InteractionHandler {
 			) {
 				throw new Error('Totals require Over or Under.')
 			}
-			const session = await this.builderService.addLeg(userId, guildId, {
-				matchId: gameId,
-				marketKey,
-				side,
-			})
+			const session = await this.builderService.addLeg(
+				userId,
+				guildId,
+				expected,
+				{
+					matchId: gameId,
+					marketKey,
+					side,
+				},
+			)
 			return updateBuilder(this.builderService.render(session))
 		} catch (error) {
 			logParlayBuilderError(error, { userId, modal: payload.kind })

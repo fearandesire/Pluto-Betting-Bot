@@ -209,7 +209,11 @@ export default class GuildWrapper {
 		options: MessageCreateOptions,
 		expectedGuildId?: string,
 	): Promise<Message> {
-		this.validateSnowflake(channelId, 'target', expectedGuildId ?? 'unknown')
+		this.validateSnowflake(
+			channelId,
+			'target',
+			expectedGuildId ?? 'unknown',
+		)
 
 		let channel: Channel | null
 		try {
