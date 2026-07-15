@@ -1,6 +1,9 @@
 import Router from '@koa/router'
 import type { Context, Next } from 'koa'
+import { z } from 'zod'
 import { logger } from '../../../logging/WinstonLogger.js'
+import { deliveryEnvelopeSchema } from './delivery-contract.js'
+import { getNotificationDeliveryQueue } from './delivery-queue.js'
 import { validateNotifyBetUsers } from './notification-utils.js'
 import NotificationService from './notifications.service.js'
 import { validateParlayResultNotification } from './parlay-notification-utils.js'
@@ -67,6 +70,53 @@ NotificationRouter.post('/notifications/bets/results', async (ctx) => {
 
 NotificationRouter.post('/notifications/parlays/results', async (ctx) => {
 	const rawPayload = ctx.request.body || {}
+	const envelope = deliveryEnvelopeSchema.safeParse(rawPayload)
+	if (envelope.success && envelope.data.kind === 'parlay_result') {
+		try {
+			const record = await getNotificationDeliveryQueue().accept(
+				envelope.data,
+			)
+			ctx.status = 202
+			ctx.body = {
+				delivery_id: record.delivery_id,
+				status: record.state,
+			}
+			return
+		} catch (error) {
+			if (
+				error instanceof Error &&
+				(error as Error & { code?: string }).code ===
+					'DELIVERY_PAYLOAD_MISMATCH'
+			) {
+				ctx.status = 409
+				ctx.body = {
+					success: false,
+					code: 'DELIVERY_PAYLOAD_MISMATCH',
+					error: 'delivery_id is already used for another payload',
+				}
+				return
+			}
+			logger.error({
+				method: 'NotificationRouter',
+				event: 'parlay.notification.queue_failed',
+				error: error instanceof Error ? error.message : String(error),
+			})
+			ctx.status = 503
+			ctx.body = {
+				success: false,
+				error: 'Notification queue unavailable',
+			}
+			return
+		}
+	}
+	if ('delivery_id' in (rawPayload as object)) {
+		ctx.status = 422
+		ctx.body = {
+			success: false,
+			error: 'Invalid delivery envelope. Failed Zod validation.',
+		}
+		return
+	}
 	const validatedData = validateParlayResultNotification(rawPayload)
 
 	if (!validatedData) {
@@ -107,6 +157,54 @@ NotificationRouter.post(
 	requireApiKeyAuthentication,
 	async (ctx) => {
 		const rawPayload = ctx.request.body || {}
+		const envelope = deliveryEnvelopeSchema.safeParse(rawPayload)
+		if (envelope.success && envelope.data.kind === 'prop_settled') {
+			try {
+				const record = await getNotificationDeliveryQueue().accept(
+					envelope.data,
+				)
+				ctx.status = 202
+				ctx.body = {
+					delivery_id: record.delivery_id,
+					status: record.state,
+				}
+				return
+			} catch (error) {
+				if (
+					error instanceof Error &&
+					(error as Error & { code?: string }).code ===
+						'DELIVERY_PAYLOAD_MISMATCH'
+				) {
+					ctx.status = 409
+					ctx.body = {
+						success: false,
+						code: 'DELIVERY_PAYLOAD_MISMATCH',
+						error: 'delivery_id is already used for another payload',
+					}
+					return
+				}
+				logger.error({
+					method: 'NotificationRouter',
+					event: 'prop.notification.queue_failed',
+					error:
+						error instanceof Error ? error.message : String(error),
+				})
+				ctx.status = 503
+				ctx.body = {
+					success: false,
+					error: 'Notification queue unavailable',
+				}
+				return
+			}
+		}
+		if ('delivery_id' in (rawPayload as object)) {
+			ctx.status = 422
+			ctx.body = {
+				success: false,
+				error: 'Invalid delivery envelope. Failed Zod validation.',
+			}
+			return
+		}
 		const validatedData = validatePropSettledNotification(rawPayload)
 
 		if (!validatedData) {
@@ -138,6 +236,33 @@ NotificationRouter.post(
 				error: 'Failed to process prop settlement notification',
 			}
 			ctx.status = 500
+		}
+	},
+)
+
+NotificationRouter.get(
+	'/deliveries/:delivery_id',
+	requireApiKeyAuthentication,
+	async (ctx) => {
+		const deliveryId = ctx.params.delivery_id
+		if (!z.string().uuid().safeParse(deliveryId).success) {
+			ctx.status = 422
+			ctx.body = { success: false, error: 'delivery_id is required' }
+			return
+		}
+		const record = await getNotificationDeliveryQueue().get(deliveryId)
+		if (!record) {
+			ctx.status = 404
+			ctx.body = { success: false, error: 'Delivery not found' }
+			return
+		}
+		ctx.status = 200
+		ctx.body = {
+			delivery_id: record.delivery_id,
+			status: record.state,
+			attempts: record.attempts,
+			destinations: record.destinations,
+			delivered_at: record.delivered_at,
 		}
 	},
 )

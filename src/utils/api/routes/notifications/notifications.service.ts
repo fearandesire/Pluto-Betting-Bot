@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 // Import interfaces and potentially the Discord client type
 import { container } from '@sapphire/framework'
 import { EmbedBuilder, type Message } from 'discord.js'
@@ -21,6 +22,16 @@ import type {
 	NotifyBetUsers,
 } from './notifications.interface.js'
 import type { ParlayResultNotification } from './parlay-notification-contract.js'
+
+function createDeliveryNonce(
+	deliveryId: string,
+	destinationIndex: number,
+): string {
+	return createHash('sha256')
+		.update(`${deliveryId}:${destinationIndex}`)
+		.digest('hex')
+		.slice(0, 25)
+}
 
 export default class NotificationService {
 	private bigWinAnnouncementService?: BigWinAnnouncementService
@@ -142,67 +153,47 @@ export default class NotificationService {
 	}
 
 	/**
+	 * Queue worker entrypoint. Unlike the legacy callback method, Discord
+	 * failures propagate so BullMQ can retain and retry the destination.
+	 */
+	async deliverParlayResult(
+		data: ParlayResultNotification,
+		deliveryId?: string,
+	): Promise<void> {
+		const embeds = this.buildParlayEmbeds(data)
+		await this.sendParlayEmbeds(
+			data.user_id,
+			data,
+			embeds,
+			true,
+			deliveryId,
+		)
+		try {
+			await this.announceParlayWin(data)
+		} catch (error) {
+			logger.warn({
+				method: this.deliverParlayResult.name,
+				event: 'parlay.notification.announcement_failed',
+				parlay_id: data.parlay_id,
+				error: error instanceof Error ? error.message : String(error),
+			})
+		}
+	}
+
+	/**
 	 * Apply one Khronos prop settlement to every original Discord post in the
 	 * posting ledger. A missing/deleted message is a delivery warning, not a
 	 * failed settlement: Khronos has already committed the outcome and can
 	 * safely retry the callback later.
 	 */
 	async processPropSettled(data: PropSettledNotification): Promise<void> {
-		const client = container.client
-		if (!client) {
-			logger.error({
-				method: this.processPropSettled.name,
-				event: 'prop.notification.delivery_failed',
-				message:
-					'Discord client not available for prop settlement update',
-				critical: true,
-				outcome_uuid: data.outcome_uuid,
-			})
-			return
-		}
-
 		const processedMessages = new Set<string>()
 		for (const reference of data.messages) {
 			const messageKey = `${reference.guild_id}:${reference.channel_id}:${reference.message_id}`
 			if (processedMessages.has(messageKey)) continue
 			processedMessages.add(messageKey)
-
 			try {
-				const channel = await client.channels.fetch(
-					reference.channel_id,
-				)
-				if (
-					!channel ||
-					!channel.isTextBased() ||
-					!('guildId' in channel) ||
-					channel.guildId !== reference.guild_id
-				) {
-					throw new Error(
-						`Channel ${reference.channel_id} is missing, not text-based, or belongs to another guild`,
-					)
-				}
-
-				const message = await channel.messages.fetch(
-					reference.message_id,
-				)
-				const updatedEmbeds = message.embeds.map((embed, index) =>
-					index === 0
-						? this.buildPropSettlementEmbed(message, data)
-						: EmbedBuilder.from(embed),
-				)
-
-				if (updatedEmbeds.length === 0) {
-					throw new Error(
-						'Original prop message has no embed to update',
-					)
-				}
-
-				await message.edit({
-					embeds: updatedEmbeds,
-					// The settlement is terminal. Removing components prevents stale
-					// buttons from being clicked while keeping the edit idempotent.
-					components: [],
-				})
+				await this.deliverPropSettlementMessage(data, reference)
 			} catch (error) {
 				logger.warn({
 					method: this.processPropSettled.name,
@@ -218,6 +209,47 @@ export default class NotificationService {
 				})
 			}
 		}
+	}
+
+	/** Deliver exactly one prop message, allowing the durable worker to retry it. */
+	async deliverPropSettlementMessage(
+		data: PropSettledNotification,
+		reference: PropSettledNotification['messages'][number],
+	): Promise<void> {
+		const client = container.client
+		if (!client) {
+			throw new Error(
+				'Discord client not available for prop settlement update',
+			)
+		}
+		const channel = await client.channels.fetch(reference.channel_id)
+		if (
+			!channel ||
+			!channel.isTextBased() ||
+			!('guildId' in channel) ||
+			channel.guildId !== reference.guild_id
+		) {
+			const error = new Error(
+				`Channel ${reference.channel_id} is missing, not text-based, or belongs to another guild`,
+			)
+			Object.assign(error, { code: '10003' })
+			throw error
+		}
+
+		const message = await channel.messages.fetch(reference.message_id)
+		const updatedEmbeds = message.embeds.map((embed, index) =>
+			index === 0
+				? this.buildPropSettlementEmbed(message, data)
+				: EmbedBuilder.from(embed),
+		)
+		if (updatedEmbeds.length === 0) {
+			const error = new Error(
+				'Original prop message has no embed to update',
+			)
+			Object.assign(error, { code: '10003' })
+			throw error
+		}
+		await message.edit({ embeds: updatedEmbeds, components: [] })
 	}
 
 	private buildPropSettlementEmbed(
@@ -527,6 +559,8 @@ export default class NotificationService {
 		userId: string,
 		data: ParlayResultNotification,
 		embeds: EmbedBuilder[],
+		throwOnFailure = false,
+		deliveryId?: string,
 	): Promise<void> {
 		const client = container.client
 
@@ -540,13 +574,22 @@ export default class NotificationService {
 				parlay_id: data.parlay_id,
 				user_id: userId,
 			})
+			if (throwOnFailure) throw new Error('Discord client not available')
 			return
 		}
 
 		try {
 			const user = await client.users.fetch(userId)
-			for (const embed of embeds) {
-				await user.send({ embeds: [embed] })
+			for (const [index, embed] of embeds.entries()) {
+				await user.send({
+					embeds: [embed],
+					...(deliveryId
+						? {
+								nonce: createDeliveryNonce(deliveryId, index),
+								enforceNonce: true,
+							}
+						: {}),
+				})
 			}
 		} catch (error) {
 			logger.error({
@@ -560,6 +603,7 @@ export default class NotificationService {
 				error: error instanceof Error ? error.message : String(error),
 				stack: error instanceof Error ? error.stack : undefined,
 			})
+			if (throwOnFailure) throw error
 		}
 	}
 
