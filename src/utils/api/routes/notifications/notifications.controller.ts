@@ -2,7 +2,10 @@ import Router from '@koa/router'
 import type { Context, Next } from 'koa'
 import { z } from 'zod'
 import { logger } from '../../../logging/WinstonLogger.js'
-import { deliveryEnvelopeSchema } from './delivery-contract.js'
+import {
+	deliveryEnvelopeSchema,
+	deliveryReceipts,
+} from './delivery-contract.js'
 import { getNotificationDeliveryQueue } from './delivery-queue.js'
 import { validateNotifyBetUsers } from './notification-utils.js'
 import NotificationService from './notifications.service.js'
@@ -259,9 +262,13 @@ NotificationRouter.get(
 		ctx.status = 200
 		ctx.body = {
 			delivery_id: record.delivery_id,
+			kind: record.kind,
 			status: record.state,
 			attempts: record.attempts,
 			destinations: record.destinations,
+			...(record.kind === 'prop_post'
+				? { receipts: deliveryReceipts(record) }
+				: {}),
 			delivered_at: record.delivered_at,
 		}
 	},

@@ -4,6 +4,8 @@ import {
 	type DeliveryEnvelope,
 	type DeliveryRecord,
 	type DestinationState,
+	deliveryReceipts,
+	hasExactPropPostReceipts,
 } from './delivery-contract.js'
 import {
 	type DeliveryStore,
@@ -28,6 +30,7 @@ export interface DeliveryDispatcher {
 
 class DiscordDeliveryDispatcher implements DeliveryDispatcher {
 	private service?: NotificationService
+	private propPostingHandler?: import('../../../props/PropPostingHandler.js').PropPostingHandler
 
 	private async getService(): Promise<NotificationService> {
 		if (!this.service) {
@@ -45,6 +48,52 @@ class DiscordDeliveryDispatcher implements DeliveryDispatcher {
 				envelope.payload,
 				envelope.delivery_id,
 			)
+		}
+
+		if (envelope.kind === 'prop_post') {
+			const destination = parsePropPostDestination(destinationId)
+			const prop = envelope.payload.props.find(
+				(candidate) =>
+					candidate.over.outcome_uuid ===
+						destination.over_outcome_uuid &&
+					candidate.under.outcome_uuid ===
+						destination.under_outcome_uuid,
+			)
+			if (!prop)
+				throw new Error(
+					`Unknown prop-post destination ${destinationId}`,
+				)
+			if (!this.propPostingHandler) {
+				const module = await import(
+					'../../../props/PropPostingHandler.js'
+				)
+				this.propPostingHandler = new module.PropPostingHandler()
+			}
+			const receipt = await this.propPostingHandler.postPropPair(
+				destination.guild_id,
+				destination.channel_id,
+				prop,
+				prop.sport_title.toLowerCase().includes('nfl') ? 'nfl' : 'nba',
+				envelope.delivery_id,
+				destinationId,
+			)
+			if (
+				receipt.length !== 2 ||
+				receipt.some(
+					(reference) =>
+						reference.guild_id !== destination.guild_id ||
+						reference.channel_id !== destination.channel_id ||
+						![
+							destination.over_outcome_uuid,
+							destination.under_outcome_uuid,
+						].includes(reference.outcome_uuid),
+				)
+			) {
+				throw new Error(
+					'Prop-post destination returned incomplete receipts',
+				)
+			}
+			return receipt
 		}
 
 		const reference = envelope.payload.messages.find(
@@ -129,6 +178,12 @@ export class NotificationDeliveryQueue {
 	}
 
 	async accept(envelope: DeliveryEnvelope): Promise<DeliveryRecord> {
+		return (await this.acceptDetailed(envelope)).record
+	}
+
+	async acceptDetailed(
+		envelope: DeliveryEnvelope,
+	): Promise<{ record: DeliveryRecord; duplicate: boolean }> {
 		const accepted = await this.store.accept(envelope)
 		if (accepted.kind === 'conflict') {
 			const error = new Error(
@@ -163,7 +218,10 @@ export class NotificationDeliveryQueue {
 				if (!isDuplicateQueueError(error)) throw error
 			}
 		}
-		return accepted.record
+		return {
+			record: accepted.record,
+			duplicate: accepted.kind === 'duplicate',
+		}
 	}
 
 	async get(deliveryId: string): Promise<DeliveryRecord | null> {
@@ -222,14 +280,30 @@ export class NotificationDeliveryQueue {
 			}
 		}
 
-		const final = await this.store.update(deliveryId, (current) => ({
-			...current,
-			state: deriveDeliveryState(current),
-			delivered_at:
-				deriveDeliveryState(current) === 'delivered'
-					? (current.delivered_at ?? new Date().toISOString())
-					: current.delivered_at,
-		}))
+		const final = await this.store.update(deliveryId, (current) => {
+			const derivedState = deriveDeliveryState(current)
+			const propPostComplete =
+				current.kind !== 'prop_post' ||
+				hasExactPropPostReceipts(
+					current.payload as Extract<
+						DeliveryEnvelope,
+						{ kind: 'prop_post' }
+					>['payload'],
+					deliveryReceipts(current),
+				)
+			const state =
+				derivedState === 'delivered' && !propPostComplete
+					? 'retryable_failed'
+					: derivedState
+			return {
+				...current,
+				state,
+				delivered_at:
+					state === 'delivered'
+						? (current.delivered_at ?? new Date().toISOString())
+						: current.delivered_at,
+			}
+		})
 		if (hasRetryableFailure || final.state === 'retryable_failed') {
 			throw new RetryableDeliveryError(
 				'One or more notification destinations require retry',
@@ -245,6 +319,38 @@ export class NotificationDeliveryQueue {
 	async close(): Promise<void> {
 		await this.worker?.close()
 		await this.queue.close()
+	}
+}
+
+interface PropPostDestination {
+	guild_id: string
+	channel_id: string
+	over_outcome_uuid: string
+	under_outcome_uuid: string
+}
+
+function parsePropPostDestination(destinationId: string): PropPostDestination {
+	const [
+		prefix,
+		guild_id,
+		channel_id,
+		over_outcome_uuid,
+		under_outcome_uuid,
+	] = destinationId.split(':')
+	if (
+		prefix !== 'prop-post' ||
+		!guild_id ||
+		!channel_id ||
+		!over_outcome_uuid ||
+		!under_outcome_uuid
+	) {
+		throw new Error(`Invalid prop-post destination ${destinationId}`)
+	}
+	return {
+		guild_id,
+		channel_id,
+		over_outcome_uuid,
+		under_outcome_uuid,
 	}
 }
 

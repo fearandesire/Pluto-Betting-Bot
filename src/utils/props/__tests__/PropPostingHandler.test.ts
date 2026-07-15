@@ -120,6 +120,36 @@ describe('PropPostingHandler message references and idempotency', () => {
 		)
 	})
 
+	it('uses a deterministic Discord nonce for durable prop-post retries', async () => {
+		const result = await new PropPostingHandler().postPropPair(
+			'guild-1',
+			'channel-1',
+			prop,
+			'nba',
+			'550e8400-e29b-41d4-a716-446655440010',
+			'prop-post:guild-1:channel-1:550e8400-e29b-41d4-a716-446655440000:550e8400-e29b-41d4-a716-446655440001',
+		)
+
+		expect(result).toEqual(references)
+		const firstOptions = mocks.sendToChannel.mock.calls[0][1]
+		expect(firstOptions).toMatchObject({
+			enforceNonce: true,
+			nonce: expect.stringMatching(/^[0-9a-f]{25}$/),
+		})
+		mocks.sendToChannel.mockClear()
+		await new PropPostingHandler().postPropPair(
+			'guild-1',
+			'channel-1',
+			prop,
+			'nba',
+			'550e8400-e29b-41d4-a716-446655440010',
+			'prop-post:guild-1:channel-1:550e8400-e29b-41d4-a716-446655440000:550e8400-e29b-41d4-a716-446655440001',
+		)
+		expect(mocks.sendToChannel.mock.calls[0][1].nonce).toBe(
+			firstOptions.nonce,
+		)
+	})
+
 	it('does not repost a prop already delivered to the same destination', async () => {
 		const handler = new PropPostingHandler()
 
@@ -163,6 +193,23 @@ describe('PropPostingHandler message references and idempotency', () => {
 
 		expect(result).toMatchObject({ posted: 1, filtered: 0, failed: 0 })
 		expect(result.results).toEqual(references)
+		expect(mocks.sendToChannel).not.toHaveBeenCalled()
+	})
+
+	it('fails closed on an unknown legacy marker instead of reposting', async () => {
+		mocks.get.mockResolvedValue(JSON.stringify({ status: 'complete' }))
+
+		const result = await new PropPostingHandler().postPropsToChannel(
+			'guild-1',
+			[prop],
+			'nba',
+			'channel-1',
+		)
+
+		expect(result).toMatchObject({ posted: 0, failed: 1, filtered: 0 })
+		expect(result.failures[0]?.error).toMatch(
+			/unknown legacy delivery marker/i,
+		)
 		expect(mocks.sendToChannel).not.toHaveBeenCalled()
 	})
 

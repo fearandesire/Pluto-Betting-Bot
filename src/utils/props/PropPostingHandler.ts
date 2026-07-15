@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import type { ProcessedPropDto } from '@pluto-khronos/api-client'
 import { format } from 'date-fns'
 import {
@@ -152,6 +153,19 @@ export class PropPostingHandler {
 				})
 				continue
 			}
+			if (deliveryState.status === 'unknown') {
+				result.failed++
+				result.failures.push({
+					guild_id: guildId,
+					channel_id: channelId,
+					outcome_uuids: [
+						prop.over.outcome_uuid,
+						prop.under.outcome_uuid,
+					],
+					error: 'Unknown legacy delivery marker; manual reconciliation required',
+				})
+				continue
+			}
 
 			try {
 				const embed = await this.createPropEmbed(prop, sport)
@@ -227,6 +241,42 @@ export class PropPostingHandler {
 		return result
 	}
 
+	/**
+	 * Posts one prop pair for the durable prop-post worker. The queue has
+	 * already persisted the delivery envelope before this method is called.
+	 * Discord's nonce makes a retry after an ambiguous send return the original
+	 * message instead of creating a second one.
+	 */
+	async postPropPair(
+		guildId: string,
+		channelId: string,
+		prop: ProcessedPropDto,
+		sport: 'nba' | 'nfl',
+		deliveryId: string,
+		destinationId: string,
+	): Promise<PostedPropReference[]> {
+		const embed = await this.createPropEmbed(prop, sport)
+		const buttons = this.createPropButtons(prop)
+		const message = await this.guildWrapper.sendToChannel(
+			channelId,
+			{
+				embeds: [embed],
+				components: [buttons],
+				nonce: createDeliveryNonce(deliveryId, destinationId),
+				enforceNonce: true,
+			},
+			guildId,
+		)
+		return [prop.over.outcome_uuid, prop.under.outcome_uuid].map(
+			(outcome_uuid) => ({
+				outcome_uuid,
+				guild_id: guildId,
+				channel_id: channelId,
+				message_id: message.id,
+			}),
+		)
+	}
+
 	private getDeliveryKey(
 		guildId: string,
 		channelId: string | undefined,
@@ -248,6 +298,7 @@ export class PropPostingHandler {
 		| { status: 'sent'; results: PostedPropReference[] }
 		| { status: 'claimed' }
 		| { status: 'unavailable' }
+		| { status: 'unknown' }
 	> {
 		try {
 			const existing = await redisCache.get(deliveryKey)
@@ -273,14 +324,15 @@ export class PropPostingHandler {
 					const marker = JSON.parse(existing) as DeliveredMarker
 					if (
 						marker.status === 'sent' &&
-						Array.isArray(marker.results)
+						Array.isArray(marker.results) &&
+						marker.results.every(isPostedPropReference)
 					) {
 						return { status: 'sent', results: marker.results }
 					}
 				} catch {
-					// An unknown marker is treated as available for compatibility
-					// with older deployments that stored a plain status value.
+					return { status: 'unknown' }
 				}
+				return { status: 'unknown' }
 			}
 
 			const lock = await redisCache.set(
@@ -488,4 +540,25 @@ export class PropPostingHandler {
 			underButton,
 		)
 	}
+}
+
+function isPostedPropReference(value: unknown): value is PostedPropReference {
+	if (!value || typeof value !== 'object') return false
+	const candidate = value as Record<string, unknown>
+	return (
+		typeof candidate.outcome_uuid === 'string' &&
+		typeof candidate.guild_id === 'string' &&
+		typeof candidate.channel_id === 'string' &&
+		typeof candidate.message_id === 'string'
+	)
+}
+
+function createDeliveryNonce(
+	deliveryId: string,
+	destinationId: string,
+): string {
+	return createHash('sha256')
+		.update(`${deliveryId}:${destinationId}`)
+		.digest('hex')
+		.slice(0, 25)
 }

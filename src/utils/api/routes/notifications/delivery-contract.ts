@@ -1,6 +1,8 @@
 import { createHash } from 'node:crypto'
 import { z } from 'zod'
 import {
+	type DailyPropsPayload,
+	dailyPropsPayloadSchema,
 	type PropSettledNotification,
 	propSettledNotificationSchema,
 } from '../shared-payload-schemas.js'
@@ -9,7 +11,11 @@ import {
 	parlayResultNotificationSchema,
 } from './parlay-notification-contract.js'
 
-export const deliveryKindSchema = z.enum(['parlay_result', 'prop_settled'])
+export const deliveryKindSchema = z.enum([
+	'parlay_result',
+	'prop_settled',
+	'prop_post',
+])
 
 const deliveryEnvelopeBaseSchema = z.object({
 	delivery_id: z.string().uuid(),
@@ -26,10 +32,24 @@ export const deliveryEnvelopeSchema = z.discriminatedUnion('kind', [
 		kind: z.literal('prop_settled'),
 		payload: propSettledNotificationSchema,
 	}),
+	deliveryEnvelopeBaseSchema.extend({
+		kind: z.literal('prop_post'),
+		payload: dailyPropsPayloadSchema,
+	}),
 ])
 
 export type DeliveryEnvelope = z.infer<typeof deliveryEnvelopeSchema>
-export type DeliveryPayload = ParlayResultNotification | PropSettledNotification
+export type DeliveryPayload =
+	| ParlayResultNotification
+	| PropSettledNotification
+	| DailyPropsPayload
+
+export interface PropPostReceipt {
+	outcome_uuid: string
+	guild_id: string
+	channel_id: string
+	message_id: string
+}
 
 export type DeliveryState =
 	| 'queued'
@@ -101,6 +121,14 @@ export function destinationIds(envelope: DeliveryEnvelope): string[] {
 	if (envelope.kind === 'parlay_result') {
 		return [`dm:${envelope.payload.user_id}`]
 	}
+	if (envelope.kind === 'prop_post') {
+		return envelope.payload.guilds.flatMap((guild) =>
+			envelope.payload.props.map(
+				(prop) =>
+					`prop-post:${guild.guild_id}:${guild.channel_id}:${prop.over.outcome_uuid}:${prop.under.outcome_uuid}`,
+			),
+		)
+	}
 	return [
 		...new Set(
 			envelope.payload.messages.map(
@@ -109,6 +137,56 @@ export function destinationIds(envelope: DeliveryEnvelope): string[] {
 			),
 		),
 	]
+}
+
+/** Flatten durable per-destination receipts for status/reconciliation APIs. */
+export function deliveryReceipts(
+	record: Pick<DeliveryRecord, 'kind' | 'destinations'>,
+): PropPostReceipt[] {
+	if (record.kind !== 'prop_post') return []
+	return record.destinations.flatMap((destination) => {
+		if (!Array.isArray(destination.receipt)) return []
+		return destination.receipt.filter(isPropPostReceipt)
+	})
+}
+
+/** A prop-post is terminally delivered only when every expected receipt exists exactly once. */
+export function hasExactPropPostReceipts(
+	payload: DailyPropsPayload,
+	receipts: readonly PropPostReceipt[],
+): boolean {
+	const expected = new Set<string>()
+	for (const prop of payload.props) {
+		for (const outcomeUuid of [
+			prop.over.outcome_uuid,
+			prop.under.outcome_uuid,
+		]) {
+			for (const guild of payload.guilds) {
+				expected.add(
+					`${outcomeUuid}:${guild.guild_id}:${guild.channel_id}`,
+				)
+			}
+		}
+	}
+	if (receipts.length !== expected.size) return false
+	const actual = new Set<string>()
+	for (const receipt of receipts) {
+		const key = `${receipt.outcome_uuid}:${receipt.guild_id}:${receipt.channel_id}`
+		if (actual.has(key) || !expected.has(key)) return false
+		actual.add(key)
+	}
+	return actual.size === expected.size
+}
+
+function isPropPostReceipt(value: unknown): value is PropPostReceipt {
+	if (!value || typeof value !== 'object') return false
+	const candidate = value as Record<string, unknown>
+	return (
+		typeof candidate.outcome_uuid === 'string' &&
+		typeof candidate.guild_id === 'string' &&
+		typeof candidate.channel_id === 'string' &&
+		typeof candidate.message_id === 'string'
+	)
 }
 
 export function classifyDeliveryError(error: unknown): {

@@ -34,6 +34,41 @@ const envelope = deliveryEnvelopeSchema.parse({
 	},
 })
 
+const propPostEnvelope = deliveryEnvelopeSchema.parse({
+	delivery_id: '550e8400-e29b-41d4-a716-446655440004',
+	schema_version: 1,
+	kind: 'prop_post',
+	occurred_at: '2026-07-14T20:00:00.000Z',
+	payload: {
+		props: [
+			{
+				event_id: 'event-1',
+				commence_time: '2026-07-14T20:00:00.000Z',
+				home_team: 'Home',
+				away_team: 'Away',
+				sport_title: 'NBA',
+				market_key: 'player_points',
+				bookmaker_key: 'draftkings',
+				description: 'Player',
+				point: 20.5,
+				over: {
+					outcome_uuid: '550e8400-e29b-41d4-a716-446655440005',
+					outcome_name: 'Over',
+					price: -110,
+				},
+				under: {
+					outcome_uuid: '550e8400-e29b-41d4-a716-446655440006',
+					outcome_name: 'Under',
+					price: -110,
+				},
+			},
+		],
+		guilds: [
+			{ guild_id: 'guild-1', channel_id: 'channel-1', sport: 'nba' },
+		],
+	},
+})
+
 function fakeRedis(): RedisCacheClient {
 	const values = new Map<string, string>()
 	return {
@@ -92,5 +127,32 @@ describe('notification delivery queue', () => {
 				(destination) => destination.state === 'delivered',
 			),
 		).toBe(true)
+	})
+
+	it('does not report prop-post delivery until the complete receipt set exists', async () => {
+		const redis = fakeRedis()
+		const store = new RedisDeliveryStore(redis)
+		const dispatcher: DeliveryDispatcher = {
+			deliver: vi.fn(async () => []),
+		}
+		queue = new NotificationDeliveryQueue({
+			store,
+			dispatcher,
+			queue: {
+				add: vi.fn(async () => undefined),
+				close: vi.fn(async () => undefined),
+			} satisfies DeliveryQueuePort,
+			startWorker: false,
+		})
+
+		await queue.accept(propPostEnvelope)
+		await expect(
+			queue.processJob({ data: propPostEnvelope } as never),
+		).rejects.toThrow(/retry/)
+
+		const record = await store.get(propPostEnvelope.delivery_id)
+		expect(record?.state).toBe('retryable_failed')
+		expect(record?.destinations[0]?.state).toBe('delivered')
+		expect(record?.destinations[0]?.receipt).toEqual([])
 	})
 })

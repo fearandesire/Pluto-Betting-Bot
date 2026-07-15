@@ -1,16 +1,40 @@
 import Router from '@koa/router'
 import { logger } from '../../../logging/WinstonLogger.js'
-import { PropPostingHandler } from '../../../props/PropPostingHandler.js'
+import {
+	deliveryEnvelopeSchema,
+	deliveryReceipts,
+} from '../notifications/delivery-contract.js'
+import { getNotificationDeliveryQueue } from '../notifications/delivery-queue.js'
 import { dailyPropsPayloadSchema } from '../shared-payload-schemas.js'
 
 const PropsRouter = new Router()
-const propPostingHandler = new PropPostingHandler()
 
 const supportedSports = new Set(['nba', 'nfl'])
 
 PropsRouter.post('/props/daily', async (ctx) => {
+	const envelope = deliveryEnvelopeSchema.safeParse(ctx.request.body ?? {})
+	if (!envelope.success || envelope.data.kind !== 'prop_post') {
+		logger.warn({
+			method: 'PropsRouter',
+			event: 'push_payload_rejected',
+			schema: 'deliveryEnvelope.prop_post',
+			issues: envelope.success
+				? [{ message: 'Expected prop_post delivery envelope' }]
+				: envelope.error.issues,
+		})
+		ctx.status = 422
+		ctx.body = {
+			success: false,
+			error: 'Invalid prop-post delivery envelope. Failed Zod validation.',
+			issues: envelope.success
+				? [{ message: 'Expected prop_post delivery envelope' }]
+				: envelope.error.issues,
+		}
+		return
+	}
+
 	const parsedPayload = dailyPropsPayloadSchema.safeParse(
-		ctx.request.body ?? {},
+		envelope.data.payload,
 	)
 
 	if (!parsedPayload.success) {
@@ -23,8 +47,19 @@ PropsRouter.post('/props/daily', async (ctx) => {
 		ctx.status = 422
 		ctx.body = {
 			success: false,
-			error: 'Invalid props payload. Failed Zod validation.',
+			error: 'Invalid prop-post delivery envelope. Failed Zod validation.',
 			issues: parsedPayload.error.issues,
+		}
+		return
+	}
+	if (
+		parsedPayload.data.props.length === 0 ||
+		parsedPayload.data.guilds.length === 0
+	) {
+		ctx.status = 422
+		ctx.body = {
+			success: false,
+			error: 'Prop-post delivery must include at least one prop and guild.',
 		}
 		return
 	}
@@ -53,55 +88,42 @@ PropsRouter.post('/props/daily', async (ctx) => {
 	}
 
 	try {
-		const postingResults = await Promise.all(
-			parsedPayload.data.guilds.map((guild) =>
-				propPostingHandler.postPropsToChannel(
-					guild.guild_id,
-					parsedPayload.data.props,
-					guild.sport.toLowerCase() as 'nba' | 'nfl',
-					guild.channel_id,
-				),
-			),
-		)
-		const references = postingResults.flatMap((result) => result.results)
-		const failures = postingResults.flatMap((result) => result.failures)
-		const failed = postingResults.reduce(
-			(total, result) => total + result.failed,
-			0,
-		)
-
-		if (failed > 0) {
-			logger.error({
-				method: 'PropsRouter',
-				event: 'props_daily_delivery_failed',
-				posted_count: references.length,
-				failed_count: failed,
-				failures,
-				results: postingResults,
-			})
-			ctx.set('X-Props-Failed', String(failed))
-			ctx.status = 500
+		const { record, duplicate } =
+			await getNotificationDeliveryQueue().acceptDetailed(envelope.data)
+		ctx.status = 202
+		ctx.body = {
+			accepted: true,
+			duplicate,
+			delivery_id: record.delivery_id,
+			kind: record.kind,
+			status: record.state,
+			...(record.kind === 'prop_post'
+				? { receipts: deliveryReceipts(record) }
+				: {}),
+		}
+	} catch (error) {
+		if (
+			error instanceof Error &&
+			(error as Error & { code?: string }).code ===
+				'DELIVERY_PAYLOAD_MISMATCH'
+		) {
+			ctx.status = 409
 			ctx.body = {
 				success: false,
-				error: 'Failed to deliver one or more daily props.',
-				posted: references,
-				failures,
+				code: 'DELIVERY_PAYLOAD_MISMATCH',
+				error: 'delivery_id is already used for another payload',
 			}
 			return
 		}
-
-		ctx.status = 200
-		ctx.body = references
-	} catch (error) {
 		logger.error({
 			method: 'PropsRouter',
-			event: 'props_daily_processing_failed',
+			event: 'props_daily_queue_failed',
 			error: error instanceof Error ? error.message : String(error),
 		})
-		ctx.status = 500
+		ctx.status = 503
 		ctx.body = {
 			success: false,
-			error: 'Failed to process daily props.',
+			error: 'Prop-post delivery queue unavailable.',
 		}
 	}
 })

@@ -8,18 +8,12 @@ const logger = vi.hoisted(() => ({
 	warn: vi.fn(),
 	info: vi.fn(),
 }))
-const postPropsToChannel = vi.hoisted(() => vi.fn())
+const acceptDetailed = vi.hoisted(() => vi.fn())
 
 vi.mock('../../../../logging/WinstonLogger.js', () => ({ logger }))
-vi.mock('../../../../props/PropPostingHandler.js', () => {
-	function MockPropPostingHandler(this: {
-		postPropsToChannel: typeof postPropsToChannel
-	}) {
-		this.postPropsToChannel = postPropsToChannel
-	}
-
-	return { PropPostingHandler: MockPropPostingHandler }
-})
+vi.mock('../../notifications/delivery-queue.js', () => ({
+	getNotificationDeliveryQueue: () => ({ acceptDetailed }),
+}))
 
 import PropsRouter from '../props-router.js'
 
@@ -50,33 +44,36 @@ const validPayload = {
 	guilds: [{ guild_id: 'guild-1', channel_id: 'channel-1', sport: 'nba' }],
 }
 
-const refs = [
-	{
-		outcome_uuid: validPayload.props[0].over.outcome_uuid,
-		guild_id: 'guild-1',
-		channel_id: 'channel-1',
-		message_id: 'message-1',
-	},
-	{
-		outcome_uuid: validPayload.props[0].under.outcome_uuid,
-		guild_id: 'guild-1',
-		channel_id: 'channel-1',
-		message_id: 'message-1',
-	},
-]
+const validEnvelope = {
+	delivery_id: '550e8400-e29b-41d4-a716-446655440010',
+	schema_version: 1,
+	kind: 'prop_post',
+	occurred_at: '2026-07-14T20:00:00.000Z',
+	payload: validPayload,
+}
+
+const queuedRecord = {
+	delivery_id: validEnvelope.delivery_id,
+	kind: 'prop_post',
+	schema_version: 1,
+	occurred_at: validEnvelope.occurred_at,
+	payload: validPayload,
+	payload_hash: 'hash',
+	state: 'queued',
+	attempts: 0,
+	destinations: [],
+	created_at: validEnvelope.occurred_at,
+	updated_at: validEnvelope.occurred_at,
+} as const
 
 describe('POST /props/daily', () => {
 	let server: Server | undefined
 
 	beforeEach(() => {
 		vi.clearAllMocks()
-		postPropsToChannel.mockResolvedValue({
-			posted: 1,
-			filtered: 0,
-			failed: 0,
-			total: 1,
-			results: refs,
-			failures: [],
+		acceptDetailed.mockResolvedValue({
+			record: queuedRecord,
+			duplicate: false,
 		})
 	})
 
@@ -109,17 +106,18 @@ describe('POST /props/daily', () => {
 		})
 	}
 
-	it('passes validated compact props to the posting handler and returns outcome refs', async () => {
-		const response = await request(validPayload)
+	it('durably accepts a validated prop-post envelope before Discord delivery', async () => {
+		const response = await request(validEnvelope)
 
-		expect(response.status).toBe(200)
-		expect(await response.json()).toEqual(refs)
-		expect(postPropsToChannel).toHaveBeenCalledWith(
-			'guild-1',
-			validPayload.props,
-			'nba',
-			'channel-1',
-		)
+		expect(response.status).toBe(202)
+		expect(await response.json()).toMatchObject({
+			accepted: true,
+			duplicate: false,
+			delivery_id: validEnvelope.delivery_id,
+			kind: 'prop_post',
+			status: 'queued',
+		})
+		expect(acceptDetailed).toHaveBeenCalledWith(validEnvelope)
 	})
 
 	it('rejects malformed payloads with structured 422 errors', async () => {
@@ -129,22 +127,29 @@ describe('POST /props/daily', () => {
 		const body = await response.json()
 		expect(body).toMatchObject({
 			success: false,
-			error: 'Invalid props payload. Failed Zod validation.',
+			error: 'Invalid prop-post delivery envelope. Failed Zod validation.',
 		})
 		expect(body.issues).toEqual(expect.any(Array))
-		expect(postPropsToChannel).not.toHaveBeenCalled()
+		expect(acceptDetailed).not.toHaveBeenCalled()
 	})
 
 	it('rejects unsupported guild sports with 422', async () => {
 		const response = await request({
-			...validPayload,
-			guilds: [
-				{ guild_id: 'guild-1', channel_id: 'channel-1', sport: 'mlb' },
-			],
+			...validEnvelope,
+			payload: {
+				...validPayload,
+				guilds: [
+					{
+						guild_id: 'guild-1',
+						channel_id: 'channel-1',
+						sport: 'mlb',
+					},
+				],
+			},
 		})
 
 		expect(response.status).toBe(422)
-		expect(postPropsToChannel).not.toHaveBeenCalled()
+		expect(acceptDetailed).not.toHaveBeenCalled()
 		expect(logger.warn).toHaveBeenCalledWith(
 			expect.objectContaining({
 				event: 'push_payload_rejected',
@@ -153,81 +158,32 @@ describe('POST /props/daily', () => {
 		)
 	})
 
-	it('returns 500 when a guild cannot receive props', async () => {
-		postPropsToChannel.mockResolvedValue({
-			posted: 0,
-			filtered: 0,
-			failed: 1,
-			total: 1,
-			results: [],
-			failures: [
-				{
-					guild_id: 'guild-1',
-					channel_id: 'channel-1',
-					outcome_uuids: refs.map((ref) => ref.outcome_uuid),
-					error: 'Discord unavailable',
-				},
-			],
-		})
+	it('returns 503 when durable queue acceptance fails', async () => {
+		acceptDetailed.mockRejectedValueOnce(new Error('Redis unavailable'))
 
-		const response = await request(validPayload)
+		const response = await request(validEnvelope)
 
-		expect(response.status).toBe(500)
-		expect(response.headers.get('x-props-failed')).toBe('1')
+		expect(response.status).toBe(503)
 		expect(await response.json()).toEqual({
 			success: false,
-			error: 'Failed to deliver one or more daily props.',
-			posted: [],
-			failures: [
-				{
-					guild_id: 'guild-1',
-					channel_id: 'channel-1',
-					outcome_uuids: refs.map((ref) => ref.outcome_uuid),
-					error: 'Discord unavailable',
-				},
-			],
+			error: 'Prop-post delivery queue unavailable.',
 		})
 		expect(logger.error).toHaveBeenCalledWith(
-			expect.objectContaining({
-				event: 'props_daily_delivery_failed',
-				failed_count: 1,
-			}),
+			expect.objectContaining({ event: 'props_daily_queue_failed' }),
 		)
 	})
 
-	it('returns posted refs alongside failure details when delivery is partial', async () => {
-		postPropsToChannel.mockResolvedValue({
-			posted: 1,
-			filtered: 0,
-			failed: 1,
-			total: 2,
-			results: refs,
-			failures: [
-				{
-					guild_id: 'guild-1',
-					channel_id: 'channel-1',
-					outcome_uuids: ['550e8400-e29b-41d4-a716-446655440002'],
-					error: 'Discord unavailable',
-				},
-			],
+	it('returns 409 when delivery ID is reused with a different payload', async () => {
+		const error = Object.assign(new Error('mismatch'), {
+			code: 'DELIVERY_PAYLOAD_MISMATCH',
 		})
+		acceptDetailed.mockRejectedValueOnce(error)
 
-		const response = await request(validPayload)
+		const response = await request(validEnvelope)
 
-		expect(response.status).toBe(500)
-		expect(response.headers.get('x-props-failed')).toBe('1')
-		expect(await response.json()).toEqual({
-			success: false,
-			error: 'Failed to deliver one or more daily props.',
-			posted: refs,
-			failures: [
-				{
-					guild_id: 'guild-1',
-					channel_id: 'channel-1',
-					outcome_uuids: ['550e8400-e29b-41d4-a716-446655440002'],
-					error: 'Discord unavailable',
-				},
-			],
+		expect(response.status).toBe(409)
+		expect(await response.json()).toMatchObject({
+			code: 'DELIVERY_PAYLOAD_MISMATCH',
 		})
 	})
 })
