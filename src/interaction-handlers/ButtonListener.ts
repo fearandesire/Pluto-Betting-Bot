@@ -216,7 +216,6 @@ export class ButtonHandler extends InteractionHandler {
 						user_id: interaction.user.id,
 						outcome_uuid: matchedOutcome.outcome_uuid,
 						choice: matchedOutcome.name, // "Over" or "Under"
-						status: 'pending',
 						guild_id: interaction.guildId!,
 						sport: prop.event_context.sport_title,
 					},

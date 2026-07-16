@@ -415,7 +415,7 @@ export default class PropsApiWrapper {
 				metadata: {
 					source,
 					propId: dto.propId,
-					winner: dto.winner,
+					result: dto.result,
 					totalProcessed: result.total_predictions_count,
 				},
 			})
@@ -434,7 +434,7 @@ export default class PropsApiWrapper {
 				metadata: {
 					source,
 					propId: dto.propId,
-					winner: dto.winner,
+					result: dto.result,
 					dto,
 					error: errorMessage,
 					status,
