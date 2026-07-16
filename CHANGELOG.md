@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.6.3](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.6.2...v4.6.3) (2026-07-15)
+
+
+### Bug Fixes
+
+* **khronos:** bump @pluto-khronos/* to 3.5.1 ([c4076a4](https://github.com/fearandesire/Pluto-Betting-Bot/commit/c4076a4cf532fda67b648a769cef18e569a008dd))
+* **props:** populate market_id in cron prop conversion ([#491](https://github.com/fearandesire/Pluto-Betting-Bot/issues/491)) ([#560](https://github.com/fearandesire/Pluto-Betting-Bot/issues/560)) ([2175160](https://github.com/fearandesire/Pluto-Betting-Bot/commit/21751607d6eec7ea56f248fd620cb03150d3a374))
+
 ## [4.6.2](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.6.1...v4.6.2) (2026-05-26)
 
 
