@@ -1,0 +1,7 @@
+# Recent
+
+## 2026-06-13
+Audited Grafana/Loki docs across Pluto/Khronos/Goracle; identified 80% duplication + Goracle gaps, consolidated shared patterns into CLAUDE.md. Created docs/agents/grafana-loki.md (15 LogQL patterns, label taxonomy) and synced updates to CONTEXT/AGENTS/CLAUDE. Ultrareview found 4 bugs: ChannelManager.throw aborts batch, InMemoryRedis.pipeline missing del/hset/expire + TTL drops, lazy prod guard, MockStore.clearPending loses refunds.
+
+## 2026-06-15
+Ran multiple Pluto-Betting-Bot ultraplan passes for epic #482-484: verified PRD-vs-code drift and cross-epic deps, identified infra-first sequencing (composition roots blocked on #502), drafted 3-4 ADRs (domain-seam, composition-root, bootstrap/Redis, layered-svc+pure-fn) with options/verdicts, and scaffolded plan doc we-are-going-to-iridescent-lovelace.md (scope/findings/patterns/feasibility) plus an 11-rule pattern spec; work paused awaiting advisor/feasibility pass. Also set up Grafana/Loki MCP access: committed `.mcp.json` with env-interp, moved creds to gitignored settings.local.json, wrote GRAFANA_MCP.md remote-auth doc, opened PR #559, and verified token safety. Separately built a custom ponytail statusline (~/.claude/statusline.ps1: [pt] + model + session title + branch + ctx%) and updated settings.json.
