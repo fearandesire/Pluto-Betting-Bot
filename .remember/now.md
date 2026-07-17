@@ -1,5 +1,3 @@
 
-## 06:46 | claude/grafana-loki-mcp-access-omalpa
-Replaced ponytail's hardcoded statusline with custom script (`~/.claude/statusline.ps1`) reading session title + model + ponytail flag; updated settings.json to use it.
-## 14:17 | agent/cicd-deployment-all-repos-a16191
-Orchestrated CI/CD fixes + deploy across Pluto/Goracle/Khronos: merged Pluto #587 (khronos 3.6.0 bump, settlement idempotency verified vs released v3.6.0 source, rebutted CodeRabbit false-positive) → shipped v4.6.4 to GHCR; merged Goracle #60 (workflow_dispatch republish, Greptile P1 fixed); merged Khronos #721 (ESPN nightly rescoped to network-only specs, Goracle spec sync) and opened follow-up #722 (matchup-records offseason fix + smoke.py retry/backoff); deleted 2 merged Goracle branches, flagged Pluto dev/parlays-props for user review; GHCR ACL for Goracle image push left user-blocked (no API exists).
+## 14:33 | agent/cicd-deployment-all-repos-a16191
+Fixed Greptile P2 (parlays-system-smoke.yml, commit 13b181e0) making teardown failures visible via ::warning::, merged khronos#722 (8ea7b2f) and re-validated nightly (run 29603433689) green, confirmed sanity matrix (Khronos v3.6.0, Pluto v4.6.4, npm @pluto-khronos 3.6.0), cleaned up worktrees, then user requested moving Khronos default branch back to main and asked to verify Pluto's `dev/parlays-props` promotion is actually complete.

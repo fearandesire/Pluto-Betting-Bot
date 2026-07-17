@@ -13,8 +13,9 @@ repaired. Two items need YOU (GHCR ACL, host-pull confirmation). Details below.
 - **Khronos #721 merged → dev.** espn-contract-nightly scoped to the ESPN contract specs (was
   failing 30+ days on missing Redis for the whole test:int suite); Goracle spec synced (adds
   props/settlement endpoints). Nightly on-demand run confirmed the ESPN schema contract passes.
-- **Khronos #722 (follow-up, → dev):** offseason-tolerant matchup-records series assertion +
-  parlays-system-smoke retry/tolerant-teardown. [status: pending merge / re-validate]
+- **Khronos #722 MERGED → dev:** offseason-tolerant matchup-records series assertion +
+  parlays-system-smoke retry + visible teardown warning (Greptile P2). Nightly RE-DISPATCHED
+  run 29603433689 → GREEN (ESPN contract step success). Nightly now fully fixed + validated.
 - **Branch cleanup:** deleted goracle `dev/parlays-props` (@88319eb, PR #54) and
   `agent/parlays-audit-remediation` (@5b558eb, PR #50) — both confirmed merged.
 
