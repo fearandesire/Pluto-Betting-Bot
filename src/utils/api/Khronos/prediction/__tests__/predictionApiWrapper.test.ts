@@ -51,7 +51,7 @@ describe('PredictionApiWrapper deletion routes', () => {
 
 	it('uses the event-based DELETE route explicitly', async () => {
 		const wrapper = new PredictionApiWrapper()
-		const params = { id: 'event-1', userId: 'user-1' }
+		const params = { eventId: 'event-1', userId: 'user-1' }
 
 		await wrapper.deletePredictionByEvent(params)
 
@@ -61,7 +61,7 @@ describe('PredictionApiWrapper deletion routes', () => {
 
 	it('keeps the deprecated event-based deletion alias compatible', async () => {
 		const wrapper = new PredictionApiWrapper()
-		const params = { id: 'event-1', userId: 'user-1' }
+		const params = { eventId: 'event-1', userId: 'user-1' }
 
 		await wrapper.deletePrediction(params)
 

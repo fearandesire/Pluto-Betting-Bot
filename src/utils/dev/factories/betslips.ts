@@ -119,6 +119,7 @@ export function makePlacedBetslip(options: {
 		payout: Number((options.placeBetDto.amount + profit).toFixed(2)),
 		betresult: PlacedBetslipBetresultEnum.Pending,
 		dateofbet: new Date().toISOString(),
+		settled_at: null,
 		guild_id: options.placeBetDto.guild_id,
 		newBalance: options.newBalance,
 		isNewUser: false,

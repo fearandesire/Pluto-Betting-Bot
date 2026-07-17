@@ -1,4 +1,8 @@
-import type { SetPropResultResponseDto } from '@pluto-khronos/api-client'
+import {
+	type PropOutcomeDetailDto,
+	PropOutcomeDetailDtoOutcomeTypeEnum,
+	type SetPropResultResponseDto,
+} from '@pluto-khronos/api-client'
 import { PaginatedMessageEmbedFields } from '@sapphire/discord.js-utilities'
 import { container } from '@sapphire/framework'
 import type { Subcommand } from '@sapphire/plugin-subcommands'
@@ -16,6 +20,24 @@ import { LogType } from '../logging/AppLog.interface.js'
 import AppLog from '../logging/AppLog.js'
 import { logger } from '../logging/WinstonLogger.js'
 import { PropPostingHandler } from '../props/PropPostingHandler.js'
+
+type SettleableSide = 'Over' | 'Under'
+
+const OUTCOME_TYPE_BY_SIDE: Record<
+	SettleableSide,
+	PropOutcomeDetailDtoOutcomeTypeEnum
+> = {
+	Over: PropOutcomeDetailDtoOutcomeTypeEnum.Over,
+	Under: PropOutcomeDetailDtoOutcomeTypeEnum.Under,
+}
+
+const OPPOSITE_SIDE: Record<SettleableSide, SettleableSide> = {
+	Over: 'Under',
+	Under: 'Over',
+}
+
+const isSettleableSide = (value: string): value is SettleableSide =>
+	value === 'Over' || value === 'Under'
 
 /**
  * Handler for admin props management commands
@@ -147,7 +169,9 @@ export class AdminPropsHandler {
 
 	/**
 	 * Handle /admin props setresult <prop_id> <result>
-	 * Set the result of a specific prop
+	 * Settles both sides of the prop's market: the side the admin declares as the
+	 * winner is settled `won`, its counterpart `lost`. Khronos settles strictly
+	 * per-outcome and never infers the paired outcome, so both calls are required.
 	 */
 	public async handleSetresult(
 		interaction: Subcommand.ChatInputCommandInteraction,
@@ -182,16 +206,73 @@ export class AdminPropsHandler {
 			return
 		}
 
+		if (!isSettleableSide(result)) {
+			logger.error('Unrecognised side selected for prop settlement', {
+				propId,
+				result,
+				user_id: interaction.user.id,
+				guild_id: interaction.guildId,
+				context: 'AdminPropsHandler.handleSetresult',
+			})
+			await interaction.reply({
+				content: `❌ Unrecognised result \`${result}\`. Expected \`Over\` or \`Under\`. Nothing was settled.`,
+				ephemeral: true,
+			})
+			return
+		}
+
+		const winningSide = result
+		const losingSide = OPPOSITE_SIDE[winningSide]
 		const propsApi = new PropsApiWrapper()
 
 		try {
 			await interaction.deferReply()
 
+			// The admin picks one outcome, but each side of a market is a separate
+			// outcome_uuid that must be settled by its own call. Resolve the whole
+			// market from the selected outcome to obtain both UUIDs.
+			const prop = await propsApi.getPropByUuid(propId)
+
+			const winningOutcome = this.findOutcomeBySide(
+				prop.outcomes,
+				winningSide,
+			)
+			const losingOutcome = this.findOutcomeBySide(
+				prop.outcomes,
+				losingSide,
+			)
+
+			if (
+				prop.outcomes.length !== 2 ||
+				!winningOutcome ||
+				!losingOutcome
+			) {
+				logger.error('Could not resolve an Over/Under pair for prop', {
+					propId,
+					winningSide,
+					outcomeCount: prop.outcomes.length,
+					outcomeTypes: prop.outcomes.map((o) => o.outcome_type),
+					outcomeUuids: prop.outcomes.map((o) => o.outcome_uuid),
+					user_id: interaction.user.id,
+					guild_id: interaction.guildId,
+					context: 'AdminPropsHandler.handleSetresult',
+				})
+				await interaction.editReply({
+					content:
+						`❌ Could not resolve a single **${winningSide}** outcome and a single **${losingSide}** outcome for this market, so nothing was settled.\n` +
+						`Found ${prop.outcomes.length} outcome(s) with types: ${prop.outcomes
+							.map((o) => o.outcome_type ?? 'unknown')
+							.join(', ')}.\n` +
+						'This prop must be settled manually — no predictions were changed.',
+				})
+				return
+			}
+
 			logger.info('Setting prop result', {
 				propId,
-				propIdLength: propId.length,
-				hasDashes: propId.includes('-'),
-				winner: result,
+				winningSide,
+				won_outcome_uuid: winningOutcome.outcome_uuid,
+				lost_outcome_uuid: losingOutcome.outcome_uuid,
 				user_id: interaction.user.id,
 				user_username: interaction.user.username,
 				guild_id: interaction.guildId,
@@ -199,26 +280,66 @@ export class AdminPropsHandler {
 			})
 
 			const apiStartTime = Date.now()
-			const response = await propsApi.setResult({
-				propId,
-				winner: result,
-				status: 'completed',
-				user_id: interaction.user.id,
+			const wonResponse = await propsApi.setResult({
+				propId: winningOutcome.outcome_uuid,
+				result: 'won',
+				guild_id: interaction.guildId,
 			})
+
+			// The won side is already settled and paid out from here on, so a failure
+			// below is a partial settlement, not a no-op. It needs its own report.
+			let lostResponse: SetPropResultResponseDto
+			try {
+				lostResponse = await propsApi.setResult({
+					propId: losingOutcome.outcome_uuid,
+					result: 'lost',
+					guild_id: interaction.guildId,
+				})
+			} catch (losingSideError) {
+				logger.error('Prop partially settled: losing side failed', {
+					propId,
+					winningSide,
+					won_outcome_uuid: winningOutcome.outcome_uuid,
+					lost_outcome_uuid: losingOutcome.outcome_uuid,
+					user_id: interaction.user.id,
+					guild_id: interaction.guildId,
+					error:
+						losingSideError instanceof Error
+							? losingSideError.message
+							: String(losingSideError),
+					context: 'AdminPropsHandler.handleSetresult',
+				})
+				container.logger.error(losingSideError)
+				await interaction.editReply({
+					content:
+						`⚠️ **Partial settlement — action needed.**\n` +
+						`The **${winningSide}** side (\`${winningOutcome.outcome_uuid}\`) settled as **won**; those predictions are already paid out.\n` +
+						`The **${losingSide}** side (\`${losingOutcome.outcome_uuid}\`) failed to settle as **lost** and is still unsettled.\n\n` +
+						`Re-run this exact command (same prop and result: **${winningSide}**) to finish — the already-settled side is a no-op on a retry.`,
+				})
+				return
+			}
 			const apiDuration = Date.now() - apiStartTime
 
 			logger.info('Prop result set successfully', {
 				propId,
-				winner: result,
-				correct_predictions: response.correct_predictions_count,
-				incorrect_predictions: response.incorrect_predictions_count,
-				total_predictions: response.total_predictions_count,
+				winningSide,
+				won_outcome_uuid: winningOutcome.outcome_uuid,
+				won_correct_predictions: wonResponse.correct_predictions_count,
+				won_total_predictions: wonResponse.total_predictions_count,
+				lost_outcome_uuid: losingOutcome.outcome_uuid,
+				lost_correct_predictions:
+					lostResponse.correct_predictions_count,
+				lost_total_predictions: lostResponse.total_predictions_count,
 				apiDuration: `${apiDuration}ms`,
 				user_id: interaction.user.id,
 				guild_id: interaction.guildId,
 			})
 
-			const embed = this.createResultEmbed(response)
+			const embed = this.createResultEmbed(
+				{ side: winningSide, response: wonResponse },
+				{ side: losingSide, response: lostResponse },
+			)
 
 			await AppLog.log({
 				guildId: interaction.guildId,
@@ -232,7 +353,7 @@ export class AdminPropsHandler {
 				propId,
 				propIdType: typeof propId,
 				propIdLength: propId?.length,
-				winner: result,
+				result,
 				user_id: interaction.user.id,
 				guild_id: interaction.guildId,
 				error: error instanceof Error ? error.message : String(error),
@@ -246,6 +367,22 @@ export class AdminPropsHandler {
 				ApiModules.props,
 			)
 		}
+	}
+
+	/**
+	 * Resolve the single outcome matching a side by its `outcome_type` enum.
+	 * Returns undefined unless exactly one outcome matches: `outcome_type` is
+	 * absent on legacy props, and a market may hold more than the two sides, so
+	 * an ambiguous or unlabelled market must never be settled by inference.
+	 */
+	private findOutcomeBySide(
+		outcomes: PropOutcomeDetailDto[],
+		side: SettleableSide,
+	): PropOutcomeDetailDto | undefined {
+		const matches = outcomes.filter(
+			(outcome) => outcome.outcome_type === OUTCOME_TYPE_BY_SIDE[side],
+		)
+		return matches.length === 1 ? matches[0] : undefined
 	}
 
 	/**
@@ -391,32 +528,37 @@ export class AdminPropsHandler {
 	}
 
 	/**
-	 * Create embed for prop result update response
+	 * Create embed for a settled prop. Both sides are reported separately: a
+	 * merged count would hide which side received which result.
 	 */
 	private createResultEmbed(
-		response: SetPropResultResponseDto,
+		won: { side: SettleableSide; response: SetPropResultResponseDto },
+		lost: { side: SettleableSide; response: SetPropResultResponseDto },
 	): EmbedBuilder {
-		const embed = new EmbedBuilder()
+		const summarise = (response: SetPropResultResponseDto): string =>
+			[
+				`Correct: **${response.correct_predictions_count}**`,
+				`Incorrect: **${response.incorrect_predictions_count}**`,
+				`Total: **${response.total_predictions_count}**`,
+			].join('\n')
+
+		return new EmbedBuilder()
 			.setTitle('Prop Result Updated')
+			.setDescription(
+				`**${won.side}** won — both sides of the market were settled.`,
+			)
 			.setColor(embedColors.PlutoGreen)
 			.addFields(
 				{
-					name: 'Correct Predictions',
-					value: response.correct_predictions_count.toString(),
+					name: `✅ ${won.side} — won`,
+					value: summarise(won.response),
 					inline: true,
 				},
 				{
-					name: 'Incorrect Predictions',
-					value: response.incorrect_predictions_count.toString(),
-					inline: true,
-				},
-				{
-					name: 'Total Predictions',
-					value: response.total_predictions_count.toString(),
+					name: `❌ ${lost.side} — lost`,
+					value: summarise(lost.response),
 					inline: true,
 				},
 			)
-
-		return embed
 	}
 }
