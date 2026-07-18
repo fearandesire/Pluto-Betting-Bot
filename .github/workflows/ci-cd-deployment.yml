@@ -143,7 +143,10 @@ jobs:
 
           # 3. Fallback (should never happen)
           VERSION="${VERSION:-0.0.0}"
-          ENABLE_LATEST="${{ github.ref == 'refs/heads/main' }}"
+          # Release events run on the tag ref (refs/tags/vX.Y.Z), not
+          # refs/heads/main — without the release clause, release deploys
+          # never move :latest and Watchtower on the VPS never updates.
+          ENABLE_LATEST="${{ github.ref == 'refs/heads/main' || github.event_name == 'release' }}"
 
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
