@@ -390,6 +390,10 @@ export default class NotificationService {
 
 		switch (data.kind) {
 			case 'won': {
+				// The published contract does not require payout for won
+				// notifications, so surface an honest "Unavailable" rather than a
+				// misleading $0.00 when neither amount is present.
+				const wonPayout = data.actual_payout ?? data.payout
 				baseEmbed
 					.setTitle('🎉 Parlay Won! 🎉')
 					.setColor('#57f287')
@@ -401,9 +405,10 @@ export default class NotificationService {
 						},
 						{
 							name: '🏆 Payout',
-							value: MoneyFormatter.toUSD(
-								data.actual_payout ?? data.payout ?? 0,
-							),
+							value:
+								wonPayout === undefined
+									? 'Unavailable'
+									: MoneyFormatter.toUSD(wonPayout),
 							inline: true,
 						},
 					)

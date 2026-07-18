@@ -143,6 +143,28 @@ describe('NotificationService.processParlayResult', () => {
 		)
 	})
 
+	it('renders an unavailable payout instead of $0.00 when no amount is present', async () => {
+		const payload = {
+			...makePayload('won'),
+			actual_payout: null,
+			payout: undefined,
+		}
+		await new NotificationService().processParlayResult(payload)
+		const embed = (
+			mocks.send.mock.calls[0][0].embeds[0] as {
+				toJSON: () => { fields: Array<{ name: string; value: string }> }
+			}
+		).toJSON()
+		expect(embed.fields).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({
+					name: '🏆 Payout',
+					value: 'Unavailable',
+				}),
+			]),
+		)
+	})
+
 	it('keeps every leg field within Discord limits', async () => {
 		const payload = {
 			...makePayload('won'),
