@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.6.7](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.6.6...v4.6.7) (2026-07-18)
+
+
+### Bug Fixes
+
+* **ci:** tag :latest on release deploys so Watchtower updates ([#595](https://github.com/fearandesire/Pluto-Betting-Bot/issues/595)) ([a88ff6b](https://github.com/fearandesire/Pluto-Betting-Bot/commit/a88ff6bb3477d6cdffacff9bc9e558c9bbc2aa46))
+
 ## [4.6.6](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.6.5...v4.6.6) (2026-07-18)
 
 
