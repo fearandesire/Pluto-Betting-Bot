@@ -94,6 +94,45 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Verify production dist
+        run: pnpm verify:dist
+
+      - name: Build production image for packaging smoke
+        run: |
+          mkdir -p assets
+          docker build \
+            --target production \
+            --tag "pluto-production-smoke:${GITHUB_SHA}" \
+            .
+
+      - name: Verify production image packaging
+        run: |
+          docker run --rm \
+            --entrypoint /bin/sh \
+            "pluto-production-smoke:${GITHUB_SHA}" \
+            -c '
+              set -eu
+              test -f /app/dist/index.js
+
+              leaked="$(find /app/dist -type f \( \
+                -path "*/__tests__/*" \
+                -o -name "*.test.*" \
+                -o -name "*.spec.*" \
+              \) -print)"
+
+              if [ -n "$leaked" ]; then
+                printf "Compiled test artifacts found in production image:\n%s\n" "$leaked" >&2
+                exit 1
+              fi
+
+              if node --input-type=module \
+                -e "await import(\"vitest\")" >/dev/null 2>&1
+              then
+                echo "vitest is importable in the production image" >&2
+                exit 1
+              fi
+            '
+
   # ===========================================================================
   # DEPLOY - Build and push Docker image to GHCR
   # Triggers: release event (release-please) | workflow_dispatch with force_build
