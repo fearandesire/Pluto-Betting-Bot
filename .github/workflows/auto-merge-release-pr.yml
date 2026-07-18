@@ -1,0 +1,48 @@
+# Auto-merge release-please PRs
+#
+# release-please (in release.yml) opens a `release-please--*` PR that bumps the
+# version + CHANGELOG. This workflow enables GitHub auto-merge (squash) on that
+# PR so it merges itself once the required `Verify` check passes — the second
+# half of the zero-touch cascade (the first half is khronos-client-update.yml).
+#
+# Merging the release PR to main fires release.yml's release-please step again,
+# which publishes the GitHub release, which triggers the Deploy job. No human
+# click is needed anywhere in the release path.
+#
+# Scope guard: only same-repo `release-please--*` head branches. Forks and
+# regular feature PRs are ignored. `pull_request` (not `_target`) is safe here
+# because release-please branches are always same-repo and need repo secrets.
+
+name: Auto-merge release PRs
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    name: Enable auto-merge
+    runs-on: ubuntu-latest
+    if: >-
+      startsWith(github.head_ref, 'release-please--') &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - name: Mint App token
+        uses: actions/create-github-app-token@v2
+        id: app
+        with:
+          app-id: ${{ secrets.CASCADE_APP_ID }}
+          private-key: ${{ secrets.CASCADE_APP_PRIVATE_KEY }}
+          owner: fearandesire
+          repositories: Pluto-Betting-Bot
+
+      - name: Enable auto-merge (squash)
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge --auto --squash "$PR_URL"

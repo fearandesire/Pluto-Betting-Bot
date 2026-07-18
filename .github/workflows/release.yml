@@ -13,14 +13,80 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+
+      - name: Mint App token
+        uses: actions/create-github-app-token@v2
+        id: app
+        with:
+          app-id: ${{ secrets.CASCADE_APP_ID }}
+          private-key: ${{ secrets.CASCADE_APP_PRIVATE_KEY }}
+          owner: fearandesire
+          repositories: Pluto-Betting-Bot
+
       - name: Release Please
         uses: googleapis/release-please-action@v5
+        id: release
         with:
-          # Must be a PAT, not GITHUB_TOKEN. GitHub does not trigger new
-          # workflow runs from events created with the default GITHUB_TOKEN,
-          # so a release published with it would never fire the
-          # `release: published` trigger in ci-cd-deployment.yml and Deploy
-          # would never run. PLUTO_BOT_PAT lets the release event cascade.
-          token: ${{ secrets.PLUTO_BOT_PAT }}
+          # Must NOT be GITHUB_TOKEN. GitHub does not trigger new workflow runs
+          # from events created with the default GITHUB_TOKEN, so a release
+          # published with it would never fire the `release: published` trigger
+          # in ci-cd-deployment.yml and Deploy would never run.
+          #
+          # A GitHub App token (fnx-cascade-bot) behaves like a PAT for this:
+          # events it creates DO trigger downstream workflows, so the release
+          # cascades into Deploy. It replaces PLUTO_BOT_PAT here as part of the
+          # PAT → App migration (short-lived, least-privilege, no human account).
+          token: ${{ steps.app.outputs.token }}
           release-type: node
           config-file: .github/release-please-config.json
+
+      # Discord C3: green embed when release-please actually cuts a release
+      # (i.e. it merged/promoted a release PR). Skipped silently if the webhook
+      # secret is not populated yet.
+      - name: Notify Discord — release
+        if: steps.release.outputs.release_created == 'true'
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_CICD_WEBHOOK }}
+          VERSION: ${{ steps.release.outputs.tag_name }}
+          RELEASE_URL: ${{ steps.release.outputs.html_url }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [[ -z "$DISCORD_WEBHOOK" ]]; then
+            echo "::notice::DISCORD_CICD_WEBHOOK not set — skipping notification"
+            exit 0
+          fi
+          payload=$(jq -n \
+            --arg version "$VERSION" \
+            --arg relurl "$RELEASE_URL" \
+            --arg runurl "$RUN_URL" \
+            '{embeds:[{title:"🟢 Pluto release published",
+              description:"release-please cut a new release. Deploy will build and push the image.",
+              color:3066993,fields:[
+               {name:"Service",value:"Pluto",inline:true},
+               {name:"Stage",value:"Release",inline:true},
+               {name:"Version",value:$version,inline:true},
+               {name:"Release",value:$relurl,inline:false},
+               {name:"Run",value:$runurl,inline:false}
+             ]}]}')
+          curl -sf -H "Content-Type: application/json" -d "$payload" "$DISCORD_WEBHOOK"
+
+      - name: Notify Discord — failure
+        if: failure()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_CICD_WEBHOOK }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [[ -z "$DISCORD_WEBHOOK" ]]; then
+            echo "::notice::DISCORD_CICD_WEBHOOK not set — skipping notification"
+            exit 0
+          fi
+          payload=$(jq -n \
+            --arg runurl "$RUN_URL" \
+            '{embeds:[{title:"🔴 Pluto release workflow failed",
+              description:"release-please errored on push to main.",
+              color:15158332,fields:[
+               {name:"Service",value:"Pluto",inline:true},
+               {name:"Stage",value:"Release",inline:true},
+               {name:"Run",value:$runurl,inline:false}
+             ]}]}')
+          curl -sf -H "Content-Type: application/json" -d "$payload" "$DISCORD_WEBHOOK"
