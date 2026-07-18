@@ -2,7 +2,7 @@ import { logger } from '../../../logging/WinstonLogger.js'
 import {
 	type ParlayResultNotification,
 	parlayResultNotificationSchema,
-} from './parlay-notification-contract.js'
+} from '../shared-payload-schemas.js'
 
 /** Parse and strictly validate the Khronos parlay result notification. */
 export function validateParlayResultNotification(

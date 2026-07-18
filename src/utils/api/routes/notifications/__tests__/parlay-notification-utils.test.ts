@@ -65,9 +65,21 @@ describe('validateParlayResultNotification', () => {
 		expect(
 			validateParlayResultNotification({
 				...validPayload,
-				payout: undefined,
-				actual_payout: null,
+				legs: [],
 			}),
 		).toBeNull()
+	})
+
+	it('accepts a won payload without payout when actual_payout is null', () => {
+		// The published @pluto-khronos/types contract does not require payout or
+		// actual_payout for won notifications; the retired local shim did. The
+		// published schema wins.
+		const result = validateParlayResultNotification({
+			...validPayload,
+			payout: undefined,
+			actual_payout: null,
+		})
+		expect(result).not.toBeNull()
+		expect(result?.kind).toBe('won')
 	})
 })

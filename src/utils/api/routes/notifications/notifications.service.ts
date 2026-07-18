@@ -9,7 +9,10 @@ import type {
 } from '../../../../services/engagement/BigWinAnnouncementService.js'
 import { logger } from '../../../logging/WinstonLogger.js'
 import MoneyFormatter from '../../common/money-formatting/money-format.js'
-import type { PropSettledNotification } from '../shared-payload-schemas.js'
+import type {
+	ParlayResultNotification,
+	PropSettledNotification,
+} from '../shared-payload-schemas.js'
 import type {
 	BetNotificationWon,
 	DisplayBetNotification,
@@ -21,7 +24,6 @@ import type {
 	DisplayResultWon,
 	NotifyBetUsers,
 } from './notifications.interface.js'
-import type { ParlayResultNotification } from './parlay-notification-contract.js'
 
 function createDeliveryNonce(
 	deliveryId: string,
