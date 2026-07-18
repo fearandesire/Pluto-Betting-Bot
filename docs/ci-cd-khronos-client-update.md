@@ -39,10 +39,30 @@ The verify step is `continue-on-error: true` so the workflow can still open a PR
 
 PR state depends on the verify outcome:
 
-- Verify failed: open or update the PR as a draft.
-- Verify green: open or update the PR ready for review.
+- Verify failed: open or update the PR as a **draft**. Draft PRs are never
+  auto-merged — a human fixes the consumers in the branch, marks it ready, and
+  merges manually.
+- Verify green: open or update the PR and **enable GitHub auto-merge (squash)**.
+  The PR merges itself once the required checks pass (`Verify` and
+  `Validate PR title`). This is the zero-touch happy path — no human click.
 
-There is no auto-merge. A human reviews the dependency diff, checks API/schema impact, and merges manually.
+The bump PR title is `deps(khronos): …`. `deps` is an allowed type in
+`.github/workflows/pr-title.yml`, so the required `Validate PR title` check
+passes and does not block auto-merge. (The eventual squash still lands as
+`fix(khronos)` via the `BEGIN_COMMIT_OVERRIDE` block below.)
+
+## Auth: GitHub App token
+
+The workflow's git-writing steps (checkout, create-pull-request, and the
+`gh pr merge --auto` call) authenticate with a short-lived token minted from
+the `fnx-cascade-bot` GitHub App (`CASCADE_APP_ID` /
+`CASCADE_APP_PRIVATE_KEY`), replacing the older `PLUTO_BOT_PAT`. An App-token
+PR still fires normal `pull_request` events, so the required checks run and
+gate the auto-merge.
+
+A Discord embed is posted to `DISCORD_CICD_WEBHOOK` when the PR is opened —
+green ("auto-merging") when verify passed, yellow ("DRAFT, needs you") when it
+failed.
 
 ## Finding and reviewing the PR
 
@@ -73,7 +93,10 @@ Review checklist:
 2. Check the linked Khronos commit and release notes for API or schema changes.
 3. Inspect Pluto compile/test failures if the PR is draft.
 4. Look for generated client API changes that require call-site updates in Pluto.
-5. Merge manually only after the dependency diff and verification result are acceptable.
+5. A green PR auto-merges once required checks pass — no manual merge needed. If
+   you want to stop it, disable auto-merge on the PR or convert it to a draft
+   before the checks finish. Only a **draft** (verify-failed) PR requires a
+   manual merge after you fix the consumers.
 
 ## Release-please commit override
 

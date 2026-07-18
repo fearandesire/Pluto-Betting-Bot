@@ -11,7 +11,17 @@
 #   2. Bump BOTH @pluto-khronos/api-client AND @pluto-khronos/types in lockstep
 #   3. Verify: pnpm typecheck && pnpm build && pnpm test:run
 #   4. Open PR — DRAFT if verify failed; ready-for-review if green
-#   5. Human reviews + clicks merge (NO auto-merge)
+#   5a. Verify green: enable GitHub auto-merge (squash). The PR merges itself
+#       once the required checks pass (Verify + Validate PR title). No human
+#       click required — this is the "zero-touch" happy path.
+#   5b. Verify red: PR stays DRAFT and is NEVER auto-merged. A human fixes the
+#       consumers in the branch, marks ready, and merges manually.
+#
+# All git-writing steps (checkout, create-pull-request, gh pr merge) use a
+# short-lived GitHub App token minted from the `fnx-cascade-bot` App
+# (CASCADE_APP_ID / CASCADE_APP_PRIVATE_KEY) instead of PLUTO_BOT_PAT. An
+# App-token-created PR still fires normal `pull_request` events, so the
+# required checks run and gate the auto-merge.
 #
 # Re-dispatch behavior: uses a static branch name (`deps/khronos-update`),
 # so a newer release updates the existing PR rather than opening a duplicate
@@ -55,10 +65,19 @@ jobs:
           echo "📦 Bumping @pluto-khronos/api-client + @pluto-khronos/types to $KHRONOS_VERSION"
           echo "🔗 Khronos commit: $KHRONOS_SHA"
 
+      - name: Mint App token
+        uses: actions/create-github-app-token@v2
+        id: app
+        with:
+          app-id: ${{ secrets.CASCADE_APP_ID }}
+          private-key: ${{ secrets.CASCADE_APP_PRIVATE_KEY }}
+          owner: fearandesire
+          repositories: Pluto-Betting-Bot
+
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          token: ${{ secrets.PLUTO_BOT_PAT }}
+          token: ${{ steps.app.outputs.token }}
           fetch-depth: 0
 
       - name: Install pnpm
@@ -107,7 +126,7 @@ jobs:
         id: cpr
         uses: peter-evans/create-pull-request@v7
         with:
-          token: ${{ secrets.PLUTO_BOT_PAT }}
+          token: ${{ steps.app.outputs.token }}
           branch: deps/khronos-update
           delete-branch: false
           title: "deps(khronos): bump @pluto-khronos/* to ${{ github.event.client_payload.khronos_version }}"
@@ -128,7 +147,7 @@ jobs:
             ## Quality gate
             **Verify (typecheck + build + test):** `${{ steps.verify.outcome }}`
 
-            ${{ steps.verify.outcome == 'failure' && '⚠️ Opened as DRAFT — fix consumers in this branch before marking ready. Then merge manually.' || '✅ All checks passed — ready for review. Click merge when you''ve scanned the diff.' }}
+            ${{ steps.verify.outcome == 'failure' && '⚠️ Opened as DRAFT — fix consumers in this branch before marking ready. Then merge manually.' || '✅ Verify passed — auto-merge (squash) is enabled. This PR merges itself once the required checks (Verify + Validate PR title) are green.' }}
 
             BEGIN_COMMIT_OVERRIDE
             fix(khronos): bump @pluto-khronos/* to ${{ github.event.client_payload.khronos_version }}
@@ -137,3 +156,92 @@ jobs:
             dependencies
             automated
             khronos-bump
+
+      # Zero-touch happy path: verify green ⇒ let GitHub squash-merge the PR
+      # once the required checks pass. Draft (verify-failed) PRs are excluded
+      # by the verify.outcome guard, and GitHub refuses --auto on a draft
+      # anyway, so a red bump can never auto-merge.
+      - name: Enable auto-merge on green
+        if: steps.diff.outputs.has_changes == 'true' && steps.verify.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          PR: ${{ steps.cpr.outputs.pull-request-number }}
+        run: |
+          # A prior verify-failed dispatch may have left this static-branch PR
+          # in draft; create-pull-request does not un-draft on update. Mark it
+          # ready first (no-op if already ready) so --auto doesn't error on a
+          # draft.
+          gh pr ready "$PR" -R "${{ github.repository }}"
+          gh pr merge --auto --squash -R "${{ github.repository }}" "$PR"
+
+      # Discord C3: one embed announcing the bump PR. Green = auto-merging,
+      # yellow = draft awaiting a human. Skipped silently if the webhook secret
+      # is not populated yet.
+      - name: Notify Discord — bump PR
+        if: steps.diff.outputs.has_changes == 'true'
+        continue-on-error: true
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_CICD_WEBHOOK }}
+          VERIFY: ${{ steps.verify.outcome }}
+          VERSION: ${{ github.event.client_payload.khronos_version }}
+          PR_URL: ${{ steps.cpr.outputs.pull-request-url }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [[ -z "$DISCORD_WEBHOOK" ]]; then
+            echo "::notice::DISCORD_CICD_WEBHOOK not set — skipping notification"
+            exit 0
+          fi
+          if [[ "$VERIFY" == "success" ]]; then
+            COLOR=3066993   # green 0x2ecc71
+            TITLE="🟢 Khronos bump — auto-merging"
+            DESC="Verify passed. Auto-merge (squash) is enabled; the PR merges once required checks are green."
+          else
+            COLOR=15844367  # yellow 0xf1c40f
+            TITLE="🟡 Khronos bump — DRAFT, needs you"
+            DESC="Verify failed. PR opened as a draft — fix the consumers, mark ready, and merge manually."
+          fi
+          payload=$(jq -n \
+            --arg title "$TITLE" \
+            --arg desc "$DESC" \
+            --arg version "$VERSION" \
+            --arg prurl "$PR_URL" \
+            --arg runurl "$RUN_URL" \
+            --argjson color "$COLOR" \
+            '{embeds:[{title:$title,description:$desc,color:$color,fields:[
+               {name:"Service",value:"Pluto",inline:true},
+               {name:"Stage",value:"Khronos bump",inline:true},
+               {name:"Version",value:$version,inline:true},
+               {name:"Pull Request",value:$prurl,inline:false},
+               {name:"Run",value:$runurl,inline:false}
+             ]}]}')
+          curl -sf -H "Content-Type: application/json" -d "$payload" "$DISCORD_WEBHOOK"
+
+      # Red embed if the job itself blew up (dispatch invalid, install broken,
+      # PR creation failed, etc.) — distinct from a controlled verify failure.
+      - name: Notify Discord — failure
+        if: failure()
+        continue-on-error: true
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_CICD_WEBHOOK }}
+          VERSION: ${{ github.event.client_payload.khronos_version }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [[ -z "$DISCORD_WEBHOOK" ]]; then
+            echo "::notice::DISCORD_CICD_WEBHOOK not set — skipping notification"
+            exit 0
+          fi
+          # Shell default guards the empty-string case (jq's // only catches
+          # null/false); an empty embed field value is a Discord 400.
+          VERSION="${VERSION:-unknown}"
+          payload=$(jq -n \
+            --arg version "$VERSION" \
+            --arg runurl "$RUN_URL" \
+            '{embeds:[{title:"🔴 Khronos bump — workflow failed",
+              description:"The khronos-client-update workflow errored before completing.",
+              color:15158332,fields:[
+               {name:"Service",value:"Pluto",inline:true},
+               {name:"Stage",value:"Khronos bump",inline:true},
+               {name:"Version",value:$version,inline:true},
+               {name:"Run",value:$runurl,inline:false}
+             ]}]}')
+          curl -sf -H "Content-Type: application/json" -d "$payload" "$DISCORD_WEBHOOK"

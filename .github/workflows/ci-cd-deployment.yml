@@ -112,6 +112,11 @@ jobs:
       contents: read
       attestations: write
       id-token: write
+      # Required so GITHUB_TOKEN can push the image to GHCR (replaces the
+      # package-push scope that previously came from PLUTO_BOT_PAT). This ALSO
+      # requires the pluto-betting-bot GHCR package to grant this repo's Actions
+      # write access (human prereq H3) — otherwise the push 403s.
+      packages: write
 
     outputs:
       version: ${{ steps.version.outputs.version }}
@@ -175,8 +180,11 @@ jobs:
         uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.PLUTO_BOT_PAT }}
+          username: ${{ github.actor }}
+          # GITHUB_TOKEN (with packages: write above) replaces PLUTO_BOT_PAT.
+          # REQUIRES the pluto-betting-bot GHCR package to have granted this
+          # repo's Actions write access (human prereq H3).
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set lowercase image name
         run: |
@@ -293,3 +301,61 @@ jobs:
             echo "$QUICK_PULL"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+
+      # Discord C3: green embed when the image was actually pushed to GHCR
+      # (skips dry runs). Skipped silently if the webhook secret is not set.
+      - name: Notify Discord — image pushed
+        if: steps.deploy_mode.outputs.push == 'true'
+        continue-on-error: true
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_CICD_WEBHOOK }}
+          VERSION: ${{ steps.version.outputs.version }}
+          IMAGE_TAG: ${{ steps.version.outputs.version }}-${{ steps.version.outputs.short_sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [[ -z "$DISCORD_WEBHOOK" ]]; then
+            echo "::notice::DISCORD_CICD_WEBHOOK not set — skipping notification"
+            exit 0
+          fi
+          payload=$(jq -n \
+            --arg version "$VERSION" \
+            --arg imagetag "$IMAGE_TAG" \
+            --arg runurl "$RUN_URL" \
+            '{embeds:[{title:"🟢 Pluto image pushed to GHCR",
+              description:"Deploy built and pushed a new image.",
+              color:3066993,fields:[
+               {name:"Service",value:"Pluto",inline:true},
+               {name:"Stage",value:"Deploy",inline:true},
+               {name:"Version",value:$version,inline:true},
+               {name:"Image tag",value:("`" + $imagetag + "`"),inline:false},
+               {name:"Run",value:$runurl,inline:false}
+             ]}]}')
+          curl -sf -H "Content-Type: application/json" -d "$payload" "$DISCORD_WEBHOOK"
+
+      - name: Notify Discord — failure
+        if: failure()
+        continue-on-error: true
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_CICD_WEBHOOK }}
+          VERSION: ${{ steps.version.outputs.version }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [[ -z "$DISCORD_WEBHOOK" ]]; then
+            echo "::notice::DISCORD_CICD_WEBHOOK not set — skipping notification"
+            exit 0
+          fi
+          # Version step may not have run if the job failed early; default it so
+          # the embed field is never empty (an empty value is a Discord 400).
+          VERSION="${VERSION:-unknown}"
+          payload=$(jq -n \
+            --arg version "$VERSION" \
+            --arg runurl "$RUN_URL" \
+            '{embeds:[{title:"🔴 Pluto deploy failed",
+              description:"The Deploy job errored before pushing the image.",
+              color:15158332,fields:[
+               {name:"Service",value:"Pluto",inline:true},
+               {name:"Stage",value:"Deploy",inline:true},
+               {name:"Version",value:$version,inline:true},
+               {name:"Run",value:$runurl,inline:false}
+             ]}]}')
+          curl -sf -H "Content-Type: application/json" -d "$payload" "$DISCORD_WEBHOOK"
