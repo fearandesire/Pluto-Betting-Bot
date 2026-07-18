@@ -306,6 +306,7 @@ jobs:
       # (skips dry runs). Skipped silently if the webhook secret is not set.
       - name: Notify Discord — image pushed
         if: steps.deploy_mode.outputs.push == 'true'
+        continue-on-error: true
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_CICD_WEBHOOK }}
           VERSION: ${{ steps.version.outputs.version }}
@@ -333,6 +334,7 @@ jobs:
 
       - name: Notify Discord — failure
         if: failure()
+        continue-on-error: true
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_CICD_WEBHOOK }}
           VERSION: ${{ steps.version.outputs.version }}
@@ -342,6 +344,9 @@ jobs:
             echo "::notice::DISCORD_CICD_WEBHOOK not set — skipping notification"
             exit 0
           fi
+          # Version step may not have run if the job failed early; default it so
+          # the embed field is never empty (an empty value is a Discord 400).
+          VERSION="${VERSION:-unknown}"
           payload=$(jq -n \
             --arg version "$VERSION" \
             --arg runurl "$RUN_URL" \
@@ -350,7 +355,7 @@ jobs:
               color:15158332,fields:[
                {name:"Service",value:"Pluto",inline:true},
                {name:"Stage",value:"Deploy",inline:true},
-               {name:"Version",value:($version // "unknown"),inline:true},
+               {name:"Version",value:$version,inline:true},
                {name:"Run",value:$runurl,inline:false}
              ]}]}')
           curl -sf -H "Content-Type: application/json" -d "$payload" "$DISCORD_WEBHOOK"

@@ -45,6 +45,7 @@ jobs:
       # secret is not populated yet.
       - name: Notify Discord — release
         if: steps.release.outputs.release_created == 'true'
+        continue-on-error: true
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_CICD_WEBHOOK }}
           VERSION: ${{ steps.release.outputs.tag_name }}
@@ -72,6 +73,7 @@ jobs:
 
       - name: Notify Discord — failure
         if: failure()
+        continue-on-error: true
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_CICD_WEBHOOK }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
