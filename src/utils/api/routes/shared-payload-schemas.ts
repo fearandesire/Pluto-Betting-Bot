@@ -107,6 +107,35 @@ const fallbackPropSettledNotificationSchema = z.object({
 		.min(1),
 })
 
+const fallbackParlayLegNotificationSchema = z.object({
+	id: z.string().min(1),
+	event_id: z.string().min(1),
+	outcome_uuid: z.string().min(1),
+	selection_display: z.string().min(1),
+	market_key: z.string().min(1),
+	odds_american: z.number().int(),
+	point: z.number().nullable(),
+	commence_time: z.coerce.date(),
+	result: z.enum(['pending', 'won', 'lost', 'push', 'void']),
+	home_team: z.string().min(1).optional(),
+	away_team: z.string().min(1).optional(),
+})
+
+const fallbackParlayResultNotificationSchema = z.object({
+	kind: z.enum(['won', 'lost', 'push_refunded', 'busted']),
+	parlay_id: z.string().uuid(),
+	user_id: z.string().min(1),
+	guild_id: z.string().min(1).optional(),
+	stake: z.number().finite().nonnegative(),
+	combined_odds_american: z.number().int(),
+	payout: z.number().finite().nonnegative().optional(),
+	actual_payout: z.number().finite().nonnegative().nullable(),
+	refund_amount: z.number().finite().nonnegative().optional(),
+	old_balance: z.number().finite().optional(),
+	new_balance: z.number().finite().optional(),
+	legs: z.array(fallbackParlayLegNotificationSchema).min(1),
+})
+
 export type NotificationBetResults = z.infer<
 	typeof fallbackNotificationBetResultsSchema
 >
@@ -114,11 +143,15 @@ export type DailyPropsPayload = z.infer<typeof fallbackDailyPropsPayloadSchema>
 export type PropSettledNotification = z.infer<
 	typeof fallbackPropSettledNotificationSchema
 >
+export type ParlayResultNotification = z.infer<
+	typeof fallbackParlayResultNotificationSchema
+>
 
 type SharedPayloadExports = {
 	notificationBetResultsSchema?: z.ZodType<NotificationBetResults>
 	dailyPropsPayloadSchema?: z.ZodType<DailyPropsPayload>
 	propSettledNotificationSchema?: z.ZodType<PropSettledNotification>
+	parlayResultNotificationSchema?: z.ZodType<ParlayResultNotification>
 }
 
 const sharedPayloadExports = KhronosTypes as unknown as SharedPayloadExports
@@ -166,3 +199,9 @@ export const propSettledNotificationSchema = isUsableSchema(
 )
 	? sharedPayloadExports.propSettledNotificationSchema
 	: fallbackPropSettledNotificationSchema
+
+export const parlayResultNotificationSchema = isUsableSchema(
+	sharedPayloadExports.parlayResultNotificationSchema,
+)
+	? sharedPayloadExports.parlayResultNotificationSchema
+	: fallbackParlayResultNotificationSchema

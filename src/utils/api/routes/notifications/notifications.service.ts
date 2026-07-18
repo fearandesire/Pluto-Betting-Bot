@@ -9,7 +9,10 @@ import type {
 } from '../../../../services/engagement/BigWinAnnouncementService.js'
 import { logger } from '../../../logging/WinstonLogger.js'
 import MoneyFormatter from '../../common/money-formatting/money-format.js'
-import type { PropSettledNotification } from '../shared-payload-schemas.js'
+import type {
+	ParlayResultNotification,
+	PropSettledNotification,
+} from '../shared-payload-schemas.js'
 import type {
 	BetNotificationWon,
 	DisplayBetNotification,
@@ -21,7 +24,6 @@ import type {
 	DisplayResultWon,
 	NotifyBetUsers,
 } from './notifications.interface.js'
-import type { ParlayResultNotification } from './parlay-notification-contract.js'
 
 function createDeliveryNonce(
 	deliveryId: string,
@@ -388,6 +390,10 @@ export default class NotificationService {
 
 		switch (data.kind) {
 			case 'won': {
+				// The published contract does not require payout for won
+				// notifications, so surface an honest "Unavailable" rather than a
+				// misleading $0.00 when neither amount is present.
+				const wonPayout = data.actual_payout ?? data.payout
 				baseEmbed
 					.setTitle('🎉 Parlay Won! 🎉')
 					.setColor('#57f287')
@@ -399,9 +405,10 @@ export default class NotificationService {
 						},
 						{
 							name: '🏆 Payout',
-							value: MoneyFormatter.toUSD(
-								data.actual_payout ?? data.payout ?? 0,
-							),
+							value:
+								wonPayout === undefined
+									? 'Unavailable'
+									: MoneyFormatter.toUSD(wonPayout),
 							inline: true,
 						},
 					)

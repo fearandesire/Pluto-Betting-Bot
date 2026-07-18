@@ -3,13 +3,11 @@ import { z } from 'zod'
 import {
 	type DailyPropsPayload,
 	dailyPropsPayloadSchema,
+	type ParlayResultNotification,
 	type PropSettledNotification,
+	parlayResultNotificationSchema,
 	propSettledNotificationSchema,
 } from '../shared-payload-schemas.js'
-import {
-	type ParlayResultNotification,
-	parlayResultNotificationSchema,
-} from './parlay-notification-contract.js'
 
 export const deliveryKindSchema = z.enum([
 	'parlay_result',
