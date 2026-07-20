@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.6.9](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.6.8...v4.6.9) (2026-07-20)
+
+
+### Bug Fixes
+
+* **ci:** confirm Khronos bumps only after landing ([#599](https://github.com/fearandesire/Pluto-Betting-Bot/issues/599)) ([91cc3b8](https://github.com/fearandesire/Pluto-Betting-Bot/commit/91cc3b83b3b42bcbbf7da726c29ea5fffa170eef))
+
 ## [4.6.8](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.6.7...v4.6.8) (2026-07-20)
 
 
