@@ -256,14 +256,12 @@ jobs:
           curl -sf -H "Content-Type: application/json" -d "$payload" "$DISCORD_WEBHOOK"
 
   # A lockfile push alone is not sufficient proof: unrelated dependency work
-  # can also change pnpm-lock.yaml. Match the exact generated squash subject,
-  # then verify both installed Khronos packages are present at one version
-  # before reporting the landed state.
+  # can also change pnpm-lock.yaml. Compare package.json before and after the
+  # push, then require both installed Khronos packages to have changed to one
+  # version before reporting the landed state.
   notify_landed:
     name: Notify Khronos bump landed
-    if: >-
-      github.event_name == 'push' &&
-      startsWith(github.event.head_commit.message, 'deps(khronos): bump @pluto-khronos/* to ')
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -273,9 +271,13 @@ jobs:
     steps:
       - name: Checkout landed commit
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
 
       - name: Verify landed package versions
         id: versions
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
         run: |
           set -euo pipefail
           API_CLIENT_VERSION=$(jq -r '.dependencies["@pluto-khronos/api-client"] // empty' package.json)
@@ -291,10 +293,27 @@ jobs:
             exit 1
           fi
 
+          BEFORE_PACKAGE=$(git show "${BEFORE_SHA}:package.json" 2>/dev/null || true)
+          if [[ -z "$BEFORE_PACKAGE" ]]; then
+            echo "::notice::Could not read package.json at the before SHA; skipping landed notification"
+            echo "landed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          PREVIOUS_API_CLIENT_VERSION=$(jq -r '.dependencies["@pluto-khronos/api-client"] // empty' <<<"$BEFORE_PACKAGE")
+          PREVIOUS_TYPES_VERSION=$(jq -r '.dependencies["@pluto-khronos/types"] // empty' <<<"$BEFORE_PACKAGE")
+
+          if [[ "$API_CLIENT_VERSION" == "$PREVIOUS_API_CLIENT_VERSION" || "$TYPES_VERSION" == "$PREVIOUS_TYPES_VERSION" ]]; then
+            echo "::notice::This lockfile push did not change both Khronos package versions; skipping landed notification"
+            echo "landed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "landed=true" >> "$GITHUB_OUTPUT"
           echo "version=$API_CLIENT_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Notify Discord — bump landed
-        if: env.DISCORD_WEBHOOK != ''
+        if: steps.versions.outputs.landed == 'true' && env.DISCORD_WEBHOOK != ''
         continue-on-error: true
         env:
           VERSION: ${{ steps.versions.outputs.version }}

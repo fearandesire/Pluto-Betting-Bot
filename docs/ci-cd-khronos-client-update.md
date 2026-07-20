@@ -18,11 +18,11 @@ Expected dispatch payload:
 Khronos sends this dispatch after publishing the matching `@pluto-khronos/api-client` and `@pluto-khronos/types` packages.
 
 A separate confirmation job watches pushes to `main` that change
-`pnpm-lock.yaml`. It runs only when the landed squash subject starts with the
-exact generated prefix `deps(khronos): bump @pluto-khronos/* to `. Before it
-posts a confirmation, it reads `package.json` and requires both Khronos
-packages to be present at the same version. This prevents unrelated lockfile
-changes from producing false green notifications.
+`pnpm-lock.yaml`. It compares `package.json` at the push's before and after
+commits, requires both Khronos dependencies to have changed, and requires the
+new versions to match. This prevents unrelated lockfile changes from producing
+false green notifications and does not depend on repository squash-message
+settings.
 
 ## Branch and PR behavior
 
