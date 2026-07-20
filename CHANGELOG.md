@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.6.8](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.6.7...v4.6.8) (2026-07-20)
+
+
+### Bug Fixes
+
+* **build:** exclude tests from production image ([#597](https://github.com/fearandesire/Pluto-Betting-Bot/issues/597)) ([a1988ed](https://github.com/fearandesire/Pluto-Betting-Bot/commit/a1988ed67d3ea35aef2748eeca1f5148e4dfb302))
+
 ## [4.6.7](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.6.6...v4.6.7) (2026-07-18)
 
 
