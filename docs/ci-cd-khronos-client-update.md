@@ -6,9 +6,9 @@ Related Khronos docs:
 
 - [Khronos release cascade](https://github.com/fearandesire/khronos/blob/main/docs/ci-cd-release-cascade.md)
 
-## Trigger
+## Triggers
 
-The workflow runs on `repository_dispatch` with event type `khronos-release`.
+The bump job runs on `repository_dispatch` with event type `khronos-release`.
 
 Expected dispatch payload:
 
@@ -16,6 +16,13 @@ Expected dispatch payload:
 - `client_payload.sha`: Khronos source commit, linked in the generated PR body.
 
 Khronos sends this dispatch after publishing the matching `@pluto-khronos/api-client` and `@pluto-khronos/types` packages.
+
+A separate confirmation job watches pushes to `main` that change
+`pnpm-lock.yaml`. It compares `package.json` at the push's before and after
+commits, requires both Khronos dependencies to have changed, and requires the
+new versions to match. This prevents unrelated lockfile changes from producing
+false green notifications and does not depend on repository squash-message
+settings.
 
 ## Branch and PR behavior
 
@@ -60,9 +67,17 @@ the `fnx-cascade-bot` GitHub App (`CASCADE_APP_ID` /
 PR still fires normal `pull_request` events, so the required checks run and
 gate the auto-merge.
 
-A Discord embed is posted to `DISCORD_CICD_WEBHOOK` when the PR is opened —
-green ("auto-merging") when verify passed, yellow ("DRAFT, needs you") when it
-failed.
+Discord notifications use state-based colors:
+
+- Yellow, auto-merge in flight: verification passed and squash auto-merge is
+  armed, but the bump has not landed on `main` yet.
+- Yellow, action needed: verification failed and the PR remains a draft.
+- Green, landed: the generated bump squash commit is on `main`, and both
+  `@pluto-khronos` dependencies are present at the same version.
+- Red, failed: the dispatch/bump job failed unexpectedly.
+
+Notification delivery remains `continue-on-error`; a missing webhook noops and
+does not block the dependency workflow.
 
 ## Finding and reviewing the PR
 
@@ -93,10 +108,11 @@ Review checklist:
 2. Check the linked Khronos commit and release notes for API or schema changes.
 3. Inspect Pluto compile/test failures if the PR is draft.
 4. Look for generated client API changes that require call-site updates in Pluto.
-5. A green PR auto-merges once required checks pass — no manual merge needed. If
-   you want to stop it, disable auto-merge on the PR or convert it to a draft
-   before the checks finish. Only a **draft** (verify-failed) PR requires a
-   manual merge after you fix the consumers.
+5. A verified PR auto-merges once required checks pass — no manual merge needed.
+   Yellow means that merge is still in flight; green arrives only after the
+   bump lands on `main`. To stop it, disable auto-merge on the PR or convert it
+   to a draft before the checks finish. Only a **draft** (verify-failed) PR
+   requires a manual merge after you fix the consumers.
 
 ## Release-please commit override
 
