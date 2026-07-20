@@ -16,6 +16,9 @@
 #       click required — this is the "zero-touch" happy path.
 #   5b. Verify red: PR stays DRAFT and is NEVER auto-merged. A human fixes the
 #       consumers in the branch, marks ready, and merges manually.
+#   6. When the generated `deps(khronos): bump ...` squash commit lands on
+#      main, emit the green confirmation. PR-open notifications stay yellow
+#      because auto-merge being armed is still an in-flight state.
 #
 # All git-writing steps (checkout, create-pull-request, gh pr merge) use a
 # short-lived GitHub App token minted from the `fnx-cascade-bot` App
@@ -42,6 +45,11 @@ name: Khronos client update
 on:
   repository_dispatch:
     types: [khronos-release]
+  push:
+    branches: [main]
+    # Every generated lockstep Khronos bump changes the lockfile. Restricting
+    # this trigger avoids runs for release-please's package.json-only commits.
+    paths: [pnpm-lock.yaml]
 
 permissions:
   contents: write
@@ -50,6 +58,7 @@ permissions:
 jobs:
   bump:
     name: Bump @pluto-khronos/* packages
+    if: github.event_name == 'repository_dispatch'
     runs-on: ubuntu-latest
 
     steps:
@@ -174,9 +183,9 @@ jobs:
           gh pr ready "$PR" -R "${{ github.repository }}"
           gh pr merge --auto --squash -R "${{ github.repository }}" "$PR"
 
-      # Discord C3: one embed announcing the bump PR. Green = auto-merging,
-      # yellow = draft awaiting a human. Skipped silently if the webhook secret
-      # is not populated yet.
+      # Discord C3: a PR is still in flight even when verification passed and
+      # auto-merge is armed, so both outcomes are yellow. The push-triggered
+      # notify_landed job emits green only after the generated bump lands.
       - name: Notify Discord — bump PR
         if: steps.diff.outputs.has_changes == 'true'
         continue-on-error: true
@@ -192,9 +201,9 @@ jobs:
             exit 0
           fi
           if [[ "$VERIFY" == "success" ]]; then
-            COLOR=3066993   # green 0x2ecc71
-            TITLE="🟢 Khronos bump — auto-merging"
-            DESC="Verify passed. Auto-merge (squash) is enabled; the PR merges once required checks are green."
+            COLOR=15844367  # yellow 0xf1c40f
+            TITLE="🟡 Khronos bump — auto-merge in flight"
+            DESC="Verify passed. Auto-merge (squash) is armed; green confirmation follows only after the bump lands on main."
           else
             COLOR=15844367  # yellow 0xf1c40f
             TITLE="🟡 Khronos bump — DRAFT, needs you"
@@ -242,6 +251,67 @@ jobs:
                {name:"Service",value:"Pluto",inline:true},
                {name:"Stage",value:"Khronos bump",inline:true},
                {name:"Version",value:$version,inline:true},
+               {name:"Run",value:$runurl,inline:false}
+             ]}]}')
+          curl -sf -H "Content-Type: application/json" -d "$payload" "$DISCORD_WEBHOOK"
+
+  # A lockfile push alone is not sufficient proof: unrelated dependency work
+  # can also change pnpm-lock.yaml. Match the exact generated squash subject,
+  # then verify both installed Khronos packages are present at one version
+  # before reporting the landed state.
+  notify_landed:
+    name: Notify Khronos bump landed
+    if: >-
+      github.event_name == 'push' &&
+      startsWith(github.event.head_commit.message, 'deps(khronos): bump @pluto-khronos/* to ')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      DISCORD_WEBHOOK: ${{ secrets.DISCORD_CICD_WEBHOOK }}
+
+    steps:
+      - name: Checkout landed commit
+        uses: actions/checkout@v6
+
+      - name: Verify landed package versions
+        id: versions
+        run: |
+          set -euo pipefail
+          API_CLIENT_VERSION=$(jq -r '.dependencies["@pluto-khronos/api-client"] // empty' package.json)
+          TYPES_VERSION=$(jq -r '.dependencies["@pluto-khronos/types"] // empty' package.json)
+
+          if [[ -z "$API_CLIENT_VERSION" || -z "$TYPES_VERSION" ]]; then
+            echo "::error::The landed commit does not contain both @pluto-khronos dependencies"
+            exit 1
+          fi
+
+          if [[ "$API_CLIENT_VERSION" != "$TYPES_VERSION" ]]; then
+            echo "::error::The landed Khronos packages are not in lockstep: api-client=$API_CLIENT_VERSION types=$TYPES_VERSION"
+            exit 1
+          fi
+
+          echo "version=$API_CLIENT_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Notify Discord — bump landed
+        if: env.DISCORD_WEBHOOK != ''
+        continue-on-error: true
+        env:
+          VERSION: ${{ steps.versions.outputs.version }}
+          COMMIT_URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          payload=$(jq -n \
+            --arg version "$VERSION" \
+            --arg commiturl "$COMMIT_URL" \
+            --arg runurl "$RUN_URL" \
+            '{embeds:[{title:"🟢 Khronos bump landed — Pluto up to date",
+              description:"The lockstep @pluto-khronos dependency bump is now on main.",
+              color:3066993,fields:[
+               {name:"Service",value:"Pluto",inline:true},
+               {name:"Stage",value:"Khronos bump",inline:true},
+               {name:"Version",value:$version,inline:true},
+               {name:"Commit",value:$commiturl,inline:false},
                {name:"Run",value:$runurl,inline:false}
              ]}]}')
           curl -sf -H "Content-Type: application/json" -d "$payload" "$DISCORD_WEBHOOK"
