@@ -124,7 +124,7 @@ jobs:
       - name: Open pull request
         if: steps.diff.outputs.has_changes == 'true'
         id: cpr
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ steps.app.outputs.token }}
           branch: deps/khronos-update
