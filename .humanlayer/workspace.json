@@ -1,0 +1,13 @@
+{
+  "pathTemplate": "~/code/worktrees/humanlayer/{{ TASKSLUG }}/{{ REPOBASENAME }}",
+  "branchTemplate": "agent/{{ TASKSLUG }}",
+  "sourceRef": "origin/main",
+  "setupCommand": "corepack pnpm@10.27.0 install",
+  "repos": [
+    {
+      "localPath": ".",
+      "description": "Solo workspace for pluto. HumanLayer worktrees use the central root to satisfy the git task audit policy.",
+      "primary": true
+    }
+  ]
+}

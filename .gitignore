@@ -104,3 +104,5 @@ docs
 # (see "Local development against Khronos" in README)
 .yalc/
 yalc.lock
+.humanlayer/tasks/
+.humanlayer/workspace.local.json
