@@ -11,6 +11,13 @@ import BettingValidation from '../../utils/betting/betting-validation.js'
 import { CacheManager } from '../../utils/cache/cache-manager.js'
 import { ErrorEmbeds } from '../../utils/common/errors/global.js'
 
+// Autocomplete convention: see docs/architecture/decisions/002-autocomplete-provider-pattern.md.
+// Every command option autocomplete is a thin adapter (Sapphire InteractionHandler with a
+// constructor-injected provider) that extracts the focused option value + guild context, calls
+// a *SuggestionProvider (all filtering/formatting/fallback lives there), and calls
+// interaction.respond(). The `match`/`team` options above follow this pattern
+// (MatchSuggestionProvider). Never inline filtering here.
+
 // Module-level singleton so cache state persists across command invocations
 const matchCacheService = new MatchCacheService(new CacheManager())
 
