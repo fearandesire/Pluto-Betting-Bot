@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.8.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.7.0...v4.8.0) (2026-09-13)
+
+
+### Features
+
+* add durable channel alerts and reservations ([#604](https://github.com/fearandesire/Pluto-Betting-Bot/issues/604)) ([4137d17](https://github.com/fearandesire/Pluto-Betting-Bot/commit/4137d17df080a501882e3012308dbded6fc8383e))
+
 ## [4.7.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.6.9...v4.7.0) (2026-09-13)
 
 
