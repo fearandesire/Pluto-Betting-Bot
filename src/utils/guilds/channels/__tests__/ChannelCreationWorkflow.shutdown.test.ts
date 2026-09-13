@@ -10,6 +10,7 @@ vi.mock('../../../logging/WinstonLogger.js', () => ({
 import { closeQueueWorkers } from '../../../../lib/startup/shutdown.js'
 import {
 	type ChannelIntent,
+	type ChannelReservationStore,
 	RedisChannelReservationStore,
 } from '../../../cache/queue/channel-reservation-store.js'
 import {
@@ -57,7 +58,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 		)
 		const injected = workflowPorts(store, { findByMarker })
 		const workflow = new ChannelCreationWorkflow(injected)
-		const refresh = vi.spyOn(redis, 'refreshIfOwned')
+		const refresh = vi.spyOn(storeRedis, 'refreshIfOwned')
 		const run = workflow.run(intent)
 
 		await waitForReservation(redis, intent)
@@ -88,7 +89,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 			.mockImplementation((releaseIntent: ChannelIntent, owner: string) =>
 				store.release(releaseIntent, owner),
 			)
-		const reservations = { ...store, release }
+		const reservations = reservationsWithRelease(store, release)
 		const workflow = new ChannelCreationWorkflow(
 			workflowPorts(reservations, {
 				create: vi.fn().mockRejectedValue(new Error('create failed')),
@@ -117,14 +118,9 @@ describeWithRedis('channel creation lease shutdown', () => {
 				store.release(releaseIntent, owner),
 			)
 		const workflow = new ChannelCreationWorkflow(
-			workflowPorts(
-				{ ...store, release },
-				{
-					create: vi
-						.fn()
-						.mockRejectedValue(new Error('create failed')),
-				},
-			),
+			workflowPorts(reservationsWithRelease(store, release), {
+				create: vi.fn().mockRejectedValue(new Error('create failed')),
+			}),
 		)
 		const run = workflow.run(intent)
 		await waitForReservation(redis, intent)
@@ -154,14 +150,9 @@ describeWithRedis('channel creation lease shutdown', () => {
 			.fn()
 			.mockRejectedValue(new Error('redis unavailable'))
 		const workflow = new ChannelCreationWorkflow(
-			workflowPorts(
-				{ ...store, release },
-				{
-					create: vi
-						.fn()
-						.mockRejectedValue(new Error('create failed')),
-				},
-			),
+			workflowPorts(reservationsWithRelease(store, release), {
+				create: vi.fn().mockRejectedValue(new Error('create failed')),
+			}),
 		)
 
 		await expect(workflow.run(intent)).rejects.toThrow('redis unavailable')
@@ -176,11 +167,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 })
 
 function workflowPorts(
-	store:
-		| RedisChannelReservationStore
-		| (RedisChannelReservationStore & {
-				release: ReturnType<typeof vi.fn>
-		  }),
+	store: ChannelReservationStore,
 	overrides: Partial<ChannelCreationPorts['discord']> = {},
 ): ChannelCreationPorts {
 	return {
@@ -193,6 +180,19 @@ function workflowPorts(
 			}),
 			...overrides,
 		},
+	}
+}
+
+function reservationsWithRelease(
+	store: RedisChannelReservationStore,
+	release: ChannelReservationStore['release'],
+): ChannelReservationStore {
+	return {
+		reserve: store.reserve.bind(store),
+		refresh: store.refresh.bind(store),
+		reclaimCreated: store.reclaimCreated.bind(store),
+		recordCreated: store.recordCreated.bind(store),
+		release,
 	}
 }
 
@@ -242,10 +242,10 @@ interface ReservationRedis {
 }
 
 function reservationRedis(redis: RedisClient): ReservationRedis {
+	const set = redis.set.bind(redis) as unknown as ReservationRedis['set']
 	return {
 		get: (key) => redis.get(key),
-		set: (key, value, ...options) =>
-			redis.set(key, value, ...options) as Promise<'OK' | null>,
+		set: (key, value, ...options) => set(key, value, ...options),
 		compareAndRemove: async (key, expectedValue) =>
 			Number(
 				await redis.eval(
