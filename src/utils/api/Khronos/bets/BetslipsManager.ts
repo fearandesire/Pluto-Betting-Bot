@@ -228,7 +228,9 @@ export class BetslipManager {
 
 	private isDefinitiveBusinessFailure(value: unknown): boolean {
 		if (typeof value === 'number') {
-			return value >= 400 && value < 500
+			return (
+				value >= 400 && value < 500 && ![408, 425, 429].includes(value)
+			)
 		}
 		if (!value || typeof value !== 'object') return false
 
@@ -243,7 +245,12 @@ export class BetslipManager {
 				: typeof error.status === 'number'
 					? error.status
 					: error.response?.status
-		return typeof status === 'number' && status >= 400 && status < 500
+		return (
+			typeof status === 'number' &&
+			status >= 400 &&
+			status < 500 &&
+			![408, 425, 429].includes(status)
+		)
 	}
 
 	async successfulBetEmbed(
