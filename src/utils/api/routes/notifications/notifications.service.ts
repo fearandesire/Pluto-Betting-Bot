@@ -164,47 +164,65 @@ export default class NotificationService {
 			payout: data.payout,
 			profit: data.profit,
 		})
+		const options = { throwOnFailure: true, deliveryId }
+
+		if (data.result === 'won') {
+			await this.notifyUser(
+				{
+					userId: data.user_id,
+					betId: data.bet_id,
+					guildId: data.guild_id,
+					result: {
+						outcome: 'won',
+						team: data.team,
+						betAmount: data.stake,
+						payout: data.payout,
+						profit: data.profit,
+						oldBalance: data.old_balance,
+						newBalance: data.new_balance,
+					},
+					displayResult: {
+						outcome: 'won',
+						team: data.team,
+						betAmount: data.stake,
+						displayBetAmount: formattedAmounts.betAmount,
+						payout: data.payout,
+						profit: data.profit,
+						displayPayout: formattedAmounts.payout,
+						displayProfit: formattedAmounts.profit,
+						displayOldBalance:
+							data.old_balance === undefined
+								? 'Unavailable'
+								: MoneyFormatter.toUSD(data.old_balance),
+						displayNewBalance:
+							data.new_balance === undefined
+								? 'Unavailable'
+								: MoneyFormatter.toUSD(data.new_balance),
+					},
+				},
+				options,
+			)
+			return
+		}
+
 		await this.notifyUser(
 			{
 				userId: data.user_id,
 				betId: data.bet_id,
 				guildId: data.guild_id,
 				result: {
-					outcome: data.result,
+					outcome: 'lost',
 					team: data.team,
 					betAmount: data.stake,
-					payout: data.result === 'won' ? data.payout : undefined,
-					profit: data.result === 'won' ? data.profit : undefined,
-					oldBalance: data.old_balance,
-					newBalance: data.new_balance,
 				},
 				displayResult: {
-					outcome: data.result,
+					outcome: 'lost',
 					team: data.team,
-					betAmount: formattedAmounts.betAmount,
-					...(data.result === 'won'
-						? {
-								payout: formattedAmounts.payout,
-								profit: formattedAmounts.profit,
-								displayPayout: formattedAmounts.payout,
-								displayProfit: formattedAmounts.profit,
-								displayOldBalance:
-									data.old_balance === undefined
-										? 'Unavailable'
-										: MoneyFormatter.toUSD(
-												data.old_balance,
-											),
-								displayNewBalance:
-									data.new_balance === undefined
-										? 'Unavailable'
-										: MoneyFormatter.toUSD(
-												data.new_balance,
-											),
-							}
-						: {}),
+					betAmount: data.stake,
+					displayBetAmount: formattedAmounts.betAmount,
 				},
-			} as unknown as DisplayBetNotification,
-			{ throwOnFailure: true, deliveryId },
+			},
+			options,
 		)
 	}
 
@@ -771,7 +789,7 @@ export default class NotificationService {
 						text: `Pluto | ${betIdLabel}`,
 					})
 
-				await this.sendEmbed(userId, betId, embed)
+				await this.sendEmbed(userId, betId, embed, options)
 				break
 			}
 		}
