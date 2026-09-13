@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.9.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.8.1...v4.9.0) (2026-09-13)
+
+
+### Features
+
+* make H2H placement retry-safe ([#607](https://github.com/fearandesire/Pluto-Betting-Bot/issues/607)) ([7fe7f28](https://github.com/fearandesire/Pluto-Betting-Bot/commit/7fe7f28f30117a1371ad164e8c42bb9dc2ed1ba0))
+
 ## [4.8.1](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.8.0...v4.8.1) (2026-09-13)
 
 
