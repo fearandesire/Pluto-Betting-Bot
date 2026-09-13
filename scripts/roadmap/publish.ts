@@ -8,7 +8,6 @@ export const ROADMAP_LANES = ['Now', 'Next', 'Later', 'Shipped'] as const
 const SHIPPED_WINDOW_DAYS = 90
 const DAY_IN_MS = 24 * 60 * 60 * 1000
 const OPAQUE_ID_PATTERN = /^[a-f0-9]{16}$/u
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu
 
 export type RoadmapLane = (typeof ROADMAP_LANES)[number]
 
@@ -267,7 +266,6 @@ const UNSAFE_MARKDOWN_PATTERNS = [
 	/\bQ[1-4]\s+\d{4}\b/iu,
 	/\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t|tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2}(?:st|nd|rd|th)?(?:,\s*\d{4})?\b/iu,
 	/\b\d{1,2}(?:st|nd|rd|th)?\s+(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t|tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\b/iu,
-	/\\\]\s*\\\((?:\/|\.{1,2}\/)/u,
 	RELATIVE_LINK_PATTERN,
 ]
 
