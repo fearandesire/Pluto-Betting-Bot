@@ -9,6 +9,29 @@ vi.mock('../../../utils/common/errors/global.js', () => ({
 	},
 }))
 
+vi.mock('@pluto-config', () => ({
+	betFooter: vi.fn().mockReturnValue(''),
+	supportMessage: '',
+}))
+
+vi.mock('../../../utils/logging/WinstonLogger.js', () => ({
+	logger: {
+		error: vi.fn(),
+		warn: vi.fn(),
+		debug: vi.fn(),
+		info: vi.fn(),
+	},
+}))
+
+vi.mock('../../../utils/api/Khronos/KhronosInstances.js', () => ({
+	KH_API_CONFIG: { basePath: 'http://localhost' },
+}))
+
+vi.mock('../../../utils/dev/index.js', () => ({
+	isMockEnabled: vi.fn().mockReturnValue(false),
+	MockBackend: { instance: vi.fn() },
+}))
+
 vi.mock('../../../utils/api/common/handleNewUser.js', () => ({
 	handleNewUser: vi.fn(),
 }))
@@ -46,6 +69,14 @@ vi.mock('../../../utils/cache/redis-instance.js', () => ({
 		refreshIfOwned: vi.fn(),
 		transitionIfValue: vi.fn(),
 	},
+}))
+
+vi.mock('../../../lib/startup/pluto.js', () => ({
+	startPluto: vi.fn(),
+}))
+
+vi.mock('../../../utils/api/patreon/Patreon-Facade.js', () => ({
+	default: class {},
 }))
 
 describe('H2H placement identity', () => {
