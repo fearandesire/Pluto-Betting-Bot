@@ -10,6 +10,7 @@ import type {
 import { logger } from '../../../logging/WinstonLogger.js'
 import MoneyFormatter from '../../common/money-formatting/money-format.js'
 import type {
+	H2hResultNotification,
 	ParlayResultNotification,
 	PropSettledNotification,
 } from '../shared-payload-schemas.js'
@@ -152,6 +153,59 @@ export default class NotificationService {
 		const embeds = this.buildParlayEmbeds(data)
 		await this.sendParlayEmbeds(data.user_id, data, embeds)
 		await this.announceParlayWin(data)
+	}
+
+	async deliverH2hResult(
+		data: H2hResultNotification,
+		deliveryId?: string,
+	): Promise<void> {
+		const formattedAmounts = await MoneyFormatter.formatAmounts({
+			amount: data.stake,
+			payout: data.payout,
+			profit: data.profit,
+		})
+		await this.notifyUser(
+			{
+				userId: data.user_id,
+				betId: data.bet_id,
+				guildId: data.guild_id,
+				result: {
+					outcome: data.result,
+					team: data.team,
+					betAmount: data.stake,
+					payout: data.result === 'won' ? data.payout : undefined,
+					profit: data.result === 'won' ? data.profit : undefined,
+					oldBalance: data.old_balance,
+					newBalance: data.new_balance,
+				},
+				displayResult: {
+					outcome: data.result,
+					team: data.team,
+					betAmount: formattedAmounts.betAmount,
+					...(data.result === 'won'
+						? {
+								payout: formattedAmounts.payout,
+								profit: formattedAmounts.profit,
+								displayPayout: formattedAmounts.payout,
+								displayProfit: formattedAmounts.profit,
+								displayOldBalance:
+									data.old_balance === undefined
+										? 'Unavailable'
+										: MoneyFormatter.toUSD(
+												data.old_balance,
+											),
+								displayNewBalance:
+									data.new_balance === undefined
+										? 'Unavailable'
+										: MoneyFormatter.toUSD(
+												data.new_balance,
+											),
+							}
+						: {}),
+				},
+			} as unknown as DisplayBetNotification,
+			{ throwOnFailure: true, deliveryId },
+		)
 	}
 
 	/**
@@ -614,7 +668,10 @@ export default class NotificationService {
 		}
 	}
 
-	async notifyUser(betData: DisplayBetNotification) {
+	async notifyUser(
+		betData: DisplayBetNotification,
+		options?: { throwOnFailure?: boolean; deliveryId?: string },
+	) {
 		const { userId, betId, result, displayResult } = betData
 		const betIdLabel =
 			betId === undefined ? 'Bet ID unavailable' : `Bet ID: ${betId}`
@@ -661,7 +718,7 @@ export default class NotificationService {
 						text: `Pluto | ${betIdLabel}`,
 					})
 
-				await this.sendEmbed(userId, betId, embed)
+				await this.sendEmbed(userId, betId, embed, options)
 				break
 			}
 
@@ -690,7 +747,7 @@ export default class NotificationService {
 						text: `Pluto | ${betIdLabel}`,
 					})
 
-				await this.sendEmbed(userId, betId, embed)
+				await this.sendEmbed(userId, betId, embed, options)
 				break
 			}
 
@@ -724,6 +781,7 @@ export default class NotificationService {
 		userId: string,
 		betId: number | undefined,
 		embed: EmbedBuilder,
+		options?: { throwOnFailure?: boolean; deliveryId?: string },
 	): Promise<void> {
 		const client = container.client
 
@@ -734,11 +792,26 @@ export default class NotificationService {
 				userId,
 				betId,
 			})
+			if (options?.throwOnFailure)
+				throw new Error('Discord client not available')
 			return
 		}
 
 		try {
-			await client.users.send(userId, { embeds: [embed] })
+			const user = options?.throwOnFailure
+				? await client.users.fetch(userId)
+				: undefined
+			if (user) {
+				await user.send({
+					embeds: [embed],
+					nonce: options?.deliveryId
+						? createDeliveryNonce(options.deliveryId, 0)
+						: undefined,
+					enforceNonce: Boolean(options?.deliveryId),
+				})
+			} else {
+				await client.users.send(userId, { embeds: [embed] })
+			}
 		} catch (err) {
 			logger.error({
 				message: 'Unable to send Discord embed',
@@ -748,6 +821,7 @@ export default class NotificationService {
 				stack: err instanceof Error ? err.stack : undefined,
 				method: this.sendEmbed.name,
 			})
+			if (options?.throwOnFailure) throw err
 		}
 	}
 }

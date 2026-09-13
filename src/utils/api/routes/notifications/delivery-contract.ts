@@ -3,6 +3,8 @@ import { z } from 'zod'
 import {
 	type DailyPropsPayload,
 	dailyPropsPayloadSchema,
+	type H2hResultNotification,
+	h2hResultNotificationSchema,
 	type ParlayResultNotification,
 	type PropSettledNotification,
 	parlayResultNotificationSchema,
@@ -13,6 +15,7 @@ export const deliveryKindSchema = z.enum([
 	'parlay_result',
 	'prop_settled',
 	'prop_post',
+	'h2h_result',
 ])
 
 const deliveryEnvelopeBaseSchema = z.object({
@@ -34,6 +37,10 @@ export const deliveryEnvelopeSchema = z.discriminatedUnion('kind', [
 		kind: z.literal('prop_post'),
 		payload: dailyPropsPayloadSchema,
 	}),
+	deliveryEnvelopeBaseSchema.extend({
+		kind: z.literal('h2h_result'),
+		payload: h2hResultNotificationSchema,
+	}),
 ])
 
 export type DeliveryEnvelope = z.infer<typeof deliveryEnvelopeSchema>
@@ -41,6 +48,7 @@ export type DeliveryPayload =
 	| ParlayResultNotification
 	| PropSettledNotification
 	| DailyPropsPayload
+	| H2hResultNotification
 
 export interface PropPostReceipt {
 	outcome_uuid: string
@@ -116,6 +124,9 @@ export function deliveryPayloadHash(envelope: DeliveryEnvelope): string {
 }
 
 export function destinationIds(envelope: DeliveryEnvelope): string[] {
+	if (envelope.kind === 'h2h_result') {
+		return [`dm:${envelope.payload.user_id}`]
+	}
 	if (envelope.kind === 'parlay_result') {
 		return [`dm:${envelope.payload.user_id}`]
 	}

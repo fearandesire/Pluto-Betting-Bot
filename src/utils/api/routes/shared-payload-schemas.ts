@@ -136,6 +136,21 @@ const fallbackParlayResultNotificationSchema = z.object({
 	legs: z.array(fallbackParlayLegNotificationSchema).min(1),
 })
 
+const fallbackH2hResultNotificationSchema = z.object({
+	user_id: z.string().min(1),
+	guild_id: z.string().min(1).optional(),
+	bet_id: z.number().int().nonnegative(),
+	event_id: z.string().min(1),
+	outcome_uuid: z.string().uuid(),
+	result: z.enum(['won', 'lost']),
+	team: z.string().min(1),
+	stake: z.number().finite().nonnegative(),
+	payout: z.number().finite().nonnegative(),
+	profit: z.number().finite(),
+	old_balance: z.number().finite().optional(),
+	new_balance: z.number().finite().optional(),
+})
+
 export type NotificationBetResults = z.infer<
 	typeof fallbackNotificationBetResultsSchema
 >
@@ -146,12 +161,16 @@ export type PropSettledNotification = z.infer<
 export type ParlayResultNotification = z.infer<
 	typeof fallbackParlayResultNotificationSchema
 >
+export type H2hResultNotification = z.infer<
+	typeof fallbackH2hResultNotificationSchema
+>
 
 type SharedPayloadExports = {
 	notificationBetResultsSchema?: z.ZodType<NotificationBetResults>
 	dailyPropsPayloadSchema?: z.ZodType<DailyPropsPayload>
 	propSettledNotificationSchema?: z.ZodType<PropSettledNotification>
 	parlayResultNotificationSchema?: z.ZodType<ParlayResultNotification>
+	h2hResultNotificationSchema?: z.ZodType<H2hResultNotification>
 }
 
 const sharedPayloadExports = KhronosTypes as unknown as SharedPayloadExports
@@ -205,3 +224,9 @@ export const parlayResultNotificationSchema = isUsableSchema(
 )
 	? sharedPayloadExports.parlayResultNotificationSchema
 	: fallbackParlayResultNotificationSchema
+
+export const h2hResultNotificationSchema = isUsableSchema(
+	sharedPayloadExports.h2hResultNotificationSchema,
+)
+	? sharedPayloadExports.h2hResultNotificationSchema
+	: fallbackH2hResultNotificationSchema

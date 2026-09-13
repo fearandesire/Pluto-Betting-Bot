@@ -71,6 +71,24 @@ const propPostEnvelope = deliveryEnvelopeSchema.parse({
 	},
 })
 
+const h2hEnvelope = deliveryEnvelopeSchema.parse({
+	delivery_id: '550e8400-e29b-41d4-a716-446655440007',
+	schema_version: 1,
+	kind: 'h2h_result',
+	occurred_at: '2026-07-14T20:00:00.000Z',
+	payload: {
+		user_id: 'user-h2h',
+		bet_id: 7,
+		event_id: 'event-h2h',
+		outcome_uuid: '550e8400-e29b-41d4-a716-446655440008',
+		result: 'won',
+		team: 'Home',
+		stake: 10,
+		payout: 25,
+		profit: 15,
+	},
+})
+
 function fakeRedis(): RedisCacheClient {
 	const values = new Map<string, string>()
 	return {
@@ -130,6 +148,33 @@ describe('notification delivery queue', () => {
 				(destination) => destination.state === 'delivered',
 			),
 		).toBe(true)
+	})
+
+	it('derives one H2H DM destination and dispatches it', async () => {
+		const store = new RedisDeliveryStore(fakeRedis())
+		const dispatcher: DeliveryDispatcher = {
+			deliver: vi.fn(async () => ({ ok: true })),
+		}
+		queue = new NotificationDeliveryQueue({
+			store,
+			dispatcher,
+			queue: {
+				add: vi.fn(async () => undefined),
+				close: vi.fn(async () => undefined),
+			},
+			startWorker: false,
+		})
+
+		await queue.accept(h2hEnvelope)
+		await queue.processJob({ data: h2hEnvelope } as never)
+
+		expect(dispatcher.deliver).toHaveBeenCalledWith(
+			h2hEnvelope,
+			'dm:user-h2h',
+		)
+		expect(
+			(await store.get(h2hEnvelope.delivery_id))?.destinations,
+		).toHaveLength(1)
 	})
 
 	it('does not report prop-post delivery until the complete receipt set exists', async () => {

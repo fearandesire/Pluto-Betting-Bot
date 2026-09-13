@@ -15,6 +15,37 @@ describe('NotificationService', () => {
 		vi.clearAllMocks()
 	})
 
+	it('passes the delivery nonce and failure propagation to durable H2H delivery', async () => {
+		const service = new NotificationService()
+		const notifyUser = vi
+			.spyOn(service, 'notifyUser')
+			.mockRejectedValue(new Error('Discord send failed'))
+
+		await expect(
+			service.deliverH2hResult(
+				{
+					user_id: 'user-1',
+					bet_id: 101,
+					event_id: 'event-1',
+					outcome_uuid: '550e8400-e29b-41d4-a716-446655440021',
+					result: 'won',
+					team: 'Home',
+					stake: 10,
+					payout: 20,
+					profit: 10,
+				},
+				'delivery-1',
+			),
+		).rejects.toThrow('Discord send failed')
+		expect(notifyUser).toHaveBeenCalledWith(
+			expect.anything(),
+			expect.objectContaining({
+				throwOnFailure: true,
+				deliveryId: 'delivery-1',
+			}),
+		)
+	})
+
 	it('delivers winners when the wire payload omits optional balances', async () => {
 		const service = new NotificationService()
 		const notifyUser = vi
