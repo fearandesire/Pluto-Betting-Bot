@@ -17,3 +17,7 @@ export function registerShutdownQueue(
 export function getRegisteredShutdownQueues(): readonly ShutdownQueue[] {
 	return [...shutdownQueues.values()]
 }
+
+export function clearShutdownQueueRegistryForTests(): void {
+	shutdownQueues.clear()
+}
