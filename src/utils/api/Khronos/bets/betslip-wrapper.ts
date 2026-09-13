@@ -37,6 +37,7 @@ export default class BetslipWrapper {
 		).placement_id
 		if (!placementId) return await this.betslipApi.placeBetslip(payload)
 
+		// The generated client gains placement_id after the next Khronos release.
 		return await this.betslipApi.placeBetslip(
 			payload,
 			async ({ init }) => ({

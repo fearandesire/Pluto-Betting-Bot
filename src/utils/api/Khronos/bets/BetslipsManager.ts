@@ -194,7 +194,11 @@ export class BetslipManager {
 				if (interaction.deferred || interaction.replied) {
 					return interaction.editReply({
 						embeds: [errEmbed],
-						components: [],
+						...(this.isDefinitiveBusinessFailure(
+							response.statusCode,
+						)
+							? { components: [] }
+							: {}),
 					})
 				}
 				return interaction.followUp({
@@ -210,7 +214,9 @@ export class BetslipManager {
 			if (interaction.deferred || interaction.replied) {
 				return interaction.editReply({
 					embeds: [errEmbed],
-					components: [],
+					...(this.isDefinitiveBusinessFailure(error)
+						? { components: [] }
+						: {}),
 				})
 			}
 			return interaction.followUp({
@@ -218,6 +224,26 @@ export class BetslipManager {
 				ephemeral: true,
 			})
 		}
+	}
+
+	private isDefinitiveBusinessFailure(value: unknown): boolean {
+		if (typeof value === 'number') {
+			return value >= 400 && value < 500
+		}
+		if (!value || typeof value !== 'object') return false
+
+		const error = value as {
+			status?: unknown
+			statusCode?: unknown
+			response?: { status?: unknown }
+		}
+		const status =
+			typeof error.statusCode === 'number'
+				? error.statusCode
+				: typeof error.status === 'number'
+					? error.status
+					: error.response?.status
+		return typeof status === 'number' && status >= 400 && status < 500
 	}
 
 	async successfulBetEmbed(

@@ -93,8 +93,14 @@ export class BetsCacheService {
 		if (!betData) return null
 		if (!betData.placement_id) {
 			const upgradedBet = { ...betData, placement_id: randomUUID() }
-			await this.cache.set(cacheKey, upgradedBet, this.BET_CACHE_TTL)
-			return upgradedBet
+			const upgraded = await this.cache.transitionIfValue(
+				cacheKey,
+				betData,
+				upgradedBet,
+				this.BET_CACHE_TTL,
+			)
+			if (upgraded) return upgradedBet
+			return (await this.cache.get(cacheKey)) as CachedBetData
 		}
 		return betData
 	}
@@ -116,6 +122,21 @@ export class BetsCacheService {
 		const updatedBet: CachedBetData = {
 			...existingBet,
 			...updates,
+		}
+		const selectionChanged =
+			(updates.team !== undefined && updates.team !== existingBet.team) ||
+			(updates.amount !== undefined &&
+				updates.amount !== existingBet.amount) ||
+			(updates.event_id !== undefined &&
+				updates.event_id !== existingBet.event_id)
+		if (selectionChanged) {
+			updatedBet.placement_id = randomUUID()
+			if (
+				updates.event_id !== undefined &&
+				updates.matchup_id === undefined
+			) {
+				updatedBet.matchup_id = updates.event_id
+			}
 		}
 
 		await this.cache.set(cacheKey, updatedBet, this.BET_CACHE_TTL)
