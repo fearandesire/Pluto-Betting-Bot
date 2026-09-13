@@ -6,15 +6,33 @@ import {
 
 class FakeRedis {
 	private readonly values = new Map<string, string>()
+	private readonly expiry = new Map<string, number>()
+	private now = 0
+
+	advance(seconds: number) {
+		this.now += seconds * 1000
+	}
+
+	private purge(key: string) {
+		if ((this.expiry.get(key) ?? Infinity) <= this.now) {
+			this.values.delete(key)
+			this.expiry.delete(key)
+		}
+	}
 
 	async get(key: string) {
+		this.purge(key)
 		return this.values.get(key) ?? null
 	}
 
 	async set(key: string, value: string, ...options: Array<string | number>) {
+		this.purge(key)
 		if (options.map(String).includes('NX') && this.values.has(key))
 			return null
 		this.values.set(key, value)
+		const exIndex = options.map(String).indexOf('EX')
+		if (exIndex >= 0)
+			this.expiry.set(key, this.now + Number(options[exIndex + 1]) * 1000)
 		return 'OK' as const
 	}
 
@@ -30,12 +48,18 @@ class FakeRedis {
 		nextValue: string,
 		_seconds?: number,
 	) {
+		this.purge(key)
 		if (this.values.get(key) !== expectedValue) return false
 		this.values.set(key, nextValue)
+		if (_seconds !== undefined)
+			this.expiry.set(key, this.now + _seconds * 1000)
 		return true
 	}
 
 	async refreshIfOwned(key: string, expectedValue: string, _seconds: number) {
+		this.purge(key)
+		if (this.values.get(key) !== expectedValue) return false
+		this.expiry.set(key, this.now + _seconds * 1000)
 		return this.values.get(key) === expectedValue
 	}
 }
@@ -85,6 +109,23 @@ describe('RedisChannelReservationStore', () => {
 		expect(await store.release(intent, 'owner-b')).toBe(false)
 		expect(await store.reserve(intent, 'owner-c')).toEqual({
 			state: 'busy',
+		})
+	})
+
+	it('allows a new owner after the previous lease expires', async () => {
+		const redis = new FakeRedis()
+		const store = new RedisChannelReservationStore(redis, {
+			leaseSeconds: 5,
+		})
+
+		expect(await store.reserve(intent, 'owner-a')).toEqual({
+			state: 'acquired',
+			owner: 'owner-a',
+		})
+		redis.advance(6)
+		expect(await store.reserve(intent, 'owner-b')).toEqual({
+			state: 'acquired',
+			owner: 'owner-b',
 		})
 	})
 })

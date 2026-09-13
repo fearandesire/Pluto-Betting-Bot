@@ -1,6 +1,7 @@
 import type { ChannelCreationEvent } from '@pluto-khronos/types'
 import { channelCreationEventSchema } from '@pluto-khronos/types'
 import { type Job, Queue, QueueEvents, Worker } from 'bullmq'
+import { ChannelCreationBusyError } from '../../guilds/channels/ChannelCreationWorkflow.js'
 import ChannelManager from '../../guilds/channels/ChannelManager.js'
 import { logger } from '../../logging/WinstonLogger.js'
 import { REDIS_CONFIG } from '../data/config.js'
@@ -12,12 +13,13 @@ interface ChannelCreationResult {
 	error?: string
 }
 
+const CHANNEL_CREATION_BACKOFF_DELAY = 1000
+
 export class ChannelCreationQueue {
 	public queue: Queue<ChannelCreationEvent, ChannelCreationResult>
 	private worker: Worker<ChannelCreationEvent, ChannelCreationResult>
 	private queueEvents: QueueEvents
 	private static readonly MAX_ATTEMPTS = 3
-	private static readonly BACKOFF_DELAY = 1000
 	// lock duration must exceed expected processing time
 	private static readonly LOCK_DURATION = 5 * 60 * 1000 // 5 minutes
 
@@ -32,8 +34,7 @@ export class ChannelCreationQueue {
 				defaultJobOptions: {
 					attempts: ChannelCreationQueue.MAX_ATTEMPTS,
 					backoff: {
-						type: 'exponential',
-						delay: ChannelCreationQueue.BACKOFF_DELAY,
+						type: 'custom',
 					},
 					// Keep completed jobs for 24 hours for BullBoard visibility
 					// age in seconds, count limits total jobs kept
@@ -55,6 +56,10 @@ export class ChannelCreationQueue {
 				connection,
 				concurrency: 15,
 				lockDuration: ChannelCreationQueue.LOCK_DURATION,
+				settings: {
+					backoffStrategy: (attemptsMade, _type, error) =>
+						channelCreationRetryDelay(attemptsMade, error),
+				},
 			},
 		)
 
@@ -248,7 +253,7 @@ export class ChannelCreationQueue {
 			}
 
 			// rethrow to let BullMQ handle retry/backoff
-			throw new Error(errorMessage)
+			throw err instanceof Error ? err : new Error(errorMessage)
 		}
 	}
 
@@ -260,3 +265,16 @@ export class ChannelCreationQueue {
 }
 
 export const channelCreationQueue = new ChannelCreationQueue()
+
+export function channelCreationRetryDelay(
+	attemptsMade: number,
+	error: Error & { retryAfterMs?: number },
+): number {
+	if (error instanceof ChannelCreationBusyError) {
+		return error.retryAfterMs
+	}
+	return Math.min(
+		30_000,
+		CHANNEL_CREATION_BACKOFF_DELAY * 2 ** Math.max(0, attemptsMade),
+	)
+}

@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import fs from 'node:fs/promises'
 import path, { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -33,6 +34,7 @@ import redisCache from '../../cache/redis-instance.js'
 import StringUtils from '../../common/string-utils.js'
 import { logger } from '../../logging/WinstonLogger.js'
 import {
+	ChannelCreationBusyError,
 	ChannelCreationWorkflow,
 	type CreatedChannel,
 } from './ChannelCreationWorkflow.js'
@@ -91,8 +93,12 @@ export default class ChannelManager {
 			const workflow = new ChannelCreationWorkflow({
 				reservations: this.reservations,
 				discord: {
-					findByMarker: () =>
-						this.findChannelByMarker(guild.guildId, intent),
+					findByMarker: (_intent, knownChannelId) =>
+						this.findChannelByMarker(
+							guild.guildId,
+							intent,
+							knownChannelId,
+						),
 					completeExisting: (_intent, channelId) =>
 						this.completeExistingChannel(channel, guild, channelId),
 					create: () =>
@@ -101,7 +107,7 @@ export default class ChannelManager {
 			})
 			const outcome = await workflow.run(intent)
 			if (outcome.state === 'busy') {
-				throw new Error('Channel creation reservation is busy')
+				throw new ChannelCreationBusyError()
 			}
 		}
 	}
@@ -114,22 +120,43 @@ export default class ChannelManager {
 			guildId: guild.guildId,
 			gameId: channel.id,
 			channelName: channel.channelname,
-			marker: `pluto-game:${guild.guildId}:${channel.id}`,
+			marker: `pluto-game:${createHash('sha256')
+				.update(`${guild.guildId}:${channel.id}`)
+				.digest('hex')
+				.slice(0, 24)}`,
 		}
 	}
 
 	private async findChannelByMarker(
 		guildId: string,
 		intent: ChannelIntent,
+		knownChannelId?: string,
 	): Promise<{ id: string } | null> {
 		const guild = SapDiscClient.guilds.cache.get(guildId)
 		if (!guild) return null
-		const found = guild.channels.cache.find(
+		const knownChannel = knownChannelId
+			? (guild.channels.cache.get(knownChannelId) ??
+				(await guild.channels.fetch(knownChannelId).catch(() => null)))
+			: null
+		if (knownChannel?.type === ChannelType.GuildText) {
+			return { id: knownChannel.id }
+		}
+
+		const fetchedChannels = await guild.channels.fetch().catch(() => null)
+		const channels = fetchedChannels ?? guild.channels.cache
+		const found = channels.find(
 			(candidate) =>
 				candidate.type === ChannelType.GuildText &&
 				candidate.topic === intent.marker,
 		)
-		return found ? { id: found.id } : null
+		if (found) return { id: found.id }
+		const legacy = channels.find(
+			(candidate) =>
+				candidate.type === ChannelType.GuildText &&
+				candidate.name.toLowerCase() ===
+					intent.channelName.toLowerCase(),
+		)
+		return legacy ? { id: legacy.id } : null
 	}
 
 	private async createReservedChannel(
@@ -180,7 +207,9 @@ export default class ChannelManager {
 		channelId: string,
 	): Promise<void> {
 		const locatedGuild = SapDiscClient.guilds.cache.get(guild.guildId)
-		const existing = locatedGuild?.channels.cache.get(channelId)
+		const existing =
+			locatedGuild?.channels.cache.get(channelId) ??
+			(await locatedGuild?.channels.fetch(channelId).catch(() => null))
 		if (!existing || existing.type !== ChannelType.GuildText) {
 			throw new Error('Reserved game channel is unavailable')
 		}

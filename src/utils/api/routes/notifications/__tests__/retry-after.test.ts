@@ -8,7 +8,7 @@ describe('boundedDeliveryRetryDelay', () => {
 				status: 429,
 				retryAfterMs: 12_000,
 			}),
-		).toBe(12_000)
+		).toBe(60_000)
 	})
 
 	it('caps an excessive or untrusted retry-after value', () => {
@@ -17,6 +17,15 @@ describe('boundedDeliveryRetryDelay', () => {
 				status: 429,
 				retryAfterMs: Number.MAX_SAFE_INTEGER,
 			}),
-		).toBe(60_000)
+		).toBe(60 * 60 * 1000)
+	})
+
+	it('uses a long retry-after value as a lower bound', () => {
+		expect(
+			boundedDeliveryRetryDelay(1, {
+				status: 429,
+				retryAfterMs: 180_000,
+			}),
+		).toBe(180_000)
 	})
 })

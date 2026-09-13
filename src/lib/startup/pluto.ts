@@ -1,4 +1,3 @@
-import { toSafeUserError } from '../../services/alerts/safe-user-error.js'
 import { configureSystemNotificationDelivery } from '../../utils/api/routes/notifications/delivery-queue.js'
 import { logger } from '../../utils/logging/WinstonLogger.js'
 import env, { isSystemStartupMode, type ParsedStartupEnv } from './env.js'
@@ -98,12 +97,7 @@ export async function startPluto({
 		logger.error({
 			message: 'Failed to login',
 		})
-		const safeError = toSafeUserError(error)
-		client.logger.fatal({
-			message: 'Pluto startup failed',
-			code: safeError.code,
-			status: safeError.status,
-		})
+		client.logger.fatal({ message: 'Pluto startup failed', error })
 		client.destroy()
 		exitProcess(1)
 	}

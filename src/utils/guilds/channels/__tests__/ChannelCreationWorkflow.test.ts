@@ -1,4 +1,9 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+vi.mock('../../../logging/WinstonLogger.js', () => ({
+	logger: { warn: vi.fn() },
+}))
+
 import {
 	type ChannelCreationPorts,
 	ChannelCreationWorkflow,
@@ -47,6 +52,7 @@ class ReservationStub {
 }
 
 describe('ChannelCreationWorkflow', () => {
+	afterEach(() => vi.useRealTimers())
 	it('creates one channel for concurrent workers on one scheduling intent', async () => {
 		const injected = ports()
 		injected.reservations = new ReservationStub()
@@ -70,6 +76,9 @@ describe('ChannelCreationWorkflow', () => {
 			state: 'created',
 			channelId: 'discord-channel-1',
 		})
+		injected.discord.findByMarker = vi
+			.fn()
+			.mockResolvedValue({ id: 'discord-channel-1' })
 
 		expect(await workflow.run(intent)).toEqual({
 			state: 'already-created',
@@ -151,5 +160,67 @@ describe('ChannelCreationWorkflow', () => {
 			channelId: 'discord-channel-1',
 		})
 		expect(injected.discord.completeExisting).toHaveBeenCalledOnce()
+	})
+
+	it('does not create after the reservation lease is lost', async () => {
+		vi.useFakeTimers()
+		const injected = ports()
+		let resolveLookup:
+			| ((channel: { id: string } | null) => void)
+			| undefined
+		injected.discord.findByMarker = vi.fn(
+			() =>
+				new Promise<{ id: string } | null>(
+					(resolve) => (resolveLookup = resolve),
+				),
+		)
+		injected.reservations.refresh = vi.fn().mockResolvedValue(false)
+
+		const run = new ChannelCreationWorkflow(injected).run(intent)
+		await Promise.resolve()
+		await Promise.resolve()
+		vi.advanceTimersByTime(60_000)
+		resolveLookup?.(null)
+		await Promise.resolve()
+		await Promise.resolve()
+
+		await expect(run).rejects.toThrow(/lease/i)
+		expect(injected.discord.create).not.toHaveBeenCalled()
+		expect(injected.reservations.release).toHaveBeenCalled()
+	})
+
+	it('does not turn a renewal rejection into an unhandled rejection', async () => {
+		vi.useFakeTimers()
+		const injected = ports()
+		injected.reservations.refresh = vi
+			.fn()
+			.mockRejectedValue(new Error('redis unavailable'))
+
+		await new ChannelCreationWorkflow(injected).run(intent)
+		await vi.advanceTimersByTimeAsync(60_000)
+		expect(injected.discord.create).toHaveBeenCalledOnce()
+	})
+
+	it('reclaims a stale created result when the channel no longer exists', async () => {
+		const injected = ports()
+		injected.reservations.reserve = vi.fn().mockResolvedValue({
+			state: 'created',
+			channelId: 'deleted-channel',
+		})
+		injected.reservations.reclaimCreated = vi.fn().mockResolvedValue(true)
+		injected.discord.findByMarker = vi.fn().mockResolvedValue(null)
+
+		const result = await new ChannelCreationWorkflow(injected).run(intent)
+
+		expect(result).toEqual({
+			state: 'created',
+			channelId: 'discord-channel-1',
+		})
+		expect(injected.reservations.reclaimCreated).toHaveBeenCalledWith(
+			intent,
+			'deleted-channel',
+			expect.any(String),
+		)
+		expect(injected.discord.create).toHaveBeenCalledOnce()
 	})
 })

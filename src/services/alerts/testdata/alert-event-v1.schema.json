@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:fearandesire:atlas:alert-event:v1",
-  "title": "Atlas Alert Event v1",
+  "$id": "urn:pluto:alert-event:v1",
+  "title": "Alert Event v1",
   "description": "A bounded, redacted state transition for one operator-visible alert incident.",
   "type": "object",
   "additionalProperties": false,

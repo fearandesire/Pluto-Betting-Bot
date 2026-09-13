@@ -41,7 +41,12 @@ SapDiscClient.on('shardDisconnect', (_event, shardId) => {
 	gatewayMonitor.disconnected(String(shardId))
 })
 SapDiscClient.on('shardReady', (shardId) => {
-	void gatewayMonitor.ready(String(shardId))
+	void gatewayMonitor.ready(String(shardId)).catch((error) => {
+		logger.error({
+			event: 'gateway.recovery_tracking_failed',
+			error: error instanceof Error ? error.name : 'unknown',
+		})
+	})
 })
 
 ApplicationCommandRegistries.setDefaultBehaviorWhenNotIdentical(

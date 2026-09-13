@@ -18,6 +18,7 @@ interface TrackerConfig {
 export class ConsecutiveFailureTracker {
 	private count = 0
 	private firing = false
+	private observedSuccess = false
 
 	constructor(
 		private readonly reporter: Pick<AlertReporter, 'firing' | 'resolved'>,
@@ -27,19 +28,29 @@ export class ConsecutiveFailureTracker {
 	async failure(): Promise<void> {
 		this.count = Math.min(this.count + 1, this.config.threshold)
 		if (this.count < this.config.threshold || this.firing) return
-		this.firing = true
-		await this.reporter.firing(this.observation())
+		try {
+			await this.reporter.firing(this.observation())
+			this.firing = true
+		} catch {
+			this.firing = false
+		}
 	}
 
 	async success(): Promise<void> {
 		const wasFiring = this.firing
 		this.count = 0
 		this.firing = false
-		if (!wasFiring) return
-		await this.reporter.resolved({
-			...this.observation(),
-			resolvedAt: new Date(),
-		})
+		const shouldResolve = wasFiring || !this.observedSuccess
+		if (!shouldResolve) return
+		try {
+			await this.reporter.resolved({
+				...this.observation(),
+				resolvedAt: new Date(),
+			})
+			this.observedSuccess = true
+		} catch {
+			this.observedSuccess = false
+		}
 	}
 
 	private observation(): AlertObservation {
@@ -68,7 +79,7 @@ export class GatewayConnectivityMonitor {
 		if (this.timers.has(shardId)) return
 		const timer = setTimeout(() => {
 			this.timers.delete(shardId)
-			void this.reporter
+			const pending = this.reporter
 				.firing({
 					key: 'gateway.disconnected',
 					scope: `shard_${shardId}`,
@@ -80,23 +91,32 @@ export class GatewayConnectivityMonitor {
 					observedAt: new Date(),
 				})
 				.catch(() => undefined)
+			this.pendingFirings.set(shardId, pending)
 		}, this.disconnectDelayMs)
 		this.timers.set(shardId, timer)
 	}
+
+	private readonly pendingFirings = new Map<string, Promise<void>>()
 
 	async ready(shardId: string): Promise<void> {
 		const timer = this.timers.get(shardId)
 		if (timer) clearTimeout(timer)
 		this.timers.delete(shardId)
-		await this.reporter.resolved({
-			key: 'gateway.disconnected',
-			scope: `shard_${shardId}`,
-			severity: 'critical',
-			title: 'Discord gateway recovered',
-			summary: 'The Discord gateway shard is connected again.',
-			retriable: true,
-			observedAt: new Date(),
-			resolvedAt: new Date(),
-		})
+		await this.pendingFirings.get(shardId)
+		this.pendingFirings.delete(shardId)
+		try {
+			await this.reporter.resolved({
+				key: 'gateway.disconnected',
+				scope: `shard_${shardId}`,
+				severity: 'critical',
+				title: 'Discord gateway recovered',
+				summary: 'The Discord gateway shard is connected again.',
+				retriable: true,
+				observedAt: new Date(),
+				resolvedAt: new Date(),
+			})
+		} catch {
+			return
+		}
 	}
 }

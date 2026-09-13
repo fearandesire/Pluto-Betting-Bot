@@ -13,6 +13,11 @@ export type ChannelReservation =
 export interface ChannelReservationStore {
 	reserve(intent: ChannelIntent, owner: string): Promise<ChannelReservation>
 	refresh?(intent: ChannelIntent, owner: string): Promise<boolean>
+	reclaimCreated?(
+		intent: ChannelIntent,
+		channelId: string,
+		owner: string,
+	): Promise<boolean>
 	recordCreated(
 		intent: ChannelIntent,
 		owner: string,
@@ -112,6 +117,19 @@ export class RedisChannelReservationStore implements ChannelReservationStore {
 	async refresh(intent: ChannelIntent, owner: string): Promise<boolean> {
 		return this.redis.refreshIfOwned(
 			reservationKey(intent),
+			JSON.stringify({ state: 'reserved', owner }),
+			this.leaseSeconds,
+		)
+	}
+
+	async reclaimCreated(
+		intent: ChannelIntent,
+		channelId: string,
+		owner: string,
+	): Promise<boolean> {
+		return this.redis.transitionIfValue(
+			reservationKey(intent),
+			JSON.stringify({ state: 'created', channelId }),
 			JSON.stringify({ state: 'reserved', owner }),
 			this.leaseSeconds,
 		)

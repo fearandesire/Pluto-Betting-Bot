@@ -27,7 +27,20 @@ describe('toSafeUserError', () => {
 			code: 'TEMPORARY_UNAVAILABLE',
 			message:
 				'The service is temporarily unavailable. Please try again later.',
-			status: 503,
+			status: 429,
+		})
+	})
+
+	it('preserves an HTTP status while neutralizing the message', () => {
+		expect(
+			toSafeUserError(
+				Object.assign(new Error('internal'), { status: 404 }),
+			),
+		).toEqual({
+			code: 'REQUEST_ERROR',
+			message:
+				'The request could not be processed. Check the provided values and try again.',
+			status: 404,
 		})
 	})
 })

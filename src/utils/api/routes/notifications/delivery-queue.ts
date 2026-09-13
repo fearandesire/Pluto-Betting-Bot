@@ -21,8 +21,8 @@ import type NotificationService from './notifications.service.js'
 
 export const NOTIFICATION_DELIVERY_QUEUE = 'notification-delivery-v1'
 export const SYSTEM_DISCORD_BASE_URL = 'http://fake-discord:8080'
-const MAX_RETRY_DELAY_MS = 60_000
-const MIN_RETRY_DELAY_MS = 1_000
+const MIN_RETRY_DELAY_MS = 60_000
+const MAX_RETRY_WINDOW_DELAY_MS = 60 * 60 * 1000
 
 // Keep queue construction lazy and environment-only. Importing notification
 // routes in unit tests must not force Pluto's full startup env schema.
@@ -496,15 +496,18 @@ export class NotificationDeliveryQueue {
 		kind: DeliveryJob['kind'],
 	): Promise<void> {
 		if (!this.alertReporter) return
-		await this.alertReporter.firing({
-			key: 'delivery.failed',
-			scope: `${kind}:${deliveryId}`,
-			severity: 'warning',
-			title: 'Notification delivery failed',
-			summary: 'A notification delivery job requires operator attention.',
-			retriable: true,
-			observedAt: new Date(),
-		})
+		await this.alertReporter
+			.firing({
+				key: 'delivery.failed',
+				scope: `${kind}:${deliveryId}`,
+				severity: 'warning',
+				title: 'Notification delivery failed',
+				summary:
+					'A notification delivery job requires operator attention.',
+				retriable: true,
+				observedAt: new Date(),
+			})
+			.catch(() => undefined)
 	}
 
 	private async reportAlertRecovery(
@@ -512,16 +515,18 @@ export class NotificationDeliveryQueue {
 		kind: DeliveryJob['kind'],
 	): Promise<void> {
 		if (!this.alertReporter) return
-		await this.alertReporter.resolved({
-			key: 'delivery.failed',
-			scope: `${kind}:${deliveryId}`,
-			severity: 'warning',
-			title: 'Notification delivery recovered',
-			summary: 'A notification delivery job completed successfully.',
-			retriable: true,
-			observedAt: new Date(),
-			resolvedAt: new Date(),
-		})
+		await this.alertReporter
+			.resolved({
+				key: 'delivery.failed',
+				scope: `${kind}:${deliveryId}`,
+				severity: 'warning',
+				title: 'Notification delivery recovered',
+				summary: 'A notification delivery job completed successfully.',
+				retriable: true,
+				observedAt: new Date(),
+				resolvedAt: new Date(),
+			})
+			.catch(() => undefined)
 	}
 
 	/** Focused seam for integration tests; BullMQ invokes the same handler. */
@@ -541,14 +546,14 @@ export function boundedDeliveryRetryDelay(
 ): number {
 	const requested = error.status === 429 ? error.retryAfterMs : undefined
 	const exponential = Math.min(
-		2 ** Math.max(0, attemptsMade) * MIN_RETRY_DELAY_MS,
-		MAX_RETRY_DELAY_MS,
+		2 ** Math.max(0, attemptsMade - 1) * MIN_RETRY_DELAY_MS,
+		MAX_RETRY_WINDOW_DELAY_MS,
 	)
 	if (!Number.isFinite(requested) || requested === undefined)
 		return exponential
 	return Math.min(
-		MAX_RETRY_DELAY_MS,
-		Math.max(MIN_RETRY_DELAY_MS, Math.trunc(requested)),
+		MAX_RETRY_WINDOW_DELAY_MS,
+		Math.max(exponential, Math.trunc(requested)),
 	)
 }
 
