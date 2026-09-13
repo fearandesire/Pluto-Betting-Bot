@@ -4,7 +4,7 @@ import { fullFormat } from 'winston-error-format'
 import env from '#lib/startup/env.js'
 import { createConsoleTransport } from './transports/consoleTransport.js'
 // Loki direct-ship removed: Docker stdout → Alloy is the sole production path
-// (fnx-observability contract v1 / Pluto#580).
+// (atlas-ops contract v1 / Pluto#580).
 
 /**
  * Renames Winston's `message` field to `msg` so JSON output matches the
