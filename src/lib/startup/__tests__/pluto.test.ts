@@ -78,6 +78,7 @@ describe('Pluto startup orchestration', () => {
 			},
 			initializeSystemStartupServices,
 			initializeStartupServices: vi.fn(async () => undefined),
+			installShutdownHandlers: vi.fn(),
 			exitProcess: vi.fn(),
 		})
 
@@ -98,6 +99,7 @@ describe('Pluto startup orchestration', () => {
 			env: baseEnv,
 			initializeStartupServices: vi.fn(async () => undefined),
 			initializeSystemStartupServices: vi.fn(async () => undefined),
+			installShutdownHandlers: vi.fn(),
 			exitProcess: vi.fn(),
 		})
 

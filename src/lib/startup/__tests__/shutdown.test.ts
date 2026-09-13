@@ -16,6 +16,10 @@ vi.mock('../../../utils/cache/queue/match-refresh-queue.js', () => ({
 	getMatchRefreshQueue: () => ({ close: closeMatchRefreshQueue }),
 }))
 
+vi.mock('../../../utils/logging/WinstonLogger.js', () => ({
+	logger: { info: vi.fn(), error: vi.fn() },
+}))
+
 const { closeQueueWorkers, installShutdownHandlers } = await import(
 	'../shutdown.js'
 )
