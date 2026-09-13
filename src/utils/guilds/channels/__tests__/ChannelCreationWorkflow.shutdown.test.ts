@@ -214,9 +214,17 @@ describeWithRedis('channel creation lease shutdown', () => {
 		const completion = new Promise<void>((resolve) => {
 			resolveCompletion = resolve
 		})
+		let resolveCompleteEntered!: () => void
+		const completeEntered = new Promise<void>((resolve) => {
+			resolveCompleteEntered = resolve
+		})
+		const complete = vi.fn(() => {
+			resolveCompleteEntered()
+			return completion
+		})
 		const create = vi.fn().mockResolvedValue({
 			channelId: 'discord-channel-new',
-			complete: () => completion,
+			complete,
 		})
 		const workflow = new ChannelCreationWorkflow(
 			workflowPorts(store, { create }),
@@ -224,9 +232,12 @@ describeWithRedis('channel creation lease shutdown', () => {
 		const refresh = vi.spyOn(storeRedis, 'refreshIfOwned')
 		const run = workflow.run(intent)
 
-		await vi.waitFor(() => expect(create).toHaveBeenCalledOnce())
-		const refreshCount = refresh.mock.calls.length
+		await vi.waitFor(() => expect(complete).toHaveBeenCalledOnce())
+		await completeEntered
 		const close = closeQueueWorkers(30_000)
+		await vi.advanceTimersByTimeAsync(2_000)
+		await expect(close).resolves.not.toThrow()
+		const refreshCount = refresh.mock.calls.length
 		await vi.advanceTimersByTimeAsync(60_000)
 		expect(refresh).toHaveBeenCalledTimes(refreshCount)
 		resolveCompletion()
@@ -235,7 +246,6 @@ describeWithRedis('channel creation lease shutdown', () => {
 			state: 'created',
 			channelId: 'discord-channel-new',
 		})
-		await expect(close).resolves.not.toThrow()
 		expect(warn).toHaveBeenCalledWith({
 			message: 'in-flight creation exceeded shutdown budget',
 			channelKey: intent.marker,
@@ -253,23 +263,34 @@ describeWithRedis('channel creation lease shutdown', () => {
 		const completion = new Promise<void>((resolve) => {
 			resolveCompletion = resolve
 		})
+		let resolveCompleteEntered!: () => void
+		const completeEntered = new Promise<void>((resolve) => {
+			resolveCompleteEntered = resolve
+		})
 		const findByMarker = vi
 			.fn()
 			.mockResolvedValueOnce(null)
 			.mockResolvedValue({ id: 'discord-channel-existing' })
+		const completeExisting = vi.fn(() => {
+			resolveCompleteEntered()
+			return completion
+		})
 		const workflow = new ChannelCreationWorkflow(
 			workflowPorts(store, {
 				findByMarker,
 				create: vi.fn().mockRejectedValue(new Error('create failed')),
-				completeExisting: () => completion,
+				completeExisting,
 			}),
 		)
 		const refresh = vi.spyOn(storeRedis, 'refreshIfOwned')
 		const run = workflow.run(intent)
 
-		await vi.waitFor(() => expect(findByMarker).toHaveBeenCalledTimes(2))
-		const refreshCount = refresh.mock.calls.length
+		await vi.waitFor(() => expect(completeExisting).toHaveBeenCalledOnce())
+		await completeEntered
 		const close = closeQueueWorkers(30_000)
+		await vi.advanceTimersByTimeAsync(2_000)
+		await expect(close).resolves.not.toThrow()
+		const refreshCount = refresh.mock.calls.length
 		await vi.advanceTimersByTimeAsync(60_000)
 		expect(refresh).toHaveBeenCalledTimes(refreshCount)
 		resolveCompletion()
@@ -278,7 +299,6 @@ describeWithRedis('channel creation lease shutdown', () => {
 			state: 'reconciled',
 			channelId: 'discord-channel-existing',
 		})
-		await expect(close).resolves.not.toThrow()
 		expect(warn).toHaveBeenCalledWith({
 			message: 'in-flight creation exceeded shutdown budget',
 			channelKey: intent.marker,
@@ -286,20 +306,80 @@ describeWithRedis('channel creation lease shutdown', () => {
 		await redis.del(keyFor(intent))
 	})
 
-	it('leaves a lease to expire when release exceeds the shutdown budget', async () => {
+	it('logs when an in-flight creation settles within the shutdown sub-budget', async () => {
 		vi.useFakeTimers()
-		const intent = uniqueIntent('release-timeout')
+		const intent = uniqueIntent('settled-in-flight')
+		const store = new RedisChannelReservationStore(storeRedis, {
+			leaseSeconds: 300,
+		})
+		let resolveCompletion!: () => void
+		const completion = new Promise<void>((resolve) => {
+			resolveCompletion = resolve
+		})
+		let resolveCompleteEntered!: () => void
+		const completeEntered = new Promise<void>((resolve) => {
+			resolveCompleteEntered = resolve
+		})
+		const complete = vi.fn(() => {
+			resolveCompleteEntered()
+			return completion
+		})
+		const workflow = new ChannelCreationWorkflow(
+			workflowPorts(store, {
+				create: vi.fn().mockResolvedValue({
+					channelId: 'discord-channel-settled',
+					complete,
+				}),
+			}),
+		)
+		const run = workflow.run(intent)
+
+		await vi.waitFor(() => expect(complete).toHaveBeenCalledOnce())
+		await completeEntered
+		const close = closeQueueWorkers(30_000)
+		setTimeout(resolveCompletion, 1_000)
+		await vi.advanceTimersByTimeAsync(1_000)
+		await expect(close).resolves.not.toThrow()
+		await expect(run).resolves.toEqual({
+			state: 'created',
+			channelId: 'discord-channel-settled',
+		})
+
+		expect(warn).toHaveBeenCalledWith({
+			message: 'waited for in-flight creation',
+			channelKey: intent.marker,
+		})
+		expect(warn).not.toHaveBeenCalledWith({
+			message: 'lease left to expire',
+			channelKey: intent.marker,
+		})
+		await redis.del(keyFor(intent))
+	})
+
+	it('retries a settled failed run release within the shutdown budget', async () => {
+		vi.useFakeTimers()
+		const intent = uniqueIntent('release-retry-timeout')
 		const store = new RedisChannelReservationStore(storeRedis, {
 			leaseSeconds: 300,
 		})
 		const findByMarker = vi.fn().mockResolvedValue(null)
-		let rejectRelease!: (error: Error) => void
-		const release = vi.fn(
-			() =>
-				new Promise<boolean>((_, reject) => {
-					rejectRelease = reject
-				}),
-		)
+		let resolveRetry!: (released: boolean) => void
+		let retryStarted!: () => void
+		const retryEntered = new Promise<void>((resolve) => {
+			retryStarted = resolve
+		})
+		const retry = new Promise<boolean>((resolve) => {
+			resolveRetry = resolve
+		})
+		let retrySettled = false
+		const release = vi.fn(() => {
+			retryStarted()
+			return retry.then((released) => {
+				retrySettled = true
+				return released
+			})
+		})
+		release.mockRejectedValueOnce(new Error('initial release failed'))
 		const workflow = new ChannelCreationWorkflow(
 			workflowPorts(reservationsWithRelease(store, release), {
 				findByMarker,
@@ -308,19 +388,90 @@ describeWithRedis('channel creation lease shutdown', () => {
 		)
 		const run = workflow.run(intent)
 		await waitForReservation(redis, intent)
-		await vi.waitFor(() => expect(release).toHaveBeenCalledOnce())
+		await expect(run).rejects.toThrow('initial release failed')
 		const close = closeQueueWorkers(30_000)
 
+		await retryEntered
+		expect(release).toHaveBeenCalledTimes(2)
 		await vi.advanceTimersByTimeAsync(2_000)
 		await expect(close).resolves.not.toThrow()
-		expect(release).toHaveBeenCalledOnce()
+		expect(release).toHaveBeenCalledTimes(2)
 		expect(warn).toHaveBeenCalledWith({
 			message: 'lease left to expire',
 			channelKey: intent.marker,
 		})
 
-		rejectRelease(new Error('redis unavailable'))
-		await expect(run).rejects.toThrow('redis unavailable')
+		resolveRetry(true)
+		await retry
+		await vi.waitFor(() => expect(retrySettled).toBe(true))
+		await redis.del(keyFor(intent))
+	})
+
+	it('retains a renewed lease for shutdown cleanup after the original expiry', async () => {
+		vi.useFakeTimers()
+		const intent = uniqueIntent('renewed-lease-retention')
+		const store = new RedisChannelReservationStore(storeRedis, {
+			leaseSeconds: 300,
+		})
+		const findByMarker = vi.fn().mockResolvedValue(null)
+		let rejectCreate!: (error: Error) => void
+		const create = vi.fn(
+			() =>
+				new Promise<{
+					channelId: string
+					complete: () => Promise<void>
+				}>((_, reject) => {
+					rejectCreate = reject
+				}),
+		)
+		let resolveRetry!: (released: boolean) => void
+		let retryStarted!: () => void
+		const retryEntered = new Promise<void>((resolve) => {
+			retryStarted = resolve
+		})
+		const retry = new Promise<boolean>((resolve) => {
+			resolveRetry = resolve
+		})
+		const release = vi
+			.fn()
+			.mockRejectedValueOnce(new Error('initial release failed'))
+			.mockImplementationOnce(() => {
+				retryStarted()
+				return retry
+			})
+		const workflow = new ChannelCreationWorkflow(
+			workflowPorts(reservationsWithRelease(store, release), {
+				findByMarker,
+				create,
+			}),
+		)
+		const refresh = vi.spyOn(storeRedis, 'refreshIfOwned')
+		const run = workflow.run(intent)
+
+		await waitForReservation(redis, intent)
+		await vi.waitFor(() => expect(refresh).toHaveBeenCalledOnce())
+		await vi.advanceTimersByTimeAsync(4 * 60 * 1_000)
+		await vi.waitFor(() =>
+			expect(refresh.mock.calls.length).toBeGreaterThanOrEqual(5),
+		)
+
+		rejectCreate(new Error('create failed'))
+		await expect(run).rejects.toThrow('initial release failed')
+		await vi.advanceTimersByTimeAsync(2 * 60 * 1_000)
+		expect(await redis.exists(keyFor(intent))).toBe(1)
+
+		const close = closeQueueWorkers(30_000)
+		await retryEntered
+		expect(release).toHaveBeenCalledTimes(2)
+		await vi.advanceTimersByTimeAsync(2_000)
+		await expect(close).resolves.not.toThrow()
+		expect(warn).toHaveBeenCalledWith({
+			message: 'lease left to expire',
+			channelKey: intent.marker,
+		})
+
+		resolveRetry(true)
+		await retry
 		await redis.del(keyFor(intent))
 	})
 
