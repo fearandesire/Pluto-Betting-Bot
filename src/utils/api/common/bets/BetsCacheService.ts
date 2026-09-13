@@ -100,7 +100,8 @@ export class BetsCacheService {
 				this.BET_CACHE_TTL,
 			)
 			if (upgraded) return upgradedBet
-			return (await this.cache.get(cacheKey)) as CachedBetData
+			const currentBet = await this.cache.get(cacheKey)
+			return currentBet ? (currentBet as CachedBetData) : null
 		}
 		return betData
 	}
