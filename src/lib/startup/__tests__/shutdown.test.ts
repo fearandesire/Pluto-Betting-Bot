@@ -4,31 +4,59 @@ const events: string[] = []
 const closeChannelCreationQueue = vi.fn(async () => undefined)
 const closeChannelDeletionQueue = vi.fn(async () => undefined)
 const closeMatchRefreshQueue = vi.fn(async () => undefined)
-
-vi.mock('../../../utils/cache/queue/ChannelCreationQueue.js', () => ({
-	channelCreationQueue: { close: closeChannelCreationQueue },
+const queueModuleImports = vi.hoisted(() => ({
+	creation: vi.fn(),
+	deletion: vi.fn(),
+	matchRefresh: vi.fn(),
 }))
 
-vi.mock('../../../utils/cache/queue/ChannelDeletionQueue.js', () => ({
-	channelDeletionQueue: { close: closeChannelDeletionQueue },
-}))
+vi.mock('../../../utils/cache/queue/ChannelCreationQueue.js', () => {
+	queueModuleImports.creation()
+	return {
+		channelCreationQueue: { close: closeChannelCreationQueue },
+	}
+})
 
-vi.mock('../../../utils/cache/queue/match-refresh-queue.js', () => ({
-	getMatchRefreshQueue: () => ({ close: closeMatchRefreshQueue }),
-}))
+vi.mock('../../../utils/cache/queue/ChannelDeletionQueue.js', () => {
+	queueModuleImports.deletion()
+	return {
+		channelDeletionQueue: { close: closeChannelDeletionQueue },
+	}
+})
+
+vi.mock('../../../utils/cache/queue/match-refresh-queue.js', () => {
+	queueModuleImports.matchRefresh()
+	return {
+		getMatchRefreshQueue: () => ({ close: closeMatchRefreshQueue }),
+	}
+})
 
 vi.mock('../../../utils/logging/WinstonLogger.js', () => ({
-	logger: { info: vi.fn(), error: vi.fn() },
+	logger: {
+		info: vi.fn(),
+		error: vi.fn(),
+		warn: vi.fn(),
+	},
 }))
 
 const { closeQueueWorkers, installShutdownHandlers } = await import(
 	'../shutdown.js'
 )
+const { registerShutdownQueue } = await import('../shutdown.js')
 
 describe('Pluto graceful shutdown', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
 		events.length = 0
+		registerShutdownQueue('channel-creation', {
+			close: closeChannelCreationQueue,
+		})
+		registerShutdownQueue('channel-deletion', {
+			close: closeChannelDeletionQueue,
+		})
+		registerShutdownQueue('match-refresh', {
+			close: closeMatchRefreshQueue,
+		})
 	})
 
 	afterEach(() => {
@@ -38,6 +66,9 @@ describe('Pluto graceful shutdown', () => {
 	it('closes every queue worker with the shutdown bound', async () => {
 		await closeQueueWorkers()
 
+		expect(queueModuleImports.creation).not.toHaveBeenCalled()
+		expect(queueModuleImports.deletion).not.toHaveBeenCalled()
+		expect(queueModuleImports.matchRefresh).not.toHaveBeenCalled()
 		expect(closeChannelCreationQueue).toHaveBeenCalledWith(30_000)
 		expect(closeChannelDeletionQueue).toHaveBeenCalledWith(30_000)
 		expect(closeMatchRefreshQueue).toHaveBeenCalledWith(30_000)
@@ -46,7 +77,7 @@ describe('Pluto graceful shutdown', () => {
 	it('drains once when SIGTERM and SIGINT arrive together', async () => {
 		const handlers = new Map<string, () => void>()
 		const processLike = {
-			once: vi.fn((signal: string, handler: () => void) => {
+			on: vi.fn((signal: string, handler: () => void) => {
 				handlers.set(signal, handler)
 			}),
 			removeListener: vi.fn(),
@@ -87,7 +118,7 @@ describe('Pluto graceful shutdown', () => {
 		installShutdownHandlers({
 			client,
 			processLike: {
-				once: vi.fn((signal: string, handler: () => void) => {
+				on: vi.fn((signal: string, handler: () => void) => {
 					handlers.set(signal, handler)
 				}),
 				removeListener: vi.fn(),
@@ -119,7 +150,7 @@ describe('Pluto graceful shutdown', () => {
 			client,
 			closeQueues,
 			processLike: {
-				once: vi.fn((signal: string, handler: () => void) => {
+				on: vi.fn((signal: string, handler: () => void) => {
 					handlers.set(signal, handler)
 				}),
 				removeListener: vi.fn(),
@@ -129,6 +160,29 @@ describe('Pluto graceful shutdown', () => {
 
 		handlers.get('SIGTERM')?.()
 		await vi.waitFor(() => expect(exitProcess).toHaveBeenCalledWith(1))
+	})
+
+	it('exits non-zero when a queue is force-closed', async () => {
+		const client = { destroy: vi.fn() }
+		const exitProcess = vi.fn()
+		const closeQueues = vi.fn(async () => true)
+		const handlers = new Map<string, () => void>()
+
+		installShutdownHandlers({
+			client,
+			closeQueues,
+			processLike: {
+				on: vi.fn((signal: string, handler: () => void) => {
+					handlers.set(signal, handler)
+				}),
+				removeListener: vi.fn(),
+			},
+			exitProcess,
+		})
+
+		handlers.get('SIGTERM')?.()
+		await vi.waitFor(() => expect(exitProcess).toHaveBeenCalledWith(1))
+		expect(client.destroy).toHaveBeenCalledOnce()
 	})
 
 	it('arms a hard deadline when queue shutdown hangs', async () => {
@@ -143,7 +197,7 @@ describe('Pluto graceful shutdown', () => {
 			closeQueues,
 			queueShutdownTimeoutMs: 10,
 			processLike: {
-				once: vi.fn((signal: string, handler: () => void) => {
+				on: vi.fn((signal: string, handler: () => void) => {
 					handlers.set(signal, handler)
 				}),
 				removeListener: vi.fn(),

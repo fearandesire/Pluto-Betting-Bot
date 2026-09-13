@@ -1,6 +1,7 @@
 import type { ChannelCreationEvent } from '@pluto-khronos/types'
 import { channelCreationEventSchema } from '@pluto-khronos/types'
 import { type Job, Queue, QueueEvents, Worker } from 'bullmq'
+import { registerShutdownQueue } from '../../../lib/startup/shutdown.js'
 import { ChannelCreationBusyError } from '../../guilds/channels/ChannelCreationWorkflow.js'
 import ChannelManager from '../../guilds/channels/ChannelManager.js'
 import { logger } from '../../logging/WinstonLogger.js'
@@ -66,6 +67,7 @@ export class ChannelCreationQueue {
 
 		this.setupWorkerEvents()
 		this.setupQueueEvents()
+		registerShutdownQueue('channel-creation', this)
 
 		logger.info({
 			message: 'Channel creation BullMQ initialized',
@@ -274,7 +276,7 @@ export class ChannelCreationQueue {
 
 	public async close(
 		drainTimeoutMs = ChannelCreationQueue.DEFAULT_DRAIN_TIMEOUT_MS,
-	): Promise<void> {
+	): Promise<boolean> {
 		await this.worker.pause(true)
 		const deadline = Date.now() + drainTimeoutMs
 		let forceClose = false
@@ -298,6 +300,7 @@ export class ChannelCreationQueue {
 		await this.worker.close(forceClose)
 		await this.queueEvents.close()
 		await this.queue.close()
+		return forceClose
 	}
 }
 

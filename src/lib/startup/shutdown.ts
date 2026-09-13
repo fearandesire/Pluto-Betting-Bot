@@ -9,36 +9,52 @@ interface ShutdownClient {
 }
 
 interface ShutdownProcess {
-	once(signal: ShutdownSignal, listener: () => void): unknown
+	on(signal: ShutdownSignal, listener: () => void): unknown
 	removeListener(signal: ShutdownSignal, listener: () => void): unknown
+}
+
+export interface ShutdownQueue {
+	close(timeoutMs: number): Promise<boolean | void>
+}
+
+const shutdownQueues = new Map<string, ShutdownQueue>()
+
+export function registerShutdownQueue(
+	name: string,
+	queue: ShutdownQueue,
+): () => void {
+	shutdownQueues.set(name, queue)
+	return () => {
+		if (shutdownQueues.get(name) === queue) shutdownQueues.delete(name)
+	}
+}
+
+export function getRegisteredShutdownQueues(): readonly ShutdownQueue[] {
+	return [...shutdownQueues.values()]
 }
 
 export interface InstallShutdownHandlersOptions {
 	client: ShutdownClient
 	processLike?: ShutdownProcess
-	closeQueues?: (timeoutMs: number) => Promise<void>
+	closeQueues?: (timeoutMs: number) => Promise<boolean | void>
 	exitProcess?: (code: number) => never | void
 	queueShutdownTimeoutMs?: number
 }
 
 export async function closeQueueWorkers(
 	timeoutMs = QUEUE_SHUTDOWN_TIMEOUT_MS,
-): Promise<void> {
-	const [
-		{ channelCreationQueue },
-		{ channelDeletionQueue },
-		{ getMatchRefreshQueue },
-	] = await Promise.all([
-		import('../../utils/cache/queue/ChannelCreationQueue.js'),
-		import('../../utils/cache/queue/ChannelDeletionQueue.js'),
-		import('../../utils/cache/queue/match-refresh-queue.js'),
-	])
-
-	await Promise.all([
-		channelCreationQueue.close(timeoutMs),
-		channelDeletionQueue.close(timeoutMs),
-		getMatchRefreshQueue().close(timeoutMs),
-	])
+): Promise<boolean> {
+	const results = await Promise.allSettled(
+		getRegisteredShutdownQueues().map((queue) => queue.close(timeoutMs)),
+	)
+	const failed = results.find(
+		(result): result is PromiseRejectedResult =>
+			result.status === 'rejected',
+	)
+	if (failed) throw failed.reason
+	return results.some(
+		(result) => result.status === 'fulfilled' && result.value === true,
+	)
 }
 
 export function installShutdownHandlers({
@@ -52,6 +68,9 @@ export function installShutdownHandlers({
 
 	const shutdown = (signal: ShutdownSignal): Promise<void> => {
 		if (!shutdownPromise) {
+			let timedOut = false
+			let failed = false
+			let hardExitTimer: ReturnType<typeof setTimeout> | undefined
 			shutdownPromise = (async () => {
 				logger.info({
 					message: `Received ${signal}; shutting down Pluto`,
@@ -59,9 +78,22 @@ export function installShutdownHandlers({
 				})
 
 				try {
-					client.destroy()
-					await closeQueues(queueShutdownTimeoutMs)
+					hardExitTimer = setTimeout(() => {
+						timedOut = true
+						logger.error({
+							message: 'Queue shutdown exceeded hard deadline',
+							source: 'startup:shutdown',
+						})
+						exitProcess(1)
+					}, queueShutdownTimeoutMs + 5_000)
+					hardExitTimer.unref()
+
+					const forceClosed = await closeQueues(
+						queueShutdownTimeoutMs,
+					)
+					if (forceClosed) failed = true
 				} catch (error) {
+					failed = true
 					logger.error({
 						message: 'Graceful shutdown failed',
 						source: 'startup:shutdown',
@@ -73,9 +105,18 @@ export function installShutdownHandlers({
 						},
 					})
 				} finally {
-					exitProcess(0)
+					if (hardExitTimer) clearTimeout(hardExitTimer)
+					if (!timedOut) {
+						client.destroy()
+						exitProcess(failed ? 1 : 0)
+					}
 				}
 			})()
+		} else {
+			logger.warn({
+				message: `Received ${signal} again; shutdown already in progress`,
+				source: 'startup:shutdown',
+			})
 		}
 
 		return shutdownPromise
@@ -88,8 +129,8 @@ export function installShutdownHandlers({
 		void shutdown('SIGINT')
 	}
 
-	processLike.once('SIGTERM', onSigterm)
-	processLike.once('SIGINT', onSigint)
+	processLike.on('SIGTERM', onSigterm)
+	processLike.on('SIGINT', onSigint)
 
 	return () => {
 		processLike.removeListener('SIGTERM', onSigterm)

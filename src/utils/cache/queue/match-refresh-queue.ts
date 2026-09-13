@@ -1,5 +1,6 @@
 import type { MatchDetailDto } from '@pluto-khronos/api-client'
 import { type Job, Queue, Worker } from 'bullmq'
+import { registerShutdownQueue } from '../../../lib/startup/shutdown.js'
 import MatchApiWrapper from '../../api/Khronos/matches/matchApiWrapper.js'
 import { logger } from '../../logging/WinstonLogger.js'
 import { CacheManager } from '../cache-manager.js'
@@ -65,6 +66,7 @@ export class MatchRefreshQueue {
 		)
 
 		this.setupWorkerEvents()
+		registerShutdownQueue(MatchRefreshQueue.QUEUE_NAME, this)
 
 		logger.info({
 			message: 'Match refresh BullMQ initialized',
@@ -207,7 +209,7 @@ export class MatchRefreshQueue {
 
 	public async close(
 		drainTimeoutMs = MatchRefreshQueue.DEFAULT_DRAIN_TIMEOUT_MS,
-	): Promise<void> {
+	): Promise<boolean> {
 		this.isClosing = true
 		await this.worker.pause(true)
 		const deadline = Date.now() + drainTimeoutMs
@@ -231,6 +233,7 @@ export class MatchRefreshQueue {
 
 		await this.worker.close(forceClose)
 		await this.queue.close()
+		return forceClose
 	}
 
 	private async scheduleNext(

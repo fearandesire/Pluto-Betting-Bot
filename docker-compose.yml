@@ -10,6 +10,7 @@ services:
       - redis-net
     restart: always
     container_name: pluto_api
+    stop_grace_period: 45s
     environment:
       - DOPPLER_TOKEN=${PLUTO_DOPPLER_TOKEN}
 

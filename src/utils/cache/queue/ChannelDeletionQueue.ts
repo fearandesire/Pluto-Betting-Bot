@@ -1,4 +1,5 @@
 import { type Job, Queue, Worker } from 'bullmq'
+import { registerShutdownQueue } from '../../../lib/startup/shutdown.js'
 import ChannelManager from '../../guilds/channels/ChannelManager.js'
 import { logger } from '../../logging/WinstonLogger.js'
 import { REDIS_CONFIG } from '../data/config.js'
@@ -49,6 +50,7 @@ export class ChannelDeletionQueue {
 		)
 
 		this.setupWorkerEvents()
+		registerShutdownQueue('channel-deletion', this)
 
 		logger.info({
 			message: 'Channel deletion BullMQ initialized',
@@ -144,7 +146,7 @@ export class ChannelDeletionQueue {
 
 	public async close(
 		drainTimeoutMs = ChannelDeletionQueue.DEFAULT_DRAIN_TIMEOUT_MS,
-	): Promise<void> {
+	): Promise<boolean> {
 		await this.worker.pause(true)
 		const deadline = Date.now() + drainTimeoutMs
 		let forceClose = false
@@ -167,6 +169,7 @@ export class ChannelDeletionQueue {
 
 		await this.worker.close(forceClose)
 		await this.queue.close()
+		return forceClose
 	}
 }
 
