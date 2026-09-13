@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs'
+
+import { parse as parseDotenv } from 'dotenv'
 import { describe, expect, it, vi } from 'vitest'
 
 const requiredEnv = {
@@ -65,5 +68,81 @@ describe('Pluto system startup env gate', () => {
 				TOKEN: undefined,
 			}),
 		).toThrow(/TOKEN is required/)
+	})
+
+	it('uses API_PORT when it is configured', () => {
+		const env = parseStartupEnv({
+			...requiredEnv,
+			API_PORT: '3010',
+		})
+
+		expect(env.API_PORT).toBe(3010)
+	})
+
+	it('allows mock startup without observability or Patreon configuration', () => {
+		const exampleEnv = parseDotenv(
+			readFileSync(new URL('../../../../.env.example', import.meta.url)),
+		)
+		const env = parseStartupEnv(exampleEnv)
+
+		expect(env.USE_MOCK_DATA).toBe(true)
+		expect(env.PATREON_API_URL).toBeUndefined()
+		expect(env.AXIOM_DATASET).toBeUndefined()
+		expect(env.AXIOM_API_TOKEN).toBeUndefined()
+		expect(env.AXIOM_ORG_ID).toBeUndefined()
+	})
+
+	it('requires Patreon and Axiom configuration outside mock mode', () => {
+		expect(() =>
+			parseStartupEnv({
+				...requiredEnv,
+				NODE_ENV: 'production',
+				PATREON_API_URL: undefined,
+			}),
+		).toThrow(/PATREON_API_URL/)
+
+		expect(() =>
+			parseStartupEnv({
+				...requiredEnv,
+				NODE_ENV: 'production',
+				AXIOM_API_TOKEN: undefined,
+			}),
+		).toThrow(/AXIOM_API_TOKEN/)
+	})
+
+	it('does not treat uppercase TRUE as mock mode', () => {
+		const uppercaseMockEnv = {
+			...requiredEnv,
+			USE_MOCK_DATA: 'TRUE',
+			PATREON_API_URL: undefined,
+			AXIOM_DATASET: undefined,
+			AXIOM_API_TOKEN: undefined,
+			AXIOM_ORG_ID: undefined,
+		}
+
+		expect(() => parseStartupEnv(uppercaseMockEnv)).toThrow(
+			/PATREON_API_URL/,
+		)
+		expect(() => parseStartupEnv(uppercaseMockEnv)).toThrow(/AXIOM_DATASET/)
+		expect(() => parseStartupEnv(uppercaseMockEnv)).toThrow(
+			/AXIOM_API_TOKEN/,
+		)
+		expect(() => parseStartupEnv(uppercaseMockEnv)).toThrow(/AXIOM_ORG_ID/)
+	})
+
+	it('requires each Axiom identifier outside mock mode', () => {
+		expect(() =>
+			parseStartupEnv({
+				...requiredEnv,
+				AXIOM_DATASET: undefined,
+			}),
+		).toThrow(/AXIOM_DATASET/)
+
+		expect(() =>
+			parseStartupEnv({
+				...requiredEnv,
+				AXIOM_ORG_ID: undefined,
+			}),
+		).toThrow(/AXIOM_ORG_ID/)
 	})
 })
