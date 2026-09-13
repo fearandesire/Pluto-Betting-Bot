@@ -51,6 +51,15 @@ class DiscordDeliveryDispatcher implements DeliveryDispatcher {
 			)
 		}
 
+		if (envelope.kind === 'h2h_result') {
+			if (destinationId !== `dm:${envelope.payload.user_id}`)
+				throw new Error(`Invalid H2H destination ${destinationId}`)
+			return (await this.getService()).deliverH2hResult(
+				envelope.payload,
+				envelope.delivery_id,
+			)
+		}
+
 		if (envelope.kind === 'prop_post') {
 			const destination = parsePropPostDestination(destinationId)
 			const prop = envelope.payload.props.find(
@@ -116,6 +125,16 @@ export class SystemDiscordDeliveryDispatcher implements DeliveryDispatcher {
 		if (envelope.kind === 'parlay_result') {
 			if (!destinationId.startsWith('dm:'))
 				throw new Error(`Invalid parlay destination ${destinationId}`)
+			return sendToFakeDiscord(
+				`/users/${encodeURIComponent(envelope.payload.user_id)}/messages`,
+				'POST',
+				{ destination_id: destinationId, envelope },
+			)
+		}
+
+		if (envelope.kind === 'h2h_result') {
+			if (destinationId !== `dm:${envelope.payload.user_id}`)
+				throw new Error(`Invalid H2H destination ${destinationId}`)
 			return sendToFakeDiscord(
 				`/users/${encodeURIComponent(envelope.payload.user_id)}/messages`,
 				'POST',

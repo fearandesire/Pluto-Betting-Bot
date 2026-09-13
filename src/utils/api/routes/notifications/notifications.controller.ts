@@ -34,6 +34,45 @@ async function requireApiKeyAuthentication(ctx: Context, next: Next) {
 
 NotificationRouter.post('/notifications/bets/results', async (ctx) => {
 	const rawPayload = ctx.request.body || {}
+	const envelope = deliveryEnvelopeSchema.safeParse(rawPayload)
+	if (envelope.success && envelope.data.kind === 'h2h_result') {
+		try {
+			const record = await getNotificationDeliveryQueue().accept(
+				envelope.data,
+			)
+			ctx.status = 202
+			ctx.body = { delivery_id: record.delivery_id, status: record.state }
+			return
+		} catch (error) {
+			if (
+				error instanceof Error &&
+				(error as Error & { code?: string }).code ===
+					'DELIVERY_PAYLOAD_MISMATCH'
+			) {
+				ctx.status = 409
+				ctx.body = {
+					success: false,
+					code: 'DELIVERY_PAYLOAD_MISMATCH',
+					error: 'delivery_id is already used for another payload',
+				}
+				return
+			}
+			ctx.status = 503
+			ctx.body = {
+				success: false,
+				error: 'Notification queue unavailable',
+			}
+			return
+		}
+	}
+	if ('delivery_id' in (rawPayload as object)) {
+		ctx.status = 422
+		ctx.body = {
+			success: false,
+			error: 'Invalid delivery envelope. Failed Zod validation.',
+		}
+		return
+	}
 
 	const validatedData = validateNotifyBetUsers(rawPayload)
 
