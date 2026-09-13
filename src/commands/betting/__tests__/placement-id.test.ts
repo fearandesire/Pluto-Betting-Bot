@@ -225,6 +225,33 @@ describe('H2H placement identity', () => {
 		expect(clearUserBet).not.toHaveBeenCalled()
 	})
 
+	it('keeps the confirmation control after a rate-limit response', async () => {
+		const finalize = vi.fn().mockResolvedValue({ statusCode: 429 })
+		const manager = new BetslipManager(
+			{ finalize } as never,
+			{ clearUserBet: vi.fn() } as never,
+		)
+		const editReply = vi.fn()
+		const bet = { userid: 'user-1', placement_id: 'placement-429' }
+
+		await manager.placeBet(
+			{
+				deferred: true,
+				replied: false,
+				editReply,
+				followUp: vi.fn(),
+				user: { displayAvatarURL: () => 'avatar' },
+			} as never,
+			bet as never,
+			{} as never,
+		)
+
+		expect(editReply).toHaveBeenCalledWith(
+			expect.not.objectContaining({ components: [] }),
+		)
+		expect(finalize).toHaveBeenCalledWith({ placeBetDto: bet })
+	})
+
 	it('removes the confirmation control for definitive business failures', async () => {
 		const manager = new BetslipManager(
 			{
