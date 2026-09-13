@@ -70,8 +70,8 @@ export class ButtonHandler extends InteractionHandler {
 						interaction.user.id,
 					)
 					if (
-						!interaction.guildId ||
-						!cachedBet ||
+						cachedBet &&
+						interaction.guildId &&
 						cachedBet.guild_id !== interaction.guildId
 					) {
 						throw new Error(

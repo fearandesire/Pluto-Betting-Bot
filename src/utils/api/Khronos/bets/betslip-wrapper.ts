@@ -59,13 +59,22 @@ export default class BetslipWrapper {
 		const { guildId, ...request } = payload as CancelBetslipRequest & {
 			guildId?: string
 		}
-		return await this.betslipApi.cancelBetslip({
-			...request,
-			patreonDataDto: {
-				...request.patreonDataDto,
-				guild_id: guildId,
-			},
-		} as CancelBetslipRequest)
+		return await this.betslipApi.cancelBetslip(
+			{
+				...request,
+				patreonDataDto: {
+					...request.patreonDataDto,
+					guild_id: guildId,
+				},
+			} as CancelBetslipRequest,
+			async ({ init }) => ({
+				...init,
+				body: JSON.stringify({
+					...JSON.parse(String(init.body)),
+					guild_id: guildId,
+				}),
+			}),
+		)
 	}
 
 	async activeBetsForUser(
