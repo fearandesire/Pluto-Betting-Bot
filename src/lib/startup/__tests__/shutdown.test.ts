@@ -102,7 +102,12 @@ describe('Pluto graceful shutdown', () => {
 	})
 
 	it('destroys the client only after every queue has closed', async () => {
+		let resolveChannelCreation!: () => void
+		const channelCreationClosed = new Promise<void>((resolve) => {
+			resolveChannelCreation = resolve
+		})
 		closeChannelCreationQueue.mockImplementationOnce(async () => {
+			await channelCreationClosed
 			events.push('channel creation closed')
 		})
 		closeChannelDeletionQueue.mockImplementationOnce(async () => {
@@ -127,6 +132,10 @@ describe('Pluto graceful shutdown', () => {
 		})
 
 		handlers.get('SIGTERM')?.()
+		await Promise.resolve()
+		expect(client.destroy).not.toHaveBeenCalled()
+
+		resolveChannelCreation()
 		await vi.waitFor(() => expect(exitProcess).toHaveBeenCalledWith(0))
 
 		expect(events).toEqual([
