@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.10.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.9.0...v4.10.0) (2026-09-13)
+
+
+### Features
+
+* support mock-mode local setup ([#612](https://github.com/fearandesire/Pluto-Betting-Bot/issues/612)) ([fd2ffeb](https://github.com/fearandesire/Pluto-Betting-Bot/commit/fd2ffeb324b5cbbb55103355f9ebdf22986973ff))
+
 ## [4.9.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.8.1...v4.9.0) (2026-09-13)
 
 
