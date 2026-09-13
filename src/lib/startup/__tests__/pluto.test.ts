@@ -118,6 +118,7 @@ describe('Pluto startup orchestration', () => {
 		})
 		const installShutdownHandlers = vi.fn(() => {
 			events.push('shutdown handlers installed')
+			return () => undefined
 		})
 
 		await startPluto({

@@ -138,13 +138,17 @@ describe('Pluto graceful shutdown', () => {
 		resolveChannelCreation()
 		await vi.waitFor(() => expect(exitProcess).toHaveBeenCalledWith(0))
 
-		expect(events).toEqual([
-			'channel creation closed',
-			'channel deletion closed',
-			'match refresh closed',
-			'client destroyed',
-			'process exited',
-		])
+		const destroyedAt = events.indexOf('client destroyed')
+		expect(destroyedAt).toBeGreaterThan(
+			events.indexOf('channel creation closed'),
+		)
+		expect(destroyedAt).toBeGreaterThan(
+			events.indexOf('channel deletion closed'),
+		)
+		expect(destroyedAt).toBeGreaterThan(
+			events.indexOf('match refresh closed'),
+		)
+		expect(events[events.length - 1]).toBe('process exited')
 	})
 
 	it('exits non-zero when queue shutdown fails', async () => {

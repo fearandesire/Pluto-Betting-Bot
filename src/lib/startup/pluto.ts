@@ -83,9 +83,10 @@ export async function startPluto({
 	exitProcess = process.exit,
 }: StartPlutoOptions): Promise<void> {
 	try {
+		setupShutdownHandlers({ client, exitProcess })
+
 		if (isSystemStartupMode(startupEnv)) {
 			await initializeSystemServices()
-			setupShutdownHandlers({ client })
 			logger.info({
 				message:
 					'Pluto system mode is up without Discord gateway login',
@@ -96,7 +97,6 @@ export async function startPluto({
 
 		await initializeServices()
 		await client.login(startupEnv.TOKEN)
-		setupShutdownHandlers({ client })
 		logger.info('Pluto is up and running!')
 	} catch (error) {
 		logger.error({
