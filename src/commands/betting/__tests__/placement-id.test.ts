@@ -285,6 +285,12 @@ describe('H2H placement identity', () => {
 		await manager.placeBet(interaction as never, bet, {} as never)
 		await manager.placeBet(interaction as never, bet, {} as never)
 
+		expect(finalize.mock.calls[0]?.[0].placeBetDto.placement_id).toBe(
+			'placement-1',
+		)
+		expect(finalize.mock.calls[1]?.[0].placeBetDto.placement_id).toBe(
+			'placement-1',
+		)
 		expect(clearUserBet).toHaveBeenCalledTimes(1)
 	})
 })
