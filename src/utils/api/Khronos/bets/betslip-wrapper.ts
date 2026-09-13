@@ -46,10 +46,10 @@ export default class BetslipWrapper {
 			payload,
 			async ({ init }) => ({
 				...init,
-				body: JSON.stringify({
-					...JSON.parse(String(init.body)),
+				body: {
+					...((init.body ?? {}) as Record<string, unknown>),
 					placement_id: placementId,
-				}),
+				} as unknown as BodyInit,
 			}),
 		)
 	}

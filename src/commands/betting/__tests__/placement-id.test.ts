@@ -172,24 +172,44 @@ describe('H2H placement identity', () => {
 
 	it('forwards placement_id in the generated request body', async () => {
 		const wrapper = new BetslipWrapper()
-		const placeBetslip = vi.fn(async (payload, transform) => {
-			const transformed = await transform({
-				init: { body: JSON.stringify(payload.placeBetDto) },
-			})
-			return JSON.parse(String(transformed.body))
-		})
-		;(wrapper as never as { betslipApi: unknown }).betslipApi = {
-			placeBetslip,
-		}
+		const fetchApi = vi.fn(
+			async (_input: RequestInfo | URL, _init?: RequestInit) =>
+				new Response('{}', {
+					status: 200,
+					headers: { 'content-type': 'application/json' },
+				}),
+		)
+		;(wrapper as never as { betslipApi: BetslipsApi }).betslipApi =
+			new BetslipsApi(
+				new Configuration({
+					basePath: 'http://localhost',
+					fetchApi,
+				}),
+			)
 
-		const response = await wrapper.finalize({
+		await wrapper.finalize({
 			placeBetDto: {
+				userid: 'user-1',
+				team: 'Lakers',
+				amount: 80,
+				guild_id: 'guild-1',
+				market_key: 'h2h',
+				matchup_id: 'matchup-1',
+				event_id: 'event-1',
 				placement_id: '00000000-0000-4000-8000-000000000012',
 			} as never,
 		})
 
-		expect(placeBetslip).toHaveBeenCalled()
-		expect(response).toMatchObject({
+		expect(fetchApi).toHaveBeenCalledTimes(1)
+		const requestInit = fetchApi.mock.calls[0]?.[1]
+		expect(JSON.parse(String(requestInit?.body))).toEqual({
+			userid: 'user-1',
+			team: 'Lakers',
+			amount: 80,
+			guild_id: 'guild-1',
+			market_key: 'h2h',
+			matchup_id: 'matchup-1',
+			event_id: 'event-1',
 			placement_id: '00000000-0000-4000-8000-000000000012',
 		})
 	})
