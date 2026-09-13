@@ -172,19 +172,14 @@ describeWithRedis('channel creation lease shutdown', () => {
 		const store = new RedisChannelReservationStore(storeRedis, {
 			leaseSeconds: 300,
 		})
-		let resolveLookup!: (channel: { id: string } | null) => void
-		const findByMarker = vi
-			.fn()
-			.mockImplementationOnce(
-				() =>
-					new Promise<{ id: string } | null>((resolve) => {
-						resolveLookup = resolve
-					}),
-			)
-			.mockResolvedValue(null)
-		const release = vi
-			.fn()
-			.mockRejectedValue(new Error('redis unavailable'))
+		const findByMarker = vi.fn().mockResolvedValue(null)
+		let rejectRelease!: (error: Error) => void
+		const release = vi.fn(
+			() =>
+				new Promise<boolean>((_, reject) => {
+					rejectRelease = reject
+				}),
+		)
 		const workflow = new ChannelCreationWorkflow(
 			workflowPorts(reservationsWithRelease(store, release), {
 				findByMarker,
@@ -193,7 +188,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 		)
 		const run = workflow.run(intent)
 		await waitForReservation(redis, intent)
-		await vi.waitFor(() => expect(findByMarker).toHaveBeenCalledOnce())
+		await vi.waitFor(() => expect(release).toHaveBeenCalledOnce())
 		const close = closeQueueWorkers(30_000)
 
 		await vi.advanceTimersByTimeAsync(1_500)
@@ -205,7 +200,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 			channelKey: intent.marker,
 		})
 
-		resolveLookup(null)
+		rejectRelease(new Error('redis unavailable'))
 		await expect(run).rejects.toThrow('create failed')
 		await redis.del(keyFor(intent))
 	})
@@ -243,7 +238,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 		})
 		await expect(close).resolves.not.toThrow()
 		expect(warn).toHaveBeenCalledWith({
-			message: 'waited for in-flight creation',
+			message: 'in-flight creation exceeded shutdown budget',
 			channelKey: intent.marker,
 		})
 		await redis.del(keyFor(intent))
@@ -286,7 +281,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 		})
 		await expect(close).resolves.not.toThrow()
 		expect(warn).toHaveBeenCalledWith({
-			message: 'waited for in-flight creation',
+			message: 'in-flight creation exceeded shutdown budget',
 			channelKey: intent.marker,
 		})
 		await redis.del(keyFor(intent))
@@ -298,17 +293,14 @@ describeWithRedis('channel creation lease shutdown', () => {
 		const store = new RedisChannelReservationStore(storeRedis, {
 			leaseSeconds: 300,
 		})
-		let resolveLookup!: (channel: { id: string } | null) => void
-		const findByMarker = vi
-			.fn()
-			.mockImplementationOnce(
-				() =>
-					new Promise<{ id: string } | null>((resolve) => {
-						resolveLookup = resolve
-					}),
-			)
-			.mockResolvedValue(null)
-		const release = vi.fn(() => new Promise<boolean>(() => undefined))
+		const findByMarker = vi.fn().mockResolvedValue(null)
+		let rejectRelease!: (error: Error) => void
+		const release = vi.fn(
+			() =>
+				new Promise<boolean>((_, reject) => {
+					rejectRelease = reject
+				}),
+		)
 		const workflow = new ChannelCreationWorkflow(
 			workflowPorts(reservationsWithRelease(store, release), {
 				findByMarker,
@@ -317,7 +309,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 		)
 		const run = workflow.run(intent)
 		await waitForReservation(redis, intent)
-		await vi.waitFor(() => expect(findByMarker).toHaveBeenCalledOnce())
+		await vi.waitFor(() => expect(release).toHaveBeenCalledOnce())
 		const close = closeQueueWorkers(30_000)
 
 		await vi.advanceTimersByTimeAsync(2_000)
@@ -328,7 +320,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 			channelKey: intent.marker,
 		})
 
-		resolveLookup(null)
+		rejectRelease(new Error('redis unavailable'))
 		await expect(run).rejects.toThrow('create failed')
 		await redis.del(keyFor(intent))
 	})
