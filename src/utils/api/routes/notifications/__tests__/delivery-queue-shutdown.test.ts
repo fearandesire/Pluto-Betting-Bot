@@ -57,7 +57,7 @@ vi.mock('../../../../logging/WinstonLogger.js', () => ({
 	logger: { error: vi.fn() },
 }))
 
-vi.mock('../../../../../lib/startup/shutdown.js', () => ({
+vi.mock('../../../../../lib/startup/shutdown-registry.js', () => ({
 	registerShutdownQueue,
 }))
 

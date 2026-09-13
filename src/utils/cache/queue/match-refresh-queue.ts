@@ -1,6 +1,6 @@
 import type { MatchDetailDto } from '@pluto-khronos/api-client'
 import { type Job, Queue, Worker } from 'bullmq'
-import { registerShutdownQueue } from '../../../lib/startup/shutdown.js'
+import { registerShutdownQueue } from '../../../lib/startup/shutdown-registry.js'
 import MatchApiWrapper from '../../api/Khronos/matches/matchApiWrapper.js'
 import { logger } from '../../logging/WinstonLogger.js'
 import { CacheManager } from '../cache-manager.js'

@@ -1,7 +1,7 @@
 import type { ChannelCreationEvent } from '@pluto-khronos/types'
 import { channelCreationEventSchema } from '@pluto-khronos/types'
 import { type Job, Queue, QueueEvents, Worker } from 'bullmq'
-import { registerShutdownQueue } from '../../../lib/startup/shutdown.js'
+import { registerShutdownQueue } from '../../../lib/startup/shutdown-registry.js'
 import { ChannelCreationBusyError } from '../../guilds/channels/ChannelCreationWorkflow.js'
 import ChannelManager from '../../guilds/channels/ChannelManager.js'
 import { logger } from '../../logging/WinstonLogger.js'

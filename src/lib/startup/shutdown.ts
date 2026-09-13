@@ -1,4 +1,13 @@
 import { logger } from '../../utils/logging/WinstonLogger.js'
+import {
+	getRegisteredShutdownQueues,
+	registerShutdownQueue,
+} from './shutdown-registry.js'
+
+export {
+	getRegisteredShutdownQueues,
+	registerShutdownQueue,
+} from './shutdown-registry.js'
 
 export const QUEUE_SHUTDOWN_TIMEOUT_MS = 30_000
 
@@ -11,26 +20,6 @@ interface ShutdownClient {
 interface ShutdownProcess {
 	on(signal: ShutdownSignal, listener: () => void): unknown
 	removeListener(signal: ShutdownSignal, listener: () => void): unknown
-}
-
-export interface ShutdownQueue {
-	close(timeoutMs: number): Promise<boolean | void>
-}
-
-const shutdownQueues = new Map<string, ShutdownQueue>()
-
-export function registerShutdownQueue(
-	name: string,
-	queue: ShutdownQueue,
-): () => void {
-	shutdownQueues.set(name, queue)
-	return () => {
-		if (shutdownQueues.get(name) === queue) shutdownQueues.delete(name)
-	}
-}
-
-export function getRegisteredShutdownQueues(): readonly ShutdownQueue[] {
-	return [...shutdownQueues.values()]
 }
 
 export interface InstallShutdownHandlersOptions {

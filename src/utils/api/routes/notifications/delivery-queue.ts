@@ -1,5 +1,5 @@
 import { type Job, Queue, Worker } from 'bullmq'
-import { registerShutdownQueue } from '../../../../lib/startup/shutdown.js'
+import { registerShutdownQueue } from '../../../../lib/startup/shutdown-registry.js'
 import {
 	type AlertReporter,
 	getDefaultAlertReporter,
