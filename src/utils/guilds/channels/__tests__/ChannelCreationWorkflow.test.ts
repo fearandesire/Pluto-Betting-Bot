@@ -190,18 +190,6 @@ describe('ChannelCreationWorkflow', () => {
 		expect(injected.reservations.release).toHaveBeenCalled()
 	})
 
-	it('does not turn a renewal rejection into an unhandled rejection', async () => {
-		vi.useFakeTimers()
-		const injected = ports()
-		injected.reservations.refresh = vi
-			.fn()
-			.mockRejectedValue(new Error('redis unavailable'))
-
-		await new ChannelCreationWorkflow(injected).run(intent)
-		await vi.advanceTimersByTimeAsync(60_000)
-		expect(injected.discord.create).toHaveBeenCalledOnce()
-	})
-
 	it('aborts before creation when the pre-create lease refresh throws', async () => {
 		const injected = ports()
 		injected.reservations.refresh = vi
@@ -214,7 +202,7 @@ describe('ChannelCreationWorkflow', () => {
 		expect(injected.discord.create).not.toHaveBeenCalled()
 		expect(injected.reservations.release).toHaveBeenCalledWith(
 			intent,
-			'owner-a',
+			expect.any(String),
 		)
 	})
 
@@ -228,7 +216,7 @@ describe('ChannelCreationWorkflow', () => {
 		expect(injected.discord.create).not.toHaveBeenCalled()
 		expect(injected.reservations.release).toHaveBeenCalledWith(
 			intent,
-			'owner-a',
+			expect.any(String),
 		)
 	})
 

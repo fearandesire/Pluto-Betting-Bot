@@ -39,6 +39,15 @@ export class ChannelCreationBusyError extends Error {
 	}
 }
 
+export class LeaseLostError extends Error {
+	readonly code = 'CHANNEL_CREATION_LEASE_LOST'
+
+	constructor() {
+		super('Channel creation lease was lost')
+		this.name = 'LeaseLostError'
+	}
+}
+
 export class ChannelCreationWorkflow {
 	constructor(private readonly ports: ChannelCreationPorts) {}
 
@@ -76,13 +85,13 @@ export class ChannelCreationWorkflow {
 		})
 		try {
 			const existing = await this.ports.discord.findByMarker(intent)
-			if (leaseLost) throw new Error('Channel creation lease was lost')
+			if (leaseLost) throw new LeaseLostError()
 			if (existing) {
 				await this.recordIfOwned(intent, owner, existing.id)
 				return { state: 'reconciled', channelId: existing.id }
 			}
 
-			if (leaseLost) throw new Error('Channel creation lease was lost')
+			if (leaseLost) throw new LeaseLostError()
 			if (this.ports.reservations.refresh) {
 				try {
 					const renewed = await this.ports.reservations.refresh(
@@ -91,15 +100,13 @@ export class ChannelCreationWorkflow {
 					)
 					if (!renewed) {
 						leaseLost = true
-						throw new Error('Channel creation lease was lost')
+						throw new LeaseLostError()
 					}
 				} catch (error) {
-					if (
-						error instanceof Error &&
-						error.message.includes('lease')
-					)
-						throw error
+					if (error instanceof LeaseLostError) throw error
+					leaseLost = true
 					logLeaseError('verification', error)
+					throw new LeaseLostError()
 				}
 			}
 			created = await this.ports.discord.create(intent)
@@ -157,7 +164,10 @@ export class ChannelCreationWorkflow {
 				.then((renewed) => {
 					if (!renewed) onLeaseLost?.()
 				})
-				.catch((error) => logLeaseError('renewal', error))
+				.catch((error) => {
+					onLeaseLost?.()
+					logLeaseError('renewal', error)
+				})
 		}, 60_000)
 		return () => clearInterval(timer)
 	}

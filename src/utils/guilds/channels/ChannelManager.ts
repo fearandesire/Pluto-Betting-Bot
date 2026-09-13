@@ -38,6 +38,7 @@ import {
 	ChannelCreationWorkflow,
 	type CreatedChannel,
 } from './ChannelCreationWorkflow.js'
+import { findExistingGameChannel } from './channel-reconciliation.js'
 import { buildRecordsStr } from './matchEmbedUtils.js'
 
 /**
@@ -98,6 +99,7 @@ export default class ChannelManager {
 							guild.guildId,
 							intent,
 							knownChannelId,
+							guild.gameCategoryId,
 						),
 					completeExisting: (_intent, channelId) =>
 						this.completeExistingChannel(channel, guild, channelId),
@@ -131,6 +133,7 @@ export default class ChannelManager {
 		guildId: string,
 		intent: ChannelIntent,
 		knownChannelId?: string,
+		gameCategoryId: string,
 	): Promise<{ id: string } | null> {
 		const guild = SapDiscClient.guilds.cache.get(guildId)
 		if (!guild) return null
@@ -142,21 +145,20 @@ export default class ChannelManager {
 			return { id: knownChannel.id }
 		}
 
-		const fetchedChannels = await guild.channels.fetch().catch(() => null)
-		const channels = fetchedChannels ?? guild.channels.cache
-		const found = channels.find(
-			(candidate) =>
-				candidate.type === ChannelType.GuildText &&
-				candidate.topic === intent.marker,
+		const channels =
+			guild.channels.cache.size > 0
+				? guild.channels.cache
+				: ((await guild.channels.fetch().catch(() => null)) ??
+					guild.channels.cache)
+		const textChannels = channels.filter(
+			(candidate) => candidate.type === ChannelType.GuildText,
 		)
-		if (found) return { id: found.id }
-		const legacy = channels.find(
-			(candidate) =>
-				candidate.type === ChannelType.GuildText &&
-				candidate.name.toLowerCase() ===
-					intent.channelName.toLowerCase(),
+		const found = findExistingGameChannel(
+			textChannels.values(),
+			intent,
+			gameCategoryId,
 		)
-		return legacy ? { id: legacy.id } : null
+		return found ? { id: found.id } : null
 	}
 
 	private async createReservedChannel(
