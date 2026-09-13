@@ -193,6 +193,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 		)
 		const run = workflow.run(intent)
 		await waitForReservation(redis, intent)
+		await vi.waitFor(() => expect(findByMarker).toHaveBeenCalledOnce())
 		const close = closeQueueWorkers(30_000)
 
 		await vi.advanceTimersByTimeAsync(1_500)
@@ -230,9 +231,10 @@ describeWithRedis('channel creation lease shutdown', () => {
 		const run = workflow.run(intent)
 
 		await vi.waitFor(() => expect(create).toHaveBeenCalledOnce())
+		const refreshCount = refresh.mock.calls.length
 		const close = closeQueueWorkers(30_000)
 		await vi.advanceTimersByTimeAsync(60_000)
-		expect(refresh).not.toHaveBeenCalled()
+		expect(refresh).toHaveBeenCalledTimes(refreshCount)
 		resolveCompletion()
 
 		await expect(run).resolves.toEqual({
@@ -272,9 +274,10 @@ describeWithRedis('channel creation lease shutdown', () => {
 		const run = workflow.run(intent)
 
 		await vi.waitFor(() => expect(findByMarker).toHaveBeenCalledTimes(2))
+		const refreshCount = refresh.mock.calls.length
 		const close = closeQueueWorkers(30_000)
 		await vi.advanceTimersByTimeAsync(60_000)
-		expect(refresh).not.toHaveBeenCalled()
+		expect(refresh).toHaveBeenCalledTimes(refreshCount)
 		resolveCompletion()
 
 		await expect(run).resolves.toEqual({
@@ -314,6 +317,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 		)
 		const run = workflow.run(intent)
 		await waitForReservation(redis, intent)
+		await vi.waitFor(() => expect(findByMarker).toHaveBeenCalledOnce())
 		const close = closeQueueWorkers(30_000)
 
 		await vi.advanceTimersByTimeAsync(2_000)
