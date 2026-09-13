@@ -16,6 +16,7 @@ import {
 import {
 	type ChannelCreationPorts,
 	ChannelCreationWorkflow,
+	LeaseLostError,
 } from '../ChannelCreationWorkflow.js'
 
 const redisUrl = process.env.PLUTO_TEST_REDIS_URL
@@ -96,7 +97,9 @@ describeWithRedis('channel creation lease shutdown', () => {
 			}),
 		)
 
-		await expect(workflow.run(intent)).rejects.toThrow('create failed')
+		await expect(workflow.run(intent)).rejects.toThrow(
+			'transient release failure',
+		)
 		await closeQueueWorkers(30_000)
 
 		expect(await store.reserve(intent, 'retry-owner')).toEqual({
@@ -131,7 +134,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 			300,
 		)
 
-		await expect(run).rejects.toThrow('create failed')
+		await expect(run).rejects.toBeInstanceOf(LeaseLostError)
 		await closeQueueWorkers(30_000)
 
 		expect(release).toHaveBeenCalledTimes(2)
