@@ -352,26 +352,41 @@ describe('H2H placement identity', () => {
 
 	it('serializes the guild scope into the Khronos cancellation body', async () => {
 		const wrapper = new BetslipWrapper()
-		const cancelBetslip = vi.fn().mockResolvedValue({})
+		type RequestTransform = (context: {
+			init: { body: string }
+		}) => Promise<{ body: string }>
+		const cancelBetslip = vi.fn(
+			async (_request: unknown, transform: RequestTransform) =>
+				transform({
+					init: { body: JSON.stringify({ patreonOverride: false }) },
+				}),
+		)
 		;(wrapper as never as { betslipApi: unknown }).betslipApi = {
 			cancelBetslip,
 		}
 
-		await wrapper.cancel({
+		const serialized = (await wrapper.cancel({
 			userId: 'user-1',
 			betId: 42,
 			guildId: 'guild-1',
 			patreonDataDto: { patreonOverride: false },
+		})) as unknown as { body: string }
+		expect(JSON.parse(serialized.body)).toEqual({
+			patreonOverride: false,
+			guild_id: 'guild-1',
 		})
 
-		expect(cancelBetslip).toHaveBeenCalledWith({
-			userId: 'user-1',
-			betId: 42,
-			patreonDataDto: {
-				patreonOverride: false,
-				guild_id: 'guild-1',
+		expect(cancelBetslip).toHaveBeenCalledWith(
+			{
+				userId: 'user-1',
+				betId: 42,
+				patreonDataDto: {
+					patreonOverride: false,
+					guild_id: 'guild-1',
+				},
 			},
-		})
+			expect.any(Function),
+		)
 	})
 
 	it('clears pending state when the cancellation cache has expired', async () => {
