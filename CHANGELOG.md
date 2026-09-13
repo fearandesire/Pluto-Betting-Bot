@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.8.1](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.8.0...v4.8.1) (2026-09-13)
+
+
+### Bug Fixes
+
+* drain queue workers during shutdown ([#609](https://github.com/fearandesire/Pluto-Betting-Bot/issues/609)) ([80bd6c6](https://github.com/fearandesire/Pluto-Betting-Bot/commit/80bd6c653b5d02c28c8a1c52ea67a17356a30a4c))
+
 ## [4.8.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.7.0...v4.8.0) (2026-09-13)
 
 
