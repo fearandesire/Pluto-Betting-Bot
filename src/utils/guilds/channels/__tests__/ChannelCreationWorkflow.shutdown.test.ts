@@ -445,15 +445,23 @@ describeWithRedis('channel creation lease shutdown', () => {
 				create,
 			}),
 		)
-		const refresh = vi.spyOn(storeRedis, 'refreshIfOwned')
+		const originalRefresh = storeRedis.refreshIfOwned.bind(storeRedis)
+		let successfulRefreshes = 0
+		vi.spyOn(storeRedis, 'refreshIfOwned').mockImplementation(
+			async (...args) => {
+				const renewed = await originalRefresh(...args)
+				if (renewed) successfulRefreshes += 1
+				return renewed
+			},
+		)
 		const run = workflow.run(intent)
 
 		await waitForReservation(redis, intent)
-		await vi.waitFor(() => expect(refresh).toHaveBeenCalledOnce())
-		await vi.advanceTimersByTimeAsync(4 * 60 * 1_000)
-		await vi.waitFor(() =>
-			expect(refresh.mock.calls.length).toBeGreaterThanOrEqual(5),
-		)
+		await vi.waitFor(() => expect(successfulRefreshes).toBe(1))
+		for (let minute = 0; minute < 4; minute += 1) {
+			await vi.advanceTimersByTimeAsync(60_000)
+			await vi.waitFor(() => expect(successfulRefreshes).toBe(minute + 2))
+		}
 
 		rejectCreate(new Error('create failed'))
 		await expect(run).rejects.toThrow('initial release failed')
