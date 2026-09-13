@@ -107,7 +107,7 @@ describe('public roadmap publisher', () => {
 		expect(markdown).toContain('## Next')
 		expect(markdown).toContain('## Later')
 		expect(markdown).toContain('## Shipped')
-		expect(markdown).not.toMatch(/TF-\d+/i)
+		expect(markdown).not.toMatch(/#\d+/)
 		expect(markdown).not.toMatch(/https?:\/\//i)
 		expect(markdown).not.toMatch(/2026-\d{2}-\d{2}/)
 		expect(markdown).not.toContain('Ada Example')

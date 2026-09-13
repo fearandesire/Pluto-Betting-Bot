@@ -2,8 +2,8 @@
 	"items": [
 		{
 			"publicId": "roadmap-now-001",
-			"title": "Publish the roadmap [TF-9001]",
-			"description": "Assigned to Ada Example. Ship on 2026-09-20. https://private.example/TF-9001",
+			"title": "Publish the roadmap #12345",
+			"description": "Assigned to Ada Example. Ship on 2026-09-20. https://example.invalid/12345",
 			"labels": ["public", "product"],
 			"milestoneId": "11111111-1111-4111-8111-111111111111",
 			"status": "Now",
@@ -28,7 +28,7 @@
 		},
 		{
 			"publicId": "roadmap-shipped-001",
-			"title": "Launch the safe export [TF-9003]",
+			"title": "Launch the safe export #12346",
 			"description": "Completed on 2026-08-20 by Ada Example.",
 			"labels": ["public"],
 			"milestoneId": "11111111-1111-4111-8111-111111111111",
@@ -46,7 +46,7 @@
 		},
 		{
 			"publicId": "roadmap-private-001",
-			"title": "Internal migration [TF-9004]",
+			"title": "Internal migration #12347",
 			"labels": ["internal"],
 			"milestoneId": "11111111-1111-4111-8111-111111111111",
 			"status": "Now"
