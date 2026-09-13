@@ -499,8 +499,12 @@ describeWithRedis('channel creation lease shutdown', () => {
 				}),
 		)
 		let refreshApplied = false
+		let verificationRefreshReady = false
 		const refresh = vi.fn(
 			async (refreshIntent: ChannelIntent, owner: string) => {
+				if (!verificationRefreshReady) {
+					return new Promise<boolean>(() => undefined)
+				}
 				const renewed = await store.refresh(refreshIntent, owner)
 				if (renewed) {
 					refreshApplied = true
@@ -523,14 +527,23 @@ describeWithRedis('channel creation lease shutdown', () => {
 		const run = workflow.run(intent)
 
 		await waitForReservation(redis, intent)
-		vi.setSystemTime(Date.now() + 4 * 60_000)
+		const activeRenewals = (
+			workflow as unknown as {
+				activeRenewals: Map<string, () => void>
+			}
+		).activeRenewals
+		const stopRenewal = [...activeRenewals.values()][0]
+		stopRenewal?.()
+		await vi.advanceTimersByTimeAsync(4 * 60_000)
+		verificationRefreshReady = true
 		resolveLookup(null)
 		await expect(run).rejects.toThrow('Channel creation lease was lost')
 		expect(refreshApplied).toBe(true)
 		expect(await redis.ttl(keyFor(intent))).toBeGreaterThan(0)
 
-		await vi.advanceTimersByTimeAsync(3 * 60_000)
+		await vi.advanceTimersByTimeAsync(90_000)
 		expect(await redis.exists(keyFor(intent))).toBe(1)
+		expect(release).toHaveBeenCalledOnce()
 
 		await closeQueueWorkers(30_000)
 		expect(release).toHaveBeenCalledTimes(2)
@@ -620,32 +633,30 @@ describeWithRedis('channel creation lease shutdown', () => {
 		)
 		let refreshCalls = 0
 		let lateRefreshSettled = false
-		let resolveLateRefresh!: () => void
-		const lateRefresh = new Promise<void>((resolve) => {
-			resolveLateRefresh = resolve
+		let rejectLateRefresh!: (error: Error) => void
+		const lateRefresh = new Promise<never>((_, reject) => {
+			rejectLateRefresh = reject
 		})
 		const refresh = vi.fn(
 			async (refreshIntent: ChannelIntent, owner: string) => {
 				refreshCalls += 1
 				const renewed = await store.refresh(refreshIntent, owner)
 				if (refreshCalls === 2) {
-					await lateRefresh
-					lateRefreshSettled = true
+					try {
+						await lateRefresh
+					} finally {
+						lateRefreshSettled = true
+					}
+					throw new Error('late refresh response lost')
 				}
 				return renewed
 			},
 		)
+		const release = vi.fn(store.release.bind(store))
 		const workflow = new ChannelCreationWorkflow(
-			workflowPorts(
-				reservationsWithRelease(
-					store,
-					store.release.bind(store),
-					refresh,
-				),
-				{
-					create,
-				},
-			),
+			workflowPorts(reservationsWithRelease(store, release, refresh), {
+				create,
+			}),
 		)
 		const run = workflow.run(intent)
 
@@ -673,10 +684,18 @@ describeWithRedis('channel creation lease shutdown', () => {
 			channelId: 'discord-channel-late-refresh',
 		})
 		expect(lease.expiryTimer).toBe(expiryTimer)
+		expect(await redis.get(keyFor(intent))).toBe(
+			JSON.stringify({
+				state: 'created',
+				channelId: 'discord-channel-late-refresh',
+			}),
+		)
 
-		resolveLateRefresh()
+		rejectLateRefresh(new Error('late refresh response lost'))
 		await vi.waitFor(() => expect(lateRefreshSettled).toBe(true))
 		expect(lease.expiryTimer).toBe(expiryTimer)
+		await closeQueueWorkers(30_000)
+		expect(release).not.toHaveBeenCalled()
 		await redis.del(keyFor(intent))
 	})
 
