@@ -4,6 +4,7 @@ import {
 	fromError,
 	isZodErrorLike,
 } from 'zod-validation-error'
+import { toSafeUserError } from '../../../../services/alerts/safe-user-error.js'
 import { logger } from '../../../logging/WinstonLogger.js'
 
 const customMsgBuilder = createMessageBuilder({
@@ -65,25 +66,28 @@ export function createErrorHandler() {
 			}
 
 			if (isHttpError(err)) {
-				ctx.status = err.statusCode || err.status || 500
+				const safeError = toSafeUserError(err, ctx.state.reqId)
+				ctx.status = safeError.status
 				ctx.body = {
 					status: 'error',
-					code:
-						ctx.status === 500
-							? 'INTERNAL_SERVER_ERROR'
-							: 'REQUEST_ERROR',
-					message:
-						err.message ||
-						'An error occurred processing your request',
+					code: safeError.code,
+					message: safeError.message,
+					...(safeError.correlationId
+						? { correlation_id: safeError.correlationId }
+						: {}),
 				}
 				return
 			}
 
-			ctx.status = 500
+			const safeError = toSafeUserError(err, ctx.state.reqId)
+			ctx.status = safeError.status
 			ctx.body = {
 				status: 'error',
-				code: 'UNKNOWN_ERROR',
-				message: 'An unexpected error occurred',
+				code: safeError.code,
+				message: safeError.message,
+				...(safeError.correlationId
+					? { correlation_id: safeError.correlationId }
+					: {}),
 			}
 		}
 	}

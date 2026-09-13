@@ -1,3 +1,4 @@
+import { toSafeUserError } from '../../services/alerts/safe-user-error.js'
 import { configureSystemNotificationDelivery } from '../../utils/api/routes/notifications/delivery-queue.js'
 import { logger } from '../../utils/logging/WinstonLogger.js'
 import env, { isSystemStartupMode, type ParsedStartupEnv } from './env.js'
@@ -18,10 +19,30 @@ export interface StartPlutoOptions {
 	exitProcess?: (code: number) => never | void
 }
 
-async function initializeRedisBackedStartupServices() {
+async function initializeRedisBackedStartupServices(
+	startupEnv: ParsedStartupEnv,
+) {
 	// These modules intentionally start Koa, Redis queues, and cron workers when
 	// loaded, so startup keeps the side-effect imports behind the explicit boot step.
 	await import('./cache.js')
+	const { AlertReporter, setDefaultAlertReporter } = await import(
+		'../../services/alerts/alert-reporter.js'
+	)
+	const { RedisAlertIncidentStore } = await import(
+		'../../services/alerts/redis-alert-incident-store.js'
+	)
+	const { default: redis } = await import(
+		'../../utils/cache/redis-instance.js'
+	)
+	const { logger: alertLogger } = await import(
+		'../../utils/logging/WinstonLogger.js'
+	)
+	setDefaultAlertReporter(
+		new AlertReporter(new RedisAlertIncidentStore(redis), alertLogger, {
+			version: startupEnv.PROJECT_VERSION,
+			environment: startupEnv.NODE_ENV,
+		}),
+	)
 	await import('../../utils/api/Khronos/KhronosInstances.js')
 	await import('../../utils/api/koa/index.js')
 	await import('../../utils/cache/queue/ChannelCreationQueue.js')
@@ -40,12 +61,14 @@ export async function initializeStartupServices(
 		return
 	}
 
-	await initializeRedisBackedStartupServices()
+	await initializeRedisBackedStartupServices(startupEnv)
 }
 
-export async function initializeSystemStartupServices() {
+export async function initializeSystemStartupServices(
+	startupEnv: ParsedStartupEnv = env,
+) {
+	await initializeRedisBackedStartupServices(startupEnv)
 	configureSystemNotificationDelivery()
-	await initializeRedisBackedStartupServices()
 }
 
 export async function startPluto({
@@ -53,8 +76,8 @@ export async function startPluto({
 	env: startupEnv = env,
 	initializeStartupServices: initializeServices = () =>
 		initializeStartupServices(startupEnv),
-	initializeSystemStartupServices:
-		initializeSystemServices = initializeSystemStartupServices,
+	initializeSystemStartupServices: initializeSystemServices = () =>
+		initializeSystemStartupServices(startupEnv),
 	exitProcess = process.exit,
 }: StartPlutoOptions): Promise<void> {
 	try {
@@ -75,7 +98,12 @@ export async function startPluto({
 		logger.error({
 			message: 'Failed to login',
 		})
-		client.logger.fatal(error)
+		const safeError = toSafeUserError(error)
+		client.logger.fatal({
+			message: 'Pluto startup failed',
+			code: safeError.code,
+			status: safeError.status,
+		})
 		client.destroy()
 		exitProcess(1)
 	}
