@@ -205,7 +205,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 		await redis.del(keyFor(intent))
 	})
 
-	it('waits for a new channel completion and stops its renewal timer', async () => {
+	it('bounds shutdown with an unresolved new channel completion', async () => {
 		vi.useFakeTimers()
 		const intent = uniqueIntent('unresolved-new-channel')
 		const store = new RedisChannelReservationStore(storeRedis, {
@@ -244,7 +244,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 		await redis.del(keyFor(intent))
 	})
 
-	it('waits for an existing channel completion and stops its renewal timer', async () => {
+	it('bounds shutdown with an unresolved existing channel completion', async () => {
 		vi.useFakeTimers()
 		const intent = uniqueIntent('unresolved-existing-channel')
 		const store = new RedisChannelReservationStore(storeRedis, {
