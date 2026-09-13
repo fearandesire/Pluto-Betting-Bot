@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs'
+
+import { parse as parseDotenv } from 'dotenv'
 import { describe, expect, it, vi } from 'vitest'
 
 const requiredEnv = {
@@ -68,16 +71,10 @@ describe('Pluto system startup env gate', () => {
 	})
 
 	it('allows mock startup without observability or Patreon configuration', () => {
-		const env = parseStartupEnv({
-			...requiredEnv,
-			PATREON_API_URL: undefined,
-			AXIOM_DATASET: undefined,
-			AXIOM_API_TOKEN: undefined,
-			AXIOM_ORG_ID: undefined,
-			USE_MOCK_DATA: 'true',
-			MOCK_GUILD_BETTING_CHAN_ID: 'placeholder-channel',
-			DEV_GUILD_GAMES_CATEGORY_ID: 'placeholder-category',
-		})
+		const exampleEnv = parseDotenv(
+			readFileSync(new URL('../../../../.env.example', import.meta.url)),
+		)
+		const env = parseStartupEnv(exampleEnv)
 
 		expect(env.USE_MOCK_DATA).toBe(true)
 		expect(env.PATREON_API_URL).toBeUndefined()

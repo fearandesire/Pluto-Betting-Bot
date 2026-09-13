@@ -30,19 +30,19 @@ const envSchema = z
 		API_PORT: z.number().int().positive(),
 		API_URL: z.string().url().min(1, { message: 'API_URL is required' }),
 		LOG_LEVEL: z.enum(['Trace', 'Debug', 'Info', 'Warn', 'Error', 'Fatal']),
-		PATREON_API_URL: z
-			.string()
-			.url()
-			.min(1, { message: 'PATREON_API_URL is required' }),
+		PATREON_API_URL: z.preprocess(
+			(value) => (value === '' ? undefined : value),
+			z.string().url().optional(),
+		),
 		KH_PLUTO_CLIENT_KEY: requiredString(
 			'KH_PLUTO_CLIENT_KEY is required for Khronos API authentication',
 		),
 		APP_OWNER_ID: z.string(),
-		AXIOM_DATASET: z.string(),
-		AXIOM_API_TOKEN: requiredString(
-			'AXIOM_API_TOKEN is required for Axiom logging',
+		AXIOM_DATASET: optionalNonEmptyString,
+		AXIOM_API_TOKEN: optionalNonEmptyString.describe(
+			'Axiom API token used for logging',
 		),
-		AXIOM_ORG_ID: z.string(),
+		AXIOM_ORG_ID: optionalNonEmptyString,
 		BULL_BOARD_USERNAME: requiredString('BULL_BOARD_USERNAME is required'),
 		BULL_BOARD_PASSWORD: requiredString('BULL_BOARD_PASSWORD is required'),
 		API_KEY: requiredString('API_KEY is required for API authentication'),
@@ -124,6 +124,36 @@ const envSchema = z
 					path: ['MOCK_GUILD_BETTING_CHAN_ID'],
 					message:
 						'MOCK_GUILD_BETTING_CHAN_ID is required when USE_MOCK_DATA is enabled',
+				})
+			}
+		}
+		if (!data.USE_MOCK_DATA) {
+			if (!data.PATREON_API_URL) {
+				ctx.addIssue({
+					code: z.ZodIssueCode.custom,
+					path: ['PATREON_API_URL'],
+					message: 'PATREON_API_URL is required',
+				})
+			}
+			if (!data.AXIOM_DATASET) {
+				ctx.addIssue({
+					code: z.ZodIssueCode.custom,
+					path: ['AXIOM_DATASET'],
+					message: 'AXIOM_DATASET is required for Axiom logging',
+				})
+			}
+			if (!data.AXIOM_API_TOKEN) {
+				ctx.addIssue({
+					code: z.ZodIssueCode.custom,
+					path: ['AXIOM_API_TOKEN'],
+					message: 'AXIOM_API_TOKEN is required for Axiom logging',
+				})
+			}
+			if (!data.AXIOM_ORG_ID) {
+				ctx.addIssue({
+					code: z.ZodIssueCode.custom,
+					path: ['AXIOM_ORG_ID'],
+					message: 'AXIOM_ORG_ID is required for Axiom logging',
 				})
 			}
 		}

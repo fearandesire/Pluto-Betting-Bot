@@ -18,7 +18,8 @@
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 [![Version](https://img.shields.io/github/package-json/v/fearandesire/Pluto-Betting-Bot?style=flat-square&color=blue&label=Version)](https://github.com/fearandesire/Pluto-Betting-Bot/releases)
 
-[Documentation](https://docs.pluto.fearandesire.com)
+[Documentation](docs/README.md)
+[Security](SECURITY.md)
 [Support on Patreon](https://www.patreon.com/fenix_/posts)
 [Report Bug](https://github.com/fearandesire/Pluto-Betting-Bot/issues)
 
@@ -97,7 +98,7 @@ Pluto powers the betting experience for some of Discord's largest sports communi
 
 Pluto's autonomous betting lifecycle — from odds ingestion to bet settlement — is powered by a distributed microservices architecture:
 
-For current architecture notes and cross-service context, start with the [Pluto docs hub](docs/README.md) and the [Khronos cross-service overview](https://github.com/fearandesire/khronos/blob/main/docs/architecture/cross-service-overview.md).
+For current architecture notes, start with the [Pluto docs hub](docs/README.md).
 
 ```mermaid
 flowchart LR
@@ -267,26 +268,7 @@ Required repo secrets: `CASCADE_APP_ID`, `CASCADE_APP_PRIVATE_KEY`,
 
 ## Assets
 
-Matchup images under `assets/matchupimages/` are proprietary and **not committed to git** (`assets/` is gitignored). The source of truth is a private Cloudflare R2 bucket: `pluto-assets`, key `matchupimages.tar.gz`.
-
-**CI behavior:** The `deploy` job in [`.github/workflows/ci-cd-deployment.yml`](.github/workflows/ci-cd-deployment.yml) hydrates the tarball from R2 (S3-compatible API) into the build context before the Docker build, so the existing `COPY` chain works unchanged. Required GitHub Actions secrets: `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_ACCOUNT_ID`.
-
-**Refreshing assets (local → R2):**
-
-1. Configure an AWS CLI profile pinned to R2 (one-time):
-   ```bash
-   aws configure --profile pluto-r2
-   # Access Key ID:     <R2 token key>
-   # Secret Access Key: <R2 token secret>
-   # Default region:    auto
-   ```
-2. Run from repo root with your account ID exported:
-   ```bash
-   export R2_ACCOUNT_ID=<your-cloudflare-account-id>
-   pnpm assets:upload
-   ```
-
-The script tars `assets/matchupimages/`, uploads to `s3://pluto-assets/matchupimages.tar.gz`, and cleans up. See [`scripts/upload-assets.sh`](scripts/upload-assets.sh).
+Matchup images under `assets/matchupimages/` are not committed to git (`assets/` is gitignored). Deployment environments provide any required proprietary assets before building the image. Local contributors can use mock mode without access to those assets.
 
 ## Documentation
 
@@ -295,12 +277,10 @@ The script tars `assets/matchupimages/`, uploads to `s3://pluto-assets/matchupim
 - [ADR 002: Atomic cache operations](docs/architecture/decisions/002-atomic-cache-operations.md)
 - [Durable notification receiver feature guide](docs/features/durable-notification-receiver.md)
 - [Khronos client update CI](docs/ci-cd-khronos-client-update.md)
-- [Khronos cross-service overview](https://github.com/fearandesire/khronos/blob/main/docs/architecture/cross-service-overview.md)
-- [Hosted Pluto Documentation](https://docs.pluto.fearandesire.com)
 
 ## Contributing
 
-Contributions are welcome. Any contributions you make are appreciated.
+Contributions are welcome. Read the [contributing guide](CONTRIBUTING.md) for local setup, development checks, and pull request expectations.
 
 1. Fork the Project
 2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)

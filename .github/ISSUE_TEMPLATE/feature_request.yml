@@ -1,0 +1,38 @@
+name: Feature request
+description: Suggest an improvement to Pluto
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an improvement. Please describe the user problem before proposing an implementation.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: Who would benefit, and what are they trying to accomplish?
+      placeholder: Describe the user problem and its impact.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the behavior you would like to see.
+      placeholder: Describe the desired outcome.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What other approaches or workarounds have you tried?
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched for existing requests before opening this one.
+          required: true
