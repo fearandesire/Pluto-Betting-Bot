@@ -64,6 +64,7 @@ launch.json
 !.env.project
 !.env.vault
 .env.*
+!.env.example
 dev/
 !src/utils/dev/
 !src/utils/dev/**/*

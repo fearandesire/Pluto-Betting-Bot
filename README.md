@@ -18,7 +18,7 @@
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 [![Version](https://img.shields.io/github/package-json/v/fearandesire/Pluto-Betting-Bot?style=flat-square&color=blue&label=Version)](https://github.com/fearandesire/Pluto-Betting-Bot/releases)
 
-[Documentation](docs/README.md)
+[Documentation](https://docs.pluto.fearandesire.com)
 [Security](SECURITY.md)
 [Support on Patreon](https://www.patreon.com/fenix_/posts)
 [Report Bug](https://github.com/fearandesire/Pluto-Betting-Bot/issues)
@@ -164,7 +164,7 @@ Architecture references:
 
 ### Prerequisites
 
-- Node.js 20.x or higher
+- Node.js 22.x or higher
 - pnpm 8.x or higher
 - Redis instance
 - PostgreSQL database

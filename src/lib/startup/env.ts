@@ -175,7 +175,10 @@ export function parseStartupEnv(
 		R_PORT: Number.parseInt(source.R_PORT || '6379', 10),
 		R_DB: Number.parseInt(source.R_DB || '0', 10),
 		R_PASS: source.R_PASS,
-		API_PORT: Number.parseInt(source.APIPORT || '2090', 10),
+		API_PORT: Number.parseInt(
+			source.API_PORT ?? source.APIPORT ?? '2090',
+			10,
+		),
 		API_URL: source.API_URL,
 		LOG_LEVEL: source.LOG_LEVEL || 'Info',
 		PATREON_API_URL: source.PATREON_API_URL,

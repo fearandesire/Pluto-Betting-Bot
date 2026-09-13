@@ -7,7 +7,7 @@ Thanks for helping improve Pluto. This repository contains an open-source Discor
 - Read the README and check existing documentation for the area you plan to change.
 - Keep credentials, tokens, personal data, production identifiers, and private configuration out of commits.
 - For a local setup, copy `.env.example` to `.env` and replace its placeholders. Mock mode is the default example configuration.
-- Use Node.js 20 or newer and pnpm.
+- Use Node.js 22 or newer and pnpm.
 
 ## Development workflow
 
