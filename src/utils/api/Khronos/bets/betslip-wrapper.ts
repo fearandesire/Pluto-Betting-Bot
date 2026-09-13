@@ -14,6 +14,10 @@ import {
 import { isMockEnabled, MockBackend } from '../../../dev/index.js'
 import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js'
 
+type CancelRequestWithGuild = CancelBetslipRequest & {
+	guildId: string
+}
+
 export default class BetslipWrapper {
 	private betslipApi: BetslipsApi
 	private readonly khConfig: IKH_API_CONFIG = KH_API_CONFIG
@@ -50,9 +54,18 @@ export default class BetslipWrapper {
 		)
 	}
 
-	async cancel(payload: CancelBetslipRequest) {
+	async cancel(payload: CancelRequestWithGuild) {
 		if (this.mock) return this.mock.cancelBetslip(payload)
-		return await this.betslipApi.cancelBetslip(payload)
+		const { guildId, ...request } = payload as CancelBetslipRequest & {
+			guildId?: string
+		}
+		return await this.betslipApi.cancelBetslip({
+			...request,
+			patreonDataDto: {
+				...request.patreonDataDto,
+				guild_id: guildId,
+			},
+		} as CancelBetslipRequest)
 	}
 
 	async activeBetsForUser(

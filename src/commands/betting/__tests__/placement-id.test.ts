@@ -347,4 +347,28 @@ describe('H2H placement identity', () => {
 			patreonDataDto: { patreonOverride: false },
 		})
 	})
+
+	it('serializes the guild scope into the Khronos cancellation body', async () => {
+		const wrapper = new BetslipWrapper()
+		const cancelBetslip = vi.fn().mockResolvedValue({})
+		;(wrapper as never as { betslipApi: unknown }).betslipApi = {
+			cancelBetslip,
+		}
+
+		await wrapper.cancel({
+			userId: 'user-1',
+			betId: 42,
+			guildId: 'guild-1',
+			patreonDataDto: { patreonOverride: false },
+		})
+
+		expect(cancelBetslip).toHaveBeenCalledWith({
+			userId: 'user-1',
+			betId: 42,
+			patreonDataDto: {
+				patreonOverride: false,
+				guild_id: 'guild-1',
+			},
+		})
+	})
 })

@@ -479,9 +479,13 @@ export class BetslipManager {
 					ephemeral: true,
 				})
 			}
+			if (!interaction.guildId) {
+				throw new Error('Cannot cancel a bet outside a guild context.')
+			}
 			await this.betslipInstance.cancel({
 				userId: userid,
 				betId: betId,
+				guildId: interaction.guildId,
 				patreonDataDto: {
 					patreonOverride,
 				},
