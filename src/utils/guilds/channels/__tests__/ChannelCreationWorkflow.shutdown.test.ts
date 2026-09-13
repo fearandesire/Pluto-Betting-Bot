@@ -585,7 +585,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 			await vi.advanceTimersByTimeAsync(60_000)
 			await vi.waitFor(() => expect(refreshCalls).toBe(minute + 2))
 		}
-		expect(ambiguousRefreshApplied).toBe(true)
+		await vi.waitFor(() => expect(ambiguousRefreshApplied).toBe(true))
 		rejectCreate(new Error('create failed'))
 		await expect(run).rejects.toThrow('initial release failed')
 
@@ -618,6 +618,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 				}),
 		)
 		let refreshCalls = 0
+		let lateRefreshSettled = false
 		let resolveLateRefresh!: () => void
 		const lateRefresh = new Promise<void>((resolve) => {
 			resolveLateRefresh = resolve
@@ -628,6 +629,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 				const renewed = await store.refresh(refreshIntent, owner)
 				if (refreshCalls === 2) {
 					await lateRefresh
+					lateRefreshSettled = true
 				}
 				return renewed
 			},
@@ -671,7 +673,8 @@ describeWithRedis('channel creation lease shutdown', () => {
 		expect(lease.expiryTimer).toBeUndefined()
 
 		resolveLateRefresh()
-		await vi.waitFor(() => expect(lease.expiryTimer).toBeUndefined())
+		await vi.waitFor(() => expect(lateRefreshSettled).toBe(true))
+		expect(lease.expiryTimer).toBeUndefined()
 		await redis.del(keyFor(intent))
 	})
 

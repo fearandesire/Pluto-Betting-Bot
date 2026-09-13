@@ -146,8 +146,9 @@ export class ChannelCreationWorkflow {
 
 			if (leaseLost) throw new LeaseLostError()
 			if (this.ports.reservations.refresh) {
+				const lease = this.activeLeases.get(owner)
+				this.extendLeaseExpiry(owner, lease)
 				try {
-					const lease = this.activeLeases.get(owner)
 					const renewed = await this.ports.reservations.refresh(
 						intent,
 						owner,
@@ -159,6 +160,7 @@ export class ChannelCreationWorkflow {
 					this.extendLeaseExpiry(owner, lease)
 				} catch (error) {
 					if (error instanceof LeaseLostError) throw error
+					this.extendLeaseExpiry(owner, lease)
 					leaseLost = true
 					logLeaseError('verification', error)
 					throw new LeaseLostError()
@@ -287,6 +289,7 @@ export class ChannelCreationWorkflow {
 			return () => undefined
 		const timer = setInterval(() => {
 			const lease = this.activeLeases.get(owner)
+			this.extendLeaseExpiry(owner, lease)
 			void this.ports.reservations
 				.refresh?.(intent, owner)
 				.then((renewed) => {
@@ -297,6 +300,7 @@ export class ChannelCreationWorkflow {
 					}
 				})
 				.catch((error) => {
+					this.extendLeaseExpiry(owner, lease)
 					onLeaseLost?.()
 					logLeaseError('renewal', error)
 				})
