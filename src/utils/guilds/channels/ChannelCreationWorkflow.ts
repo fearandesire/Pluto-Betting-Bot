@@ -55,7 +55,7 @@ const CHANNEL_CREATION_LEASE_TTL_MS = 5 * 60 * 1000
 
 interface ActiveLease {
 	intent: ChannelIntent
-	expiryTimer: ReturnType<typeof setTimeout>
+	expiryTimer?: ReturnType<typeof setTimeout>
 }
 
 interface ActiveRun {
@@ -147,6 +147,7 @@ export class ChannelCreationWorkflow {
 			if (leaseLost) throw new LeaseLostError()
 			if (this.ports.reservations.refresh) {
 				try {
+					const lease = this.activeLeases.get(owner)
 					const renewed = await this.ports.reservations.refresh(
 						intent,
 						owner,
@@ -155,6 +156,7 @@ export class ChannelCreationWorkflow {
 						leaseLost = true
 						throw new LeaseLostError()
 					}
+					this.extendLeaseExpiry(owner, lease)
 				} catch (error) {
 					if (error instanceof LeaseLostError) throw error
 					leaseLost = true
@@ -284,10 +286,15 @@ export class ChannelCreationWorkflow {
 		if (this.shuttingDown || !this.ports.reservations.refresh)
 			return () => undefined
 		const timer = setInterval(() => {
+			const lease = this.activeLeases.get(owner)
 			void this.ports.reservations
 				.refresh?.(intent, owner)
 				.then((renewed) => {
-					if (!renewed) onLeaseLost?.()
+					if (renewed) {
+						this.extendLeaseExpiry(owner, lease)
+					} else {
+						onLeaseLost?.()
+					}
 				})
 				.catch((error) => {
 					onLeaseLost?.()
@@ -298,20 +305,31 @@ export class ChannelCreationWorkflow {
 	}
 
 	private trackLease(intent: ChannelIntent, owner: string): ActiveLease {
-		const expiryTimer = setTimeout(() => {
-			this.removeLease(owner)
-		}, CHANNEL_CREATION_LEASE_TTL_MS)
-		expiryTimer.unref?.()
 		const lease = {
 			intent,
-			expiryTimer,
 		}
 		this.activeLeases.set(owner, lease)
+		this.extendLeaseExpiry(owner, lease)
 		if (this.shuttingDown) {
 			this.leaveLeaseToExpire.add(owner)
 			logLeaseLeftToExpire(intent)
 		}
 		return lease
+	}
+
+	private extendLeaseExpiry(
+		owner: string,
+		lease: ActiveLease | undefined,
+	): void {
+		// Mirror successful Redis renewal locally without resurrecting stale leases.
+		if (!lease || this.activeLeases.get(owner) !== lease) return
+		if (lease.expiryTimer) clearTimeout(lease.expiryTimer)
+		lease.expiryTimer = setTimeout(() => {
+			if (this.activeLeases.get(owner) === lease) {
+				this.removeLease(owner)
+			}
+		}, CHANNEL_CREATION_LEASE_TTL_MS)
+		lease.expiryTimer.unref?.()
 	}
 
 	private async releaseLease(
@@ -336,7 +354,7 @@ export class ChannelCreationWorkflow {
 
 	private removeLease(owner: string): void {
 		const lease = this.activeLeases.get(owner)
-		if (lease) clearTimeout(lease.expiryTimer)
+		if (lease?.expiryTimer) clearTimeout(lease.expiryTimer)
 		this.activeLeases.delete(owner)
 		this.maybeUnregisterShutdownQueue()
 	}
