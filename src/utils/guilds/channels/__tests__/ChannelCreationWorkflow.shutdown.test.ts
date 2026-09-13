@@ -1,5 +1,14 @@
 import Redis, { type Redis as RedisClient } from 'ioredis'
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import {
+	afterAll,
+	afterEach,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from 'vitest'
 
 const warn = vi.hoisted(() => vi.fn())
 
@@ -35,6 +44,10 @@ describeWithRedis('channel creation lease shutdown', () => {
 	let redis: RedisClient
 	let storeRedis: ReservationRedis
 
+	beforeEach(() => {
+		vi.clearAllMocks()
+	})
+
 	beforeAll(() => {
 		redis = new RedisConstructor(redisUrl!)
 		storeRedis = reservationRedis(redis)
@@ -44,6 +57,10 @@ describeWithRedis('channel creation lease shutdown', () => {
 		await redis.quit()
 	})
 
+	afterEach(() => {
+		vi.useRealTimers()
+	})
+
 	it('stops renewing an owned lease after shutdown', async () => {
 		vi.useFakeTimers()
 		const intent = uniqueIntent('timer')
@@ -51,12 +68,15 @@ describeWithRedis('channel creation lease shutdown', () => {
 			leaseSeconds: 300,
 		})
 		let resolveLookup!: (channel: { id: string } | null) => void
-		const findByMarker = vi.fn(
-			() =>
-				new Promise<{ id: string } | null>((resolve) => {
-					resolveLookup = resolve
-				}),
-		)
+		const findByMarker = vi
+			.fn()
+			.mockImplementationOnce(
+				() =>
+					new Promise<{ id: string } | null>((resolve) => {
+						resolveLookup = resolve
+					}),
+			)
+			.mockResolvedValue(null)
 		const injected = workflowPorts(store, { findByMarker })
 		const workflow = new ChannelCreationWorkflow(injected)
 		const refresh = vi.spyOn(storeRedis, 'refreshIfOwned')
@@ -165,6 +185,126 @@ describeWithRedis('channel creation lease shutdown', () => {
 			message: 'lease left to expire',
 			channelKey: intent.marker,
 		})
+		await redis.del(keyFor(intent))
+	})
+
+	it('waits for a new channel completion and stops its renewal timer', async () => {
+		vi.useFakeTimers()
+		const intent = uniqueIntent('unresolved-new-channel')
+		const store = new RedisChannelReservationStore(storeRedis, {
+			leaseSeconds: 300,
+		})
+		let resolveCompletion!: () => void
+		const completion = new Promise<void>((resolve) => {
+			resolveCompletion = resolve
+		})
+		const create = vi.fn().mockResolvedValue({
+			channelId: 'discord-channel-new',
+			complete: () => completion,
+		})
+		const workflow = new ChannelCreationWorkflow(
+			workflowPorts(store, { create }),
+		)
+		const refresh = vi.spyOn(storeRedis, 'refreshIfOwned')
+		const run = workflow.run(intent)
+
+		await vi.waitFor(() => expect(create).toHaveBeenCalledOnce())
+		const close = closeQueueWorkers(30_000)
+		await vi.advanceTimersByTimeAsync(60_000)
+		expect(refresh).not.toHaveBeenCalled()
+		resolveCompletion()
+
+		await expect(run).resolves.toEqual({
+			state: 'created',
+			channelId: 'discord-channel-new',
+		})
+		await expect(close).resolves.not.toThrow()
+		expect(warn).toHaveBeenCalledWith({
+			message: 'waited for in-flight creation',
+			channelKey: intent.marker,
+		})
+		await redis.del(keyFor(intent))
+	})
+
+	it('waits for an existing channel completion and stops its renewal timer', async () => {
+		vi.useFakeTimers()
+		const intent = uniqueIntent('unresolved-existing-channel')
+		const store = new RedisChannelReservationStore(storeRedis, {
+			leaseSeconds: 300,
+		})
+		let resolveCompletion!: () => void
+		const completion = new Promise<void>((resolve) => {
+			resolveCompletion = resolve
+		})
+		const findByMarker = vi
+			.fn()
+			.mockResolvedValueOnce(null)
+			.mockResolvedValue({ id: 'discord-channel-existing' })
+		const workflow = new ChannelCreationWorkflow(
+			workflowPorts(store, {
+				findByMarker,
+				create: vi.fn().mockRejectedValue(new Error('create failed')),
+				completeExisting: () => completion,
+			}),
+		)
+		const refresh = vi.spyOn(storeRedis, 'refreshIfOwned')
+		const run = workflow.run(intent)
+
+		await vi.waitFor(() => expect(findByMarker).toHaveBeenCalledTimes(2))
+		const close = closeQueueWorkers(30_000)
+		await vi.advanceTimersByTimeAsync(60_000)
+		expect(refresh).not.toHaveBeenCalled()
+		resolveCompletion()
+
+		await expect(run).resolves.toEqual({
+			state: 'reconciled',
+			channelId: 'discord-channel-existing',
+		})
+		await expect(close).resolves.not.toThrow()
+		expect(warn).toHaveBeenCalledWith({
+			message: 'waited for in-flight creation',
+			channelKey: intent.marker,
+		})
+		await redis.del(keyFor(intent))
+	})
+
+	it('leaves a lease to expire when release exceeds the shutdown budget', async () => {
+		vi.useFakeTimers()
+		const intent = uniqueIntent('release-timeout')
+		const store = new RedisChannelReservationStore(storeRedis, {
+			leaseSeconds: 300,
+		})
+		let resolveLookup!: (channel: { id: string } | null) => void
+		const findByMarker = vi
+			.fn()
+			.mockImplementationOnce(
+				() =>
+					new Promise<{ id: string } | null>((resolve) => {
+						resolveLookup = resolve
+					}),
+			)
+			.mockResolvedValue(null)
+		const release = vi.fn(() => new Promise<boolean>(() => undefined))
+		const workflow = new ChannelCreationWorkflow(
+			workflowPorts(reservationsWithRelease(store, release), {
+				findByMarker,
+				create: vi.fn().mockRejectedValue(new Error('create failed')),
+			}),
+		)
+		const run = workflow.run(intent)
+		await waitForReservation(redis, intent)
+		const close = closeQueueWorkers(30_000)
+
+		await vi.advanceTimersByTimeAsync(2_000)
+		await expect(close).resolves.not.toThrow()
+		expect(release).toHaveBeenCalledOnce()
+		expect(warn).toHaveBeenCalledWith({
+			message: 'lease left to expire',
+			channelKey: intent.marker,
+		})
+
+		resolveLookup(null)
+		await expect(run).rejects.toThrow('create failed')
 		await redis.del(keyFor(intent))
 	})
 })
