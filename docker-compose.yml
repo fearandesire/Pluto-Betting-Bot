@@ -10,6 +10,8 @@ services:
       - redis-net
     restart: always
     container_name: pluto_api
+    # Give queue workers time to drain before Docker sends SIGKILL.
+    stop_grace_period: 45s
     environment:
       - DOPPLER_TOKEN=${PLUTO_DOPPLER_TOKEN}
 

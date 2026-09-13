@@ -1,4 +1,5 @@
 import { type Job, Queue, Worker } from 'bullmq'
+import { registerShutdownQueue } from '../../../../lib/startup/shutdown-registry.js'
 import {
 	type AlertReporter,
 	getDefaultAlertReporter,
@@ -23,6 +24,7 @@ export const NOTIFICATION_DELIVERY_QUEUE = 'notification-delivery-v1'
 export const SYSTEM_DISCORD_BASE_URL = 'http://fake-discord:8080'
 const MIN_RETRY_DELAY_MS = 60_000
 const MAX_RETRY_WINDOW_DELAY_MS = 60 * 60 * 1000
+const DELIVERY_SHUTDOWN_TIMEOUT_MS = 30_000
 
 // Keep queue construction lazy and environment-only. Importing notification
 // routes in unit tests must not force Pluto's full startup env schema.
@@ -280,6 +282,8 @@ export class NotificationDeliveryQueue {
 	private readonly dispatcher: DeliveryDispatcher
 	private readonly alertReporter?: Pick<AlertReporter, 'firing' | 'resolved'>
 	private readonly discordRateLimitTracker?: ConsecutiveFailureTracker
+	private activeJobs = new Set<Promise<void>>()
+	private unregisterShutdownQueue?: () => void
 
 	constructor(options: NotificationDeliveryQueueOptions = {}) {
 		this.store = options.store ?? new RedisDeliveryStore()
@@ -313,7 +317,7 @@ export class NotificationDeliveryQueue {
 		if (options.startWorker !== false) {
 			this.worker = new Worker<DeliveryJob>(
 				NOTIFICATION_DELIVERY_QUEUE,
-				async (job) => this.process(job),
+				async (job) => this.runJob(job),
 				{
 					connection: REDIS_CONFIG,
 					concurrency: 8,
@@ -339,6 +343,10 @@ export class NotificationDeliveryQueue {
 						}),
 				)
 			})
+			this.unregisterShutdownQueue = registerShutdownQueue(
+				NOTIFICATION_DELIVERY_QUEUE,
+				this,
+			)
 		}
 	}
 
@@ -553,9 +561,46 @@ export class NotificationDeliveryQueue {
 		return this.process(job)
 	}
 
-	async close(): Promise<void> {
-		await this.worker?.close()
+	private async runJob(job: Job<DeliveryJob>): Promise<void> {
+		const activeJob = this.process(job)
+		this.activeJobs.add(activeJob)
+		try {
+			await activeJob
+		} finally {
+			this.activeJobs.delete(activeJob)
+		}
+	}
+
+	async close(
+		drainTimeoutMs = DELIVERY_SHUTDOWN_TIMEOUT_MS,
+	): Promise<boolean> {
+		let forceClose = false
+		if (this.worker) {
+			await this.worker.pause(true)
+			const deadline = Date.now() + drainTimeoutMs
+
+			while (this.activeJobs.size > 0) {
+				const remainingMs = deadline - Date.now()
+				if (remainingMs <= 0) {
+					forceClose = true
+					break
+				}
+				let timeout: ReturnType<typeof setTimeout> | undefined
+				await Promise.race([
+					Promise.allSettled(this.activeJobs),
+					new Promise<void>((resolve) => {
+						timeout = setTimeout(resolve, remainingMs)
+					}),
+				])
+				if (timeout) clearTimeout(timeout)
+			}
+
+			await this.worker.close(forceClose)
+		}
 		await this.queue.close()
+		this.unregisterShutdownQueue?.()
+		this.unregisterShutdownQueue = undefined
+		return forceClose
 	}
 }
 

@@ -78,6 +78,7 @@ describe('Pluto startup orchestration', () => {
 			},
 			initializeSystemStartupServices,
 			initializeStartupServices: vi.fn(async () => undefined),
+			installShutdownHandlers: vi.fn(),
 			exitProcess: vi.fn(),
 		})
 
@@ -98,9 +99,40 @@ describe('Pluto startup orchestration', () => {
 			env: baseEnv,
 			initializeStartupServices: vi.fn(async () => undefined),
 			initializeSystemStartupServices: vi.fn(async () => undefined),
+			installShutdownHandlers: vi.fn(),
 			exitProcess: vi.fn(),
 		})
 
 		expect(client.login).toHaveBeenCalledWith('discord-token')
+	})
+
+	it('installs shutdown handlers before slow service initialization', async () => {
+		const client = {
+			login: vi.fn(async () => 'ready'),
+			destroy: vi.fn(),
+			logger: { fatal: vi.fn() },
+		}
+		const events: string[] = []
+		const initializeStartupServices = vi.fn(async () => {
+			events.push('services initialized')
+		})
+		const installShutdownHandlers = vi.fn(() => {
+			events.push('shutdown handlers installed')
+			return () => undefined
+		})
+
+		await startPluto({
+			client,
+			env: baseEnv,
+			initializeStartupServices,
+			initializeSystemStartupServices: vi.fn(async () => undefined),
+			installShutdownHandlers,
+			exitProcess: vi.fn(),
+		})
+
+		expect(events).toEqual([
+			'shutdown handlers installed',
+			'services initialized',
+		])
 	})
 })

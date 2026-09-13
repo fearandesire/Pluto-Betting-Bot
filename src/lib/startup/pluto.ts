@@ -1,6 +1,7 @@
 import { configureSystemNotificationDelivery } from '../../utils/api/routes/notifications/delivery-queue.js'
 import { logger } from '../../utils/logging/WinstonLogger.js'
 import env, { isSystemStartupMode, type ParsedStartupEnv } from './env.js'
+import { installShutdownHandlers } from './shutdown.js'
 
 interface StartupClient {
 	login(token: string): Promise<unknown>
@@ -15,6 +16,7 @@ export interface StartPlutoOptions {
 	env?: ParsedStartupEnv
 	initializeStartupServices?: () => Promise<void>
 	initializeSystemStartupServices?: () => Promise<void>
+	installShutdownHandlers?: typeof installShutdownHandlers
 	exitProcess?: (code: number) => never | void
 }
 
@@ -77,9 +79,12 @@ export async function startPluto({
 		initializeStartupServices(startupEnv),
 	initializeSystemStartupServices: initializeSystemServices = () =>
 		initializeSystemStartupServices(startupEnv),
+	installShutdownHandlers: setupShutdownHandlers = installShutdownHandlers,
 	exitProcess = process.exit,
 }: StartPlutoOptions): Promise<void> {
 	try {
+		setupShutdownHandlers({ client, exitProcess })
+
 		if (isSystemStartupMode(startupEnv)) {
 			await initializeSystemServices()
 			logger.info({

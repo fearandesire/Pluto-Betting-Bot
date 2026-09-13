@@ -1,4 +1,5 @@
 import { type Job, Queue, Worker } from 'bullmq'
+import { registerShutdownQueue } from '../../../lib/startup/shutdown-registry.js'
 import ChannelManager from '../../guilds/channels/ChannelManager.js'
 import { logger } from '../../logging/WinstonLogger.js'
 import { REDIS_CONFIG } from '../data/config.js'
@@ -12,6 +13,7 @@ export class ChannelDeletionQueue {
 	private worker: Worker<ChannelDeletionJobData, ChannelDeletionResult>
 	private static readonly MAX_ATTEMPTS = 3
 	private static readonly BACKOFF_DELAY = 1000 // 1 second initial delay
+	private static readonly DEFAULT_DRAIN_TIMEOUT_MS = 30_000
 
 	constructor() {
 		const connection = REDIS_CONFIG
@@ -43,11 +45,12 @@ export class ChannelDeletionQueue {
 		// Initialize worker with proper concurrency
 		this.worker = new Worker<ChannelDeletionJobData, ChannelDeletionResult>(
 			'channel-deletion-queue',
-			async (job) => this.processJob(job),
+			async (job) => this.runJob(job),
 			{ connection, concurrency: 15 },
 		)
 
 		this.setupWorkerEvents()
+		registerShutdownQueue('channel-deletion', this)
 
 		logger.info({
 			message: 'Channel deletion BullMQ initialized',
@@ -127,9 +130,46 @@ export class ChannelDeletionQueue {
 		}
 	}
 
-	public async close(): Promise<void> {
+	private activeJobs = new Set<Promise<ChannelDeletionResult>>()
+
+	private async runJob(
+		job: Job<ChannelDeletionJobData>,
+	): Promise<ChannelDeletionResult> {
+		const activeJob = this.processJob(job)
+		this.activeJobs.add(activeJob)
+		try {
+			return await activeJob
+		} finally {
+			this.activeJobs.delete(activeJob)
+		}
+	}
+
+	public async close(
+		drainTimeoutMs = ChannelDeletionQueue.DEFAULT_DRAIN_TIMEOUT_MS,
+	): Promise<boolean> {
+		await this.worker.pause(true)
+		const deadline = Date.now() + drainTimeoutMs
+		let forceClose = false
+
+		while (this.activeJobs.size > 0) {
+			const remainingMs = deadline - Date.now()
+			if (remainingMs <= 0) {
+				forceClose = true
+				break
+			}
+			let timeout: ReturnType<typeof setTimeout> | undefined
+			await Promise.race([
+				Promise.allSettled(this.activeJobs),
+				new Promise<void>((resolve) => {
+					timeout = setTimeout(resolve, remainingMs)
+				}),
+			])
+			if (timeout) clearTimeout(timeout)
+		}
+
+		await this.worker.close(forceClose)
 		await this.queue.close()
-		await this.worker.close()
+		return forceClose
 	}
 }
 
