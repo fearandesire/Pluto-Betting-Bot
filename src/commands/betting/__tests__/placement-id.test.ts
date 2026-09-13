@@ -1,4 +1,6 @@
+import { PatreonDataDtoToJSON } from '@pluto-khronos/api-client'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { ButtonHandler } from '../../../interaction-handlers/ButtonListener.js'
 import { BetsCacheService } from '../../../utils/api/common/bets/BetsCacheService.js'
 import { BetslipManager } from '../../../utils/api/Khronos/bets/BetslipsManager.js'
 import BetslipWrapper from '../../../utils/api/Khronos/bets/betslip-wrapper.js'
@@ -370,5 +372,43 @@ describe('H2H placement identity', () => {
 				guild_id: 'guild-1',
 			},
 		})
+	})
+
+	it('clears pending state when the cancellation cache has expired', async () => {
+		const handler = new ButtonHandler({} as never, {} as never)
+		;(handler as never as { betsCacheService: unknown }).betsCacheService =
+			{
+				getUserBet: vi.fn().mockResolvedValue(undefined),
+			}
+		const clearPending = vi
+			.spyOn(BetslipWrapper.prototype, 'clearPending')
+			.mockResolvedValue({} as never)
+		const interaction = {
+			customId: 'matchup_btn_cancel',
+			guildId: 'guild-1',
+			user: {
+				id: 'user-1',
+				displayAvatarURL: () => 'avatar',
+			},
+			deferUpdate: vi.fn(),
+			editReply: vi.fn(),
+		}
+
+		await handler.parse(interaction as never)
+
+		expect(clearPending).toHaveBeenCalledWith('user-1')
+		expect(interaction.editReply).toHaveBeenCalledWith(
+			expect.objectContaining({ components: [] }),
+		)
+	})
+
+	it('documents the current client serializer dropping guild scope', () => {
+		// Client 3.8.0 serializes only patreonOverride; flip this assertion when bumped.
+		expect(
+			PatreonDataDtoToJSON({
+				patreonOverride: false,
+				guild_id: 'guild-1',
+			} as never),
+		).toEqual({ patreonOverride: false })
 	})
 })
