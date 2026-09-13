@@ -3,6 +3,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 
 // Keep private tracker exports under scripts/roadmap/exports/; .gitignore excludes them.
+// publicSummary is operator-written text and must already be safe for public release.
 
 export const ROADMAP_LANES = ['Now', 'Next', 'Later', 'Shipped'] as const
 const SHIPPED_WINDOW_DAYS = 90
@@ -87,19 +88,26 @@ function asString(value: unknown): string | undefined {
 	return typeof value === 'string' && value.trim() ? value.trim() : undefined
 }
 
-function assertIdSecret(secret: unknown): asserts secret is string {
-	if (typeof secret !== 'string' || secret.length < 32) {
+function requireIdSecret(secret: unknown): string {
+	if (typeof secret !== 'string') {
 		throw new Error('ROADMAP_ID_SECRET must be at least 32 characters')
 	}
+
+	const normalized = secret.trim()
+	if (normalized.length < 32) {
+		throw new Error('ROADMAP_ID_SECRET must be at least 32 characters')
+	}
+
+	return normalized
 }
 
 export function derivePublicId(trackerId: string, secret: string): string {
-	assertIdSecret(secret)
+	const normalizedSecret = requireIdSecret(secret)
 	if (!trackerId.trim()) {
 		throw new Error('Roadmap item is missing trackerId')
 	}
 
-	return createHmac('sha256', secret).update(trackerId, 'utf8').digest('hex').slice(0, 16)
+	return createHmac('sha256', normalizedSecret).update(trackerId, 'utf8').digest('hex').slice(0, 16)
 }
 
 function getMilestoneId(item: RoadmapItem): string | undefined {
@@ -203,7 +211,7 @@ export function filterPublishableItems(
 	input: unknown,
 	options: FilterOptions,
 ): Array<RoadmapItem & { publicId: string; lane: RoadmapLane }> {
-	assertIdSecret(options.idSecret)
+	const idSecret = requireIdSecret(options.idSecret)
 	const items = extractItems(input)
 	assertRecognizableStatuses(items)
 	const now = options.now ?? new Date()
@@ -224,7 +232,7 @@ export function filterPublishableItems(
 			return []
 		}
 
-		const publicId = derivePublicId(trackerId, options.idSecret)
+		const publicId = derivePublicId(trackerId, idSecret)
 		if (tombstones.has(publicId)) {
 			return []
 		}
@@ -248,28 +256,40 @@ function escapeMarkup(value: string): string {
 }
 
 function renderItem(item: RoadmapItem): string {
-	const title = escapeMarkup(asString(item.title) ?? 'Unspecified roadmap item')
+	const rawTitle = asString(item.title) ?? 'Unspecified roadmap item'
 	const summary = asString(item.publicSummary)
+	if (summary && /\]\(/u.test(summary)) {
+		throw new Error('Generated roadmap contains a markdown link')
+	}
+	if (/\]\(/u.test(rawTitle)) {
+		throw new Error('Generated roadmap contains a markdown link')
+	}
+
+	const title = escapeMarkup(rawTitle)
 	return `- ${[title, summary ? escapeMarkup(summary) : ''].filter(Boolean).join(' - ')}`
 }
 
-const RELATIVE_LINK_PATTERN = new RegExp(String.raw`\]\s*\((?:/|\.{1,2}/)`, 'u')
-
 const UNSAFE_MARKDOWN_PATTERNS = [
-	/\b[A-Z]{1,10}-?\d+\b/iu,
+	/\b[A-Z]{1,10}[\s_-]?\d+/iu,
+	/#\d+/u,
 	/(?:https?:\/\/|ftp:\/\/|www\.)[^\s]+/iu,
 	/\b(?:[a-z0-9-]+\.)+[a-z]{2,}(?:\/[^\s]*)?/iu,
 	/\b[\w.+-]+@[\w.-]+\.[a-z]{2,}\b/iu,
 	/(^|\s)@[\w-]+/u,
 	/\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/iu,
-	/\b(?:\d{4}[-/.]\d{1,2}[-/.]\d{1,4}|\d{1,2}[./-]\d{1,2}[./-]\d{2,4}|\d{8})\b/u,
+	/\b(?:\d{4}[-/.]\d{1,2}[-/.]\d{1,4}|\d{1,2}[./-]\d{1,2}[./-]\d{2,4}|\d{1,2}[/-]\d{1,2}|\d{8})\b/u,
+	/\b[0-9a-f]{32}\b/iu,
 	/\bQ[1-4]\s+\d{4}\b/iu,
-	/\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t|tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2}(?:st|nd|rd|th)?(?:,\s*\d{4})?\b/iu,
-	/\b\d{1,2}(?:st|nd|rd|th)?\s+(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t|tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\b/iu,
-	RELATIVE_LINK_PATTERN,
+	/\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t|tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\.?\s+\d{4}\b/iu,
+	/\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t|tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\.?\s+\d{1,2}(?:st|nd|rd|th)?(?:,\s*\d{4})?\b/iu,
+	/\b\d{1,2}(?:st|nd|rd|th)?\s+(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t|tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\.?\b/iu,
 ]
 
 function assertSafeMarkdown(markdown: string): void {
+	if (/(?<!\\)\]\(/u.test(markdown)) {
+		throw new Error('Generated roadmap contains an unescaped markdown link')
+	}
+
 	const unescaped = markdown.replace(/\\/gu, '')
 	if (UNSAFE_MARKDOWN_PATTERNS.some((pattern) => pattern.test(unescaped))) {
 		throw new Error('Generated roadmap contains unsafe public content')
@@ -293,8 +313,7 @@ export function renderRoadmap(items: readonly RoadmapItem[]): string {
 
 export function publishRoadmap(input: unknown, options: PublishOptions = {}): string {
 	const env = options.env ?? process.env
-	const idSecret = env.ROADMAP_ID_SECRET
-	assertIdSecret(idSecret)
+	const idSecret = requireIdSecret(env.ROADMAP_ID_SECRET)
 	const milestoneAllowlist =
 		options.milestoneAllowlist ?? parseMilestoneAllowlist(env.ROADMAP_MILESTONE_ALLOWLIST)
 
