@@ -69,10 +69,10 @@ export default class BetslipWrapper {
 			} as CancelBetslipRequest,
 			async ({ init }) => ({
 				...init,
-				body: JSON.stringify({
-					...JSON.parse(String(init.body)),
+				body: {
+					...((init.body ?? {}) as Record<string, unknown>),
 					guild_id: guildId,
-				}),
+				} as unknown as BodyInit,
 			}),
 		)
 	}

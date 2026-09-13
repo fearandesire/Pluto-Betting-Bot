@@ -357,12 +357,12 @@ describe('H2H placement identity', () => {
 	it('serializes the guild scope into the Khronos cancellation body', async () => {
 		const wrapper = new BetslipWrapper()
 		type RequestTransform = (context: {
-			init: { body: string }
-		}) => Promise<{ body: string }>
+			init: { body: Record<string, unknown> }
+		}) => Promise<{ body: Record<string, unknown> }>
 		const cancelBetslip = vi.fn(
 			async (_request: unknown, transform: RequestTransform) =>
 				transform({
-					init: { body: JSON.stringify({ patreonOverride: false }) },
+					init: { body: { patreonOverride: false } },
 				}),
 		)
 		;(wrapper as never as { betslipApi: unknown }).betslipApi = {
@@ -374,8 +374,8 @@ describe('H2H placement identity', () => {
 			betId: 42,
 			guildId: 'guild-1',
 			patreonDataDto: { patreonOverride: false },
-		})) as unknown as { body: string }
-		expect(JSON.parse(serialized.body)).toEqual({
+		})) as unknown as { body: Record<string, unknown> }
+		expect(serialized.body).toEqual({
 			patreonOverride: false,
 			guild_id: 'guild-1',
 		})
