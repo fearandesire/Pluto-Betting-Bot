@@ -76,7 +76,9 @@ vi.mock('../../../lib/startup/pluto.js', () => ({
 }))
 
 vi.mock('../../../utils/api/patreon/Patreon-Facade.js', () => ({
-	default: class {},
+	default: class {
+		static isSponsorTier = vi.fn().mockResolvedValue(false)
+	},
 }))
 
 describe('H2H placement identity', () => {
@@ -319,5 +321,30 @@ describe('H2H placement identity', () => {
 			'placement-1',
 		)
 		expect(clearUserBet).toHaveBeenCalledTimes(1)
+	})
+
+	it('passes the interaction guild when cancelling a wager', async () => {
+		const cancel = vi.fn().mockResolvedValue({})
+		const manager = new BetslipManager({ cancel } as never, {} as never)
+		const interaction = {
+			deferred: true,
+			replied: false,
+			guildId: 'guild-1',
+			user: {
+				id: 'user-1',
+				displayAvatarURL: () => 'https://cdn.discordapp.com/avatar.png',
+			},
+			followUp: vi.fn(),
+			reply: vi.fn(),
+		}
+
+		await manager.cancelBet(interaction as never, 'user-1', 42)
+
+		expect(cancel).toHaveBeenCalledWith({
+			userId: 'user-1',
+			betId: 42,
+			guildId: 'guild-1',
+			patreonDataDto: { patreonOverride: false },
+		})
 	})
 })
