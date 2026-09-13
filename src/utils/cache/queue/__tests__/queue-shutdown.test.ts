@@ -1,5 +1,4 @@
 import { Queue, Worker } from 'bullmq'
-import Redis from 'ioredis'
 import { describe, expect, it } from 'vitest'
 
 const redisUrl = process.env.PLUTO_TEST_REDIS_URL

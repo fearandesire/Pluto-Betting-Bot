@@ -45,4 +45,4 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --force --
 
 EXPOSE 2090
 
-CMD ["doppler", "run", "--", "node", "dist/index.js"]
+CMD ["doppler", "run", "--forward-signals", "--", "node", "dist/index.js"]
