@@ -175,6 +175,8 @@ function stripPrivateMetadata(value: string): string {
 		.replace(/\b(?:assigned to|assignee|owner|dri)\s*:\s*[^.;\n]+[.;]?/giu, '')
 		.replace(/\b(?:assigned to|owned by)\s+[^.;\n]+[.;]?/giu, '')
 		.replace(/\b(?:completed|shipped|released)\s+on\s+[^.;\n]+[.;]?/giu, '')
+		.replace(/\b(?:ship|planned for|scheduled for)(?:\s+on)?\s*[.;]?/giu, '')
+		.replace(/\[\s*\]/gu, '')
 		.replace(/\s{2,}/gu, ' ')
 		.replace(/\s+([.,;])/gu, '$1')
 		.trim()
