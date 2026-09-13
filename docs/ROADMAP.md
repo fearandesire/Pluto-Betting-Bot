@@ -1,13 +1,13 @@
 # Public Roadmap
 
 ## Now
-- Publish the roadmap
+- None currently listed
 
 ## Next
-- Improve onboarding
+- None currently listed
 
 ## Later
-- Explore mobile support - A public idea with no private details.
+- None currently listed
 
 ## Shipped
-- Launch the safe export
+- None currently listed
