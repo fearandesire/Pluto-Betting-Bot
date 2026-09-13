@@ -148,6 +148,8 @@
 		"@types/node-cron": "^3.0.11",
 		"@types/numeral": "^2.0.5",
 		"@types/ws": "^8.5.14",
+		"ajv": "8.17.1",
+		"ajv-formats": "3.0.1",
 		"bluebird": "^3.7.2",
 		"husky": "^9.1.7",
 		"lint-staged": "^17.0.4",

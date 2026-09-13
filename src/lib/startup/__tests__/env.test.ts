@@ -29,6 +29,7 @@ const requiredEnv = {
 for (const [key, value] of Object.entries(requiredEnv)) {
 	vi.stubEnv(key, value)
 }
+vi.stubEnv('LOG_LEVEL', 'Info')
 
 const { isSystemStartupMode, parseStartupEnv } = await import('../env.js')
 

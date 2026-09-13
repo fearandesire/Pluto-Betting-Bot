@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import fs from 'node:fs/promises'
 import path, { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -25,8 +26,19 @@ import {
 	incomingChannelDataSchema,
 	type PrepareMatchEmbed,
 } from '../../cache/data/schemas.js'
+import {
+	type ChannelIntent,
+	RedisChannelReservationStore,
+} from '../../cache/queue/channel-reservation-store.js'
+import redisCache from '../../cache/redis-instance.js'
 import StringUtils from '../../common/string-utils.js'
 import { logger } from '../../logging/WinstonLogger.js'
+import {
+	ChannelCreationBusyError,
+	ChannelCreationWorkflow,
+	type CreatedChannel,
+} from './ChannelCreationWorkflow.js'
+import { findExistingGameChannel } from './channel-reconciliation.js'
 import { buildRecordsStr } from './matchEmbedUtils.js'
 
 /**
@@ -34,12 +46,14 @@ import { buildRecordsStr } from './matchEmbedUtils.js'
  */
 export default class ChannelManager {
 	private readonly API_URL: string
+	private readonly reservations: RedisChannelReservationStore
 	private ep: {
 		gchan: string
 	}
 
-	constructor() {
+	constructor(reservations = new RedisChannelReservationStore(redisCache)) {
 		this.API_URL = `${env.KH_API_URL}`
+		this.reservations = reservations
 		this.ep = {
 			gchan: '/channels',
 		}
@@ -66,58 +80,206 @@ export default class ChannelManager {
 		channel: ChannelAggregated,
 		guilds: GuildEligibility[],
 	) {
-		// Early check for channel existence in each guild
-		for (const guild of guilds) {
-			const locatedGuild = await SapDiscClient.guilds.cache.get(
-				guild.guildId,
-			)
-			if (!locatedGuild) continue
-
-			// Check if channel already exists and skip if it does
-			const existingChannel = locatedGuild.channels.cache.find(
-				(GC) =>
-					GC.name.toLowerCase() === channel.channelname.toLowerCase(),
-			)
-			if (existingChannel) {
-				return
-			}
-		}
-
 		const parsedSport = await StringUtils.sportKeyTransform(
 			channel.sport,
 		).toLowerCase()
 		channel.sport = parsedSport as SportsServing
 
-		const { sport, matchOdds, metadata } = channel
-		const { favored } = matchOdds
-		const favoredTeamInfo = await teamResolver.resolve(favored, {
-			sport: parsedSport,
-			full: true,
-		})
-		this.validateFavoredTeamInfo(favoredTeamInfo)
-
-		// Fetch vs. image for the match
-		const matchImg = await this.fetchVsImg(channel.channelname, sport)
-
-		const eligibleGuilds = guilds.filter((guild) => guild.sport === sport)
+		const eligibleGuilds = guilds.filter(
+			(guild) => guild.sport === channel.sport,
+		)
 
 		for (const guild of eligibleGuilds) {
-			try {
-				await this.createChannelAndSendEmbed({
-					channel,
-					guild,
-					metadata: { favoredTeamInfo, matchImg, ...metadata },
-				})
-			} catch (err) {
-				logger.error('Failed to create channel for guild', {
-					source: 'ChannelManager.processChannel',
-					guildId: guild.guildId,
-					channelName: channel.channelname,
-					error: err,
-				})
-				throw err
+			const intent = this.channelIntent(channel, guild)
+			const workflow = new ChannelCreationWorkflow({
+				reservations: this.reservations,
+				discord: {
+					findByMarker: (_intent, knownChannelId) =>
+						this.findChannelByMarker(
+							guild.guildId,
+							intent,
+							guild.gameCategoryId,
+							knownChannelId,
+						),
+					completeExisting: (_intent, channelId) =>
+						this.completeExistingChannel(channel, guild, channelId),
+					create: () =>
+						this.createReservedChannel(channel, guild, intent),
+				},
+			})
+			const outcome = await workflow.run(intent)
+			if (outcome.state === 'busy') {
+				throw new ChannelCreationBusyError()
 			}
 		}
+	}
+
+	private channelIntent(
+		channel: ChannelAggregated,
+		guild: GuildEligibility,
+	): ChannelIntent {
+		return {
+			guildId: guild.guildId,
+			gameId: channel.id,
+			channelName: channel.channelname,
+			marker: `pluto-game:${createHash('sha256')
+				.update(`${guild.guildId}:${channel.id}`)
+				.digest('hex')
+				.slice(0, 24)}`,
+		}
+	}
+
+	private async findChannelByMarker(
+		guildId: string,
+		intent: ChannelIntent,
+		gameCategoryId: string,
+		knownChannelId?: string,
+	): Promise<{ id: string } | null> {
+		const guild = SapDiscClient.guilds.cache.get(guildId)
+		if (!guild) return null
+		const knownChannel = knownChannelId
+			? (guild.channels.cache.get(knownChannelId) ??
+				(await guild.channels.fetch(knownChannelId).catch(() => null)))
+			: null
+		if (knownChannel?.type === ChannelType.GuildText) {
+			return { id: knownChannel.id }
+		}
+
+		const channels =
+			guild.channels.cache.size > 0
+				? guild.channels.cache
+				: ((await guild.channels.fetch().catch(() => null)) ??
+					guild.channels.cache)
+		const textChannels = channels.filter(
+			(candidate) => candidate.type === ChannelType.GuildText,
+		)
+		const found = findExistingGameChannel(
+			textChannels.values(),
+			intent,
+			gameCategoryId,
+		)
+		return found ? { id: found.id } : null
+	}
+
+	private async createReservedChannel(
+		channel: ChannelAggregated,
+		guild: GuildEligibility,
+		intent: ChannelIntent,
+	): Promise<CreatedChannel> {
+		const favoredTeamInfo = await teamResolver.resolve(
+			channel.matchOdds.favored,
+			{ sport: channel.sport.toLowerCase(), full: true },
+		)
+		this.validateFavoredTeamInfo(favoredTeamInfo)
+		const matchImg = await this.fetchVsImg(
+			channel.channelname,
+			channel.sport,
+		)
+		const messageOptions = await this.prepareGameMessage(channel, guild, {
+			favoredTeamInfo,
+			matchImg,
+		})
+		const locatedGuild = SapDiscClient.guilds.cache.get(guild.guildId)
+		if (!locatedGuild) throw new Error('Guild is no longer available')
+		let gameCategory = locatedGuild.channels.cache.get(guild.gameCategoryId)
+		if (!gameCategory) {
+			gameCategory = await locatedGuild.channels
+				.fetch(guild.gameCategoryId)
+				.catch(() => null)
+		}
+		if (!gameCategory || gameCategory.type !== ChannelType.GuildCategory) {
+			throw new Error('Game category is unavailable')
+		}
+		const gameChannel = await locatedGuild.channels.create({
+			name: channel.channelname,
+			type: ChannelType.GuildText,
+			topic: intent.marker,
+			parent: gameCategory as CategoryChannelResolvable,
+		})
+		return {
+			channelId: gameChannel.id,
+			complete: () =>
+				gameChannel.send(messageOptions).then(() => undefined),
+		}
+	}
+
+	private async completeExistingChannel(
+		channel: ChannelAggregated,
+		guild: GuildEligibility,
+		channelId: string,
+	): Promise<void> {
+		const locatedGuild = SapDiscClient.guilds.cache.get(guild.guildId)
+		const existing =
+			locatedGuild?.channels.cache.get(channelId) ??
+			(await locatedGuild?.channels.fetch(channelId).catch(() => null))
+		if (!existing || existing.type !== ChannelType.GuildText) {
+			throw new Error('Reserved game channel is unavailable')
+		}
+		const favoredTeamInfo = await teamResolver.resolve(
+			channel.matchOdds.favored,
+			{ sport: channel.sport.toLowerCase(), full: true },
+		)
+		this.validateFavoredTeamInfo(favoredTeamInfo)
+		const matchImg = await this.fetchVsImg(
+			channel.channelname,
+			channel.sport,
+		)
+		const messageOptions = await this.prepareGameMessage(channel, guild, {
+			favoredTeamInfo,
+			matchImg,
+		})
+		const expectedDescription =
+			messageOptions.embeds?.[0] instanceof EmbedBuilder
+				? messageOptions.embeds[0].data.description
+				: undefined
+		const recentMessages = await existing.messages
+			.fetch({ limit: 10 })
+			.catch(() => null)
+		if (
+			expectedDescription &&
+			recentMessages?.some((message) =>
+				message.embeds.some(
+					(embed) => embed.description === expectedDescription,
+				),
+			)
+		) {
+			return
+		}
+		await existing.send(messageOptions)
+	}
+
+	private async prepareGameMessage(
+		channel: ChannelAggregated,
+		guild: GuildEligibility,
+		metadata: { favoredTeamInfo: any; matchImg: Buffer | null },
+	): Promise<MessageCreateOptions> {
+		const matchEmbed = await this.prepMatchEmbed({
+			favored: channel.matchOdds.favored,
+			favoredTeamClr: metadata.favoredTeamInfo.colors[0],
+			home_team: channel.home_team,
+			homeTeamShortName: new StringUtils().getShortName(
+				channel.home_team,
+			),
+			away_team: channel.away_team,
+			awayTeamShortName: new StringUtils().getShortName(
+				channel.away_team,
+			),
+			bettingChanId: guild.bettingChannelId,
+			header: channel.metadata?.headline ?? '',
+			sport: channel.sport,
+			records: channel.metadata?.records ?? null,
+		})
+		const messageOptions: MessageCreateOptions = {
+			embeds: [matchEmbed.embed],
+		}
+		if (metadata.matchImg) {
+			const attachment = new AttachmentBuilder(metadata.matchImg, {
+				name: 'match.jpg',
+			})
+			matchEmbed.embed.setImage('attachment://match.jpg')
+			messageOptions.files = [attachment]
+		}
+		return messageOptions
 	}
 
 	/**

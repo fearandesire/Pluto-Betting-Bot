@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:pluto:alert-event:v1",
+  "title": "Alert Event v1",
+  "description": "A bounded, redacted state transition for one operator-visible alert incident.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "service",
+    "version",
+    "environment",
+    "severity",
+    "key",
+    "scope",
+    "fingerprint",
+    "state",
+    "title",
+    "summary",
+    "fired_at"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "service": { "$ref": "#/$defs/identity" },
+    "version": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "environment": {
+      "type": "string",
+      "enum": ["production", "staging", "development", "test"]
+    },
+    "severity": { "type": "string", "enum": ["info", "warning", "critical"] },
+    "key": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 96,
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$"
+    },
+    "scope": { "$ref": "#/$defs/identity" },
+    "fingerprint": {
+      "type": "string",
+      "minLength": 7,
+      "maxLength": 260,
+      "pattern": "^[a-z0-9][a-z0-9_-]*:[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+:[a-z0-9][a-z0-9_-]*$"
+    },
+    "state": { "type": "string", "enum": ["firing", "resolved"] },
+    "title": { "type": "string", "minLength": 1, "maxLength": 160 },
+    "summary": { "type": "string", "minLength": 1, "maxLength": 1024 },
+    "fired_at": { "type": "string", "format": "date-time" },
+    "resolved_at": { "type": "string", "format": "date-time" },
+    "suppressed_count": { "type": "integer", "minimum": 0, "maximum": 2147483647 },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "code", "message", "retriable"],
+      "properties": {
+        "type": { "$ref": "#/$defs/errorIdentity" },
+        "code": { "$ref": "#/$defs/errorIdentity" },
+        "message": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "retriable": { "type": "boolean" }
+      }
+    },
+    "links": {
+      "type": "object",
+      "additionalProperties": false,
+      "maxProperties": 3,
+      "properties": {
+        "loki": { "$ref": "#/$defs/safeHttpsUrl" },
+        "runbook": { "$ref": "#/$defs/safeHttpsUrl" },
+        "ticket": { "$ref": "#/$defs/safeHttpsUrl" }
+      }
+    },
+    "context": { "$ref": "#/$defs/contextObject" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "state": { "const": "resolved" } }, "required": ["state"] },
+      "then": { "properties": { "resolved_at": true }, "required": ["resolved_at"] }
+    },
+    {
+      "if": { "properties": { "state": { "const": "firing" } }, "required": ["state"] },
+      "then": { "not": { "required": ["resolved_at"] } }
+    }
+  ],
+  "$defs": {
+    "identity": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-z0-9][a-z0-9_-]*$"
+    },
+    "errorIdentity": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 96,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+    },
+    "safePropertyName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "allOf": [
+        { "pattern": "^[a-z][a-z0-9_]*$" },
+        {
+          "not": {
+            "pattern": "(password|secret|token|api_?key|authorization|cookie|request_?body|response_?body)"
+          }
+        }
+      ]
+    },
+    "safeHttpsUrl": {
+      "type": "string",
+      "format": "uri",
+      "minLength": 9,
+      "maxLength": 2048,
+      "allOf": [
+        { "pattern": "^https://" },
+        { "not": { "pattern": "^https://[^/?#]*@" } }
+      ]
+    },
+    "contextObject": {
+      "type": "object",
+      "maxProperties": 24,
+      "propertyNames": { "$ref": "#/$defs/safePropertyName" },
+      "additionalProperties": { "$ref": "#/$defs/contextValue" }
+    },
+    "contextValue": {
+      "anyOf": [
+        { "$ref": "#/$defs/contextScalar" },
+        { "$ref": "#/$defs/contextArray" },
+        { "$ref": "#/$defs/contextObjectLeaf" }
+      ]
+    },
+    "contextObjectLeaf": {
+      "type": "object",
+      "maxProperties": 16,
+      "propertyNames": { "$ref": "#/$defs/safePropertyName" },
+      "additionalProperties": {
+        "anyOf": [
+          { "$ref": "#/$defs/contextScalar" },
+          { "$ref": "#/$defs/contextArray" }
+        ]
+      }
+    },
+    "contextArray": {
+      "type": "array",
+      "maxItems": 32,
+      "items": { "$ref": "#/$defs/contextScalar" }
+    },
+    "contextScalar": {
+      "anyOf": [
+        { "type": "string", "maxLength": 512 },
+        { "type": "number" },
+        { "type": "boolean" },
+        { "type": "null" }
+      ]
+    }
+  }
+}

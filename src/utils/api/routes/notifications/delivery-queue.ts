@@ -1,5 +1,10 @@
 import { type Job, Queue, Worker } from 'bullmq'
 import {
+	type AlertReporter,
+	getDefaultAlertReporter,
+} from '../../../../services/alerts/alert-reporter.js'
+import { ConsecutiveFailureTracker } from '../../../../services/alerts/failure-trackers.js'
+import {
 	classifyDeliveryError,
 	type DeliveryEnvelope,
 	type DeliveryRecord,
@@ -16,6 +21,8 @@ import type NotificationService from './notifications.service.js'
 
 export const NOTIFICATION_DELIVERY_QUEUE = 'notification-delivery-v1'
 export const SYSTEM_DISCORD_BASE_URL = 'http://fake-discord:8080'
+const MIN_RETRY_DELAY_MS = 60_000
+const MAX_RETRY_WINDOW_DELAY_MS = 60 * 60 * 1000
 
 // Keep queue construction lazy and environment-only. Importing notification
 // routes in unit tests must not force Pluto's full startup env schema.
@@ -209,7 +216,11 @@ async function sendToFakeDiscord(
 		const error = new Error(
 			`fake-discord returned ${response.status} for ${method} ${path}`,
 		)
-		Object.assign(error, { status: response.status, payload })
+		Object.assign(error, {
+			status: response.status,
+			payload,
+			retryAfterMs: parseRetryAfter(response.headers.get('retry-after')),
+		})
 		throw error
 	}
 	return payload
@@ -235,6 +246,11 @@ function fakeDiscordMessageId(response: unknown): string | undefined {
 
 class RetryableDeliveryError extends Error {
 	readonly retryable = true
+	readonly status?: number
+	constructor(readonly retryAfterMs?: number) {
+		super('One or more notification destinations require retry')
+		this.status = retryAfterMs === undefined ? undefined : 429
+	}
 }
 
 type DeliveryJob = DeliveryEnvelope
@@ -244,6 +260,8 @@ export interface NotificationDeliveryQueueOptions {
 	dispatcher?: DeliveryDispatcher
 	queue?: DeliveryQueuePort
 	startWorker?: boolean
+	alertReporter?: Pick<AlertReporter, 'firing' | 'resolved'>
+	discordRateLimitThreshold?: number
 }
 
 export interface DeliveryQueuePort {
@@ -260,17 +278,34 @@ export class NotificationDeliveryQueue {
 	private readonly worker?: Worker<DeliveryJob>
 	private readonly store: DeliveryStore
 	private readonly dispatcher: DeliveryDispatcher
+	private readonly alertReporter?: Pick<AlertReporter, 'firing' | 'resolved'>
+	private readonly discordRateLimitTracker?: ConsecutiveFailureTracker
 
 	constructor(options: NotificationDeliveryQueueOptions = {}) {
 		this.store = options.store ?? new RedisDeliveryStore()
 		this.dispatcher = options.dispatcher ?? new DiscordDeliveryDispatcher()
+		this.alertReporter = options.alertReporter ?? getDefaultAlertReporter()
+		const rateLimitReporter = this.alertReporter
+		if (rateLimitReporter) {
+			this.discordRateLimitTracker = new ConsecutiveFailureTracker(
+				rateLimitReporter,
+				{
+					key: 'discord.rate_limited',
+					scope: 'notification-delivery',
+					severity: 'warning',
+					title: 'Discord delivery is rate limited',
+					summary: 'Discord delivery is temporarily rate limited.',
+					threshold: options.discordRateLimitThreshold ?? 3,
+				},
+			)
+		}
 		this.queue =
 			options.queue ??
 			(new Queue<DeliveryJob>(NOTIFICATION_DELIVERY_QUEUE, {
 				connection: REDIS_CONFIG,
 				defaultJobOptions: {
 					attempts: 8,
-					backoff: { type: 'exponential', delay: 60_000 },
+					backoff: { type: 'custom' },
 					removeOnComplete: { age: 180 * 24 * 60 * 60 },
 					removeOnFail: false,
 				},
@@ -284,6 +319,13 @@ export class NotificationDeliveryQueue {
 					concurrency: 8,
 					lockDuration: 60_000,
 					stalledInterval: 30_000,
+					settings: {
+						backoffStrategy: (attemptsMade, _type, error) =>
+							NotificationDeliveryQueue.retryDelay(
+								attemptsMade,
+								error,
+							),
+					},
 				},
 			)
 			this.worker.on('failed', (job, error) => {
@@ -362,6 +404,7 @@ export class NotificationDeliveryQueue {
 			attempts: current.attempts + 1,
 		}))
 		let hasRetryableFailure = false
+		let retryAfterMs: number | undefined
 
 		for (const destination of record.destinations) {
 			if (
@@ -388,7 +431,15 @@ export class NotificationDeliveryQueue {
 						receipt,
 					}),
 				)
+				await this.discordRateLimitTracker?.success()
 			} catch (error) {
+				const status = (error as { status?: unknown }).status
+				if (
+					typeof status === 'number' &&
+					(status === 429 || status >= 500)
+				) {
+					await this.discordRateLimitTracker?.failure()
+				}
 				const classified = classifyDeliveryError(error)
 				const state: DestinationState =
 					classified.classification === 'permanent'
@@ -402,6 +453,13 @@ export class NotificationDeliveryQueue {
 					}),
 				)
 				if (state === 'retryable_failed') hasRetryableFailure = true
+				const candidate = error as { retryAfterMs?: unknown }
+				if (typeof candidate.retryAfterMs === 'number') {
+					retryAfterMs = Math.max(
+						retryAfterMs ?? 0,
+						candidate.retryAfterMs,
+					)
+				}
 			}
 		}
 
@@ -429,11 +487,65 @@ export class NotificationDeliveryQueue {
 						: current.delivered_at,
 			}
 		})
-		if (hasRetryableFailure || final.state === 'retryable_failed') {
-			throw new RetryableDeliveryError(
-				'One or more notification destinations require retry',
-			)
+		const attemptsExhausted =
+			(job.attemptsMade ?? 0) + 1 >= Number(job.opts?.attempts ?? 1)
+		if (final.state === 'delivered') {
+			await this.reportAlertRecovery(deliveryId, job.data.kind)
+		} else if (
+			final.state === 'permanent_failed' ||
+			(hasRetryableFailure && attemptsExhausted)
+		) {
+			await this.reportAlertFailure(deliveryId, job.data.kind)
 		}
+		if (hasRetryableFailure || final.state === 'retryable_failed') {
+			throw new RetryableDeliveryError(retryAfterMs)
+		}
+	}
+
+	/** BullMQ custom backoff keeps server-provided retry hints bounded. */
+	static retryDelay(attemptsMade: number, error: Error): number {
+		return boundedDeliveryRetryDelay(
+			attemptsMade,
+			error as Error & { retryAfterMs?: number },
+		)
+	}
+
+	private async reportAlertFailure(
+		deliveryId: string,
+		kind: DeliveryJob['kind'],
+	): Promise<void> {
+		if (!this.alertReporter) return
+		await this.alertReporter
+			.firing({
+				key: 'delivery.failed',
+				scope: `${kind}:${deliveryId}`,
+				severity: 'warning',
+				title: 'Notification delivery failed',
+				summary:
+					'A notification delivery job requires operator attention.',
+				retriable: true,
+				observedAt: new Date(),
+			})
+			.catch(() => undefined)
+	}
+
+	private async reportAlertRecovery(
+		deliveryId: string,
+		kind: DeliveryJob['kind'],
+	): Promise<void> {
+		if (!this.alertReporter) return
+		await this.alertReporter
+			.resolved({
+				key: 'delivery.failed',
+				scope: `${kind}:${deliveryId}`,
+				severity: 'warning',
+				title: 'Notification delivery recovered',
+				summary: 'A notification delivery job completed successfully.',
+				retriable: true,
+				observedAt: new Date(),
+				resolvedAt: new Date(),
+			})
+			.catch(() => undefined)
 	}
 
 	/** Focused seam for integration tests; BullMQ invokes the same handler. */
@@ -445,6 +557,33 @@ export class NotificationDeliveryQueue {
 		await this.worker?.close()
 		await this.queue.close()
 	}
+}
+
+export function boundedDeliveryRetryDelay(
+	attemptsMade: number,
+	error: { retryAfterMs?: number; status?: number },
+): number {
+	const requested = error.status === 429 ? error.retryAfterMs : undefined
+	const exponential = Math.min(
+		2 ** Math.max(0, attemptsMade - 1) * MIN_RETRY_DELAY_MS,
+		MAX_RETRY_WINDOW_DELAY_MS,
+	)
+	if (!Number.isFinite(requested) || requested === undefined)
+		return exponential
+	return Math.min(
+		MAX_RETRY_WINDOW_DELAY_MS,
+		Math.max(exponential, Math.trunc(requested)),
+	)
+}
+
+function parseRetryAfter(value: string | null): number | undefined {
+	if (!value) return undefined
+	const seconds = Number(value)
+	if (Number.isFinite(seconds) && seconds > 0) return seconds * 1000
+	const timestamp = Date.parse(value)
+	if (Number.isNaN(timestamp)) return undefined
+	const delay = timestamp - Date.now()
+	return delay > 0 ? delay : undefined
 }
 
 interface PropPostDestination {
