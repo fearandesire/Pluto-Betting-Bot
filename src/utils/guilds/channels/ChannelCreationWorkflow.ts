@@ -109,6 +109,7 @@ export class ChannelCreationWorkflow {
 					throw new LeaseLostError()
 				}
 			}
+			if (leaseLost) throw new LeaseLostError()
 			created = await this.ports.discord.create(intent)
 			await this.recordIfOwned(intent, owner, created.channelId)
 			recorded = true
