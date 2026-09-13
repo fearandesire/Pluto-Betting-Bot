@@ -106,6 +106,7 @@ describe('public roadmap publisher', () => {
 
 		expect(() => publishRoadmap([rawIdItem], { env: { ROADMAP_MILESTONE_ALLOWLIST: allowedMilestone } })).toThrow()
 		expect(() => publishRoadmap([rawIdItem], { env: { ...env, ROADMAP_ID_SECRET: 'short' } })).toThrow()
+		expect(() => publishRoadmap([rawIdItem], { env: { ...env, ROADMAP_ID_SECRET: ' '.repeat(32) } })).toThrow()
 	})
 
 	it('publishes titles and opt-in summaries, never descriptions', () => {
@@ -122,8 +123,13 @@ describe('public roadmap publisher', () => {
 	})
 
 	it.each([
-		'tf-1547',
-		'TF1547',
+		'abc-123',
+		'ABC123',
+		'#616',
+		'TF 1547',
+		'TF_1547',
+		'PR 616',
+		'issue 1547',
 		'X-12',
 		'tracker.example/item',
 		'https://github.com/example/item',
@@ -133,14 +139,20 @@ describe('public roadmap publisher', () => {
 		'@handle',
 		'123e4567-e89b-12d3-a456-426614174000',
 		'Sept 13',
+		'Sep 2026',
+		'sept. 13',
 		'13th Sep',
 		'2026/09/13',
 		'13.09.2026',
+		'9/13',
 		'Q3 2026',
 		'20260913',
+		'123e4567e89b12d3a456426614174000',
 		'[x](mailto:person@example.com)',
 		'[x](/private)',
+		'[x](docs/private)',
 	])('rejects unsafe public summary %s', (unsafeSummary) => {
+		expect(() => publish([item({ title: unsafeSummary })])).toThrow()
 		expect(() => publish([item({ publicSummary: unsafeSummary })])).toThrow()
 	})
 
