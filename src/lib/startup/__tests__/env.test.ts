@@ -66,4 +66,41 @@ describe('Pluto system startup env gate', () => {
 			}),
 		).toThrow(/TOKEN is required/)
 	})
+
+	it('allows mock startup without observability or Patreon configuration', () => {
+		const env = parseStartupEnv({
+			...requiredEnv,
+			PATREON_API_URL: undefined,
+			AXIOM_DATASET: undefined,
+			AXIOM_API_TOKEN: undefined,
+			AXIOM_ORG_ID: undefined,
+			USE_MOCK_DATA: 'true',
+			MOCK_GUILD_BETTING_CHAN_ID: 'placeholder-channel',
+			DEV_GUILD_GAMES_CATEGORY_ID: 'placeholder-category',
+		})
+
+		expect(env.USE_MOCK_DATA).toBe(true)
+		expect(env.PATREON_API_URL).toBeUndefined()
+		expect(env.AXIOM_DATASET).toBeUndefined()
+		expect(env.AXIOM_API_TOKEN).toBeUndefined()
+		expect(env.AXIOM_ORG_ID).toBeUndefined()
+	})
+
+	it('requires Patreon and Axiom configuration in production', () => {
+		expect(() =>
+			parseStartupEnv({
+				...requiredEnv,
+				NODE_ENV: 'production',
+				PATREON_API_URL: undefined,
+			}),
+		).toThrow(/PATREON_API_URL/)
+
+		expect(() =>
+			parseStartupEnv({
+				...requiredEnv,
+				NODE_ENV: 'production',
+				AXIOM_API_TOKEN: undefined,
+			}),
+		).toThrow(/AXIOM_API_TOKEN/)
+	})
 })
