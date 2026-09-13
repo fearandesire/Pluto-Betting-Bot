@@ -96,6 +96,8 @@ CLAUDE.md
 
 docs/internal
 scripts/internal
+scripts/roadmap/exports/
+roadmap-export*.json
 
 .frolic-session.json
 
