@@ -59,6 +59,8 @@ describeWithRedis('channel creation lease shutdown', () => {
 
 	afterEach(() => {
 		vi.useRealTimers()
+		vi.restoreAllMocks()
+		vi.clearAllMocks()
 		clearShutdownQueueRegistryForTests()
 	})
 
