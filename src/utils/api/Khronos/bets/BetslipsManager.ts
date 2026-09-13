@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { betFooter, supportMessage } from '@pluto-config'
 import type {
 	BetslipWithAggregationDTO,
@@ -92,6 +93,7 @@ export class BetslipManager {
 				const cacheBetData = {
 					...betslip,
 					guild_id,
+					placement_id: randomUUID(),
 				}
 				if (!betslip.dateofmatchup || !betslip.opponent) {
 					const errEmb = await ErrorEmbeds.internalErr(
@@ -148,6 +150,7 @@ export class BetslipManager {
 			if (response.statusCode >= 200 && response.statusCode < 300) {
 				const { betslip } = response
 				handleNewUser(response)
+				await this.betCacheService.clearUserBet(betDetails.userid)
 
 				const guildUtils = new GuildUtils()
 				const chosenTeamEmoji =

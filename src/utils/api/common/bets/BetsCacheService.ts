@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import type {
 	BetslipWithAggregationDTO,
 	PlaceBetDto,
@@ -10,6 +11,7 @@ import type { CacheManager } from '../../../cache/cache-manager.js'
  * Stores only essential data needed for bet finalization
  */
 export interface CachedBetData {
+	placement_id: string
 	userid: string
 	team: string
 	amount: number
@@ -45,7 +47,10 @@ export class BetsCacheService {
 	 */
 	async cacheUserBet(
 		userId: string,
-		betData: BetslipWithAggregationDTO & { guild_id: string },
+		betData: BetslipWithAggregationDTO & {
+			guild_id: string
+			placement_id?: string
+		},
 	) {
 		const cacheKey = this.cachePrefix + userId
 
@@ -59,6 +64,7 @@ export class BetsCacheService {
 		// `event_id` is the canonical match identifier; `matchup_id` is the legacy
 		// alias kept populated for backward compatibility with older Khronos endpoints.
 		const cachedData: CachedBetData = {
+			placement_id: betData.placement_id ?? randomUUID(),
 			userid: betData.userid,
 			team: betData.team,
 			amount: betData.amount,
@@ -84,7 +90,13 @@ export class BetsCacheService {
 	async getUserBet(userId: string): Promise<CachedBetData | null> {
 		const cacheKey = this.cachePrefix + userId
 		const betData = await this.cache.get(cacheKey)
-		return betData || null
+		if (!betData) return null
+		if (!betData.placement_id) {
+			const upgradedBet = { ...betData, placement_id: randomUUID() }
+			await this.cache.set(cacheKey, upgradedBet, this.BET_CACHE_TTL)
+			return upgradedBet
+		}
+		return betData
 	}
 
 	/**
@@ -114,8 +126,11 @@ export class BetsCacheService {
 	 * Sends `event_id` as the canonical match identifier and keeps `matchup_id`
 	 * populated alongside it for backward compatibility during the deprecation window.
 	 */
-	async sanitize(betData: CachedBetData): Promise<PlaceBetDto> {
+	async sanitize(
+		betData: CachedBetData,
+	): Promise<PlaceBetDto & { placement_id: string }> {
 		return {
+			placement_id: betData.placement_id,
 			userid: betData.userid,
 			team: betData.team,
 			amount: betData.amount,
