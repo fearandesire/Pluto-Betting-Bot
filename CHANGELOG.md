@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.11.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.10.0...v4.11.0) (2026-09-13)
+
+
+### Features
+
+* publish a private-by-default public roadmap ([#616](https://github.com/fearandesire/Pluto-Betting-Bot/issues/616)) ([0bd4b07](https://github.com/fearandesire/Pluto-Betting-Bot/commit/0bd4b0776e46c8782653fbc05155ab490c4af5fb))
+
 ## [4.10.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.9.0...v4.10.0) (2026-09-13)
 
 
