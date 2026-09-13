@@ -155,7 +155,7 @@ describe('public roadmap publisher', () => {
 
 		expect(markdown).not.toContain('\n## Pwned')
 		expect(markdown).toContain('A line')
-		expect(markdown).toContain('&lt;img onerror=&quot;alert(1)&quot;&gt;')
+		expect(markdown).toContain('&lt;img onerror=&quot;alert\\(1\\)&quot;&gt;')
 		expect(markdown).not.toContain('<img')
 	})
 
@@ -175,13 +175,14 @@ describe('public roadmap publisher', () => {
 	it('maps tracker states to roadmap lanes and sorts titles', () => {
 		const markdown = publish([
 			item({ trackerId: 'tracker-z', title: 'Zed', status: 'In Progress' }),
+			item({ trackerId: 'tracker-b', title: 'Another', status: 'In Progress' }),
 			item({ trackerId: 'tracker-a', title: 'Alpha', status: 'Backlog' }),
 			item({ trackerId: 'tracker-d', title: 'Done item', status: 'Done', completedAt: '2026-09-01' }),
 		])
 
-		expect(markdown.indexOf('Alpha')).toBeLessThan(markdown.indexOf('Zed'))
+		expect(markdown.indexOf('Another')).toBeLessThan(markdown.indexOf('Zed'))
 		expect(markdown).toContain('## Later\n- Alpha')
-		expect(markdown).toContain('## Now\n- Zed')
+		expect(markdown).toContain('## Now\n- Another\n- Zed')
 		expect(markdown).toContain('## Shipped\n- Done item')
 	})
 
