@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.11.1](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.11.0...v4.11.1) (2026-09-13)
+
+
+### Bug Fixes
+
+* release channel reservations during shutdown ([92eec5f](https://github.com/fearandesire/Pluto-Betting-Bot/commit/92eec5ff10e077db0e00b6a3bd215bee50ce8670))
+
 ## [4.11.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.10.0...v4.11.0) (2026-09-13)
 
 
