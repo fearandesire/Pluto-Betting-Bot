@@ -53,7 +53,6 @@ export const CHANNEL_CREATION_LEASE_RELEASE_TIMEOUT_MS = 2_000
 
 interface ActiveLease {
 	intent: ChannelIntent
-	owner: string
 	stopRenewal: () => void
 }
 
@@ -190,7 +189,9 @@ export class ChannelCreationWorkflow {
 		}
 	}
 
-	async close(_drainTimeoutMs: number): Promise<void> {
+	async close(
+		_drainTimeoutMs = CHANNEL_CREATION_LEASE_RELEASE_TIMEOUT_MS,
+	): Promise<void> {
 		if (this.shuttingDown) return
 		this.shuttingDown = true
 		const deadline = Date.now() + CHANNEL_CREATION_LEASE_RELEASE_TIMEOUT_MS
@@ -265,7 +266,6 @@ export class ChannelCreationWorkflow {
 	private trackLease(intent: ChannelIntent, owner: string): ActiveLease {
 		const lease: ActiveLease = {
 			intent,
-			owner,
 			stopRenewal: () => undefined,
 		}
 		if (this.shuttingDown) {
