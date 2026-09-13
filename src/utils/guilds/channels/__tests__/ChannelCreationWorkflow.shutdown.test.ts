@@ -17,6 +17,7 @@ vi.mock('../../../logging/WinstonLogger.js', () => ({
 }))
 
 import { closeQueueWorkers } from '../../../../lib/startup/shutdown.js'
+import { clearShutdownQueueRegistryForTests } from '../../../../lib/startup/shutdown-registry.js'
 import {
 	type ChannelIntent,
 	type ChannelReservationStore,
@@ -59,6 +60,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 
 	afterEach(() => {
 		vi.useRealTimers()
+		clearShutdownQueueRegistryForTests()
 	})
 
 	it('stops renewing an owned lease after shutdown', async () => {
@@ -165,26 +167,45 @@ describeWithRedis('channel creation lease shutdown', () => {
 	})
 
 	it('logs and survives a shutdown release failure', async () => {
+		vi.useFakeTimers()
 		const intent = uniqueIntent('failure')
 		const store = new RedisChannelReservationStore(storeRedis, {
 			leaseSeconds: 300,
 		})
+		let resolveLookup!: (channel: { id: string } | null) => void
+		const findByMarker = vi
+			.fn()
+			.mockImplementationOnce(
+				() =>
+					new Promise<{ id: string } | null>((resolve) => {
+						resolveLookup = resolve
+					}),
+			)
+			.mockResolvedValue(null)
 		const release = vi
 			.fn()
 			.mockRejectedValue(new Error('redis unavailable'))
 		const workflow = new ChannelCreationWorkflow(
 			workflowPorts(reservationsWithRelease(store, release), {
+				findByMarker,
 				create: vi.fn().mockRejectedValue(new Error('create failed')),
 			}),
 		)
+		const run = workflow.run(intent)
+		await waitForReservation(redis, intent)
+		const close = closeQueueWorkers(30_000)
 
-		await expect(workflow.run(intent)).rejects.toThrow('redis unavailable')
-		await expect(closeQueueWorkers(30_000)).resolves.not.toThrow()
+		await vi.advanceTimersByTimeAsync(1_500)
+		await expect(close).resolves.not.toThrow()
+		expect(release).toHaveBeenCalledOnce()
 
 		expect(warn).toHaveBeenCalledWith({
 			message: 'lease left to expire',
 			channelKey: intent.marker,
 		})
+
+		resolveLookup(null)
+		await expect(run).rejects.toThrow('create failed')
 		await redis.del(keyFor(intent))
 	})
 
@@ -305,6 +326,30 @@ describeWithRedis('channel creation lease shutdown', () => {
 
 		resolveLookup(null)
 		await expect(run).rejects.toThrow('create failed')
+		await redis.del(keyFor(intent))
+	})
+
+	it('drops a failed lease registry entry after the lease TTL', async () => {
+		vi.useFakeTimers()
+		const intent = uniqueIntent('registry-expiry')
+		const store = new RedisChannelReservationStore(storeRedis, {
+			leaseSeconds: 300,
+		})
+		const release = vi
+			.fn()
+			.mockRejectedValue(new Error('redis unavailable'))
+		const workflow = new ChannelCreationWorkflow(
+			workflowPorts(reservationsWithRelease(store, release), {
+				create: vi.fn().mockRejectedValue(new Error('create failed')),
+			}),
+		)
+
+		await expect(workflow.run(intent)).rejects.toThrow('redis unavailable')
+		const close = vi.spyOn(workflow, 'close')
+		await vi.advanceTimersByTimeAsync(5 * 60 * 1000)
+		await closeQueueWorkers(30_000)
+
+		expect(close).not.toHaveBeenCalled()
 		await redis.del(keyFor(intent))
 	})
 })
