@@ -7,6 +7,7 @@ vi.mock('../../../logging/WinstonLogger.js', () => ({
 import {
 	type ChannelCreationPorts,
 	ChannelCreationWorkflow,
+	LeaseLostError,
 } from '../ChannelCreationWorkflow.js'
 
 const intent = {
@@ -199,6 +200,36 @@ describe('ChannelCreationWorkflow', () => {
 		await new ChannelCreationWorkflow(injected).run(intent)
 		await vi.advanceTimersByTimeAsync(60_000)
 		expect(injected.discord.create).toHaveBeenCalledOnce()
+	})
+
+	it('aborts before creation when the pre-create lease refresh throws', async () => {
+		const injected = ports()
+		injected.reservations.refresh = vi
+			.fn()
+			.mockRejectedValue(new Error('redis unavailable'))
+
+		await expect(
+			new ChannelCreationWorkflow(injected).run(intent),
+		).rejects.toBeInstanceOf(LeaseLostError)
+		expect(injected.discord.create).not.toHaveBeenCalled()
+		expect(injected.reservations.release).toHaveBeenCalledWith(
+			intent,
+			'owner-a',
+		)
+	})
+
+	it('uses a typed lease error when the pre-create lease refresh is lost', async () => {
+		const injected = ports()
+		injected.reservations.refresh = vi.fn().mockResolvedValue(false)
+
+		await expect(
+			new ChannelCreationWorkflow(injected).run(intent),
+		).rejects.toBeInstanceOf(LeaseLostError)
+		expect(injected.discord.create).not.toHaveBeenCalled()
+		expect(injected.reservations.release).toHaveBeenCalledWith(
+			intent,
+			'owner-a',
+		)
 	})
 
 	it('reclaims a stale created result when the channel no longer exists', async () => {
