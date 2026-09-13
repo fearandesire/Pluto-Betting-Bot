@@ -485,6 +485,196 @@ describeWithRedis('channel creation lease shutdown', () => {
 		await redis.del(keyFor(intent))
 	})
 
+	it('retains a lease after an ambiguous verification refresh', async () => {
+		vi.useFakeTimers()
+		const intent = uniqueIntent('ambiguous-verification-refresh')
+		const store = new RedisChannelReservationStore(storeRedis, {
+			leaseSeconds: 300,
+		})
+		let resolveLookup!: (channel: { id: string } | null) => void
+		const findByMarker = vi.fn().mockImplementationOnce(
+			() =>
+				new Promise<{ id: string } | null>((resolve) => {
+					resolveLookup = resolve
+				}),
+		)
+		let refreshApplied = false
+		const refresh = vi.fn(
+			async (refreshIntent: ChannelIntent, owner: string) => {
+				const renewed = await store.refresh(refreshIntent, owner)
+				if (renewed) {
+					refreshApplied = true
+					throw new Error('verification refresh response lost')
+				}
+				return renewed
+			},
+		)
+		const release = vi
+			.fn()
+			.mockRejectedValueOnce(new Error('initial release failed'))
+			.mockImplementation((releaseIntent: ChannelIntent, owner: string) =>
+				store.release(releaseIntent, owner),
+			)
+		const workflow = new ChannelCreationWorkflow(
+			workflowPorts(reservationsWithRelease(store, release, refresh), {
+				findByMarker,
+			}),
+		)
+		const run = workflow.run(intent)
+
+		await waitForReservation(redis, intent)
+		vi.setSystemTime(Date.now() + 4 * 60_000)
+		resolveLookup(null)
+		await expect(run).rejects.toThrow('Channel creation lease was lost')
+		expect(refreshApplied).toBe(true)
+		expect(await redis.ttl(keyFor(intent))).toBeGreaterThan(0)
+
+		await vi.advanceTimersByTimeAsync(3 * 60_000)
+		expect(await redis.exists(keyFor(intent))).toBe(1)
+
+		await closeQueueWorkers(30_000)
+		expect(release).toHaveBeenCalledTimes(2)
+		expect(await redis.exists(keyFor(intent))).toBe(0)
+	})
+
+	it('retains a lease after an ambiguous periodic refresh', async () => {
+		vi.useFakeTimers()
+		const intent = uniqueIntent('ambiguous-periodic-refresh')
+		const store = new RedisChannelReservationStore(storeRedis, {
+			leaseSeconds: 300,
+		})
+		let rejectCreate!: (error: Error) => void
+		const create = vi.fn(
+			() =>
+				new Promise<{
+					channelId: string
+					complete: () => Promise<void>
+				}>((_, reject) => {
+					rejectCreate = reject
+				}),
+		)
+		let refreshCalls = 0
+		let ambiguousRefreshApplied = false
+		const refresh = vi.fn(
+			async (refreshIntent: ChannelIntent, owner: string) => {
+				refreshCalls += 1
+				const renewed = await store.refresh(refreshIntent, owner)
+				if (refreshCalls === 5 && renewed) {
+					ambiguousRefreshApplied = true
+					throw new Error('periodic refresh response lost')
+				}
+				return renewed
+			},
+		)
+		const release = vi
+			.fn()
+			.mockRejectedValueOnce(new Error('initial release failed'))
+			.mockImplementation((releaseIntent: ChannelIntent, owner: string) =>
+				store.release(releaseIntent, owner),
+			)
+		const workflow = new ChannelCreationWorkflow(
+			workflowPorts(reservationsWithRelease(store, release, refresh), {
+				create,
+			}),
+		)
+		const run = workflow.run(intent)
+
+		await waitForReservation(redis, intent)
+		await vi.waitFor(() => expect(refreshCalls).toBe(1))
+		for (let minute = 0; minute < 4; minute += 1) {
+			await vi.advanceTimersByTimeAsync(60_000)
+			await vi.waitFor(() => expect(refreshCalls).toBe(minute + 2))
+		}
+		expect(ambiguousRefreshApplied).toBe(true)
+		rejectCreate(new Error('create failed'))
+		await expect(run).rejects.toThrow('initial release failed')
+
+		await vi.advanceTimersByTimeAsync(4 * 60_000 + 30_000)
+		expect(await redis.exists(keyFor(intent))).toBe(1)
+		expect(await redis.ttl(keyFor(intent))).toBeGreaterThan(0)
+
+		await closeQueueWorkers(30_000)
+		expect(release).toHaveBeenCalledTimes(2)
+		expect(await redis.exists(keyFor(intent))).toBe(0)
+	})
+
+	it('ignores a late refresh result after the lease was removed', async () => {
+		vi.useFakeTimers()
+		const intent = uniqueIntent('late-refresh-result')
+		const store = new RedisChannelReservationStore(storeRedis, {
+			leaseSeconds: 300,
+		})
+		let resolveCreate!: (created: {
+			channelId: string
+			complete: () => Promise<void>
+		}) => void
+		const create = vi.fn(
+			() =>
+				new Promise<{
+					channelId: string
+					complete: () => Promise<void>
+				}>((resolve) => {
+					resolveCreate = resolve
+				}),
+		)
+		let refreshCalls = 0
+		let resolveLateRefresh!: () => void
+		const lateRefresh = new Promise<void>((resolve) => {
+			resolveLateRefresh = resolve
+		})
+		const refresh = vi.fn(
+			async (refreshIntent: ChannelIntent, owner: string) => {
+				refreshCalls += 1
+				const renewed = await store.refresh(refreshIntent, owner)
+				if (refreshCalls === 2) {
+					await lateRefresh
+				}
+				return renewed
+			},
+		)
+		const workflow = new ChannelCreationWorkflow(
+			workflowPorts(
+				reservationsWithRelease(
+					store,
+					store.release.bind(store),
+					refresh,
+				),
+				{
+					create,
+				},
+			),
+		)
+		const run = workflow.run(intent)
+
+		await waitForReservation(redis, intent)
+		await vi.waitFor(() => expect(refreshCalls).toBe(1))
+		await vi.advanceTimersByTimeAsync(60_000)
+		await vi.waitFor(() => expect(refreshCalls).toBe(2))
+		const activeLeases = (
+			workflow as unknown as {
+				activeLeases: Map<
+					string,
+					{ expiryTimer?: ReturnType<typeof setTimeout> }
+				>
+			}
+		).activeLeases
+		const lease = [...activeLeases.values()][0]
+
+		resolveCreate({
+			channelId: 'discord-channel-late-refresh',
+			complete: vi.fn().mockResolvedValue(undefined),
+		})
+		await expect(run).resolves.toEqual({
+			state: 'created',
+			channelId: 'discord-channel-late-refresh',
+		})
+		expect(lease.expiryTimer).toBeUndefined()
+
+		resolveLateRefresh()
+		await vi.waitFor(() => expect(lease.expiryTimer).toBeUndefined())
+		await redis.del(keyFor(intent))
+	})
+
 	it('drops a failed lease registry entry after the lease TTL', async () => {
 		vi.useFakeTimers()
 		const intent = uniqueIntent('registry-expiry')
@@ -530,10 +720,13 @@ function workflowPorts(
 function reservationsWithRelease(
 	store: RedisChannelReservationStore,
 	release: ChannelReservationStore['release'],
+	refresh: NonNullable<
+		ChannelReservationStore['refresh']
+	> = store.refresh.bind(store),
 ): ChannelReservationStore {
 	return {
 		reserve: store.reserve.bind(store),
-		refresh: store.refresh.bind(store),
+		refresh,
 		reclaimCreated: store.reclaimCreated.bind(store),
 		recordCreated: store.recordCreated.bind(store),
 		release,
