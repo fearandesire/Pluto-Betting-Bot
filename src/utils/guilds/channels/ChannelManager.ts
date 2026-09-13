@@ -98,8 +98,8 @@ export default class ChannelManager {
 						this.findChannelByMarker(
 							guild.guildId,
 							intent,
-							knownChannelId,
 							guild.gameCategoryId,
+							knownChannelId,
 						),
 					completeExisting: (_intent, channelId) =>
 						this.completeExistingChannel(channel, guild, channelId),
@@ -132,8 +132,8 @@ export default class ChannelManager {
 	private async findChannelByMarker(
 		guildId: string,
 		intent: ChannelIntent,
-		knownChannelId?: string,
 		gameCategoryId: string,
+		knownChannelId?: string,
 	): Promise<{ id: string } | null> {
 		const guild = SapDiscClient.guilds.cache.get(guildId)
 		if (!guild) return null
