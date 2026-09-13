@@ -1,4 +1,8 @@
-import { PatreonDataDtoToJSON } from '@pluto-khronos/api-client'
+import {
+	BetslipsApi,
+	Configuration,
+	PatreonDataDtoToJSON,
+} from '@pluto-khronos/api-client'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ButtonHandler } from '../../../interaction-handlers/ButtonListener.js'
 import { BetsCacheService } from '../../../utils/api/common/bets/BetsCacheService.js'
@@ -387,6 +391,38 @@ describe('H2H placement identity', () => {
 			},
 			expect.any(Function),
 		)
+	})
+
+	it('passes guild scope through the generated client to fetch', async () => {
+		const fetchApi = vi.fn(
+			async (_input: RequestInfo | URL, init?: RequestInit) =>
+				new Response('{}', {
+					status: 200,
+					headers: { 'content-type': 'application/json' },
+				}),
+		)
+		const wrapper = new BetslipWrapper()
+		;(wrapper as never as { betslipApi: BetslipsApi }).betslipApi =
+			new BetslipsApi(
+				new Configuration({
+					basePath: 'http://localhost',
+					fetchApi,
+				}),
+			)
+
+		await wrapper.cancel({
+			userId: 'user-1',
+			betId: 42,
+			guildId: 'guild-1',
+			patreonDataDto: { patreonOverride: false },
+		})
+
+		expect(fetchApi).toHaveBeenCalledTimes(1)
+		const requestInit = fetchApi.mock.calls[0]?.[1]
+		expect(JSON.parse(String(requestInit?.body))).toMatchObject({
+			patreonOverride: false,
+			guild_id: 'guild-1',
+		})
 	})
 
 	it('clears pending state when the cancellation cache has expired', async () => {
