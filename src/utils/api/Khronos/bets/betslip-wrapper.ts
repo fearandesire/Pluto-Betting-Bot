@@ -6,6 +6,7 @@ import {
 	type GetActiveBetslipsRequest,
 	type GetUserBetslipsRequest,
 	type InitBetslipRequest,
+	type PlaceBetDto,
 	type PlaceBetslipRequest,
 	type PlacedBetslip,
 	type PlacedBetslipDto,
@@ -30,7 +31,23 @@ export default class BetslipWrapper {
 
 	async finalize(payload: PlaceBetslipRequest): Promise<PlacedBetslipDto> {
 		if (this.mock) return this.mock.placeBetslip(payload)
-		return await this.betslipApi.placeBetslip(payload)
+
+		const placementId = (
+			payload.placeBetDto as PlaceBetDto & { placement_id?: string }
+		).placement_id
+		if (!placementId) return await this.betslipApi.placeBetslip(payload)
+
+		// The generated client gains placement_id after the next Khronos release.
+		return await this.betslipApi.placeBetslip(
+			payload,
+			async ({ init }) => ({
+				...init,
+				body: JSON.stringify({
+					...JSON.parse(String(init.body)),
+					placement_id: placementId,
+				}),
+			}),
+		)
 	}
 
 	async cancel(payload: CancelBetslipRequest) {

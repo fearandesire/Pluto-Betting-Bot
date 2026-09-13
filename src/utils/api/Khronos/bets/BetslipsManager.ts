@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { betFooter, supportMessage } from '@pluto-config'
 import type {
 	BetslipWithAggregationDTO,
@@ -92,6 +93,7 @@ export class BetslipManager {
 				const cacheBetData = {
 					...betslip,
 					guild_id,
+					placement_id: randomUUID(),
 				}
 				if (!betslip.dateofmatchup || !betslip.opponent) {
 					const errEmb = await ErrorEmbeds.internalErr(
@@ -148,6 +150,7 @@ export class BetslipManager {
 			if (response.statusCode >= 200 && response.statusCode < 300) {
 				const { betslip } = response
 				handleNewUser(response)
+				await this.betCacheService.clearUserBet(betDetails.userid)
 
 				const guildUtils = new GuildUtils()
 				const chosenTeamEmoji =
@@ -191,7 +194,11 @@ export class BetslipManager {
 				if (interaction.deferred || interaction.replied) {
 					return interaction.editReply({
 						embeds: [errEmbed],
-						components: [],
+						...(this.isDefinitiveBusinessFailure(
+							response.statusCode,
+						)
+							? { components: [] }
+							: {}),
 					})
 				}
 				return interaction.followUp({
@@ -207,7 +214,9 @@ export class BetslipManager {
 			if (interaction.deferred || interaction.replied) {
 				return interaction.editReply({
 					embeds: [errEmbed],
-					components: [],
+					...(this.isDefinitiveBusinessFailure(error)
+						? { components: [] }
+						: {}),
 				})
 			}
 			return interaction.followUp({
@@ -215,6 +224,33 @@ export class BetslipManager {
 				ephemeral: true,
 			})
 		}
+	}
+
+	private isDefinitiveBusinessFailure(value: unknown): boolean {
+		if (typeof value === 'number') {
+			return (
+				value >= 400 && value < 500 && ![408, 425, 429].includes(value)
+			)
+		}
+		if (!value || typeof value !== 'object') return false
+
+		const error = value as {
+			status?: unknown
+			statusCode?: unknown
+			response?: { status?: unknown }
+		}
+		const status =
+			typeof error.statusCode === 'number'
+				? error.statusCode
+				: typeof error.status === 'number'
+					? error.status
+					: error.response?.status
+		return (
+			typeof status === 'number' &&
+			status >= 400 &&
+			status < 500 &&
+			![408, 425, 429].includes(status)
+		)
 	}
 
 	async successfulBetEmbed(
