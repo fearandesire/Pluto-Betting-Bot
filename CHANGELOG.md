@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.7.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.6.9...v4.7.0) (2026-09-13)
+
+
+### Features
+
+* accept durable H2H result deliveries ([#605](https://github.com/fearandesire/Pluto-Betting-Bot/issues/605)) ([112a07e](https://github.com/fearandesire/Pluto-Betting-Bot/commit/112a07ece01c447dd3170e623a6818f603fffca1))
+
 ## [4.6.9](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.6.8...v4.6.9) (2026-07-20)
 
 
