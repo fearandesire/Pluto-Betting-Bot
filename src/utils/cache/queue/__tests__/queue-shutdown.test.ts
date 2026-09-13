@@ -34,6 +34,10 @@ const queueWorker = vi.hoisted(() => {
 	}
 })
 
+const matchApi = vi.hoisted(() => ({
+	getAllMatches: vi.fn(),
+}))
+
 vi.mock('bullmq', () => ({
 	Queue: queueWorker.FakeQueue,
 	Worker: queueWorker.FakeWorker,
@@ -41,7 +45,7 @@ vi.mock('bullmq', () => ({
 
 vi.mock('../../../api/Khronos/matches/matchApiWrapper.js', () => ({
 	default: class {
-		getAllMatches = vi.fn()
+		getAllMatches = matchApi.getAllMatches
 	},
 }))
 
@@ -72,10 +76,7 @@ describe('queue shutdown', () => {
 		const jobFinished = new Promise<void>((resolve) => {
 			releaseJob = resolve
 		})
-		const api = new (
-			await import('../../../api/Khronos/matches/matchApiWrapper.js')
-		).default()
-		vi.mocked(api.getAllMatches).mockImplementationOnce(async () => {
+		matchApi.getAllMatches.mockImplementationOnce(async () => {
 			await jobFinished
 			return { matches: [] }
 		})
