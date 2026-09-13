@@ -201,7 +201,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 		})
 
 		rejectRelease(new Error('redis unavailable'))
-		await expect(run).rejects.toThrow('create failed')
+		await expect(run).rejects.toThrow('redis unavailable')
 		await redis.del(keyFor(intent))
 	})
 
@@ -321,7 +321,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 		})
 
 		rejectRelease(new Error('redis unavailable'))
-		await expect(run).rejects.toThrow('create failed')
+		await expect(run).rejects.toThrow('redis unavailable')
 		await redis.del(keyFor(intent))
 	})
 
