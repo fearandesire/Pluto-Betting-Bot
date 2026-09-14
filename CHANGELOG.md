@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.11.2](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.11.1...v4.11.2) (2026-09-14)
+
+
+### Bug Fixes
+
+* preserve wager identities and guild scope in requests ([#613](https://github.com/fearandesire/Pluto-Betting-Bot/issues/613)) ([148f101](https://github.com/fearandesire/Pluto-Betting-Bot/commit/148f101b5885cf33c7c8a10c4ed9cc956dcfd188))
+
 ## [4.11.1](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.11.0...v4.11.1) (2026-09-13)
 
 
