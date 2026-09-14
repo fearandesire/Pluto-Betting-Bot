@@ -571,8 +571,9 @@ describeWithRedis('channel creation lease shutdown', () => {
 		const refresh = vi.fn(
 			async (refreshIntent: ChannelIntent, owner: string) => {
 				refreshCalls += 1
+				const callNumber = refreshCalls
 				const renewed = await store.refresh(refreshIntent, owner)
-				if (refreshCalls === 5 && renewed) {
+				if (callNumber === 5 && renewed) {
 					ambiguousRefreshApplied = true
 					throw new Error('periodic refresh response lost')
 				}
@@ -594,6 +595,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 
 		await waitForReservation(redis, intent)
 		await vi.waitFor(() => expect(refreshCalls).toBe(1))
+		await vi.waitFor(() => expect(create).toHaveBeenCalledOnce())
 		for (let minute = 0; minute < 4; minute += 1) {
 			await vi.advanceTimersByTimeAsync(60_000)
 			await vi.waitFor(() => expect(refreshCalls).toBe(minute + 2))
@@ -640,8 +642,9 @@ describeWithRedis('channel creation lease shutdown', () => {
 		const refresh = vi.fn(
 			async (refreshIntent: ChannelIntent, owner: string) => {
 				refreshCalls += 1
+				const callNumber = refreshCalls
 				const renewed = await store.refresh(refreshIntent, owner)
-				if (refreshCalls === 2) {
+				if (callNumber === 2) {
 					try {
 						await lateRefresh
 					} finally {
@@ -662,6 +665,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 
 		await waitForReservation(redis, intent)
 		await vi.waitFor(() => expect(refreshCalls).toBe(1))
+		await vi.waitFor(() => expect(create).toHaveBeenCalledOnce())
 		await vi.advanceTimersByTimeAsync(60_000)
 		await vi.waitFor(() => expect(refreshCalls).toBe(2))
 		const activeLeases = (
