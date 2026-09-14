@@ -473,13 +473,12 @@ describe('H2H placement identity', () => {
 		)
 	})
 
-	it('documents the current client serializer dropping guild scope', () => {
-		// Client 3.8.0 serializes only patreonOverride; flip this assertion when bumped.
+	it('preserves guild scope in the generated cancellation serializer', () => {
 		expect(
 			PatreonDataDtoToJSON({
 				patreonOverride: false,
 				guild_id: 'guild-1',
 			} as never),
-		).toEqual({ patreonOverride: false })
+		).toEqual({ patreonOverride: false, guild_id: 'guild-1' })
 	})
 })
