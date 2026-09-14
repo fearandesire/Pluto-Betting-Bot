@@ -1,4 +1,10 @@
+import {
+	BetslipsApi,
+	Configuration,
+	PatreonDataDtoToJSON,
+} from '@pluto-khronos/api-client'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { ButtonHandler } from '../../../interaction-handlers/ButtonListener.js'
 import { BetsCacheService } from '../../../utils/api/common/bets/BetsCacheService.js'
 import { BetslipManager } from '../../../utils/api/Khronos/bets/BetslipsManager.js'
 import BetslipWrapper from '../../../utils/api/Khronos/bets/betslip-wrapper.js'
@@ -76,7 +82,9 @@ vi.mock('../../../lib/startup/pluto.js', () => ({
 }))
 
 vi.mock('../../../utils/api/patreon/Patreon-Facade.js', () => ({
-	default: class {},
+	default: class {
+		static isSponsorTier = vi.fn().mockResolvedValue(false)
+	},
 }))
 
 describe('H2H placement identity', () => {
@@ -164,24 +172,44 @@ describe('H2H placement identity', () => {
 
 	it('forwards placement_id in the generated request body', async () => {
 		const wrapper = new BetslipWrapper()
-		const placeBetslip = vi.fn(async (payload, transform) => {
-			const transformed = await transform({
-				init: { body: JSON.stringify(payload.placeBetDto) },
-			})
-			return JSON.parse(String(transformed.body))
-		})
-		;(wrapper as never as { betslipApi: unknown }).betslipApi = {
-			placeBetslip,
-		}
+		const fetchApi = vi.fn(
+			async (_input: RequestInfo | URL, _init?: RequestInit) =>
+				new Response('{}', {
+					status: 200,
+					headers: { 'content-type': 'application/json' },
+				}),
+		)
+		;(wrapper as never as { betslipApi: BetslipsApi }).betslipApi =
+			new BetslipsApi(
+				new Configuration({
+					basePath: 'http://localhost',
+					fetchApi,
+				}),
+			)
 
-		const response = await wrapper.finalize({
+		await wrapper.finalize({
 			placeBetDto: {
+				userid: 'user-1',
+				team: 'Lakers',
+				amount: 80,
+				guild_id: 'guild-1',
+				market_key: 'h2h',
+				matchup_id: 'matchup-1',
+				event_id: 'event-1',
 				placement_id: '00000000-0000-4000-8000-000000000012',
 			} as never,
 		})
 
-		expect(placeBetslip).toHaveBeenCalled()
-		expect(response).toMatchObject({
+		expect(fetchApi).toHaveBeenCalledTimes(1)
+		const requestInit = fetchApi.mock.calls[0]?.[1]
+		expect(JSON.parse(String(requestInit?.body))).toEqual({
+			userid: 'user-1',
+			team: 'Lakers',
+			amount: 80,
+			guild_id: 'guild-1',
+			market_key: 'h2h',
+			matchup_id: 'matchup-1',
+			event_id: 'event-1',
 			placement_id: '00000000-0000-4000-8000-000000000012',
 		})
 	})
@@ -319,5 +347,139 @@ describe('H2H placement identity', () => {
 			'placement-1',
 		)
 		expect(clearUserBet).toHaveBeenCalledTimes(1)
+	})
+
+	it('passes the interaction guild when cancelling a wager', async () => {
+		const cancel = vi.fn().mockResolvedValue({})
+		const manager = new BetslipManager({ cancel } as never, {} as never)
+		const interaction = {
+			deferred: true,
+			replied: false,
+			guildId: 'guild-1',
+			user: {
+				id: 'user-1',
+				displayAvatarURL: () => 'https://cdn.discordapp.com/avatar.png',
+			},
+			followUp: vi.fn(),
+			reply: vi.fn(),
+		}
+
+		await manager.cancelBet(interaction as never, 'user-1', 42)
+
+		expect(cancel).toHaveBeenCalledWith({
+			userId: 'user-1',
+			betId: 42,
+			guildId: 'guild-1',
+			patreonDataDto: { patreonOverride: false },
+		})
+	})
+
+	it('serializes the guild scope into the Khronos cancellation body', async () => {
+		const wrapper = new BetslipWrapper()
+		type RequestTransform = (context: {
+			init: { body: Record<string, unknown> }
+		}) => Promise<{ body: Record<string, unknown> }>
+		const cancelBetslip = vi.fn(
+			async (_request: unknown, transform: RequestTransform) =>
+				transform({
+					init: { body: { patreonOverride: false } },
+				}),
+		)
+		;(wrapper as never as { betslipApi: unknown }).betslipApi = {
+			cancelBetslip,
+		}
+
+		const serialized = (await wrapper.cancel({
+			userId: 'user-1',
+			betId: 42,
+			guildId: 'guild-1',
+			patreonDataDto: { patreonOverride: false },
+		})) as unknown as { body: Record<string, unknown> }
+		expect(serialized.body).toEqual({
+			patreonOverride: false,
+			guild_id: 'guild-1',
+		})
+
+		expect(cancelBetslip).toHaveBeenCalledWith(
+			{
+				userId: 'user-1',
+				betId: 42,
+				patreonDataDto: {
+					patreonOverride: false,
+					guild_id: 'guild-1',
+				},
+			},
+			expect.any(Function),
+		)
+	})
+
+	it('passes guild scope through the generated client to fetch', async () => {
+		const fetchApi = vi.fn(
+			async (_input: RequestInfo | URL, init?: RequestInit) =>
+				new Response('{}', {
+					status: 200,
+					headers: { 'content-type': 'application/json' },
+				}),
+		)
+		const wrapper = new BetslipWrapper()
+		;(wrapper as never as { betslipApi: BetslipsApi }).betslipApi =
+			new BetslipsApi(
+				new Configuration({
+					basePath: 'http://localhost',
+					fetchApi,
+				}),
+			)
+
+		await wrapper.cancel({
+			userId: 'user-1',
+			betId: 42,
+			guildId: 'guild-1',
+			patreonDataDto: { patreonOverride: false },
+		})
+
+		expect(fetchApi).toHaveBeenCalledTimes(1)
+		const requestInit = fetchApi.mock.calls[0]?.[1]
+		expect(JSON.parse(String(requestInit?.body))).toMatchObject({
+			patreonOverride: false,
+			guild_id: 'guild-1',
+		})
+	})
+
+	it('clears pending state when the cancellation cache has expired', async () => {
+		const handler = new ButtonHandler({} as never, {} as never)
+		;(handler as never as { betsCacheService: unknown }).betsCacheService =
+			{
+				getUserBet: vi.fn().mockResolvedValue(undefined),
+			}
+		const clearPending = vi
+			.spyOn(BetslipWrapper.prototype, 'clearPending')
+			.mockResolvedValue({} as never)
+		const interaction = {
+			customId: 'matchup_btn_cancel',
+			guildId: 'guild-1',
+			user: {
+				id: 'user-1',
+				displayAvatarURL: () => 'avatar',
+			},
+			deferUpdate: vi.fn(),
+			editReply: vi.fn(),
+		}
+
+		await handler.parse(interaction as never)
+
+		expect(clearPending).toHaveBeenCalledWith('user-1')
+		expect(interaction.editReply).toHaveBeenCalledWith(
+			expect.objectContaining({ components: [] }),
+		)
+	})
+
+	it('documents the current client serializer dropping guild scope', () => {
+		// Client 3.8.0 serializes only patreonOverride; flip this assertion when bumped.
+		expect(
+			PatreonDataDtoToJSON({
+				patreonOverride: false,
+				guild_id: 'guild-1',
+			} as never),
+		).toEqual({ patreonOverride: false })
 	})
 })

@@ -47,7 +47,8 @@ export class UserCommand extends Command {
 				userid,
 			)
 			const matchingBet = betsData.pendingBets.find(
-				(bet) => bet.betid === betId,
+				(bet) =>
+					bet.betid === betId && bet.guild_id === interaction.guildId,
 			)
 			if (!matchingBet) {
 				const errEmbed = await ErrorEmbeds.betErr(
