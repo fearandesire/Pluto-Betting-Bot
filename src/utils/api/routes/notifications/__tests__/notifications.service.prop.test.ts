@@ -1,5 +1,6 @@
 import { EmbedBuilder } from 'discord.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { RedisCacheClient } from '../../../../cache/redis-instance.js'
 
 const mocks = vi.hoisted(() => ({
 	fetchChannel: vi.fn(),
@@ -25,6 +26,13 @@ vi.mock('../../../../logging/WinstonLogger.js', () => ({
 	logger: mocks.logger,
 }))
 
+import { deliveryEnvelopeSchema } from '../delivery-contract.js'
+import {
+	type DeliveryDispatcher,
+	type DeliveryQueuePort,
+	NotificationDeliveryQueue,
+} from '../delivery-queue.js'
+import { RedisDeliveryStore } from '../delivery-store.js'
 import NotificationService from '../notifications.service.js'
 
 const payload = {
@@ -41,6 +49,22 @@ const payload = {
 			guild_id: 'guild-1',
 			channel_id: 'channel-1',
 			message_id: 'message-1',
+		},
+	],
+}
+
+const voidPayload = {
+	...payload,
+	result: 'void' as const,
+	winning_side_display: undefined,
+	actual_value: null,
+	tallies: { correct: 0, incorrect: 0, total: 2 },
+	messages: [
+		payload.messages[0],
+		{
+			guild_id: 'guild-1',
+			channel_id: 'channel-1',
+			message_id: 'message-2',
 		},
 	],
 }
@@ -63,6 +87,18 @@ function createMessage() {
 		return message
 	})
 	return message
+}
+
+function fakeRedis(): RedisCacheClient {
+	const values = new Map<string, string>()
+	return {
+		set: async (key, value, ...args) => {
+			if (args.includes('NX') && values.has(key)) return null
+			values.set(key, value)
+			return 'OK'
+		},
+		get: async (key) => values.get(key) ?? null,
+	} as unknown as RedisCacheClient
 }
 
 describe('NotificationService.processPropSettled', () => {
@@ -155,5 +191,153 @@ describe('NotificationService.processPropSettled', () => {
 				message_id: 'message-1',
 			}),
 		)
+	})
+
+	it('renders a void settlement once on each ledger message', async () => {
+		const messages = new Map([
+			['message-1', createMessage()],
+			['message-2', createMessage()],
+		])
+		const channel = {
+			guildId: 'guild-1',
+			isTextBased: () => true,
+			messages: {
+				fetch: vi.fn(async (messageId: string) =>
+					messages.get(messageId),
+				),
+			},
+		}
+		mocks.fetchChannel.mockResolvedValue(channel)
+
+		await new NotificationService().processPropSettled(voidPayload)
+
+		expect(channel.messages.fetch).toHaveBeenCalledTimes(2)
+		for (const message of messages.values()) {
+			expect(message.edit).toHaveBeenCalledOnce()
+			const edit = message.edit.mock.calls[0][0] as {
+				embeds: Array<{
+					toJSON: () => {
+						fields?: Array<{ name: string; value: string }>
+					}
+				}>
+				components: unknown[]
+			}
+			const fields = edit.embeds[0].toJSON().fields ?? []
+			expect(fields).toEqual(
+				expect.arrayContaining([
+					expect.objectContaining({
+						name: '🎯 Result',
+						value: '**Result: Voided 🚫**',
+					}),
+					expect.objectContaining({
+						name: '📊 Prediction results',
+						value: '0% of 2 predictors got it right (0 correct, 0 incorrect).',
+					}),
+				]),
+			)
+			expect(edit.components).toEqual([])
+		}
+	})
+
+	it('warns for a deleted message while editing the remaining void message', async () => {
+		const survivingMessage = createMessage()
+		const channel = {
+			guildId: 'guild-1',
+			isTextBased: () => true,
+			messages: {
+				fetch: vi.fn(async (messageId: string) => {
+					if (messageId === 'message-1') {
+						throw Object.assign(new Error('Unknown Message'), {
+							code: 10008,
+						})
+					}
+					return survivingMessage
+				}),
+			},
+		}
+		mocks.fetchChannel.mockResolvedValue(channel)
+
+		await expect(
+			new NotificationService().processPropSettled(voidPayload),
+		).resolves.toBeUndefined()
+
+		expect(survivingMessage.edit).toHaveBeenCalledOnce()
+		expect(mocks.logger.warn).toHaveBeenCalledWith(
+			expect.objectContaining({
+				event: 'prop.notification.message_update_failed',
+				message_id: 'message-1',
+				error: 'Unknown Message',
+			}),
+		)
+		expect(mocks.logger.error).not.toHaveBeenCalled()
+	})
+
+	it('reports a duplicate delivery without editing either void message twice', async () => {
+		const envelope = deliveryEnvelopeSchema.parse({
+			delivery_id: '550e8400-e29b-41d4-a716-446655440040',
+			schema_version: 1,
+			kind: 'prop_settled',
+			occurred_at: '2026-09-17T20:00:00.000Z',
+			payload: voidPayload,
+		})
+		if (envelope.kind !== 'prop_settled') {
+			throw new Error('Expected prop settlement envelope')
+		}
+		const messages = new Map([
+			['message-1', createMessage()],
+			['message-2', createMessage()],
+		])
+		const channel = {
+			guildId: 'guild-1',
+			isTextBased: () => true,
+			messages: {
+				fetch: vi.fn(async (messageId: string) =>
+					messages.get(messageId),
+				),
+			},
+		}
+		mocks.fetchChannel.mockResolvedValue(channel)
+		const service = new NotificationService()
+		const dispatcher: DeliveryDispatcher = {
+			deliver: vi.fn(async (_envelope, destinationId) => {
+				const reference = envelope.payload.messages.find((candidate) =>
+					destinationId.endsWith(`:${candidate.message_id}`),
+				)
+				if (!reference)
+					throw new Error(`Unknown destination ${destinationId}`)
+				await service.deliverPropSettlementMessage(
+					envelope.payload,
+					reference,
+				)
+			}),
+		}
+		const queuePort = {
+			add: vi.fn(async () => undefined),
+			close: vi.fn(async () => undefined),
+		} satisfies DeliveryQueuePort
+		const queue = new NotificationDeliveryQueue({
+			store: new RedisDeliveryStore(fakeRedis()),
+			dispatcher,
+			queue: queuePort,
+			startWorker: false,
+		})
+
+		try {
+			const first = await queue.acceptDetailed(envelope)
+			expect(first.duplicate).toBe(false)
+			await queue.processJob({ data: envelope } as never)
+
+			const replay = await queue.acceptDetailed(envelope)
+
+			expect(replay.duplicate).toBe(true)
+			expect(replay.record.state).toBe('delivered')
+			expect(queuePort.add).toHaveBeenCalledOnce()
+			expect(dispatcher.deliver).toHaveBeenCalledTimes(2)
+			for (const message of messages.values()) {
+				expect(message.edit).toHaveBeenCalledOnce()
+			}
+		} finally {
+			await queue.close()
+		}
 	})
 })
