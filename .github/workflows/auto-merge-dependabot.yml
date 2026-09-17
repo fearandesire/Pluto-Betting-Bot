@@ -8,18 +8,29 @@ permissions:
 jobs:
   dependabot-auto-merge:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'fearandesire/pluto-betting-bot'
+    if: >-
+      github.event.pull_request.user.login == 'dependabot[bot]' &&
+      github.repository == 'fearandesire/Pluto-Betting-Bot' &&
+      github.event.pull_request.head.repo.full_name == github.repository
     steps:
       - name: Dependabot metadata
         id: metadata
         uses: dependabot/fetch-metadata@v3.1.0
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
-          
+
+      - name: Mint GitHub App token (Pluto-Betting-Bot)
+        uses: actions/create-github-app-token@v2
+        id: app
+        with:
+          app-id: ${{ secrets.CASCADE_APP_ID }}
+          private-key: ${{ secrets.CASCADE_APP_PRIVATE_KEY }}
+          owner: fearandesire
+          repositories: Pluto-Betting-Bot
+
       - name: Enable auto-merge for Dependabot PRs
         if: contains(github.event.pull_request.labels.*.name, 'dependencies')
-        run: |
-          gh pr merge --auto --squash "$PR_URL"
+        run: gh pr merge --auto --squash "$PR_URL"
         env:
-          PR_URL: ${{github.event.pull_request.html_url}}
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ steps.app.outputs.token }}
