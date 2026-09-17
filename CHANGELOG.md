@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.12.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.11.3...v4.12.0) (2026-09-17)
+
+
+### Features
+
+* **api:** expose guild moderator lookup for internal callers ([#625](https://github.com/fearandesire/Pluto-Betting-Bot/issues/625)) ([4d5ee0b](https://github.com/fearandesire/Pluto-Betting-Bot/commit/4d5ee0bd844a07da4821b08808c362a8b7201456))
+
 ## [4.11.3](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.11.2...v4.11.3) (2026-09-14)
 
 
