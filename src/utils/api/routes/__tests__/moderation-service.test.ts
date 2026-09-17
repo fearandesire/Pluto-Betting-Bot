@@ -154,13 +154,13 @@ describe('GuildModeratorLookupService', () => {
 		])
 	})
 
-	it('treats a Discord 404 as an unknown member for that guild', async () => {
+	it('treats Discord Unknown Member (10007) as an unknown member for that guild', async () => {
 		const service = new GuildModeratorLookupService({
 			getServedGuilds: async () => [
 				guild({
 					id: '111111111111111111',
 					name: 'Missing Member',
-					error: { status: 404 },
+					error: { status: 404, code: 10007 },
 				}),
 			],
 		})
@@ -168,6 +168,22 @@ describe('GuildModeratorLookupService', () => {
 		const result = await service.lookup(USER_ID)
 
 		expect(result.guilds).toEqual([])
+	})
+
+	it('fails closed on a 404 that is not Unknown Member', async () => {
+		const service = new GuildModeratorLookupService({
+			getServedGuilds: async () => [
+				guild({
+					id: '111111111111111111',
+					name: 'Unavailable Guild',
+					error: { status: 404, code: 10004 },
+				}),
+			],
+		})
+
+		await expect(service.lookup(USER_ID)).rejects.toBeInstanceOf(
+			ModerationLookupUnavailableError,
+		)
 	})
 
 	it('fails the entire lookup when any member fetch has a non-404 error', async () => {

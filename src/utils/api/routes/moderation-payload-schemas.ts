@@ -1,6 +1,13 @@
 import { z } from 'zod'
 
-export const discordSnowflakeSchema = z.string().regex(/^\d{17,22}$/)
+const MAX_SNOWFLAKE = 18_446_744_073_709_551_615n // unsigned 64-bit
+
+export const discordSnowflakeSchema = z
+	.string()
+	.refine(
+		(value) => /^\d{17,20}$/.test(value) && BigInt(value) <= MAX_SNOWFLAKE,
+		{ message: 'Invalid Discord snowflake' },
+	)
 
 export const guildModeratorLookupResponseSchema = z.object({
 	user_id: discordSnowflakeSchema,

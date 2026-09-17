@@ -50,11 +50,9 @@ function isUnknownMemberError(error: unknown): boolean {
 		status?: number
 	}
 
-	return (
-		discordError.status === 404 ||
-		discordError.httpStatus === 404 ||
-		Number(discordError.code) === UNKNOWN_MEMBER_ERROR_CODE
-	)
+	// Only Discord's explicit Unknown Member error means "not a member".
+	// Any other failure (unavailable guild, rate limit, generic 404) fails closed.
+	return Number(discordError.code) === UNKNOWN_MEMBER_ERROR_CODE
 }
 
 async function getConfiguredDiscordGuilds(): Promise<ModerationGuild[]> {
@@ -82,14 +80,18 @@ async function getConfiguredDiscordGuilds(): Promise<ModerationGuild[]> {
 	})
 }
 
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+function withTimeout<T>(
+	run: (signal: AbortSignal) => Promise<T>,
+	timeoutMs: number,
+): Promise<T> {
 	return new Promise<T>((resolve, reject) => {
-		const timeout = setTimeout(
-			() => reject(new ModerationLookupUnavailableError()),
-			timeoutMs,
-		)
+		const controller = new AbortController()
+		const timeout = setTimeout(() => {
+			controller.abort()
+			reject(new ModerationLookupUnavailableError())
+		}, timeoutMs)
 
-		promise.then(
+		run(controller.signal).then(
 			(value) => {
 				clearTimeout(timeout)
 				resolve(value)
@@ -121,7 +123,7 @@ export class GuildModeratorLookupService {
 
 		try {
 			const response = await withTimeout(
-				this.lookupWithoutTimeout(userId),
+				(signal) => this.lookupWithoutTimeout(userId, signal),
 				this.timeoutMs,
 			)
 			guildCount = response.guilds.length
@@ -143,12 +145,17 @@ export class GuildModeratorLookupService {
 
 	private async lookupWithoutTimeout(
 		userId: string,
+		signal: AbortSignal,
 	): Promise<GuildModeratorLookupResponse> {
 		const servedGuilds = await this.getServedGuilds()
+		// ponytail: discord.js member fetches cannot be aborted mid-flight; the
+		// signal stops new work after a timeout so abandoned lookups do not fan out.
+		signal.throwIfAborted()
 		const matches = await Promise.all(
 			servedGuilds.map(async (guild) => {
 				let member: ModerationMember
 				try {
+					signal.throwIfAborted()
 					member = await guild.members.fetch(userId)
 				} catch (error) {
 					if (isUnknownMemberError(error)) return null
