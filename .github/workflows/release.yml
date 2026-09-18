@@ -12,10 +12,10 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Mint App token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         id: app
         with:
           app-id: ${{ secrets.CASCADE_APP_ID }}
