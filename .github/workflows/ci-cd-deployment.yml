@@ -22,12 +22,11 @@ on:
         type: string
         required: false
 
+  # No paths filter. `Verify` is a required check: a path-filtered trigger means
+  # the workflow never starts on a docs-only pull request, so the check never
+  # reports and the pull request waits on a status that will never arrive.
   pull_request:
     branches: [main, dev/parlays-props]
-    paths-ignore:
-      - "**.md"
-      - "docs/**"
-      - "dev/**"
 
   release:
     types: [published]
@@ -43,6 +42,13 @@ permissions:
   contents: read
   pull-requests: read
 
+# One in-flight run per workflow+ref. A superseded pull request run is cancelled
+# so a force-push does not leave a stale required check racing the new head.
+# Release and manual runs are never cancelled: they publish the image.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   # ===========================================================================
   # VERIFY - Build validation and commit linting
@@ -50,6 +56,9 @@ jobs:
   verify:
     name: Verify
     runs-on: ubuntu-latest
+    # Observed 1.8-3.3 min over the last 8 runs; 15 is well above 2x typical and
+    # bounds a hung Redis service container or Docker build.
+    timeout-minutes: 15
 
     services:
       redis:
@@ -141,6 +150,9 @@ jobs:
     name: Deploy
     needs: verify
     runs-on: ubuntu-latest
+    # Observed ~5.6 min for asset hydration, buildx and the GHCR push; 20 leaves
+    # room for a cold build cache without allowing an all-day hang.
+    timeout-minutes: 20
     if: >-
       needs.verify.result == 'success' && (
         github.event_name == 'release' ||
