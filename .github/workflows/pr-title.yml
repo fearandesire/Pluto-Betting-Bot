@@ -12,13 +12,75 @@ on:
 
 permissions:
   pull-requests: read
+  contents: read
+
+concurrency:
+  group: pr-title-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
   validate:
     name: Validate PR title
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - uses: amannn/action-semantic-pull-request@v5
+      - name: Classify PR
+        id: classify
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const pullRequest = context.payload.pull_request;
+            const automationAccounts = new Set(['dependabot[bot]', 'renovate[bot]']);
+            const cascadeBranches = new Set(['deps/khronos-update']);
+            const isAutomationAccount = automationAccounts.has(pullRequest.user.login);
+            const isSameRepository = pullRequest.head.repo?.full_name === context.repo.owner + '/' + context.repo.repo;
+            const isCascadeBranch = cascadeBranches.has(pullRequest.head.ref);
+
+            let dependencyOnly = false;
+            let reason;
+
+            if (!isAutomationAccount) {
+              reason = 'author is not an approved dependency bot';
+            } else if (!isSameRepository) {
+              reason = 'head repository differs from the base repository';
+            } else if (isCascadeBranch) {
+              reason = `cascade branch ${pullRequest.head.ref} is never exempt`;
+            } else {
+              const files = await github.paginate(github.rest.pulls.listFiles, {
+                ...context.repo,
+                pull_number: pullRequest.number,
+                per_page: 100,
+              });
+              const isAllowedDependencyFile = (filename) =>
+                filename === 'package.json' ||
+                filename.endsWith('/package.json') ||
+                filename === 'pnpm-lock.yaml' ||
+                filename.endsWith('/pnpm-lock.yaml') ||
+                filename === 'go.mod' ||
+                filename === 'go.sum' ||
+                filename === 'Dockerfile' ||
+                filename.endsWith('/Dockerfile') ||
+                filename.startsWith('docker/') ||
+                /^\.github\/workflows\/[^/]+\.ya?ml$/.test(filename);
+              const disallowedFiles = files
+                .map(({ filename }) => filename)
+                .filter((filename) => !isAllowedDependencyFile(filename));
+
+              dependencyOnly = files.length > 0 && disallowedFiles.length === 0;
+              reason = dependencyOnly
+                ? `all ${files.length} changed file(s) match the dependency allowlist`
+                : files.length === 0
+                  ? 'the pull request has no changed files'
+                  : `changed file(s) outside the dependency allowlist: ${disallowedFiles.join(', ')}`;
+            }
+
+            core.setOutput('dependency_only', String(dependencyOnly));
+            core.setOutput('reason', reason);
+
+      - name: Validate semantic PR title
+        id: semantic
+        if: steps.classify.outputs.dependency_only != 'true'
+        uses: amannn/action-semantic-pull-request@v5
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -34,6 +96,7 @@ jobs:
             ci
             chore
             deps
+            docker
             revert
             hotfix
             patch
@@ -44,3 +107,22 @@ jobs:
           validateSingleCommit: false
           headerPattern: '^(\w+)(?:\(([\w$.\-*/ ]*)\))?: (.+)$'
           headerPatternCorrespondence: type, scope, subject
+
+      - name: Record classification and result
+        if: always()
+        uses: actions/github-script@v8
+        env:
+          DEPENDENCY_ONLY: ${{ steps.classify.outputs.dependency_only }}
+          CLASSIFICATION_REASON: ${{ steps.classify.outputs.reason }}
+          SEMANTIC_OUTCOME: ${{ steps.semantic.outcome }}
+        with:
+          script: |
+            const dependencyOnly = process.env.DEPENDENCY_ONLY === 'true';
+            await core.summary
+              .addHeading('PR title validation')
+              .addTable([
+                [{ data: 'Classification', header: true }, dependencyOnly ? 'dependency-only' : 'validate title'],
+                [{ data: 'Reason', header: true }, process.env.CLASSIFICATION_REASON || 'classification did not complete'],
+                [{ data: 'Semantic title check', header: true }, process.env.SEMANTIC_OUTCOME || 'not run'],
+              ])
+              .write();
