@@ -23,10 +23,19 @@ export async function setupKoaApp(): Promise<Koa> {
 	// Capture request identity (User-Agent, X-Service-Name) for logging
 	app.use(captureRequestIdentity())
 
-	// Add logging middleware
+	// Add logging middleware. Credential headers are stripped before the
+	// request/response ever reaches winston -- they must never appear in
+	// Grafana Cloud Loki, which retains logs beyond credential rotation.
 	app.use(
 		logger({
 			transports: [createConsoleTransport()],
+			reqUnselect: [
+				'header.cookie',
+				'header.x-api-key',
+				'header.admin-token',
+				'header.authorization',
+			],
+			resUnselect: ['header.set-cookie'],
 		}),
 	)
 
