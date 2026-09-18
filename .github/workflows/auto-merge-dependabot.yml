@@ -1,5 +1,13 @@
 name: Dependabot auto-merge
-on: pull_request
+
+# pull_request_target is intentional: Dependabot-authored pull_request runs get a
+# restricted secret context (Actions secrets withheld). This job never checks out
+# PR head — only mints an App token and calls gh pr merge by URL. Do not add an
+# actions/checkout of the PR head without revisiting this security model.
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, labeled]
 
 permissions:
   contents: write
@@ -13,12 +21,6 @@ jobs:
       github.repository == 'fearandesire/Pluto-Betting-Bot' &&
       github.event.pull_request.head.repo.full_name == github.repository
     steps:
-      - name: Dependabot metadata
-        id: metadata
-        uses: dependabot/fetch-metadata@v3.1.0
-        with:
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-
       - name: Mint GitHub App token (Pluto-Betting-Bot)
         uses: actions/create-github-app-token@v2
         id: app
