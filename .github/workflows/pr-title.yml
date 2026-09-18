@@ -26,7 +26,7 @@ jobs:
     steps:
       - name: Classify PR
         id: classify
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const pullRequest = context.payload.pull_request;
@@ -80,7 +80,7 @@ jobs:
       - name: Validate semantic PR title
         id: semantic
         if: steps.classify.outputs.dependency_only != 'true'
-        uses: amannn/action-semantic-pull-request@v5
+        uses: amannn/action-semantic-pull-request@v6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -110,7 +110,7 @@ jobs:
 
       - name: Record classification and result
         if: always()
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         env:
           DEPENDENCY_ONLY: ${{ steps.classify.outputs.dependency_only }}
           CLASSIFICATION_REASON: ${{ steps.classify.outputs.reason }}
