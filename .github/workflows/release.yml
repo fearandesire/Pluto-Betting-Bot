@@ -32,7 +32,7 @@ jobs:
           # published with it would never fire the `release: published` trigger
           # in ci-cd-deployment.yml and Deploy would never run.
           #
-          # A GitHub App token (fnx-cascade-bot) behaves like a PAT for this:
+          # A GitHub App token (release-relay) behaves like a PAT for this:
           # events it creates DO trigger downstream workflows, so the release
           # cascades into Deploy. It replaces PLUTO_BOT_PAT here as part of the
           # PAT → App migration (short-lived, least-privilege, no human account).
