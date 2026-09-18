@@ -19,6 +19,8 @@ import { readFileSync } from 'fs'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 import env from '../../../lib/startup/env.js'
+import { getDefaultAlertReporter } from '../../../services/alerts/alert-reporter.js'
+import { ConsecutiveFailureTracker } from '../../../services/alerts/failure-trackers.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -26,6 +28,20 @@ const packageJsonPath = join(__dirname, '../../../../package.json')
 const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'))
 const SERVICE_NAME = 'Pluto-Betting-Bot'
 const SERVICE_VERSION = packageJson.version || '1.0.0'
+const khronosConnectivity = new ConsecutiveFailureTracker(
+	{
+		firing: async (input) => getDefaultAlertReporter()?.firing(input),
+		resolved: async (input) => getDefaultAlertReporter()?.resolved(input),
+	},
+	{
+		key: 'khronos.unreachable',
+		scope: 'api',
+		severity: 'critical',
+		title: 'Khronos is unreachable',
+		summary: 'Pluto cannot reach the scheduling service.',
+		threshold: 5,
+	},
+)
 
 const retryingFetch = fetchRetry(global.fetch, {
 	retries: 3,
@@ -37,16 +53,19 @@ const retryingFetch = fetchRetry(global.fetch, {
 				const retryAfterSeconds = Number.parseInt(retryAfterHeader, 10)
 				if (!Number.isNaN(retryAfterSeconds) && retryAfterSeconds > 0) {
 					// Convert to milliseconds and add small jitter to prevent synchronized retries
-					const retryAfterMs = retryAfterSeconds * 1000
+					const retryAfterMs = Math.min(
+						retryAfterSeconds * 1000,
+						30000,
+					)
 					const jitter = retryAfterMs * 0.1 * Math.random() // 10% jitter
 					return retryAfterMs + jitter
 				}
 				// Try parsing as HTTP-date
 				const retryAfterDate = Date.parse(retryAfterHeader)
 				if (!Number.isNaN(retryAfterDate)) {
-					const retryAfterMs = Math.max(
-						0,
-						retryAfterDate - Date.now(),
+					const retryAfterMs = Math.min(
+						30000,
+						Math.max(0, retryAfterDate - Date.now()),
 					)
 					const jitter = retryAfterMs * 0.1 * Math.random()
 					return retryAfterMs + jitter
@@ -67,7 +86,7 @@ const retryingFetch = fetchRetry(global.fetch, {
 		const maxDelayMs = 30000
 		return Math.min(delayWithJitter, maxDelayMs)
 	},
-	retryOn: (attempt, error, response) => {
+	retryOn: (_attempt, error, response) => {
 		if (
 			error !== null ||
 			response?.status === 429 ||
@@ -79,6 +98,21 @@ const retryingFetch = fetchRetry(global.fetch, {
 	},
 })
 
+const observedFetch: typeof retryingFetch = async (...args) => {
+	try {
+		const response = await retryingFetch(...args)
+		if (response.ok) {
+			void khronosConnectivity.success().catch(() => undefined)
+		} else if (response.status === 429 || response.status >= 500) {
+			void khronosConnectivity.failure().catch(() => undefined)
+		}
+		return response
+	} catch (error) {
+		void khronosConnectivity.failure().catch(() => undefined)
+		throw error
+	}
+}
+
 export const KH_API_CONFIG = new Configuration({
 	basePath: `${env.KH_API_URL}`,
 	headers: {
@@ -86,7 +120,7 @@ export const KH_API_CONFIG = new Configuration({
 		'User-Agent': `${SERVICE_NAME}/${SERVICE_VERSION}`,
 		'X-Service-Name': SERVICE_NAME,
 	},
-	fetchApi: retryingFetch,
+	fetchApi: observedFetch,
 })
 
 export const AccountsInstance = new AccountsApi(KH_API_CONFIG)

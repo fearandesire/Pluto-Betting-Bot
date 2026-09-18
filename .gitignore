@@ -64,6 +64,7 @@ launch.json
 !.env.project
 !.env.vault
 .env.*
+!.env.example
 dev/
 !src/utils/dev/
 !src/utils/dev/**/*
@@ -95,6 +96,8 @@ CLAUDE.md
 
 docs/internal
 scripts/internal
+scripts/roadmap/exports/
+roadmap-export*.json
 
 .frolic-session.json
 
@@ -104,3 +107,5 @@ docs
 # (see "Local development against Khronos" in README)
 .yalc/
 yalc.lock
+.humanlayer/tasks/
+.humanlayer/workspace.local.json

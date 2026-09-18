@@ -36,6 +36,7 @@ export class UserCommand extends Command {
 			const historyPage = this.paginationService.getHistoryPage(
 				betsData.historyBets,
 				1,
+				betsData.historyParlays,
 			)
 			const groupedBets = this.paginationService.groupBetsByDate(
 				historyPage.bets,
@@ -44,8 +45,11 @@ export class UserCommand extends Command {
 			const displayData: MyBetsDisplayData = {
 				userId,
 				pendingBets: betsData.pendingBets,
+				pendingParlays: betsData.pendingParlays,
+				historyParlays: betsData.historyParlays,
 				historyPage,
 				groupedBets,
+				parlayFetchWarning: betsData.parlayFetchWarning,
 			}
 
 			const response = await this.formatterService.buildEmbedResponse(

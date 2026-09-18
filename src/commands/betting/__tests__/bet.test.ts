@@ -5,14 +5,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const mockGetMatch = vi.fn<(id: string) => Promise<MatchDetailDto | null>>()
 
 vi.mock('../../../utils/api/routes/cache/match-cache-service.js', () => ({
-	default: vi.fn().mockImplementation(() => ({ getMatch: mockGetMatch })),
+	default: vi.fn().mockImplementation(function () {
+		return { getMatch: mockGetMatch }
+	}),
 }))
 
 const mockInitialize = vi.fn().mockResolvedValue(undefined)
 vi.mock('../../../utils/api/Khronos/bets/BetslipsManager.js', () => ({
-	BetslipManager: vi.fn().mockImplementation(() => ({
-		initialize: mockInitialize,
-	})),
+	BetslipManager: vi.fn().mockImplementation(function () {
+		return { initialize: mockInitialize }
+	}),
 }))
 
 vi.mock('../../../utils/api/Khronos/bets/betslip-wrapper.js', () => ({

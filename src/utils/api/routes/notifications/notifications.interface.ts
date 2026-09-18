@@ -10,8 +10,8 @@ export interface ResultWon {
 	betAmount: number
 	payout: number
 	profit: number
-	newBalance: number
-	oldBalance: number
+	newBalance?: number
+	oldBalance?: number
 }
 
 export interface ResultLost {
@@ -28,7 +28,10 @@ export interface ResultPush {
 
 export interface BetNotificationBase {
 	userId: string
-	betId: number
+	/** Optional for shared-contract winners that are not tied to a single bet. */
+	betId?: number
+	/** Optional until Khronos includes guild context in bet-result callbacks. */
+	guildId?: string
 }
 
 export interface BetNotificationWon extends BetNotificationBase {

@@ -1,5 +1,141 @@
 # Changelog
 
+## [4.12.1](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.12.0...v4.12.1) (2026-09-18)
+
+
+### Bug Fixes
+
+* **khronos:** bump @pluto-khronos/* to 3.9.0 ([67d28f2](https://github.com/fearandesire/Pluto-Betting-Bot/commit/67d28f21871968bb98e2012fbd42e3b76aa16b32))
+
+## [4.12.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.11.3...v4.12.0) (2026-09-17)
+
+
+### Features
+
+* **api:** expose guild moderator lookup for internal callers ([#625](https://github.com/fearandesire/Pluto-Betting-Bot/issues/625)) ([4d5ee0b](https://github.com/fearandesire/Pluto-Betting-Bot/commit/4d5ee0bd844a07da4821b08808c362a8b7201456))
+
+## [4.11.3](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.11.2...v4.11.3) (2026-09-14)
+
+
+### Bug Fixes
+
+* **khronos:** bump @pluto-khronos/* to 3.8.1 ([b2260cf](https://github.com/fearandesire/Pluto-Betting-Bot/commit/b2260cfcc260be747f11ddc07af075904648a812))
+
+## [4.11.2](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.11.1...v4.11.2) (2026-09-14)
+
+
+### Bug Fixes
+
+* preserve wager identities and guild scope in requests ([#613](https://github.com/fearandesire/Pluto-Betting-Bot/issues/613)) ([148f101](https://github.com/fearandesire/Pluto-Betting-Bot/commit/148f101b5885cf33c7c8a10c4ed9cc956dcfd188))
+
+## [4.11.1](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.11.0...v4.11.1) (2026-09-13)
+
+
+### Bug Fixes
+
+* release channel reservations during shutdown ([92eec5f](https://github.com/fearandesire/Pluto-Betting-Bot/commit/92eec5ff10e077db0e00b6a3bd215bee50ce8670))
+
+## [4.11.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.10.0...v4.11.0) (2026-09-13)
+
+
+### Features
+
+* publish a private-by-default public roadmap ([#616](https://github.com/fearandesire/Pluto-Betting-Bot/issues/616)) ([0bd4b07](https://github.com/fearandesire/Pluto-Betting-Bot/commit/0bd4b0776e46c8782653fbc05155ab490c4af5fb))
+
+## [4.10.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.9.0...v4.10.0) (2026-09-13)
+
+
+### Features
+
+* support mock-mode local setup ([#612](https://github.com/fearandesire/Pluto-Betting-Bot/issues/612)) ([fd2ffeb](https://github.com/fearandesire/Pluto-Betting-Bot/commit/fd2ffeb324b5cbbb55103355f9ebdf22986973ff))
+
+## [4.9.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.8.1...v4.9.0) (2026-09-13)
+
+
+### Features
+
+* make H2H placement retry-safe ([#607](https://github.com/fearandesire/Pluto-Betting-Bot/issues/607)) ([7fe7f28](https://github.com/fearandesire/Pluto-Betting-Bot/commit/7fe7f28f30117a1371ad164e8c42bb9dc2ed1ba0))
+
+## [4.8.1](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.8.0...v4.8.1) (2026-09-13)
+
+
+### Bug Fixes
+
+* drain queue workers during shutdown ([#609](https://github.com/fearandesire/Pluto-Betting-Bot/issues/609)) ([80bd6c6](https://github.com/fearandesire/Pluto-Betting-Bot/commit/80bd6c653b5d02c28c8a1c52ea67a17356a30a4c))
+
+## [4.8.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.7.0...v4.8.0) (2026-09-13)
+
+
+### Features
+
+* add durable channel alerts and reservations ([#604](https://github.com/fearandesire/Pluto-Betting-Bot/issues/604)) ([4137d17](https://github.com/fearandesire/Pluto-Betting-Bot/commit/4137d17df080a501882e3012308dbded6fc8383e))
+
+## [4.7.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.6.9...v4.7.0) (2026-09-13)
+
+
+### Features
+
+* accept durable H2H result deliveries ([#605](https://github.com/fearandesire/Pluto-Betting-Bot/issues/605)) ([112a07e](https://github.com/fearandesire/Pluto-Betting-Bot/commit/112a07ece01c447dd3170e623a6818f603fffca1))
+
+## [4.6.9](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.6.8...v4.6.9) (2026-07-20)
+
+
+### Bug Fixes
+
+* **ci:** confirm Khronos bumps only after landing ([#599](https://github.com/fearandesire/Pluto-Betting-Bot/issues/599)) ([91cc3b8](https://github.com/fearandesire/Pluto-Betting-Bot/commit/91cc3b83b3b42bcbbf7da726c29ea5fffa170eef))
+
+## [4.6.8](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.6.7...v4.6.8) (2026-07-20)
+
+
+### Bug Fixes
+
+* **build:** exclude tests from production image ([#597](https://github.com/fearandesire/Pluto-Betting-Bot/issues/597)) ([a1988ed](https://github.com/fearandesire/Pluto-Betting-Bot/commit/a1988ed67d3ea35aef2748eeca1f5148e4dfb302))
+
+## [4.6.7](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.6.6...v4.6.7) (2026-07-18)
+
+
+### Bug Fixes
+
+* **ci:** tag :latest on release deploys so Watchtower updates ([#595](https://github.com/fearandesire/Pluto-Betting-Bot/issues/595)) ([a88ff6b](https://github.com/fearandesire/Pluto-Betting-Bot/commit/a88ff6bb3477d6cdffacff9bc9e558c9bbc2aa46))
+
+## [4.6.6](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.6.5...v4.6.6) (2026-07-18)
+
+
+### Bug Fixes
+
+* **khronos:** bump @pluto-khronos/* to 3.8.0 ([8b935f1](https://github.com/fearandesire/Pluto-Betting-Bot/commit/8b935f18329b460cd7faf2b81c513759ba16217c))
+
+## [4.6.5](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.6.4...v4.6.5) (2026-07-18)
+
+
+### Bug Fixes
+
+* **khronos:** bump @pluto-khronos/* to 3.7.0 ([8ac0922](https://github.com/fearandesire/Pluto-Betting-Bot/commit/8ac0922b7ffd0b14e4f822c3a2c0249997ee26e2))
+
+## [4.6.4](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.6.3...v4.6.4) (2026-07-17)
+
+
+### Bug Fixes
+
+* **khronos:** bump @pluto-khronos/* to 3.6.0 ([d0c11b2](https://github.com/fearandesire/Pluto-Betting-Bot/commit/d0c11b2b2eba8391d6cf496614f82c6a135d4a4a))
+
+## [4.6.3](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.6.2...v4.6.3) (2026-07-15)
+
+
+### Bug Fixes
+
+* **khronos:** bump @pluto-khronos/* to 3.5.1 ([c4076a4](https://github.com/fearandesire/Pluto-Betting-Bot/commit/c4076a4cf532fda67b648a769cef18e569a008dd))
+* **props:** populate market_id in cron prop conversion ([#491](https://github.com/fearandesire/Pluto-Betting-Bot/issues/491)) ([#560](https://github.com/fearandesire/Pluto-Betting-Bot/issues/560)) ([2175160](https://github.com/fearandesire/Pluto-Betting-Bot/commit/21751607d6eec7ea56f248fd620cb03150d3a374))
+
+## [4.6.2](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.6.1...v4.6.2) (2026-05-26)
+
+
+### Bug Fixes
+
+* **ci:** unblock dependabot auto-merge and validate bumps ([#554](https://github.com/fearandesire/Pluto-Betting-Bot/issues/554)) ([967f2f3](https://github.com/fearandesire/Pluto-Betting-Bot/commit/967f2f3d451481314208641b3f9dd58f39bbeff1))
+* **ci:** use PLUTO_BOT_PAT for GHCR login ([#540](https://github.com/fearandesire/Pluto-Betting-Bot/issues/540)) ([4e725c4](https://github.com/fearandesire/Pluto-Betting-Bot/commit/4e725c4d701c6a58ac9624ab19a2be9c936eb5ed))
+* **khronos:** bump @pluto-khronos/* to 3.4.3 ([9db5a1b](https://github.com/fearandesire/Pluto-Betting-Bot/commit/9db5a1bf254faa4506bcfb13c70d014f90f1adf6))
+
 ## [4.6.1](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.6.0...v4.6.1) (2026-05-17)
 
 

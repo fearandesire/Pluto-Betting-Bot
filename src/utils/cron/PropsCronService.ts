@@ -2,7 +2,6 @@
 // Props Cron Service - Scheduled caching of props from Khronos
 // ============================================================================
 
-import type { PropDto } from '@pluto-khronos/api-client'
 import type PropsApiWrapper from '../api/Khronos/props/props-api-wrapper.js'
 import { logger } from '../logging/WinstonLogger.js'
 import type { ActivePropsService } from '../props/ActivePropsService.js'
@@ -10,6 +9,7 @@ import type {
 	CachedProp,
 	PropsCacheService,
 } from '../props/PropCacheService.js'
+import { convertFlatPropsToCachedProps } from '../props/prop-conversion.js'
 
 /**
  * Service for running scheduled prop caching jobs
@@ -106,7 +106,7 @@ export class PropsCronService {
 			})
 
 			// Convert flat PropDto array to CachedProp format
-			return this.convertFlatPropsToCachedProps(availableProps)
+			return convertFlatPropsToCachedProps(availableProps)
 		} catch (error) {
 			await logger.error({
 				message: `Failed to fetch props for ${sport}`,
@@ -120,49 +120,6 @@ export class PropsCronService {
 			// Return empty array instead of throwing to allow other sports to continue
 			return []
 		}
-	}
-
-	/**
-	 * Convert PropDto array (with outcomes) to CachedProp format
-	 * Filters to only include player props (excludes h2h, spreads, totals, etc.)
-	 * Flattens outcomes array into individual cached props
-	 */
-	private convertFlatPropsToCachedProps(props: PropDto[]): CachedProp[] {
-		const EXCLUDED_MARKETS = [
-			'h2h',
-			'spreads',
-			'totals',
-			'team_totals',
-			'player_anytime_td',
-		]
-		const cached: CachedProp[] = []
-
-		for (const prop of props) {
-			// Skip non-player props
-			if (EXCLUDED_MARKETS.includes(prop.market_key)) {
-				continue
-			}
-
-			// Skip if missing required fields
-			if (!prop.outcomes || !prop.event_context) {
-				continue
-			}
-
-			// Flatten each outcome into a separate cached prop
-			for (const outcome of prop.outcomes) {
-				cached.push({
-					outcome_uuid: outcome.outcome_uuid,
-					description: outcome.description || 'Unknown',
-					market_key: prop.market_key,
-					point: outcome.point || null,
-					home_team: prop.event_context.home_team,
-					away_team: prop.event_context.away_team,
-					commence_time: prop.event_context.commence_time,
-				})
-			}
-		}
-
-		return cached
 	}
 
 	/**

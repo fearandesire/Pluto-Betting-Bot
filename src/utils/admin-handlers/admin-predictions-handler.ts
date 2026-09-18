@@ -119,7 +119,8 @@ export class AdminPredictionsHandler {
 				return
 			}
 
-			// Delete the prediction
+			// The admin input resolves to the unique prediction UUID, so use the
+			// explicit DELETE /prediction/by-id/:prediction_id route.
 			await predictionApiWrapper.deletePredictionById({
 				predictionId: matchedPrediction.id,
 				userId: user.id,

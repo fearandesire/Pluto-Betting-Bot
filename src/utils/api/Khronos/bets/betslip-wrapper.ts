@@ -6,12 +6,17 @@ import {
 	type GetActiveBetslipsRequest,
 	type GetUserBetslipsRequest,
 	type InitBetslipRequest,
+	type PlaceBetDto,
 	type PlaceBetslipRequest,
 	type PlacedBetslip,
 	type PlacedBetslipDto,
 } from '@pluto-khronos/api-client'
 import { isMockEnabled, MockBackend } from '../../../dev/index.js'
 import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js'
+
+type CancelRequestWithGuild = CancelBetslipRequest & {
+	guildId: string
+}
 
 export default class BetslipWrapper {
 	private betslipApi: BetslipsApi
@@ -30,12 +35,46 @@ export default class BetslipWrapper {
 
 	async finalize(payload: PlaceBetslipRequest): Promise<PlacedBetslipDto> {
 		if (this.mock) return this.mock.placeBetslip(payload)
-		return await this.betslipApi.placeBetslip(payload)
+
+		const placementId = (
+			payload.placeBetDto as PlaceBetDto & { placement_id?: string }
+		).placement_id
+		if (!placementId) return await this.betslipApi.placeBetslip(payload)
+
+		// The generated client gains placement_id after the next Khronos release.
+		return await this.betslipApi.placeBetslip(
+			payload,
+			async ({ init }) => ({
+				...init,
+				body: {
+					...((init.body ?? {}) as Record<string, unknown>),
+					placement_id: placementId,
+				} as unknown as BodyInit,
+			}),
+		)
 	}
 
-	async cancel(payload: CancelBetslipRequest) {
+	async cancel(payload: CancelRequestWithGuild) {
 		if (this.mock) return this.mock.cancelBetslip(payload)
-		return await this.betslipApi.cancelBetslip(payload)
+		const { guildId, ...request } = payload as CancelBetslipRequest & {
+			guildId?: string
+		}
+		return await this.betslipApi.cancelBetslip(
+			{
+				...request,
+				patreonDataDto: {
+					...request.patreonDataDto,
+					guild_id: guildId,
+				},
+			} as CancelBetslipRequest,
+			async ({ init }) => ({
+				...init,
+				body: {
+					...((init.body ?? {}) as Record<string, unknown>),
+					guild_id: guildId,
+				} as unknown as BodyInit,
+			}),
+		)
 	}
 
 	async activeBetsForUser(

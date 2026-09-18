@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { betFooter, supportMessage } from '@pluto-config'
 import type {
 	BetslipWithAggregationDTO,
@@ -92,6 +93,7 @@ export class BetslipManager {
 				const cacheBetData = {
 					...betslip,
 					guild_id,
+					placement_id: randomUUID(),
 				}
 				if (!betslip.dateofmatchup || !betslip.opponent) {
 					const errEmb = await ErrorEmbeds.internalErr(
@@ -148,6 +150,7 @@ export class BetslipManager {
 			if (response.statusCode >= 200 && response.statusCode < 300) {
 				const { betslip } = response
 				handleNewUser(response)
+				await this.betCacheService.clearUserBet(betDetails.userid)
 
 				const guildUtils = new GuildUtils()
 				const chosenTeamEmoji =
@@ -191,7 +194,11 @@ export class BetslipManager {
 				if (interaction.deferred || interaction.replied) {
 					return interaction.editReply({
 						embeds: [errEmbed],
-						components: [],
+						...(this.isDefinitiveBusinessFailure(
+							response.statusCode,
+						)
+							? { components: [] }
+							: {}),
 					})
 				}
 				return interaction.followUp({
@@ -207,7 +214,9 @@ export class BetslipManager {
 			if (interaction.deferred || interaction.replied) {
 				return interaction.editReply({
 					embeds: [errEmbed],
-					components: [],
+					...(this.isDefinitiveBusinessFailure(error)
+						? { components: [] }
+						: {}),
 				})
 			}
 			return interaction.followUp({
@@ -215,6 +224,33 @@ export class BetslipManager {
 				ephemeral: true,
 			})
 		}
+	}
+
+	private isDefinitiveBusinessFailure(value: unknown): boolean {
+		if (typeof value === 'number') {
+			return (
+				value >= 400 && value < 500 && ![408, 425, 429].includes(value)
+			)
+		}
+		if (!value || typeof value !== 'object') return false
+
+		const error = value as {
+			status?: unknown
+			statusCode?: unknown
+			response?: { status?: unknown }
+		}
+		const status =
+			typeof error.statusCode === 'number'
+				? error.statusCode
+				: typeof error.status === 'number'
+					? error.status
+					: error.response?.status
+		return (
+			typeof status === 'number' &&
+			status >= 400 &&
+			status < 500 &&
+			![408, 425, 429].includes(status)
+		)
 	}
 
 	async successfulBetEmbed(
@@ -297,6 +333,42 @@ export class BetslipManager {
 			})
 		} catch (e) {
 			logger.warn('Failed to announce bet placed', { error: e })
+		}
+	}
+
+	/**
+	 * Announce a successfully placed parlay through the same guild betting
+	 * channel pathway used by singles.
+	 */
+	public async announceParlayPlaced(
+		interaction: CommandInteraction | ButtonInteraction,
+		details: {
+			parlayId: string
+			legCount: number
+			stake: number
+			potentialPayout: number
+		},
+	): Promise<void> {
+		try {
+			if (!interaction.guildId) {
+				logger.warn('Cannot announce parlay - no guild context')
+				return
+			}
+
+			const publicEmbed = new EmbedBuilder()
+				.setDescription(
+					`<@${interaction.user.id}> placed a **${details.legCount}-leg parlay** for **\`$${details.stake.toFixed(2)}\`**!`,
+				)
+				.setColor(embedColors.success)
+				.setFooter({
+					text: `Potential payout: $${details.potentialPayout.toFixed(2)} • Parlay ${details.parlayId.slice(0, 8)}`,
+				})
+
+			await new GuildWrapper().sendToBettingChannel(interaction.guildId, {
+				embeds: [publicEmbed],
+			})
+		} catch (error) {
+			logger.warn('Failed to announce parlay placed', { error })
 		}
 	}
 
@@ -407,9 +479,13 @@ export class BetslipManager {
 					ephemeral: true,
 				})
 			}
+			if (!interaction.guildId) {
+				throw new Error('Cannot cancel a bet outside a guild context.')
+			}
 			await this.betslipInstance.cancel({
 				userId: userid,
 				betId: betId,
+				guildId: interaction.guildId,
 				patreonDataDto: {
 					patreonOverride,
 				},

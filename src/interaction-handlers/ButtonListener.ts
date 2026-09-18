@@ -66,6 +66,18 @@ export class ButtonHandler extends InteractionHandler {
 
 				try {
 					const betslipWrapper = new BetslipWrapper()
+					const cachedBet = await this.betsCacheService.getUserBet(
+						interaction.user.id,
+					)
+					if (
+						cachedBet &&
+						interaction.guildId &&
+						cachedBet.guild_id !== interaction.guildId
+					) {
+						throw new Error(
+							'Betslip does not belong to this guild.',
+						)
+					}
 					await betslipWrapper.clearPending(interaction.user.id)
 
 					const cancelEmbed = new EmbedBuilder()
@@ -111,7 +123,10 @@ export class ButtonHandler extends InteractionHandler {
 						interaction.user.id,
 					)
 
-					if (!cachedBet) {
+					if (
+						!cachedBet ||
+						cachedBet.guild_id !== interaction.guildId
+					) {
 						console.error({
 							method: this.constructor.name,
 							message: 'Cached bet not found',
@@ -216,7 +231,6 @@ export class ButtonHandler extends InteractionHandler {
 						user_id: interaction.user.id,
 						outcome_uuid: matchedOutcome.outcome_uuid,
 						choice: matchedOutcome.name, // "Over" or "Under"
-						status: 'pending',
 						guild_id: interaction.guildId!,
 						sport: prop.event_context.sport_title,
 					},

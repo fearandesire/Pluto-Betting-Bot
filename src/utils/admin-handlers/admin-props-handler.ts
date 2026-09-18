@@ -1,4 +1,3 @@
-import type { SetPropResultResponseDto } from '@pluto-khronos/api-client'
 import { PaginatedMessageEmbedFields } from '@sapphire/discord.js-utilities'
 import { container } from '@sapphire/framework'
 import type { Subcommand } from '@sapphire/plugin-subcommands'
@@ -11,7 +10,6 @@ import PredictionApiWrapper from '../api/Khronos/prediction/predictionApiWrapper
 import PropsApiWrapper from '../api/Khronos/props/props-api-wrapper.js'
 import { DateManager } from '../common/DateManager.js'
 import StringUtils from '../common/string-utils.js'
-import { isValidUUID } from '../common/uuid-validation.js'
 import { LogType } from '../logging/AppLog.interface.js'
 import AppLog from '../logging/AppLog.js'
 import { logger } from '../logging/WinstonLogger.js'
@@ -19,7 +17,7 @@ import { PropPostingHandler } from '../props/PropPostingHandler.js'
 
 /**
  * Handler for admin props management commands
- * Handles generating, setting results, and viewing active props
+ * Handles generating and viewing active props
  */
 export class AdminPropsHandler {
 	/**
@@ -146,109 +144,6 @@ export class AdminPropsHandler {
 	}
 
 	/**
-	 * Handle /admin props setresult <prop_id> <result>
-	 * Set the result of a specific prop
-	 */
-	public async handleSetresult(
-		interaction: Subcommand.ChatInputCommandInteraction,
-	): Promise<void> {
-		const propId = interaction.options.getString('prop_id', true)
-		const result = interaction.options.getString('result', true)
-
-		if (!interaction.guildId) {
-			await interaction.reply({
-				content: 'This command can only be used in a server.',
-				ephemeral: true,
-			})
-			return
-		}
-
-		// Validate propId is a valid UUID format before sending to API
-		if (!isValidUUID(propId)) {
-			logger.error('Invalid UUID format received from autocomplete', {
-				propId,
-				propIdType: typeof propId,
-				propIdLength: propId?.length,
-				user_id: interaction.user.id,
-				user_username: interaction.user.username,
-				guild_id: interaction.guildId,
-				result,
-				context: 'AdminPropsHandler.handleSetresult',
-			})
-			await interaction.reply({
-				content: `❌ Invalid prop ID format. Expected UUID, received: \`${propId.substring(0, 50)}${propId.length > 50 ? '...' : ''}\`\n\nPlease try selecting the prop again from the autocomplete menu.`,
-				ephemeral: true,
-			})
-			return
-		}
-
-		const propsApi = new PropsApiWrapper()
-
-		try {
-			await interaction.deferReply()
-
-			logger.info('Setting prop result', {
-				propId,
-				propIdLength: propId.length,
-				hasDashes: propId.includes('-'),
-				winner: result,
-				user_id: interaction.user.id,
-				user_username: interaction.user.username,
-				guild_id: interaction.guildId,
-				context: 'AdminPropsHandler.handleSetresult',
-			})
-
-			const apiStartTime = Date.now()
-			const response = await propsApi.setResult({
-				propId,
-				winner: result,
-				status: 'completed',
-				user_id: interaction.user.id,
-			})
-			const apiDuration = Date.now() - apiStartTime
-
-			logger.info('Prop result set successfully', {
-				propId,
-				winner: result,
-				correct_predictions: response.correct_predictions_count,
-				incorrect_predictions: response.incorrect_predictions_count,
-				total_predictions: response.total_predictions_count,
-				apiDuration: `${apiDuration}ms`,
-				user_id: interaction.user.id,
-				guild_id: interaction.guildId,
-			})
-
-			const embed = this.createResultEmbed(response)
-
-			await AppLog.log({
-				guildId: interaction.guildId,
-				description: `Prop result updated for ${propId} in guild ${interaction.guildId}`,
-				type: LogType.Info,
-			})
-
-			await interaction.editReply({ embeds: [embed] })
-		} catch (error) {
-			logger.error('Failed to set prop result', {
-				propId,
-				propIdType: typeof propId,
-				propIdLength: propId?.length,
-				winner: result,
-				user_id: interaction.user.id,
-				guild_id: interaction.guildId,
-				error: error instanceof Error ? error.message : String(error),
-				stack: error instanceof Error ? error.stack : undefined,
-				context: 'AdminPropsHandler.handleSetresult',
-			})
-			container.logger.error(error)
-			await new ApiErrorHandler().handle(
-				interaction,
-				error,
-				ApiModules.props,
-			)
-		}
-	}
-
-	/**
 	 * Handle /admin props viewactive
 	 * View all props with active predictions
 	 */
@@ -293,7 +188,7 @@ export class AdminPropsHandler {
 			const embed = new EmbedBuilder()
 				.setTitle('Active Props - Pending Results')
 				.setDescription(
-					`Found **${totalOutcomes}** outcome${totalOutcomes !== 1 ? 's' : ''} with active predictions across **${dateGroups.length}** date${dateGroups.length !== 1 ? 's' : ''}.\nUse \`/admin props setresult\` to settle these props.`,
+					`Found **${totalOutcomes}** outcome${totalOutcomes !== 1 ? 's' : ''} with active predictions across **${dateGroups.length}** date${dateGroups.length !== 1 ? 's' : ''}.\nManage prop results in the Khronos admin dashboard.`,
 				)
 				.setColor(embedColors.PlutoBlue)
 				.setTimestamp()
@@ -388,35 +283,5 @@ export class AdminPropsHandler {
 				ApiModules.props,
 			)
 		}
-	}
-
-	/**
-	 * Create embed for prop result update response
-	 */
-	private createResultEmbed(
-		response: SetPropResultResponseDto,
-	): EmbedBuilder {
-		const embed = new EmbedBuilder()
-			.setTitle('Prop Result Updated')
-			.setColor(embedColors.PlutoGreen)
-			.addFields(
-				{
-					name: 'Correct Predictions',
-					value: response.correct_predictions_count.toString(),
-					inline: true,
-				},
-				{
-					name: 'Incorrect Predictions',
-					value: response.incorrect_predictions_count.toString(),
-					inline: true,
-				},
-				{
-					name: 'Total Predictions',
-					value: response.total_predictions_count.toString(),
-					inline: true,
-				},
-			)
-
-		return embed
 	}
 }

@@ -2,7 +2,6 @@ import * as winston from 'winston'
 import { consoleFormat } from 'winston-console-format'
 import { fullFormat } from 'winston-error-format'
 import env from '#lib/startup/env.js'
-import { messageToMsg } from '../WinstonLogger.js'
 
 /**
  * Creates a console transport with environment-aware formatting.
@@ -26,11 +25,11 @@ export const createConsoleTransport = () => {
 		(logFormat !== 'json' && env.NODE_ENV !== 'production')
 
 	if (!usePretty) {
+		// Keep Winston `message` field name for Alloy stage.json (`msg = "message"`).
 		return new winston.transports.Console({
 			format: winston.format.combine(
 				winston.format.timestamp(),
 				fullFormat(),
-				messageToMsg(),
 				winston.format.json(),
 			),
 		})

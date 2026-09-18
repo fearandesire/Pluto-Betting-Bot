@@ -7,6 +7,7 @@
 import env from '#lib/startup/env.js'
 import { matchCache } from '../routes/cache/match-cache.js'
 import ChannelsRoutes from '../routes/channels/channels-router.js'
+import ModerationRouter from '../routes/moderation/moderation-router.js'
 import NotificationRouter from '../routes/notifications/notifications.controller.js'
 import PropsRouter from '../routes/props/props-router.js'
 import ScheduleRouter from '../routes/schedule/schedule.js'
@@ -19,6 +20,7 @@ app.use(NotificationRouter.routes()).use(NotificationRouter.allowedMethods())
 app.use(matchCache.routes()).use(matchCache.allowedMethods())
 app.use(ScheduleRouter.routes()).use(ScheduleRouter.allowedMethods())
 app.use(PropsRouter.routes()).use(PropsRouter.allowedMethods())
+app.use(ModerationRouter.routes()).use(ModerationRouter.allowedMethods())
 
 app.listen(env.API_PORT)
 

@@ -1,0 +1,148 @@
+import { readFileSync } from 'node:fs'
+
+import { parse as parseDotenv } from 'dotenv'
+import { describe, expect, it, vi } from 'vitest'
+
+const requiredEnv = {
+	NODE_ENV: 'development',
+	TOKEN: 'discord-token',
+	PREFIX: '!',
+	PROJECT_VERSION: 'test',
+	KH_API_URL: 'http://khronos:3000',
+	KH_API_TOKEN: 'kh-token',
+	R_HOST: 'redis',
+	R_PORT: '6379',
+	R_DB: '0',
+	R_PASS: 'redis-pass',
+	API_URL: 'http://pluto:2090',
+	API_KEY: 'api-key',
+	PATREON_API_URL: 'http://patreon:3000',
+	KH_PLUTO_CLIENT_KEY: 'client-key',
+	APP_OWNER_ID: 'owner',
+	AXIOM_DATASET: 'dataset',
+	AXIOM_API_TOKEN: 'axiom-token',
+	AXIOM_ORG_ID: 'org',
+	BULL_BOARD_USERNAME: 'admin',
+	BULL_BOARD_PASSWORD: 'password',
+	LOKI_URL: 'http://loki:3100',
+	LOKI_USER: 'loki',
+	LOKI_PASS: 'loki-pass',
+}
+
+for (const [key, value] of Object.entries(requiredEnv)) {
+	vi.stubEnv(key, value)
+}
+vi.stubEnv('LOG_LEVEL', 'Info')
+
+const { isSystemStartupMode, parseStartupEnv } = await import('../env.js')
+
+describe('Pluto system startup env gate', () => {
+	it('cannot activate system mode in production', () => {
+		expect(() =>
+			parseStartupEnv({
+				...requiredEnv,
+				NODE_ENV: 'production',
+				PLUTO_SYSTEM_MODE: '1',
+				PLUTO_SYSTEM_ALLOW: '1',
+			}),
+		).toThrow(/PLUTO_SYSTEM_MODE cannot be enabled/)
+	})
+
+	it('activates system mode only when both system flags are set outside production', () => {
+		const env = parseStartupEnv({
+			...requiredEnv,
+			TOKEN: undefined,
+			PLUTO_SYSTEM_MODE: '1',
+			PLUTO_SYSTEM_ALLOW: '1',
+		})
+
+		expect(isSystemStartupMode(env)).toBe(true)
+		expect(env.TOKEN).toBeUndefined()
+	})
+
+	it('keeps TOKEN required for normal production startup', () => {
+		expect(() =>
+			parseStartupEnv({
+				...requiredEnv,
+				NODE_ENV: 'production',
+				TOKEN: undefined,
+			}),
+		).toThrow(/TOKEN is required/)
+	})
+
+	it('uses API_PORT when it is configured', () => {
+		const env = parseStartupEnv({
+			...requiredEnv,
+			API_PORT: '3010',
+		})
+
+		expect(env.API_PORT).toBe(3010)
+	})
+
+	it('allows mock startup without observability or Patreon configuration', () => {
+		const exampleEnv = parseDotenv(
+			readFileSync(new URL('../../../../.env.example', import.meta.url)),
+		)
+		const env = parseStartupEnv(exampleEnv)
+
+		expect(env.USE_MOCK_DATA).toBe(true)
+		expect(env.PATREON_API_URL).toBeUndefined()
+		expect(env.AXIOM_DATASET).toBeUndefined()
+		expect(env.AXIOM_API_TOKEN).toBeUndefined()
+		expect(env.AXIOM_ORG_ID).toBeUndefined()
+	})
+
+	it('requires Patreon and Axiom configuration outside mock mode', () => {
+		expect(() =>
+			parseStartupEnv({
+				...requiredEnv,
+				NODE_ENV: 'production',
+				PATREON_API_URL: undefined,
+			}),
+		).toThrow(/PATREON_API_URL/)
+
+		expect(() =>
+			parseStartupEnv({
+				...requiredEnv,
+				NODE_ENV: 'production',
+				AXIOM_API_TOKEN: undefined,
+			}),
+		).toThrow(/AXIOM_API_TOKEN/)
+	})
+
+	it('does not treat uppercase TRUE as mock mode', () => {
+		const uppercaseMockEnv = {
+			...requiredEnv,
+			USE_MOCK_DATA: 'TRUE',
+			PATREON_API_URL: undefined,
+			AXIOM_DATASET: undefined,
+			AXIOM_API_TOKEN: undefined,
+			AXIOM_ORG_ID: undefined,
+		}
+
+		expect(() => parseStartupEnv(uppercaseMockEnv)).toThrow(
+			/PATREON_API_URL/,
+		)
+		expect(() => parseStartupEnv(uppercaseMockEnv)).toThrow(/AXIOM_DATASET/)
+		expect(() => parseStartupEnv(uppercaseMockEnv)).toThrow(
+			/AXIOM_API_TOKEN/,
+		)
+		expect(() => parseStartupEnv(uppercaseMockEnv)).toThrow(/AXIOM_ORG_ID/)
+	})
+
+	it('requires each Axiom identifier outside mock mode', () => {
+		expect(() =>
+			parseStartupEnv({
+				...requiredEnv,
+				AXIOM_DATASET: undefined,
+			}),
+		).toThrow(/AXIOM_DATASET/)
+
+		expect(() =>
+			parseStartupEnv({
+				...requiredEnv,
+				AXIOM_ORG_ID: undefined,
+			}),
+		).toThrow(/AXIOM_ORG_ID/)
+	})
+})

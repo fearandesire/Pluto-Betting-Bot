@@ -44,8 +44,23 @@ export default class PredictionApiWrapper {
 		}
 	}
 
-	async deletePrediction(params: RemovePredictionRequest) {
+	/**
+	 * Delete the user's prediction for an event.
+	 *
+	 * Khronos keeps this event-based DELETE route for callers that only have
+	 * the event ID. Keep the route intent in the wrapper name so callers do
+	 * not accidentally use it when they have a prediction ID.
+	 */
+	async deletePredictionByEvent(params: RemovePredictionRequest) {
 		await this.predictionApi.removePrediction(params)
+	}
+
+	/**
+	 * @deprecated Use deletePredictionByEvent so the event-based route is
+	 * explicit. Keep this alias while downstream consumers migrate.
+	 */
+	async deletePrediction(params: RemovePredictionRequest) {
+		return this.deletePredictionByEvent(params)
 	}
 
 	async getPredictionsFiltered(

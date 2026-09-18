@@ -36,11 +36,11 @@ importers:
         specifier: ^15.5.0
         version: 15.5.0(koa@3.2.0)
       '@pluto-khronos/api-client':
-        specifier: 3.3.0
-        version: 3.3.0
+        specifier: 3.9.0
+        version: 3.9.0
       '@pluto-khronos/types':
-        specifier: 3.3.0
-        version: 3.3.0(discord.js@14.26.3)
+        specifier: 3.9.0
+        version: 3.9.0(discord.js@14.26.3)
       '@sapphire/decorators':
         specifier: ^6.1.1
         version: 6.2.0
@@ -279,6 +279,12 @@ importers:
       '@types/ws':
         specifier: ^8.5.14
         version: 8.18.1
+      ajv:
+        specifier: 8.17.1
+        version: 8.17.1
+      ajv-formats:
+        specifier: 3.0.1
+        version: 3.0.1(ajv@8.17.1)
       bluebird:
         specifier: ^3.7.2
         version: 3.7.2
@@ -1842,11 +1848,11 @@ packages:
     resolution: {integrity: sha512-QNqXyfVS2wm9hweSYD2O7F0G06uurj9kZ96TRQE5Y9hU7+tgdZwIkbAKc5Ocy1HxEY2kuDQa6cQ1WRs/O5LFKA==}
     engines: {node: ^12.20.0 || ^14.18.0 || >=16.0.0}
 
-  '@pluto-khronos/api-client@3.3.0':
-    resolution: {integrity: sha512-A2tcJrO/nfTmVcHqKCIPivqVsfnPKrmYjAzlGnF6kaOjSeGtrHeSwQnQhLZmmalzWjXXPAuWVCY5nUFghouZbQ==}
+  '@pluto-khronos/api-client@3.9.0':
+    resolution: {integrity: sha512-VCg4NCeBRfSprbt2MzYKh+r0fTA1fwYbK/GsRL7EUBb+OywlhG/MB3Xfphi3AJD7lxZMDVQOeHnWz23cqVO13g==}
 
-  '@pluto-khronos/types@3.3.0':
-    resolution: {integrity: sha512-l1jclMoOlZEwUF7RkwCwSx86Bjys0x/vF3jwiPtqMPmef4IkSAcQ301QEJDkB3YCkD8AVfKje84YSOh44SgEZg==}
+  '@pluto-khronos/types@3.9.0':
+    resolution: {integrity: sha512-TLbOeaKE1f7TVNFDU64dyGJ95OwUPdcGXOxVxK8zAh/I+1bokfyEZ0CX/ttkOk9OMv2p9TpVbSOWOTVgsxm+2Q==}
     peerDependencies:
       discord.js: ^14.0.0
 
@@ -2812,8 +2818,8 @@ packages:
   ajv@6.14.0:
     resolution: {integrity: sha512-IWrosm/yrn43eiKqkfkHis7QioDleaXQHdDVPKg0FSwwd/DuvyX79TZnFOnYpB7dcsFAMmtFztZuXPDvSePkFw==}
 
-  ajv@8.18.0:
-    resolution: {integrity: sha512-PlXPeEWMXMZ7sPYOHqmDyCJzcfNrUr3fGNKtezX14ykXOEIvyK81d+qydx89KY5O71FKMPaQ2vBfBFI5NHR63A==}
+  ajv@8.17.1:
+    resolution: {integrity: sha512-B/gBuNg5SiMTrPkC+A2+cW0RszwxYmn6VYxB/inlBStS5nx6xHIt/ehKRhIMhqusl7a8LjQoZnjCs5vhwxOQ1g==}
 
   ansi-escapes@4.3.2:
     resolution: {integrity: sha512-gKXj5ALrKWQLsYG9jlTRmR/xKluxHV+Z9QEwNIgCfM1/uwPMCuzVVnh5mwTd+OuBZcwSIMbqssNWRm1lE51QaQ==}
@@ -8711,9 +8717,9 @@ snapshots:
 
   '@pkgr/core@0.2.9': {}
 
-  '@pluto-khronos/api-client@3.3.0': {}
+  '@pluto-khronos/api-client@3.9.0': {}
 
-  '@pluto-khronos/types@3.3.0(discord.js@14.26.3)':
+  '@pluto-khronos/types@3.9.0(discord.js@14.26.3)':
     dependencies:
       discord.js: 14.26.3
       resolve-team: 2.0.4
@@ -9661,9 +9667,9 @@ snapshots:
 
   agent-base@8.0.0: {}
 
-  ajv-formats@3.0.1(ajv@8.18.0):
+  ajv-formats@3.0.1(ajv@8.17.1):
     optionalDependencies:
-      ajv: 8.18.0
+      ajv: 8.17.1
 
   ajv@6.14.0:
     dependencies:
@@ -9672,7 +9678,7 @@ snapshots:
       json-schema-traverse: 0.4.1
       uri-js: 4.4.1
 
-  ajv@8.18.0:
+  ajv@8.17.1:
     dependencies:
       fast-deep-equal: 3.1.3
       fast-uri: 3.1.2
@@ -10940,8 +10946,8 @@ snapshots:
   fast-json-stringify@6.0.1:
     dependencies:
       '@fastify/merge-json-schemas': 0.2.1
-      ajv: 8.18.0
-      ajv-formats: 3.0.1(ajv@8.18.0)
+      ajv: 8.17.1
+      ajv-formats: 3.0.1(ajv@8.17.1)
       fast-uri: 3.1.2
       json-schema-ref-resolver: 2.0.1
       rfdc: 1.4.1

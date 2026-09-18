@@ -1,6 +1,8 @@
 import type { ChannelCreationEvent } from '@pluto-khronos/types'
 import { channelCreationEventSchema } from '@pluto-khronos/types'
 import { type Job, Queue, QueueEvents, Worker } from 'bullmq'
+import { registerShutdownQueue } from '../../../lib/startup/shutdown-registry.js'
+import { ChannelCreationBusyError } from '../../guilds/channels/ChannelCreationWorkflow.js'
 import ChannelManager from '../../guilds/channels/ChannelManager.js'
 import { logger } from '../../logging/WinstonLogger.js'
 import { REDIS_CONFIG } from '../data/config.js'
@@ -12,12 +14,14 @@ interface ChannelCreationResult {
 	error?: string
 }
 
+const CHANNEL_CREATION_BACKOFF_DELAY = 1000
+
 export class ChannelCreationQueue {
 	public queue: Queue<ChannelCreationEvent, ChannelCreationResult>
 	private worker: Worker<ChannelCreationEvent, ChannelCreationResult>
 	private queueEvents: QueueEvents
 	private static readonly MAX_ATTEMPTS = 3
-	private static readonly BACKOFF_DELAY = 1000
+	private static readonly DEFAULT_DRAIN_TIMEOUT_MS = 30_000
 	// lock duration must exceed expected processing time
 	private static readonly LOCK_DURATION = 5 * 60 * 1000 // 5 minutes
 
@@ -32,8 +36,7 @@ export class ChannelCreationQueue {
 				defaultJobOptions: {
 					attempts: ChannelCreationQueue.MAX_ATTEMPTS,
 					backoff: {
-						type: 'exponential',
-						delay: ChannelCreationQueue.BACKOFF_DELAY,
+						type: 'custom',
 					},
 					// Keep completed jobs for 24 hours for BullBoard visibility
 					// age in seconds, count limits total jobs kept
@@ -50,16 +53,21 @@ export class ChannelCreationQueue {
 		// Worker with explicit lockDuration
 		this.worker = new Worker<ChannelCreationEvent, ChannelCreationResult>(
 			'channel-creation',
-			async (job) => this.processJob(job),
+			async (job) => this.runJob(job),
 			{
 				connection,
 				concurrency: 15,
 				lockDuration: ChannelCreationQueue.LOCK_DURATION,
+				settings: {
+					backoffStrategy: (attemptsMade, _type, error) =>
+						channelCreationRetryDelay(attemptsMade, error),
+				},
 			},
 		)
 
 		this.setupWorkerEvents()
 		this.setupQueueEvents()
+		registerShutdownQueue('channel-creation', this)
 
 		logger.info({
 			message: 'Channel creation BullMQ initialized',
@@ -248,15 +256,65 @@ export class ChannelCreationQueue {
 			}
 
 			// rethrow to let BullMQ handle retry/backoff
-			throw new Error(errorMessage)
+			throw err instanceof Error ? err : new Error(errorMessage)
 		}
 	}
 
-	public async close(): Promise<void> {
-		await this.worker.close()
+	private activeJobs = new Set<Promise<ChannelCreationResult>>()
+
+	private async runJob(
+		job: Job<ChannelCreationEvent>,
+	): Promise<ChannelCreationResult> {
+		const activeJob = this.processJob(job)
+		this.activeJobs.add(activeJob)
+		try {
+			return await activeJob
+		} finally {
+			this.activeJobs.delete(activeJob)
+		}
+	}
+
+	public async close(
+		drainTimeoutMs = ChannelCreationQueue.DEFAULT_DRAIN_TIMEOUT_MS,
+	): Promise<boolean> {
+		await this.worker.pause(true)
+		const deadline = Date.now() + drainTimeoutMs
+		let forceClose = false
+
+		while (this.activeJobs.size > 0) {
+			const remainingMs = deadline - Date.now()
+			if (remainingMs <= 0) {
+				forceClose = true
+				break
+			}
+			let timeout: ReturnType<typeof setTimeout> | undefined
+			await Promise.race([
+				Promise.allSettled(this.activeJobs),
+				new Promise<void>((resolve) => {
+					timeout = setTimeout(resolve, remainingMs)
+				}),
+			])
+			if (timeout) clearTimeout(timeout)
+		}
+
+		await this.worker.close(forceClose)
 		await this.queueEvents.close()
 		await this.queue.close()
+		return forceClose
 	}
 }
 
 export const channelCreationQueue = new ChannelCreationQueue()
+
+export function channelCreationRetryDelay(
+	attemptsMade: number,
+	error: Error & { retryAfterMs?: number },
+): number {
+	if (error instanceof ChannelCreationBusyError) {
+		return error.retryAfterMs
+	}
+	return Math.min(
+		30_000,
+		CHANNEL_CREATION_BACKOFF_DELAY * 2 ** Math.max(0, attemptsMade),
+	)
+}

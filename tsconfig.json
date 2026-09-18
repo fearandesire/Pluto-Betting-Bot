@@ -29,12 +29,12 @@
 			"#lib/*": ["./src/lib/*"]
 		},
 		"outDir": "./dist",
-		"rootDir": "./src",
+		"rootDir": ".",
 		"noFallthroughCasesInSwitch": false,
 		"lib": ["ES2021", "DOM"],
 		"tsBuildInfoFile": "./dist/.tsbuildinfo"
 	},
-	"include": ["src"],
+	"include": ["src", "scripts/roadmap"],
 	"exclude": [
 		"ecosystem.config.js",
 		"node_modules",

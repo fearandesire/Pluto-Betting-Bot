@@ -19,6 +19,7 @@
 [![Version](https://img.shields.io/github/package-json/v/fearandesire/Pluto-Betting-Bot?style=flat-square&color=blue&label=Version)](https://github.com/fearandesire/Pluto-Betting-Bot/releases)
 
 [Documentation](https://docs.pluto.fearandesire.com)
+[Security](SECURITY.md)
 [Support on Patreon](https://www.patreon.com/fenix_/posts)
 [Report Bug](https://github.com/fearandesire/Pluto-Betting-Bot/issues)
 
@@ -97,6 +98,8 @@ Pluto powers the betting experience for some of Discord's largest sports communi
 
 Pluto's autonomous betting lifecycle — from odds ingestion to bet settlement — is powered by a distributed microservices architecture:
 
+For current architecture notes, start with the [Pluto docs hub](docs/README.md).
+
 ```mermaid
 flowchart LR
     subgraph Client ["Pluto Client (Open Source)"]
@@ -133,6 +136,13 @@ flowchart LR
 > [!NOTE]
 > This repository contains only the open-source Discord bot client; backend services remain private.
 
+Architecture references:
+
+- [ADR 001: Durable notification receiver](docs/architecture/decisions/001-durable-notification-receiver.md)
+- [ADR 002: Atomic cache operations](docs/architecture/decisions/002-atomic-cache-operations.md)
+- [Durable notification receiver feature guide](docs/features/durable-notification-receiver.md)
+- [Khronos client update CI](docs/ci-cd-khronos-client-update.md)
+
 ## Tech Stack
 
 | Category | Technologies |
@@ -154,7 +164,7 @@ flowchart LR
 
 ### Prerequisites
 
-- Node.js 20.x or higher
+- Node.js 22.x or higher
 - pnpm 8.x or higher
 - Redis instance
 - PostgreSQL database
@@ -230,38 +240,47 @@ pnpm dev:unlink-khronos
 
 A pre-commit hook aborts the commit if `yalc.lock` is present — prevents accidentally committing a linked state. If you see it fire, run `pnpm dev:unlink-khronos` first.
 
+## CI/CD — zero-touch cascade
+
+The Khronos → Pluto → deploy path is automated end to end. Human review is only
+required when something is red.
+
+| Stage | Workflow | Behavior |
+|-------|----------|----------|
+| Khronos bump | `khronos-client-update.yml` | On a Khronos release, bumps `@pluto-khronos/*`, runs verify, opens the `deps/khronos-update` PR. **Verify green → GitHub auto-merge (squash).** Verify red → stays a draft for a human. |
+| Release | `release.yml` | release-please opens a `release-please--*` PR on `main`. |
+| Auto-merge release | `auto-merge-release-pr.yml` | Enables auto-merge (squash) on `release-please--*` PRs; they merge once `Verify` passes. |
+| Deploy | `ci-cd-deployment.yml` | On the published release, builds and pushes the Docker image to GHCR. |
+
+**Auth (App token).** The git-writing steps in `khronos-client-update.yml` and
+`release.yml` authenticate with a short-lived token minted from the
+`fnx-cascade-bot` GitHub App (`CASCADE_APP_ID` / `CASCADE_APP_PRIVATE_KEY`),
+replacing `PLUTO_BOT_PAT`. App-token-created PRs and releases still fire the
+downstream `pull_request` / `release: published` events (unlike `GITHUB_TOKEN`),
+so the cascade keeps flowing. The GHCR image push uses `GITHUB_TOKEN` with
+`packages: write`.
+
+**Notifications.** Each stage posts a Discord embed to `DISCORD_CICD_WEBHOOK`
+(green = success/auto-merging, yellow = draft needing a human, red = failure).
+
+Required repo secrets: `CASCADE_APP_ID`, `CASCADE_APP_PRIVATE_KEY`,
+`DISCORD_CICD_WEBHOOK`.
+
 ## Assets
 
-Matchup images under `assets/matchupimages/` are proprietary and **not committed to git** (`assets/` is gitignored). The source of truth is a private Cloudflare R2 bucket: `pluto-assets`, key `matchupimages.tar.gz`.
-
-**CI behavior:** The `deploy` job in [`.github/workflows/ci-cd-deployment.yml`](.github/workflows/ci-cd-deployment.yml) hydrates the tarball from R2 (S3-compatible API) into the build context before the Docker build, so the existing `COPY` chain works unchanged. Required GitHub Actions secrets: `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_ACCOUNT_ID`.
-
-**Refreshing assets (local → R2):**
-
-1. Configure an AWS CLI profile pinned to R2 (one-time):
-   ```bash
-   aws configure --profile pluto-r2
-   # Access Key ID:     <R2 token key>
-   # Secret Access Key: <R2 token secret>
-   # Default region:    auto
-   ```
-2. Run from repo root with your account ID exported:
-   ```bash
-   export R2_ACCOUNT_ID=<your-cloudflare-account-id>
-   pnpm assets:upload
-   ```
-
-The script tars `assets/matchupimages/`, uploads to `s3://pluto-assets/matchupimages.tar.gz`, and cleans up. See [`scripts/upload-assets.sh`](scripts/upload-assets.sh).
+Matchup images under `assets/matchupimages/` are not committed to git (`assets/` is gitignored). Deployment environments provide any required proprietary assets before building the image. Local contributors can use mock mode without access to those assets.
 
 ## Documentation
 
-For comprehensive guides, API references, and configuration details:
-
-**[Pluto Documentation](https://docs.pluto.fearandesire.com)**
+- [Pluto docs hub](docs/README.md)
+- [ADR 001: Durable notification receiver](docs/architecture/decisions/001-durable-notification-receiver.md)
+- [ADR 002: Atomic cache operations](docs/architecture/decisions/002-atomic-cache-operations.md)
+- [Durable notification receiver feature guide](docs/features/durable-notification-receiver.md)
+- [Khronos client update CI](docs/ci-cd-khronos-client-update.md)
 
 ## Contributing
 
-Contributions are welcome. Any contributions you make are appreciated.
+Contributions are welcome. Read the [contributing guide](CONTRIBUTING.md) for local setup, development checks, and pull request expectations.
 
 1. Fork the Project
 2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
