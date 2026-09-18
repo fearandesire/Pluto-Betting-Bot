@@ -3,8 +3,6 @@ import {
 	type PropDto,
 	PropsApi,
 	ResponseError,
-	type SetPropResultDto,
-	type SetPropResultResponseDto,
 } from '@pluto-khronos/api-client'
 import pTimeout from 'p-timeout'
 import { z } from 'zod'
@@ -392,63 +390,5 @@ export default class PropsApiWrapper {
 	 */
 	async getPropByUuid(outcomeUuid: string): Promise<PropDto> {
 		return this.getProp({ outcomeUuid })
-	}
-
-	/**
-	 * Set the result of a prop
-	 * @param dto - The parameters for setting the prop result
-	 * @returns A promise that resolves to the response with prediction statistics
-	 */
-	async setResult(dto: SetPropResultDto): Promise<SetPropResultResponseDto> {
-		const source = `${this.constructor.name}.${this.setResult.name}`
-
-		try {
-			const result = await pTimeout(
-				this.propsApi.propsControllerSetPropResultV1({
-					setPropResultDto: dto,
-				}),
-				{ milliseconds: DEFAULT_TIMEOUT_MS },
-			)
-
-			await logger.info({
-				message: `Set prop result for ${dto.propId}`,
-				metadata: {
-					source,
-					propId: dto.propId,
-					result: dto.result,
-					totalProcessed: result.total_predictions_count,
-				},
-			})
-
-			return result
-		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : String(error)
-			const status =
-				error instanceof ResponseError
-					? error.response.status
-					: undefined
-
-			await logger.error({
-				message: `Failed to set prop result: ${errorMessage}`,
-				metadata: {
-					source,
-					propId: dto.propId,
-					result: dto.result,
-					dto,
-					error: errorMessage,
-					status,
-					body:
-						error instanceof ResponseError
-							? await error.response
-									.clone()
-									.json()
-									.catch(() => null)
-							: undefined,
-				},
-			})
-
-			throw new Error(`Failed to set prop result: ${errorMessage}`)
-		}
 	}
 }

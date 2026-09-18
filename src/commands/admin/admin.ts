@@ -11,7 +11,6 @@ import { AdminPropsHandler } from '../../utils/admin-handlers/admin-props-handle
  * - /admin predictions view <user> - View any user's predictions
  * - /admin predictions delete <user> <id> - Delete a specific prediction
  * - /admin props generate <count> - Generate and post props to channel
- * - /admin props setresult <prop_id> <result> - Set the result of a prop
  * - /admin props viewactive - View all props with active predictions
  */
 @ApplyOptions<Subcommand.Options>({
@@ -35,7 +34,6 @@ import { AdminPropsHandler } from '../../utils/admin-handlers/admin-props-handle
 			type: 'group',
 			entries: [
 				{ name: 'generate', chatInputRun: 'propsGenerate' },
-				{ name: 'setresult', chatInputRun: 'propsSetresult' },
 				{ name: 'viewactive', chatInputRun: 'propsViewactive' },
 			],
 		},
@@ -132,35 +130,6 @@ export class UserCommand extends Subcommand {
 							)
 							.addSubcommand((subcommand) =>
 								subcommand
-									.setName('setresult')
-									.setDescription('Set the result of a prop')
-									.addStringOption((option) =>
-										option
-											.setName('prop_id')
-											.setDescription(
-												'The ID of the prop',
-											)
-											.setRequired(true)
-											.setAutocomplete(true),
-									)
-									.addStringOption((option) =>
-										option
-											.setName('result')
-											.setDescription(
-												'The result of the prop',
-											)
-											.setRequired(true)
-											.addChoices(
-												{ name: 'Over', value: 'Over' },
-												{
-													name: 'Under',
-													value: 'Under',
-												},
-											),
-									),
-							)
-							.addSubcommand((subcommand) =>
-								subcommand
 									.setName('viewactive')
 									.setDescription(
 										'View props with active predictions',
@@ -191,12 +160,6 @@ export class UserCommand extends Subcommand {
 		interaction: Subcommand.ChatInputCommandInteraction,
 	) {
 		return this.propsHandler.handleGenerate(interaction)
-	}
-
-	public async propsSetresult(
-		interaction: Subcommand.ChatInputCommandInteraction,
-	) {
-		return this.propsHandler.handleSetresult(interaction)
 	}
 
 	public async propsViewactive(
