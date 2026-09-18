@@ -165,7 +165,7 @@
 		"tsc-alias": "^1.8.16",
 		"tsconfig-paths": "^4.2.0",
 		"typescript": "^5.9.3",
-		"vite": "^7.3.2",
+		"vite": "^7.3.5",
 		"vite-tsconfig-paths": "^6.1.0",
 		"vitest": "^4.1.6"
 	}
