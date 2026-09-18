@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.12.2](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.12.1...v4.12.2) (2026-09-18)
+
+
+### Bug Fixes
+
+* **api:** redact credential headers from request logs ([#644](https://github.com/fearandesire/Pluto-Betting-Bot/issues/644)) ([5520fcb](https://github.com/fearandesire/Pluto-Betting-Bot/commit/5520fcb7f5ece764b3467e52dcf12d489a178d48))
+
 ## [4.12.1](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.12.0...v4.12.1) (2026-09-18)
 
 
