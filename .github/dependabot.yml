@@ -9,6 +9,14 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "saturday"
+      time: "06:00"
+      timezone: "Etc/UTC"
+    # Groups all npm updates into one PR (e.g., "chore(deps): bump the npm_and_yarn group")
+    groups:
+      all-npm-dependencies:
+        patterns:
+          - "*"
     open-pull-requests-limit: 10
     versioning-strategy: auto
     labels:
@@ -22,8 +30,15 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "saturday"
+      time: "06:00"
+      timezone: "Etc/UTC"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
     labels:
-      - "ci"
+      - "area:ci"
       - "dependencies"
     commit-message:
       prefix: "ci"
@@ -33,8 +48,14 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "saturday"
+      time: "06:00"
+      timezone: "Etc/UTC"
+    groups:
+      docker-dependencies:
+        patterns:
+          - "*"
     labels:
-      - "docker"
       - "dependencies"
     commit-message:
       prefix: "docker"
