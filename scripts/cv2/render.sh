@@ -18,6 +18,10 @@ BG=0x313338
 
 [[ -d "$PREVIEW" ]] || { echo "discord-preview not found at $PREVIEW (set DISCORD_PREVIEW)" >&2; exit 1; }
 command -v ffmpeg >/dev/null || { echo "ffmpeg required" >&2; exit 1; }
+# Field markdown (#15) and -# subtext (#14): older renderers draw them as raw text.
+MIN_PREVIEW=3c73153
+git -C "$PREVIEW" merge-base --is-ancestor "$MIN_PREVIEW" HEAD 2>/dev/null ||
+	{ echo "discord-preview at $PREVIEW is older than $MIN_PREVIEW; run: git -C $PREVIEW pull" >&2; exit 1; }
 
 target="${1:?usage: render.sh <cluster|all>}"
 if [[ "$target" == all ]]; then
