@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.13.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.12.4...v4.13.0) (2026-09-23)
+
+
+### Features
+
+* **discord:** components v2 foundation ([#653](https://github.com/fearandesire/Pluto-Betting-Bot/issues/653)) ([1651563](https://github.com/fearandesire/Pluto-Betting-Bot/commit/1651563b8af552b1aa81934cb5cbc7e222a0a146))
+
 ## [4.12.4](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.12.3...v4.12.4) (2026-09-22)
 
 
