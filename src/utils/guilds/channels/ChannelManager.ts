@@ -16,6 +16,7 @@ import {
 import _ from 'lodash'
 import { teamResolver } from 'resolve-team'
 import { SapDiscClient } from '../../../index.js'
+import { matchPostEmbed } from '../../../lib/discord/builders/odds.js'
 import env from '../../../lib/startup/env.js'
 import { findEmoji } from '../../bot_res/findEmoji.js'
 import {
@@ -38,7 +39,6 @@ import {
 	type CreatedChannel,
 } from './ChannelCreationWorkflow.js'
 import { findExistingGameChannel } from './channel-reconciliation.js'
-import { buildRecordsStr } from './matchEmbedUtils.js'
 
 /**
  * Handle interactions between Pluto API & Discord user interface/interactions
@@ -314,21 +314,8 @@ export default class ChannelManager {
 	 * @param {PrepareMatchEmbed} args - The arguments for preparing the match embed
 	 */
 	async prepMatchEmbed(args: PrepareMatchEmbed) {
-		const embedClr = args.favoredTeamClr
 		const teamEmoji = (await findEmoji(args.favored)) ?? ''
-		const matchVersus = `${args.awayTeamShortName} @ ${args.homeTeamShortName}`
-
-		const recordsStr = buildRecordsStr(args)
-
-		const matchEmbed = new EmbedBuilder()
-			.setColor(embedClr)
-			.setDescription(
-				`# ${matchVersus}\n\n> ${teamEmoji}  **${args.favored}** opens as the favorite.${recordsStr}\n\n**Place your bets** → \`/commands\` in <#${args.bettingChanId}>`,
-			)
-			.setFooter({
-				text: 'Pluto | Created by fenixforever',
-			})
-		return { embed: matchEmbed }
+		return { embed: matchPostEmbed(args, teamEmoji) }
 	}
 
 	async locateChannel(channelName: string) {

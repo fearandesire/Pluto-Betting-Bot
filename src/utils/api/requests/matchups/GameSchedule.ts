@@ -1,5 +1,8 @@
-import { type ColorResolvable, EmbedBuilder, TextChannel } from 'discord.js'
-import embedColors from '../../../../lib/colorsConfig.js'
+import { TextChannel } from 'discord.js'
+import {
+	dailyScheduleEmbed,
+	scheduleGameLine,
+} from '../../../../lib/discord/builders/odds.js'
 import GuildUtils from '../../../guilds/GuildUtils.js'
 import { AxiosKhronosInstance } from '../../common/axios-config.js'
 import { OutgoingEndpoints } from '../../common/endpoints.js'
@@ -27,18 +30,7 @@ export default class GameSchedule {
 	}
 
 	async createScheduleEmbed(desc: string) {
-		// Make today's date string: `DD/MM/YYYY`
-		const date = new Date()
-		const today = date.toLocaleDateString('en-US', {
-			month: '2-digit',
-			day: '2-digit',
-			year: 'numeric',
-		})
-		const scheduleEmbed = new EmbedBuilder()
-			.setDescription(`## Daily Schedule | ${today}\n${desc}`)
-			.setColor(embedColors.PlutoRed as ColorResolvable)
-			.setFooter({ text: 'dev. fenixforever' })
-		return { scheduleEmbed }
+		return { scheduleEmbed: dailyScheduleEmbed(desc) }
 	}
 
 	/**
@@ -132,18 +124,6 @@ export default class GameSchedule {
 	 *
 	 */
 	async formatForSchedule(game: IMatchupAggregated) {
-		// Define a mapping of sports to their corresponding emojis
-		const sportEmojis: { [key: string]: string } = {
-			nba: '🏀',
-			nfl: '🏈',
-		}
-
-		// Extract the short names of the home and away teams
-		const [homeTeamShort, awayTeamShort] = [
-			game.home_team,
-			game.away_team,
-		].map((name) => name.split(' ').pop())
-
 		const homeTeamEmojiPromise = await new GuildUtils().findEmoji(
 			game.home_team,
 		)
@@ -156,18 +136,10 @@ export default class GameSchedule {
 			awayTeamEmojiPromise,
 		])
 
-		// Use the results of the promises, falling back to the sport emoji if necessary
-		const homeTeamEmoji =
-			homeTeamEmojiResult ?? sportEmojis[game.sport_title.toLowerCase()]
-		const awayTeamEmoji =
-			awayTeamEmojiResult ?? sportEmojis[game.sport_title.toLowerCase()]
-
-		// Convert the game's commence time to a Unix timestamp
-		const unixTimestamp = Math.floor(
-			new Date(game.commence_time).getTime() / 1000,
-		)
-		// Build and return the formatted string
-		return `**${awayTeamEmoji} ${awayTeamShort} *(${game.teamRecords[1]})*** *\`at\`* **${homeTeamEmoji} ${homeTeamShort} *(${game.teamRecords[0]})*** @ *<t:${unixTimestamp}:t>*`
+		return scheduleGameLine(game, {
+			home: homeTeamEmojiResult,
+			away: awayTeamEmojiResult,
+		})
 	}
 
 	async reqAll() {
