@@ -1,18 +1,22 @@
 import type { AllUserPredictionsDto } from '@pluto-khronos/api-client'
 import { GetAllPredictionsFilteredStatusEnum } from '@pluto-khronos/api-client'
 import { ApplyOptions } from '@sapphire/decorators'
-import { PaginatedMessageEmbedFields } from '@sapphire/discord.js-utilities'
 import { Subcommand } from '@sapphire/plugin-subcommands'
 import {
-	EmbedBuilder,
+	type EmbedBuilder,
 	InteractionContextType,
 	type Message,
 	PermissionFlagsBits,
 } from 'discord.js'
-import _ from 'lodash'
-import { teamResolver } from 'resolve-team'
-import embedColors from '../../lib/colorsConfig.js'
-import { LEADERBOARD_SCORING } from '../../lib/scoring-constants.js'
+import {
+	leaderboardScore,
+	predictionHistoryField,
+	predictionHistoryPaginator,
+	predictionHistoryTemplate,
+	predictionLeaderboardEmbed,
+	predictionStatsEmbed,
+	resolveStreakBadgeTier,
+} from '../../lib/discord/builders/props.js'
 import LeaderboardWrapper, {
 	type LeaderboardResponseWithStreaks,
 } from '../../utils/api/Khronos/leaderboard/leaderboard-wrapper.js'
@@ -25,11 +29,7 @@ import ClientTools from '../../utils/bot_res/ClientTools.js'
 import { DateManager } from '../../utils/common/DateManager.js'
 import TeamInfo from '../../utils/common/TeamInfo.js'
 import Pagination from '../../utils/embeds/pagination.js'
-import {
-	formatBadge,
-	formatStreakLine,
-	type StreakBadgeTier,
-} from '../../utils/predictions/streak-display.js'
+import type { StreakBadgeTier } from '../../utils/predictions/streak-display.js'
 
 /**
  * Reserved command id for the consolidated group. Legacy aliases retain their
@@ -38,27 +38,10 @@ import {
  */
 const PREDICTIONS_COMMAND_ID_HINTS = ['1298280482123026537']
 
-/** Resolve display badge from the current streak when older API payloads omit it. */
-export function resolveStreakBadgeTier(
-	currentStreak: number | null,
-	reportedTier: StreakBadgeTier = null,
-): StreakBadgeTier {
-	if (currentStreak === null) return null
-	if (reportedTier !== null) return reportedTier
-	if (currentStreak >= 10) return 10
-	if (currentStreak >= 5) return 5
-	if (currentStreak >= 3) return 3
-	return null
-}
-
-/** Keep leaderboard marker copy consistent across pages and future clients. */
-export function formatStreakBadge(
-	currentStreak: number,
-	reportedTier: StreakBadgeTier = null,
-): string {
-	const tier = resolveStreakBadgeTier(currentStreak, reportedTier)
-	return formatBadge(tier)
-}
+export {
+	formatStreakBadge,
+	resolveStreakBadgeTier,
+} from '../../lib/discord/builders/props.js'
 
 @ApplyOptions<Subcommand.Options>({
 	name: 'predictions',
@@ -162,10 +145,10 @@ export class UserCommand extends Subcommand {
 			const description = status
 				? `Filtered by: \`${status}\``
 				: undefined
-			const templateEmbed = new EmbedBuilder()
-				.setTitle(`Prediction History | ${user.username}`)
-				.setColor(embedColors.PlutoBlue)
-			if (description) templateEmbed.setDescription(description)
+			const templateEmbed = predictionHistoryTemplate(
+				user.username,
+				status,
+			)
 
 			const propsApiWrapper = new PropsApiWrapper()
 			let hadFormattingFailures = false
@@ -197,12 +180,10 @@ export class UserCommand extends Subcommand {
 				return interaction.editReply({ embeds: [templateEmbed] })
 			}
 
-			const paginatedMessage = new PaginatedMessageEmbedFields({
-				template: { embeds: [templateEmbed] },
-			})
-				.setItems(formattedPredictions)
-				.setItemsPerPage(10)
-				.make()
+			const paginatedMessage = predictionHistoryPaginator(
+				templateEmbed,
+				formattedPredictions,
+			)
 
 			return paginatedMessage.run(interaction)
 		} catch (error) {
@@ -270,70 +251,18 @@ export class UserCommand extends Subcommand {
 				currentStreak,
 				predictionStats?.badge_tier ?? null,
 			)
-			const embed = new EmbedBuilder()
-				.setTitle('📊 Prediction Statistics')
-				.setColor(embedColors.PlutoBlue)
-				.setDescription(
-					`Server stats for ${interaction.user.username}\n\n${formatStreakLine(currentStreak, bestStreak)}`,
-				)
-				.addFields(
-					{
-						name: 'Total Predictions',
-						value: `\`${totalPredictions}\``,
-						inline: true,
-					},
-					{
-						name: 'Win Rate',
-						value: `\`${winRate.toFixed(1)}%\``,
-						inline: true,
-					},
-					{ name: '\u200B', value: '\u200B', inline: true },
-					{
-						name: '✅ Correct',
-						value: `\`${correctPredictions}\``,
-						inline: true,
-					},
-					{
-						name: '❌ Incorrect',
-						value: `\`${incorrectPredictions}\``,
-						inline: true,
-					},
-					{
-						name: '⏳ Pending',
-						value: `\`${pending.length}\``,
-						inline: true,
-					},
-					{
-						name: '🔥 Current Streak',
-						value:
-							currentStreak === null
-								? '`Unavailable`'
-								: `\`${currentStreak}\``,
-						inline: true,
-					},
-					{
-						name: '🏆 Best Streak',
-						value:
-							bestStreak === null
-								? '`Unavailable`'
-								: `\`${bestStreak}\``,
-						inline: true,
-					},
-					{
-						name: '🏅 Streak Badge',
-						value:
-							predictionStats === null
-								? '`Unavailable`'
-								: badgeTier === null
-									? '`None yet`'
-									: `\`🔥${badgeTier}\``,
-						inline: true,
-					},
-				)
-				.setFooter({
-					text: "Use /predictions leaderboard to compare your streak • voids/pushes don't break streaks.",
-				})
-				.setTimestamp()
+			const embed = predictionStatsEmbed({
+				username: interaction.user.username,
+				totalPredictions,
+				correctPredictions,
+				incorrectPredictions,
+				winRate,
+				pendingCount: pending.length,
+				currentStreak,
+				bestStreak,
+				statsAvailable: predictionStats !== null,
+				badgeTier,
+			})
 
 			return interaction.editReply({ embeds: [embed] })
 		} catch (error) {
@@ -397,35 +326,13 @@ export class UserCommand extends Subcommand {
 		if (!outcome) return null
 
 		const parsedMatch = await this.parseMatchString(prediction.match_string)
-		const point = outcome.point ?? null
-		const choice =
-			prediction.choice.charAt(0).toUpperCase() +
-			prediction.choice.slice(1).toLowerCase()
-		const status =
-			prediction.status !== GetAllPredictionsFilteredStatusEnum.Completed
-				? 'Pending ⏳'
-				: prediction.is_correct === true
-					? 'Correct ✅'
-					: prediction.is_correct === false
-						? 'Incorrect ❌'
-						: 'Pending ⏳'
-		const market = _.startCase(prop.market_key.replace('player_', ''))
-		const date = this.dateManager.toMMDDYYYY(
-			prop.event_context.commence_time,
-		)
-		const value = [
-			`**Date**: ${date}`,
-			`**Status**: ${status}`,
-			`**Choice**: \`${choice}${point === null ? '' : ` ${point}`}\``,
-			`**Market**: ${market}`,
-			prediction.description?.trim()
-				? `**Player:** ${prediction.description}`
-				: null,
-		]
-			.filter((line): line is string => Boolean(line))
-			.join('\n')
-
-		return { name: parsedMatch, value, inline: false }
+		return predictionHistoryField({
+			prediction,
+			matchLabel: parsedMatch,
+			date: this.dateManager.toMMDDYYYY(prop.event_context.commence_time),
+			point: outcome.point ?? null,
+			marketKey: prop.market_key,
+		})
 	}
 
 	private async parseMatchString(matchString: string) {
@@ -444,10 +351,10 @@ export class UserCommand extends Subcommand {
 		return leaderboard.entries.map((entry, index) => ({
 			userId: entry.user_id,
 			position: index + 1,
-			score:
-				entry.correct_predictions * LEADERBOARD_SCORING.CORRECT_POINTS +
-				entry.incorrect_predictions *
-					LEADERBOARD_SCORING.INCORRECT_PENALTY,
+			score: leaderboardScore(
+				entry.correct_predictions,
+				entry.incorrect_predictions,
+			),
 			correctPredictions: entry.correct_predictions,
 			incorrectPredictions: entry.incorrect_predictions,
 			currentStreak: entry.current_streak,
@@ -462,28 +369,16 @@ export class UserCommand extends Subcommand {
 	): Promise<EmbedBuilder> {
 		const startIndex = (currentPage - 1) * 20
 		const pageEntries = leaderboard.slice(startIndex, startIndex + 20)
-		const totalPages = Math.ceil(leaderboard.length / 20)
-		const description = await Promise.all(
+		const rows = await Promise.all(
 			pageEntries.map(async (entry) => {
 				const member = await this.getMember(entry.userId)
-				const username = member?.username ?? entry.userId
-				const total =
-					entry.correctPredictions + entry.incorrectPredictions
-				const streakBadge = formatStreakBadge(
-					entry.currentStreak,
-					entry.badgeTier,
-				)
-				return `${entry.position}. ${username}${streakBadge} - **\`${entry.score}\`** *(${entry.correctPredictions}/${total})*`
+				return {
+					...entry,
+					username: member?.username ?? entry.userId,
+				}
 			}),
 		)
-
-		return new EmbedBuilder()
-			.setTitle('Prediction Accuracy Leaderboard')
-			.setColor(embedColors.PlutoBlue)
-			.setDescription(description.join('\n'))
-			.setFooter({
-				text: `Page ${currentPage} of ${totalPages} | Total Entries: ${leaderboard.length} | 🔥3/5/10 = streak badge`,
-			})
+		return predictionLeaderboardEmbed(rows, currentPage, leaderboard.length)
 	}
 
 	private async getMember(userId: string) {
