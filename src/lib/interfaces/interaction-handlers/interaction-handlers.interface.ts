@@ -45,9 +45,6 @@ export const parseMyBetsNavCustomId = (
 	}
 }
 
-export enum selectMenuIds {
-	matchup_select_team = 'matchup_select_team',
-}
 // Helper function to check if a string starts with any of the given prefixes
 export const startsWithAny = (str: string, prefixes: string[]): boolean =>
 	_.some(prefixes, (prefix) => _.startsWith(str, prefix))
