@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
 	expectV2Payload,
 	toJsonComponents,
-} from '../../test/helpers/v2-assert.js'
+} from '../../lib/discord/v2/__tests__/v2-assert.js'
 
 vi.mock('@sapphire/framework', () => ({
 	InteractionHandler: class {

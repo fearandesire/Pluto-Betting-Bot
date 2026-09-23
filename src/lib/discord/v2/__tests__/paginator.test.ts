@@ -1,9 +1,5 @@
 import { ButtonStyle, MessageFlags } from 'discord.js'
 import { describe, expect, it } from 'vitest'
-import {
-	expectV2Payload,
-	toJsonComponents,
-} from '../../../../test/helpers/v2-assert.js'
 import { assertV2Budget } from '../kit.js'
 import {
 	decodePageNav,
@@ -12,6 +8,7 @@ import {
 	registerPageSource,
 	renderPage,
 } from '../paginator.js'
+import { expectV2Payload, toJsonComponents } from './v2-assert.js'
 
 type Json = {
 	type: number

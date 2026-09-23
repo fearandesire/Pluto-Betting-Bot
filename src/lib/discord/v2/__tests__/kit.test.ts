@@ -1,11 +1,6 @@
 import { ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js'
 import { describe, expect, it } from 'vitest'
 import {
-	expectV2Payload,
-	sumTextDisplayChars,
-	toJsonComponents,
-} from '../../../../test/helpers/v2-assert.js'
-import {
 	accent,
 	assertV2Budget,
 	divider,
@@ -16,6 +11,11 @@ import {
 	v2EditFlags,
 	v2Payload,
 } from '../kit.js'
+import {
+	expectV2Payload,
+	sumTextDisplayChars,
+	toJsonComponents,
+} from './v2-assert.js'
 
 describe('v2Payload', () => {
 	it('wraps blocks in one container with V2 flag, no classic fields, mentions off', () => {

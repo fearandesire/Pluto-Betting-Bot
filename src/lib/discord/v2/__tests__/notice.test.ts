@@ -5,8 +5,8 @@ import {
 	type RepliableInteraction,
 } from 'discord.js'
 import { describe, expect, it, vi } from 'vitest'
-import { expectV2Payload } from '../../../../test/helpers/v2-assert.js'
 import { sendErrorNotice } from '../notice.js'
+import { expectV2Payload } from './v2-assert.js'
 
 const v2Msg = () => ({
 	id: 'v2',
