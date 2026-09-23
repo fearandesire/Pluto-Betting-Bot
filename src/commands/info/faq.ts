@@ -1,6 +1,6 @@
 import { ApplyOptions } from '@sapphire/decorators'
 import { Command } from '@sapphire/framework'
-import { EmbedBuilder } from 'discord.js'
+import { infoEmbed } from '../../lib/discord/builders/info.js'
 import PlutoInfo from '../../utils/commands/info/info.js'
 
 @ApplyOptions<Command.Options>({
@@ -19,14 +19,7 @@ export class UserCommand extends Command {
 		interaction: Command.ChatInputCommandInteraction,
 	) {
 		const faqInfo = await PlutoInfo.faqInfo()
-		const embed = new EmbedBuilder()
-			.setTitle(faqInfo.title)
-			.setDescription(faqInfo.description)
-			.setColor(faqInfo.color)
-			.setThumbnail(faqInfo.thumbnail)
-			.setFooter({
-				text: faqInfo.footer,
-			})
+		const embed = infoEmbed(faqInfo)
 
 		return interaction.reply({ embeds: [embed], ephemeral: true })
 	}
