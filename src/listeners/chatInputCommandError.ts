@@ -5,6 +5,7 @@ import {
 } from '@sapphire/framework'
 import { EmbedBuilder, MessageFlags } from 'discord.js'
 import embedColors from '../lib/colorsConfig.js'
+import { sendErrorNotice } from '../lib/discord/v2/notice.js'
 import GuildWrapper from '../utils/api/Khronos/guild/guild-wrapper.js'
 import { createLogger } from '../utils/logging/WinstonLogger.js'
 
@@ -174,17 +175,13 @@ export class ChatInputCommandError extends Listener<
 		}
 
 		try {
-			if (interaction.deferred) {
-				await interaction.editReply({ embeds: [embed] })
-				return
-			}
-
-			if (interaction.replied) {
-				await interaction.followUp(payload)
-				return
-			}
-
-			await interaction.reply(payload)
+			// V2 reply → ephemeral V2 follow-up; classic: edit if deferred, else follow up.
+			await sendErrorNotice(interaction, embed, {
+				classic: () =>
+					interaction.deferred
+						? interaction.editReply({ embeds: [embed] })
+						: interaction.followUp(payload),
+			})
 		} catch (replyErr) {
 			log.error('Failed to send error embed to interaction', {
 				event: 'command.error_response_failed',

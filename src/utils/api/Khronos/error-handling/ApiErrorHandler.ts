@@ -5,6 +5,7 @@ import type {
 	Message,
 } from 'discord.js'
 import { APP_OWNER_INFO } from '../../../../lib/configs/constants.js'
+import { sendErrorNotice } from '../../../../lib/discord/v2/notice.js'
 import {
 	ApiHttpErrorTypes,
 	ApiModules,
@@ -167,11 +168,23 @@ export class ApiErrorHandler {
 
 		const errEmbed = await this.createErrorEmbed(errModule, errorMessage)
 
-		const msg = await interaction.editReply({
-			embeds: [errEmbed],
-		})
-		this.scheduleMessageDeletion(msg, 'ApiErrorHandler.errorResponses')
-		return msg
+		return this.notify(
+			interaction,
+			errEmbed,
+			'ApiErrorHandler.errorResponses',
+		)
+	}
+
+	/** Sends the embed; auto-deletes it unless it went out as a V2 follow-up (ephemeral, not ours to time out). */
+	private async notify(
+		interaction: CommandInteraction | ButtonInteraction,
+		embed: EmbedBuilder,
+		source: string,
+	): Promise<Message<boolean>> {
+		const { branch, message } = await sendErrorNotice(interaction, embed)
+		if (branch !== 'v2-followup')
+			this.scheduleMessageDeletion(message, source)
+		return message
 	}
 
 	private async createErrorEmbed(
@@ -261,9 +274,7 @@ export class ApiErrorHandler {
 				throw e
 			}
 
-			const msg = await interaction.editReply({ embeds: [errEmbed] })
-			this.scheduleMessageDeletion(msg, 'ApiErrorHandler.handle')
-			return msg
+			return this.notify(interaction, errEmbed, 'ApiErrorHandler.handle')
 		}
 	}
 }
