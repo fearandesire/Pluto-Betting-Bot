@@ -1,7 +1,9 @@
-import { EmbedBuilder, type MessageCreateOptions } from 'discord.js'
-import embedColors from '../../lib/colorsConfig.js'
+import type { EmbedBuilder, MessageCreateOptions } from 'discord.js'
+import {
+	bigWinParlayEmbed,
+	bigWinSingleBetEmbed,
+} from '../../lib/discord/builders/notifications.js'
 import env from '../../lib/startup/env.js'
-import MoneyFormatter from '../../utils/api/common/money-formatting/money-format.js'
 import GuildWrapper from '../../utils/api/Khronos/guild/guild-wrapper.js'
 import redisCache from '../../utils/cache/redis-instance.js'
 import { logger } from '../../utils/logging/WinstonLogger.js'
@@ -91,32 +93,7 @@ export class BigWinAnnouncementService {
 			guildId: input.guildId,
 			userId: input.userId,
 			payout: input.payout,
-			buildEmbed: () =>
-				new EmbedBuilder()
-					.setTitle('💰 Big Parlay Win! 💰')
-					.setDescription(
-						`<@${input.userId}> just hit a huge parlay!`,
-					)
-					.setColor(embedColors.success)
-					.addFields(
-						{
-							name: '🧾 Legs',
-							value: String(input.legs),
-							inline: true,
-						},
-						{
-							name: '📈 Combined Odds',
-							value: this.formatOdds(input.combinedOddsAmerican),
-							inline: true,
-						},
-						{
-							name: '🏆 Payout',
-							value: MoneyFormatter.toUSD(input.payout),
-							inline: false,
-						},
-					)
-					.setFooter({ text: `Parlay ID: ${input.parlayId}` })
-					.setTimestamp(),
+			buildEmbed: () => bigWinParlayEmbed(input),
 		})
 	}
 
@@ -127,36 +104,7 @@ export class BigWinAnnouncementService {
 			guildId: input.guildId,
 			userId: input.userId,
 			payout: input.payout,
-			buildEmbed: () =>
-				new EmbedBuilder()
-					.setTitle('💰 Big Win! 💰')
-					.setDescription(`<@${input.userId}> just landed a big win!`)
-					.setColor(embedColors.success)
-					.addFields(
-						{
-							name: '🎯 Selection',
-							value: input.team,
-							inline: true,
-						},
-						...(input.oddsAmerican === undefined
-							? []
-							: [
-									{
-										name: '📈 Odds',
-										value: this.formatOdds(
-											input.oddsAmerican,
-										),
-										inline: true,
-									},
-								]),
-						{
-							name: '🏆 Payout',
-							value: MoneyFormatter.toUSD(input.payout),
-							inline: false,
-						},
-					)
-					.setFooter({ text: `Bet ID: ${input.betId}` })
-					.setTimestamp(),
+			buildEmbed: () => bigWinSingleBetEmbed(input),
 		})
 	}
 
@@ -269,10 +217,6 @@ export class BigWinAnnouncementService {
 				error: error instanceof Error ? error.message : String(error),
 			})
 		}
-	}
-
-	private formatOdds(odds: number): string {
-		return odds > 0 ? `+${odds}` : String(odds)
 	}
 }
 
