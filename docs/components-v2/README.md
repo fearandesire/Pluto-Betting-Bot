@@ -119,6 +119,7 @@ Status: ⬜ todo · 📸 before captured · 🔁 migrated (after + GIF) · ✅ m
 | admin | F3/F6: Sapphire paginator gets the template as the message template, not via `setTemplate`, so every page has a **random colour** in production. The V2 paginator fixes this; confirm in the live smoke. |
 | admin | F8: `lib/discord/builders/admin-command-error.ts` duplicates the inline embed in `chatInputCommandError.ts` (listener was frozen in PR 0). Point the listener at the builder, then migrate. |
 | admin | F6: fixture uses midday-UTC dates. If production sends date-only `YYYY-MM-DD`, `toLocaleDateString` can show the previous day in US timezones. Check it. |
+| all (paginator) | `v2-pagination-handler` `ownerOnly` compares against `message.interactionMetadata.user`, which is null on `channel.send` messages. Only use `ownerOnly` for command replies, or store the owner in the scope. |
 | betting | A3: only the non-2xx failure message is captured; the catch-branch text differs. |
 | all | Production has no `TZ` (UTC). Times formatted with local time (e.g. C1 "Game Time", MyBets date headers) show **UTC** to users, which is an existing bug. V2 builders should use Discord timestamps (`<t:unix:f>` / `<t:unix:R>`) so each viewer sees their own time zone. |
 
