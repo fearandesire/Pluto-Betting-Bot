@@ -11,14 +11,12 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 SCREENS="$ROOT/docs/components-v2/screens"
 PREVIEW="${DISCORD_PREVIEW:-$(cd "$ROOT/.." && pwd)/discord-preview}"
-# Worktrees live outside the projects dir; fall back to the canonical checkout.
-[[ -d "$PREVIEW" ]] || PREVIEW="$HOME/code/projects/discord-preview"
 WIDTH=700
 BG=0x313338
 
 [[ -d "$PREVIEW" ]] || { echo "discord-preview not found at $PREVIEW (set DISCORD_PREVIEW)" >&2; exit 1; }
 command -v ffmpeg >/dev/null || { echo "ffmpeg required" >&2; exit 1; }
-# Field markdown (#15) and -# subtext (#14): older renderers draw them as raw text.
+# Older renderers draw embed-field markdown and -# subtext as raw text.
 MIN_PREVIEW=3c73153
 git -C "$PREVIEW" merge-base --is-ancestor "$MIN_PREVIEW" HEAD 2>/dev/null ||
 	{ echo "discord-preview at $PREVIEW is older than $MIN_PREVIEW; run: git -C $PREVIEW pull" >&2; exit 1; }

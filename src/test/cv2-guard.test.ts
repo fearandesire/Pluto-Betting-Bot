@@ -1,7 +1,7 @@
 /**
  * Components V2 migration guard. Fails when a file outside the allowlist
  * builds classic embeds, so new classic surfaces can't slip in mid-migration.
- * Each cluster PR deletes its files from CLASSIC_ALLOWLIST; the list should
+ * Each migration PR deletes its files from CLASSIC_ALLOWLIST; the list should
  * end empty apart from documented holdouts (docs/components-v2/README.md).
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
@@ -92,7 +92,7 @@ describe('components v2 guard', () => {
 		const unexpected = classicFiles.filter((f) => !CLASSIC_ALLOWLIST.has(f))
 		expect(
 			unexpected,
-			'Build new message UI with src/lib/discord/v2 (see discord-builders skill)',
+			'Build new message UI with src/lib/discord/v2 (see docs/components-v2/README.md)',
 		).toEqual([])
 	})
 

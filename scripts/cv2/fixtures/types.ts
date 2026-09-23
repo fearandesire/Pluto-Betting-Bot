@@ -13,8 +13,8 @@ export type DumpMessage = {
 }
 
 /**
- * One migration surface (Appendix A ID). `before` renders today's classic
- * message; `after` is added by the cluster PR that migrates it.
+ * One migrated message (ID from docs/components-v2/README.md). `before` renders
+ * today's classic message; `after` is added by the PR that migrates it.
  */
 export type Surface = {
 	id: string

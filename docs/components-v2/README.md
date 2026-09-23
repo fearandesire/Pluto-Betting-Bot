@@ -1,20 +1,20 @@
 # Components V2 migration
 
-Pluto's classic embed messages are moving to Discord **Components V2**. This folder is the single source of truth for that work. It holds the per-surface checklist, the surface table, and the before/after screens every PR must include.
+Pluto's classic embed messages are moving to Discord **Components V2**. This folder holds the checklist, the list of messages, and the before/after screenshots each PR includes.
 
 - **Kit:** `src/lib/discord/v2/` — `kit.ts` (payload + blocks), `edit.ts` (classic→V2 edits), `notice.ts` (V2-aware errors), `paginator.ts`
-- **Screens:** `screens/<cluster>/<ID>-{before,after}.{json,png}` plus `<ID>.gif` (before→after)
+- **Screenshots:** `screens/<area>/<ID>-{before,after}.{json,png}` plus `<ID>.gif` (before→after)
 - **Pipeline:**
   ```bash
-  CV2_DUMP=after CV2_CLUSTER=<cluster> pnpm vitest run scripts/cv2/dump-surfaces.test.ts
-  scripts/cv2/render.sh <cluster>   # needs ../discord-preview (bun) + ffmpeg
+  CV2_DUMP=after CV2_CLUSTER=<area> pnpm vitest run scripts/cv2/dump-surfaces.test.ts
+  scripts/cv2/render.sh <area>   # needs a discord-preview checkout (bun) + ffmpeg
   ```
-  Each surface's fixture is in `scripts/cv2/fixtures/cluster-<cluster>.ts`. A cluster PR adds an `after` function next to the existing `before`.
-- **Guard:** `src/test/cv2-guard.test.ts` fails when a file not on its allowlist uses `EmbedBuilder`, `embeds:`, or `PaginatedMessageEmbedFields`. Each cluster PR removes its own files from the allowlist.
+  Each message's fixture is in `scripts/cv2/fixtures/cluster-<area>.ts`. A migration PR adds an `after` function next to the existing `before`.
+- **Guard:** `src/test/cv2-guard.test.ts` fails when a file not on its allowlist uses `EmbedBuilder`, `embeds:`, or `PaginatedMessageEmbedFields`. Each migration PR removes its files from the allowlist.
 
-## Per-surface checklist
+## Checklist
 
-A cluster PR is done when every box is ticked for each surface ID it owns, and the `cv2-surface-reviewer` agent reports PASS.
+A migration PR is done when every box is ticked for each message it changes.
 
 - [ ] The builder is pure, lives under `src/lib/discord/`, and uses only kit helpers.
 - [ ] The test uses `expectV2Payload` with the **exact** flags and component count, plus one worst-case-length fixture.
@@ -27,8 +27,7 @@ A cluster PR is done when every box is ticked for each surface ID it owns, and t
 - [ ] Images use `attachment://` names that match `files`.
 - [ ] `pnpm typecheck && pnpm test:run` passes, and the surface's files are removed from the guard allowlist.
 - [ ] The `after` dump and render are done, the GIF exists, and the PR body has its row (template below).
-- [ ] Live smoke in the dev guild (Fenix): initial send, each edit in the chain, one forced error, and a pre-deploy message where one applies.
-- [ ] Any new pitfall is added to the `discord-builders` skill.
+- [ ] Tested live in a dev server: initial send, each edit in the chain, one forced error, and a pre-deploy message where one applies.
 
 ### PR body template
 
@@ -46,11 +45,11 @@ Images must use SHA-pinned raw URLs; relative paths don't render in PR bodies, a
 </details>
 ```
 
-## Surface table
+## Messages
 
-Status: ⬜ todo · 📸 before captured · 🔁 migrated (after + GIF) · ✅ merged + live-verified · ⏸ holdout
+Status: 📸 before captured · 🔁 migrated · ✅ merged and verified live
 
-| ID | Surface | Cluster | Source | PR | Status |
+| ID | Message | Area | Source | PR | Status |
 |---|---|---|---|---|---|
 | A1 | Pending betslip | betting | `BetslipsManager.presentBetWithPay` | | 📸 |
 | A2 | Bet confirmed | betting | `BetslipsManager.successfulBetEmbed` | | 📸 |
@@ -95,7 +94,7 @@ Status: ⬜ todo · 📸 before captured · 🔁 migrated (after + GIF) · ✅ m
 | G1 | /help, /faq, /commands | help | `lib/discord/builders/info.ts` | | 📸 |
 | G2 | /patreon | help | `commands/info/patreon.ts` | | 📸 |
 | G3 | /changelog | help | `commands/info/changelog.ts` | | 📸 |
-| G4–G6 | Error notices | — | `lib/discord/v2/notice.ts` | PR 0 | V2-aware |
+| G4–G6 | Error notices | — | `lib/discord/v2/notice.ts` | #653 | V2-aware |
 | G7 | Precondition denied | — | content only | — | no change |
 
 ## Holdouts (stay classic, on purpose)
@@ -109,15 +108,15 @@ Status: ⬜ todo · 📸 before captured · 🔁 migrated (after + GIF) · ✅ m
 
 | Where | Branch | Delete when |
 |---|---|---|
-| C2 prop settlement | `isV2Message(original)` ? rebuild from ledger : legacy embed rebuild | No unsettled props posted before the C cluster deploy remain in the ledger |
-| B3 game-channel dedupe | matches TextDisplay content **or** legacy `embed.description` | One full season after the B cluster deploy |
+| C2 prop settlement | `isV2Message(original)` ? rebuild from ledger : legacy embed rebuild | No unsettled props posted before the props migration remain in the ledger |
+| B3 game-channel dedupe | matches TextDisplay content **or** legacy `embed.description` | One full season after the odds migration ships |
 
-## Carry-overs for cluster PRs (found during before-capture)
+## Known issues to fix during migration
 
-| Cluster | Item |
+| Area | Item |
 |---|---|
-| admin | F3/F6: Sapphire paginator gets the template as the message template, not via `setTemplate`, so every page has a **random colour** in production. The V2 paginator fixes this; confirm in the live smoke. |
-| admin | F8: `lib/discord/builders/admin-command-error.ts` duplicates the inline embed in `chatInputCommandError.ts` (listener was frozen in PR 0). Point the listener at the builder, then migrate. |
+| admin | F3/F6: Sapphire paginator gets the template as the message template, not via `setTemplate`, so every page has a **random colour** in production. The V2 paginator fixes this; confirm it live. |
+| admin | F8: `lib/discord/builders/admin-command-error.ts` duplicates the inline embed in `chatInputCommandError.ts` (the listener was left unchanged in #653). Point the listener at the builder, then migrate. |
 | admin | F6: fixture uses midday-UTC dates. If production sends date-only `YYYY-MM-DD`, `toLocaleDateString` can show the previous day in US timezones. Check it. |
 | all (paginator) | `v2-pagination-handler` `ownerOnly` compares against `message.interactionMetadata.user`, which is null on `channel.send` messages. Only use `ownerOnly` for command replies, or store the owner in the scope. |
 | betting | A3: only the non-2xx failure message is captured; the catch-branch text differs. |
@@ -126,6 +125,6 @@ Status: ⬜ todo · 📸 before captured · 🔁 migrated (after + GIF) · ✅ m
 ## Known render limits
 
 - Remote images come from `scripts/cv2/fixtures/images/`. The Pluto logo is real (imgbb); the guild icon and match image are labelled placeholders.
-- Renders need discord-preview ≥ `3c73153` (field markdown, #15; `-#` subtext, #14). Older checkouts draw both as raw text. Run `git -C ../discord-preview pull` before rendering.
+- Renders need discord-preview at `3c73153` or newer. Older versions draw embed-field markdown and `-#` subtext as raw text. `render.sh` refuses to run on an older checkout.
 - Guild custom emojis don't exist offline, so team names use each code path's no-emoji fallback.
 - Dates render in UTC (pinned in the dump harness to match production).
