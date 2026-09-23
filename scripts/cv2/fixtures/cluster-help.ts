@@ -26,7 +26,7 @@ const fixtures: ClusterFixtures = {
 						description: PatreonInformation,
 						color: embedColors.PlutoBlue,
 						footer: 'For questions, message me on Discord: fenixforever',
-						thumbnail: 'https://i.imgur.com/qG3Mm5t.png',
+						thumbnail: 'https://i.ibb.co/gZtJ87YV/pluto-logo.png',
 					}),
 				],
 			}),

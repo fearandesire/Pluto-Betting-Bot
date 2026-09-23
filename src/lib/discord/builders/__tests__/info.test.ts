@@ -8,14 +8,14 @@ describe('infoEmbed (classic, pre-migration)', () => {
 				title: 'Pluto Documentation',
 				description: 'desc',
 				color: '#c8eefb',
-				thumbnail: 'https://i.imgur.com/RWjfjyv.png',
+				thumbnail: 'https://i.ibb.co/gZtJ87YV/pluto-logo.png',
 				footer: 'foot',
 			}).toJSON(),
 		).toEqual({
 			title: 'Pluto Documentation',
 			description: 'desc',
 			color: 0xc8eefb,
-			thumbnail: { url: 'https://i.imgur.com/RWjfjyv.png' },
+			thumbnail: { url: 'https://i.ibb.co/gZtJ87YV/pluto-logo.png' },
 			footer: { text: 'foot', icon_url: undefined },
 		})
 	})

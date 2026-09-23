@@ -1,6 +1,7 @@
 import { ApplyOptions } from '@sapphire/decorators'
 import { Command } from '@sapphire/framework'
 import embedColors from '../../lib/colorsConfig.js'
+import { plutoLogoUrl } from '../../lib/configs/constants.js'
 import { infoEmbed } from '../../lib/discord/builders/info.js'
 import { PatreonInformation } from '../../utils/api/patreon/interfaces.js'
 
@@ -25,7 +26,7 @@ export class UserCommand extends Command {
 			description: PatreonInformation,
 			color: embedColors.PlutoBlue,
 			footer: 'For questions, message me on Discord: fenixforever',
-			thumbnail: 'https://i.imgur.com/qG3Mm5t.png',
+			thumbnail: plutoLogoUrl,
 		})
 
 		return interaction.editReply({ embeds: [emb] })

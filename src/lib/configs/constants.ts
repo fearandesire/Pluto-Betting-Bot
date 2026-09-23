@@ -1,4 +1,6 @@
 export const plutoDocsUrl = 'https://docs.pluto.fearandesire.com'
+/** Pluto coin logo (imgbb; imgur is blocked in the UK). */
+export const plutoLogoUrl = 'https://i.ibb.co/gZtJ87YV/pluto-logo.png'
 export const pltuoDevGuild = '777353407383339038'
 export const DEV_IDS = {
 	guild: '777353407383339038',

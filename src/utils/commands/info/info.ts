@@ -1,6 +1,6 @@
 import { helpfooter } from '@pluto-config'
 import embedColors from '../../../lib/colorsConfig.js'
-import { plutoDocsUrl } from '../../../lib/configs/constants.js'
+import { plutoDocsUrl, plutoLogoUrl } from '../../../lib/configs/constants.js'
 import { patreonUrl } from '../../../utils/api/patreon/interfaces.js'
 import { APP_VERSION } from '../../../utils/scripts/pkg-version.js'
 
@@ -49,7 +49,7 @@ export default class PlutoInfo {
 		return {
 			title: 'Pluto Commands',
 			description: cmdDescription,
-			thumbnail: 'https://i.imgur.com/RWjfjyv.png',
+			thumbnail: plutoLogoUrl,
 			color: embedColors.PlutoBlue, // Placeholder color, replace with actual one from your configuration
 			footer: await helpfooter('core'),
 		}
@@ -59,7 +59,7 @@ export default class PlutoInfo {
 		return {
 			title: 'Pluto Documentation',
 			description: `Pluto is a full-fledged betting app that creates a competitive sports betting environment.\n# Getting Started\n1. Run the \`/odds\` command to view current betting odds.\n2. Use the \`/bet\` command to place bets, starting with a balance of $50.\n3. Use the \`/dailyclaim\` command every 24 hours to get free money if you run out of funds.\n\n**💜 [Support Pluto](https://www.patreon.com/fenix_)**\n**📒 [Documentation](${plutoDocsUrl})**\n\nVersion: \`${APP_VERSION}\``,
-			thumbnail: 'https://i.imgur.com/RWjfjyv.png',
+			thumbnail: plutoLogoUrl,
 			color: embedColors.PlutoBlue,
 			footer: await helpfooter('core'),
 		}
@@ -70,7 +70,7 @@ export default class PlutoInfo {
 			title: '❓ FAQ',
 			description: `# **__Leveling__**\nExperience *(XP)* is distributed when bets are closed.\n- A winning bet is worth 50 XP\n- A losing bet is 20.\nLevels are incorporated into the system to establish a structured progression system that goes beyond mere financial gains.\nThis system not only provides a clear measure of who the top performers are but also facilitates rewarding *(prizes, giveaway entries, etc)* the top betters at the end of each season.\nEveryone starts at level 0, and the max level is 100.\n## **__Tiers__**\nTiers are ranks that you receive as you level up.\nHere is the list of tiers and their level ranges:\nBronze: 0-15\nSilver: 15-30\nGold: 30-50\nEmerald: 50-75\nDiamond: 75-100\n# **__Parlays__**\n*TBD*\n💙 [Support the continued development of Pluto](${patreonUrl})`,
 			color: embedColors.PlutoBlue,
-			thumbnail: 'https://i.imgur.com/RWjfjyv.png',
+			thumbnail: plutoLogoUrl,
 			footer: await helpfooter('core'),
 		}
 	}

@@ -38,7 +38,7 @@ Images must use SHA-pinned raw URLs; relative paths don't render in PR bodies, a
 ## Visual verification
 | ID | Surface | Before | After | Live |
 |---|---|---|---|---|
-| A1 | Pending betslip | ![](https://github.com/fearandesire/pluto-betting-bot/raw/<sha>/docs/components-v2/screens/betting/A1-before.png) | ![](…/A1-after.png) | ![](…/A1-live.png) |
+| A1 | Pending betslip | ![](https://github.com/fearandesire/Pluto-Betting-Bot/raw/<sha>/docs/components-v2/screens/betting/A1-before.png) | ![](…/A1-after.png) | ![](…/A1-live.png) |
 
 <details><summary>Before → After</summary>
 
@@ -52,49 +52,49 @@ Status: ⬜ todo · 📸 before captured · 🔁 migrated (after + GIF) · ✅ m
 
 | ID | Surface | Cluster | Source | PR | Status |
 |---|---|---|---|---|---|
-| A1 | Pending betslip | betting | `BetslipsManager.presentBetWithPay` | | ⬜ |
-| A2 | Bet confirmed | betting | `BetslipsManager.successfulBetEmbed` | | ⬜ |
-| A3 | placeBet failure | betting | `BetslipsManager.placeBet` | | ⬜ |
-| A4 | Bet cancelled | betting | `ButtonListener` cancel | | ⬜ |
-| A5 | Confirm failure | betting | `ButtonListener` confirm | | ⬜ |
-| A6 | Public "placed a bet" | betting | `BetslipsManager` | | ⬜ |
-| A7 | Public parlay placed | betting | `BetslipsManager.announceParlayPlaced` | | ⬜ |
-| A8 | /cancelbet | betting | `BetslipsManager.cancelBet` | | ⬜ |
-| A9 | /doubledown | betting | `commands/betting/doubledown.ts` | | ⬜ |
-| A10 | /mybets | betting | `mybets-formatter.service.buildEmbedResponse` | | ⬜ |
-| A11 | MyBets page / cancel | betting | `my-bets-pagination-handler`, `parlay-cancel-handler` | | ⬜ |
+| A1 | Pending betslip | betting | `BetslipsManager.presentBetWithPay` | | 📸 |
+| A2 | Bet confirmed | betting | `BetslipsManager.successfulBetEmbed` | | 📸 |
+| A3 | placeBet failure | betting | `BetslipsManager.placeBet` | | 📸 |
+| A4 | Bet cancelled | betting | `ButtonListener` cancel | | 📸 |
+| A5 | Confirm failure | betting | `ButtonListener` confirm | | 📸 |
+| A6 | Public "placed a bet" | betting | `BetslipsManager` | | 📸 |
+| A7 | Public parlay placed | betting | `BetslipsManager.announceParlayPlaced` | | 📸 |
+| A8 | /cancelbet | betting | `BetslipsManager.cancelBet` | | 📸 |
+| A9 | /doubledown | betting | `commands/betting/doubledown.ts` | | 📸 |
+| A10 | /mybets | betting | `mybets-formatter.service.buildEmbedResponse` | | 📸 |
+| A11 | MyBets page / cancel | betting | `my-bets-pagination-handler`, `parlay-cancel-handler` | | 📸 |
 | A12 | /parlay builder | betting | `ParlayBuilderService.render` | — | already V2 |
-| B1 | /odds board | odds | `parseScheduled` | | ⬜ |
-| B2 | Daily schedule | odds | `GameSchedule` | | ⬜ |
-| B3 | Game-channel post | odds | `ChannelManager.prepareGameMessage` | | ⬜ |
-| C1 | Prop post | props | `PropPostingHandler` | | ⬜ |
-| C2 | Prop settlement edit | props | `notifications.service.buildPropSettlementEmbed` | | ⬜ |
-| C3 | Prediction placed | props | `ButtonListener` prop branch | | ⬜ |
-| C5 | /predictions history | props | `predictions.ts` | | ⬜ |
-| C6 | /predictions stats | props | `predictions.ts` | | ⬜ |
-| C7 | /predictions leaderboard | props | `predictions.ts` + `pagination.ts` | | ⬜ |
-| C8 | Deprecated prediction aliases | props | `prediction-deprecation.ts` | | ⬜ |
-| D1 | /balance | account | `requests/accounts/AccountManager` | | ⬜ |
-| D2 | /dailyclaim | account | same | | ⬜ |
-| D3 | /register | account | `Khronos/accounts/AccountManager` | | ⬜ |
-| D4 | /leaderboard | account | `pagination-utilities.ts` | | ⬜ |
-| D5 | /stats h2h | account | `commands/stats/stats.ts` | | ⬜ |
-| D6 | Welcome DM | account | `WelcomeMessageService` | | ⬜ |
-| E1 | Bet result DM | notifications | `notifications.service.notifyUser` | | ⬜ |
-| E2 | Parlay result DMs | notifications | `notifications.service.buildParlayEmbeds` | | ⬜ |
-| E3 | Big-win announcement | notifications | `BigWinAnnouncementService` | | ⬜ |
-| E4 | Weekly recap | notifications | `weekly-recap.embed.ts` | | ⬜ |
-| F1 | /config footer (admin) | admin | `commands/admin/config.ts` | | ⬜ |
-| F2 | /config set/view | admin | `commands/configuration/config.ts` | | ⬜ |
-| F3 | /admin predictions view | admin | `admin-predictions-handler.ts` | | ⬜ |
-| F4 | /admin predictions delete | admin | same | | ⬜ |
-| F5 | /admin props generate | admin | `admin-props-handler.ts` | | ⬜ |
-| F6 | /admin props viewactive | admin | same | | ⬜ |
-| F7 | AppLog log embed | admin | `AppLog.ts` | | ⬜ |
-| F8 | Command-error log | admin | `chatInputCommandError.ts` | | ⬜ |
+| B1 | /odds board | odds | `parseScheduled` | | 📸 |
+| B2 | Daily schedule | odds | `GameSchedule` | | 📸 |
+| B3 | Game-channel post | odds | `ChannelManager.prepareGameMessage` | | 📸 |
+| C1 | Prop post | props | `PropPostingHandler` | | 📸 |
+| C2 | Prop settlement edit | props | `notifications.service.buildPropSettlementEmbed` | | 📸 |
+| C3 | Prediction placed | props | `ButtonListener` prop branch | | 📸 |
+| C5 | /predictions history | props | `predictions.ts` | | 📸 |
+| C6 | /predictions stats | props | `predictions.ts` | | 📸 |
+| C7 | /predictions leaderboard | props | `predictions.ts` + `pagination.ts` | | 📸 |
+| C8 | Deprecated prediction aliases | props | `prediction-deprecation.ts` | | 📸 |
+| D1 | /balance | account | `requests/accounts/AccountManager` | | 📸 |
+| D2 | /dailyclaim | account | same | | 📸 |
+| D3 | /register | account | `Khronos/accounts/AccountManager` | | 📸 |
+| D4 | /leaderboard | account | `pagination-utilities.ts` | | 📸 |
+| D5 | /stats h2h | account | `commands/stats/stats.ts` | | 📸 |
+| D6 | Welcome DM | account | `WelcomeMessageService` | | 📸 |
+| E1 | Bet result DM | notifications | `notifications.service.notifyUser` | | 📸 |
+| E2 | Parlay result DMs | notifications | `notifications.service.buildParlayEmbeds` | | 📸 |
+| E3 | Big-win announcement | notifications | `BigWinAnnouncementService` | | 📸 |
+| E4 | Weekly recap | notifications | `weekly-recap.embed.ts` | | 📸 |
+| F1 | /config footer (admin) | admin | `commands/admin/config.ts` | | 📸 |
+| F2 | /config set/view | admin | `commands/configuration/config.ts` | | 📸 |
+| F3 | /admin predictions view | admin | `admin-predictions-handler.ts` | | 📸 |
+| F4 | /admin predictions delete | admin | same | | 📸 |
+| F5 | /admin props generate | admin | `admin-props-handler.ts` | | 📸 |
+| F6 | /admin props viewactive | admin | same | | 📸 |
+| F7 | AppLog log embed | admin | `AppLog.ts` | | 📸 |
+| F8 | Command-error log | admin | `chatInputCommandError.ts` | | 📸 |
 | G1 | /help, /faq, /commands | help | `lib/discord/builders/info.ts` | | 📸 |
-| G2 | /patreon | help | `commands/info/patreon.ts` | | ⬜ |
-| G3 | /changelog | help | `commands/info/changelog.ts` | | ⬜ |
+| G2 | /patreon | help | `commands/info/patreon.ts` | | 📸 |
+| G3 | /changelog | help | `commands/info/changelog.ts` | | 📸 |
 | G4–G6 | Error notices | — | `lib/discord/v2/notice.ts` | PR 0 | V2-aware |
 | G7 | Precondition denied | — | content only | — | no change |
 
@@ -125,7 +125,7 @@ Status: ⬜ todo · 📸 before captured · 🔁 migrated (after + GIF) · ✅ m
 
 ## Known render limits
 
-- Remote images come from `scripts/cv2/fixtures/images/`. `imgur-*.png` are solid-blue placeholders because i.imgur.com rate-limits the devbox; drop in the real files and re-render.
+- Remote images come from `scripts/cv2/fixtures/images/`. The Pluto logo is real (imgbb); the guild icon and match image are labelled placeholders.
 - `-#` subtext draws literally, and markdown/newlines inside embed **field values** show as raw text, until discord-preview supports them. The JSON is correct and Discord renders it properly. Once the renderer is fixed, re-run `render.sh` on the existing JSON; no re-dump needed.
 - Guild custom emojis don't exist offline, so team names use each code path's no-emoji fallback.
 - Dates render in UTC (pinned in the dump harness to match production).
