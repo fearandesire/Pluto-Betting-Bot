@@ -4,7 +4,7 @@
  * Then: scripts/cv2/render.sh <cluster|all>
  * Skipped unless CV2_DUMP is set, so it never runs in CI.
  */
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { parse } from 'dotenv'
 import { afterAll, beforeAll, describe, it, vi } from 'vitest'
@@ -33,11 +33,14 @@ if (phase) {
 
 // Each fixtures/cluster-*.ts exports `default: ClusterFixtures`. Loaded only
 // when dumping, after env is populated.
-const loaders = import.meta.glob<{ default: ClusterFixtures }>(
-	'./fixtures/cluster-*.ts',
-)
-const clusterModules = phase
-	? await Promise.all(Object.values(loaders).map((load) => load()))
+const FIXTURES = path.resolve(__dirname, 'fixtures')
+const clusterModules: { default: ClusterFixtures }[] = phase
+	? await Promise.all(
+			readdirSync(FIXTURES)
+				.filter((f) => /^cluster-.+\.ts$/.test(f))
+				.sort()
+				.map((f) => import(path.join(FIXTURES, f))),
+		)
 	: []
 
 const IMAGE_KEYS = new Set(['url', 'icon_url', 'proxy_url'])

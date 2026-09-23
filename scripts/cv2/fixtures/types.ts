@@ -5,8 +5,8 @@
  */
 export type DumpMessage = {
 	content?: string
-	embeds?: unknown[]
-	components?: unknown[]
+	embeds?: readonly unknown[]
+	components?: readonly unknown[]
 	flags?: number
 	/** attachment:// targets; url must be a data: URL so renders stay offline. */
 	files?: { name: string; url: string }[]
