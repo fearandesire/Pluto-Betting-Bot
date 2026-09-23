@@ -108,3 +108,11 @@ describe('helpers', () => {
 		expect(() => assertV2Budget(fake)).toThrow(/4000/)
 	})
 })
+
+describe('text over the per-display limit', () => {
+	it('clamps instead of letting discord.js throw', () => {
+		const t = text('x'.repeat(V2_MAX_TEXT_CHARS + 500))
+		expect(t.data.content).toHaveLength(V2_MAX_TEXT_CHARS)
+		expect(t.data.content?.endsWith('…')).toBe(true)
+	})
+})

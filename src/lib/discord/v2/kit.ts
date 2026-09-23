@@ -7,6 +7,7 @@ import {
 	MediaGalleryItemBuilder,
 	type MessageActionRowComponentBuilder,
 	MessageFlags,
+	type MessageMentionOptions,
 	SectionBuilder,
 	SeparatorBuilder,
 	SeparatorSpacingSize,
@@ -26,13 +27,18 @@ export type V2Block =
 
 export type V2MessagePayload = {
 	components: ContainerBuilder[]
-	flags: number
-	allowedMentions: { parse: [] } | { parse: string[]; users?: string[] }
+	flags: MessageFlags.IsComponentsV2 | number
+	allowedMentions: MessageMentionOptions
 	files?: AttachmentBuilder[]
 }
 
+/** discord.js validates length in setContent, so clamp before it throws. */
 export const text = (content: string) =>
-	new TextDisplayBuilder().setContent(content)
+	new TextDisplayBuilder().setContent(
+		content.length > V2_MAX_TEXT_CHARS
+			? `${content.slice(0, V2_MAX_TEXT_CHARS - 1)}…`
+			: content,
+	)
 
 export const divider = (spacing = SeparatorSpacingSize.Small) =>
 	new SeparatorBuilder().setDivider(true).setSpacing(spacing)
@@ -69,7 +75,7 @@ export function accent(name: keyof typeof embedColors & string): number {
 }
 
 /** Flags for editReply/followUp after a plain defer. Discord rejects Ephemeral on edits. */
-export const v2EditFlags = () => MessageFlags.IsComponentsV2
+export const v2EditFlags = () => MessageFlags.IsComponentsV2 as const
 
 function blockCost(block: V2Block): { components: number; chars: number } {
 	const json = block.toJSON() as {
