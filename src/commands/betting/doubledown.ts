@@ -1,7 +1,7 @@
 import { ApplyOptions } from '@sapphire/decorators'
 import { Command } from '@sapphire/framework'
-import { EmbedBuilder, InteractionContextType } from 'discord.js'
-import embedColors from '../../lib/colorsConfig.js'
+import { InteractionContextType } from 'discord.js'
+import { doubleDownEmbed } from '../../lib/discord/builders/betting.js'
 import { ApiModules } from '../../lib/interfaces/api/api.interface.js'
 import { isApiError } from './../../lib/interfaces/errors/api-errors.js'
 import env from '../../lib/startup/env.js'
@@ -73,12 +73,13 @@ export class UserCommand extends Command {
 			const formattedPayout = MoneyFormatter.toUSD(newPayout)
 			const formattedProfit = MoneyFormatter.toUSD(newProfit)
 			const formattedBalance = MoneyFormatter.toUSD(newBalance)
-			const modifiedBetEmbed = new EmbedBuilder()
-				.setDescription(
-					`## Double Down\n\n**Bet:** \`${formattedAmount}\` | **Payout:** \`${formattedPayout}\`\n**Profit:** \`${formattedProfit}\`\n**Balance:** \`${formattedBalance}\``,
-				)
-				.setColor(embedColors.success)
-				.setThumbnail(interaction.user.displayAvatarURL())
+			const modifiedBetEmbed = doubleDownEmbed({
+				amount: formattedAmount,
+				payout: formattedPayout,
+				profit: formattedProfit,
+				balance: formattedBalance,
+				avatarUrl: interaction.user.displayAvatarURL(),
+			})
 			return interaction.editReply({ embeds: [modifiedBetEmbed] })
 		} catch (err) {
 			await new ApiErrorHandler().handle(

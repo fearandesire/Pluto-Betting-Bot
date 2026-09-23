@@ -4,10 +4,12 @@ import {
 	InteractionHandlerTypes,
 } from '@sapphire/framework'
 import type { ButtonInteraction } from 'discord.js'
-import { EmbedBuilder } from 'discord.js'
 import _ from 'lodash'
-import { teamResolver } from 'resolve-team'
-import embedColors from '../lib/colorsConfig.js'
+import {
+	betCanceledEmbed,
+	formatPredictionConfirmation,
+	predictionPlacedEmbed,
+} from '../lib/discord/builders/betting.js'
 import { ApiModules } from '../lib/interfaces/api/api.interface.js'
 import { btnIds } from '../lib/interfaces/interaction-handlers/interaction-handlers.interface.js'
 import {
@@ -21,7 +23,6 @@ import PredictionApiWrapper from '../utils/api/Khronos/prediction/predictionApiW
 import PropsApiWrapper from '../utils/api/Khronos/props/props-api-wrapper.js'
 import { CacheManager } from '../utils/cache/cache-manager.js'
 import { ErrorEmbeds } from '../utils/common/errors/global.js'
-import TeamInfo from '../utils/common/TeamInfo.js'
 
 /**
  * @module ButtonListener
@@ -80,13 +81,9 @@ export class ButtonHandler extends InteractionHandler {
 					}
 					await betslipWrapper.clearPending(interaction.user.id)
 
-					const cancelEmbed = new EmbedBuilder()
-						.setTitle('Bet Canceled')
-						.setDescription(
-							'Your bet has been successfully cancelled.',
-						)
-						.setColor(embedColors.PlutoRed)
-						.setThumbnail(interaction.user.displayAvatarURL())
+					const cancelEmbed = betCanceledEmbed(
+						interaction.user.displayAvatarURL(),
+					)
 
 					await interaction.editReply({
 						embeds: [cancelEmbed],
@@ -237,25 +234,14 @@ export class ButtonHandler extends InteractionHandler {
 				})
 
 				// Format prediction in compact view format matching history style
-				const formattedPrediction =
-					await this.formatPredictionConfirmation(
-						matchedOutcome,
-						prop.market_key,
-						prop.event_context,
-					)
+				const formattedPrediction = await formatPredictionConfirmation(
+					matchedOutcome,
+					prop.market_key,
+					prop.event_context,
+				)
 
-				const predictionEmbed = new EmbedBuilder()
-					.setColor(embedColors.PlutoGreen)
-					.setTitle('✅ Prediction Placed')
-					.setDescription(
-						'Your prediction has been recorded.\nView your predictions with `/predictions history`',
-					)
-					.addFields({
-						name: '\u200B',
-						value: formattedPrediction,
-						inline: false,
-					})
-					.setTimestamp()
+				const predictionEmbed =
+					predictionPlacedEmbed(formattedPrediction)
 
 				await interaction.editReply({
 					content: '',
@@ -279,74 +265,6 @@ export class ButtonHandler extends InteractionHandler {
 				return
 			}
 		}
-	}
-
-	/**
-	 * Format prediction confirmation in compact view format matching history style
-	 * Player format: **⏳ Player Name** (ABBREV vs. ABBREV)\nProp Type • **PICK Line**\n*<t:TIMESTAMP:d>*
-	 * Team format: **⏳ Team Name**\nProp Type • **PICK Line**\n*<t:TIMESTAMP:d>*
-	 */
-	private async formatPredictionConfirmation(
-		outcome: {
-			name: string
-			description?: string
-			point?: number | null
-		},
-		marketKey: string,
-		eventContext: {
-			home_team: string
-			away_team: string
-			commence_time: string
-		},
-	): Promise<string> {
-		const isPlayerPrediction =
-			outcome.description && outcome.description.trim() !== ''
-
-		let entityLine: string
-		if (isPlayerPrediction) {
-			const playerName = outcome.description!
-			const awayTeamData = await teamResolver.resolve(
-				eventContext.away_team,
-				{ full: true },
-			)
-			const homeTeamData = await teamResolver.resolve(
-				eventContext.home_team,
-				{ full: true },
-			)
-			const awayAbbrev =
-				awayTeamData?.abbrev ||
-				TeamInfo.getTeamShortName(eventContext.away_team)
-			const homeAbbrev =
-				homeTeamData?.abbrev ||
-				TeamInfo.getTeamShortName(eventContext.home_team)
-			const matchupString = `${awayAbbrev} vs. ${homeAbbrev}`
-			entityLine = `**⏳ ${playerName}** (${matchupString})`
-		} else {
-			// Handle spreads market - choice is team name
-			const teamName = TeamInfo.getTeamShortName(outcome.name)
-			entityLine = `**⏳ ${teamName}**`
-		}
-
-		const propType = _.startCase(
-			marketKey.replace('player_', '').replace('_', ' '),
-		)
-
-		const pick = outcome.name.toUpperCase()
-		const line =
-			outcome.point !== null && outcome.point !== undefined
-				? outcome.point.toString()
-				: ''
-
-		const timestamp = Math.floor(
-			new Date(eventContext.commence_time).getTime() / 1000,
-		)
-		const formattedDate = `<t:${timestamp}:d>`
-
-		const propLine = line
-			? `${propType} • **${pick} ${line}**`
-			: `${propType} • **${pick}**`
-
-		return `${entityLine}\n${propLine}\n*${formattedDate}*`
 	}
 }
 
