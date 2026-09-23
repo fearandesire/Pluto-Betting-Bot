@@ -1,7 +1,8 @@
 import { container } from '@sapphire/framework'
-import { EmbedBuilder } from 'discord.js'
+import type { EmbedBuilder } from 'discord.js'
 import _ from 'lodash'
 import pTimeout, { TimeoutError } from 'p-timeout'
+import { welcomeEmbed } from '../../../lib/discord/builders/account.js'
 import type { CacheManager } from '../../cache/cache-manager.js'
 import { logger } from '../../logging/WinstonLogger.js'
 import { plutoWelcomeMsg } from './interfaces/kh-pluto/kh-pluto.interface.js'
@@ -409,10 +410,6 @@ export class WelcomeMessageService {
 	 * Builds the welcome embed using plutoWelcomeMsg constant.
 	 */
 	private static buildWelcomeEmbed(): EmbedBuilder {
-		return new EmbedBuilder()
-			.setTitle('Welcome to Pluto! 🎉')
-			.setDescription(plutoWelcomeMsg)
-			.setColor(0x5865f2) // Discord blurple
-			.setTimestamp()
+		return welcomeEmbed(plutoWelcomeMsg)
 	}
 }

@@ -34,7 +34,7 @@
 		"lib": ["ES2021", "DOM"],
 		"tsBuildInfoFile": "./dist/.tsbuildinfo"
 	},
-	"include": ["src", "scripts/roadmap"],
+	"include": ["src", "scripts/roadmap", "scripts/cv2"],
 	"exclude": [
 		"ecosystem.config.js",
 		"node_modules",

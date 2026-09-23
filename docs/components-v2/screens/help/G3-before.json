@@ -1,0 +1,28 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"embeds": [
+		{
+			"title": "Pluto Update v4.12.4",
+			"description": "**Playoff odds & faster bet slips**\n\n- 🏀 NBA playoff series odds now show in `/odds`\n- ⚡ Bet slips confirm faster\n- 🐛 Fixed `/mybets` paging on long histories\n\nMade by <@208016830491525120>",
+			"color": 13168379,
+			"fields": [
+				{
+					"name": "📅 Published",
+					"value": "<t:1790960400:R>",
+					"inline": true
+				},
+				{
+					"name": "Docs",
+					"value": "https://docs.pluto.fearandesire.com"
+				}
+			],
+			"footer": {
+				"text": "Use `/help` for more information on Pluto"
+			},
+			"timestamp": "2026-10-02T17:00:00.000Z"
+		}
+	]
+}

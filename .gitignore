@@ -101,7 +101,9 @@ roadmap-export*.json
 
 .frolic-session.json
 
-docs
+docs/*
+# Components V2 migration screens + checklist are public (before/after artifacts)
+!docs/components-v2/
 
 # yalc — local cross-repo linking against Khronos
 # (see "Local development against Khronos" in README)

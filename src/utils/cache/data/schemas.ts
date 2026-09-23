@@ -190,31 +190,5 @@ export const prepareMatchEmbedSchema = z
 	})
 	.describe('Data required to prepare a match embed')
 
-export const createChannelAndSendEmbedSchema = z
-	.object({
-		channel: channelAggregatedSchema,
-		guild: eligibleGuildData,
-		metadata: z.object({
-			favoredTeamInfo: z.any().describe('Resolved team information'),
-			matchImg: z
-				.instanceof(Buffer)
-				.nullable()
-				.describe('Match image buffer'),
-			headline: z
-				.string()
-				.nullable()
-				.optional()
-				.describe('Optional headline or description for the game'),
-			records: teamRecordsResultSchema
-				.nullable()
-				.optional()
-				.describe('Team records and statistics'),
-		}),
-	})
-	.describe('Data required to create a channel and send an embed')
-
 export type PrepareMatchEmbed = z.infer<typeof prepareMatchEmbedSchema>
-export type CreateChannelAndSendEmbed = z.infer<
-	typeof createChannelAndSendEmbedSchema
->
 export type TeamMatchupRecords = z.infer<typeof teamRecordsResultSchema>

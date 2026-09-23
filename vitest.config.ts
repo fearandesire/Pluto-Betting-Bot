@@ -1,6 +1,9 @@
 import path from 'node:path'
 import { defineConfig } from 'vitest/config'
 
+// Production runs in UTC (no TZ set); make date-formatting tests match it on any machine.
+process.env.TZ = 'UTC'
+
 export default defineConfig({
 	test: {
 		environment: 'node',

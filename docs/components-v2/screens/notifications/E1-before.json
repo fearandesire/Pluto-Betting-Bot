@@ -1,0 +1,43 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"embeds": [
+		{
+			"title": "🎉 Bet Won! 🎉",
+			"color": 5763719,
+			"fields": [
+				{
+					"name": "🎯 Team Selected",
+					"value": "Kansas City Chiefs",
+					"inline": true
+				},
+				{
+					"name": "💰 Bet Amount",
+					"value": "$100.00",
+					"inline": true
+				},
+				{
+					"name": "💫 Profit",
+					"value": "$74.07",
+					"inline": true
+				},
+				{
+					"name": "🏆 Total Payout",
+					"value": "$174.07",
+					"inline": false
+				},
+				{
+					"name": "📊 Balance Update",
+					"value": "$900.00 → $1,074.07",
+					"inline": false
+				}
+			],
+			"timestamp": "2026-10-04T19:30:00.000Z",
+			"footer": {
+				"text": "Pluto | Bet ID: 48213"
+			}
+		}
+	]
+}

@@ -1,0 +1,16 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"embeds": [
+		{
+			"color": 3447003,
+			"title": "Prediction command moved",
+			"description": "This command is kept for one release as an alias. Use **/predictions history** instead.",
+			"footer": {
+				"text": "Legacy aliases will be removed after the migration window."
+			}
+		}
+	]
+}

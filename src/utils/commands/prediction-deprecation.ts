@@ -1,5 +1,5 @@
-import { type ChatInputCommandInteraction, EmbedBuilder } from 'discord.js'
-import embedColors from '../../lib/colorsConfig.js'
+import type { ChatInputCommandInteraction } from 'discord.js'
+import { predictionDeprecationEmbed } from '../../lib/discord/builders/props.js'
 
 /**
  * Keep legacy prediction commands discoverable while the consolidated command
@@ -11,15 +11,7 @@ export async function sendPredictionCommandDeprecation(
 ) {
 	await interaction.deferReply({ ephemeral: true })
 
-	const embed = new EmbedBuilder()
-		.setColor(embedColors.info)
-		.setTitle('Prediction command moved')
-		.setDescription(
-			`This command is kept for one release as an alias. Use **${replacement}** instead.`,
-		)
-		.setFooter({
-			text: 'Legacy aliases will be removed after the migration window.',
-		})
+	const embed = predictionDeprecationEmbed(replacement)
 
 	return interaction.editReply({ embeds: [embed] })
 }

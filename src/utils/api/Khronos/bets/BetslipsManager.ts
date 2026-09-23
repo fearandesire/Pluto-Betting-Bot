@@ -7,21 +7,23 @@ import type {
 	PlaceBetDto,
 	PlacedBetslip,
 } from '@pluto-khronos/api-client'
-import { format } from 'date-fns'
 import {
-	ActionRowBuilder,
-	ButtonBuilder,
 	type ButtonInteraction,
-	ButtonStyle,
 	type CommandInteraction,
-	EmbedBuilder,
 	type GuildEmoji,
 	type InteractionResponse,
 	type Message,
 	type StringSelectMenuInteraction,
 } from 'discord.js'
 import _ from 'lodash'
-import embedColors from '../../../../lib/colorsConfig.js'
+import {
+	betCancellationEmbed,
+	betConfirmedEmbed,
+	betPlacedAnnouncementEmbed,
+	formatMatchDate,
+	parlayPlacedAnnouncementEmbed,
+	pendingBetslip,
+} from '../../../../lib/discord/builders/betting.js'
 import { ApiModules } from '../../../../lib/interfaces/api/api.interface.js'
 import type { IAPIBetslipPayload } from '../../../../lib/interfaces/api/bets/betslips.interfaces.js'
 import { isApiError } from '../../../../lib/interfaces/errors/api-errors.js'
@@ -274,23 +276,20 @@ export class BetslipManager {
 				payout: betslip.payout!,
 			})
 
-		const formattedBetData = this.formatBetStr(betAmount, payout, profit)
-		const formattedDate = this.formatMatchDate(apiInfo.dateofmatchup)
-
 		// Use team strings that already have emoji fallback logic applied
-		const successEmbed = new EmbedBuilder()
-			.setTitle('Bet confirmed!')
-			.setDescription(
-				`## ${teamDetails.betOnTeam} *vs.* ${teamDetails.opponent}\n**${teamDetails.chosenTeamShort}** | **${formattedDate}**\n${formattedBetData}`,
-			)
-			.setColor(embedColors.success)
-			.setThumbnail(embedImg)
-			.setFooter({
-				text: `Bet ID: ${betslip.betid} | ${betFooter({
-					balance: (betslip.newBalance ?? 0) + betslip.amount,
-					betAmount: betslip.amount,
-				})}`,
-			})
+		const successEmbed = betConfirmedEmbed({
+			betOnTeam: teamDetails.betOnTeam,
+			opponent: teamDetails.opponent,
+			chosenTeamShort: teamDetails.chosenTeamShort,
+			date: formatMatchDate(apiInfo.dateofmatchup),
+			amounts: { betAmount, payout, profit },
+			avatarUrl: embedImg,
+			betId: betslip.betid,
+			footer: betFooter({
+				balance: (betslip.newBalance ?? 0) + betslip.amount,
+				betAmount: betslip.amount,
+			}),
+		})
 
 		if (interaction.deferred || interaction.replied) {
 			return interaction.editReply({
@@ -316,17 +315,15 @@ export class BetslipManager {
 
 			const guildWrapper = new GuildWrapper()
 			const formattedAmount = MoneyFormatter.toUSD(betDetails.amount)
-			const publicEmbed = new EmbedBuilder()
-				.setDescription(
-					`<@${interaction.user.id}> placed a bet on **${betDetails.betOnTeam}** for **\`${formattedAmount}\`**!`,
-				)
-				.setColor(embedColors.success)
-				.setFooter({
-					text: betFooter({
-						balance: betDetails.balance,
-						betAmount: betDetails.amount,
-					}),
-				})
+			const publicEmbed = betPlacedAnnouncementEmbed({
+				userId: interaction.user.id,
+				betOnTeam: betDetails.betOnTeam,
+				formattedAmount,
+				footer: betFooter({
+					balance: betDetails.balance,
+					betAmount: betDetails.amount,
+				}),
+			})
 
 			await guildWrapper.sendToBettingChannel(interaction.guildId, {
 				embeds: [publicEmbed],
@@ -355,14 +352,10 @@ export class BetslipManager {
 				return
 			}
 
-			const publicEmbed = new EmbedBuilder()
-				.setDescription(
-					`<@${interaction.user.id}> placed a **${details.legCount}-leg parlay** for **\`$${details.stake.toFixed(2)}\`**!`,
-				)
-				.setColor(embedColors.success)
-				.setFooter({
-					text: `Potential payout: $${details.potentialPayout.toFixed(2)} • Parlay ${details.parlayId.slice(0, 8)}`,
-				})
+			const publicEmbed = parlayPlacedAnnouncementEmbed({
+				userId: interaction.user.id,
+				...details,
+			})
 
 			await new GuildWrapper().sendToBettingChannel(interaction.guildId, {
 				embeds: [publicEmbed],
@@ -370,88 +363,6 @@ export class BetslipManager {
 		} catch (error) {
 			logger.warn('Failed to announce parlay placed', { error })
 		}
-	}
-
-	private formatBetStr(betAmount: string, payout: string, profit: string) {
-		const b = '**'
-		const formattedBetData = `${b}${betAmount}${b} -> ${b}${payout}${b}\n${b}Profit:${b} ${b}${profit}${b}`
-		return formattedBetData
-	}
-
-	/**
-	 * Formats a date string to MM/DD/YY format
-	 * Handles both ISO date strings and already-formatted dates
-	 */
-	private formatMatchDate(
-		dateInput: string | undefined,
-		betslip?: BetslipWithAggregationDTO,
-	): string {
-		/* let userTimezone = new Intl.DateTimeFormat().resolvedOptions().timeZone
-		userTimezone =
-			userTimezone && userTimezone.trim().length
-				? userTimezone
-				: 'Etc/UTC' */
-		let userTimezone = 'America/New_York' // Force Eastern Time on Betslip
-
-		// Try to get commence_time from betslip.match if available
-		if (betslip?.match?.commence_time) {
-			const date = new Date(betslip.match.commence_time)
-			//return date.toLocaleDateString('en-US', { timeZone: userTimezone })
-			return date
-				.toLocaleString('en-US', {
-					timeZone: userTimezone,
-					timeZoneName: 'short',
-				})
-				.replace(',', ' -')
-				.replace(/:\d\d /, ' ')
-		}
-
-		// If dateInput is an ISO date string (contains 'T' or matches ISO pattern), format it
-		if (dateInput) {
-			try {
-				// Check if it's an ISO date string
-				if (
-					dateInput.includes('T') ||
-					/^\d{4}-\d{2}-\d{2}/.test(dateInput)
-				) {
-					const date = new Date(dateInput)
-					if (dateInput.includes('T')) {
-						/* return date.toLocaleDateString('en-US', {
-							timeZone: userTimezone,
-						}) */
-						return date
-							.toLocaleString('en-US', {
-								timeZone: userTimezone,
-								timeZoneName: 'short',
-							})
-							.replace(',', ' -')
-							.replace(/:\d\d /, ' ')
-					}
-					return format(date, 'M/d/y')
-				}
-				// If it's already formatted, try to parse and reformat to ensure MM/DD/YY
-				const parsedDate = new Date(dateInput)
-				if (!isNaN(parsedDate.getTime())) {
-					if (dateInput.match(/T|:|[AP]M/)) {
-						/* return parsedDate.toLocaleDateString('en-US', {
-							timeZone: userTimezone,
-						}) */
-						return parsedDate
-							.toLocaleString('en-US', {
-								timeZone: userTimezone,
-								timeZoneName: 'short',
-							})
-							.replace(',', ' -')
-							.replace(/:\d\d /, ' ')
-					}
-					return format(parsedDate, 'M/d/y')
-				}
-			} catch {
-				// If parsing fails, return as-is
-			}
-		}
-
-		return dateInput || 'TBD'
 	}
 
 	async cancelBet(
@@ -490,13 +401,10 @@ export class BetslipManager {
 					patreonOverride,
 				},
 			})
-			const cancelledEmbed = new EmbedBuilder()
-				.setTitle('Bet Cancellation :ticket:')
-				.setDescription(
-					`Successfully cancelled bet \`${betId}\`\nYour funds have been restored.`,
-				)
-				.setColor(embedColors.success)
-				.setThumbnail(interaction.user.displayAvatarURL())
+			const cancelledEmbed = betCancellationEmbed(
+				betId,
+				interaction.user.displayAvatarURL(),
+			)
 			if (interaction.deferred || interaction.replied) {
 				return interaction.followUp({
 					embeds: [cancelledEmbed],
@@ -552,32 +460,17 @@ export class BetslipManager {
 				profit: betData.payData.profit,
 				payout: betData.payData.payout,
 			})
-		const formattedBetData = this.formatBetStr(betAmount, payout, profit)
-		// uppercase the first letter of users team choice with lodash
-		const usersTeamUpper = _.upperFirst(usersTeam)
-		const formattedDate = this.formatMatchDate(dateofmatchup, betslip)
-
-		const embed = new EmbedBuilder()
-			.setTitle('Pending Betslip')
-			.setDescription(
-				`## ${chosenTeamStr} *vs.* ${oppTeamStr}\n**${usersTeamUpper}** | **${formattedDate}**\n${formattedBetData}\n*Confirm your bet via the buttons below*`,
-			)
-			.setThumbnail(interaction.user.displayAvatarURL())
-			.setColor(embedColors.PlutoYellow)
-		const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-			new ButtonBuilder()
-				.setCustomId('matchup_btn_confirm')
-				.setLabel('Confirm Bet')
-				.setStyle(ButtonStyle.Success),
-			new ButtonBuilder()
-				.setCustomId('matchup_btn_cancel')
-				.setLabel('Cancel Bet')
-				.setStyle(ButtonStyle.Danger),
+		const message = await interaction.editReply(
+			pendingBetslip({
+				chosenTeam: chosenTeamStr,
+				opponent: oppTeamStr!,
+				// uppercase the first letter of users team choice with lodash
+				teamLabel: _.upperFirst(usersTeam),
+				date: formatMatchDate(dateofmatchup, betslip),
+				amounts: { betAmount, payout, profit },
+				avatarUrl: interaction.user.displayAvatarURL(),
+			}),
 		)
-		const message = await interaction.editReply({
-			embeds: [embed],
-			components: [actionRow],
-		})
 		return message
 	}
 

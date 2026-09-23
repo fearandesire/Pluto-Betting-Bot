@@ -1,0 +1,30 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"embeds": [
+		{
+			"title": "📊 Week 5 Recap",
+			"color": 13168379,
+			"description": "Sleeper-aligned window: **Sep 29 – Oct 5** · Season 2026",
+			"fields": [
+				{
+					"name": "Top predictors",
+					"value": "1. Pluto Tester — **21/27** (77.8%)\n2. hoopsgod — **19/26** (73.1%)\n3. gridiron_gary — **17/25** (68.0%)\n4. lockoftheweek — **15/24** (62.5%)\n5. fadeTheBooks — **14/24** (58.3%)"
+				},
+				{
+					"name": "Highlights",
+					"value": "🎯 Single: <@100000000000000011> — **845.00**\n🎲 Parlay: <@100000000000000001> — **672.50**"
+				},
+				{
+					"name": "Totals",
+					"value": "Predictions: **412**\nCorrect: **238** · Incorrect: **174**\nAccuracy: **57.8%** (+3.4 pp)"
+				}
+			],
+			"footer": {
+				"text": "Khronos weekly recap · Pluto"
+			}
+		}
+	]
+}

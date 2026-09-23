@@ -1,0 +1,38 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"embeds": [
+		{
+			"color": 11152685,
+			"title": "Command Error",
+			"fields": [
+				{
+					"name": "Command",
+					"value": "/admin predictions view",
+					"inline": true
+				},
+				{
+					"name": "User",
+					"value": "<@100000000000000001>",
+					"inline": true
+				},
+				{
+					"name": "Duration",
+					"value": "1284ms",
+					"inline": true
+				},
+				{
+					"name": "Error",
+					"value": "`Error: Request failed with status code 503`"
+				},
+				{
+					"name": "Stack",
+					"value": "```\nError: Request failed with status code 503\nat PredictionApiWrapper.getActivePredictionsForUser (/dist/utils/api/Khronos/prediction/predictionApiWrapper.js:88:19)\nat AdminPredictionsHandler.handleView (/dist/utils/admin-handlers/admin-predictions-handler.js:31:29)\nat UserCommand.predictionsView (/dist/commands/admin/admin.js:142:9)\n```"
+				}
+			],
+			"timestamp": "2026-10-04T19:30:00.000Z"
+		}
+	]
+}

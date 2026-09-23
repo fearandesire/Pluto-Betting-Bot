@@ -1,0 +1,43 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"embeds": [
+		{
+			"timestamp": "2026-10-04T19:30:00.000Z",
+			"footer": {
+				"text": "Pluto | Parlay ID: 5f3c9a1e-8b2d-4c6f-9e1a-7d4b2c8f0a13"
+			},
+			"fields": [
+				{
+					"name": "📈 Combined Odds",
+					"value": "+1245",
+					"inline": true
+				},
+				{
+					"name": "💰 Stake",
+					"value": "$50.00",
+					"inline": true
+				},
+				{
+					"name": "🏆 Payout",
+					"value": "$672.50",
+					"inline": true
+				},
+				{
+					"name": "📊 Balance Update",
+					"value": "$1,250.00 → $1,922.50",
+					"inline": false
+				},
+				{
+					"name": "🧾 Legs",
+					"value": "✅ Kansas City Chiefs ML (-135)\n✅ Philadelphia Eagles ML (-140)\n✅ San Francisco 49ers ML (-180)\n✅ Detroit Lions ML (-125)\n✅ Baltimore Ravens ML (-210)",
+					"inline": false
+				}
+			],
+			"title": "🎉 Parlay Won! 🎉",
+			"color": 5763719
+		}
+	]
+}

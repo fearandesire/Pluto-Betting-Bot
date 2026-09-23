@@ -1,0 +1,29 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"embeds": [
+		{
+			"title": "📋 Footer Cache Status",
+			"color": 14201370,
+			"fields": [
+				{
+					"name": "⏰ Refresh Information",
+					"value": "**Last Refresh:** <t:1791139680:R>\n**Next Refresh:** <t:1791143280:R>\n**TTL:** 60 minutes",
+					"inline": false
+				},
+				{
+					"name": "📊 Statistics",
+					"value": "**Total Footers:** 31\n**Categories:** 4\n**Announcement Active:** ❌ No",
+					"inline": false
+				},
+				{
+					"name": "📁 Categories",
+					"value": "• **core:** 8 footers\n• **general:** 6 footers\n• **betting:** 9 footers\n• **props:** 8 footers",
+					"inline": false
+				}
+			]
+		}
+	]
+}

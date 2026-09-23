@@ -8,6 +8,7 @@ import {
 import type { CommandInteraction, GuildMember } from 'discord.js'
 import _ from 'lodash'
 import { SapDiscClient } from '../../../../index.js'
+import { profileDescription } from '../../../../lib/discord/builders/account.js'
 import { ApiModules } from '../../../../lib/interfaces/api/api.interface.js'
 import { supportMessage } from '../../../../lib/PlutoConfig.js'
 import { ErrorEmbeds } from '../../../common/errors/global.js'
@@ -140,12 +141,12 @@ export class AccountManager {
 				}
 				const formattedBalance = MoneyFormatter.toUSD(balance)
 				const Tier = _.upperFirst(tier)
-				let descStr = ''
-				if (isNewUser) {
-					descStr += `${plutoWelcomeMsg}\n\n💰 **Balance:** \`${formattedBalance}\`\n🛡️ **Level:** \`${level}\`\n💫 **Tier:** \`${Tier}\``
-				} else {
-					descStr = `💰 **Balance:** \`${formattedBalance}\`\n🛡️ **Level:** \`${level}\`\n💫 **Tier:** \`${Tier}\``
-				}
+				const descStr = profileDescription({
+					balance: formattedBalance,
+					level,
+					tier: Tier,
+					welcome: isNewUser ? plutoWelcomeMsg : undefined,
+				})
 				const embed = await EmbedsSuccess.sv1(
 					interaction,
 					`${user?.displayName}'s Profile`,

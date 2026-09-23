@@ -1,10 +1,12 @@
 import type { AllUserPredictionsDto } from '@pluto-khronos/api-client'
-import { PaginatedMessageEmbedFields } from '@sapphire/discord.js-utilities'
 import { container } from '@sapphire/framework'
 import type { Subcommand } from '@sapphire/plugin-subcommands'
-import { EmbedBuilder } from 'discord.js'
-import _ from 'lodash'
-import embedColors from '../../lib/colorsConfig.js'
+import {
+	fieldsPaginator,
+	predictionDeletedEmbed,
+	predictionField,
+	predictionsTemplateEmbed,
+} from '../../lib/discord/builders/admin.js'
 import PredictionApiWrapper from '../api/Khronos/prediction/predictionApiWrapper.js'
 import PropsApiWrapper from '../api/Khronos/props/props-api-wrapper.js'
 import { DateManager } from '../common/DateManager.js'
@@ -40,13 +42,11 @@ export class AdminPredictionsHandler {
 				return
 			}
 
-			const templateEmbed = new EmbedBuilder()
-				.setTitle(`Active Predictions | ${user.username}`)
-				.setDescription(
-					`Total: \`${activePredictions.length}\` active prediction(s)`,
-				)
-				.setColor(embedColors.PlutoBlue)
-				.setFooter({ text: `User ID: ${user.id}` })
+			const templateEmbed = predictionsTemplateEmbed(
+				user.username,
+				user.id,
+				activePredictions.length,
+			)
 
 			const formattedPredictions = await Promise.all(
 				activePredictions.map((prediction) =>
@@ -54,12 +54,10 @@ export class AdminPredictionsHandler {
 				),
 			)
 
-			const paginatedMsg = new PaginatedMessageEmbedFields({
-				template: { embeds: [templateEmbed] },
-			})
-				.setItems(formattedPredictions)
-				.setItemsPerPage(5)
-				.make()
+			const paginatedMsg = fieldsPaginator(
+				templateEmbed,
+				formattedPredictions,
+			)
 
 			await paginatedMsg.run(interaction)
 		} catch (error) {
@@ -140,40 +138,14 @@ export class AdminPredictionsHandler {
 				matchedPrediction.created_at,
 			)
 
-			const confirmEmbed = new EmbedBuilder()
-				.setTitle('✅ Prediction Deleted')
-				.setColor(embedColors.success)
-				.setDescription(
-					`Successfully deleted prediction for ${user.username}.`,
-				)
-				.addFields(
-					{
-						name: 'Prediction ID',
-						value: `\`${matchedPrediction.id.slice(-8)}\``,
-						inline: true,
-					},
-					{
-						name: 'User',
-						value: `${user.username} (${user.id})`,
-						inline: true,
-					},
-					{
-						name: 'Match',
-						value: parsedMatchString,
-						inline: false,
-					},
-					{
-						name: 'Choice',
-						value: matchedPrediction.choice,
-						inline: true,
-					},
-					{
-						name: 'Created',
-						value: date,
-						inline: true,
-					},
-				)
-				.setTimestamp()
+			const confirmEmbed = predictionDeletedEmbed({
+				id: matchedPrediction.id,
+				username: user.username,
+				userId: user.id,
+				match: parsedMatchString,
+				choice: matchedPrediction.choice,
+				date,
+			})
 
 			await interaction.editReply({
 				embeds: [confirmEmbed],
@@ -224,51 +196,18 @@ export class AdminPredictionsHandler {
 			prop.event_context,
 		)
 
-		// Format the choice with point and market
-		const formattedChoice = this.formatPredictionChoice(
-			prediction.choice,
-			outcome?.point,
-			prop.market_key,
-		)
-
 		// Format date
 		const date = new DateManager().toMMDDYYYY(prediction.created_at)
 
-		// Build Prop Details section
-		let propDetailsValue = `**Choice:** ${formattedChoice}`
-		if (outcome?.description && outcome.description.trim() !== '') {
-			propDetailsValue = `**Prop:** ${outcome.description}\n${propDetailsValue}`
-		}
-
-		// Build Event Details section
-		const eventDetailsValue = `**Match:** ${parsedMatchString}\n**Date:** ${date}`
-
-		// Combine sections
-		const value = `**ID:** \`${prediction.id.slice(-8)}\`\n\n**Prop Details**\n${propDetailsValue}\n\n**Event Details**\n${eventDetailsValue}`
-
-		return {
-			name: `Prediction #${prediction.id.slice(-8)}`,
-			value: value,
-			inline: false,
-		}
-	}
-
-	/**
-	 * Formats a prediction choice with point and market information
-	 */
-	private formatPredictionChoice(
-		choice: string,
-		point: number | undefined,
-		marketKey: string,
-	): string {
-		const upperChoice = choice.toUpperCase()
-		const marketName = _.startCase(marketKey.replace('player_', ''))
-
-		if (point !== null && point !== undefined) {
-			return `${upperChoice} ${point} ${marketName}`
-		}
-
-		return `${upperChoice} ${marketName}`
+		return predictionField({
+			id: prediction.id,
+			choice: prediction.choice,
+			point: outcome?.point,
+			marketKey: prop.market_key,
+			outcomeDescription: outcome?.description,
+			match: parsedMatchString,
+			date,
+		})
 	}
 
 	/**

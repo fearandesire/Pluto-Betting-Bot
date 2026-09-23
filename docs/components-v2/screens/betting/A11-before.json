@@ -1,0 +1,71 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"embeds": [
+		{
+			"title": "⏳ Pending Bets",
+			"color": 14201370,
+			"description": "**⏳ Celtics**\nWager: `$100.00` • Payout: `$166.67`\n*Placed: <t:1791137400:d>* • ID: `48100`\n\n**⏳ Chiefs**\nWager: `$50.00` • Payout: `$90.00`\n*Placed: <t:1791135900:d>* • ID: `48101`\n\n**🎲 3-leg Parlay**\nStake: `$25.00` • Odds: `+591` • Potential: `$172.75`\n⏳ Boston Celtics • h2h • <t:1791243000:d>\n⏳ Kansas City Chiefs -3.5 • spreads • <t:1791306000:d>\n⏳ Over 224.5 • totals • <t:1791327600:d>"
+		},
+		{
+			"title": "📜 Bet History",
+			"color": 13168379,
+			"description": "**Sep 23, 2026**\n\n**❌ Knicks**\nWager: `$55.00` • Lost `$55.00`\n*<t:1790197200:d>*\n\n**Sep 22, 2026**\n\n**✅ Ravens**\nWager: `$70.00` • Won `$129.50` (+`$59.50`)\n*<t:1790100000:d>*\n\n**Sep 21, 2026**\n\n**❌ Thunder**\nWager: `$90.00` • Lost `$90.00`\n*<t:1790031600:d>*"
+		}
+	],
+	"components": [
+		{
+			"type": 1,
+			"components": [
+				{
+					"type": 2,
+					"custom_id": "mybets_nav_first_2",
+					"label": "⏮",
+					"style": 2,
+					"disabled": false
+				},
+				{
+					"type": 2,
+					"custom_id": "mybets_nav_prev_2",
+					"label": "◀",
+					"style": 1,
+					"disabled": false
+				},
+				{
+					"type": 2,
+					"custom_id": "mybets_nav_page",
+					"label": "2/2",
+					"style": 2,
+					"disabled": true
+				},
+				{
+					"type": 2,
+					"custom_id": "mybets_nav_next_2",
+					"label": "▶",
+					"style": 1,
+					"disabled": true
+				},
+				{
+					"type": 2,
+					"custom_id": "mybets_nav_last_2",
+					"label": "⏭",
+					"style": 2,
+					"disabled": true
+				}
+			]
+		},
+		{
+			"type": 1,
+			"components": [
+				{
+					"type": 2,
+					"custom_id": "parlay_cancel_a3f9c2e1-7b4d-4e0a-9c55-1d2e3f4a5b6c_1",
+					"label": "Cancel a3f9c2",
+					"style": 4
+				}
+			]
+		}
+	]
+}

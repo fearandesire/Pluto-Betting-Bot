@@ -7,9 +7,9 @@ import {
 	PermissionFlagsBits,
 } from 'discord.js'
 import embedColors from '../../lib/colorsConfig.js'
+import { guildConfigViewEmbed } from '../../lib/discord/builders/admin.js'
 import GuildConfigWrapper from '../../utils/api/Khronos/guild/guild-config.wrapper.js'
 import GuildWrapper from '../../utils/api/Khronos/guild/guild-wrapper.js'
-import StringUtils from '../../utils/common/string-utils.js'
 
 @ApplyOptions<Command.Options>({
 	description: 'Manage guild configurations',
@@ -132,26 +132,11 @@ export class UserCommand extends Command {
 			definedSettings.set(setting.setting_type, setting.setting_value)
 		}
 
-		const embed = new EmbedBuilder()
-			.setColor(embedColors.info)
-			.setTitle(`${interaction.guild.name} Guild Configuration`)
-			.setDescription(
-				'Here are the current configuration settings for this guild.\nSet / Change using `/config set`',
-			)
-
-		for (const [key, value] of Object.entries(
-			DiscordConfigSettingTypeEnum,
-		)) {
-			// Parse the name to be human-readable
-			let configName = key.replace(/_/g, ' ')
-			configName = StringUtils.toTitleCase(configName)
-			const settingValue = definedSettings.get(value) || 'Not set'
-			embed.addFields({ name: configName, value: settingValue })
-		}
-
-		embed.setAuthor({
-			name: interaction.user.username,
-			iconURL: interaction.user.displayAvatarURL(),
+		const embed = guildConfigViewEmbed({
+			guildName: interaction.guild.name,
+			defined: definedSettings,
+			username: interaction.user.username,
+			avatarUrl: interaction.user.displayAvatarURL(),
 		})
 
 		await interaction.editReply({ embeds: [embed] })

@@ -1,16 +1,12 @@
 import { createHash } from 'node:crypto'
 import type { ProcessedPropDto } from '@pluto-khronos/api-client'
-import { format } from 'date-fns'
+import type { ActionRowBuilder, ButtonBuilder, EmbedBuilder } from 'discord.js'
 import {
-	ActionRowBuilder,
-	ButtonBuilder,
-	ButtonStyle,
-	EmbedBuilder,
-} from 'discord.js'
-import { MarketKeyTranslations } from '../api/common/interfaces/market-translations.js'
+	propPostButtons,
+	propPostEmbed,
+} from '../../lib/discord/builders/props.js'
 import GuildWrapper from '../api/Khronos/guild/guild-wrapper.js'
 import redisCache from '../cache/redis-instance.js'
-import StringUtils from '../common/string-utils.js'
 import TeamInfo from '../common/TeamInfo.js'
 import { logger } from '../logging/WinstonLogger.js'
 
@@ -468,43 +464,16 @@ export class PropPostingHandler {
 		prop: ProcessedPropDto,
 		sport: 'nfl' | 'nba',
 	): Promise<EmbedBuilder> {
-		const sportEmoji = sport === 'nfl' ? '🏈' : '🏀'
-		const marketTranslation =
-			MarketKeyTranslations[prop.market_key] || prop.market_key
-		const marketName = StringUtils.toTitleCase(marketTranslation)
-
-		const gameTime = format(new Date(prop.commence_time), 'EEE, h:mm a')
-
 		const [homeTeamInfo, awayTeamInfo] = await Promise.all([
 			new TeamInfo().getTeamInfo(prop.home_team),
 			new TeamInfo().getTeamInfo(prop.away_team),
 		])
 
-		const title = '🎯 Accuracy Challenge'
-
-		const descriptionLines = [
-			`### **${prop.description}** • O/U **\`${prop.point}\`** ${marketName}\n`,
-			`**Market:** ${marketName}`,
-			`**Over**: ${prop.over.price > 0 ? '+' : ''}${prop.over.price}\n**Under**: ${prop.under.price > 0 ? '+' : ''}${prop.under.price}`,
-		]
-
-		return new EmbedBuilder()
-			.setTitle(title)
-			.setDescription(descriptionLines.join('\n'))
-			.addFields(
-				{
-					name: 'Match',
-					value: `${sportEmoji} ${homeTeamInfo.resolvedTeamData.abbrev} vs. ${awayTeamInfo.resolvedTeamData.abbrev}`,
-					inline: true,
-				},
-				{
-					name: 'Game Time',
-					value: `⏰ ${gameTime}`,
-					inline: true,
-				},
-			)
-			.setColor(homeTeamInfo.color)
-			.setTimestamp()
+		return propPostEmbed(prop, sport, {
+			homeAbbrev: homeTeamInfo.resolvedTeamData.abbrev,
+			awayAbbrev: awayTeamInfo.resolvedTeamData.abbrev,
+			homeColor: homeTeamInfo.color,
+		})
 	}
 
 	/**
@@ -523,22 +492,7 @@ export class PropPostingHandler {
 	private createPropButtons(
 		prop: ProcessedPropDto,
 	): ActionRowBuilder<ButtonBuilder> {
-		const overButton = new ButtonBuilder()
-			.setCustomId(`prop_${prop.over.outcome_uuid}`)
-			.setLabel('Over')
-			.setEmoji('⬆️')
-			.setStyle(ButtonStyle.Success)
-
-		const underButton = new ButtonBuilder()
-			.setCustomId(`prop_${prop.under.outcome_uuid}`)
-			.setLabel('Under')
-			.setEmoji('⬇️')
-			.setStyle(ButtonStyle.Danger)
-
-		return new ActionRowBuilder<ButtonBuilder>().addComponents(
-			overButton,
-			underButton,
-		)
+		return propPostButtons(prop)
 	}
 }
 

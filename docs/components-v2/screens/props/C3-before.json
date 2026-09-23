@@ -1,0 +1,22 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"content": "",
+	"embeds": [
+		{
+			"color": 5763719,
+			"title": "✅ Prediction Placed",
+			"description": "Your prediction has been recorded.\nView your predictions with `/predictions history`",
+			"fields": [
+				{
+					"name": "​",
+					"value": "**⏳ Jayson Tatum** (LAL vs. BOS)\nPoints • **OVER 27.5**\n*<t:1791243000:d>*",
+					"inline": false
+				}
+			],
+			"timestamp": "2026-10-04T19:30:00.000Z"
+		}
+	]
+}

@@ -1,0 +1,15 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"embeds": [
+		{
+			"description": "## Daily Schedule | 10/04/2026\n**🏈 Bills *(4-0)*** *`at`* **🏈 Chiefs *(3-1)*** @ *<t:1791145500:t>*\n**🏈 Eagles *(3-1)*** *`at`* **🏈 Cowboys *(2-2)*** @ *<t:1791145500:t>*\n**🏈 Rams *(2-2)*** *`at`* **🏈 49ers *(3-1)*** @ *<t:1791159600:t>*\n",
+			"color": 11152685,
+			"footer": {
+				"text": "dev. fenixforever"
+			}
+		}
+	]
+}

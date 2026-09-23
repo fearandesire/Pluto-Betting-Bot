@@ -1,15 +1,16 @@
-import { PaginatedMessageEmbedFields } from '@sapphire/discord.js-utilities'
 import { container } from '@sapphire/framework'
 import type { Subcommand } from '@sapphire/plugin-subcommands'
-import { EmbedBuilder } from 'discord.js'
-import embedColors from '../../lib/colorsConfig.js'
+import {
+	activePropsEmbed,
+	activePropsFields,
+	fieldsPaginator,
+	propsPostedEmbed,
+} from '../../lib/discord/builders/admin.js'
 import { ApiModules } from '../../lib/interfaces/api/api.interface.js'
 import { ApiErrorHandler } from '../api/Khronos/error-handling/ApiErrorHandler.js'
 import GuildWrapper from '../api/Khronos/guild/guild-wrapper.js'
 import PredictionApiWrapper from '../api/Khronos/prediction/predictionApiWrapper.js'
 import PropsApiWrapper from '../api/Khronos/props/props-api-wrapper.js'
-import { DateManager } from '../common/DateManager.js'
-import StringUtils from '../common/string-utils.js'
 import { LogType } from '../logging/AppLog.interface.js'
 import AppLog from '../logging/AppLog.js'
 import { logger } from '../logging/WinstonLogger.js'
@@ -76,39 +77,7 @@ export class AdminPropsHandler {
 				interaction.guildId,
 			)
 
-			// Build success message
-			const responseLines: string[] = [
-				`✅ Successfully posted **${result.posted}** player prop${result.posted !== 1 ? 's' : ''} to ${predictionChannel}`,
-			]
-
-			if (result.failed > 0) {
-				responseLines.push(
-					`❌ Failed to post **${result.failed}** prop${result.failed !== 1 ? 's' : ''}`,
-				)
-			}
-
-			const embed = new EmbedBuilder()
-				.setTitle('Player Props Posted')
-				.setDescription(responseLines.join('\n'))
-				.setColor(embedColors.PlutoGreen)
-				.addFields(
-					{
-						name: 'Total Pairs',
-						value: result.total.toString(),
-						inline: true,
-					},
-					{
-						name: 'Posted',
-						value: result.posted.toString(),
-						inline: true,
-					},
-					{
-						name: 'Failed',
-						value: result.failed.toString(),
-						inline: true,
-					},
-				)
-				.setTimestamp()
+			const embed = propsPostedEmbed(result, `${predictionChannel}`)
 
 			await interaction.editReply({
 				content: '',
@@ -185,87 +154,14 @@ export class AdminPropsHandler {
 				return
 			}
 
-			const embed = new EmbedBuilder()
-				.setTitle('Active Props - Pending Results')
-				.setDescription(
-					`Found **${totalOutcomes}** outcome${totalOutcomes !== 1 ? 's' : ''} with active predictions across **${dateGroups.length}** date${dateGroups.length !== 1 ? 's' : ''}.\nManage prop results in the Khronos admin dashboard.`,
-				)
-				.setColor(embedColors.PlutoBlue)
-				.setTimestamp()
-
-			const fields: Array<{
-				name: string
-				value: string
-				inline: boolean
-			}> = []
-
-			for (const dateGroup of dateGroups) {
-				const dateObj = new Date(dateGroup.date)
-				const formattedDate = dateObj.toLocaleDateString('en-US', {
-					weekday: 'short',
-					month: 'short',
-					day: 'numeric',
-					year: 'numeric',
-				})
-
-				fields.push({
-					name: `\u200B\n📅 ${formattedDate}`,
-					value: '\u200B',
-					inline: false,
-				})
-
-				// Add games and props for this date
-				for (const game of dateGroup.games) {
-					const gameTime = new DateManager().toDiscordUnix(
-						game.commence_time,
-					)
-					const gameTotalPredictions = game.props.reduce(
-						(sum, prop) => sum + prop.prediction_count,
-						0,
-					)
-
-					fields.push({
-						name: `🎯 ${game.matchup}`,
-						value: `Time: ${gameTime} • ${gameTotalPredictions} prediction${gameTotalPredictions !== 1 ? 's' : ''}`,
-						inline: false,
-					})
-
-					for (const prop of game.props) {
-						const propParts: string[] = [
-							`**Market:** ${StringUtils.toTitleCase(prop.market_key.replace(/_/g, ' '))}`,
-						]
-
-						if (prop.description) {
-							propParts.push(`**Player:** ${prop.description}`)
-						}
-
-						if (prop.point !== null && prop.point !== undefined) {
-							propParts.push(`**Line:** ${prop.point}`)
-						}
-
-						propParts.push(
-							`**Predictions:** ${prop.prediction_count}`,
-						)
-
-						fields.push({
-							name: `  └ 🎯 ${prop.outcome_uuid}`,
-							value: `  ${propParts.join(' • ')}`,
-							inline: false,
-						})
-					}
-				}
-			}
+			const embed = activePropsEmbed(totalOutcomes, dateGroups.length)
+			const fields = activePropsFields(dateGroups)
 
 			if (fields.length <= 25) {
 				embed.addFields(fields)
 				await interaction.editReply({ embeds: [embed] })
 			} else {
-				const paginatedMsg = new PaginatedMessageEmbedFields({
-					template: { embeds: [embed] },
-				})
-					.setItems(fields)
-					.setItemsPerPage(5)
-					.make()
+				const paginatedMsg = fieldsPaginator(embed, fields)
 
 				await paginatedMsg.run(interaction)
 			}

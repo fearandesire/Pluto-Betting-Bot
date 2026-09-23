@@ -1,0 +1,15 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"embeds": [
+		{
+			"description": "<@100000000000000001> placed a **3-leg parlay** for **`$25.00`**!",
+			"color": 5763719,
+			"footer": {
+				"text": "Potential payout: $172.75 • Parlay a3f9c2e1"
+			}
+		}
+	]
+}

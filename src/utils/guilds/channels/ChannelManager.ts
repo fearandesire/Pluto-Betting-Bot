@@ -16,11 +16,11 @@ import {
 import _ from 'lodash'
 import { teamResolver } from 'resolve-team'
 import { SapDiscClient } from '../../../index.js'
+import { matchPostEmbed } from '../../../lib/discord/builders/odds.js'
 import env from '../../../lib/startup/env.js'
 import { findEmoji } from '../../bot_res/findEmoji.js'
 import {
 	type ChannelAggregated,
-	type CreateChannelAndSendEmbed,
 	type GuildEligibility,
 	type IncomingChannelData,
 	incomingChannelDataSchema,
@@ -39,7 +39,6 @@ import {
 	type CreatedChannel,
 } from './ChannelCreationWorkflow.js'
 import { findExistingGameChannel } from './channel-reconciliation.js'
-import { buildRecordsStr } from './matchEmbedUtils.js'
 
 /**
  * Handle interactions between Pluto API & Discord user interface/interactions
@@ -310,115 +309,13 @@ export default class ChannelManager {
 	}
 
 	/**
-	 * Creates a channel and sends an embed message to it.
-	 * @async
-	 * @param {CreateChannelAndSendEmbed} data - The data containing channel, guild and metadata information
-	 */
-	async createChannelAndSendEmbed(data: CreateChannelAndSendEmbed) {
-		const { channel, guild, metadata } = data
-		const locatedGuild = (await SapDiscClient.guilds.cache.get(
-			guild.guildId,
-		)) as Guild
-
-		if (!locatedGuild) return null
-
-		let guildsGameCategory = locatedGuild.channels.cache.get(
-			guild.gameCategoryId,
-		)
-		if (!guildsGameCategory) {
-			const fetched = await locatedGuild.channels
-				.fetch(guild.gameCategoryId)
-				.catch(() => null)
-			if (fetched) guildsGameCategory = fetched
-		}
-		if (!guildsGameCategory) {
-			throw new Error(
-				`Game category channel not found — verify the category exists and the bot has access to it. guildId=${guild.guildId} gameCategoryId=${guild.gameCategoryId} channelName=${channel.channelname}`,
-			)
-		}
-		if (guildsGameCategory.type !== ChannelType.GuildCategory) {
-			throw new Error(
-				`Channel ${guild.gameCategoryId} is not a category channel. guildId=${guild.guildId} channelName=${channel.channelname}`,
-			)
-		}
-
-		const bettingChanId = guild.bettingChannelId
-
-		const { home_team, away_team } = channel
-
-		if (_.isEmpty(home_team) || _.isEmpty(away_team)) {
-			throw new Error('Missing home and away teams in channel data.')
-		}
-		if (!bettingChanId) {
-			throw new Error('Missing betting channel id in channel data.')
-		}
-
-		const { matchOdds } = channel
-		const strUtils = new StringUtils()
-		const args = {
-			favored: matchOdds.favored,
-			favoredTeamClr: metadata.favoredTeamInfo.colors[0],
-			home_team,
-			homeTeamShortName: strUtils.getShortName(home_team),
-			awayTeamShortName: strUtils.getShortName(away_team),
-			away_team,
-			bettingChanId,
-			header: metadata.headline,
-			records: metadata.records,
-			sport: channel.sport,
-		}
-
-		// Prepare the embed data
-		const matchEmbed = await this.prepMatchEmbed(args)
-		// Create an AttachmentBuilder instance with the matchImg buffer
-		let attachment: AttachmentBuilder | null = null
-		if (metadata.matchImg) {
-			attachment = new AttachmentBuilder(metadata.matchImg, {
-				name: 'match.jpg',
-			})
-			matchEmbed.embed.setImage('attachment://match.jpg')
-		}
-
-		// ! Create the game channel
-		const gameChan: TextChannel = await locatedGuild.channels.create({
-			name: `${channel.channelname}`,
-			type: ChannelType.GuildText,
-			topic: 'Enjoy the Game!',
-			parent: guildsGameCategory as CategoryChannelResolvable,
-		})
-
-		// ? Send the embed to the game channel
-		const messageOptions: MessageCreateOptions = {
-			embeds: [matchEmbed.embed],
-		}
-		if (attachment) {
-			messageOptions.files = [attachment]
-		}
-
-		await gameChan.send(messageOptions)
-	}
-
-	/**
 	 * Prepares the match embed with team information and betting details
 	 * @async
 	 * @param {PrepareMatchEmbed} args - The arguments for preparing the match embed
 	 */
 	async prepMatchEmbed(args: PrepareMatchEmbed) {
-		const embedClr = args.favoredTeamClr
 		const teamEmoji = (await findEmoji(args.favored)) ?? ''
-		const matchVersus = `${args.awayTeamShortName} @ ${args.homeTeamShortName}`
-
-		const recordsStr = buildRecordsStr(args)
-
-		const matchEmbed = new EmbedBuilder()
-			.setColor(embedClr)
-			.setDescription(
-				`# ${matchVersus}\n\n> ${teamEmoji}  **${args.favored}** opens as the favorite.${recordsStr}\n\n**Place your bets** → \`/commands\` in <#${args.bettingChanId}>`,
-			)
-			.setFooter({
-				text: 'Pluto | Created by fenixforever',
-			})
-		return { embed: matchEmbed }
+		return { embed: matchPostEmbed(args, teamEmoji) }
 	}
 
 	async locateChannel(channelName: string) {
