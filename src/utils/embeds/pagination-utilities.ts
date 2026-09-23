@@ -1,4 +1,5 @@
-import { type CommandInteraction, EmbedBuilder, type User } from 'discord.js'
+import type { CommandInteraction, User } from 'discord.js'
+import { leaderboardPageEmbed } from '../../lib/discord/builders/account.js'
 
 export default class PaginationUtilities {
 	paginateArray<T>(array: T[], page: number, pageSize: number): T[] {
@@ -27,23 +28,12 @@ export default class PaginationUtilities {
 			usersPerPage,
 		)
 
-		let description = pageData
-			.map((entry, index) => {
-				const position =
-					(currentPageNumber - 1) * usersPerPage + index + 1
-				return `**${position}.** ${entry.memberTag}: **\`$${entry.balance}\`**`
-			})
-			.join('\n')
-
-		if (!description) description = 'No entries to display.'
-
-		const embed = new EmbedBuilder()
-			.setTitle(
-				`Leaderboard | Page ${currentPageNumber} of ${pagesTotal}`,
-			)
-			.setDescription(description)
-			.setColor(0xffac33) // Customizable
-			.setFooter({ text: `Page ${currentPageNumber} of ${pagesTotal}` })
+		const embed = leaderboardPageEmbed(
+			pageData,
+			currentPageNumber,
+			pagesTotal,
+			usersPerPage,
+		)
 
 		const message = await interaction.followUp({
 			embeds: [embed],
@@ -82,22 +72,12 @@ export default class PaginationUtilities {
 				currentPageNumber,
 				usersPerPage,
 			)
-			const newDescription = newPageData
-				.map((entry, index) => {
-					const position =
-						(currentPageNumber - 1) * usersPerPage + index + 1
-					return `**${position}.** ${entry.memberTag}: **\`$${entry.balance}\`**`
-				})
-				.join('\n')
-			const newEmbed = new EmbedBuilder()
-				.setTitle(
-					`Leaderboard | Page ${currentPageNumber} of ${pagesTotal}`,
-				)
-				.setDescription(newDescription)
-				.setColor(0xffac33) // Customizable
-				.setFooter({
-					text: `Page ${currentPageNumber} of ${pagesTotal}`,
-				})
+			const newEmbed = leaderboardPageEmbed(
+				newPageData,
+				currentPageNumber,
+				pagesTotal,
+				usersPerPage,
+			)
 			await message.edit({ embeds: [newEmbed] })
 			// Remove user's reaction to prevent rate limiting
 			await reaction.users.remove(user.id)

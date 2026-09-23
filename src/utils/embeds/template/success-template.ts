@@ -1,9 +1,8 @@
 import { helpfooter } from '@pluto-config'
-import { type CommandInteraction, EmbedBuilder } from 'discord.js'
-import embedColors from '../../../lib/colorsConfig.js'
+import type { CommandInteraction } from 'discord.js'
+import { successEmbed } from '../../../lib/discord/builders/account.js'
 
 export default class EmbedsSuccess {
-	private static readonly embedColors = embedColors
 	private static readonly helpfooter = helpfooter
 
 	static async sv1(
@@ -11,11 +10,11 @@ export default class EmbedsSuccess {
 		title: string,
 		description: string,
 	) {
-		return new EmbedBuilder()
-			.setTitle(title)
-			.setDescription(description)
-			.setColor(EmbedsSuccess.embedColors.success)
-			.setFooter({ text: await EmbedsSuccess.helpfooter() })
-			.setThumbnail(interaction.user.displayAvatarURL())
+		return successEmbed({
+			title,
+			description,
+			footer: await EmbedsSuccess.helpfooter(),
+			thumbnail: interaction.user.displayAvatarURL(),
+		})
 	}
 }

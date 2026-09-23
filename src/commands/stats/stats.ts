@@ -1,6 +1,9 @@
 import { ApplyOptions } from '@sapphire/decorators'
 import { Subcommand } from '@sapphire/plugin-subcommands'
-import { Colors } from 'discord.js'
+import {
+	h2hNoStatsEmbed,
+	h2hStatsEmbed,
+} from '../../lib/discord/builders/account.js'
 import { helpfooter } from '../../lib/PlutoConfig.js'
 import StatsWraps from '../../utils/api/Khronos/stats/stats-wrapper.js'
 
@@ -50,71 +53,17 @@ export class UserCommand extends Subcommand {
 			})
 
 			if (!overallStats || overallStats.totalBets === 0) {
-				const noStatsEmbed = {
-					color: Colors.Red,
-					title: '❌ No Betting Stats Available',
-					description:
-						"You don't have enough betting history to display statistics.",
-					footer: {
-						text: await helpfooter('general'),
-					},
-				}
+				const noStatsEmbed = h2hNoStatsEmbed(
+					await helpfooter('general'),
+				)
 				return await interaction.editReply({ embeds: [noStatsEmbed] })
 			}
 
-			const formatValue = (value: number) =>
-				value === 0 ? 'N/A' : `$${value.toLocaleString()}`
-			const formatCount = (value: number) =>
-				value === 0 ? 'N/A' : value.toLocaleString()
-			const formatPercentage = (value: number) =>
-				value === 0 ? 'N/A' : `${value.toFixed(1)}%`
-
-			const embed = {
-				color: Colors.Blue,
-				title: `🎲 ${interaction.user.username}'s Betting Stats`,
-				fields: [
-					{
-						name: '📊 Totals',
-						value: [
-							`Bets: **${formatCount(overallStats.totalBets)}**`,
-							`Wins: **${formatCount(overallStats.totalWins)}**`,
-							`Losses: **${formatCount(overallStats.totalLosses)}**`,
-							`Win Rate: **${formatPercentage(overallStats.winRate)}**`,
-							`Highest Bet: **${formatValue(overallStats.highestBetAmount)}** 💰`,
-						].join('\n'),
-						inline: false,
-					},
-					{
-						name: '🏆 Most Bet Team',
-						value:
-							overallStats.mostBetTeam.count === 0
-								? 'N/A'
-								: `Team: **${overallStats.mostBetTeam.team}**\nBets: **${overallStats.mostBetTeam.count}**`,
-						inline: true,
-					},
-					{
-						name: '😅 Most Losses Team',
-						value:
-							overallStats.mostLossesTeam.losses === 0
-								? 'N/A'
-								: `Team: **${overallStats.mostLossesTeam.team}**\nLosses: **${overallStats.mostLossesTeam.losses}**`,
-						inline: true,
-					},
-					{
-						name: '💵 Profit/Loss Summary',
-						value: [
-							`Total Profit: **${formatValue(overallStats.profitLossSummary.totalWon)}**`,
-							`Total Loss: **${formatValue(overallStats.profitLossSummary.totalLost)}**`,
-							`Net Profit: **${formatValue(overallStats.profitLossSummary.netProfit)}**`,
-						].join('\n'),
-						inline: false,
-					},
-				],
-				timestamp: new Date().toISOString(),
-				footer: {
-					text: await helpfooter('general'),
-				},
-			}
+			const embed = h2hStatsEmbed(
+				interaction.user.username,
+				overallStats,
+				await helpfooter('general'),
+			)
 
 			await interaction.editReply({ embeds: [embed] })
 		} catch (error) {
