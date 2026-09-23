@@ -110,13 +110,20 @@ export function v2Payload(opts: {
 	const container = new ContainerBuilder()
 	if (opts.accent !== undefined) container.setAccentColor(opts.accent)
 
-	const rows = (opts.actions ?? []).map((r) =>
-		new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
-			r,
-		),
-	)
-	const rowCost = rows.reduce((n, r) => n + 1 + r.components.length, 0)
-	let componentsLeft = V2_MAX_COMPONENTS - 1 - rowCost
+	// Rows are admitted first (controls matter) but only while they fit;
+	// blocks then fill whatever budget is left.
+	let componentsLeft = V2_MAX_COMPONENTS - 1
+	const rows: ActionRowBuilder<MessageActionRowComponentBuilder>[] = []
+	for (const r of opts.actions ?? []) {
+		const cost = 1 + r.length
+		if (cost > componentsLeft) break
+		componentsLeft -= cost
+		rows.push(
+			new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
+				r,
+			),
+		)
+	}
 	let charsLeft = V2_MAX_TEXT_CHARS
 
 	for (const block of opts.blocks) {

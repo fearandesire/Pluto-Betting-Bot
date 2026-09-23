@@ -17,6 +17,10 @@ vi.mock('@sapphire/framework', () => ({
 	InteractionHandlerTypes: { Button: 'button' },
 }))
 
+vi.mock('../../utils/logging/WinstonLogger.js', () => ({
+	logger: { error: vi.fn(), info: vi.fn(), warn: vi.fn() },
+}))
+
 const { encodePageNav, registerPageSource } = await import(
 	'../../lib/discord/v2/paginator.js'
 )
@@ -42,6 +46,7 @@ function makeInteraction(opts: {
 		reply: vi.fn(),
 		deferUpdate: vi.fn(),
 		editReply: vi.fn(),
+		followUp: vi.fn(),
 	}
 }
 
@@ -182,6 +187,39 @@ describe('V2PaginationHandler', () => {
 		expect(i.editReply.mock.calls[0][0].flags).toBe(
 			MessageFlags.IsComponentsV2,
 		)
+	})
+
+	it('load failure after deferUpdate sends an ephemeral V2 notice', async () => {
+		load.mockRejectedValue(new Error('khronos down'))
+		const i = makeInteraction({ customId: 'pg.v1.h-open.1.next' })
+		await expect(
+			handler.run(i as never, {
+				scope: 'h-open',
+				page: 1,
+				action: 'next',
+			}),
+		).resolves.toBeUndefined()
+		expect(i.editReply).not.toHaveBeenCalled()
+		expect(i.followUp).toHaveBeenCalledTimes(1)
+		const payload = i.followUp.mock.calls[0][0]
+		expectV2Payload(payload, {
+			flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+			components: 2,
+		})
+		expect(firstText(payload)).toBe(
+			"Couldn't load that page. Please try again.",
+		)
+	})
+
+	it('edit failure after load also sends the notice', async () => {
+		const i = makeInteraction({ customId: 'pg.v1.h-open.1.next' })
+		i.editReply.mockRejectedValue(new Error('50035'))
+		await handler.run(i as never, {
+			scope: 'h-open',
+			page: 1,
+			action: 'next',
+		})
+		expect(i.followUp).toHaveBeenCalledTimes(1)
 	})
 
 	it('unknown scope replies with an ephemeral expired notice', async () => {

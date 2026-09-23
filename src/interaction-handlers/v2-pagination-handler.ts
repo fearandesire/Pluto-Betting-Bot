@@ -10,6 +10,7 @@ import {
 	type PageNav,
 	renderPage,
 } from '../lib/discord/v2/paginator.js'
+import { logger } from '../utils/logging/WinstonLogger.js'
 
 const notice = (content: string) =>
 	v2Payload({ blocks: [text(content)], ephemeral: true })
@@ -54,10 +55,29 @@ export class V2PaginationHandler extends InteractionHandler {
 		}
 
 		await interaction.deferUpdate()
-		const data = await source.load(interaction, route.page)
-		await interaction.editReply({
-			...renderPage(data),
-			flags: v2EditFlags(),
-		})
+		try {
+			const data = await source.load(interaction, route.page)
+			await interaction.editReply({
+				...renderPage(data),
+				flags: v2EditFlags(),
+			})
+		} catch (error) {
+			// Acknowledged already: tell the user instead of failing silently.
+			logger.error({
+				message: 'V2 pagination failed',
+				metadata: {
+					source: 'V2PaginationHandler',
+					scope: route.scope,
+					error,
+				},
+			})
+			try {
+				await interaction.followUp(
+					notice("Couldn't load that page. Please try again."),
+				)
+			} catch {
+				// Interaction token expired; nothing left to tell the user.
+			}
+		}
 	}
 }

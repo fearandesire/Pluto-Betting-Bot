@@ -116,3 +116,26 @@ describe('text over the per-display limit', () => {
 		expect(t.data.content?.endsWith('…')).toBe(true)
 	})
 })
+
+describe('action rows over budget', () => {
+	it('keeps the whole payload within 40 components by dropping rows that do not fit', () => {
+		const row = () =>
+			Array.from({ length: 5 }, (_, j) =>
+				new ButtonBuilder()
+					.setCustomId(`t.v1.${j}`)
+					.setLabel(`${j}`)
+					.setStyle(ButtonStyle.Secondary),
+			)
+		// 8 rows × (1 + 5) = 48 components, plus the container
+		const p = v2Payload({
+			blocks: [text('x')],
+			actions: Array.from({ length: 8 }, row),
+		})
+		expect(() => assertV2Budget(p)).not.toThrow()
+		// container(1) + 6 full rows(36) + text(1) = 38; a 7th row (6) would be 44
+		expectV2Payload(p, {
+			flags: MessageFlags.IsComponentsV2,
+			components: 38,
+		})
+	})
+})
