@@ -1,8 +1,7 @@
 import { ApplyOptions } from '@sapphire/decorators'
 import { Command } from '@sapphire/framework'
-import { EmbedBuilder } from 'discord.js'
 import { APP_OWNER_INFO } from '#lib/configs/constants.js'
-import embedColors from '../../lib/colorsConfig.js'
+import { changelogEmbed } from '../../lib/discord/builders/changelog.js'
 import { ApiModules } from '../../lib/interfaces/api/api.interface.js'
 import { ChangelogWrapper } from '../../utils/api/Khronos/changelog/changelog-wrapper.js'
 import { ApiErrorHandler } from '../../utils/api/Khronos/error-handling/ApiErrorHandler.js'
@@ -35,36 +34,7 @@ export class UserCommand extends Command {
 				})
 			}
 
-			const publishedTimestamp = Math.floor(
-				changelog.published_at.getTime() / 1000,
-			)
-
-			// Process content to ensure escaped newlines become actual newlines
-			const processedContent = changelog.content.replace(/\\n/g, '\n')
-			// Title may contain markdown headers, so don't wrap in bold if it starts with #
-			const processedTitle = changelog.title.startsWith('#')
-				? changelog.title.replace(/\\n/g, '\n')
-				: `**${changelog.title.replace(/\\n/g, '\n')}**`
-
-			const embed = new EmbedBuilder()
-				.setTitle(`Pluto Update v${changelog.version}`)
-				.setDescription(
-					`${processedTitle}\n\n${processedContent}\n\nMade by <@${APP_OWNER_INFO.discord_id}>`,
-				)
-				.setColor(embedColors.PlutoBlue)
-				.addFields({
-					name: '📅 Published',
-					value: `<t:${publishedTimestamp}:R>`,
-					inline: true,
-				})
-				.addFields({
-					name: 'Docs',
-					value: 'https://docs.pluto.fearandesire.com',
-				})
-				.setFooter({
-					text: 'Use `/help` for more information on Pluto',
-				})
-				.setTimestamp(changelog.published_at)
+			const embed = changelogEmbed(changelog, APP_OWNER_INFO.discord_id)
 
 			return interaction.editReply({ embeds: [embed] })
 		} catch (error) {
