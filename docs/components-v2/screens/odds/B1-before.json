@@ -1,0 +1,33 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"embeds": [
+		{
+			"title": "Odds 🎲",
+			"color": 13168379,
+			"footer": {
+				"text": "💲 Use /balance to check your profile"
+			},
+			"thumbnail": {
+				"url": "data:image/png;base64,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"
+			},
+			"fields": [
+				{
+					"name": "Oct 4, 2026 (EDT)",
+					"value": "4:25 PM - Eagles **`(-140)`** @ Cowboys `(+120)`\n4:25 PM - Bills `(+115)` @ Chiefs **`(-135)`**\n8:20 PM - Rams `(+155)` @ 49ers **`(-180)`**"
+				},
+				{
+					"name": "Oct 5, 2026",
+					"value": "8:15 PM - Lions **`(-125)`** @ Packers `(+105)`"
+				},
+				{
+					"name": "Oct 7, 2026",
+					"value": "8:15 PM - Bengals `(+175)` @ Ravens **`(-210)`**"
+				}
+			],
+			"description": "Use /bet to place bets on any of these matches\nFor teams with multiple games this week, specify your desired match using the `match` field."
+		}
+	]
+}

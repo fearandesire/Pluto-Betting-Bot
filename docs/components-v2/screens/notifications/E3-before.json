@@ -1,0 +1,34 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"embeds": [
+		{
+			"title": "💰 Big Parlay Win! 💰",
+			"description": "<@100000000000000001> just hit a huge parlay!",
+			"color": 5763719,
+			"fields": [
+				{
+					"name": "🧾 Legs",
+					"value": "5",
+					"inline": true
+				},
+				{
+					"name": "📈 Combined Odds",
+					"value": "+1245",
+					"inline": true
+				},
+				{
+					"name": "🏆 Payout",
+					"value": "$672.50",
+					"inline": false
+				}
+			],
+			"footer": {
+				"text": "Parlay ID: 5f3c9a1e-8b2d-4c6f-9e1a-7d4b2c8f0a13"
+			},
+			"timestamp": "2026-10-04T19:30:00.000Z"
+		}
+	]
+}

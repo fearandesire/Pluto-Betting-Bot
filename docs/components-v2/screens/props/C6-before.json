@@ -1,0 +1,64 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"embeds": [
+		{
+			"title": "📊 Prediction Statistics",
+			"color": 13168379,
+			"description": "Server stats for Pluto Tester\n\nCurrent Streak: **4** · Best: **9**",
+			"fields": [
+				{
+					"name": "Total Predictions",
+					"value": "`47`",
+					"inline": true
+				},
+				{
+					"name": "Win Rate",
+					"value": "`63.8%`",
+					"inline": true
+				},
+				{
+					"name": "​",
+					"value": "​",
+					"inline": true
+				},
+				{
+					"name": "✅ Correct",
+					"value": "`30`",
+					"inline": true
+				},
+				{
+					"name": "❌ Incorrect",
+					"value": "`17`",
+					"inline": true
+				},
+				{
+					"name": "⏳ Pending",
+					"value": "`3`",
+					"inline": true
+				},
+				{
+					"name": "🔥 Current Streak",
+					"value": "`4`",
+					"inline": true
+				},
+				{
+					"name": "🏆 Best Streak",
+					"value": "`9`",
+					"inline": true
+				},
+				{
+					"name": "🏅 Streak Badge",
+					"value": "`🔥3`",
+					"inline": true
+				}
+			],
+			"footer": {
+				"text": "Use /predictions leaderboard to compare your streak • voids/pushes don't break streaks."
+			},
+			"timestamp": "2026-10-04T19:30:00.000Z"
+		}
+	]
+}

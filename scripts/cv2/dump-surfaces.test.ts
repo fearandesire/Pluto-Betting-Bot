@@ -19,6 +19,10 @@ const phase = process.env.CV2_DUMP as 'before' | 'after' | undefined
 const only = process.env.CV2_CLUSTER ?? 'all'
 const SCREENS = path.resolve(__dirname, '../../docs/components-v2/screens')
 
+// Local-time strings follow the process TZ. Production sets none (UTC), so
+// render in UTC to show what users actually see.
+process.env.TZ = 'UTC'
+
 // App modules validate env at import time; .env.example has safe placeholders.
 if (phase) {
 	const example = parse(

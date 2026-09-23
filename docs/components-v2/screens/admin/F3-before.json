@@ -1,0 +1,114 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"embeds": [
+		{
+			"title": "Active Predictions | Pluto Tester",
+			"description": "Total: `7` active prediction(s)",
+			"color": 0,
+			"fields": [
+				{
+					"name": "Prediction #0000e1f1",
+					"value": "**ID:** `0000e1f1`\n\n**Prop Details**\n**Prop:** LeBron James\n**Choice:** OVER 27.5 Points\n\n**Event Details**\n**Match:** Lakers vs. Celtics\n**Date:** 10/03/2026",
+					"inline": false
+				},
+				{
+					"name": "Prediction #0000e1f2",
+					"value": "**ID:** `0000e1f2`\n\n**Prop Details**\n**Prop:** Jayson Tatum\n**Choice:** UNDER 8.5 Assists\n\n**Event Details**\n**Match:** Lakers vs. Celtics\n**Date:** 10/03/2026",
+					"inline": false
+				},
+				{
+					"name": "Prediction #0000e1f3",
+					"value": "**ID:** `0000e1f3`\n\n**Prop Details**\n**Prop:** Nikola Jokic\n**Choice:** OVER 11.5 Rebounds\n\n**Event Details**\n**Match:** Nuggets vs. Warriors\n**Date:** 10/03/2026",
+					"inline": false
+				},
+				{
+					"name": "Prediction #0000e1f4",
+					"value": "**ID:** `0000e1f4`\n\n**Prop Details**\n**Prop:** Stephen Curry\n**Choice:** OVER 3.5 Threes\n\n**Event Details**\n**Match:** Nuggets vs. Warriors\n**Date:** 10/03/2026",
+					"inline": false
+				},
+				{
+					"name": "Prediction #0000e1f5",
+					"value": "**ID:** `0000e1f5`\n\n**Prop Details**\n**Prop:** Giannis Antetokounmpo\n**Choice:** UNDER 30.5 Points\n\n**Event Details**\n**Match:** Bucks vs. Knicks\n**Date:** 10/03/2026",
+					"inline": false
+				}
+			],
+			"footer": {
+				"text": "1 / 2 • User ID: 100000000000000001"
+			}
+		}
+	],
+	"components": [
+		{
+			"type": 1,
+			"components": [
+				{
+					"type": 2,
+					"custom_id": "@sapphire/paginated-messages.firstPage",
+					"style": 1,
+					"emoji": {
+						"animated": false,
+						"name": "⏪"
+					}
+				},
+				{
+					"type": 2,
+					"custom_id": "@sapphire/paginated-messages.previousPage",
+					"style": 1,
+					"emoji": {
+						"animated": false,
+						"name": "◀️"
+					}
+				},
+				{
+					"type": 2,
+					"custom_id": "@sapphire/paginated-messages.nextPage",
+					"style": 1,
+					"emoji": {
+						"animated": false,
+						"name": "▶️"
+					}
+				},
+				{
+					"type": 2,
+					"custom_id": "@sapphire/paginated-messages.goToLastPage",
+					"style": 1,
+					"emoji": {
+						"animated": false,
+						"name": "⏩"
+					}
+				},
+				{
+					"type": 2,
+					"custom_id": "@sapphire/paginated-messages.stop",
+					"style": 4,
+					"emoji": {
+						"animated": false,
+						"name": "⏹️"
+					}
+				}
+			]
+		},
+		{
+			"type": 1,
+			"components": [
+				{
+					"custom_id": "@sapphire/paginated-messages.goToPage",
+					"type": 3,
+					"options": [
+						{
+							"label": "Page 1",
+							"value": "0"
+						},
+						{
+							"label": "Page 2",
+							"value": "1"
+						}
+					]
+				}
+			]
+		}
+	]
+}

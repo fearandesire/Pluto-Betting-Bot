@@ -1,0 +1,32 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"content": "",
+	"embeds": [
+		{
+			"title": "Player Props Posted",
+			"description": "✅ Successfully posted **9** player props to <#300000000000000003>\n❌ Failed to post **1** prop",
+			"color": 5763719,
+			"fields": [
+				{
+					"name": "Total Pairs",
+					"value": "10",
+					"inline": true
+				},
+				{
+					"name": "Posted",
+					"value": "9",
+					"inline": true
+				},
+				{
+					"name": "Failed",
+					"value": "1",
+					"inline": true
+				}
+			],
+			"timestamp": "2026-10-04T19:30:00.000Z"
+		}
+	]
+}

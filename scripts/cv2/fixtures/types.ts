@@ -50,4 +50,6 @@ export const IMAGE_CACHE: Record<string, string> = {
 	'https://i.imgur.com/RWjfjyv.png': 'imgur-RWjfjyv.png',
 	'https://i.imgur.com/qG3Mm5t.png': 'imgur-qG3Mm5t.png',
 	'https://cdn.discordapp.com/embed/avatars/0.png': 'discord-avatar-0.png',
+	'https://cdn.discordapp.com/icons/200000000000000002/0b1c2d3e4f.jpg':
+		'discord-guild-icon.png',
 }

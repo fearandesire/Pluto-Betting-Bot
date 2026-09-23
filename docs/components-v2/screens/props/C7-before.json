@@ -1,0 +1,51 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"embeds": [
+		{
+			"title": "Prediction Accuracy Leaderboard",
+			"color": 13168379,
+			"description": "1. Pluto Tester 🔥10 - **`362`** *(38/47)*\n2. hoopsgod 🔥5 - **`350`** *(37/47)*\n3. gridiron_gary - **`338`** *(36/47)*\n4. lockoftheweek 🔥3 - **`326`** *(35/47)*\n5. fadeTheBooks 🔥3 - **`314`** *(34/47)*\n6. mia_parlays - **`312`** *(33/42)*\n7. sharpshooter - **`300`** *(32/42)*\n8. underdog_ally - **`288`** *(31/42)*\n9. bankrollbenny - **`276`** *(30/42)*\n10. overunderoscar - **`264`** *(29/42)*\n11. chalkeater - **`262`** *(28/37)*\n12. teaser_tina - **`250`** *(27/37)*\n13. moneyline_mo - **`238`** *(26/37)*\n14. spreadsheet - **`226`** *(25/37)*\n15. the_closer - **`214`** *(24/37)*\n16. sundayscaries - **`212`** *(23/32)*\n17. badbeatbob - **`200`** *(22/32)*\n18. coverqueen - **`188`** *(21/32)*\n19. juicefree - **`176`** *(20/32)*\n20. longshot_lou - **`164`** *(19/32)*",
+			"footer": {
+				"text": "Page 1 of 2 | Total Entries: 24 | 🔥3/5/10 = streak badge"
+			}
+		}
+	],
+	"components": [
+		{
+			"type": 1,
+			"components": [
+				{
+					"type": 2,
+					"custom_id": "first",
+					"label": "First",
+					"style": 1,
+					"disabled": true
+				},
+				{
+					"type": 2,
+					"custom_id": "previous",
+					"label": "Previous",
+					"style": 1,
+					"disabled": true
+				},
+				{
+					"type": 2,
+					"custom_id": "next",
+					"label": "Next",
+					"style": 1,
+					"disabled": false
+				},
+				{
+					"type": 2,
+					"custom_id": "last",
+					"label": "Last",
+					"style": 1,
+					"disabled": false
+				}
+			]
+		}
+	]
+}

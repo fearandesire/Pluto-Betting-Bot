@@ -1,0 +1,19 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"embeds": [
+		{
+			"title": "Supporting Development | Patreon 💙",
+			"description": "Pluto is completely free to use. However, it is not free to run or maintain, not to mention the time investment! Additionally, there's several key features that are a long-term goal to add, including the highly requested Parlay feature.\n\nBecoming a Patreon member and supporting Pluto will enable Pluto to grow to it's full potential of being the best sports betting app on Discord. New features will be added, including:\n- 🎲 **Parlay Bets**\n- 🕛 **Real-Time Game Data**\n- 👴 **Historical Game Data**\n..and more!\n\nSupport Pluto via Patreon 🡺 please click [**here**](https://www.patreon.com/fenix_).\n\nThank you!\n - fenix 🎔",
+			"color": 13168379,
+			"footer": {
+				"text": "For questions, message me on Discord: fenixforever"
+			},
+			"thumbnail": {
+				"url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAIAAABMXPacAAAACXBIWXMAAAABAAAAAQBPJcTWAAAA+klEQVR4nO3RMQ0AMAzAsPInNjQjsGswesRSAETynPu02KwfxAMAoB0AAO0AAGgHAEA7AADaAQDQDgCAdgAAtAMAoB0AAO0AAGgHAEA7AADaAQDQDgCAdgAAtAMAoB0AAO0AAGgHAEA7AADaAQDQDgCAdgAAtAMAoB0AAO0AAGgHAEA7AADaAQDQDgCAdgAAtAMAoB0AAO0AAGgHAEA7AADaAQDQDgCAdgAAtAMAoB0AAO0AAGgHAEA7AADaAQDQDgCAdgAAtAMAoB0AAO0AAGgHAEA7AADaAQDQDgCAdgAAtAMAoB0AAO0AAGgHAEA7AADaAQDQDgCAdh9rlYoGa6XVZQAAAABJRU5ErkJggg=="
+			}
+		}
+	]
+}

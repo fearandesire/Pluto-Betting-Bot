@@ -1,0 +1,135 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"embeds": [
+		{
+			"title": "Active Props - Pending Results",
+			"description": "Found **24** outcomes with active predictions across **2** dates.\nManage prop results in the Khronos admin dashboard.",
+			"timestamp": "2026-10-04T19:30:00.000Z",
+			"color": 0,
+			"fields": [
+				{
+					"name": "​\n📅 Sun, Oct 4, 2026",
+					"value": "​",
+					"inline": false
+				},
+				{
+					"name": "🎯 Los Angeles Lakers @ Boston Celtics",
+					"value": "Time: <t:1791156600:d> @ <t:1791156600:t> • 30 predictions",
+					"inline": false
+				},
+				{
+					"name": "  └ 🎯 9f8e7d6c-0000-4000-8000-00000000000a",
+					"value": "  **Market:** Player Points • **Player:** LeBron James • **Line:** 24.5 • **Predictions:** 12",
+					"inline": false
+				},
+				{
+					"name": "  └ 🎯 9f8e7d6c-0010-4000-8000-00000000001a",
+					"value": "  **Market:** Player Rebounds • **Player:** Anthony Davis • **Line:** 9.5 • **Predictions:** 9",
+					"inline": false
+				},
+				{
+					"name": "  └ 🎯 9f8e7d6c-0020-4000-8000-00000000002a",
+					"value": "  **Market:** Player Assists • **Player:** Jayson Tatum • **Line:** 6.5 • **Predictions:** 6",
+					"inline": false
+				}
+			],
+			"footer": {
+				"text": "1 / 7"
+			}
+		}
+	],
+	"components": [
+		{
+			"type": 1,
+			"components": [
+				{
+					"type": 2,
+					"custom_id": "@sapphire/paginated-messages.firstPage",
+					"style": 1,
+					"emoji": {
+						"animated": false,
+						"name": "⏪"
+					}
+				},
+				{
+					"type": 2,
+					"custom_id": "@sapphire/paginated-messages.previousPage",
+					"style": 1,
+					"emoji": {
+						"animated": false,
+						"name": "◀️"
+					}
+				},
+				{
+					"type": 2,
+					"custom_id": "@sapphire/paginated-messages.nextPage",
+					"style": 1,
+					"emoji": {
+						"animated": false,
+						"name": "▶️"
+					}
+				},
+				{
+					"type": 2,
+					"custom_id": "@sapphire/paginated-messages.goToLastPage",
+					"style": 1,
+					"emoji": {
+						"animated": false,
+						"name": "⏩"
+					}
+				},
+				{
+					"type": 2,
+					"custom_id": "@sapphire/paginated-messages.stop",
+					"style": 4,
+					"emoji": {
+						"animated": false,
+						"name": "⏹️"
+					}
+				}
+			]
+		},
+		{
+			"type": 1,
+			"components": [
+				{
+					"custom_id": "@sapphire/paginated-messages.goToPage",
+					"type": 3,
+					"options": [
+						{
+							"label": "Page 1",
+							"value": "0"
+						},
+						{
+							"label": "Page 2",
+							"value": "1"
+						},
+						{
+							"label": "Page 3",
+							"value": "2"
+						},
+						{
+							"label": "Page 4",
+							"value": "3"
+						},
+						{
+							"label": "Page 5",
+							"value": "4"
+						},
+						{
+							"label": "Page 6",
+							"value": "5"
+						},
+						{
+							"label": "Page 7",
+							"value": "6"
+						}
+					]
+				}
+			]
+		}
+	]
+}

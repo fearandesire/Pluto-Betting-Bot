@@ -1,0 +1,15 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"embeds": [
+		{
+			"description": "<@100000000000000001> placed a bet on **Celtics** for **`$100.00`**!",
+			"color": 5763719,
+			"footer": {
+				"text": "🧙‍♂️ Abracadabra! Your money has magically disappeared!"
+			}
+		}
+	]
+}

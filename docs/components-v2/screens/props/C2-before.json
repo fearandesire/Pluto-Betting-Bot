@@ -1,0 +1,37 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"embeds": [
+		{
+			"title": "🎯 Accuracy Challenge",
+			"description": "### **Patrick Mahomes** • O/U **`274.5`** Passing Yards\n\n**Market:** Passing Yards\n**Over**: -115\n**Under**: -105",
+			"fields": [
+				{
+					"name": "Match",
+					"value": "🏈 KC vs. BUF",
+					"inline": true
+				},
+				{
+					"name": "Game Time",
+					"value": "⏰ Sun, 8:25 PM",
+					"inline": true
+				},
+				{
+					"name": "🎯 Result",
+					"value": "**Result: Over ✅ — 301**",
+					"inline": false
+				},
+				{
+					"name": "📊 Prediction results",
+					"value": "61% of 23 predictors got it right (14 correct, 9 incorrect).",
+					"inline": false
+				}
+			],
+			"color": 14882871,
+			"timestamp": "2026-10-04T19:30:00.000Z"
+		}
+	],
+	"components": []
+}

@@ -1,0 +1,16 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"embeds": [
+		{
+			"title": "Leaderboard | Page 1 of 2",
+			"description": "**1.** lakeshowlarry: **`$12450.50`**\n**2.** chiefskingdom: **`$11635.25`**\n**3.** celticsfan33: **`$10820.00`**\n**4.** Pluto Tester: **`$10004.75`**\n**5.** mahomesmagic: **`$9189.50`**\n**6.** nuggetsnation: **`$8374.25`**\n**7.** birdgang_jalen: **`$7559.00`**\n**8.** dubnation30: **`$6743.75`**\n**9.** bucksinsix: **`$5928.50`**\n**10.** knicksknation: **`$5113.25`**",
+			"color": 16755763,
+			"footer": {
+				"text": "Page 1 of 2"
+			}
+		}
+	]
+}

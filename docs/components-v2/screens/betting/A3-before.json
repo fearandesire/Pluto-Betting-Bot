@@ -1,0 +1,17 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"embeds": [
+		{
+			"title": "Internal Error",
+			"description": "Failed to place your bet due to an unexpected response from the API. Please try again later.",
+			"color": 11152685,
+			"footer": {
+				"text": "❓ Need help? Use /help for assistance"
+			}
+		}
+	],
+	"components": []
+}
