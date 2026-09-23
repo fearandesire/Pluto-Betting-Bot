@@ -1,0 +1,19 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"embeds": [
+		{
+			"title": "Pluto Documentation",
+			"description": "Pluto is a full-fledged betting app that creates a competitive sports betting environment.\n# Getting Started\n1. Run the `/odds` command to view current betting odds.\n2. Use the `/bet` command to place bets, starting with a balance of $50.\n3. Use the `/dailyclaim` command every 24 hours to get free money if you run out of funds.\n\n**💜 [Support Pluto](https://www.patreon.com/fenix_)**\n**📒 [Documentation](https://docs.pluto.fearandesire.com)**\n\nVersion: `4.12.4`",
+			"color": 13168379,
+			"footer": {
+				"text": "💲 Use /balance to check your profile"
+			},
+			"thumbnail": {
+				"url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAIAAABMXPacAAAACXBIWXMAAAABAAAAAQBPJcTWAAAA+klEQVR4nO3RMQ0AMAzAsPInNjQjsGswesRSAETynPu02KwfxAMAoB0AAO0AAGgHAEA7AADaAQDQDgCAdgAAtAMAoB0AAO0AAGgHAEA7AADaAQDQDgCAdgAAtAMAoB0AAO0AAGgHAEA7AADaAQDQDgCAdgAAtAMAoB0AAO0AAGgHAEA7AADaAQDQDgCAdgAAtAMAoB0AAO0AAGgHAEA7AADaAQDQDgCAdgAAtAMAoB0AAO0AAGgHAEA7AADaAQDQDgCAdgAAtAMAoB0AAO0AAGgHAEA7AADaAQDQDgCAdgAAtAMAoB0AAO0AAGgHAEA7AADaAQDQDgCAdh9rlYoGa6XVZQAAAABJRU5ErkJggg=="
+			}
+		}
+	]
+}
