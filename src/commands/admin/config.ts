@@ -2,6 +2,7 @@ import { ApplyOptions } from '@sapphire/decorators'
 import { Subcommand } from '@sapphire/plugin-subcommands'
 import { EmbedBuilder, InteractionContextType } from 'discord.js'
 import embedColors from '../../lib/colorsConfig.js'
+import { footerStatusEmbed } from '../../lib/discord/builders/admin.js'
 import { FooterManager } from '../../lib/footers/FooterManager.js'
 import { FALLBACK_FOOTERS } from '../../lib/footers/fallbackFooters.js'
 
@@ -93,36 +94,7 @@ export class ConfigCommand extends Subcommand {
 			const manager = FooterManager.getInstance()
 			const status = manager.getCacheStatus()
 
-			const embed = new EmbedBuilder()
-				.setTitle('📋 Footer Cache Status')
-				.setColor(embedColors.PlutoYellow)
-				.addFields(
-					{
-						name: '⏰ Refresh Information',
-						value: `**Last Refresh:** ${status.lastRefresh ? `<t:${Math.floor(status.lastRefresh.getTime() / 1000)}:R>` : 'Never'}\n**Next Refresh:** ${status.nextRefresh ? `<t:${Math.floor(status.nextRefresh.getTime() / 1000)}:R>` : 'Unknown'}\n**TTL:** ${status.ttl}`,
-						inline: false,
-					},
-					{
-						name: '📊 Statistics',
-						value: `**Total Footers:** ${status.cacheSize}\n**Categories:** ${Object.keys(status.categoryCounts).length}\n**Announcement Active:** ${status.hasAnnouncement ? '✅ Yes' : '❌ No'}`,
-						inline: false,
-					},
-				)
-
-			// Add category counts
-			if (Object.keys(status.categoryCounts).length > 0) {
-				const categoryList = Object.entries(status.categoryCounts)
-					.map(
-						([category, count]) =>
-							`• **${category}:** ${count} footers`,
-					)
-					.join('\n')
-				embed.addFields({
-					name: '📁 Categories',
-					value: categoryList,
-					inline: false,
-				})
-			}
+			const embed = footerStatusEmbed(status)
 
 			await interaction.reply({ embeds: [embed], ephemeral: true })
 		} catch (error) {

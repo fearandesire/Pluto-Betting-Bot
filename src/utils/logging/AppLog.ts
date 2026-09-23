@@ -1,25 +1,14 @@
 import { container } from '@sapphire/framework'
-import {
-	type ColorResolvable,
-	EmbedBuilder,
-	type TextChannel,
-} from 'discord.js'
-import embedColors from '../../lib/colorsConfig.js'
+import type { TextChannel } from 'discord.js'
 import { isErr } from '../../lib/configs/constants.js'
+import { appLogEmbed, logTypeColors } from '../../lib/discord/builders/admin.js'
 import GuildWrapper from '../api/Khronos/guild/guild-wrapper.js'
-import { LogType } from './AppLog.interface.js'
+import type { LogType } from './AppLog.interface.js'
 
 interface LogParams {
 	guildId: string
 	description: string
 	type: LogType
-}
-
-const logTypeColors: Record<LogType, ColorResolvable> = {
-	[LogType.Error]: embedColors.error,
-	[LogType.Info]: embedColors.info,
-	[LogType.Warning]: embedColors.warning,
-	[LogType.Success]: embedColors.success,
 }
 
 /**
@@ -49,20 +38,11 @@ export default class AppLog {
 				container.client.user?.defaultAvatarURL ??
 				null
 
-			const logMetadata = {
-				avatar: appAvatar,
-				author: 'Pluto',
-			}
-			const { avatar, author } = logMetadata
-
-			const embed = new EmbedBuilder()
-				.setDescription(params.description)
-				.setColor(logTypeColors[params.type])
-				.setAuthor({
-					name: author,
-					iconURL: avatar,
-				})
-				.setTimestamp()
+			const embed = appLogEmbed(
+				params.description,
+				params.type,
+				appAvatar,
+			)
 
 			await logChannel.send({ embeds: [embed] })
 		} catch (error: unknown) {
