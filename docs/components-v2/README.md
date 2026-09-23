@@ -126,6 +126,6 @@ Status: ⬜ todo · 📸 before captured · 🔁 migrated (after + GIF) · ✅ m
 ## Known render limits
 
 - Remote images come from `scripts/cv2/fixtures/images/`. The Pluto logo is real (imgbb); the guild icon and match image are labelled placeholders.
-- `-#` subtext draws literally, and markdown/newlines inside embed **field values** show as raw text, until discord-preview supports them. The JSON is correct and Discord renders it properly. Once the renderer is fixed, re-run `render.sh` on the existing JSON; no re-dump needed.
+- Renders need discord-preview ≥ `3c73153` (field markdown, #15; `-#` subtext, #14). Older checkouts draw both as raw text. Run `git -C ../discord-preview pull` before rendering.
 - Guild custom emojis don't exist offline, so team names use each code path's no-emoji fallback.
 - Dates render in UTC (pinned in the dump harness to match production).
