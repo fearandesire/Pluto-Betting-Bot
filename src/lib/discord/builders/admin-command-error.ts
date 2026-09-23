@@ -12,8 +12,8 @@ export type CommandErrorLogMeta = {
 /**
  * F8 command-error log embed. Copy of the inline builder in
  * `listeners/chatInputCommandError.ts` `postToLogChannel`; the listener does
- * not call this yet (it's being changed on another branch). Wire it in the
- * admin cluster PR and delete the inline copy.
+ * not call this yet. Wire it in when the admin messages migrate and delete
+ * the inline copy.
  */
 export function commandErrorLogEmbed(
 	err: unknown,
