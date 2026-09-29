@@ -15,17 +15,6 @@ For a nonvisual change, write "N/A:" followed by the reason. -->
 
 <!-- List the exact checks and results. Separate local, CI, and live evidence; state what remains unverified. -->
 
-- [ ] `pnpm typecheck`
-- [ ] `pnpm test:run`
-- [ ] `pnpm build`
-
-## Checklist
-
-- [ ] Tests cover changed behavior.
-- [ ] Documentation is updated when needed.
-- [ ] No secrets, personal data, or private configuration are included.
-- [ ] Unrelated changes are excluded.
-
 <details>
 <summary>Full results and logs (optional)</summary>
 

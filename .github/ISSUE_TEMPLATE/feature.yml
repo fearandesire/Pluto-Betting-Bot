@@ -1,8 +1,5 @@
 name: Feature request
 description: Describe the problem and the observable outcome you need.
-title: "[Feature]: "
-labels:
-  - enhancement
 body:
   - type: dropdown
     id: surface
@@ -43,10 +40,3 @@ body:
     attributes:
       label: Alternatives and context (optional)
       description: Add constraints, related work, or a short demo. Put long explanations inside a details block.
-  - type: checkboxes
-    id: checks
-    attributes:
-      label: Checklist
-      options:
-        - label: I searched for existing requests before opening this one.
-          required: true
