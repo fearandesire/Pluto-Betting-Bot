@@ -1,46 +1,69 @@
 name: Bug report
-description: Report a reproducible problem
+description: Describe a failure, how to reproduce it, and the evidence.
 title: "[Bug]: "
 labels:
   - bug
 body:
-  - type: markdown
+  - type: dropdown
+    id: surface
     attributes:
-      value: |
-        Thanks for taking the time to report a problem. Please remove secrets and personal data before submitting.
+      label: Affected surface (required)
+      options:
+        - Web or mobile UI
+        - Discord message or embed
+        - API, CLI, or background job
+        - Report, document, or template
+        - Other
+    validations:
+      required: true
   - type: textarea
-    id: summary
+    id: behavior
     attributes:
-      label: What happened?
-      description: Describe the behavior you observed and what you expected instead.
-      placeholder: Tell us what happened.
+      label: What happened? (required)
+      description: State the observed behavior and what you expected in a few sentences.
     validations:
       required: true
   - type: textarea
     id: reproduction
     attributes:
-      label: Steps to reproduce
-      description: List the smallest set of steps that demonstrates the problem.
-      placeholder: |
-        1. Configure ...
-        2. Run ...
-        3. Observe ...
+      label: Reproduction (required)
+      description: Give the shortest steps and relevant environment. Say if you cannot reproduce it.
     validations:
       required: true
   - type: input
     id: version
     attributes:
-      label: Version
+      label: Version or commit (required)
       description: Which release or commit are you using?
-      placeholder: Enter a version or commit.
+    validations:
+      required: true
+  - type: upload
+    id: screenshots
+    attributes:
+      label: Screenshots (required for a visible problem)
+      description: Attach the current failure, including Discord output. No after screenshot is expected before a fix exists. If unavailable, explain below.
+    validations:
+      required: false
+      accept: ".png,.jpg,.jpeg,.gif,.webp,.svg"
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence note (required)
+      description: Explain what the screenshots show. For a nonvisual problem, write N/A with a reason and relevant output. If a visible failure could not be captured, explain why.
     validations:
       required: true
   - type: textarea
-    id: logs
+    id: details
     attributes:
-      label: Relevant logs
-      description: Paste safe, redacted logs only. Never include tokens or credentials.
-      render: text
+      label: Demo, logs, or workaround (optional)
+      description: Prefer a short recording for multiple screens or a multi-step interaction; include screenshots too. Put long logs inside a details block. Never include tokens, credentials, or personal data.
+      placeholder: |
+        <details>
+        <summary>Diagnostic output</summary>
+
+        Paste relevant output here.
+
+        </details>
   - type: checkboxes
     id: checks
     attributes:
