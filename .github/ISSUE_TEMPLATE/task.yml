@@ -1,0 +1,34 @@
+name: Task
+description: Define a bounded piece of maintenance, research, or documentation work.
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind of work (required)
+      options:
+        - Maintenance
+        - Research
+        - Documentation
+        - Infrastructure
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Outcome (required)
+      description: State the problem and the result needed in a few sentences.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance (required)
+      description: List observable checks. For a visually verifiable result, include actual screenshots in the delivery PR; prefer before and after. For nonvisual work, name the check and why screenshots do not apply.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context (optional)
+      description: Link related work, current evidence, constraints, or dependencies. A task proposal does not need screenshots of unfinished work.

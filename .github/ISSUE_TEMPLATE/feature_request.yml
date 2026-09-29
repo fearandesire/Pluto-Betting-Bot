@@ -1,34 +1,48 @@
 name: Feature request
-description: Suggest an improvement to Pluto
+description: Describe the problem and the observable outcome you need.
 title: "[Feature]: "
 labels:
   - enhancement
 body:
-  - type: markdown
+  - type: dropdown
+    id: surface
     attributes:
-      value: |
-        Thanks for suggesting an improvement. Please describe the user problem before proposing an implementation.
+      label: Affected surface (required)
+      options:
+        - Web or mobile UI
+        - Discord message or embed
+        - API, CLI, or background job
+        - Report, document, or template
+        - Other
+    validations:
+      required: true
   - type: textarea
     id: problem
     attributes:
-      label: Problem to solve
-      description: Who would benefit, and what are they trying to accomplish?
-      placeholder: Describe the user problem and its impact.
+      label: Problem (required)
+      description: Who is affected, and what are they trying to do? Keep it to a few sentences.
     validations:
       required: true
   - type: textarea
-    id: proposal
+    id: outcome
     attributes:
-      label: Proposed solution
-      description: Describe the behavior you would like to see.
-      placeholder: Describe the desired outcome.
+      label: Desired outcome (required)
+      description: Describe the behavior that would solve the problem and how we could check it.
     validations:
       required: true
-  - type: textarea
-    id: alternatives
+  - type: upload
+    id: references
     attributes:
-      label: Alternatives considered
-      description: What other approaches or workarounds have you tried?
+      label: Current screenshots or references (optional)
+      description: Show the existing problem or a labeled mockup if helpful. A proposal does not need screenshots of an unimplemented result.
+    validations:
+      required: false
+      accept: ".png,.jpg,.jpeg,.gif,.webp,.svg"
+  - type: textarea
+    id: context
+    attributes:
+      label: Alternatives and context (optional)
+      description: Add constraints, related work, or a short demo. Put long explanations inside a details block.
   - type: checkboxes
     id: checks
     attributes:
