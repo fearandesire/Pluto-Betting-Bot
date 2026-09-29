@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.13.1](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.13.0...v4.13.1) (2026-09-29)
+
+
+### Bug Fixes
+
+* standardize shared contribution templates ([#658](https://github.com/fearandesire/Pluto-Betting-Bot/issues/658)) ([aea72e4](https://github.com/fearandesire/Pluto-Betting-Bot/commit/aea72e4130742f2bfd307c801327d654597a9ca4))
+
 ## [4.13.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.12.4...v4.13.0) (2026-09-23)
 
 
