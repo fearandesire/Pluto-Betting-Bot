@@ -3,14 +3,10 @@
   "sourceCommit": "43ade7ab080d6aaa71e472c01a33bae56d29be93",
   "installedPaths": [
     ".github/PULL_REQUEST_TEMPLATE.md",
-    ".github/ISSUE_TEMPLATE/bug_report.yml",
-    ".github/ISSUE_TEMPLATE/feature_request.yml",
+    ".github/ISSUE_TEMPLATE/bug.yml",
+    ".github/ISSUE_TEMPLATE/feature.yml",
     ".github/ISSUE_TEMPLATE/task.yml"
   ],
-  "adaptedPaths": [
-    ".github/PULL_REQUEST_TEMPLATE.md",
-    ".github/ISSUE_TEMPLATE/bug_report.yml",
-    ".github/ISSUE_TEMPLATE/feature_request.yml"
-  ],
-  "notes": "Reused existing general issue-form paths and chooser config. Retained PR verification commands/checklist and issue titles, labels, required version, duplicate-search, and privacy clauses."
+  "adaptedPaths": [],
+  "notes": "Exact shared templates with canonical filenames and no repository-specific adaptations."
 }

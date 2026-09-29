@@ -1,8 +1,5 @@
 name: Bug report
 description: Describe a failure, how to reproduce it, and the evidence.
-title: "[Bug]: "
-labels:
-  - bug
 body:
   - type: dropdown
     id: surface
@@ -27,14 +24,7 @@ body:
     id: reproduction
     attributes:
       label: Reproduction (required)
-      description: Give the shortest steps and relevant environment. Say if you cannot reproduce it.
-    validations:
-      required: true
-  - type: input
-    id: version
-    attributes:
-      label: Version or commit (required)
-      description: Which release or commit are you using?
+      description: Give the shortest steps, affected version or commit, and relevant environment. Say if you cannot reproduce it.
     validations:
       required: true
   - type: upload
@@ -56,7 +46,7 @@ body:
     id: details
     attributes:
       label: Demo, logs, or workaround (optional)
-      description: Prefer a short recording for multiple screens or a multi-step interaction; include screenshots too. Put long logs inside a details block. Never include tokens, credentials, or personal data.
+      description: Prefer a short recording for multiple screens or a multi-step interaction; include screenshots too. Put long logs inside a details block and remove secrets or private data.
       placeholder: |
         <details>
         <summary>Diagnostic output</summary>
@@ -64,12 +54,3 @@ body:
         Paste relevant output here.
 
         </details>
-  - type: checkboxes
-    id: checks
-    attributes:
-      label: Checklist
-      options:
-        - label: I searched for existing reports before opening this one.
-          required: true
-        - label: I removed secrets and personal data from this report.
-          required: true
