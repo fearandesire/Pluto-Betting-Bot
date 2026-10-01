@@ -44,7 +44,7 @@
 		"overrides": {
 			"shell-quote": "1.9.0",
 			"@xhmikosr/decompress": "11.1.4",
-			"systeminformation": "5.31.6"
+			"systeminformation": "5.31.7"
 		},
 		"onlyBuiltDependencies": [
 			"@swc/core",
