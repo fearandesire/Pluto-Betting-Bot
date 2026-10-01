@@ -4,11 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  shell-quote: 1.9.0
-  '@xhmikosr/decompress': 11.1.4
-  systeminformation: 5.31.7
-
 importers:
 
   .:
@@ -20,8 +15,8 @@ importers:
         specifier: ^7.0.0
         version: 7.0.0(@bull-board/ui@7.0.0)
       '@bull-board/koa':
-        specifier: ^7.0.0
-        version: 7.0.0(@babel/core@7.29.0(supports-color@8.1.1))(@types/koa@3.0.3)(handlebars@4.7.9)(lodash@4.18.1)(supports-color@8.1.1)
+        specifier: ^9.10.1
+        version: 9.10.2(@babel/core@7.29.0(supports-color@8.1.1))(@types/koa@3.0.3)(bullmq@5.76.1(supports-color@8.1.1))(handlebars@4.7.9)(lodash@4.18.1)(supports-color@8.1.1)(typescript@5.9.3)
       '@bull-board/ui':
         specifier: ^7.0.0
         version: 7.0.0
@@ -589,11 +584,26 @@ packages:
     peerDependencies:
       '@bull-board/ui': 7.0.0
 
-  '@bull-board/koa@7.0.0':
-    resolution: {integrity: sha512-/lZZUyqnb7SaXvzQXP34fAeell+si7Rc+McNv9AKB9mNheffNGuRgAMd/jEFPcPWbAuWXkHruCCNbABGz/oePw==}
+  '@bull-board/api@9.10.2':
+    resolution: {integrity: sha512-x/PLmpFI+RxpoFA9Z3kXZH/evVSqwmY59drNRFjFY+h+Ls60pwG2uhx0560qGAz8z6Orv/4kfT/5DcGBuFrF6g==}
+    peerDependencies:
+      '@bull-board/ui': 9.10.2
+      bull: ^4.16.5
+      bullmq: ^5.56.0 || ^6.0.0
+    peerDependenciesMeta:
+      bull:
+        optional: true
+      bullmq:
+        optional: true
+
+  '@bull-board/koa@9.10.2':
+    resolution: {integrity: sha512-24kLqltScXAKuDEdzn6KM6cVNhosP5yLaaCBFvzJO22iyLDLuWOipIoniSmgjtSeUwg9b375w9TJ/3z9+z+pJw==}
 
   '@bull-board/ui@7.0.0':
     resolution: {integrity: sha512-AnKeklpDn0iMFgu4ukDU6uTNmw4oudl07G4k2Fh95SknKDrXSiWRV0N1TGUawMqyfG1Yi5P/W/8d7raBq/Uw6w==}
+
+  '@bull-board/ui@9.10.2':
+    resolution: {integrity: sha512-7VHpIe1XIdxlye0deOmMNbmHGVdkEy9nC/gZZitx9uZA3lLE21i92MPGHLFEvMm0Y33fAswPfvzTc3m4pQFg/Q==}
 
   '@colors/colors@1.6.0':
     resolution: {integrity: sha512-Ir+AOibqzrIsL6ajt3Rz3LskB7OiMVHqltZmspbW/TJuTVuyOMirVqAkjfY6JISiLHgyNqicAC8AyHHGzNd/dA==}
@@ -3863,8 +3873,8 @@ packages:
     engines: {node: '>=0.10.0'}
     hasBin: true
 
-  ejs@5.0.2:
-    resolution: {integrity: sha512-IpbUaI/CAW86l3f+T8zN0iggSc0LmMZLcIW5eRVStLVNCoTXkE0YlncbbH50fp8Cl6zHIky0sW2uUbhBqGw0Jw==}
+  ejs@6.0.1:
+    resolution: {integrity: sha512-UaaM14yby8U3k02ihS1Bmj5Kz2d7CCQM1scxpgs4Mhkq8F1wR2gl3+Ts4h5Ne4Mnt7M9m4Dw7jsuMr3+xO4vZA==}
     engines: {node: '>=0.12.18'}
     hasBin: true
 
@@ -7074,6 +7084,14 @@ packages:
     resolution: {integrity: sha512-kiGUalWN+rgBJ/1OHZsBtU4rXZOfj/7rKQxULKlIzwzQSvMJUUNgPwJEEh7gU6xEVxC0ahoOBvN2YI8GH6FNgA==}
     engines: {node: '>=10.12.0'}
 
+  valibot@1.5.0:
+    resolution: {integrity: sha512-nil6AkP2TChWL43Z5uJ6GTxX01CUA+g8LWUM+N/rB9NBbkUMaUsi9PUNzlUPgoKASgmx9f7eGOYpJ04/fSa6FQ==}
+    peerDependencies:
+      typescript: '>=5'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
   validate-npm-package-license@3.0.4:
     resolution: {integrity: sha512-DpKm2Ui/xN7/HQKCtpZxoRWBhZ9Z0kqtygG8XCgNQ8ZlDnxuQmWhj566j8fN4Cu3/JmbhsDo7fcAJq4s9h27Ew==}
 
@@ -7607,14 +7625,24 @@ snapshots:
       '@bull-board/ui': 7.0.0
       redis-info: 3.1.0
 
-  '@bull-board/koa@7.0.0(@babel/core@7.29.0(supports-color@8.1.1))(@types/koa@3.0.3)(handlebars@4.7.9)(lodash@4.18.1)(supports-color@8.1.1)':
+  '@bull-board/api@9.10.2(@bull-board/ui@9.10.2(bullmq@5.76.1(supports-color@8.1.1))(typescript@5.9.3))(bullmq@5.76.1(supports-color@8.1.1))(typescript@5.9.3)':
     dependencies:
-      '@bull-board/api': 7.0.0(@bull-board/ui@7.0.0)
-      '@bull-board/ui': 7.0.0
+      '@bull-board/ui': 9.10.2(bullmq@5.76.1(supports-color@8.1.1))(typescript@5.9.3)
+      redis-info: 3.1.0
+      valibot: 1.5.0(typescript@5.9.3)
+    optionalDependencies:
+      bullmq: 5.76.1(supports-color@8.1.1)
+    transitivePeerDependencies:
+      - typescript
+
+  '@bull-board/koa@9.10.2(@babel/core@7.29.0(supports-color@8.1.1))(@types/koa@3.0.3)(bullmq@5.76.1(supports-color@8.1.1))(handlebars@4.7.9)(lodash@4.18.1)(supports-color@8.1.1)(typescript@5.9.3)':
+    dependencies:
+      '@bull-board/api': 9.10.2(@bull-board/ui@9.10.2(bullmq@5.76.1(supports-color@8.1.1))(typescript@5.9.3))(bullmq@5.76.1(supports-color@8.1.1))(typescript@5.9.3)
+      '@bull-board/ui': 9.10.2(bullmq@5.76.1(supports-color@8.1.1))(typescript@5.9.3)
       '@koa/bodyparser': 6.1.0(koa@3.2.1)
       '@koa/router': 15.7.0(koa@3.2.1)(supports-color@8.1.1)
-      '@ladjs/koa-views': 9.0.0(@babel/core@7.29.0(supports-color@8.1.1))(@types/koa@3.0.3)(ejs@5.0.2)(handlebars@4.7.9)(lodash@4.18.1)(supports-color@8.1.1)
-      ejs: 5.0.2
+      '@ladjs/koa-views': 9.0.0(@babel/core@7.29.0(supports-color@8.1.1))(@types/koa@3.0.3)(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(supports-color@8.1.1)
+      ejs: 6.0.1
       koa: 3.2.1
       koa-mount: 4.2.0(supports-color@8.1.1)
       koa-static: 5.0.0(supports-color@8.1.1)
@@ -7624,6 +7652,8 @@ snapshots:
       - arc-templates
       - atpl
       - bracket-template
+      - bull
+      - bullmq
       - coffee-script
       - dot
       - dust
@@ -7663,6 +7693,7 @@ snapshots:
       - toffee
       - twig
       - twing
+      - typescript
       - underscore
       - vash
       - velocityjs
@@ -7672,6 +7703,14 @@ snapshots:
   '@bull-board/ui@7.0.0':
     dependencies:
       '@bull-board/api': 7.0.0(@bull-board/ui@7.0.0)
+
+  '@bull-board/ui@9.10.2(bullmq@5.76.1(supports-color@8.1.1))(typescript@5.9.3)':
+    dependencies:
+      '@bull-board/api': 9.10.2(@bull-board/ui@9.10.2(bullmq@5.76.1(supports-color@8.1.1))(typescript@5.9.3))(bullmq@5.76.1(supports-color@8.1.1))(typescript@5.9.3)
+    transitivePeerDependencies:
+      - bull
+      - bullmq
+      - typescript
 
   '@colors/colors@1.6.0': {}
 
@@ -8367,16 +8406,16 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@ladjs/consolidate@1.0.4(@babel/core@7.29.0(supports-color@8.1.1))(ejs@5.0.2)(handlebars@4.7.9)(lodash@4.18.1)':
+  '@ladjs/consolidate@1.0.4(@babel/core@7.29.0(supports-color@8.1.1))(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)':
     optionalDependencies:
       '@babel/core': 7.29.0(supports-color@8.1.1)
-      ejs: 5.0.2
+      ejs: 6.0.1
       handlebars: 4.7.9
       lodash: 4.18.1
 
-  '@ladjs/koa-views@9.0.0(@babel/core@7.29.0(supports-color@8.1.1))(@types/koa@3.0.3)(ejs@5.0.2)(handlebars@4.7.9)(lodash@4.18.1)(supports-color@8.1.1)':
+  '@ladjs/koa-views@9.0.0(@babel/core@7.29.0(supports-color@8.1.1))(@types/koa@3.0.3)(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(supports-color@8.1.1)':
     dependencies:
-      '@ladjs/consolidate': 1.0.4(@babel/core@7.29.0(supports-color@8.1.1))(ejs@5.0.2)(handlebars@4.7.9)(lodash@4.18.1)
+      '@ladjs/consolidate': 1.0.4(@babel/core@7.29.0(supports-color@8.1.1))(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)
       debug: 4.4.3(supports-color@8.1.1)
       get-paths: 0.0.7
       koa-send: 5.0.1(supports-color@8.1.1)
@@ -10729,7 +10768,7 @@ snapshots:
     dependencies:
       jake: 10.9.4
 
-  ejs@5.0.2: {}
+  ejs@6.0.1: {}
 
   electron-to-chromium@1.5.357: {}
 
@@ -14568,6 +14607,10 @@ snapshots:
       '@jridgewell/trace-mapping': 0.3.31
       '@types/istanbul-lib-coverage': 2.0.6
       convert-source-map: 2.0.0
+
+  valibot@1.5.0(typescript@5.9.3):
+    optionalDependencies:
+      typescript: 5.9.3
 
   validate-npm-package-license@3.0.4:
     dependencies:
