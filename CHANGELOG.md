@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.13.2](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.13.1...v4.13.2) (2026-10-01)
+
+
+### Bug Fixes
+
+* **deps:** patch transitive packages and stabilize image build ([#671](https://github.com/fearandesire/Pluto-Betting-Bot/issues/671)) ([7bff649](https://github.com/fearandesire/Pluto-Betting-Bot/commit/7bff6495126b370c8f403c90e395e3bc1919c5f4))
+
 ## [4.13.1](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.13.0...v4.13.1) (2026-09-29)
 
 
