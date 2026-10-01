@@ -1,17 +1,14 @@
 name: Dependabot auto-merge
 
-# pull_request_target is intentional: Dependabot-authored pull_request runs get a
-# restricted secret context (Actions secrets withheld). This job never checks out
-# PR head — only mints an App token and calls gh pr merge by URL. Do not add an
-# actions/checkout of the PR head without revisiting this security model.
-
+# Use the trusted base-branch workflow for Dependabot PR metadata and the
+# existing release-relay App token. Never check out or run code from the PR.
 on:
   pull_request_target:
     types: [opened, reopened, synchronize, labeled]
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
+  pull-requests: read
 
 jobs:
   dependabot-auto-merge:
@@ -19,9 +16,20 @@ jobs:
     if: >-
       github.event.pull_request.user.login == 'dependabot[bot]' &&
       github.repository == 'fearandesire/Pluto-Betting-Bot' &&
-      github.event.pull_request.head.repo.full_name == github.repository
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      !github.event.pull_request.draft
     steps:
+      - name: Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v3.1.0
+        with:
+          github-token: ${{ github.token }}
+
       - name: Mint GitHub App token (Pluto-Betting-Bot)
+        if: >-
+          contains(github.event.pull_request.labels.*.name, 'dependencies') &&
+          (steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
+           steps.metadata.outputs.update-type == 'version-update:semver-minor')
         uses: actions/create-github-app-token@v3
         id: app
         with:
@@ -30,9 +38,10 @@ jobs:
           owner: fearandesire
           repositories: Pluto-Betting-Bot
 
-      - name: Enable auto-merge for Dependabot PRs
-        if: contains(github.event.pull_request.labels.*.name, 'dependencies')
-        run: gh pr merge --auto --squash "$PR_URL"
+      - name: Enable auto-merge for compatible Dependabot PRs
+        if: steps.app.outcome == 'success'
+        run: gh pr merge --auto --squash --match-head-commit "$PR_HEAD_SHA" "$PR_URL"
         env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ steps.app.outputs.token }}
