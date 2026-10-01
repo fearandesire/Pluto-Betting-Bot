@@ -12,7 +12,8 @@ updates:
       day: "saturday"
       time: "06:00"
       timezone: "Etc/UTC"
-    # Keep major updates separate for review; only group compatible updates.
+    # Keep major updates in one review PR so they cannot fill the PR limit
+    # and prevent the compatible group from opening.
     groups:
       npm-non-major:
         patterns:
@@ -20,6 +21,11 @@ updates:
         update-types:
           - "minor"
           - "patch"
+      npm-major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
     open-pull-requests-limit: 10
     versioning-strategy: auto
     labels:
