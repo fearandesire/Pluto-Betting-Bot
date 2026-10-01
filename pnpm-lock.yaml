@@ -4,18 +4,13 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  shell-quote: 1.9.0
-  '@xhmikosr/decompress': 11.1.4
-  systeminformation: 5.31.7
-
 importers:
 
   .:
     dependencies:
       '@axiomhq/winston':
-        specifier: ^1.6.1
-        version: 1.6.1
+        specifier: ^2.0.0
+        version: 2.0.0
       '@bull-board/api':
         specifier: ^7.0.0
         version: 7.0.0(@bull-board/ui@7.0.0)
@@ -347,12 +342,12 @@ importers:
 
 packages:
 
-  '@axiomhq/js@1.6.1':
-    resolution: {integrity: sha512-iNWOnGvP+R2lIWYk9jkfvRI/rfhOR9hlWJOBJhMKwZ9mfpE0KdnFnG2XPLoMcrbyrOBKj6Jw0hpIH5GhPucLog==}
+  '@axiomhq/js@2.0.0':
+    resolution: {integrity: sha512-mhDH0KLFkDko9ytoltgmch2gOiwE6kY6VWhCmTux9lzL9hmjTej68JeQKwq9GGqOY7xwDsya88bNiTnp/zc8+Q==}
     engines: {node: '>=20'}
 
-  '@axiomhq/winston@1.6.1':
-    resolution: {integrity: sha512-J26JxqUr+v1O5SjH74pYhkTGvWIqMkuGjTOz1ZV3kbYrMczAVwxxhimKWZ2Va9+1Jt5cV8IJTW0oauYnpKKGYA==}
+  '@axiomhq/winston@2.0.0':
+    resolution: {integrity: sha512-PT2/iC4goWKI8yuGJn5AotN157mJNq++5d3UfaMHR41pPkI31OBsZ6MXnQqZi36BR8taRIzsmdR1E5exNyNhIg==}
     engines: {node: '>=20'}
 
   '@babel/code-frame@7.27.1':
@@ -7362,13 +7357,13 @@ packages:
 
 snapshots:
 
-  '@axiomhq/js@1.6.1':
+  '@axiomhq/js@2.0.0':
     dependencies:
       fetch-retry: 6.0.0
 
-  '@axiomhq/winston@1.6.1':
+  '@axiomhq/winston@2.0.0':
     dependencies:
-      '@axiomhq/js': 1.6.1
+      '@axiomhq/js': 2.0.0
       winston-transport: 4.9.0
 
   '@babel/code-frame@7.27.1':
