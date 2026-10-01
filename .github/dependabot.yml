@@ -12,11 +12,14 @@ updates:
       day: "saturday"
       time: "06:00"
       timezone: "Etc/UTC"
-    # Groups all npm updates into one PR (e.g., "chore(deps): bump the npm_and_yarn group")
+    # Keep major updates separate for review; only group compatible updates.
     groups:
-      all-npm-dependencies:
+      npm-non-major:
         patterns:
           - "*"
+        update-types:
+          - "minor"
+          - "patch"
     open-pull-requests-limit: 10
     versioning-strategy: auto
     labels:
