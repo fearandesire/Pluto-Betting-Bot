@@ -21,8 +21,9 @@ WORKDIR /app
 # Copy package metadata and pnpm build-script approvals
 COPY package.json pnpm-lock.yaml ./
 
-# Install dependencies
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --force
+# Build only needs the Puppeteer package; browser binaries are not copied to production.
+# Skip the browser download so a network stall cannot fail the packaging smoke.
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store PUPPETEER_SKIP_DOWNLOAD=1 pnpm install --force --frozen-lockfile
 
 # Copy the rest of the files and generated OpenAPI code
 COPY . .

@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  shell-quote: 1.9.0
+  '@xhmikosr/decompress': 11.1.4
+  systeminformation: 5.31.7
+
 importers:
 
   .:
@@ -2905,24 +2910,24 @@ packages:
     resolution: {integrity: sha512-F8Sr2O2aqwYfoXTafemRNAYDG4xwBTaHJpAo9YVnnnRXHLP9gkb+HYDsFoCAsCneS3/J7BOfeYnxxlUCicLqjg==}
     engines: {node: '>=20'}
 
-  '@xhmikosr/decompress-tar@9.0.1':
-    resolution: {integrity: sha512-4AkVR1SoqTxYY22IRRYKDeLirPIDGqMqYsqgjKYuwhgRcBb+yDP4t5Xph33UCzL/nahK/aADmlMEjTNstbX7kw==}
+  '@xhmikosr/decompress-tar@9.0.2':
+    resolution: {integrity: sha512-8nPZ6lZ3ExhsSxi/X/PMB3K+Vtsuxk43HowxYpxw4AsCHTYqFBXwC8B3Y+M/meaUOGOVm+2tFNUAfWGRjBt+Ww==}
     engines: {node: '>=20'}
 
-  '@xhmikosr/decompress-tarbz2@9.0.1':
-    resolution: {integrity: sha512-aFONnsbqEOuXudvK7V7wB8dcEAKR389oUYQfZhrQZA8OtogJpDjrUAvEH3Qlc9yFqTU6r5/svTEcRwtXhoIJbQ==}
+  '@xhmikosr/decompress-tarbz2@9.0.2':
+    resolution: {integrity: sha512-m0DvZhE7remCxtS8xY2iHSjivT4v+iyYDdfNoeuu8Nm+7g8xEXdLKSyDEicu4u1ImJLLGEfjMuTLera/F6UGWw==}
     engines: {node: '>=20'}
 
   '@xhmikosr/decompress-targz@9.0.1':
     resolution: {integrity: sha512-1JXu2b6yrpm5EuBoOzMU57B4qrHXJKWQQ7LlMynNEiz85mEjDciO3ayf//GXaTLLCEKiHjWlU3q3THjgf7uODA==}
     engines: {node: '>=20'}
 
-  '@xhmikosr/decompress-unzip@8.1.0':
-    resolution: {integrity: sha512-hVcpEZIS8avXU1ioR0Pb2LcBYHfah1lzzTQPDItkBi3W+kSE/DxSeEgOoHJB8rn+Izm0ArWZxxlpsvEK4ySjaw==}
+  '@xhmikosr/decompress-unzip@8.2.1':
+    resolution: {integrity: sha512-2MS94QnmXQwjkKN8WyFiu1sU7J3rcWJcMze4kRYsX7tN+CXpUGECgkh4YSOhujpkWPuVlFudIziJHO/TxOqkQQ==}
     engines: {node: '>=20'}
 
-  '@xhmikosr/decompress@11.1.2':
-    resolution: {integrity: sha512-f2hlnMN1ChbifAfdzWns6mssojjr3lgJm6MtT4ttVAClx85QEIQAdGXN22bPqy/qKxbvDf93GdqbR6+xIO/a4A==}
+  '@xhmikosr/decompress@11.1.4':
+    resolution: {integrity: sha512-ZbYL7SAfY37/TMpopqBR3mQiuQ76kI/RNpN4q82YHSw/UxktZNy8P4wgiKPSrTImMAWRaUG8UK1pgEa56YdLaw==}
     engines: {node: '>=20'}
 
   '@xhmikosr/downloader@16.1.2':
@@ -6451,8 +6456,8 @@ packages:
     resolution: {integrity: sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==}
     engines: {node: '>=8'}
 
-  shell-quote@1.8.3:
-    resolution: {integrity: sha512-ObmnIF4hXNg1BqhnHmgbDETF8dLPCggZWBjkQfhZpbszZnYur5DUljTcCHii5LC3J5E0yeO/1LIMyH+UvHQgyw==}
+  shell-quote@1.9.0:
+    resolution: {integrity: sha512-Iov+JwFv/2HcTpcwNMKd8+IWNb8tboQJNQTkAY/LLVK7gGH9jy+LGkVqPxfekHl+yMmiqXszdGWXgkfml7hjqA==}
     engines: {node: '>= 0.4'}
 
   side-channel-list@1.0.0:
@@ -6718,8 +6723,8 @@ packages:
     resolution: {integrity: sha512-Bh7QjT8/SuKUIfObSXNHNSK6WHo6J1tHCqJsuaFDP7gP0fkzSfTxI8y85JrppZ0h8l0maIgc2tfuZQ6/t3GtnQ==}
     engines: {node: ^14.18.0 || >=16.0.0}
 
-  systeminformation@5.31.5:
-    resolution: {integrity: sha512-5SyLdip4/3alxD4Kh+63bUQTJmu7YMfYQTC+koZy7X73HgNqZSD2P4wOZQWtUncvPvcEmnfIjCoygN4MRoEejQ==}
+  systeminformation@5.31.7:
+    resolution: {integrity: sha512-/8NC53e5nP9nmhn42/ncdOkyJnOoue/Vy+tJOyUGd1Yv66G069wK4rrziwhrqDETgk78CudTQupw5z19S5uoZw==}
     engines: {node: '>=8.0.0'}
     os: [darwin, linux, win32, freebsd, openbsd, netbsd, sunos, android]
     hasBin: true
@@ -7327,8 +7332,8 @@ packages:
   yauzl@2.10.0:
     resolution: {integrity: sha512-p4a9I6X6nu6IhoGmBqAcbJy1mlC4j27vEPZX9F4L4/vZT3Lyq1VkFHw/V/PUcB9Buo+DG3iHkT0x3Qya58zc3g==}
 
-  yauzl@3.2.0:
-    resolution: {integrity: sha512-Ow9nuGZE+qp1u4JIPvg+uCiUr7xGQWdff7JQSk5VGYTAZMDe2q8lxJ10ygv10qmSj031Ty/6FNJpLO4o1Sgc+w==}
+  yauzl@3.4.0:
+    resolution: {integrity: sha512-jIH9yLR9wqr0wOS0TpBvo/g/2UgZH5qePVbjgRliiF0BYvOZyaBknKsF+x9Iht0O6sqgnB93rCICdOZFecJuDw==}
     engines: {node: '>=12'}
 
   yn@3.1.1:
@@ -8335,7 +8340,7 @@ snapshots:
   '@kaname-png/plugin-statcord@2.3.3':
     dependencies:
       '@sapphire/fetch': 3.0.5
-      systeminformation: 5.31.5
+      systeminformation: 5.31.7
       tslib: 2.8.1
 
   '@keyv/serialize@1.1.1': {}
@@ -9738,7 +9743,7 @@ snapshots:
       - react-native-b4a
       - supports-color
 
-  '@xhmikosr/decompress-tar@9.0.1(supports-color@8.1.1)':
+  '@xhmikosr/decompress-tar@9.0.2(supports-color@8.1.1)':
     dependencies:
       file-type: 21.3.4(supports-color@8.1.1)
       is-stream: 4.0.1
@@ -9748,9 +9753,9 @@ snapshots:
       - react-native-b4a
       - supports-color
 
-  '@xhmikosr/decompress-tarbz2@9.0.1(supports-color@8.1.1)':
+  '@xhmikosr/decompress-tarbz2@9.0.2(supports-color@8.1.1)':
     dependencies:
-      '@xhmikosr/decompress-tar': 9.0.1(supports-color@8.1.1)
+      '@xhmikosr/decompress-tar': 9.0.2(supports-color@8.1.1)
       file-type: 21.3.4(supports-color@8.1.1)
       is-stream: 4.0.1
       seek-bzip: 2.0.0
@@ -9762,7 +9767,7 @@ snapshots:
 
   '@xhmikosr/decompress-targz@9.0.1(supports-color@8.1.1)':
     dependencies:
-      '@xhmikosr/decompress-tar': 9.0.1(supports-color@8.1.1)
+      '@xhmikosr/decompress-tar': 9.0.2(supports-color@8.1.1)
       file-type: 21.3.4(supports-color@8.1.1)
       is-stream: 4.0.1
     transitivePeerDependencies:
@@ -9770,20 +9775,20 @@ snapshots:
       - react-native-b4a
       - supports-color
 
-  '@xhmikosr/decompress-unzip@8.1.0(supports-color@8.1.1)':
+  '@xhmikosr/decompress-unzip@8.2.1(supports-color@8.1.1)':
     dependencies:
       file-type: 21.3.4(supports-color@8.1.1)
       get-stream: 9.0.1
-      yauzl: 3.2.0
+      yauzl: 3.4.0
     transitivePeerDependencies:
       - supports-color
 
-  '@xhmikosr/decompress@11.1.2(supports-color@8.1.1)':
+  '@xhmikosr/decompress@11.1.4(supports-color@8.1.1)':
     dependencies:
-      '@xhmikosr/decompress-tar': 9.0.1(supports-color@8.1.1)
-      '@xhmikosr/decompress-tarbz2': 9.0.1(supports-color@8.1.1)
+      '@xhmikosr/decompress-tar': 9.0.2(supports-color@8.1.1)
+      '@xhmikosr/decompress-tarbz2': 9.0.2(supports-color@8.1.1)
       '@xhmikosr/decompress-targz': 9.0.1(supports-color@8.1.1)
-      '@xhmikosr/decompress-unzip': 8.1.0(supports-color@8.1.1)
+      '@xhmikosr/decompress-unzip': 8.2.1(supports-color@8.1.1)
       graceful-fs: 4.2.11
       strip-dirs: 3.0.0
     transitivePeerDependencies:
@@ -9794,7 +9799,7 @@ snapshots:
   '@xhmikosr/downloader@16.1.2(supports-color@8.1.1)':
     dependencies:
       '@xhmikosr/archive-type': 8.0.1(supports-color@8.1.1)
-      '@xhmikosr/decompress': 11.1.2(supports-color@8.1.1)
+      '@xhmikosr/decompress': 11.1.4(supports-color@8.1.1)
       content-disposition: 1.1.0
       ext-name: 5.0.0
       file-type: 21.3.4(supports-color@8.1.1)
@@ -12833,7 +12838,7 @@ snapshots:
       minimatch: 3.1.5
       pidtree: 0.3.1
       read-pkg: 3.0.0
-      shell-quote: 1.8.3
+      shell-quote: 1.9.0
       string.prototype.padend: 3.1.6
 
   npm-run-path@4.0.1:
@@ -13894,7 +13899,7 @@ snapshots:
 
   shebang-regex@3.0.0: {}
 
-  shell-quote@1.8.3: {}
+  shell-quote@1.9.0: {}
 
   side-channel-list@1.0.0:
     dependencies:
@@ -14196,7 +14201,7 @@ snapshots:
     dependencies:
       '@pkgr/core': 0.2.9
 
-  systeminformation@5.31.5: {}
+  systeminformation@5.31.7: {}
 
   tar-fs@2.1.4:
     dependencies:
@@ -14838,9 +14843,8 @@ snapshots:
       buffer-crc32: 0.2.13
       fd-slicer: 1.1.0
 
-  yauzl@3.2.0:
+  yauzl@3.4.0:
     dependencies:
-      buffer-crc32: 0.2.13
       pend: 1.2.0
 
   yn@3.1.1: {}
