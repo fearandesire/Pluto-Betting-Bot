@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.13.3](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.13.2...v4.13.3) (2026-10-02)
+
+
+### Bug Fixes
+
+* **props:** accept push/void prop settlements and show Push/Void in prediction history ([#676](https://github.com/fearandesire/Pluto-Betting-Bot/issues/676)) ([f62414d](https://github.com/fearandesire/Pluto-Betting-Bot/commit/f62414d0f1d6c107fb6fe8c958b62f732683fdbb))
+
 ## [4.13.2](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.13.1...v4.13.2) (2026-10-01)
 
 
