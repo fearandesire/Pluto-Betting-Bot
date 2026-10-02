@@ -185,6 +185,26 @@ export function predictionHistoryTemplate(
 	return templateEmbed
 }
 
+/**
+ * History status label. Khronos settles pushes and voids as their own
+ * prediction statuses (`push` / `void`) with no `is_correct`, so they must not
+ * fall through to the Pending default.
+ */
+function formatPredictionStatus(prediction: AllUserPredictionsDto): string {
+	switch (prediction.status) {
+		case GetAllPredictionsFilteredStatusEnum.Push:
+			return 'Push ➖'
+		case GetAllPredictionsFilteredStatusEnum.Void:
+			return 'Void 🚫'
+		case GetAllPredictionsFilteredStatusEnum.Completed:
+			if (prediction.is_correct === true) return 'Correct ✅'
+			if (prediction.is_correct === false) return 'Incorrect ❌'
+			return 'Pending ⏳'
+		default:
+			return 'Pending ⏳'
+	}
+}
+
 /** One prediction as a paginator field (surface C5). */
 export function predictionHistoryField(args: {
 	prediction: AllUserPredictionsDto
@@ -199,14 +219,7 @@ export function predictionHistoryField(args: {
 	const choice =
 		prediction.choice.charAt(0).toUpperCase() +
 		prediction.choice.slice(1).toLowerCase()
-	const status =
-		prediction.status !== GetAllPredictionsFilteredStatusEnum.Completed
-			? 'Pending ⏳'
-			: prediction.is_correct === true
-				? 'Correct ✅'
-				: prediction.is_correct === false
-					? 'Incorrect ❌'
-					: 'Pending ⏳'
+	const status = formatPredictionStatus(prediction)
 	const market = _.startCase(args.marketKey.replace('player_', ''))
 	const value = [
 		`**Date**: ${args.date}`,

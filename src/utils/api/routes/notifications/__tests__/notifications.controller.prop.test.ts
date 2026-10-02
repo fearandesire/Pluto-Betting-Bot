@@ -72,6 +72,34 @@ describe('POST /notifications/props/settled', () => {
 		expect(ctx.body).toEqual({ success: true })
 	})
 
+	it.each(['push', 'void'] as const)(
+		'accepts a legacy non-envelope %s settlement with 200, not 422',
+		async (result) => {
+			const ctx = {
+				request: {
+					body: {
+						...validPayload,
+						result,
+						winning_side_display: undefined,
+						actual_value: null,
+						tallies: { correct: 0, incorrect: 0, total: 1 },
+					},
+				},
+				body: undefined as unknown,
+				status: 200,
+				state: { apiKeyAuthenticated: true },
+			}
+
+			await getPropSettlementRoute()(ctx as never, async () => undefined)
+
+			expect(ctx.status).toBe(200)
+			expect(ctx.body).toEqual({ success: true })
+			expect(processPropSettled).toHaveBeenCalledWith(
+				expect.objectContaining({ result }),
+			)
+		},
+	)
+
 	it('returns 500 when settlement processing fails', async () => {
 		processPropSettled.mockRejectedValueOnce(new Error('delivery failed'))
 		const ctx = {
@@ -113,6 +141,26 @@ describe('POST /notifications/props/settled', () => {
 			request: {
 				body: {
 					...validPayload,
+					tallies: { correct: 2, incorrect: 0, total: 1 },
+				},
+			},
+			body: undefined as unknown,
+			status: 200,
+			state: { apiKeyAuthenticated: true },
+		}
+
+		await getPropSettlementRoute()(ctx as never, async () => undefined)
+
+		expect(processPropSettled).not.toHaveBeenCalled()
+		expect(ctx.status).toBe(422)
+	})
+
+	it('still rejects a void settlement whose graded tallies exceed the total', async () => {
+		const ctx = {
+			request: {
+				body: {
+					...validPayload,
+					result: 'void',
 					tallies: { correct: 2, incorrect: 0, total: 1 },
 				},
 			},
