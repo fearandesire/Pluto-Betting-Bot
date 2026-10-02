@@ -95,6 +95,20 @@ Destination ids are derived by kind:
 - `prop_settled`: `prop:<guild_id>:<channel_id>:<message_id>`
 - `prop_post`: `prop-post:<guild_id>:<channel_id>:<over_outcome_uuid>:<under_outcome_uuid>`
 
+## Failure signals
+
+A delivery that fails to reach Discord is reported by these structured error logs and `delivery.failed` incidents:
+
+| Signal | When |
+| --- | --- |
+| `notification.delivery.job_failed` (error log) | Every failed BullMQ attempt. Carries `delivery_id`, `kind`, `attempts_made`, `max_attempts`. |
+| `notification.delivery.exhausted` (error log) plus a `delivery.failed` incident scoped `<kind>:<delivery_id>` | The attempt budget (8) is spent, including when the worker threw before it could classify the failure (for example a Redis error). |
+| `delivery.failed` incident | A destination failed permanently, or retryable failures hit the last attempt. |
+| `notification.delivery.record_missing` (error log) plus `delivery.failed` | A queued job's Redis delivery record no longer exists, so nothing could be delivered. |
+| `notification.delivery.alert_report_failed` (error log) | Raising or resolving the incident itself failed. |
+
+Failed jobs stay in the `notification-delivery-v1` failed set (`removeOnFail: false`). Jobs that BullMQ fails for stalling more than `maxStalledCount` times emit no worker `failed` event and are not covered by these signals.
+
 ## Looking up a delivery
 
 Use the status endpoint when possible:
