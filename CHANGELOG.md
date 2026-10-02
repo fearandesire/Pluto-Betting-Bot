@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.13.4](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.13.3...v4.13.4) (2026-10-02)
+
+
+### Bug Fixes
+
+* **delivery:** alert when a notification job exhausts retries ([#677](https://github.com/fearandesire/Pluto-Betting-Bot/issues/677)) ([bdda656](https://github.com/fearandesire/Pluto-Betting-Bot/commit/bdda656da5001b55d72ec0833ddcfa3111f3c164))
+
 ## [4.13.3](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.13.2...v4.13.3) (2026-10-02)
 
 
