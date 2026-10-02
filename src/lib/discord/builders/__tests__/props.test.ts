@@ -126,6 +126,62 @@ describe('props builders (classic, pre-migration)', () => {
 		])
 	})
 
+	it.each([
+		[GetAllPredictionsFilteredStatusEnum.Push, 'Push ➖'],
+		[GetAllPredictionsFilteredStatusEnum.Void, 'Void 🚫'],
+	])(
+		'renders a %s prediction as %s in history, never Pending',
+		(status, label) => {
+			const field = predictionHistoryField({
+				prediction: {
+					choice: 'OVER',
+					status,
+					is_correct: null,
+					description: 'Josh Allen',
+				} as AllUserPredictionsDto,
+				matchLabel: 'Bills vs. Chiefs',
+				date: '10/04/2026',
+				point: 1.5,
+				marketKey: 'player_pass_tds',
+			})
+			expect(field.value).toContain(`**Status**: ${label}`)
+			expect(field.value).not.toContain('Pending')
+		},
+	)
+
+	it('still renders pending and unresolved predictions as Pending in history', () => {
+		const base = {
+			choice: 'UNDER',
+			description: 'Josh Allen',
+		} as AllUserPredictionsDto
+		const args = {
+			matchLabel: 'Bills vs. Chiefs',
+			date: '10/04/2026',
+			point: 1.5,
+			marketKey: 'player_pass_tds',
+		}
+		expect(
+			predictionHistoryField({
+				...args,
+				prediction: {
+					...base,
+					status: GetAllPredictionsFilteredStatusEnum.Pending,
+					is_correct: null,
+				} as AllUserPredictionsDto,
+			}).value,
+		).toContain('**Status**: Pending ⏳')
+		expect(
+			predictionHistoryField({
+				...args,
+				prediction: {
+					...base,
+					status: GetAllPredictionsFilteredStatusEnum.Completed,
+					is_correct: false,
+				} as AllUserPredictionsDto,
+			}).value,
+		).toContain('**Status**: Incorrect ❌')
+	})
+
 	it('pins the history template, field and page 1 (C5)', async () => {
 		expect(
 			predictionHistoryTemplate('Pluto Tester', 'pending').toJSON(),
