@@ -333,15 +333,7 @@ export class NotificationDeliveryQueue {
 				},
 			)
 			this.worker.on('failed', (job, error) => {
-				void import('../../../logging/WinstonLogger.js').then(
-					({ logger }) =>
-						logger.error({
-							method: 'NotificationDeliveryQueue',
-							event: 'notification.delivery.job_failed',
-							delivery_id: job?.data.delivery_id,
-							error: error.message.slice(0, 500),
-						}),
-				)
+				void this.handleJobFailed(job, error).catch(() => undefined)
 			})
 			this.unregisterShutdownQueue = registerShutdownQueue(
 				NOTIFICATION_DELIVERY_QUEUE,
@@ -404,7 +396,18 @@ export class NotificationDeliveryQueue {
 	private async process(job: Job<DeliveryJob>): Promise<void> {
 		const { delivery_id: deliveryId } = job.data
 		const record = await this.store.get(deliveryId)
-		if (!record) return
+		if (!record) {
+			// The job is still in BullMQ but its Redis delivery record is gone
+			// (flush/eviction). Returning keeps the job from retrying forever, but
+			// the notification was never delivered, so say so loudly.
+			await this.logEvent('error', {
+				event: 'notification.delivery.record_missing',
+				delivery_id: deliveryId,
+				kind: job.data.kind,
+			})
+			await this.reportAlertFailure(deliveryId, job.data.kind)
+			return
+		}
 
 		await this.store.update(deliveryId, (current) => ({
 			...current,
@@ -518,6 +521,53 @@ export class NotificationDeliveryQueue {
 		)
 	}
 
+	/**
+	 * Runs for every failed BullMQ attempt. `process()` already alerts when it
+	 * observes exhaustion itself, but a job can also fail for good because
+	 * something in `process()` threw (for example a Redis error while updating
+	 * the delivery record), and that path never reached the alert call. When the
+	 * attempt budget is spent, log a distinct `exhausted` error and raise the
+	 * same `delivery.failed` incident; the incident store dedupes by scope, so a
+	 * delivery that was already reported is not announced twice.
+	 */
+	async handleJobFailed(
+		job: Job<DeliveryJob> | undefined,
+		error: Error,
+	): Promise<void> {
+		const maxAttempts = Number(job?.opts?.attempts ?? 1)
+		const attemptsMade = job?.attemptsMade ?? 0
+		const exhausted = attemptsMade >= maxAttempts
+		const details = {
+			delivery_id: job?.data.delivery_id,
+			kind: job?.data.kind,
+			attempts_made: attemptsMade,
+			max_attempts: maxAttempts,
+			error: error.message.slice(0, 500),
+		}
+		await this.logEvent('error', {
+			event: 'notification.delivery.job_failed',
+			...details,
+		})
+		if (!exhausted || !job) return
+		await this.logEvent('error', {
+			event: 'notification.delivery.exhausted',
+			...details,
+		})
+		await this.reportAlertFailure(job.data.delivery_id, job.data.kind)
+	}
+
+	private async logEvent(
+		level: 'warn' | 'error',
+		fields: Record<string, unknown>,
+	): Promise<void> {
+		try {
+			const { logger } = await import('../../../logging/WinstonLogger.js')
+			logger[level]({ method: 'NotificationDeliveryQueue', ...fields })
+		} catch {
+			// Logging must never change delivery behaviour.
+		}
+	}
+
 	private async reportAlertFailure(
 		deliveryId: string,
 		kind: DeliveryJob['kind'],
@@ -534,7 +584,27 @@ export class NotificationDeliveryQueue {
 				retriable: true,
 				observedAt: new Date(),
 			})
-			.catch(() => undefined)
+			.catch((error: unknown) =>
+				this.logAlertReportFailure('firing', deliveryId, kind, error),
+			)
+	}
+
+	private async logAlertReportFailure(
+		transition: 'firing' | 'resolved',
+		deliveryId: string,
+		kind: DeliveryJob['kind'],
+		error: unknown,
+	): Promise<void> {
+		await this.logEvent('error', {
+			event: 'notification.delivery.alert_report_failed',
+			transition,
+			delivery_id: deliveryId,
+			kind,
+			error: (error instanceof Error
+				? error.message
+				: String(error)
+			).slice(0, 500),
+		})
 	}
 
 	private async reportAlertRecovery(
@@ -553,7 +623,9 @@ export class NotificationDeliveryQueue {
 				observedAt: new Date(),
 				resolvedAt: new Date(),
 			})
-			.catch(() => undefined)
+			.catch((error: unknown) =>
+				this.logAlertReportFailure('resolved', deliveryId, kind, error),
+			)
 	}
 
 	/** Focused seam for integration tests; BullMQ invokes the same handler. */
