@@ -62,7 +62,7 @@ passes and does not block auto-merge. (The eventual squash still lands as
 
 The workflow's git-writing steps (checkout, create-pull-request, and the
 `gh pr merge --auto` call) authenticate with a short-lived token minted from
-the `fnx-cascade-bot` GitHub App (`CASCADE_APP_ID` /
+the `release-relay` GitHub App (`CASCADE_APP_ID` /
 `CASCADE_APP_PRIVATE_KEY`), replacing the older `PLUTO_BOT_PAT`. An App-token
 PR still fires normal `pull_request` events, so the required checks run and
 gate the auto-merge.
