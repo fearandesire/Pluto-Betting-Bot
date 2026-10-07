@@ -91,6 +91,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Verify generated team registry
+        run: node scripts/matchup-assets/generate-registry.mjs --check
+
       - name: Typecheck
         run: pnpm typecheck
 
@@ -108,7 +111,7 @@ jobs:
 
       - name: Build production image for packaging smoke
         run: |
-          mkdir -p assets
+          mkdir -p assets/matchupimages
           docker build \
             --target production \
             --tag "pluto-production-smoke:${GITHUB_SHA}" \
@@ -156,7 +159,7 @@ jobs:
     if: >-
       needs.verify.result == 'success' && (
         github.event_name == 'release' ||
-        (github.event_name == 'workflow_dispatch' && inputs.force_build)
+        (github.event_name == 'workflow_dispatch' && inputs.force_build && github.ref == 'refs/heads/main')
       )
 
     permissions:
@@ -212,20 +215,34 @@ jobs:
           echo "🔖 Short SHA: $SHORT_SHA"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-      - name: Hydrate assets from R2
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install and build release validator
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+          node scripts/matchup-assets/generate-registry.mjs --check
+
+      # This job only runs for published releases or manual main-branch builds.
+      # The required PR Verify job remains credential-free, including forks.
+      - name: Hydrate pinned immutable asset release
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: auto
-          R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
         run: |
-          set -euo pipefail
-          aws s3 cp s3://pluto-assets/matchupimages.tar.gz /tmp/matchupimages.tar.gz \
-            --endpoint-url="$R2_ENDPOINT"
-          mkdir -p assets
-          tar -xzf /tmp/matchupimages.tar.gz -C assets/
-          rm /tmp/matchupimages.tar.gz
-          echo "Hydrated $(find assets/matchupimages -type f | wc -l) asset files"
+          pnpm assets:hydrate -- --dir assets --lock config/matchup-assets-release.json
+          pnpm assets:validate -- --dir assets
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -279,7 +296,27 @@ jobs:
             org.opencontainers.image.version=${{ steps.version.outputs.version }}
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
 
-      - name: Build Docker image
+      - name: Build candidate Docker image before publication
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: false
+          load: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Verify every ordered lookup in the real candidate container
+        env:
+          CANDIDATE_IMAGE: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}-${{ steps.version.outputs.short_sha }}
+        run: |
+          docker run --rm --network none --workdir /tmp \
+            --entrypoint node \
+            --mount "type=bind,src=$PWD/scripts/verify-matchup-container.mjs,dst=/tmp/verify-matchup-container.mjs,readonly" \
+            "$CANDIDATE_IMAGE" /tmp/verify-matchup-container.mjs --app-root /app
+
+      - name: Publish verified Docker image
         id: build
         uses: docker/build-push-action@v7
         with:

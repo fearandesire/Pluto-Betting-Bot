@@ -111,3 +111,6 @@ docs/*
 yalc.lock
 .humanlayer/tasks/
 .humanlayer/workspace.local.json
+
+# Build-only recovered artwork cache; serving assets live in pinned R2 archives.
+scripts/matchup-assets/originals/*.png

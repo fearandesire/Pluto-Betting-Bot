@@ -1,169 +1,201 @@
 #!/usr/bin/env node
 import { spawnSync } from 'node:child_process'
-import fs from 'node:fs'
-import os from 'node:os'
+import fs from 'node:fs/promises'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import {
+	extractArchive,
+	packArchive,
+	sha256,
+	validateReleaseLock,
+} from './matchup-assets/archive.mjs'
+import { validateAssets } from './validate-matchup-assets.mjs'
 
-const BUCKET = 'pluto-assets'
-const KEY = 'matchupimages.tar.gz'
-const ASSET_DIR = path.join('assets', 'matchupimages')
-
-const command = process.argv[2]
-const dotEnvLocal = readDotEnvLocal()
-const accountId = process.env.R2_ACCOUNT_ID || dotEnvLocal.R2_ACCOUNT_ID
-const profile =
-	process.env.R2_AWS_PROFILE || dotEnvLocal.R2_AWS_PROFILE || 'pluto-r2'
-
-if (!['hydrate', 'upload'].includes(command)) {
-	fail('Usage: node scripts/assets-r2.js <hydrate|upload>')
-}
-
-if (!accountId) {
-	fail('Set R2_ACCOUNT_ID in the environment or .env.local')
-}
-
-const endpoint = `https://${accountId}.r2.cloudflarestorage.com`
-
-if (command === 'hydrate') {
-	await hydrate()
-} else {
-	await upload()
-}
-
-async function hydrate() {
-	const workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pluto-assets-'))
-	const archive = path.join(workDir, KEY)
-
-	try {
-		run('aws', [
-			's3',
-			'cp',
-			`s3://${BUCKET}/${KEY}`,
-			archive,
-			`--endpoint-url=${endpoint}`,
-			'--profile',
-			profile,
-		])
-
-		fs.mkdirSync('assets', { recursive: true })
-		run('tar', ['-xzf', archive, '-C', 'assets'])
-
-		console.log(`Hydrated ${countFiles(ASSET_DIR)} asset files`)
-	} finally {
-		fs.rmSync(workDir, { recursive: true, force: true })
-	}
-}
-
-async function upload() {
-	if (!fs.existsSync(ASSET_DIR) || !fs.statSync(ASSET_DIR).isDirectory()) {
-		fail('assets/matchupimages not found. Run from repo root.')
-	}
-
-	const workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pluto-assets-'))
-	const archive = path.join(workDir, KEY)
-
-	try {
-		console.log(`Packing ${ASSET_DIR} to ${archive}`)
-		run('tar', ['-czf', archive, '-C', 'assets', 'matchupimages'])
-
-		const count = countFiles(ASSET_DIR)
-		const size = fs.statSync(archive).size
-		console.log(
-			`Uploading ${count} files (${formatBytes(size)}) to s3://${BUCKET}/${KEY}`,
-		)
-
-		run('aws', [
-			's3',
-			'cp',
-			archive,
-			`s3://${BUCKET}/${KEY}`,
-			`--endpoint-url=${endpoint}`,
-			'--profile',
-			profile,
-		])
-
-		console.log('Done.')
-	} finally {
-		fs.rmSync(workDir, { recursive: true, force: true })
-	}
-}
-
-function run(cmd, args) {
-	const result = spawnSync(cmd, args, { stdio: 'inherit', shell: false })
-
-	if (result.error) {
-		fail(
-			`Failed to run ${cmd}: ${result.error.message}. Ensure ${cmd} is installed and available on PATH.`,
-		)
-	}
-
-	if (result.status !== 0) {
-		process.exit(result.status ?? 1)
-	}
-}
-
-function readDotEnvLocal() {
-	const file = '.env.local'
-
-	if (!fs.existsSync(file)) {
-		return {}
-	}
-
-	return Object.fromEntries(
-		fs
-			.readFileSync(file, 'utf8')
-			.split(/\r?\n/)
-			.map((line) => line.trim())
-			.filter((line) => line && !line.startsWith('#'))
-			.map((line) => {
-				const index = line.indexOf('=')
-				if (index === -1) {
-					return []
-				}
-
-				const key = line.slice(0, index).trim()
-				const value = line
-					.slice(index + 1)
-					.trim()
-					.replace(/^['"]|['"]$/g, '')
-				return [key, value]
-			})
-			.filter(([key]) => key),
+function aws(args) {
+	const endpoint =
+		process.env.R2_ENDPOINT ||
+		(process.env.R2_ACCOUNT_ID
+			? `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`
+			: null)
+	if (
+		!endpoint ||
+		!/^https:\/\/[a-zA-Z0-9.-]+\.r2\.cloudflarestorage\.com$/.test(endpoint)
 	)
+		throw new Error('R2 endpoint is not configured')
+	const profile = process.env.AWS_ACCESS_KEY_ID
+		? []
+		: ['--profile', process.env.R2_AWS_PROFILE || 'pluto-r2']
+	const result = spawnSync(
+		'aws',
+		[...args, '--endpoint-url', endpoint, ...profile],
+		{ encoding: 'utf8', maxBuffer: 1024 * 1024 },
+	)
+	if (result.error) throw new Error('AWS CLI is unavailable')
+	return result
 }
-
-function countFiles(dir) {
-	if (!fs.existsSync(dir)) {
-		return 0
+export async function hydrateArchive(archive, dir, lock) {
+	const extracted = await extractArchive(archive, dir, lock)
+	try {
+		const receipt = await validateAssets(extracted.stage)
+		if (
+			lock.objectKey !==
+			`matchupimages/releases/${lock.archiveSha256}/matchupimages.tar.gz`
+		)
+			throw new Error('release_key_mismatch')
+		const target = path.join(path.resolve(dir), 'matchupimages')
+		try {
+			await fs.lstat(target)
+			throw new Error(
+				'hydrate_destination_exists: use a fresh assets directory',
+			)
+		} catch (error) {
+			if (error.code !== 'ENOENT') throw error
+		}
+		await fs.rename(extracted.matchupRoot, target)
+		return receipt
+	} finally {
+		await fs.rm(extracted.stage, { recursive: true, force: true })
 	}
-
-	let count = 0
-	for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-		const child = path.join(dir, entry.name)
-		if (entry.isDirectory()) {
-			count += countFiles(child)
-		} else if (entry.isFile()) {
-			count += 1
+}
+export async function packRelease(dir, archivePath, lockPath) {
+	const receipt = await validateAssets(dir)
+	const archive = await packArchive(dir, archivePath)
+	const lock = {
+		schemaVersion: 1,
+		objectKey: `matchupimages/releases/${archive.archiveSha256}/matchupimages.tar.gz`,
+		archiveSha256: archive.archiveSha256,
+		manifestSchemaVersion: 1,
+	}
+	validateReleaseLock(lock)
+	await fs.mkdir(path.dirname(path.resolve(lockPath)), { recursive: true })
+	await fs.writeFile(lockPath, JSON.stringify(lock, null, 2) + '\n')
+	return { ...receipt, ...archive, objectKey: lock.objectKey }
+}
+export async function runAssetsCommand(args) {
+	const filtered = args.filter((arg) => arg !== '--'),
+		command = filtered.shift()
+	const flag = (name, fallback) => {
+		const index = filtered.indexOf(name)
+		if (index < 0) return fallback
+		if (!filtered[index + 1] || filtered[index + 1].startsWith('--'))
+			throw new Error(`Missing ${name} value`)
+		return filtered[index + 1]
+	}
+	const dir = flag('--dir', 'assets'),
+		lockPath = flag('--lock', 'config/matchup-assets-release.json'),
+		archivePath = flag('--archive', 'assets/matchup-release.tar.gz')
+	if (command === 'pack') return packRelease(dir, archivePath, lockPath)
+	if (!['hydrate', 'upload'].includes(command))
+		throw new Error(
+			'Usage: assets-r2.js <pack|hydrate|upload> --dir <assets-root> --archive <archive> --lock <release-lock>',
+		)
+	const lock = validateReleaseLock(
+		JSON.parse(await fs.readFile(lockPath, 'utf8')),
+	)
+	const bucketKey = `s3://pluto-assets/${lock.objectKey}`
+	if (command === 'hydrate') {
+		await fs.mkdir(path.dirname(path.resolve(dir)), { recursive: true })
+		const temporary = await fs.mkdtemp(
+			path.join(path.dirname(path.resolve(dir)), '.asset-download-'),
+		)
+		try {
+			const download = path.join(temporary, 'archive.tar.gz'),
+				result = aws([
+					's3',
+					'cp',
+					bucketKey,
+					download,
+					'--only-show-errors',
+				])
+			if (result.status !== 0)
+				throw new Error(
+					'R2 download failed (missing object or access failure); check configured access',
+				)
+			return hydrateArchive(await fs.readFile(download), dir, lock)
+		} finally {
+			await fs.rm(temporary, { recursive: true, force: true })
 		}
 	}
-
-	return count
-}
-
-function formatBytes(bytes) {
-	const units = ['B', 'KiB', 'MiB', 'GiB']
-	let value = bytes
-	let unit = units[0]
-
-	for (let i = 1; i < units.length && value >= 1024; i += 1) {
-		value /= 1024
-		unit = units[i]
+	const bytes = await fs.readFile(archivePath)
+	if (sha256(bytes) !== lock.archiveSha256)
+		throw new Error('archive_digest_mismatch')
+	// Verify full archive in a disposable directory before uploading.
+	const verification = await fs.mkdtemp(
+		path.join(path.dirname(path.resolve(dir)), '.asset-upload-check-'),
+	)
+	try {
+		await hydrateArchive(bytes, verification, lock)
+	} finally {
+		await fs.rm(verification, { recursive: true, force: true })
 	}
-
-	return `${value.toFixed(value >= 10 || unit === 'B' ? 0 : 1)} ${unit}`
+	const temporary = await fs.mkdtemp(
+		path.join(path.dirname(path.resolve(dir)), '.asset-readback-'),
+	)
+	try {
+		const existing = path.join(temporary, 'existing.tar.gz')
+		const read = aws([
+			's3api',
+			'get-object',
+			'--bucket',
+			'pluto-assets',
+			'--key',
+			lock.objectKey,
+			existing,
+		])
+		if (read.status === 0) {
+			if (sha256(await fs.readFile(existing)) !== lock.archiveSha256)
+				throw new Error('immutable_object_conflict')
+		} else {
+			// Only explicit object absence allows creation; auth/transport failures stop.
+			if (!/NoSuchKey|\(404\)/.test(read.stderr))
+				throw new Error(
+					'R2 object check failed; check configured access',
+				)
+			const put = aws([
+				's3api',
+				'put-object',
+				'--bucket',
+				'pluto-assets',
+				'--key',
+				lock.objectKey,
+				'--body',
+				path.resolve(archivePath),
+				'--if-none-match',
+				'*',
+			])
+			if (put.status !== 0) throw new Error('R2 immutable upload failed')
+		}
+		const readback = aws([
+			's3',
+			'cp',
+			bucketKey,
+			existing,
+			'--only-show-errors',
+		])
+		if (
+			readback.status !== 0 ||
+			sha256(await fs.readFile(existing)) !== lock.archiveSha256
+		)
+			throw new Error('R2 readback verification failed')
+		return { status: 'uploaded-and-readback-verified', ...lock }
+	} finally {
+		await fs.rm(temporary, { recursive: true, force: true })
+	}
 }
-
-function fail(message) {
-	console.error(`ERROR: ${message}`)
-	process.exit(1)
+if (
+	process.argv[1] &&
+	path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+) {
+	try {
+		console.log(
+			JSON.stringify(
+				await runAssetsCommand(process.argv.slice(2)),
+				null,
+				2,
+			),
+		)
+	} catch (error) {
+		console.error(`Asset release failed: ${error.message}`)
+		process.exitCode = 1
+	}
 }

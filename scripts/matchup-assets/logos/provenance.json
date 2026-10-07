@@ -1,0 +1,392 @@
+{
+  "schemaVersion": 1,
+  "sources": [
+    {
+      "sport": "nfl",
+      "teamId": "49ers",
+      "teamName": "San Francisco 49ers",
+      "url": "https://static.www.nfl.com/image/private/f_auto/league/dxibuyxbk0b9ua5ih9hn",
+      "discoveryUrl": "https://www.nfl.com/teams/",
+      "sourceLabel": "San Francisco 49ers",
+      "file": "nfl-49ers.png",
+      "sha256": "5739888562c5d7abf5404785084aeed7b8953850507305ebffd5cc800c81f123",
+      "bytes": 10646
+    },
+    {
+      "sport": "nfl",
+      "teamId": "bears",
+      "teamName": "Chicago Bears",
+      "url": "https://static.www.nfl.com/image/private/f_auto/league/ijrplti0kmzsyoaikhv1",
+      "discoveryUrl": "https://www.nfl.com/teams/",
+      "sourceLabel": "Chicago Bears",
+      "file": "nfl-bears.png",
+      "sha256": "45d154ee9902aa8745c52caf1fe360e90a940455977fdc62eaa3e471e983f4c1",
+      "bytes": 32943
+    },
+    {
+      "sport": "nfl",
+      "teamId": "bengals",
+      "teamName": "Cincinnati Bengals",
+      "url": "https://static.www.nfl.com/image/private/f_auto/league/okxpteoliyayufypqalq",
+      "discoveryUrl": "https://www.nfl.com/teams/",
+      "sourceLabel": "Cincinnati Bengals",
+      "file": "nfl-bengals.png",
+      "sha256": "549994085a0eb02cf8caeca147a2d5bf38b082d90f08b8ba9335188515b94fd9",
+      "bytes": 6717
+    },
+    {
+      "sport": "nfl",
+      "teamId": "bills",
+      "teamName": "Buffalo Bills",
+      "url": "https://static.www.nfl.com/image/private/f_auto/league/giphcy6ie9mxbnldntsf",
+      "discoveryUrl": "https://www.nfl.com/teams/",
+      "sourceLabel": "Buffalo Bills",
+      "file": "nfl-bills.png",
+      "sha256": "5ccbfc52f6e71617ba7071c19f546b289cb86292633f5b800d5e87491f9f2e5f",
+      "bytes": 7430
+    },
+    {
+      "sport": "nfl",
+      "teamId": "broncos",
+      "teamName": "Denver Broncos",
+      "url": "https://static.www.nfl.com/image/private/f_auto/league/t0p7m5cjdjy18rnzzqbx",
+      "discoveryUrl": "https://www.nfl.com/teams/",
+      "sourceLabel": "Denver Broncos",
+      "file": "nfl-broncos.png",
+      "sha256": "24843fd3f83e561a16addbc437262b236cf4fd9766fa1cbe70e2bb3e83d51922",
+      "bytes": 8402
+    },
+    {
+      "sport": "nfl",
+      "teamId": "browns",
+      "teamName": "Cleveland Browns",
+      "url": "https://static.www.nfl.com/image/upload/f_auto/league/bedyixmmjhszfcx5wv2l",
+      "discoveryUrl": "https://www.nfl.com/teams/",
+      "sourceLabel": "Cleveland Browns",
+      "file": "nfl-browns.png",
+      "sha256": "bab5e124b0078f12686cb14938c7dd9a60113ea5bffb09643720a11d446aa654",
+      "bytes": 15179
+    },
+    {
+      "sport": "nfl",
+      "teamId": "buccaneers",
+      "teamName": "Tampa Bay Buccaneers",
+      "url": "https://static.www.nfl.com/image/private/f_auto/league/v8uqiualryypwqgvwcih",
+      "discoveryUrl": "https://www.nfl.com/teams/",
+      "sourceLabel": "Tampa Bay Buccaneers",
+      "file": "nfl-buccaneers.png",
+      "sha256": "7fcd8a4fa95f167d6d35c93c3bbb4b9bad30bb516a4e6d351e1b3bed9f67d797",
+      "bytes": 27737
+    },
+    {
+      "sport": "nfl",
+      "teamId": "cardinals",
+      "teamName": "Arizona Cardinals",
+      "url": "https://static.www.nfl.com/image/private/f_auto/league/u9fltoslqdsyao8cpm0k",
+      "discoveryUrl": "https://www.nfl.com/teams/",
+      "sourceLabel": "Arizona Cardinals",
+      "file": "nfl-cardinals.png",
+      "sha256": "0397514112043f9098d98e056fe2b2f6505f5dbad312c25b389d88d6ba5ff0b2",
+      "bytes": 8480
+    },
+    {
+      "sport": "nfl",
+      "teamId": "chargers",
+      "teamName": "Los Angeles Chargers",
+      "url": "https://static.www.nfl.com/image/private/f_auto/league/dhfidtn8jrumakbogeu4",
+      "discoveryUrl": "https://www.nfl.com/teams/",
+      "sourceLabel": "Los Angeles Chargers",
+      "file": "nfl-chargers.png",
+      "sha256": "245d031a226ebd6288e668ab773d3949cf611d09a52fea20678cd66491346e1f",
+      "bytes": 6170
+    },
+    {
+      "sport": "nfl",
+      "teamId": "chiefs",
+      "teamName": "Kansas City Chiefs",
+      "url": "https://static.www.nfl.com/image/private/f_auto/league/ujshjqvmnxce8m4obmvs",
+      "discoveryUrl": "https://www.nfl.com/teams/",
+      "sourceLabel": "Kansas City Chiefs",
+      "file": "nfl-chiefs.png",
+      "sha256": "a952a09543e0d513b39b4d2e6f5b93eca35f7dc23503584d535b9218b2ff879d",
+      "bytes": 9166
+    },
+    {
+      "sport": "nfl",
+      "teamId": "colts",
+      "teamName": "Indianapolis Colts",
+      "url": "https://static.www.nfl.com/image/private/f_auto/league/ketwqeuschqzjsllbid5",
+      "discoveryUrl": "https://www.nfl.com/teams/",
+      "sourceLabel": "Indianapolis Colts",
+      "file": "nfl-colts.png",
+      "sha256": "af553e1e43660ca1866b65e816dc409668729d655e017ba3a8378a048134e7cc",
+      "bytes": 7303
+    },
+    {
+      "sport": "nfl",
+      "teamId": "commanders",
+      "teamName": "Washington Commanders",
+      "url": "https://static.www.nfl.com/image/private/f_auto/league/xymxwrxtyj9fhaemhdyd",
+      "discoveryUrl": "https://www.nfl.com/teams/",
+      "sourceLabel": "Washington Commanders",
+      "file": "nfl-commanders.png",
+      "sha256": "5a281e83ced28c65f4f67d5144486e96a6c2c8b1f43dc2ae0bed63fa45c84dfb",
+      "bytes": 26110
+    },
+    {
+      "sport": "nfl",
+      "teamId": "cowboys",
+      "teamName": "Dallas Cowboys",
+      "url": "https://static.www.nfl.com/image/private/f_auto/league/ieid8hoygzdlmzo0tnf6",
+      "discoveryUrl": "https://www.nfl.com/teams/",
+      "sourceLabel": "Dallas Cowboys",
+      "file": "nfl-cowboys.png",
+      "sha256": "10f3446972e7e47d8f7a8573e29e18b0107ef46507339c52681d88e8178925aa",
+      "bytes": 4893
+    },
+    {
+      "sport": "nfl",
+      "teamId": "dolphins",
+      "teamName": "Miami Dolphins",
+      "url": "https://static.www.nfl.com/image/private/f_auto/league/lits6p8ycthy9to70bnt",
+      "discoveryUrl": "https://www.nfl.com/teams/",
+      "sourceLabel": "Miami Dolphins",
+      "file": "nfl-dolphins.png",
+      "sha256": "684760b33b5fd77bd1805be55ba16f9cbd6ac68ed436ac98295e60b46f761341",
+      "bytes": 20435
+    },
+    {
+      "sport": "nfl",
+      "teamId": "eagles",
+      "teamName": "Philadelphia Eagles",
+      "url": "https://static.www.nfl.com/image/private/f_auto/league/puhrqgj71gobgdkdo6uq",
+      "discoveryUrl": "https://www.nfl.com/teams/",
+      "sourceLabel": "Philadelphia Eagles",
+      "file": "nfl-eagles.png",
+      "sha256": "475967a2e05931b537334196800ca64c06ad10c4d697122573ece21639547b81",
+      "bytes": 13805
+    },
+    {
+      "sport": "nfl",
+      "teamId": "falcons",
+      "teamName": "Atlanta Falcons",
+      "url": "https://static.www.nfl.com/image/private/f_auto/league/d8m7hzpsbrl6pnqht8op",
+      "discoveryUrl": "https://www.nfl.com/teams/",
+      "sourceLabel": "Atlanta Falcons",
+      "file": "nfl-falcons.png",
+      "sha256": "833ce57575ca583034ddb876f6e8fb444823f1424664139149288d3610bf4638",
+      "bytes": 8916
+    },
+    {
+      "sport": "nfl",
+      "teamId": "giants",
+      "teamName": "New York Giants",
+      "url": "https://static.www.nfl.com/image/private/f_auto/league/t6mhdmgizi6qhndh8b9p",
+      "discoveryUrl": "https://www.nfl.com/teams/",
+      "sourceLabel": "New York Giants",
+      "file": "nfl-giants.png",
+      "sha256": "76b979e5316a5381e157b6460ad2d46ef04a595408315a865ed595bed1ddfe92",
+      "bytes": 3524
+    },
+    {
+      "sport": "nfl",
+      "teamId": "jaguars",
+      "teamName": "Jacksonville Jaguars",
+      "url": "https://static.www.nfl.com/image/private/f_auto/league/qycbib6ivrm9dqaexryk",
+      "discoveryUrl": "https://www.nfl.com/teams/",
+      "sourceLabel": "Jacksonville Jaguars",
+      "file": "nfl-jaguars.png",
+      "sha256": "548a4bede71e0635e242138e957f13de5190f538d44e891f9813492ee8d172d5",
+      "bytes": 24787
+    },
+    {
+      "sport": "nfl",
+      "teamId": "jets",
+      "teamName": "New York Jets",
+      "url": "https://static.www.nfl.com/image/upload/f_auto/league/vdqo4iiufmdrimkaxslj",
+      "discoveryUrl": "https://www.nfl.com/teams/",
+      "sourceLabel": "New York Jets",
+      "file": "nfl-jets.png",
+      "sha256": "1486c6b6214208c7bdc9e4e3aeab9bf09510baa2fd175c86a54b3503940931a1",
+      "bytes": 2115
+    },
+    {
+      "sport": "nfl",
+      "teamId": "lions",
+      "teamName": "Detroit Lions",
+      "url": "https://static.www.nfl.com/image/private/f_auto/league/ocvxwnapdvwevupe4tpr",
+      "discoveryUrl": "https://www.nfl.com/teams/",
+      "sourceLabel": "Detroit Lions",
+      "file": "nfl-lions.png",
+      "sha256": "69704ce45dd8be79d5910dfff6096399387cd11e0ef6409d87d49aed7646e5e3",
+      "bytes": 11070
+    },
+    {
+      "sport": "nfl",
+      "teamId": "packers",
+      "teamName": "Green Bay Packers",
+      "url": "https://static.www.nfl.com/image/private/f_auto/league/gppfvr7n8gljgjaqux2x",
+      "discoveryUrl": "https://www.nfl.com/teams/",
+      "sourceLabel": "Green Bay Packers",
+      "file": "nfl-packers.png",
+      "sha256": "e7b261d7035e19c89d53a72329a2fb58ba6c7fb8b6e91d30542e5078587785fc",
+      "bytes": 6458
+    },
+    {
+      "sport": "nfl",
+      "teamId": "panthers",
+      "teamName": "Carolina Panthers",
+      "url": "https://static.www.nfl.com/image/private/f_auto/league/ervfzgrqdpnc7lh5gqwq",
+      "discoveryUrl": "https://www.nfl.com/teams/",
+      "sourceLabel": "Carolina Panthers",
+      "file": "nfl-panthers.png",
+      "sha256": "d89b62db5b8be23c47bd6917c41619be3115ab621ddd585aad8f3e3d6fff2605",
+      "bytes": 8127
+    },
+    {
+      "sport": "nfl",
+      "teamId": "patriots",
+      "teamName": "New England Patriots",
+      "url": "https://static.www.nfl.com/image/private/f_auto/league/moyfxx3dq5pio4aiftnc",
+      "discoveryUrl": "https://www.nfl.com/teams/",
+      "sourceLabel": "New England Patriots",
+      "file": "nfl-patriots.png",
+      "sha256": "384fa570b0a32163bf23f846c6150513381fa5c3b31260b4364928f8598334f4",
+      "bytes": 5938
+    },
+    {
+      "sport": "nfl",
+      "teamId": "raiders",
+      "teamName": "Las Vegas Raiders",
+      "url": "https://static.www.nfl.com/image/private/f_auto/league/gzcojbzcyjgubgyb6xf2",
+      "discoveryUrl": "https://www.nfl.com/teams/",
+      "sourceLabel": "Las Vegas Raiders",
+      "file": "nfl-raiders.png",
+      "sha256": "d3a95e10a0ab521e78375c003d3c2638f6a4ba0209e3b0277d412d19c512a0c2",
+      "bytes": 11470
+    },
+    {
+      "sport": "nfl",
+      "teamId": "rams",
+      "teamName": "Los Angeles Rams",
+      "url": "https://static.www.nfl.com/image/upload/f_auto/league/ssfh7d2tbkbltexf0xqg",
+      "discoveryUrl": "https://www.nfl.com/teams/",
+      "sourceLabel": "Los Angeles Rams",
+      "file": "nfl-rams.png",
+      "sha256": "9715fa493f9e3c63ea13c53faaba1841c2f2e3fda35adfa6165ee612b4bd7ed5",
+      "bytes": 11160
+    },
+    {
+      "sport": "nfl",
+      "teamId": "ravens",
+      "teamName": "Baltimore Ravens",
+      "url": "https://static.www.nfl.com/image/private/f_auto/league/ucsdijmddsqcj1i9tddd",
+      "discoveryUrl": "https://www.nfl.com/teams/",
+      "sourceLabel": "Baltimore Ravens",
+      "file": "nfl-ravens.png",
+      "sha256": "83340023b046c489872d3b0ab2f27e6f0185c5670861df6988fa4e71d2620d32",
+      "bytes": 17832
+    },
+    {
+      "sport": "nfl",
+      "teamId": "saints",
+      "teamName": "New Orleans Saints",
+      "url": "https://static.www.nfl.com/image/private/f_auto/league/grhjkahghjkk17v43hdx",
+      "discoveryUrl": "https://www.nfl.com/teams/",
+      "sourceLabel": "New Orleans Saints",
+      "file": "nfl-saints.png",
+      "sha256": "21d2cb74ce71fdb421c6ba4d6fa00834b2f9c7d5c70baa27f45dd2264634ae06",
+      "bytes": 11618
+    },
+    {
+      "sport": "nfl",
+      "teamId": "seahawks",
+      "teamName": "Seattle Seahawks",
+      "url": "https://static.www.nfl.com/image/private/f_auto/league/gcytzwpjdzbpwnwxincg",
+      "discoveryUrl": "https://www.nfl.com/teams/",
+      "sourceLabel": "Seattle Seahawks",
+      "file": "nfl-seahawks.png",
+      "sha256": "a1ec3888a32fe32195816d469144b326686efd8b9c9c72fdefca4fadae4def53",
+      "bytes": 5725
+    },
+    {
+      "sport": "nfl",
+      "teamId": "steelers",
+      "teamName": "Pittsburgh Steelers",
+      "url": "https://static.www.nfl.com/image/private/f_auto/league/xujg9t3t4u5nmjgr54wx",
+      "discoveryUrl": "https://www.nfl.com/teams/",
+      "sourceLabel": "Pittsburgh Steelers",
+      "file": "nfl-steelers.png",
+      "sha256": "91c5074eee6042747271946dfd7695b6510a9cd2b0feda106a53dd3fa173effd",
+      "bytes": 10589
+    },
+    {
+      "sport": "nfl",
+      "teamId": "texans",
+      "teamName": "Houston Texans",
+      "url": "https://static.www.nfl.com/image/upload/f_auto/league/u6camnphqvjc6mku6u3c",
+      "discoveryUrl": "https://www.nfl.com/teams/",
+      "sourceLabel": "Houston Texans",
+      "file": "nfl-texans.png",
+      "sha256": "88eda19f5dfa5d769d190736617b9b0f8927145f526733f63d350a5909b043f0",
+      "bytes": 7192
+    },
+    {
+      "sport": "nfl",
+      "teamId": "titans",
+      "teamName": "Tennessee Titans",
+      "url": "https://static.www.nfl.com/image/upload/f_auto/league/wxdf3ixx9hqg4k9bw5ju",
+      "discoveryUrl": "https://www.nfl.com/teams/",
+      "sourceLabel": "Tennessee Titans",
+      "file": "nfl-titans.png",
+      "sha256": "5a8b2c6bee57b06afb9f2984c2edfe07074e9a3bcba426a352d9479e0b6fc891",
+      "bytes": 18407
+    },
+    {
+      "sport": "nfl",
+      "teamId": "vikings",
+      "teamName": "Minnesota Vikings",
+      "url": "https://static.www.nfl.com/image/private/f_auto/league/teguylrnqqmfcwxvcmmz",
+      "discoveryUrl": "https://www.nfl.com/teams/",
+      "sourceLabel": "Minnesota Vikings",
+      "file": "nfl-vikings.png",
+      "sha256": "d2a989b71f3bf0d11a6295149c5c62938f569b5d9804de26cda270d23dfbf3da",
+      "bytes": 28342
+    },
+    {
+      "sport": "nba",
+      "teamId": "blazers",
+      "teamName": "Portland Trail Blazers",
+      "url": "https://cdn.nba.com/logos/nba/1610612757/primary/L/logo.svg",
+      "discoveryUrl": "https://www.nba.com/teams",
+      "sourceLabel": "Portland Trail Blazers Logo",
+      "file": "nba-blazers.svg",
+      "sha256": "65fbdafe950a7064f5303a1a45942b1519061cf9f56681e304763c81f87ca719",
+      "bytes": 2051
+    },
+    {
+      "sport": "nba",
+      "teamId": "hawks",
+      "teamName": "Atlanta Hawks",
+      "url": "https://cdn.nba.com/logos/nba/1610612737/primary/L/logo.svg",
+      "discoveryUrl": "https://www.nba.com/teams",
+      "sourceLabel": "Atlanta Hawks Logo",
+      "file": "nba-hawks.svg",
+      "sha256": "efe7639e6daac1a103c13a1c3cc0b2d00979397ab70333e9d8ded492ea250504",
+      "bytes": 1882
+    }
+  ],
+  "discoveryNotes": [
+    {
+      "url": "https://www.nba.com/teams",
+      "method": "web browser source links",
+      "result": "official labeled CDN logo links observed",
+      "priorAttempt": "Python urllib page fetch returned HTTP 403; no alternate identity or authentication was attempted."
+    },
+    {
+      "url": "https://www.nfl.com/teams/",
+      "method": "public official page HTML",
+      "result": "all 32 exact team-name alt labels mapped to official CDN asset URLs"
+    }
+  ]
+}

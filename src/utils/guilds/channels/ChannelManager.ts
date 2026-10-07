@@ -1,7 +1,4 @@
 import { createHash } from 'node:crypto'
-import fs from 'node:fs/promises'
-import path, { dirname } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import type { SportsServing } from '@pluto-khronos/types'
 import {
 	AttachmentBuilder,
@@ -39,6 +36,7 @@ import {
 	type CreatedChannel,
 } from './ChannelCreationWorkflow.js'
 import { findExistingGameChannel } from './channel-reconciliation.js'
+import { resolveMatchupImage } from './matchup-image-resolver.js'
 
 /**
  * Handle interactions between Pluto API & Discord user interface/interactions
@@ -170,10 +168,11 @@ export default class ChannelManager {
 			{ sport: channel.sport.toLowerCase(), full: true },
 		)
 		this.validateFavoredTeamInfo(favoredTeamInfo)
-		const matchImg = await this.fetchVsImg(
-			channel.channelname,
-			channel.sport,
-		)
+		const matchImg = await resolveMatchupImage({
+			sport: channel.sport,
+			awayTeam: channel.away_team,
+			homeTeam: channel.home_team,
+		})
 		const messageOptions = await this.prepareGameMessage(channel, guild, {
 			favoredTeamInfo,
 			matchImg,
@@ -219,10 +218,11 @@ export default class ChannelManager {
 			{ sport: channel.sport.toLowerCase(), full: true },
 		)
 		this.validateFavoredTeamInfo(favoredTeamInfo)
-		const matchImg = await this.fetchVsImg(
-			channel.channelname,
-			channel.sport,
-		)
+		const matchImg = await resolveMatchupImage({
+			sport: channel.sport,
+			awayTeam: channel.away_team,
+			homeTeam: channel.home_team,
+		})
 		const messageOptions = await this.prepareGameMessage(channel, guild, {
 			favoredTeamInfo,
 			matchImg,
@@ -347,46 +347,6 @@ export default class ChannelManager {
 		}
 		for (const gameChan of gameChans) {
 			await gameChan.delete()
-		}
-	}
-
-	private async fetchVsImg(matchup: string, sport: string) {
-		const matchupFileName = `${matchup
-			.replace('at', 'vs')
-			.replace(/-/g, '_')
-			.split('_')
-			.map((part) =>
-				part
-					.toLowerCase()
-					.replace(/\b[a-z]/g, (char) => char.toUpperCase()),
-			)
-			.join('_')}.jpg`
-
-		// Ensure "vs" is always lowercase
-		const finalMatchupFileName = matchupFileName.replace('Vs', 'vs')
-
-		const __filename = fileURLToPath(import.meta.url)
-		const __dirname = dirname(__filename)
-		try {
-			// Assuming the base directory is one level up from where your script is located
-			const baseDir = path.resolve(__dirname, '../../../../') // Adjust this path based on your actual project structure
-			const imagePath = path.join(
-				baseDir,
-				'assets',
-				'matchupimages',
-				sport,
-				finalMatchupFileName,
-			)
-
-			// Read the image file as a binary buffer
-			const img = await fs.readFile(imagePath)
-			if (!img) {
-				return null
-			}
-			return img
-		} catch (error) {
-			console.error(error)
-			return null
 		}
 	}
 }

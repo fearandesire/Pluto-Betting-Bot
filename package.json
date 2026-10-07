@@ -26,14 +26,19 @@
 		"dvault-prod": "npx dotenv-vault@latest push production",
 		"release": "release-it",
 		"docker:ci": "docker-compose build && docker-compose push",
-		"assets:upload": "bash scripts/upload-assets.sh",
+		"assets:upload": "node scripts/assets-r2.js upload",
 		"prepare": "husky",
 		"typecheck": "tsc --noEmit",
 		"test": "vitest",
 		"test:run": "vitest run",
 		"test:coverage": "vitest run --coverage",
 		"dev:link-khronos": "yalc add @pluto-khronos/api-client && yalc add @pluto-khronos/types && pnpm install",
-		"dev:unlink-khronos": "yalc remove @pluto-khronos/api-client && yalc remove @pluto-khronos/types && pnpm install"
+		"dev:unlink-khronos": "yalc remove @pluto-khronos/api-client && yalc remove @pluto-khronos/types && pnpm install",
+		"assets:registry": "node scripts/matchup-assets/generate-registry.mjs",
+		"assets:build": "node scripts/matchup-assets/build.mjs",
+		"assets:validate": "node scripts/validate-matchup-assets.mjs",
+		"assets:pack": "node scripts/assets-r2.js pack",
+		"assets:hydrate": "node scripts/assets-r2.js hydrate"
 	},
 	"lint-staged": {
 		"*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
@@ -165,6 +170,7 @@
 		"release-it": "^20.0.1",
 		"release-it-changelogen": "^0.1.0",
 		"rimraf": "^6.1.3",
+		"sharp": "0.35.5",
 		"ts-jest": "^29.4.14",
 		"ts-node": "11.0.0-beta.1",
 		"tsc-alias": "^1.9.5",

@@ -21,5 +21,8 @@ backups
 .pnpm-store
 pnpm-debug.log
 
-!assets/*
+# Include only the validated serving tree, never local audit/staging evidence.
+assets/*
+!assets/matchupimages/
+!assets/matchupimages/**
 generated/
