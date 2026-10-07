@@ -57,6 +57,13 @@
 		"includes": [
 			"src/**/*.ts",
 			"scripts/cv2/**/*.ts",
+			"scripts/matchup-assets/**/*.mjs",
+			"scripts/matchup-assets/**/*.test.ts",
+			"scripts/assets-r2.js",
+			"scripts/assets-r2.test.ts",
+			"scripts/validate-matchup-assets.mjs",
+			"scripts/validate-matchup-assets.test.ts",
+			"scripts/verify-matchup-container.mjs",
 			"!*.env.d.ts",
 			"!src/env.d.ts",
 			"!package.json",

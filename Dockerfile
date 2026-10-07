@@ -39,7 +39,7 @@ WORKDIR /app
 COPY --from=builder /app/package.json /app/pnpm-lock.yaml ./
 COPY --from=builder /app/dist ./dist
 # Copy Assets
-COPY --from=builder /app/assets ./assets
+COPY --from=builder /app/assets/matchupimages ./assets/matchupimages
 
 # Install production dependencies (skip scripts to avoid husky prepare hook)
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --force --ignore-scripts
