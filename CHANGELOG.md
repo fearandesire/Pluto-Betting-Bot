@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.13.6](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.13.5...v4.13.6) (2026-10-07)
+
+
+### Bug Fixes
+
+* repair matchup artwork and pin verified asset releases ([#682](https://github.com/fearandesire/Pluto-Betting-Bot/issues/682)) ([0b81609](https://github.com/fearandesire/Pluto-Betting-Bot/commit/0b8160951491b03845511be3e57bf7b02874ced6))
+
 ## [4.13.5](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.13.4...v4.13.5) (2026-10-02)
 
 
