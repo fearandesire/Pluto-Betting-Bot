@@ -4,6 +4,6 @@ src/openapi/** linguist-generated=true
 *.json text eol=lf
 
 # Swagger spec - minimize diff noise and mark as generated
-Khronos-Swagger-Spec-v1.json -diff linguist-generated=true 
+Khronos-Swagger-Spec-v1.json -diff linguist-generated=true
 # Preserve original logo bytes for SHA-256 provenance checks.
-scripts/matchup-assets/logos/*.svg -text
+scripts/matchup-assets/logos/*.svg -text -diff
