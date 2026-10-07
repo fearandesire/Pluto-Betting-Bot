@@ -1,6 +1,6 @@
 // Generated from scripts/matchup-assets/teams.json. Run assets:registry after edits.
 export const TEAMS_REVISION =
-	'1b7b38605191843c985179e3fc882312dbed3748dfa56ca4c36b15a1ab01bd6c'
+	'0c782ca463828e97e8c08523b6b2fa40e5ecc90c4074a4981b8b02ef520b6841'
 export const TEAM_REGISTRY = {
 	nba: [
 		{
