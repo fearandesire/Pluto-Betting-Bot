@@ -254,7 +254,7 @@ required when something is red.
 
 **Auth (App token).** The git-writing steps in `khronos-client-update.yml` and
 `release.yml` authenticate with a short-lived token minted from the
-`fnx-cascade-bot` GitHub App (`CASCADE_APP_ID` / `CASCADE_APP_PRIVATE_KEY`),
+`release-relay` GitHub App (`CASCADE_APP_ID` / `CASCADE_APP_PRIVATE_KEY`),
 replacing `PLUTO_BOT_PAT`. App-token-created PRs and releases still fire the
 downstream `pull_request` / `release: published` events (unlike `GITHUB_TOKEN`),
 so the cascade keeps flowing. The GHCR image push uses `GITHUB_TOKEN` with
