@@ -119,8 +119,34 @@ describe('GuildModeratorLookupService', () => {
 				permissions: ['BAN_MEMBERS'],
 			},
 		])
-		expect(configuredGuild.members.fetch).toHaveBeenCalledWith(USER_ID)
+		expect(configuredGuild.members.fetch).toHaveBeenCalledWith({
+			user: USER_ID,
+			force: true,
+		})
 		expect(unconfiguredGuild.members.fetch).not.toHaveBeenCalled()
+	})
+
+	it('does not grant permissions from stale member cache after member events are disabled', async () => {
+		const configuredGuild = guild({
+			id: '111111111111111111',
+			name: 'Revoked moderator',
+		})
+		configuredGuild.members.fetch = vi.fn(async (input) => ({
+			permissions: {
+				has: () => !(input as unknown as { force?: boolean }).force,
+			},
+		}))
+		guildCache.set(configuredGuild.id, configuredGuild)
+		getAllGuilds.mockResolvedValue([
+			{ guild_id: configuredGuild.id, config: [{}] },
+		])
+		expect(
+			(await new GuildModeratorLookupService().lookup(USER_ID)).guilds,
+		).toEqual([])
+		expect(configuredGuild.members.fetch).toHaveBeenCalledWith({
+			user: USER_ID,
+			force: true,
+		})
 	})
 
 	it('returns an empty list for a non-moderator', async () => {

@@ -18,19 +18,17 @@ const SapDiscClient = new SapphireClient({
 		GatewayIntentBits.DirectMessageReactions,
 		GatewayIntentBits.DirectMessages,
 		GatewayIntentBits.GuildExpressions,
-		GatewayIntentBits.GuildMembers,
 		GatewayIntentBits.GuildMessageReactions,
 		GatewayIntentBits.GuildMessages,
 		GatewayIntentBits.Guilds,
 		GatewayIntentBits.GuildVoiceStates,
-		GatewayIntentBits.MessageContent,
 	],
 	partials: [Partials.Channel],
 	logger: {
 		level: LogLevel.Debug,
 	},
 	typing: true,
-	loadMessageCommandListeners: true,
+	loadMessageCommandListeners: false,
 })
 
 const gatewayMonitor = new GatewayConnectivityMonitor({
