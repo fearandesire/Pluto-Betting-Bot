@@ -7,7 +7,6 @@ import {
 } from '@pluto-khronos/api-client'
 import type { CommandInteraction, GuildMember } from 'discord.js'
 import _ from 'lodash'
-import { SapDiscClient } from '../../../../index.js'
 import { profileDescription } from '../../../../lib/discord/builders/account.js'
 import { ApiModules } from '../../../../lib/interfaces/api/api.interface.js'
 import { supportMessage } from '../../../../lib/PlutoConfig.js'
@@ -15,7 +14,7 @@ import { ErrorEmbeds } from '../../../common/errors/global.js'
 import { isMockEnabled, MockBackend } from '../../../dev/index.js'
 import PaginationUtilities from '../../../embeds/pagination-utilities.js'
 import EmbedsSuccess from '../../../embeds/template/success-template.js'
-import GuildUtils from '../../../guilds/GuildUtils.js'
+import { resolveLeaderboardMembers } from '../../../guilds/member-resolver.js'
 import { handleNewUser } from '../../common/handleNewUser.js'
 import { plutoWelcomeMsg } from '../../common/interfaces/kh-pluto/kh-pluto.interface.js'
 import MoneyFormatter from '../../common/money-formatting/money-format.js'
@@ -108,7 +107,7 @@ export class AccountManager {
 			const descStr = `Your balance is **\`${formattedBalance}\`**`
 			const embed = await EmbedsSuccess.sv1(
 				interaction,
-				'💰 Processed Daily Claim',
+				'ðŸ’° Processed Daily Claim',
 				descStr,
 			)
 			return interaction.editReply({ embeds: [embed] })
@@ -126,19 +125,23 @@ export class AccountManager {
 			handleNewUser(res)
 			const { balance, level, tier, userid, isNewUser } = res
 			if (interaction.guild) {
-				const guildUtils = new GuildUtils()
-				const guild = await guildUtils.getGuild(interaction.guild.id)
-				if (!guild) {
-					throw new Error('Guild not identified from interaction.')
-				}
-				const user: GuildMember | undefined = await guildUtils.getUser(
-					guild,
-					userid,
-				)
-				const userAvatar = user?.displayAvatarURL()
-				if (!userAvatar) {
-					throw new Error('User avatar not found.')
-				}
+				const member =
+					interaction.guild.members.cache.get(userid) ??
+					(await interaction.guild.members
+						.fetch(userid)
+						.catch(() => null))
+				const user =
+					member?.user ??
+					(userid === interaction.user.id
+						? interaction.user
+						: await interaction.client.users
+								.fetch(userid)
+								.catch(() => null))
+				const displayName =
+					member?.displayName ??
+					user?.globalName ??
+					user?.username ??
+					userid
 				const formattedBalance = MoneyFormatter.toUSD(balance)
 				const Tier = _.upperFirst(tier)
 				const descStr = profileDescription({
@@ -149,7 +152,7 @@ export class AccountManager {
 				})
 				const embed = await EmbedsSuccess.sv1(
 					interaction,
-					`${user?.displayName}'s Profile`,
+					`${displayName}'s Profile`,
 					descStr,
 				)
 				return interaction.editReply({ embeds: [embed] })
@@ -170,17 +173,16 @@ export class AccountManager {
 			if (!currentGuild) {
 				throw new Error('Guild not identified from interaction.')
 			}
-			const guild = await SapDiscClient.guilds.fetch(interaction.guild.id)
+			const guild = currentGuild
 			// Resolve current dsicord usernames
 			const lbData = res.map((user: any) => ({
 				userid: user.id,
 				balance: `${Number(user.balance).toFixed(2)}`,
 			}))
-			// Pre-fetch all members
-			const lbUserIds = lbData.map((entry: any) => entry.userid)
-			const lbMembers = await guild.members.fetch({
-				user: lbUserIds,
-			})
+			const lbMembers = await resolveLeaderboardMembers(
+				guild,
+				lbData.map((entry) => entry.userid),
+			)
 			// Map lbData to include Discord member details
 			const formattedLbData = lbData.map((entry: any) => {
 				const member: GuildMember | undefined = lbMembers.get(

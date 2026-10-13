@@ -74,7 +74,10 @@ async function getConfiguredDiscordGuilds(): Promise<ModerationGuild[]> {
 			ownerId: discordGuild.ownerId,
 			members: {
 				fetch: async (userId: string) =>
-					await discordGuild.members.fetch(userId),
+					await discordGuild.members.fetch({
+						user: userId,
+						force: true,
+					}),
 			},
 		}
 	})

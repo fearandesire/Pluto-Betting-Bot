@@ -315,3 +315,7 @@ If you find Pluto valuable, consider supporting its development:
 <a href="#top">Back to Top</a>
 
 </div>
+
+## Discord member access
+
+No Members or Message Content intents are requested. Slash commands and reaction pagination remain supported. Leaderboard names use cached members or single-member REST requests, with at most four concurrent requests and fifty uncached lookups per leaderboard; other entries retain mentions. Profiles fall back to the Discord user name or account ID when member resolution fails.
