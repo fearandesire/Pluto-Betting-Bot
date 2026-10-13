@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.13.9](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.13.8...v4.13.9) (2026-10-13)
+
+
+### Bug Fixes
+
+* **discord:** recover gateway without privileged intents ([#709](https://github.com/fearandesire/Pluto-Betting-Bot/issues/709)) ([9c3eaae](https://github.com/fearandesire/Pluto-Betting-Bot/commit/9c3eaae598e8f216fcba8801d7b3f1f3325e690c))
+
 ## [4.13.8](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.13.7...v4.13.8) (2026-10-09)
 
 
