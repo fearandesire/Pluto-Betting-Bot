@@ -21,7 +21,7 @@
 #      because auto-merge being armed is still an in-flight state.
 #
 # All git-writing steps (checkout, create-pull-request, gh pr merge) use a
-# short-lived GitHub App token minted from the `fnx-cascade-bot` App
+# short-lived GitHub App token minted from the `release-relay` App
 # (CASCADE_APP_ID / CASCADE_APP_PRIVATE_KEY) instead of PLUTO_BOT_PAT. An
 # App-token-created PR still fires normal `pull_request` events, so the
 # required checks run and gate the auto-merge.
