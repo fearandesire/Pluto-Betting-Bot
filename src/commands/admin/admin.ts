@@ -4,6 +4,11 @@ import { InteractionContextType, PermissionFlagsBits } from 'discord.js'
 import { AdminPredictionsHandler } from '../../utils/admin-handlers/admin-predictions-handler.js'
 import { AdminPropsHandler } from '../../utils/admin-handlers/admin-props-handler.js'
 
+// Autocomplete convention: see docs/architecture/decisions/002-autocomplete-provider-pattern.md.
+// The `prop_id` option (and other prop autocompletes) follow the thin-adapter pattern: the
+// adapter extracts context and delegates all suggestion logic to PropSuggestionProvider
+// (no inline cache lookups, API calls, or filtering in the handler/listener).
+
 /**
  * Admin command for managing predictions and props across the server
  *
