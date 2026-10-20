@@ -153,4 +153,28 @@ describe('ChannelManager matchup attachments', () => {
 			})
 		}
 	}
+	it('renders a schedule-only card with its normal image and no market placeholders', async () => {
+		mocks.resolve.mockResolvedValue(fixture.jpeg)
+		const { matchOdds: _matchOdds, ...core } = channel
+		const message = await new ChannelManager(
+			{} as any,
+		).preparePresentationMessage(
+			{
+				...core,
+				created: false,
+				sport: 'nfl',
+				status: 'scheduled',
+				gametime: new Date('2099-10-20T23:00:00Z'),
+				betting: { state: 'unavailable', reason: 'no_markets' },
+			},
+			guild as any,
+		)
+		const json = (message.embeds![0] as EmbedBuilder).toJSON()
+		expect(json.description).toMatch(/^# Patriots @ Commanders\n\n<t:/)
+		expect(json.description).not.toMatch(
+			/favorite|bets|unavailable|null|undefined/i,
+		)
+		expect(json.image?.url).toBe('attachment://match.jpg')
+		expect(message.files).toHaveLength(1)
+	})
 })

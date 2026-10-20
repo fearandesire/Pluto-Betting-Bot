@@ -1,4 +1,12 @@
 import type { ChannelCreationEvent } from '@pluto-khronos/types'
+import { createChannelPresentationService } from '../../guilds/channels/ChannelPresentationService.js'
+import {
+	type ChannelCreationEventV2,
+	channelCreationEventV2Schema,
+} from '../data/channel-presentation-contract.js'
+
+type CreationJob = ChannelCreationEvent | ChannelCreationEventV2
+
 import { channelCreationEventSchema } from '@pluto-khronos/types'
 import { type Job, Queue, QueueEvents, Worker } from 'bullmq'
 import { registerShutdownQueue } from '../../../lib/startup/shutdown-registry.js'
@@ -17,8 +25,8 @@ interface ChannelCreationResult {
 const CHANNEL_CREATION_BACKOFF_DELAY = 1000
 
 export class ChannelCreationQueue {
-	public queue: Queue<ChannelCreationEvent, ChannelCreationResult>
-	private worker: Worker<ChannelCreationEvent, ChannelCreationResult>
+	public queue: Queue<CreationJob, ChannelCreationResult>
+	private worker: Worker<CreationJob, ChannelCreationResult>
 	private queueEvents: QueueEvents
 	private static readonly MAX_ATTEMPTS = 3
 	private static readonly DEFAULT_DRAIN_TIMEOUT_MS = 30_000
@@ -29,7 +37,7 @@ export class ChannelCreationQueue {
 		const connection = REDIS_CONFIG
 
 		// centralize defaults here
-		this.queue = new Queue<ChannelCreationEvent, ChannelCreationResult>(
+		this.queue = new Queue<CreationJob, ChannelCreationResult>(
 			'channel-creation',
 			{
 				connection,
@@ -51,7 +59,7 @@ export class ChannelCreationQueue {
 		this.queueEvents = new QueueEvents('channel-creation', { connection })
 
 		// Worker with explicit lockDuration
-		this.worker = new Worker<ChannelCreationEvent, ChannelCreationResult>(
+		this.worker = new Worker<CreationJob, ChannelCreationResult>(
 			'channel-creation',
 			async (job) => this.runJob(job),
 			{
@@ -92,7 +100,7 @@ export class ChannelCreationQueue {
 
 		this.worker.on(
 			'completed',
-			async (job: Job<ChannelCreationEvent, ChannelCreationResult>) => {
+			async (job: Job<CreationJob, ChannelCreationResult>) => {
 				const result = job.returnvalue
 				logger.info({
 					message: 'Job completed',
@@ -110,7 +118,7 @@ export class ChannelCreationQueue {
 
 		this.worker.on(
 			'failed',
-			(job: Job<ChannelCreationEvent> | undefined, err: Error) => {
+			(job: Job<CreationJob> | undefined, err: Error) => {
 				if (!job) {
 					logger.error({
 						message: 'Channel creation failed - job undefined',
@@ -182,7 +190,7 @@ export class ChannelCreationQueue {
 	}
 
 	private async processJob(
-		job: Job<ChannelCreationEvent>,
+		job: Job<CreationJob>,
 	): Promise<ChannelCreationResult> {
 		logger.debug({
 			message: 'Channel creation job received - full payload',
@@ -199,7 +207,12 @@ export class ChannelCreationQueue {
 			},
 		})
 
-		const validation = channelCreationEventSchema.safeParse(job.data)
+		if ('schemaVersion' in job.data && job.data.schemaVersion !== 2)
+			throw new Error('Unsupported channel creation schema')
+		const validation =
+			'schemaVersion' in job.data && job.data.schemaVersion === 2
+				? channelCreationEventV2Schema.safeParse(job.data)
+				: channelCreationEventSchema.safeParse(job.data)
 		if (!validation.success) {
 			logger.error({
 				message: 'Invalid job data received',
@@ -224,11 +237,30 @@ export class ChannelCreationQueue {
 		}
 
 		try {
+			if (
+				'schemaVersion' in validation.data &&
+				validation.data.schemaVersion === 2
+			) {
+				await createChannelPresentationService().apply(
+					guild.guildId,
+					channel.id,
+					true,
+				)
+				return {
+					success: true,
+					guildId: guild.guildId,
+					channelId: channel.id,
+				}
+			}
 			const channelManager = new ChannelManager()
 
 			// Idempotency check inside ChannelManager.processChannels
 			await channelManager.processChannels({
-				channels: [channel as Required<typeof channel>],
+				channels: [
+					channel as ChannelCreationEvent['channel'] & {
+						gametime: Date
+					},
+				],
 				guilds: [guild],
 			})
 
@@ -263,7 +295,7 @@ export class ChannelCreationQueue {
 	private activeJobs = new Set<Promise<ChannelCreationResult>>()
 
 	private async runJob(
-		job: Job<ChannelCreationEvent>,
+		job: Job<CreationJob>,
 	): Promise<ChannelCreationResult> {
 		const activeJob = this.processJob(job)
 		this.activeJobs.add(activeJob)

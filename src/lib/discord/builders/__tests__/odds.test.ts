@@ -70,4 +70,41 @@ describe('odds builders (classic, pre-migration)', () => {
 			},
 		})
 	})
+	it('omits all betting and favorite copy on an unpriced game card', () => {
+		const card = matchPostEmbed(
+			{
+				home_team: 'Detroit Pistons',
+				homeTeamShortName: 'Pistons',
+				away_team: 'Boston Celtics',
+				awayTeamShortName: 'Celtics',
+				bettingChanId: '300',
+				header: '',
+				sport: 'nba',
+				bettingAvailable: false,
+				gametime: new Date('2026-10-20T23:00:00Z'),
+			},
+			undefined,
+		).toJSON()
+		expect(card.description).toBe('# Celtics @ Pistons\n\n<t:1792537200:F>')
+		expect(JSON.stringify(card)).not.toMatch(
+			/null|undefined|unavailable|favorite|Place your bets/i,
+		)
+	})
+	it('does not advertise betting when a suspended card still has a former favorite', () => {
+		const card = matchPostEmbed(
+			{
+				home_team: 'Detroit Pistons',
+				homeTeamShortName: 'Pistons',
+				away_team: 'Boston Celtics',
+				awayTeamShortName: 'Celtics',
+				favored: 'Boston Celtics',
+				bettingAvailable: false,
+				bettingChanId: '300',
+				header: '',
+				sport: 'nba',
+			},
+			undefined,
+		).toJSON()
+		expect(card.description).toBe('# Celtics @ Pistons')
+	})
 })

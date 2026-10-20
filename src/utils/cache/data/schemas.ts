@@ -172,9 +172,12 @@ export type ChannelCreationPayload = z.infer<typeof channelCreationEventSchema>
 
 export const prepareMatchEmbedSchema = z
 	.object({
-		favored: z.string().describe('Name of the favored team'),
+		favored: z.string().optional().describe('Name of the favored team'),
+		bettingAvailable: z.boolean().optional(),
+		gametime: z.date().optional(),
 		favoredTeamClr: z
 			.custom<ColorResolvable>()
+			.optional()
 			.describe('Color code for the favored team'),
 		home_team: z.string().describe('Name of the home team'),
 		homeTeamShortName: z.string().describe('Short name of the home team'),

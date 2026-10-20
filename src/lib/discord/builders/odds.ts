@@ -58,10 +58,23 @@ export function scheduleGameLine(
 export function matchPostEmbed(args: PrepareMatchEmbed, teamEmoji: EmojiLike) {
 	const matchVersus = `${args.awayTeamShortName} @ ${args.homeTeamShortName}`
 	const recordsStr = buildRecordsStr(args)
+	const bettingAvailable = args.bettingAvailable ?? Boolean(args.favored)
+	const tipoff = args.gametime
+		? `\n\n<t:${Math.floor(new Date(args.gametime).getTime() / 1000)}:F>`
+		: ''
+	const favorite =
+		bettingAvailable && args.favored
+			? `\n\n> ${teamEmoji ?? ''}  **${args.favored}** opens as the favorite.`
+			: ''
+	const betting = bettingAvailable
+		? `\n\n**Place your bets** → \`/commands\` in <#${args.bettingChanId}>`
+		: ''
 	return new EmbedBuilder()
-		.setColor(args.favoredTeamClr)
+		.setColor(
+			args.favoredTeamClr ?? (embedColors.PlutoRed as ColorResolvable),
+		)
 		.setDescription(
-			`# ${matchVersus}\n\n> ${teamEmoji}  **${args.favored}** opens as the favorite.${recordsStr}\n\n**Place your bets** → \`/commands\` in <#${args.bettingChanId}>`,
+			`# ${matchVersus}${tipoff}${favorite}${recordsStr}${betting}`,
 		)
 		.setFooter({
 			text: 'Pluto | Created by fenixforever',
