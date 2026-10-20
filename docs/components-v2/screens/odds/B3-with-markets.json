@@ -1,0 +1,15 @@
+{
+  "author": {
+    "name": "Pluto",
+    "bot": true
+  },
+  "embeds": [
+    {
+      "color": 31283,
+      "description": "# Celtics @ Pistons\n\n<t:1792537200:F>\n\n>   **Boston Celtics** opens as the favorite.\n\n**Place your bets** \u2192 `/commands` in <#300>",
+      "footer": {
+        "text": "Pluto | dev. fenixforever"
+      }
+    }
+  ]
+}
