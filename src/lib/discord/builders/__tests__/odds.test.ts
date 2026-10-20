@@ -107,4 +107,27 @@ describe('odds builders (classic, pre-migration)', () => {
 		).toJSON()
 		expect(card.description).toBe('# Celtics @ Pistons')
 	})
+	it.each(['postponed', 'cancelled'] as const)(
+		'shows %s status without a stale tipoff or betting copy',
+		(gameStatus) => {
+			const card = matchPostEmbed(
+				{
+					home_team: 'Detroit Pistons',
+					homeTeamShortName: 'Pistons',
+					away_team: 'Boston Celtics',
+					awayTeamShortName: 'Celtics',
+					bettingChanId: '300',
+					header: '',
+					sport: 'nba',
+					gameStatus,
+					bettingAvailable: false,
+					gametime: new Date('2026-10-20T23:00:00Z'),
+				},
+				'',
+			).toJSON()
+			expect(card.description).toBe(
+				`# Celtics @ Pistons\n\n**${gameStatus[0].toUpperCase() + gameStatus.slice(1)}**`,
+			)
+		},
+	)
 })

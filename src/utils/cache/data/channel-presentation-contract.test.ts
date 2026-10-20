@@ -22,6 +22,12 @@ const available = {
 	},
 }
 const cases = [
+	{
+		...core,
+		schedule_provider: 'espn',
+		schedule_observed_at: '2026-10-20T22:00:00Z',
+		schedule_snapshot_ref: 'fixture-snapshot',
+	},
 	{ ...core },
 	{ ...core, betting: available },
 	{
@@ -57,7 +63,7 @@ describe('additive channel contracts', () => {
 				(item) =>
 					contracts.channelAggregatedV2Schema.safeParse(item).success,
 			),
-		).toEqual([true, true, false, false, false, false, false, false])
+		).toEqual([true, true, true, false, false, false, false, false, false])
 	})
 	it.skipIf(!process.env.PLUTO_SHARED_CONTRACT_MODULE)(
 		'matches the producer shared-package build for the full fixture corpus',
@@ -74,8 +80,8 @@ describe('additive channel contracts', () => {
 					contracts.channelAggregatedV2Schema.safeParse(item)
 				expect(consumer.success).toBe(producer.success)
 				if (consumer.success)
-					expect(JSON.stringify(consumer.data)).toBe(
-						JSON.stringify(producer.data),
+					expect(JSON.parse(JSON.stringify(consumer.data))).toEqual(
+						JSON.parse(JSON.stringify(producer.data)),
 					)
 			}
 		},

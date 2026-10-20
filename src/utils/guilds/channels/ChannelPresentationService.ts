@@ -13,6 +13,10 @@ import {
 	type PresentationLock,
 	RedisPresentationLock,
 } from './channel-presentation-lock.js'
+import {
+	matchesGameMarker,
+	V2_PRESENTATION_TOPIC_SUFFIX,
+} from './channel-reconciliation.js'
 
 export interface PresentationStore {
 	load(guildId: string, gameId: string): Promise<ChannelPresentationState>
@@ -92,12 +96,7 @@ export class ChannelPresentationService {
 					throw new Error(
 						'Presentation update has no confirmed channel',
 					)
-				if (
-					state.desiredPresentation.status !== 'scheduled' ||
-					new Date(state.desiredPresentation.gametime).getTime() <=
-						Date.now()
-				)
-					return
+				if (!canCreatePresentation(state.desiredPresentation)) return
 				await check()
 				channelId = await this.discord.create(
 					guild,
@@ -121,6 +120,23 @@ export class ChannelPresentationService {
 			})
 		})
 	}
+}
+
+export function canCreatePresentation(
+	channel: ChannelAggregatedV2,
+	now = Date.now(),
+): boolean {
+	const tipoff = new Date(channel.gametime).getTime()
+	const observed = Date.parse(channel.schedule_observed_at ?? '')
+	return (
+		channel.status === 'scheduled' &&
+		tipoff > now &&
+		tipoff <= now + 60 * 60 * 1000 &&
+		Boolean(channel.schedule_provider && channel.schedule_snapshot_ref) &&
+		Number.isFinite(observed) &&
+		observed <= now &&
+		now - observed <= 6 * 60 * 60 * 1000
+	)
 }
 
 export function presentationMarker(guildId: string, gameId: string) {
@@ -147,7 +163,7 @@ export class DiscordPresentationPort implements PresentationDiscord {
 	) {
 		if (channelId) {
 			const channel = await this.text(guild.guildId, channelId)
-			if (channel.topic !== marker)
+			if (!matchesGameMarker(channel.topic, marker))
 				throw new Error('Presentation channel marker mismatch')
 			return channel.id
 		}
@@ -157,7 +173,7 @@ export class DiscordPresentationPort implements PresentationDiscord {
 		const matches = channels.filter(
 			(channel) =>
 				channel?.type === ChannelType.GuildText &&
-				channel.topic === marker,
+				matchesGameMarker(channel.topic, marker),
 		)
 		if (matches.size > 1) throw new Error('Ambiguous presentation channels')
 		return matches.first()?.id ?? null
@@ -171,11 +187,13 @@ export class DiscordPresentationPort implements PresentationDiscord {
 		const category = await server?.channels.fetch(guild.gameCategoryId)
 		if (!category || category.type !== ChannelType.GuildCategory)
 			throw new Error('Game category unavailable')
+		if (!canCreatePresentation(channel))
+			throw new Error('Presentation creation window or evidence expired')
 		return (
 			await server.channels.create({
 				name: channel.channelname,
 				type: ChannelType.GuildText,
-				topic: marker,
+				topic: `${marker}${V2_PRESENTATION_TOPIC_SUFFIX}`,
 				parent: category.id,
 			})
 		).id

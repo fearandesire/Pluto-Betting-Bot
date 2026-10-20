@@ -3,6 +3,7 @@ import type { AddressInfo } from 'node:net'
 import { ChannelType, Collection } from 'discord.js'
 import {
 	afterAll,
+	afterEach,
 	beforeAll,
 	beforeEach,
 	describe,
@@ -84,11 +85,14 @@ const core = {
 	id: gameId,
 	sport: 'nba',
 	created: false,
-	gametime: '2099-10-20T23:00:00Z',
+	gametime: '2026-10-20T23:00:00Z',
 	channelname: 'celtics-at-pistons',
 	home_team: 'Detroit Pistons',
 	away_team: 'Boston Celtics',
 	status: 'scheduled',
+	schedule_provider: 'espn',
+	schedule_observed_at: '2026-10-20T22:00:00Z',
+	schedule_snapshot_ref: 'fixture-accepted-snapshot',
 	betting: { state: 'unavailable', reason: 'no_markets' },
 }
 let server: Server
@@ -134,6 +138,8 @@ afterAll(async () => {
 	)
 })
 beforeEach(() => {
+	vi.useFakeTimers({ toFake: ['Date'] })
+	vi.setSystemTime(new Date('2026-10-20T22:30:00Z'))
 	posts = []
 	edits = []
 	mocks.calls.length = 0
@@ -266,3 +272,5 @@ describe('registered queue handlers through HTTP receipts and Discord adapter', 
 		expect(posts).toHaveLength(0)
 	})
 })
+
+afterEach(() => vi.useRealTimers())

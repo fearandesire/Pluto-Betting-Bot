@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('../../../../index.js', () => ({
 	SapDiscClient: { guilds: { cache: new Map() } },
@@ -41,8 +41,11 @@ const game = () =>
 		channelname: 'celtics-at-pistons',
 		home_team: 'Detroit Pistons',
 		away_team: 'Boston Celtics',
-		gametime: '2099-10-20T23:00:00Z',
+		gametime: '2026-10-20T23:00:00Z',
 		status: 'scheduled',
+		schedule_provider: 'espn',
+		schedule_observed_at: '2026-10-20T22:00:00Z',
+		schedule_snapshot_ref: 'fixture-accepted-snapshot',
 		betting: { state: 'unavailable', reason: 'no_markets' },
 	})
 let state: ChannelPresentationState
@@ -53,6 +56,8 @@ let messageExists: boolean
 let writes: Array<{ messageId?: string; state: string }>
 let service: ChannelPresentationService
 beforeEach(() => {
+	vi.useFakeTimers({ toFake: ['Date'] })
+	vi.setSystemTime(new Date('2026-10-20T22:30:00Z'))
 	state = {
 		gameId,
 		guildId: 'guild',
@@ -162,6 +167,21 @@ describe('durable presentation delivery', () => {
 			expect(discord.create).not.toHaveBeenCalled()
 		},
 	)
+	it.each([
+		{ gametime: new Date('2026-10-21T01:00:00Z') },
+		{ gametime: new Date('2026-10-20T22:29:00Z') },
+		{ schedule_observed_at: undefined },
+		{ schedule_observed_at: '2026-10-20T16:29:59Z' },
+		{ schedule_observed_at: '2026-10-20T22:30:01Z' },
+		{ schedule_snapshot_ref: undefined },
+	])(
+		'holds rescheduled, expired and unproven creation: %j',
+		async (patch) => {
+			Object.assign(state.desiredPresentation, patch)
+			await service.apply('guild', gameId, true)
+			expect(discord.create).not.toHaveBeenCalled()
+		},
+	)
 	it('rejects simultaneous create/update work across independent service instances', async () => {
 		const lock = new RedisPresentationLock(new InMemoryRedis())
 		let release!: () => void
@@ -213,3 +233,5 @@ describe('durable presentation delivery', () => {
 		expect(writes).toEqual([{ messageId: 'message', state: 'unavailable' }])
 	})
 })
+
+afterEach(() => vi.useRealTimers())

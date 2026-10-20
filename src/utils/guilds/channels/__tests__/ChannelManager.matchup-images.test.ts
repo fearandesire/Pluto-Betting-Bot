@@ -177,4 +177,24 @@ describe('ChannelManager matchup attachments', () => {
 		expect(json.image?.url).toBe('attachment://match.jpg')
 		expect(message.files).toHaveLength(1)
 	})
+	it('never lets a retried V1 job repost inside a V2-owned channel, including a deleted card', async () => {
+		const marker = `pluto-game:${createHash('sha256').update(`${guild.guildId}:${channel.id}`).digest('hex').slice(0, 24)}`
+		const text = {
+			id: 'text',
+			type: ChannelType.GuildText,
+			topic: `${marker} | pluto-presentation:v2`,
+			send: vi.fn(),
+			messages: { fetch: vi.fn(async () => []) },
+		}
+		mocks.guilds.set('guild', {
+			channels: { cache: new Map([['text', text]]) },
+		})
+		await (new ChannelManager({} as any) as any).completeExistingChannel(
+			channel,
+			guild,
+			'text',
+		)
+		expect(text.send).not.toHaveBeenCalled()
+		expect(text.messages.fetch).not.toHaveBeenCalled()
+	})
 })

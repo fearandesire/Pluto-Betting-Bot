@@ -59,9 +59,14 @@ export function matchPostEmbed(args: PrepareMatchEmbed, teamEmoji: EmojiLike) {
 	const matchVersus = `${args.awayTeamShortName} @ ${args.homeTeamShortName}`
 	const recordsStr = buildRecordsStr(args)
 	const bettingAvailable = args.bettingAvailable ?? Boolean(args.favored)
-	const tipoff = args.gametime
-		? `\n\n<t:${Math.floor(new Date(args.gametime).getTime() / 1000)}:F>`
-		: ''
+	const status =
+		args.gameStatus && args.gameStatus !== 'scheduled'
+			? `\n\n**${{ live: 'Live', final: 'Final', postponed: 'Postponed', cancelled: 'Cancelled' }[args.gameStatus]}**`
+			: ''
+	const tipoff =
+		args.gametime && !['postponed', 'cancelled'].includes(args.gameStatus)
+			? `\n\n<t:${Math.floor(new Date(args.gametime).getTime() / 1000)}:F>`
+			: ''
 	const favorite =
 		bettingAvailable && args.favored
 			? `\n\n> ${teamEmoji ?? ''}  **${args.favored}** opens as the favorite.`
@@ -74,7 +79,7 @@ export function matchPostEmbed(args: PrepareMatchEmbed, teamEmoji: EmojiLike) {
 			args.favoredTeamClr ?? (embedColors.PlutoRed as ColorResolvable),
 		)
 		.setDescription(
-			`# ${matchVersus}${tipoff}${favorite}${recordsStr}${betting}`,
+			`# ${matchVersus}${status}${tipoff}${favorite}${recordsStr}${betting}`,
 		)
 		.setFooter({
 			text: 'Pluto | Created by fenixforever',

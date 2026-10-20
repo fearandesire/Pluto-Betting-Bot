@@ -49,4 +49,26 @@ describe('game channel reconciliation', () => {
 			),
 		).toBeNull()
 	})
+	it('recognizes the same game under durable V2 ownership without adopting another game', () => {
+		const channel = {
+			id: 'v2-channel',
+			name: 'away-at-home',
+			parentId: 'category',
+			topic: 'pluto-game:current | pluto-presentation:v2',
+		}
+		expect(
+			findExistingGameChannel(
+				[channel],
+				{ channelName: channel.name, marker: 'pluto-game:current' },
+				'category',
+			),
+		).toBe(channel)
+		expect(
+			findExistingGameChannel(
+				[channel],
+				{ channelName: channel.name, marker: 'pluto-game:other' },
+				'category',
+			),
+		).toBeNull()
+	})
 })

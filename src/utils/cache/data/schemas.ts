@@ -175,6 +175,9 @@ export const prepareMatchEmbedSchema = z
 		favored: z.string().optional().describe('Name of the favored team'),
 		bettingAvailable: z.boolean().optional(),
 		gametime: z.date().optional(),
+		gameStatus: z
+			.enum(['scheduled', 'live', 'final', 'postponed', 'cancelled'])
+			.optional(),
 		favoredTeamClr: z
 			.custom<ColorResolvable>()
 			.optional()

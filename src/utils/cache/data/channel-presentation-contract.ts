@@ -53,6 +53,9 @@ export const channelAggregatedV2Schema = z
 			'cancelled',
 		]),
 		betting: channelBettingSchema,
+		schedule_provider: z.enum(['espn', 'odds_api']).optional(),
+		schedule_observed_at: z.string().datetime({ offset: true }).optional(),
+		schedule_snapshot_ref: z.string().trim().min(1).optional(),
 		metadata: matchMetadataSchema.nullable().optional(),
 	})
 	.superRefine((channel, context) => {

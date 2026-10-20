@@ -37,7 +37,10 @@ import {
 	type CreatedChannel,
 } from './ChannelCreationWorkflow.js'
 import { RedisPresentationLock } from './channel-presentation-lock.js'
-import { findExistingGameChannel } from './channel-reconciliation.js'
+import {
+	findExistingGameChannel,
+	V2_PRESENTATION_TOPIC_SUFFIX,
+} from './channel-reconciliation.js'
 import { resolveMatchupImage } from './matchup-image-resolver.js'
 
 /**
@@ -230,6 +233,11 @@ export default class ChannelManager {
 		if (!existing || existing.type !== ChannelType.GuildText) {
 			throw new Error('Reserved game channel is unavailable')
 		}
+		if (
+			existing.topic ===
+			`${this.channelIntent(channel, guild).marker}${V2_PRESENTATION_TOPIC_SUFFIX}`
+		)
+			return
 		const favoredTeamInfo = await teamResolver.resolve(
 			channel.matchOdds.favored,
 			{ sport: channel.sport.toLowerCase(), full: true },
@@ -287,6 +295,7 @@ export default class ChannelManager {
 			bettingAvailable,
 			gametime:
 				'betting' in channel ? new Date(channel.gametime) : undefined,
+			gameStatus: 'betting' in channel ? channel.status : undefined,
 			home_team: channel.home_team,
 			homeTeamShortName: new StringUtils().getShortName(
 				channel.home_team,
