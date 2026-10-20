@@ -73,7 +73,8 @@ vi.mock('../../../api/Khronos/KhronosInstances.js', () => ({
 import { channelCreationQueue } from '../ChannelCreationQueue.js'
 import { channelPresentationQueue } from '../ChannelPresentationQueue.js'
 
-const gameId = '00000000-0000-4000-8000-000000000001'
+// PostgreSQL accepts legacy provider GUIDs without RFC UUID version/variant bits.
+const gameId = '11111111-1111-f111-1111-111111111111'
 const guild = {
 	guildId: 'guild',
 	eligibleMatches: [gameId],

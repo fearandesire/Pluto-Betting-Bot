@@ -22,6 +22,7 @@ const available = {
 	},
 }
 const cases = [
+	{ ...core, id: '11111111-1111-F111-1111-111111111111' },
 	{
 		...core,
 		schedule_provider: 'espn',
@@ -63,7 +64,18 @@ describe('additive channel contracts', () => {
 				(item) =>
 					contracts.channelAggregatedV2Schema.safeParse(item).success,
 			),
-		).toEqual([true, true, true, false, false, false, false, false, false])
+		).toEqual([
+			true,
+			true,
+			true,
+			true,
+			false,
+			false,
+			false,
+			false,
+			false,
+			false,
+		])
 	})
 	it.skipIf(!process.env.PLUTO_SHARED_CONTRACT_MODULE)(
 		'matches the producer shared-package build for the full fixture corpus',

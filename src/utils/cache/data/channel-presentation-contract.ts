@@ -38,7 +38,7 @@ export const channelBettingSchema = z.discriminatedUnion('state', [
 
 export const channelAggregatedV2Schema = z
 	.object({
-		id: z.string().uuid(),
+		id: z.guid().toLowerCase(),
 		sport: sportsServingSchema,
 		created: z.boolean(),
 		gametime: channelAggregatedSchema.shape.gametime,
@@ -97,7 +97,7 @@ const presentationRevisionSchema = z
 export const channelPresentationUpdateV1Schema = z
 	.object({
 		schemaVersion: z.literal(1),
-		gameId: z.string().uuid(),
+		gameId: z.guid().toLowerCase(),
 		guildId: z.string().min(1),
 		revision: presentationRevisionSchema,
 		presentation: channelAggregatedV2Schema,
@@ -117,7 +117,7 @@ export const channelPresentationReceiptSchema = z.strictObject({
 /** Durable desired state and Discord references returned to the bot. */
 export const channelPresentationStateSchema = z
 	.object({
-		gameId: z.string().uuid(),
+		gameId: z.guid().toLowerCase(),
 		guildId: z.string().min(1),
 		desiredRevision: presentationRevisionSchema,
 		appliedRevision: z
