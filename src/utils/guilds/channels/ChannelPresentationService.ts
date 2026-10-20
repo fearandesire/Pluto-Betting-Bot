@@ -15,6 +15,7 @@ import {
 } from './channel-presentation-lock.js'
 import {
 	matchesGameMarker,
+	V2_PRESENTATION_FOOTER,
 	V2_PRESENTATION_TOPIC_SUFFIX,
 } from './channel-reconciliation.js'
 
@@ -205,10 +206,12 @@ export class DiscordPresentationPort implements PresentationDiscord {
 		messageId?: string,
 	) {
 		const channel = await this.text(guildId, channelId)
+		if (!matchesGameMarker(channel.topic, marker))
+			throw new Error('Presentation channel marker mismatch')
 		const owns = (message: Message) =>
 			message.author.id === SapDiscClient.user?.id &&
-			message.embeds.some((embed) =>
-				embed.footer?.text.endsWith(` | ${marker}`),
+			message.embeds.some(
+				(embed) => embed.footer?.text === V2_PRESENTATION_FOOTER,
 			)
 
 		if (messageId) {

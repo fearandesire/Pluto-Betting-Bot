@@ -39,6 +39,7 @@ import {
 import { RedisPresentationLock } from './channel-presentation-lock.js'
 import {
 	findExistingGameChannel,
+	V2_PRESENTATION_FOOTER,
 	V2_PRESENTATION_TOPIC_SUFFIX,
 } from './channel-reconciliation.js'
 import { resolveMatchupImage } from './matchup-image-resolver.js'
@@ -351,7 +352,7 @@ export default class ChannelManager {
 		})
 		if (marker && message.embeds?.[0] instanceof EmbedBuilder) {
 			message.embeds[0].setFooter({
-				text: `Pluto | Created by fenixforever | ${marker}`,
+				text: V2_PRESENTATION_FOOTER,
 			})
 		}
 		return message

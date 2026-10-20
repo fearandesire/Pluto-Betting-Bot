@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
 	basePath: '',
 	state: {} as any,
 	calls: [] as any[],
+	dropNextAck: false,
 }))
 vi.mock('bullmq', () => ({
 	Queue: class {
@@ -115,6 +116,12 @@ beforeAll(async () => {
 			let body = ''
 			for await (const chunk of request) body += chunk
 			const receipt = JSON.parse(body)
+			if (mocks.dropNextAck) {
+				mocks.dropNextAck = false
+				response.writeHead(503)
+				response.end('{}')
+				return
+			}
 			if (receipt.revision !== mocks.state.desiredRevision) {
 				response.writeHead(409)
 				response.end('{}')
@@ -144,6 +151,7 @@ beforeEach(() => {
 	posts = []
 	edits = []
 	mocks.calls.length = 0
+	mocks.dropNextAck = false
 	mocks.state = {
 		gameId,
 		guildId: 'guild',
@@ -197,6 +205,29 @@ beforeEach(() => {
 	})
 })
 describe('registered queue handlers through HTTP receipts and Discord adapter', () => {
+	it('recovers the posted card after a failed acknowledgement without posting twice', async () => {
+		mocks.dropNextAck = true
+		const job = {
+			data: { schemaVersion: 2, channel: core, guild },
+			attemptsMade: 0,
+		}
+		await expect(
+			mocks.processors.get('channel-creation')(job),
+		).rejects.toThrow()
+		expect(posts).toHaveLength(1)
+		expect(mocks.state.appliedRevision).toBe(0)
+		await mocks.processors.get('channel-creation')(job)
+		expect(posts).toHaveLength(1)
+		expect(edits).toHaveLength(1)
+		expect(mocks.state).toMatchObject({
+			appliedRevision: 1,
+			channelId: 'channel',
+			messageId: 'message',
+		})
+		expect(posts[0].embeds[0].data.footer.text).toBe(
+			'Pluto | Game chat | Created by fenixforever',
+		)
+	})
 	it('creates without prices, then edits the same card for arrival and suspension', async () => {
 		await mocks.processors.get('channel-creation')({
 			data: { schemaVersion: 2, channel: core, guild },

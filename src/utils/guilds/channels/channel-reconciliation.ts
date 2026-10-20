@@ -11,6 +11,8 @@ export interface GameChannelLookupIntent {
 }
 
 export const V2_PRESENTATION_TOPIC_SUFFIX = ' | pluto-presentation:v2'
+export const V2_PRESENTATION_FOOTER =
+	'Pluto | Game chat | Created by fenixforever'
 
 export function matchesGameMarker(
 	topic: string | null | undefined,
