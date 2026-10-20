@@ -225,7 +225,7 @@ describe('registered queue handlers through HTTP receipts and Discord adapter', 
 			messageId: 'message',
 		})
 		expect(posts[0].embeds[0].data.footer.text).toBe(
-			'Pluto | Game chat | Created by fenixforever',
+			'Pluto | dev. fenixforever',
 		)
 	})
 	it('creates without prices, then edits the same card for arrival and suspension', async () => {
