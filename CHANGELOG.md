@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.14.3](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.14.2...v4.14.3) (2026-10-21)
+
+
+### Bug Fixes
+
+* **deps:** update runtime dependencies and restore the lockfile ([#724](https://github.com/fearandesire/Pluto-Betting-Bot/issues/724)) ([1db3832](https://github.com/fearandesire/Pluto-Betting-Bot/commit/1db38322a0a2fbb9454acad91e0bd21be1a4cbe1))
+
 ## [4.14.2](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.14.1...v4.14.2) (2026-10-21)
 
 
