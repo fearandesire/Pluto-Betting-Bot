@@ -15,8 +15,9 @@
 	"main": "./dist/index.js",
 	"scripts": {
 		"clean": "rimraf ./dist",
-		"build": "rimraf dist && swc src -d dist --strip-leading-paths --ignore \"**/__tests__/**,**/*.test.ts,**/*.spec.ts\" && tsc-alias -p tsconfig.json --resolve-full-paths",
+		"build": "rimraf dist && swc src -d dist --strip-leading-paths --ignore \"**/__tests__/**,**/*.test.ts,**/*.spec.ts\" && tsc-alias -p tsconfig.json && pnpm verify:runtime",
 		"verify:dist": "node scripts/verify-production-dist.mjs",
+		"verify:runtime": "node scripts/verify-production-runtime.mjs",
 		"lint": "biome check --write . --unsafe",
 		"start": "node --env-file-if-exists=.env ./dist/index.js",
 		"dev": "pnpm build && pnpm start",

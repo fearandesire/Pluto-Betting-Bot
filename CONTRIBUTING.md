@@ -34,3 +34,14 @@ Use `pnpm lint` to apply the repository's formatting and lint checks. Do not com
 - Reviewers, human and AI, start from `REVIEW.md`: it maps paths to blast radius and lists the checks for each.
 
 Be respectful, specific, and constructive in reviews. Contributions are evaluated on correctness, maintainability, tests, and compatibility with the existing client behavior.
+
+## Compiled runtime validation
+
+| Rule | Enforcement |
+| --- | --- |
+| Package exports own bare imports. Use explicit `.js` for local imports; do not rewrite package subpaths to filesystem paths. | The build limits tsc-alias to configured local aliases. `pnpm verify:runtime` resolves and links the emitted graph with native Node. |
+| Source tests and typecheck do not establish production import or startup compatibility. Validate the shipped dependency set. | `pnpm build` runs `verify:runtime`; the production Docker stage runs the same gate with networking disabled before PR verification or image publication can finish. |
+
+The gate checks static linkage, literal dynamic import targets, and compiled
+BullBoard authentication, HTML rendering, and queue summaries. It does not prove
+full bot startup, external service connectivity, or live Discord behavior.
