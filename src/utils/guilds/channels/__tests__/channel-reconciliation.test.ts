@@ -2,9 +2,31 @@ import { describe, expect, it } from 'vitest'
 import {
 	findExistingGameChannel,
 	type GameChannelCandidate,
+	matchesGameMarker,
 } from '../channel-reconciliation.js'
 
 describe('game channel reconciliation', () => {
+	it('recognizes the exact known-unsent phase without adopting arbitrary suffixes', () => {
+		const marker = 'pluto-game:current'
+		expect(
+			matchesGameMarker(
+				`${marker} | pluto-presentation:v2:unsent`,
+				marker,
+			),
+		).toBe(true)
+		expect(
+			matchesGameMarker(
+				`${marker} | pluto-presentation:v2:unknown`,
+				marker,
+			),
+		).toBe(false)
+		expect(
+			matchesGameMarker(
+				`${marker} | pluto-presentation:v2:unsent`,
+				'pluto-game:other',
+			),
+		).toBe(false)
+	})
 	it('creates two same-name game channels for consecutive game intents', () => {
 		const channels: GameChannelCandidate[] = []
 		const categoryId = 'category-1'

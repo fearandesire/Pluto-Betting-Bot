@@ -19,6 +19,9 @@ const mocks = vi.hoisted(() => ({
 	state: {} as any,
 	calls: [] as any[],
 	dropNextAck: false,
+	afterCreate: undefined as (() => void) | undefined,
+	failNextSend: false,
+	afterAssetRead: undefined as (() => void) | undefined,
 }))
 vi.mock('bullmq', () => ({
 	Queue: class {
@@ -47,7 +50,10 @@ vi.mock('../../../logging/WinstonLogger.js', () => ({
 	logger: { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }))
 vi.mock('../../../guilds/channels/matchup-image-resolver.js', () => ({
-	resolveMatchupImage: async () => null,
+	resolveMatchupImage: async () => {
+		mocks.afterAssetRead?.()
+		return null
+	},
 }))
 vi.mock('../../../bot_res/findEmoji.js', () => ({ findEmoji: async () => '' }))
 vi.mock('resolve-team', () => ({
@@ -71,6 +77,7 @@ vi.mock('../../../api/Khronos/KhronosInstances.js', () => ({
 	},
 }))
 
+import redisCache from '../../redis-instance.js'
 import { channelCreationQueue } from '../ChannelCreationQueue.js'
 import { channelPresentationQueue } from '../ChannelPresentationQueue.js'
 
@@ -162,6 +169,9 @@ beforeEach(() => {
 	edits = []
 	mocks.calls.length = 0
 	mocks.dropNextAck = false
+	mocks.afterCreate = undefined
+	mocks.failNextSend = false
+	mocks.afterAssetRead = undefined
 	mocks.state = {
 		gameId,
 		guildId: 'guild',
@@ -184,6 +194,10 @@ beforeEach(() => {
 					...options,
 					id: 'channel',
 					type: ChannelType.GuildText,
+					setTopic: async (topic: string) => {
+						channel.topic = topic
+						return channel
+					},
 					messages: {
 						fetch: async (id?: any) =>
 							typeof id === 'string'
@@ -191,6 +205,10 @@ beforeEach(() => {
 								: messages,
 					},
 					send: async (payload: any) => {
+						if (mocks.failNextSend) {
+							mocks.failNextSend = false
+							throw new Error('Discord send result unknown')
+						}
 						posts.push(payload)
 						const message = {
 							id: 'message',
@@ -209,12 +227,75 @@ beforeEach(() => {
 					},
 				}
 				channels.set(channel.id, channel)
+				mocks.afterCreate?.()
 				return channel
 			},
 		},
 	})
 })
 describe('registered queue handlers through HTTP receipts and Discord adapter', () => {
+	it('does not retry an ambiguous initial send into an empty marked channel', async () => {
+		mocks.failNextSend = true
+		const job = {
+			data: { schemaVersion: 2, channel: core, guild },
+			attemptsMade: 0,
+		}
+		await expect(
+			mocks.processors.get('channel-creation')(job),
+		).rejects.toThrow('send result unknown')
+		await expect(
+			mocks.processors.get('channel-creation')(job),
+		).rejects.toThrow('requires reconciliation')
+		expect(posts).toHaveLength(0)
+		expect(mocks.state.appliedRevision).toBe(0)
+		expect(mocks.guilds.get('guild').channels.cache.size).toBe(2)
+	})
+	it('checks the lease after asynchronous payload preparation before starting a send', async () => {
+		mocks.afterCreate = () => {
+			mocks.afterAssetRead = () => {
+				vi.spyOn(redisCache, 'refreshIfOwned').mockResolvedValue(false)
+			}
+		}
+		await expect(
+			mocks.processors.get('channel-creation')({
+				data: { schemaVersion: 2, channel: core, guild },
+				attemptsMade: 0,
+			}),
+		).rejects.toThrow('lease was lost')
+		expect(posts).toHaveLength(0)
+		expect(
+			mocks.guilds.get('guild').channels.cache.get('channel').topic,
+		).toMatch(/pluto-presentation:v2:unsent$/)
+	})
+	it('finishes a known empty channel after a post-create hold and reschedule', async () => {
+		mocks.afterCreate = () => {
+			mocks.state.desiredRevision = 2
+			mocks.state.desiredPresentation.status = 'postponed'
+			delete mocks.state.desiredPresentation.initial_odds_completion
+		}
+		const job = {
+			data: { schemaVersion: 2, channel: core, guild },
+			attemptsMade: 0,
+		}
+		await mocks.processors.get('channel-creation')(job)
+		expect(posts).toHaveLength(0)
+		expect(mocks.state.appliedRevision).toBe(0)
+		mocks.afterCreate = undefined
+		mocks.state.desiredRevision = 3
+		mocks.state.desiredPresentation.status = 'scheduled'
+		mocks.state.desiredPresentation.initial_odds_completion = {
+			...core.initial_odds_completion,
+			revision: 3,
+		}
+		await mocks.processors.get('channel-creation')(job)
+		expect(posts).toHaveLength(1)
+		expect(mocks.guilds.get('guild').channels.cache.size).toBe(2)
+		expect(mocks.state).toMatchObject({
+			appliedRevision: 3,
+			channelId: 'channel',
+			messageId: 'message',
+		})
+	})
 	it('holds an active old job when authoritative state has no paid completion', async () => {
 		delete mocks.state.desiredPresentation.initial_odds_completion
 		await mocks.processors.get('channel-creation')({
@@ -328,4 +409,7 @@ describe('registered queue handlers through HTTP receipts and Discord adapter', 
 	})
 })
 
-afterEach(() => vi.useRealTimers())
+afterEach(() => {
+	vi.restoreAllMocks()
+	vi.useRealTimers()
+})

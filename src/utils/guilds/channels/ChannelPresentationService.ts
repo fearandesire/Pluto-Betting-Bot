@@ -18,6 +18,7 @@ import {
 	matchesGameMarker,
 	V2_PRESENTATION_FOOTER,
 	V2_PRESENTATION_TOPIC_SUFFIX,
+	V2_PRESENTATION_UNSENT_TOPIC_SUFFIX,
 } from './channel-reconciliation.js'
 
 export interface PresentationStore {
@@ -39,6 +40,7 @@ export interface PresentationDiscord {
 		guild: GuildEligibility,
 		channel: ChannelAggregatedV2,
 		marker: string,
+		beforeEffect?: () => Promise<void>,
 	): Promise<string>
 	findMessage(
 		guildId: string,
@@ -46,12 +48,18 @@ export interface PresentationDiscord {
 		marker: string,
 		messageId?: string,
 	): Promise<string | null>
+	canResumeUnsent?(
+		guildId: string,
+		channelId: string,
+		marker: string,
+	): Promise<boolean>
 	write(
 		guild: GuildEligibility,
 		channelId: string,
 		channel: ChannelAggregatedV2,
 		marker: string,
 		messageId?: string,
+		beforeEffect?: () => Promise<void>,
 	): Promise<string>
 }
 /** Both creation and refresh re-read authoritative state under the same per-game lease. */
@@ -80,6 +88,13 @@ export class ChannelPresentationService {
 				state = current
 				return true
 			}
+			const beforeEffect = async () => {
+				await check()
+				if (!hasInitialOddsCompletion(state))
+					throw new Error(
+						'Initial odds completion expired before delivery',
+					)
+			}
 			let guild = await this.store.guild(guildId)
 			if (
 				guild.guildId !== guildId ||
@@ -99,8 +114,16 @@ export class ChannelPresentationService {
 					marker,
 					state.messageId ?? undefined,
 				)
-				// An ambiguous send (or a deleted post) must never cause a second post.
-				if (!messageId)
+				// Only a durable never-sent phase permits completing an empty channel.
+				// Ambiguous sends and deleted messages still require reconciliation.
+				if (
+					!messageId &&
+					!(await this.discord.canResumeUnsent?.(
+						guildId,
+						channelId,
+						marker,
+					))
+				)
 					throw new Error(
 						'Presentation message receipt requires reconciliation',
 					)
@@ -134,6 +157,7 @@ export class ChannelPresentationService {
 					creationGuild,
 					state.desiredPresentation,
 					marker,
+					beforeEffect,
 				)
 				guild = creationGuild
 			}
@@ -146,6 +170,7 @@ export class ChannelPresentationService {
 				state.desiredPresentation,
 				marker,
 				messageId ?? undefined,
+				beforeEffect,
 			)
 			await check()
 			await this.store.ack(guildId, gameId, {
@@ -264,21 +289,29 @@ export class DiscordPresentationPort implements PresentationDiscord {
 		guild: GuildEligibility,
 		channel: ChannelAggregatedV2,
 		marker: string,
+		beforeEffect?: () => Promise<void>,
 	) {
 		const server = SapDiscClient.guilds.cache.get(guild.guildId)
 		const category = await server?.channels.fetch(guild.gameCategoryId)
 		if (!category || category.type !== ChannelType.GuildCategory)
 			throw new Error('Game category unavailable')
+		await beforeEffect?.()
 		if (!canCreatePresentation(channel))
 			throw new Error('Presentation creation window or evidence expired')
 		return (
 			await server.channels.create({
 				name: channel.channelname,
 				type: ChannelType.GuildText,
-				topic: `${marker}${V2_PRESENTATION_TOPIC_SUFFIX}`,
+				topic: `${marker}${V2_PRESENTATION_UNSENT_TOPIC_SUFFIX}`,
 				parent: category.id,
 			})
 		).id
+	}
+	async canResumeUnsent(guildId: string, channelId: string, marker: string) {
+		const channel = await this.text(guildId, channelId)
+		return (
+			channel.topic === `${marker}${V2_PRESENTATION_UNSENT_TOPIC_SUFFIX}`
+		)
 	}
 	async findMessage(
 		guildId: string,
@@ -323,6 +356,7 @@ export class DiscordPresentationPort implements PresentationDiscord {
 		channel: ChannelAggregatedV2,
 		marker: string,
 		messageId?: string,
+		beforeEffect?: () => Promise<void>,
 	) {
 		const target = await this.text(guild.guildId, channelId)
 		return this.manager.writePresentationMessage(
@@ -331,6 +365,23 @@ export class DiscordPresentationPort implements PresentationDiscord {
 			guild,
 			marker,
 			messageId,
+			async () => {
+				await beforeEffect?.()
+				if (!messageId) {
+					if (
+						target.topic !==
+						`${marker}${V2_PRESENTATION_UNSENT_TOPIC_SUFFIX}`
+					)
+						throw new Error(
+							'Initial presentation send requires reconciliation',
+						)
+					// Persist ambiguity before the first send, after payload preparation.
+					await target.setTopic(
+						`${marker}${V2_PRESENTATION_TOPIC_SUFFIX}`,
+					)
+					await beforeEffect?.()
+				}
+			},
 		)
 	}
 }

@@ -364,14 +364,19 @@ export default class ChannelManager {
 		guild: GuildEligibility,
 		marker: string,
 		messageId?: string,
+		beforeWrite?: () => Promise<void>,
 	): Promise<string> {
 		const payload = await this.preparePresentationMessage(
 			channel,
 			guild,
 			marker,
 		)
-		if (!messageId) return (await target.send(payload)).id
+		if (!messageId) {
+			await beforeWrite?.()
+			return (await target.send(payload)).id
+		}
 		const message = await target.messages.fetch(messageId)
+		await beforeWrite?.()
 		return (
 			await message.edit({
 				embeds: payload.embeds,

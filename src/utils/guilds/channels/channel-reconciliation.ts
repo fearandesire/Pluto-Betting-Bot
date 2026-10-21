@@ -11,6 +11,8 @@ export interface GameChannelLookupIntent {
 }
 
 export const V2_PRESENTATION_TOPIC_SUFFIX = ' | pluto-presentation:v2'
+export const V2_PRESENTATION_UNSENT_TOPIC_SUFFIX =
+	' | pluto-presentation:v2:unsent'
 export const V2_PRESENTATION_FOOTER = 'Pluto | dev. fenixforever'
 
 export function matchesGameMarker(
@@ -18,7 +20,9 @@ export function matchesGameMarker(
 	marker: string,
 ): boolean {
 	return (
-		topic === marker || topic === `${marker}${V2_PRESENTATION_TOPIC_SUFFIX}`
+		topic === marker ||
+		topic === `${marker}${V2_PRESENTATION_TOPIC_SUFFIX}` ||
+		topic === `${marker}${V2_PRESENTATION_UNSENT_TOPIC_SUFFIX}`
 	)
 }
 
