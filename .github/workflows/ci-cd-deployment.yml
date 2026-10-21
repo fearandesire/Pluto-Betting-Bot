@@ -97,6 +97,9 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      - name: Check compiled runtime verifier
+        run: pnpm exec biome check scripts/verify-production-runtime.mjs
+
       - name: Test with required Redis contract
         run: pnpm test:run
         env:

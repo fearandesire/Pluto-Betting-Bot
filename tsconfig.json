@@ -24,7 +24,6 @@
 		"allowSyntheticDefaultImports": true,
 		"allowJs": true,
 		"paths": {
-			"*": ["./*"],
 			"@pluto-config": ["./src/lib/PlutoConfig.ts"],
 			"#lib/*": ["./src/lib/*"]
 		},

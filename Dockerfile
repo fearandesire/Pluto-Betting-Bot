@@ -38,11 +38,15 @@ WORKDIR /app
 # Copy built files and production dependencies
 COPY --from=builder /app/package.json /app/pnpm-lock.yaml ./
 COPY --from=builder /app/dist ./dist
+COPY scripts/verify-production-runtime.mjs ./scripts/verify-production-runtime.mjs
 # Copy Assets
 COPY --from=builder /app/assets/matchupimages ./assets/matchupimages
 
 # Install production dependencies (skip scripts to avoid husky prepare hook)
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --force --ignore-scripts
+
+# Validate the final dependency set with network access disabled before publishing.
+RUN --network=none pnpm verify:runtime
 
 EXPOSE 2090
 
