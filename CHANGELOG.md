@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.14.1](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.14.0...v4.14.1) (2026-10-21)
+
+
+### Bug Fixes
+
+* **deps:** retain overrides in consolidated dependency updates ([#721](https://github.com/fearandesire/Pluto-Betting-Bot/issues/721)) ([e4148c9](https://github.com/fearandesire/Pluto-Betting-Bot/commit/e4148c90a93dc40f6a17a4c87cd0bb19aceff4d7))
+
 ## [4.14.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.13.9...v4.14.0) (2026-10-21)
 
 
