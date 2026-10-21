@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.14.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.13.9...v4.14.0) (2026-10-21)
+
+
+### Features
+
+* **channels:** support schedule-only match cards and durable updates ([#712](https://github.com/fearandesire/Pluto-Betting-Bot/issues/712)) ([d11ed8f](https://github.com/fearandesire/Pluto-Betting-Bot/commit/d11ed8fbdbeaa7f633585f9d66fb20e4ae619065))
+
 ## [4.13.9](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.13.8...v4.13.9) (2026-10-13)
 
 
