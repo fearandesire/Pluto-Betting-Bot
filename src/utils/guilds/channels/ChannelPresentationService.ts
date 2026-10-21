@@ -1,10 +1,11 @@
 import { createHash } from 'node:crypto'
 import { ChannelType, type Message, type TextChannel } from 'discord.js'
 import { SapDiscClient } from '../../../index.js'
-import type {
-	ChannelAggregatedV2,
-	ChannelPresentationReceipt,
-	ChannelPresentationState,
+import {
+	type ChannelAggregatedV2,
+	type ChannelPresentationReceipt,
+	type ChannelPresentationState,
+	initialOddsCompletionSchema,
 } from '../../cache/data/channel-presentation-contract.js'
 import type { GuildEligibility } from '../../cache/data/schemas.js'
 import ChannelManager from './ChannelManager.js'
@@ -64,10 +65,21 @@ export class ChannelPresentationService {
 	async apply(guildId: string, gameId: string, allowCreate: boolean) {
 		return this.lock.run(`${guildId}:${gameId}`, async (check) => {
 			const marker = presentationMarker(guildId, gameId)
-			const state = await this.store.load(guildId, gameId)
+			let state = await this.store.load(guildId, gameId)
 			if (state.guildId !== guildId || state.gameId !== gameId)
 				throw new Error('Presentation identity mismatch')
 			if (state.appliedRevision === state.desiredRevision) return
+			if (!hasInitialOddsCompletion(state)) return
+			const refresh = async () => {
+				const current = await this.store.load(guildId, gameId)
+				if (current.guildId !== guildId || current.gameId !== gameId)
+					throw new Error('Presentation identity mismatch')
+				if (current.appliedRevision === current.desiredRevision)
+					return false
+				if (!hasInitialOddsCompletion(current)) return false
+				state = current
+				return true
+			}
 			let guild = await this.store.guild(guildId)
 			if (
 				guild.guildId !== guildId ||
@@ -114,7 +126,10 @@ export class ChannelPresentationService {
 				)
 					return
 				if (!canCreatePresentation(state.desiredPresentation)) return
+				if (!(await refresh())) return
 				await check()
+				if (!hasInitialOddsCompletion(state)) return
+				if (!canCreatePresentation(state.desiredPresentation)) return
 				channelId = await this.discord.create(
 					creationGuild,
 					state.desiredPresentation,
@@ -122,7 +137,9 @@ export class ChannelPresentationService {
 				)
 				guild = creationGuild
 			}
+			if (!(await refresh())) return
 			await check()
+			if (!hasInitialOddsCompletion(state)) return
 			messageId = await this.discord.write(
 				guild,
 				channelId,
@@ -138,6 +155,38 @@ export class ChannelPresentationService {
 			})
 		})
 	}
+}
+
+/** Old jobs and held snapshots cannot authorize the first no-odds delivery. */
+export function hasInitialOddsCompletion(
+	state: ChannelPresentationState,
+	now = Date.now(),
+): boolean {
+	if (
+		state.messageId !== null ||
+		state.desiredPresentation.betting.state === 'available'
+	)
+		return true
+	const result = initialOddsCompletionSchema.safeParse(
+		state.desiredPresentation.initial_odds_completion,
+	)
+	if (!result.success) return false
+	const proof = result.data
+	const completedAt = Date.parse(proof.completed_at)
+	const sport =
+		state.desiredPresentation.sport.toLowerCase() === 'nba'
+			? 'basketball_nba'
+			: state.desiredPresentation.sport.toLowerCase() === 'nfl'
+				? 'americanfootball_nfl'
+				: null
+	return (
+		proof.revision === state.desiredRevision &&
+		proof.event_id === state.gameId &&
+		proof.event_id === state.desiredPresentation.id &&
+		proof.sport === sport &&
+		completedAt <= now &&
+		now - completedAt <= 15 * 60 * 1000
+	)
 }
 
 export function isPresentationEligibleForGuild(

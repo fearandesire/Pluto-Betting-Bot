@@ -96,6 +96,16 @@ const core = {
 	schedule_observed_at: '2026-10-20T22:00:00Z',
 	schedule_snapshot_ref: 'fixture-accepted-snapshot',
 	betting: { state: 'unavailable', reason: 'no_markets' },
+	initial_odds_completion: {
+		revision: 1,
+		completion_id: '00000000-0000-4000-8000-000000000002',
+		event_id: gameId,
+		sport: 'basketball_nba',
+		market: 'h2h',
+		completed: true,
+		status: 'confirmed_empty',
+		completed_at: '2026-10-20T22:29:00Z',
+	},
 }
 let server: Server
 let posts: any[]
@@ -205,6 +215,19 @@ beforeEach(() => {
 	})
 })
 describe('registered queue handlers through HTTP receipts and Discord adapter', () => {
+	it('holds an active old job when authoritative state has no paid completion', async () => {
+		delete mocks.state.desiredPresentation.initial_odds_completion
+		await mocks.processors.get('channel-creation')({
+			data: { schemaVersion: 2, channel: core, guild },
+			attemptsMade: 0,
+		})
+		expect(posts).toHaveLength(0)
+		expect(edits).toHaveLength(0)
+		expect(mocks.state.appliedRevision).toBe(0)
+		expect(
+			mocks.calls.filter((call) => call.method === 'POST'),
+		).toHaveLength(0)
+	})
 	it('recovers the posted card after a failed acknowledgement without posting twice', async () => {
 		mocks.dropNextAck = true
 		const job = {

@@ -47,6 +47,16 @@ const game = () =>
 		schedule_observed_at: '2026-10-20T22:00:00Z',
 		schedule_snapshot_ref: 'fixture-accepted-snapshot',
 		betting: { state: 'unavailable', reason: 'no_markets' },
+		initial_odds_completion: {
+			revision: 1,
+			completion_id: '00000000-0000-4000-8000-000000000002',
+			event_id: gameId,
+			sport: 'basketball_nba',
+			market: 'h2h',
+			completed: true,
+			status: 'confirmed_empty',
+			completed_at: '2026-10-20T22:29:00Z',
+		},
 	})
 let state: ChannelPresentationState
 let store: PresentationStore
@@ -105,6 +115,108 @@ beforeEach(() => {
 	)
 })
 describe('durable presentation delivery', () => {
+	it('holds an old unpriced creation until a paid completion is proven', async () => {
+		delete state.desiredPresentation.initial_odds_completion
+		await service.apply('guild', gameId, true)
+		expect(discord.create).not.toHaveBeenCalled()
+		expect(discord.write).not.toHaveBeenCalled()
+		expect(store.ack).not.toHaveBeenCalled()
+		expect(state.appliedRevision).toBe(0)
+	})
+	it.each([
+		{ revision: 2 },
+		{ event_id: '00000000-0000-4000-8000-000000000003' },
+		{ sport: 'americanfootball_nfl' },
+		{ completed_at: '2026-10-20T22:30:01Z' },
+		{ completed_at: '2026-10-20T22:14:59Z' },
+		{ status: 'unknown' },
+		{ status: 'available' },
+		{ completed: false },
+		{ completion_id: '' },
+		{ market: 'spreads' },
+	])('holds unproven initial fallback: %j', async (patch) => {
+		Object.assign(state.desiredPresentation.initial_odds_completion!, patch)
+		await service.apply('guild', gameId, true)
+		expect(discord.create).not.toHaveBeenCalled()
+		expect(discord.write).not.toHaveBeenCalled()
+		expect(store.ack).not.toHaveBeenCalled()
+	})
+	it.each(['confirmed_empty', 'unavailable', 'blocked'] as const)(
+		'accepts a completed %s decision for this initial revision',
+		async (status) => {
+			state.desiredPresentation.initial_odds_completion!.status = status
+			await service.apply('guild', gameId, true)
+			expect(discord.create).toHaveBeenCalledTimes(1)
+			expect(state.appliedRevision).toBe(1)
+		},
+	)
+	it('rechecks completion expiry after asynchronous Discord discovery', async () => {
+		state.desiredPresentation.initial_odds_completion!.completed_at =
+			'2026-10-20T22:15:01Z'
+		vi.mocked(discord.findChannel).mockImplementationOnce(async () => {
+			vi.setSystemTime(new Date('2026-10-20T22:30:02Z'))
+			return null
+		})
+		await service.apply('guild', gameId, true)
+		expect(discord.create).not.toHaveBeenCalled()
+		expect(discord.write).not.toHaveBeenCalled()
+	})
+	it('does not require an empty-odds proof for available prices', async () => {
+		delete state.desiredPresentation.initial_odds_completion
+		state.desiredPresentation.betting = {
+			state: 'available',
+			matchOdds: {
+				favored: 'Boston Celtics',
+				home_team_odds: 150,
+				away_team_odds: -175,
+			},
+		}
+		await service.apply('guild', gameId, true)
+		expect(discord.create).toHaveBeenCalledTimes(1)
+		expect(writes).toEqual([{ state: 'available', messageId: undefined }])
+	})
+	it('discards a loaded empty snapshot when prices arrive before creation', async () => {
+		vi.mocked(discord.findChannel).mockImplementationOnce(async () => {
+			state.desiredRevision = 2
+			state.desiredPresentation.betting = {
+				state: 'available',
+				matchOdds: {
+					favored: 'Boston Celtics',
+					home_team_odds: 150,
+					away_team_odds: -175,
+				},
+			}
+			delete state.desiredPresentation.initial_odds_completion
+			return null
+		})
+		await service.apply('guild', gameId, true)
+		expect(writes).toEqual([{ state: 'available', messageId: undefined }])
+		expect(state.appliedRevision).toBe(2)
+	})
+	it('holds a loaded snapshot when its replacement has no completed proof', async () => {
+		vi.mocked(discord.findChannel).mockImplementationOnce(async () => {
+			state.desiredRevision = 2
+			delete state.desiredPresentation.initial_odds_completion
+			return null
+		})
+		await service.apply('guild', gameId, true)
+		expect(discord.create).not.toHaveBeenCalled()
+		expect(discord.write).not.toHaveBeenCalled()
+		expect(store.ack).not.toHaveBeenCalled()
+	})
+	it('rechecks the delivery lease after the authoritative state read', async () => {
+		vi.mocked(store.load)
+			.mockImplementationOnce(async () => structuredClone(state))
+			.mockImplementationOnce(async () => {
+				vi.setSystemTime(new Date('2026-10-20T22:36:00Z'))
+				return structuredClone(state)
+			})
+		await expect(service.apply('guild', gameId, true)).rejects.toThrow(
+			'lease was lost',
+		)
+		expect(discord.create).not.toHaveBeenCalled()
+		expect(discord.write).not.toHaveBeenCalled()
+	})
 	it('creates one neutral post, then edits the same post when odds arrive and disappear', async () => {
 		await service.apply('guild', gameId, true)
 		expect(state).toMatchObject({
@@ -243,6 +355,7 @@ describe('durable presentation delivery', () => {
 		await expect(service.apply('guild', gameId, true)).rejects.toThrow(
 			'Stale',
 		)
+		state.desiredPresentation.initial_odds_completion!.revision = 2
 		await service.apply('guild', gameId, true)
 		expect(state.appliedRevision).toBe(2)
 		expect(discord.create).toHaveBeenCalledTimes(1)
