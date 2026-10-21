@@ -26,7 +26,7 @@ export interface PresentationStore {
 		gameId: string,
 		receipt: ChannelPresentationReceipt,
 	): Promise<void>
-	guild(guildId: string, gameId: string): Promise<GuildEligibility>
+	guild(guildId: string): Promise<GuildEligibility>
 }
 export interface PresentationDiscord {
 	findChannel(
@@ -68,7 +68,7 @@ export class ChannelPresentationService {
 			if (state.guildId !== guildId || state.gameId !== gameId)
 				throw new Error('Presentation identity mismatch')
 			if (state.appliedRevision === state.desiredRevision) return
-			const guild = await this.store.guild(guildId, gameId)
+			let guild = await this.store.guild(guildId)
 			if (
 				guild.guildId !== guildId ||
 				guild.sport !== state.desiredPresentation.sport.toLowerCase()
@@ -97,13 +97,30 @@ export class ChannelPresentationService {
 					throw new Error(
 						'Presentation update has no confirmed channel',
 					)
+				// A queued event can outlive a guild configuration change. Re-read
+				// preferences immediately before the first Discord side effect.
+				const creationGuild = await this.store.guild(guildId)
+				if (
+					creationGuild.guildId !== guildId ||
+					creationGuild.sport !==
+						state.desiredPresentation.sport.toLowerCase()
+				)
+					throw new Error('Presentation guild mismatch')
+				if (
+					!isPresentationEligibleForGuild(
+						state.desiredPresentation,
+						creationGuild.preferredTeams,
+					)
+				)
+					return
 				if (!canCreatePresentation(state.desiredPresentation)) return
 				await check()
 				channelId = await this.discord.create(
-					guild,
+					creationGuild,
 					state.desiredPresentation,
 					marker,
 				)
+				guild = creationGuild
 			}
 			await check()
 			messageId = await this.discord.write(
@@ -121,6 +138,21 @@ export class ChannelPresentationService {
 			})
 		})
 	}
+}
+
+export function isPresentationEligibleForGuild(
+	presentation: Pick<ChannelAggregatedV2, 'home_team' | 'away_team'>,
+	preferredTeams?: string[],
+): boolean {
+	const preferred = (preferredTeams ?? [])
+		.map((team) => team.trim().toLowerCase())
+		.filter(Boolean)
+	if (preferred.length === 0) return true
+	const teams = new Set([
+		presentation.home_team.trim().toLowerCase(),
+		presentation.away_team.trim().toLowerCase(),
+	])
+	return preferred.some((team) => teams.has(team))
 }
 
 export function canCreatePresentation(

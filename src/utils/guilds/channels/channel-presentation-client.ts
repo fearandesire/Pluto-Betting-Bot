@@ -28,12 +28,21 @@ export class ChannelPresentationClient {
 		)
 	}
 
-	async guild(guildId: string, gameId: string) {
+	async guild(guildId: string) {
 		const guild = await GuildsInstance.getGuildById({ id: guildId })
+		const preferredTeamsValue = guild.config?.find(
+			(c) => c.setting_type === 'PREFERRED_TEAMS',
+		)?.setting_value
+		const preferredTeams = (preferredTeamsValue ?? '')
+			.split(',')
+			.map((team) => team.trim())
+			.filter(Boolean)
 		return eligibleGuildData.parse({
 			guildId,
-			eligibleMatches: [gameId],
+			// V2 evaluates this game's current preferences at delivery time.
+			eligibleMatches: [],
 			sport: guild.sport.toLowerCase(),
+			preferredTeams,
 			bettingChannelId: guild.config?.find(
 				(c) => c.setting_type === 'BETTING_CHAN',
 			)?.setting_value,

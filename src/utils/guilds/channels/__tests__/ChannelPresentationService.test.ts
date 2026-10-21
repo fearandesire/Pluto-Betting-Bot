@@ -136,6 +136,22 @@ describe('durable presentation delivery', () => {
 			{ messageId: 'message', state: 'unavailable' },
 		])
 	})
+	it('rechecks current team preferences before creating a queued channel', async () => {
+		vi.mocked(store.guild)
+			.mockResolvedValueOnce(guild)
+			.mockResolvedValueOnce({
+				...guild,
+				eligibleMatches: [],
+				preferredTeams: ['Miami Heat'],
+			})
+
+		await service.apply('guild', gameId, true)
+
+		expect(store.guild).toHaveBeenCalledTimes(2)
+		expect(discord.create).not.toHaveBeenCalled()
+		expect(discord.write).not.toHaveBeenCalled()
+		expect(store.ack).not.toHaveBeenCalled()
+	})
 	it('recovers a successful send after lost acknowledgement without another post', async () => {
 		vi.mocked(store.ack).mockRejectedValueOnce(new Error('Response lost'))
 		await expect(service.apply('guild', gameId, true)).rejects.toThrow(

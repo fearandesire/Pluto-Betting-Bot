@@ -168,6 +168,7 @@ describe('ChannelManager matchup attachments', () => {
 				betting: { state: 'unavailable', reason: 'no_markets' },
 			},
 			guild as any,
+			'pluto-game:fixture',
 		)
 		const json = (message.embeds![0] as EmbedBuilder).toJSON()
 		expect(json.description).toMatch(/^# Patriots @ Commanders\n\n<t:/)
@@ -176,6 +177,40 @@ describe('ChannelManager matchup attachments', () => {
 		)
 		expect(json.image?.url).toBe('attachment://match.jpg')
 		expect(message.files).toHaveLength(1)
+	})
+	it('shows the favorite and betting CTA without numeric prices when odds exist', async () => {
+		mocks.resolve.mockResolvedValue(fixture.jpeg)
+		const { matchOdds: _matchOdds, ...core } = channel
+		const message = await new ChannelManager(
+			{} as any,
+		).preparePresentationMessage(
+			{
+				...core,
+				id: '00000000-0000-4000-8000-000000000002',
+				sport: 'nba',
+				channelname: 'celtics-at-pistons',
+				away_team: 'Boston Celtics',
+				home_team: 'Detroit Pistons',
+				created: false,
+				status: 'scheduled',
+				gametime: new Date('2099-10-20T23:00:00Z'),
+				betting: {
+					state: 'available',
+					matchOdds: {
+						favored: 'Boston Celtics',
+						home_team_odds: 150,
+						away_team_odds: -175,
+					},
+				},
+			},
+			guild as any,
+			'pluto-game:fixture',
+		)
+		const json = (message.embeds![0] as EmbedBuilder).toJSON()
+		expect(json.description).toContain('Boston Celtics')
+		expect(json.description).toContain('Place your bets')
+		expect(json.description).not.toMatch(/[+-]175|[+]150/)
+		expect(json.footer?.text).toBe('Pluto | dev. fenixforever')
 	})
 	it('never lets a retried V1 job repost inside a V2-owned channel, including a deleted card', async () => {
 		const marker = `pluto-game:${createHash('sha256').update(`${guild.guildId}:${channel.id}`).digest('hex').slice(0, 24)}`
