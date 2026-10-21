@@ -153,4 +153,83 @@ describe('ChannelManager matchup attachments', () => {
 			})
 		}
 	}
+	it('renders a schedule-only card with its normal image and no market placeholders', async () => {
+		mocks.resolve.mockResolvedValue(fixture.jpeg)
+		const { matchOdds: _matchOdds, ...core } = channel
+		const message = await new ChannelManager(
+			{} as any,
+		).preparePresentationMessage(
+			{
+				...core,
+				created: false,
+				sport: 'nfl',
+				status: 'scheduled',
+				gametime: new Date('2099-10-20T23:00:00Z'),
+				betting: { state: 'unavailable', reason: 'no_markets' },
+			},
+			guild as any,
+			'pluto-game:fixture',
+		)
+		const json = (message.embeds![0] as EmbedBuilder).toJSON()
+		expect(json.description).toMatch(/^# Patriots @ Commanders\n\n<t:/)
+		expect(json.description).not.toMatch(
+			/favorite|bets|unavailable|null|undefined/i,
+		)
+		expect(json.image?.url).toBe('attachment://match.jpg')
+		expect(message.files).toHaveLength(1)
+	})
+	it('shows the favorite and betting CTA without numeric prices when odds exist', async () => {
+		mocks.resolve.mockResolvedValue(fixture.jpeg)
+		const { matchOdds: _matchOdds, ...core } = channel
+		const message = await new ChannelManager(
+			{} as any,
+		).preparePresentationMessage(
+			{
+				...core,
+				id: '00000000-0000-4000-8000-000000000002',
+				sport: 'nba',
+				channelname: 'celtics-at-pistons',
+				away_team: 'Boston Celtics',
+				home_team: 'Detroit Pistons',
+				created: false,
+				status: 'scheduled',
+				gametime: new Date('2099-10-20T23:00:00Z'),
+				betting: {
+					state: 'available',
+					matchOdds: {
+						favored: 'Boston Celtics',
+						home_team_odds: 150,
+						away_team_odds: -175,
+					},
+				},
+			},
+			guild as any,
+			'pluto-game:fixture',
+		)
+		const json = (message.embeds![0] as EmbedBuilder).toJSON()
+		expect(json.description).toContain('Boston Celtics')
+		expect(json.description).toContain('Place your bets')
+		expect(json.description).not.toMatch(/[+-]175|[+]150/)
+		expect(json.footer?.text).toBe('Pluto | dev. fenixforever')
+	})
+	it('never lets a retried V1 job repost inside a V2-owned channel, including a deleted card', async () => {
+		const marker = `pluto-game:${createHash('sha256').update(`${guild.guildId}:${channel.id}`).digest('hex').slice(0, 24)}`
+		const text = {
+			id: 'text',
+			type: ChannelType.GuildText,
+			topic: `${marker} | pluto-presentation:v2`,
+			send: vi.fn(),
+			messages: { fetch: vi.fn(async () => []) },
+		}
+		mocks.guilds.set('guild', {
+			channels: { cache: new Map([['text', text]]) },
+		})
+		await (new ChannelManager({} as any) as any).completeExistingChannel(
+			channel,
+			guild,
+			'text',
+		)
+		expect(text.send).not.toHaveBeenCalled()
+		expect(text.messages.fetch).not.toHaveBeenCalled()
+	})
 })

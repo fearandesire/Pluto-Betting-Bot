@@ -16,6 +16,7 @@ import { SapDiscClient } from '../../../index.js'
 import { matchPostEmbed } from '../../../lib/discord/builders/odds.js'
 import env from '../../../lib/startup/env.js'
 import { findEmoji } from '../../bot_res/findEmoji.js'
+import type { ChannelAggregatedV2 } from '../../cache/data/channel-presentation-contract.js'
 import {
 	type ChannelAggregated,
 	type GuildEligibility,
@@ -35,7 +36,12 @@ import {
 	ChannelCreationWorkflow,
 	type CreatedChannel,
 } from './ChannelCreationWorkflow.js'
-import { findExistingGameChannel } from './channel-reconciliation.js'
+import { RedisPresentationLock } from './channel-presentation-lock.js'
+import {
+	findExistingGameChannel,
+	V2_PRESENTATION_FOOTER,
+	V2_PRESENTATION_TOPIC_SUFFIX,
+} from './channel-reconciliation.js'
 import { resolveMatchupImage } from './matchup-image-resolver.js'
 
 /**
@@ -74,6 +80,21 @@ export default class ChannelManager {
 	}
 
 	private async processChannel(
+		channel: ChannelAggregated,
+		guilds: GuildEligibility[],
+	) {
+		for (const guild of guilds) {
+			await new RedisPresentationLock().run(
+				`${guild.guildId}:${channel.id}`,
+				async (check) => {
+					await check()
+					await this.processChannelUnlocked(channel, [guild])
+				},
+			)
+		}
+	}
+
+	private async processChannelUnlocked(
 		channel: ChannelAggregated,
 		guilds: GuildEligibility[],
 	) {
@@ -213,6 +234,11 @@ export default class ChannelManager {
 		if (!existing || existing.type !== ChannelType.GuildText) {
 			throw new Error('Reserved game channel is unavailable')
 		}
+		if (
+			existing.topic ===
+			`${this.channelIntent(channel, guild).marker}${V2_PRESENTATION_TOPIC_SUFFIX}`
+		)
+			return
 		const favoredTeamInfo = await teamResolver.resolve(
 			channel.matchOdds.favored,
 			{ sport: channel.sport.toLowerCase(), full: true },
@@ -248,13 +274,29 @@ export default class ChannelManager {
 	}
 
 	private async prepareGameMessage(
-		channel: ChannelAggregated,
+		channel: ChannelAggregated | ChannelAggregatedV2,
 		guild: GuildEligibility,
 		metadata: { favoredTeamInfo: any; matchImg: Buffer | null },
 	): Promise<MessageCreateOptions> {
+		const bettingAvailable =
+			'betting' in channel
+				? channel.betting.state === 'available' &&
+					channel.status === 'scheduled' &&
+					new Date(channel.gametime).getTime() > Date.now()
+				: true
+		const matchOdds =
+			'betting' in channel
+				? channel.betting.state === 'available'
+					? channel.betting.matchOdds
+					: undefined
+				: (channel as ChannelAggregated).matchOdds
 		const matchEmbed = await this.prepMatchEmbed({
-			favored: channel.matchOdds.favored,
-			favoredTeamClr: metadata.favoredTeamInfo.colors[0],
+			favored: bettingAvailable ? matchOdds?.favored : undefined,
+			favoredTeamClr: metadata.favoredTeamInfo?.colors?.[0],
+			bettingAvailable,
+			gametime:
+				'betting' in channel ? new Date(channel.gametime) : undefined,
+			gameStatus: 'betting' in channel ? channel.status : undefined,
 			home_team: channel.home_team,
 			homeTeamShortName: new StringUtils().getShortName(
 				channel.home_team,
@@ -279,6 +321,64 @@ export default class ChannelManager {
 			messageOptions.files = [attachment]
 		}
 		return messageOptions
+	}
+
+	/** V2 presentation uses the same identity-based asset and embed builders as V1. */
+	async preparePresentationMessage(
+		channel: ChannelAggregatedV2,
+		guild: GuildEligibility,
+		marker?: string,
+	): Promise<MessageCreateOptions> {
+		const favored =
+			channel.betting.state === 'available'
+				? channel.betting.matchOdds.favored
+				: undefined
+		const favoredTeamInfo = favored
+			? await teamResolver
+					.resolve(favored, {
+						sport: channel.sport.toLowerCase(),
+						full: true,
+					})
+					.catch(() => null)
+			: null
+		const matchImg = await resolveMatchupImage({
+			sport: channel.sport,
+			awayTeam: channel.away_team,
+			homeTeam: channel.home_team,
+		})
+		const message = await this.prepareGameMessage(channel, guild, {
+			favoredTeamInfo,
+			matchImg,
+		})
+		if (marker && message.embeds?.[0] instanceof EmbedBuilder) {
+			message.embeds[0].setFooter({
+				text: V2_PRESENTATION_FOOTER,
+			})
+		}
+		return message
+	}
+
+	async writePresentationMessage(
+		target: TextChannel,
+		channel: ChannelAggregatedV2,
+		guild: GuildEligibility,
+		marker: string,
+		messageId?: string,
+	): Promise<string> {
+		const payload = await this.preparePresentationMessage(
+			channel,
+			guild,
+			marker,
+		)
+		if (!messageId) return (await target.send(payload)).id
+		const message = await target.messages.fetch(messageId)
+		return (
+			await message.edit({
+				embeds: payload.embeds,
+				files: payload.files,
+				attachments: [],
+			})
+		).id
 	}
 
 	/**
@@ -314,7 +414,9 @@ export default class ChannelManager {
 	 * @param {PrepareMatchEmbed} args - The arguments for preparing the match embed
 	 */
 	async prepMatchEmbed(args: PrepareMatchEmbed) {
-		const teamEmoji = (await findEmoji(args.favored)) ?? ''
+		const teamEmoji = args.favored
+			? ((await findEmoji(args.favored)) ?? '')
+			: ''
 		return { embed: matchPostEmbed(args, teamEmoji) }
 	}
 

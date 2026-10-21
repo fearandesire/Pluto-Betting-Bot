@@ -6,6 +6,7 @@ import auth from 'koa-basic-auth'
 import env from '../../../../lib/startup/env.js'
 import { channelCreationQueue } from '../../../cache/queue/ChannelCreationQueue.js'
 import { channelDeletionQueue } from '../../../cache/queue/ChannelDeletionQueue.js'
+import { channelPresentationQueue } from '../../../cache/queue/ChannelPresentationQueue.js'
 import { getMatchRefreshQueue } from '../../../cache/queue/match-refresh-queue.js'
 
 /**
@@ -20,6 +21,7 @@ export function setupBullBoard(app: Application) {
 	createBullBoard({
 		queues: [
 			new BullMQAdapter(channelCreationQueue.queue),
+			new BullMQAdapter(channelPresentationQueue.queue),
 			new BullMQAdapter(channelDeletionQueue.queue),
 			new BullMQAdapter(getMatchRefreshQueue().queue),
 		],
