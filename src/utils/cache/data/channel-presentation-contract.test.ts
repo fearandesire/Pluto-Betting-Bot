@@ -21,6 +21,16 @@ const available = {
 		away_team_odds: -175,
 	},
 }
+const completed = {
+	revision: 1,
+	completion_id: '00000000-0000-4000-8000-000000000002',
+	event_id: core.id,
+	sport: 'basketball_nba',
+	market: 'h2h',
+	completed: true,
+	status: 'confirmed_empty',
+	completed_at: '2026-10-20T22:29:00Z',
+}
 const cases = [
 	{ ...core, id: '11111111-1111-F111-1111-111111111111' },
 	{
@@ -56,6 +66,15 @@ const cases = [
 	{ ...core, status: 'unknown' },
 	{ ...core, home_team: core.away_team },
 	{ ...core, id: 'ESPN-numeric-id' },
+	{ ...core, initial_odds_completion: completed },
+	{
+		...core,
+		initial_odds_completion: { ...completed, status: 'unknown' },
+	},
+	{
+		...core,
+		initial_odds_completion: { ...completed, completed: false },
+	},
 ]
 describe('additive channel contracts', () => {
 	it('accepts independent schedules and rejects invalid identities and market state', () => {
@@ -73,6 +92,9 @@ describe('additive channel contracts', () => {
 			false,
 			false,
 			false,
+			false,
+			false,
+			true,
 			false,
 			false,
 		])
