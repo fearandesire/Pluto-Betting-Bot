@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.14.2](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.14.1...v4.14.2) (2026-10-21)
+
+
+### Bug Fixes
+
+* **channels:** require paid completion before initial fallback ([#725](https://github.com/fearandesire/Pluto-Betting-Bot/issues/725)) ([144d124](https://github.com/fearandesire/Pluto-Betting-Bot/commit/144d124067047c6e90bde6352f688e6af5df7fd4))
+
 ## [4.14.1](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.14.0...v4.14.1) (2026-10-21)
 
 
