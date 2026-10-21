@@ -324,14 +324,14 @@ importers:
         specifier: 0.35.5
         version: 0.35.5(@types/node@25.6.0)
       ts-jest:
-        specifier: ^29.4.14
-        version: 29.4.14(@babel/core@7.29.7)(@jest/transform@30.3.0)(@jest/types@30.3.0)(babel-jest@30.3.0(@babel/core@7.29.7))(jest-util@30.3.0)(jest@30.3.0(@types/node@25.6.0)(ts-node@11.0.0-beta.1(@swc/core@1.16.18)(@types/node@25.6.0)(typescript@5.9.3)))(typescript@5.9.3)
+        specifier: ^29.4.15
+        version: 29.4.15(@babel/core@7.29.7)(@jest/transform@30.3.0)(@jest/types@30.3.0)(babel-jest@30.3.0(@babel/core@7.29.7))(jest-util@30.3.0)(jest@30.3.0(@types/node@25.6.0)(ts-node@11.0.0-beta.1(@swc/core@1.16.18)(@types/node@25.6.0)(typescript@5.9.3)))(typescript@5.9.3)
       ts-node:
         specifier: 11.0.0-beta.1
         version: 11.0.0-beta.1(@swc/core@1.16.18)(@types/node@25.6.0)(typescript@5.9.3)
       tsc-alias:
-        specifier: ^1.9.7
-        version: 1.9.7
+        specifier: ^1.9.8
+        version: 1.9.8
       tsconfig-paths:
         specifier: ^4.2.0
         version: 4.2.0
@@ -7051,8 +7051,8 @@ packages:
     peerDependencies:
       typescript: '>=4.2.0'
 
-  ts-jest@29.4.14:
-    resolution: {integrity: sha512-+943G6wCX5E3VpzTQhBGBFntCmdT+QAkTvUlp03edTONFBvqskuXPhpyX16xdUotO4P5HQKyppldSWjocoltLQ==}
+  ts-jest@29.4.15:
+    resolution: {integrity: sha512-s2qmEUYFRqbjz1wv0EmccNPVOb45HOFpFuhzQJLKShYVisuTbCFPIIAIV2EuK5rIxb4BejLDbH7dnBZfYjybUQ==}
     engines: {node: ^14.15.0 || ^16.10.0 || ^18.0.0 || >=20.0.0}
     hasBin: true
     peerDependencies:
@@ -7109,8 +7109,8 @@ packages:
       '@swc/wasm':
         optional: true
 
-  tsc-alias@1.9.7:
-    resolution: {integrity: sha512-nGOOLMkaociegx2Y9J1lnbqrledf1EfSq3Ds4H4CLySG5RyD58KrR4ahFIAgpeMVJz4BIhJND3ETt02o9zKQAw==}
+  tsc-alias@1.9.8:
+    resolution: {integrity: sha512-od5fOkQV3Awws6HuoW+hbampmmMz+U9denraxuAwwT2Q4ZFSAJ4LWPYnyVQfCKOquGlRyk7xQTdjCZ3THTsImw==}
     engines: {node: '>=16.20.2'}
     hasBin: true
 
@@ -14723,7 +14723,7 @@ snapshots:
     dependencies:
       typescript: 5.9.3
 
-  ts-jest@29.4.14(@babel/core@7.29.7)(@jest/transform@30.3.0)(@jest/types@30.3.0)(babel-jest@30.3.0(@babel/core@7.29.7))(jest-util@30.3.0)(jest@30.3.0(@types/node@25.6.0)(ts-node@11.0.0-beta.1(@swc/core@1.16.18)(@types/node@25.6.0)(typescript@5.9.3)))(typescript@5.9.3):
+  ts-jest@29.4.15(@babel/core@7.29.7)(@jest/transform@30.3.0)(@jest/types@30.3.0)(babel-jest@30.3.0(@babel/core@7.29.7))(jest-util@30.3.0)(jest@30.3.0(@types/node@25.6.0)(ts-node@11.0.0-beta.1(@swc/core@1.16.18)(@types/node@25.6.0)(typescript@5.9.3)))(typescript@5.9.3):
     dependencies:
       bs-logger: 0.2.6
       fast-json-stable-stringify: 2.1.0
@@ -14783,7 +14783,7 @@ snapshots:
     optionalDependencies:
       '@swc/core': 1.16.18
 
-  tsc-alias@1.9.7:
+  tsc-alias@1.9.8:
     dependencies:
       chokidar: 3.6.0
       commander: 9.5.0
