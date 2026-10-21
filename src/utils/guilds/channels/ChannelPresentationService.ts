@@ -1,10 +1,11 @@
 import { createHash } from 'node:crypto'
 import { ChannelType, type Message, type TextChannel } from 'discord.js'
 import { SapDiscClient } from '../../../index.js'
-import type {
-	ChannelAggregatedV2,
-	ChannelPresentationReceipt,
-	ChannelPresentationState,
+import {
+	type ChannelAggregatedV2,
+	type ChannelPresentationReceipt,
+	type ChannelPresentationState,
+	initialOddsCompletionSchema,
 } from '../../cache/data/channel-presentation-contract.js'
 import type { GuildEligibility } from '../../cache/data/schemas.js'
 import ChannelManager from './ChannelManager.js'
@@ -17,6 +18,7 @@ import {
 	matchesGameMarker,
 	V2_PRESENTATION_FOOTER,
 	V2_PRESENTATION_TOPIC_SUFFIX,
+	V2_PRESENTATION_UNSENT_TOPIC_SUFFIX,
 } from './channel-reconciliation.js'
 
 export interface PresentationStore {
@@ -38,6 +40,7 @@ export interface PresentationDiscord {
 		guild: GuildEligibility,
 		channel: ChannelAggregatedV2,
 		marker: string,
+		beforeEffect?: () => Promise<void>,
 	): Promise<string>
 	findMessage(
 		guildId: string,
@@ -45,12 +48,18 @@ export interface PresentationDiscord {
 		marker: string,
 		messageId?: string,
 	): Promise<string | null>
+	canResumeUnsent?(
+		guildId: string,
+		channelId: string,
+		marker: string,
+	): Promise<boolean>
 	write(
 		guild: GuildEligibility,
 		channelId: string,
 		channel: ChannelAggregatedV2,
 		marker: string,
 		messageId?: string,
+		beforeEffect?: () => Promise<void>,
 	): Promise<string>
 }
 /** Both creation and refresh re-read authoritative state under the same per-game lease. */
@@ -64,10 +73,28 @@ export class ChannelPresentationService {
 	async apply(guildId: string, gameId: string, allowCreate: boolean) {
 		return this.lock.run(`${guildId}:${gameId}`, async (check) => {
 			const marker = presentationMarker(guildId, gameId)
-			const state = await this.store.load(guildId, gameId)
+			let state = await this.store.load(guildId, gameId)
 			if (state.guildId !== guildId || state.gameId !== gameId)
 				throw new Error('Presentation identity mismatch')
 			if (state.appliedRevision === state.desiredRevision) return
+			if (!hasInitialOddsCompletion(state)) return
+			const refresh = async () => {
+				const current = await this.store.load(guildId, gameId)
+				if (current.guildId !== guildId || current.gameId !== gameId)
+					throw new Error('Presentation identity mismatch')
+				if (current.appliedRevision === current.desiredRevision)
+					return false
+				if (!hasInitialOddsCompletion(current)) return false
+				state = current
+				return true
+			}
+			const beforeEffect = async () => {
+				await check()
+				if (!hasInitialOddsCompletion(state))
+					throw new Error(
+						'Initial odds completion expired before delivery',
+					)
+			}
 			let guild = await this.store.guild(guildId)
 			if (
 				guild.guildId !== guildId ||
@@ -87,8 +114,16 @@ export class ChannelPresentationService {
 					marker,
 					state.messageId ?? undefined,
 				)
-				// An ambiguous send (or a deleted post) must never cause a second post.
-				if (!messageId)
+				// Only a durable never-sent phase permits completing an empty channel.
+				// Ambiguous sends and deleted messages still require reconciliation.
+				if (
+					!messageId &&
+					!(await this.discord.canResumeUnsent?.(
+						guildId,
+						channelId,
+						marker,
+					))
+				)
 					throw new Error(
 						'Presentation message receipt requires reconciliation',
 					)
@@ -114,21 +149,28 @@ export class ChannelPresentationService {
 				)
 					return
 				if (!canCreatePresentation(state.desiredPresentation)) return
+				if (!(await refresh())) return
 				await check()
+				if (!hasInitialOddsCompletion(state)) return
+				if (!canCreatePresentation(state.desiredPresentation)) return
 				channelId = await this.discord.create(
 					creationGuild,
 					state.desiredPresentation,
 					marker,
+					beforeEffect,
 				)
 				guild = creationGuild
 			}
+			if (!(await refresh())) return
 			await check()
+			if (!hasInitialOddsCompletion(state)) return
 			messageId = await this.discord.write(
 				guild,
 				channelId,
 				state.desiredPresentation,
 				marker,
 				messageId ?? undefined,
+				beforeEffect,
 			)
 			await check()
 			await this.store.ack(guildId, gameId, {
@@ -138,6 +180,38 @@ export class ChannelPresentationService {
 			})
 		})
 	}
+}
+
+/** Old jobs and held snapshots cannot authorize the first no-odds delivery. */
+export function hasInitialOddsCompletion(
+	state: ChannelPresentationState,
+	now = Date.now(),
+): boolean {
+	if (
+		state.messageId !== null ||
+		state.desiredPresentation.betting.state === 'available'
+	)
+		return true
+	const result = initialOddsCompletionSchema.safeParse(
+		state.desiredPresentation.initial_odds_completion,
+	)
+	if (!result.success) return false
+	const proof = result.data
+	const completedAt = Date.parse(proof.completed_at)
+	const sport =
+		state.desiredPresentation.sport.toLowerCase() === 'nba'
+			? 'basketball_nba'
+			: state.desiredPresentation.sport.toLowerCase() === 'nfl'
+				? 'americanfootball_nfl'
+				: null
+	return (
+		proof.revision === state.desiredRevision &&
+		proof.event_id === state.gameId &&
+		proof.event_id === state.desiredPresentation.id &&
+		proof.sport === sport &&
+		completedAt <= now &&
+		now - completedAt <= 15 * 60 * 1000
+	)
 }
 
 export function isPresentationEligibleForGuild(
@@ -215,21 +289,29 @@ export class DiscordPresentationPort implements PresentationDiscord {
 		guild: GuildEligibility,
 		channel: ChannelAggregatedV2,
 		marker: string,
+		beforeEffect?: () => Promise<void>,
 	) {
 		const server = SapDiscClient.guilds.cache.get(guild.guildId)
 		const category = await server?.channels.fetch(guild.gameCategoryId)
 		if (!category || category.type !== ChannelType.GuildCategory)
 			throw new Error('Game category unavailable')
+		await beforeEffect?.()
 		if (!canCreatePresentation(channel))
 			throw new Error('Presentation creation window or evidence expired')
 		return (
 			await server.channels.create({
 				name: channel.channelname,
 				type: ChannelType.GuildText,
-				topic: `${marker}${V2_PRESENTATION_TOPIC_SUFFIX}`,
+				topic: `${marker}${V2_PRESENTATION_UNSENT_TOPIC_SUFFIX}`,
 				parent: category.id,
 			})
 		).id
+	}
+	async canResumeUnsent(guildId: string, channelId: string, marker: string) {
+		const channel = await this.text(guildId, channelId)
+		return (
+			channel.topic === `${marker}${V2_PRESENTATION_UNSENT_TOPIC_SUFFIX}`
+		)
 	}
 	async findMessage(
 		guildId: string,
@@ -274,6 +356,7 @@ export class DiscordPresentationPort implements PresentationDiscord {
 		channel: ChannelAggregatedV2,
 		marker: string,
 		messageId?: string,
+		beforeEffect?: () => Promise<void>,
 	) {
 		const target = await this.text(guild.guildId, channelId)
 		return this.manager.writePresentationMessage(
@@ -282,6 +365,23 @@ export class DiscordPresentationPort implements PresentationDiscord {
 			guild,
 			marker,
 			messageId,
+			async () => {
+				await beforeEffect?.()
+				if (!messageId) {
+					if (
+						target.topic !==
+						`${marker}${V2_PRESENTATION_UNSENT_TOPIC_SUFFIX}`
+					)
+						throw new Error(
+							'Initial presentation send requires reconciliation',
+						)
+					// Persist ambiguity before the first send, after payload preparation.
+					await target.setTopic(
+						`${marker}${V2_PRESENTATION_TOPIC_SUFFIX}`,
+					)
+					await beforeEffect?.()
+				}
+			},
 		)
 	}
 }

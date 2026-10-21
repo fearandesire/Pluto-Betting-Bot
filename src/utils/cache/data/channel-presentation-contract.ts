@@ -14,6 +14,18 @@ const channelEligibleGuildSchema = legacyCreationSchema.shape.guild
 const bullMqMetadataSchema = legacyCreationSchema.shape.metadata
 	.unwrap()
 	.unwrap()
+
+/** Paid decision persisted with the exact initial unpriced presentation revision. */
+export const initialOddsCompletionSchema = z.strictObject({
+	revision: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+	completion_id: z.guid(),
+	event_id: z.guid().toLowerCase(),
+	sport: z.enum(['basketball_nba', 'americanfootball_nfl']),
+	market: z.literal('h2h'),
+	completed: z.literal(true),
+	status: z.enum(['confirmed_empty', 'unavailable', 'blocked']),
+	completed_at: z.string().datetime({ offset: true }),
+})
 /** V2 is additive: persisted V1 jobs retain their original required prices. */
 export const channelBettingSchema = z.discriminatedUnion('state', [
 	z.strictObject({
@@ -56,6 +68,7 @@ export const channelAggregatedV2Schema = z
 		schedule_provider: z.enum(['espn', 'odds_api']).optional(),
 		schedule_observed_at: z.string().datetime({ offset: true }).optional(),
 		schedule_snapshot_ref: z.string().trim().min(1).optional(),
+		initial_odds_completion: initialOddsCompletionSchema.optional(),
 		metadata: matchMetadataSchema.nullable().optional(),
 	})
 	.superRefine((channel, context) => {
