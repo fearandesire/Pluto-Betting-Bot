@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.14.5](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.14.4...v4.14.5) (2026-10-21)
+
+
+### Bug Fixes
+
+* **build:** preserve package exports and verify compiled runtime ([#733](https://github.com/fearandesire/Pluto-Betting-Bot/issues/733)) ([0265a57](https://github.com/fearandesire/Pluto-Betting-Bot/commit/0265a570c9c95f813349af5a07c5abbaf8677187))
+
 ## [4.14.4](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.14.3...v4.14.4) (2026-10-21)
 
 
