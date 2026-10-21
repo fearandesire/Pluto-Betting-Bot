@@ -114,6 +114,10 @@ describe.skipIf(!fixture.config)(
 							...options,
 							id: 'discord-channel-1',
 							type: ChannelType.GuildText,
+							setTopic: async (topic: string) => {
+								channel.topic = topic
+								return channel
+							},
 							messages: {
 								fetch: async (id?: any) =>
 									typeof id === 'string'
