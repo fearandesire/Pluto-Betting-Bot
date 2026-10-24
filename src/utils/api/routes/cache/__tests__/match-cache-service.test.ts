@@ -6,11 +6,16 @@ vi.mock('../../../../logging/WinstonLogger.js', () => ({
 	logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }))
 
+const getAllMatches = vi.fn()
 vi.mock('../../../Khronos/matches/matchApiWrapper.js', () => ({
-	default: vi.fn(),
+	default: vi.fn(function () {
+		return { getAllMatches }
+	}),
 }))
 
-import MatchCacheService from '../match-cache-service.js'
+import MatchCacheService, {
+	MATCH_CACHE_TTL_SECONDS,
+} from '../match-cache-service.js'
 
 function makeMatch(overrides: Partial<MatchDetailDto> = {}): MatchDetailDto {
 	return {
@@ -93,12 +98,45 @@ describe('MatchCacheService', () => {
 	})
 
 	describe('cacheMatches', () => {
-		it('calls cache.set with the matches and a 24-hour TTL', async () => {
+		it('calls cache.set with the matches and a 3-hour TTL', async () => {
 			const cache = makeCache() as CacheManager
 			const svc = new MatchCacheService(cache)
 			const matches = [makeMatch()]
 			await svc.cacheMatches(matches)
-			expect(cache.set).toHaveBeenCalledWith('matches', matches, 86400)
+			expect(MATCH_CACHE_TTL_SECONDS).toBe(10800)
+			expect(cache.set).toHaveBeenCalledWith('matches', matches, 10800)
+		})
+	})
+
+	describe('refreshMatches', () => {
+		beforeEach(() => {
+			getAllMatches.mockReset()
+		})
+
+		it('replaces the cache with the current Khronos matches', async () => {
+			const matches = [makeMatch({ id: 'tonight' })]
+			getAllMatches.mockResolvedValue({ statusCode: 200, matches })
+			const cache = makeCache([makeMatch({ id: 'last-night' })])
+			const svc = new MatchCacheService(cache as CacheManager)
+
+			expect(await svc.refreshMatches()).toBe(1)
+			expect(cache.set).toHaveBeenCalledWith('matches', matches, 10800)
+		})
+
+		it('keeps the existing snapshot when Khronos returns no matches', async () => {
+			getAllMatches.mockResolvedValue({ statusCode: 200, matches: [] })
+			const cache = makeCache([makeMatch()])
+			const svc = new MatchCacheService(cache as CacheManager)
+
+			expect(await svc.refreshMatches()).toBe(0)
+			expect(cache.set).not.toHaveBeenCalled()
+		})
+
+		it('propagates Khronos request failures', async () => {
+			getAllMatches.mockRejectedValue(new Error('Khronos down'))
+			const svc = new MatchCacheService(makeCache() as CacheManager)
+
+			await expect(svc.refreshMatches()).rejects.toThrow('Khronos down')
 		})
 	})
 })
