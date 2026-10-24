@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.14.6](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.14.5...v4.14.6) (2026-10-24)
+
+
+### Bug Fixes
+
+* **bet:** keep the match cache refreshing so /bet lists current games ([#739](https://github.com/fearandesire/Pluto-Betting-Bot/issues/739)) ([68b2558](https://github.com/fearandesire/Pluto-Betting-Bot/commit/68b2558313ff37c4480d9182fbb471d6dd7d3fda))
+
 ## [4.14.5](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.14.4...v4.14.5) (2026-10-21)
 
 
