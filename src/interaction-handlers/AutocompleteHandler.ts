@@ -61,8 +61,12 @@ export class AutocompleteHandler extends InteractionHandler {
 
 		if (!matches) return this.none()
 
-		const sportFilteredMatches = matches.filter((match: MatchDetailDto) =>
-			match.sport?.includes(guildSport),
+		const now = Date.now()
+		const sportFilteredMatches = matches.filter(
+			(match: MatchDetailDto) =>
+				match.sport?.includes(guildSport) &&
+				!!match.commence_time &&
+				new Date(match.commence_time).getTime() > now,
 		)
 
 		if (!sportFilteredMatches.length) return this.none()

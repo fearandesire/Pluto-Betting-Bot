@@ -2,11 +2,11 @@ import { getMatchRefreshQueue } from '../../utils/cache/queue/match-refresh-queu
 import { logger } from '../../utils/logging/WinstonLogger.js'
 
 /**
- * Store matches in cache on startup
+ * Start the recurring match-cache refresh
  */
 async function initCache() {
 	try {
-		await getMatchRefreshQueue().enqueueInitialRefresh()
+		await getMatchRefreshQueue().start()
 	} catch (error) {
 		if (error instanceof Error) {
 			logger.error(error)
