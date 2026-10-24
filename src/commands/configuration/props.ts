@@ -135,13 +135,15 @@ export class UserCommand extends Subcommand {
 			)
 		}
 
+		// PROPS_ENABLED goes first: if it fails, the channel is untouched, so a
+		// server that had no channel does not start receiving props.
 		try {
 			const guildConfig = new GuildConfigWrapper()
+			await guildConfig.setPropsEnabled(interaction.guildId, true)
 			await guildConfig.setPredictionsChannel(
 				interaction.guildId,
 				channel.id,
 			)
-			await guildConfig.setPropsEnabled(interaction.guildId, true)
 		} catch (error) {
 			return this.replyWithError(interaction, error)
 		}

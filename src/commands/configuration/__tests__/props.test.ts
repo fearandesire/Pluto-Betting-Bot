@@ -146,7 +146,7 @@ describe('/props', () => {
 	})
 
 	describe('enable', () => {
-		it('writes the channel, then PROPS_ENABLED=true, and confirms', async () => {
+		it('writes PROPS_ENABLED=true, then the channel, and confirms', async () => {
 			const interaction = makeInteraction()
 
 			await command.handleEnable(interaction as never)
@@ -159,8 +159,8 @@ describe('/props', () => {
 					{
 						createConfigDto: {
 							guild_id: GUILD_ID,
-							setting_type: 'PREDICTIONS_CHAN',
-							setting_value: CHANNEL_ID,
+							setting_type: 'PROPS_ENABLED',
+							setting_value: 'true',
 						},
 					},
 				],
@@ -168,8 +168,8 @@ describe('/props', () => {
 					{
 						createConfigDto: {
 							guild_id: GUILD_ID,
-							setting_type: 'PROPS_ENABLED',
-							setting_value: 'true',
+							setting_type: 'PREDICTIONS_CHAN',
+							setting_value: CHANNEL_ID,
 						},
 					},
 				],
@@ -211,13 +211,17 @@ describe('/props', () => {
 			expect(replyText(interaction)).toContain('- View Channel')
 		})
 
-		it('reports a Khronos failure instead of a success', async () => {
+		it('reports a Khronos failure and never writes the channel', async () => {
 			mockSetGuildConfig.mockRejectedValueOnce(new Error('503 upstream'))
 			const interaction = makeInteraction()
 
 			await command.handleEnable(interaction as never)
 
 			expect(mockSetGuildConfig).toHaveBeenCalledTimes(1)
+			expect(
+				mockSetGuildConfig.mock.calls[0]![0].createConfigDto
+					.setting_type,
+			).toBe('PROPS_ENABLED')
 			const text = replyText(interaction)
 			expect(text).toContain('Something went wrong')
 			expect(text).toContain('503 upstream')
