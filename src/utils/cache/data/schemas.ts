@@ -80,6 +80,13 @@ export const eligibleGuildData = z
 			.describe(
 				'Optional list of teams the guild wants to prioritize for channel creation',
 			),
+		gameChannelTopic: z
+			.string()
+			.nullable()
+			.optional()
+			.describe(
+				'Guild-configured topic for new game channels; Pluto falls back to its default when absent',
+			),
 	})
 	.describe(
 		'Data regarding the guild that is eligible for a channel creation',

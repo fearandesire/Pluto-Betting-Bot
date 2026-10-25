@@ -1,4 +1,3 @@
-import { createHash } from 'node:crypto'
 import { ChannelType, type Message, type TextChannel } from 'discord.js'
 import { SapDiscClient } from '../../../index.js'
 import {
@@ -8,18 +7,18 @@ import {
 	initialOddsCompletionSchema,
 } from '../../cache/data/channel-presentation-contract.js'
 import type { GuildEligibility } from '../../cache/data/schemas.js'
-import ChannelManager from './ChannelManager.js'
+import ChannelManager, { V2_PRESENTATION_FOOTER } from './ChannelManager.js'
 import { ChannelPresentationClient } from './channel-presentation-client.js'
 import {
 	type PresentationLock,
 	RedisPresentationLock,
 } from './channel-presentation-lock.js'
 import {
-	matchesGameMarker,
-	V2_PRESENTATION_FOOTER,
-	V2_PRESENTATION_TOPIC_SUFFIX,
-	V2_PRESENTATION_UNSENT_TOPIC_SUFFIX,
-} from './channel-reconciliation.js'
+	adoptableGameChannels,
+	type GameChannelLedger,
+	RedisGameChannelLedger,
+} from './game-channel-ledger.js'
+import { createGameChannel } from './game-channel-topic.js'
 
 export interface PresentationStore {
 	load(guildId: string, gameId: string): Promise<ChannelPresentationState>
@@ -33,31 +32,28 @@ export interface PresentationStore {
 export interface PresentationDiscord {
 	findChannel(
 		guild: GuildEligibility,
-		marker: string,
+		channel: ChannelAggregatedV2,
 		channelId?: string,
 	): Promise<string | null>
 	create(
 		guild: GuildEligibility,
 		channel: ChannelAggregatedV2,
-		marker: string,
 		beforeEffect?: () => Promise<void>,
 	): Promise<string>
 	findMessage(
 		guildId: string,
 		channelId: string,
-		marker: string,
 		messageId?: string,
 	): Promise<string | null>
 	canResumeUnsent?(
 		guildId: string,
+		gameId: string,
 		channelId: string,
-		marker: string,
 	): Promise<boolean>
 	write(
 		guild: GuildEligibility,
 		channelId: string,
 		channel: ChannelAggregatedV2,
-		marker: string,
 		messageId?: string,
 		beforeEffect?: () => Promise<void>,
 	): Promise<string>
@@ -72,7 +68,6 @@ export class ChannelPresentationService {
 
 	async apply(guildId: string, gameId: string, allowCreate: boolean) {
 		return this.lock.run(`${guildId}:${gameId}`, async (check) => {
-			const marker = presentationMarker(guildId, gameId)
 			let state = await this.store.load(guildId, gameId)
 			if (state.guildId !== guildId || state.gameId !== gameId)
 				throw new Error('Presentation identity mismatch')
@@ -103,7 +98,7 @@ export class ChannelPresentationService {
 				throw new Error('Presentation guild mismatch')
 			let channelId = await this.discord.findChannel(
 				guild,
-				marker,
+				state.desiredPresentation,
 				state.channelId ?? undefined,
 			)
 			let messageId: string | null = null
@@ -111,7 +106,6 @@ export class ChannelPresentationService {
 				messageId = await this.discord.findMessage(
 					guildId,
 					channelId,
-					marker,
 					state.messageId ?? undefined,
 				)
 				// Only a durable never-sent phase permits completing an empty channel.
@@ -120,8 +114,8 @@ export class ChannelPresentationService {
 					!messageId &&
 					!(await this.discord.canResumeUnsent?.(
 						guildId,
+						gameId,
 						channelId,
-						marker,
 					))
 				)
 					throw new Error(
@@ -156,7 +150,6 @@ export class ChannelPresentationService {
 				channelId = await this.discord.create(
 					creationGuild,
 					state.desiredPresentation,
-					marker,
 					beforeEffect,
 				)
 				guild = creationGuild
@@ -168,7 +161,6 @@ export class ChannelPresentationService {
 				guild,
 				channelId,
 				state.desiredPresentation,
-				marker,
 				messageId ?? undefined,
 				beforeEffect,
 			)
@@ -246,12 +238,11 @@ export function canCreatePresentation(
 	)
 }
 
-export function presentationMarker(guildId: string, gameId: string) {
-	return `pluto-game:${createHash('sha256').update(`${guildId}:${gameId}`).digest('hex').slice(0, 24)}`
-}
-
 export class DiscordPresentationPort implements PresentationDiscord {
 	private readonly manager = new ChannelManager()
+	constructor(
+		private readonly ledger: GameChannelLedger = new RedisGameChannelLedger(),
+	) {}
 	private async text(
 		guildId: string,
 		channelId: string,
@@ -265,30 +256,45 @@ export class DiscordPresentationPort implements PresentationDiscord {
 	}
 	async findChannel(
 		guild: GuildEligibility,
-		marker: string,
+		channel: ChannelAggregatedV2,
 		channelId?: string,
 	) {
-		if (channelId) {
-			const channel = await this.text(guild.guildId, channelId)
-			if (!matchesGameMarker(channel.topic, marker))
-				throw new Error('Presentation channel marker mismatch')
-			return channel.id
-		}
+		if (channelId) return (await this.text(guild.guildId, channelId)).id
 		const server = SapDiscClient.guilds.cache.get(guild.guildId)
 		if (!server) throw new Error('Guild unavailable')
+		const record = await this.ledger.get(guild.guildId, channel.id)
 		const channels = await server.channels.fetch()
-		const matches = channels.filter(
-			(channel) =>
-				channel?.type === ChannelType.GuildText &&
-				matchesGameMarker(channel.topic, marker),
+		if (record?.channelId) {
+			const known = channels.get(record.channelId)
+			return known?.type === ChannelType.GuildText ? known.id : null
+		}
+		const matches = adoptableGameChannels(
+			[...channels.values()].filter(
+				(candidate): candidate is TextChannel =>
+					candidate?.type === ChannelType.GuildText,
+			),
+			{
+				channelName: channel.channelname,
+				gameCategoryId: guild.gameCategoryId,
+			},
+			record,
 		)
-		if (matches.size > 1) throw new Error('Ambiguous presentation channels')
-		return matches.first()?.id ?? null
+		if (matches.length > 1)
+			throw new Error('Ambiguous presentation channels')
+		const [adopted] = matches
+		if (!adopted) return null
+		// Creation stopped before the id was recorded, so nothing was sent.
+		await this.ledger.recordChannel(
+			guild.guildId,
+			channel.id,
+			adopted.id,
+			'unsent',
+		)
+		return adopted.id
 	}
 	async create(
 		guild: GuildEligibility,
 		channel: ChannelAggregatedV2,
-		marker: string,
 		beforeEffect?: () => Promise<void>,
 	) {
 		const server = SapDiscClient.guilds.cache.get(guild.guildId)
@@ -298,30 +304,25 @@ export class DiscordPresentationPort implements PresentationDiscord {
 		await beforeEffect?.()
 		if (!canCreatePresentation(channel))
 			throw new Error('Presentation creation window or evidence expired')
-		return (
-			await server.channels.create({
-				name: channel.channelname,
-				type: ChannelType.GuildText,
-				topic: `${marker}${V2_PRESENTATION_UNSENT_TOPIC_SUFFIX}`,
-				parent: category.id,
-			})
-		).id
-	}
-	async canResumeUnsent(guildId: string, channelId: string, marker: string) {
-		const channel = await this.text(guildId, channelId)
-		return (
-			channel.topic === `${marker}${V2_PRESENTATION_UNSENT_TOPIC_SUFFIX}`
+		await this.ledger.beginCreation(guild.guildId, channel.id)
+		const created = await createGameChannel(server, guild, {
+			name: channel.channelname,
+			parent: category.id,
+		})
+		await this.ledger.recordChannel(
+			guild.guildId,
+			channel.id,
+			created.id,
+			'unsent',
 		)
+		return created.id
 	}
-	async findMessage(
-		guildId: string,
-		channelId: string,
-		marker: string,
-		messageId?: string,
-	) {
+	async canResumeUnsent(guildId: string, gameId: string, channelId: string) {
+		const record = await this.ledger.get(guildId, gameId)
+		return record?.channelId === channelId && record.delivery === 'unsent'
+	}
+	async findMessage(guildId: string, channelId: string, messageId?: string) {
 		const channel = await this.text(guildId, channelId)
-		if (!matchesGameMarker(channel.topic, marker))
-			throw new Error('Presentation channel marker mismatch')
 		const owns = (message: Message) =>
 			message.author.id === SapDiscClient.user?.id &&
 			message.embeds.some(
@@ -354,7 +355,6 @@ export class DiscordPresentationPort implements PresentationDiscord {
 		guild: GuildEligibility,
 		channelId: string,
 		channel: ChannelAggregatedV2,
-		marker: string,
 		messageId?: string,
 		beforeEffect?: () => Promise<void>,
 	) {
@@ -363,21 +363,15 @@ export class DiscordPresentationPort implements PresentationDiscord {
 			target,
 			channel,
 			guild,
-			marker,
 			messageId,
 			async () => {
 				await beforeEffect?.()
 				if (!messageId) {
-					if (
-						target.topic !==
-						`${marker}${V2_PRESENTATION_UNSENT_TOPIC_SUFFIX}`
-					)
-						throw new Error(
-							'Initial presentation send requires reconciliation',
-						)
 					// Persist ambiguity before the first send, after payload preparation.
-					await target.setTopic(
-						`${marker}${V2_PRESENTATION_TOPIC_SUFFIX}`,
+					await this.ledger.markSent(
+						guild.guildId,
+						channel.id,
+						channelId,
 					)
 					await beforeEffect?.()
 				}

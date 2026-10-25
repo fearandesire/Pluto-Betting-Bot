@@ -41,6 +41,19 @@ vi.mock('../../../bot_res/findEmoji.js', () => ({
 }))
 
 import ChannelManager from '../ChannelManager.js'
+import type {
+	GameChannelLedger,
+	GameChannelRecord,
+} from '../game-channel-ledger.js'
+
+function ledgerWith(record: GameChannelRecord | null = null) {
+	return {
+		get: vi.fn(async () => record),
+		beginCreation: vi.fn(async () => ({ firstAttemptAt: 0 })),
+		recordChannel: vi.fn(async () => undefined),
+		markSent: vi.fn(async () => undefined),
+	} satisfies GameChannelLedger
+}
 
 let fixture: Awaited<ReturnType<typeof createFixtureAssets>>
 beforeAll(async () => {
@@ -122,14 +135,24 @@ describe('ChannelManager matchup attachments', () => {
 							? 'unrelated-lakers-at-knicks-garbage'
 							: channel.channelname,
 				}
-				const manager = new ChannelManager({} as any) as any
+				const manager = new ChannelManager(
+					{} as any,
+					ledgerWith(),
+				) as any
 				if (method === 'create') {
 					const created = await manager.createReservedChannel(
 						input,
 						guild,
-						{ marker: 'pluto-game:fixture' },
+						{
+							guildId: guild.guildId,
+							gameId: input.id,
+							channelName: input.channelname,
+						},
 					)
 					await created.complete()
+					expect(create).toHaveBeenCalledWith(
+						expect.objectContaining({ topic: 'Enjoy the game!' }),
+					)
 				} else
 					await manager.completeExistingChannel(input, guild, 'text')
 				expect(mocks.resolve).toHaveBeenCalledWith({
@@ -168,7 +191,6 @@ describe('ChannelManager matchup attachments', () => {
 				betting: { state: 'unavailable', reason: 'no_markets' },
 			},
 			guild as any,
-			'pluto-game:fixture',
 		)
 		const json = (message.embeds![0] as EmbedBuilder).toJSON()
 		expect(json.description).toMatch(/^# Patriots @ Commanders\n\n<t:/)
@@ -204,7 +226,6 @@ describe('ChannelManager matchup attachments', () => {
 				},
 			},
 			guild as any,
-			'pluto-game:fixture',
 		)
 		const json = (message.embeds![0] as EmbedBuilder).toJSON()
 		expect(json.description).toContain('Boston Celtics')
@@ -213,22 +234,26 @@ describe('ChannelManager matchup attachments', () => {
 		expect(json.footer?.text).toBe('Pluto | dev. fenixforever')
 	})
 	it('never lets a retried V1 job repost inside a V2-owned channel, including a deleted card', async () => {
-		const marker = `pluto-game:${createHash('sha256').update(`${guild.guildId}:${channel.id}`).digest('hex').slice(0, 24)}`
 		const text = {
 			id: 'text',
 			type: ChannelType.GuildText,
-			topic: `${marker} | pluto-presentation:v2`,
+			topic: 'Enjoy the game!',
 			send: vi.fn(),
 			messages: { fetch: vi.fn(async () => []) },
 		}
 		mocks.guilds.set('guild', {
 			channels: { cache: new Map([['text', text]]) },
 		})
-		await (new ChannelManager({} as any) as any).completeExistingChannel(
-			channel,
-			guild,
-			'text',
-		)
+		await (
+			new ChannelManager(
+				{} as any,
+				ledgerWith({
+					firstAttemptAt: 0,
+					channelId: 'text',
+					delivery: 'sent',
+				}),
+			) as any
+		).completeExistingChannel(channel, guild, 'text')
 		expect(text.send).not.toHaveBeenCalled()
 		expect(text.messages.fetch).not.toHaveBeenCalled()
 	})
