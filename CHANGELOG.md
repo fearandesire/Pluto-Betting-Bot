@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.15.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.14.10...v4.15.0) (2026-10-26)
+
+
+### Features
+
+* **props:** let server admins enable or disable daily props ([#738](https://github.com/fearandesire/Pluto-Betting-Bot/issues/738)) ([576e498](https://github.com/fearandesire/Pluto-Betting-Bot/commit/576e498dbb13336193960563c01079ce693e7fb5))
+
 ## [4.14.10](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.14.9...v4.14.10) (2026-10-26)
 
 
