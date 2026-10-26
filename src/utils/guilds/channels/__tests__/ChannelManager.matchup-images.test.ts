@@ -60,8 +60,8 @@ function ledgerWith(record: GameChannelRecord | null = null) {
 		exclusive: <T>(
 			_guild: string,
 			_name: string,
-			action: () => Promise<T>,
-		) => action(),
+			action: (check: () => Promise<void>) => Promise<T>,
+		) => action(async () => undefined),
 	} satisfies GameChannelLedger
 }
 

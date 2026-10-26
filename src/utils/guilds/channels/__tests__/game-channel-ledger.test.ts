@@ -10,7 +10,10 @@ vi.mock('../../../logging/WinstonLogger.js', () => ({
 }))
 
 import { InMemoryRedis } from '../../../cache/redis-instance.js'
-import { ChannelCreationBusyError } from '../ChannelCreationWorkflow.js'
+import {
+	ChannelCreationBusyError,
+	LeaseLostError,
+} from '../ChannelCreationWorkflow.js'
 import { RedisPresentationLock } from '../channel-presentation-lock.js'
 import {
 	createRecordedGameChannel,
@@ -43,7 +46,7 @@ function ledgerAt(start: number) {
 		() => now,
 		new RedisPresentationLock(redis),
 	)
-	return { ledger, advance: (ms: number) => (now += ms) }
+	return { ledger, redis, advance: (ms: number) => (now += ms) }
 }
 
 describe('locateGameChannel', () => {
@@ -125,6 +128,42 @@ describe('locateGameChannel', () => {
 		await expect(ledger.get('guild', 'game-a')).resolves.not.toHaveProperty(
 			'channelId',
 		)
+	})
+
+	it('stops a creator that lost its name lease before it records', async () => {
+		const { ledger, redis, advance } = ledgerAt(2_000_000)
+		await ledger.beginCreation('guild', 'game-a')
+		advance(3_600_000)
+		const gameB = channel(at(5_600_000))
+		const creating = createRecordedGameChannel(
+			ledger,
+			{ ...key, gameId: 'game-b' },
+			async () => {
+				// B's lease expires mid-create; A recovers the visible channel.
+				await redis.del(
+					'pluto:channel-presentation:v1:game-channel-name:guild:away-at-home',
+				)
+				await expect(
+					locateGameChannel(ledger, key, [gameB]),
+				).resolves.toEqual({ channel: gameB, via: 'recovered' })
+				return gameB
+			},
+		)
+		await expect(creating).rejects.toBeInstanceOf(LeaseLostError)
+		await expect(ledger.ownerOf(gameB.id)).resolves.toBe('guild:game-a')
+		await expect(ledger.get('guild', 'game-b')).resolves.not.toHaveProperty(
+			'channelId',
+		)
+	})
+
+	it('records each channel for one game only', async () => {
+		const { ledger } = ledgerAt(2_000_000)
+		await ledger.recordChannel('guild', 'game-a', 'shared')
+		await ledger.recordChannel('guild', 'game-a', 'shared')
+		await expect(
+			ledger.recordChannel('guild', 'game-b', 'shared'),
+		).rejects.toThrow('recorded by another game')
+		await expect(ledger.get('guild', 'game-b')).resolves.toBeNull()
 	})
 
 	it("never recovers another game's recorded channel", async () => {

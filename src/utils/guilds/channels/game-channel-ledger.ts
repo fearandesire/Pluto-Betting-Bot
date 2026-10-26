@@ -46,11 +46,14 @@ export interface GameChannelLedger {
 	markSent(guildId: string, gameId: string, channelId: string): Promise<void>
 	/** `guildId:gameId` of the game that recorded this channel, if any. */
 	ownerOf(channelId: string): Promise<string | null>
-	/** Runs `action` holding the lock for one channel name in a guild. */
+	/**
+	 * Runs `action` holding the lock for one channel name in a guild. `check`
+	 * throws once the lease is lost; call it before each durable write.
+	 */
 	exclusive<T>(
 		guildId: string,
 		channelName: string,
-		action: () => Promise<T>,
+		action: (check: () => Promise<void>) => Promise<T>,
 	): Promise<T>
 }
 
@@ -79,11 +82,11 @@ export class RedisGameChannelLedger implements GameChannelLedger {
 	exclusive<T>(
 		guildId: string,
 		channelName: string,
-		action: () => Promise<T>,
+		action: (check: () => Promise<void>) => Promise<T>,
 	): Promise<T> {
 		return this.lock.run(
 			`game-channel-name:${encodeURIComponent(guildId)}:${encodeURIComponent(channelName.toLowerCase())}`,
-			() => action(),
+			action,
 		)
 	}
 
@@ -127,6 +130,17 @@ export class RedisGameChannelLedger implements GameChannelLedger {
 		channelId: string,
 		delivery?: GameChannelDelivery,
 	) {
+		// A channel belongs to one game for good: the owner key is write-once.
+		const owner = ownerId(guildId, gameId)
+		const claimed = await this.redis.set(
+			`${OWNER_PREFIX}${channelId}`,
+			owner,
+			'EX',
+			RECORD_TTL_SECONDS,
+			'NX',
+		)
+		if (claimed !== 'OK' && (await this.ownerOf(channelId)) !== owner)
+			throw new Error('Game channel is recorded by another game')
 		const current = await this.get(guildId, gameId)
 		const now = this.now()
 		await this.write(guildId, gameId, {
@@ -136,12 +150,6 @@ export class RedisGameChannelLedger implements GameChannelLedger {
 			channelId,
 			...(delivery ? { delivery } : {}),
 		})
-		await this.redis.set(
-			`${OWNER_PREFIX}${channelId}`,
-			ownerId(guildId, gameId),
-			'EX',
-			RECORD_TTL_SECONDS,
-		)
 	}
 
 	async markSent(guildId: string, gameId: string, channelId: string) {
@@ -221,7 +229,7 @@ export async function locateGameChannel<T extends GameChannelCandidate>(
 	}
 
 	if (!record) return null
-	return ledger.exclusive(key.guildId, key.channelName, async () => {
+	return ledger.exclusive(key.guildId, key.channelName, async (check) => {
 		const owner = ownerId(key.guildId, key.gameId)
 		const recovered: T[] = []
 		for (const channel of attemptWindowChannels(candidates, key, record)) {
@@ -232,6 +240,7 @@ export async function locateGameChannel<T extends GameChannelCandidate>(
 		if (recovered.length > 1) throw new Error('Ambiguous game channels')
 		const [channel] = recovered
 		if (!channel) return null
+		await check()
 		await ledger.recordChannel(
 			key.guildId,
 			key.gameId,
@@ -253,11 +262,14 @@ export function createRecordedGameChannel<C extends { id: string }>(
 	create: () => Promise<C>,
 	delivery?: 'unsent',
 ): Promise<C> {
-	return ledger.exclusive(key.guildId, key.channelName, async () => {
+	return ledger.exclusive(key.guildId, key.channelName, async (check) => {
 		await ledger.beginCreation(key.guildId, key.gameId)
 		const created = await create().finally(() =>
 			ledger.settleAttempt(key.guildId, key.gameId),
 		)
+		// A lost lease means another game may have recovered this channel.
+		// Leave it unrecorded here; reconciliation decides on the next run.
+		await check()
 		await ledger.recordChannel(
 			key.guildId,
 			key.gameId,
