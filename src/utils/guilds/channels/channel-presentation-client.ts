@@ -30,10 +30,8 @@ export class ChannelPresentationClient {
 
 	async guild(guildId: string) {
 		const guild = await GuildsInstance.getGuildById({ id: guildId })
-		const preferredTeamsValue = guild.config?.find(
-			(c) => c.setting_type === 'PREFERRED_TEAMS',
-		)?.setting_value
-		const preferredTeams = (preferredTeamsValue ?? '')
+		const setting = (type: string) => configValue(guild.config, type)
+		const preferredTeams = (setting('PREFERRED_TEAMS') ?? '')
 			.split(',')
 			.map((team) => team.trim())
 			.filter(Boolean)
@@ -43,12 +41,9 @@ export class ChannelPresentationClient {
 			eligibleMatches: [],
 			sport: guild.sport.toLowerCase(),
 			preferredTeams,
-			bettingChannelId: guild.config?.find(
-				(c) => c.setting_type === 'BETTING_CHAN',
-			)?.setting_value,
-			gameCategoryId: guild.config?.find(
-				(c) => c.setting_type === 'GAMES_CATEGORY',
-			)?.setting_value,
+			bettingChannelId: setting('BETTING_CHAN'),
+			gameCategoryId: setting('GAMES_CATEGORY'),
+			gameChannelTopic: setting('GAME_CHANNEL_TOPIC'),
 		})
 	}
 
@@ -77,4 +72,12 @@ export class ChannelPresentationClient {
 			)
 		return response.status === 204 ? undefined : response.json()
 	}
+}
+
+/** Khronos may return setting types newer than the generated client enum. */
+function configValue(
+	config: ReadonlyArray<{ setting_type: string; setting_value: string }> = [],
+	type: string,
+): string | undefined {
+	return config.find((c) => c.setting_type === type)?.setting_value
 }

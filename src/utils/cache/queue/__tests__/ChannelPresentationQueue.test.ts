@@ -265,7 +265,14 @@ describe('registered queue handlers through HTTP receipts and Discord adapter', 
 		expect(posts).toHaveLength(0)
 		expect(
 			mocks.guilds.get('guild').channels.cache.get('channel').topic,
-		).toMatch(/pluto-presentation:v2:unsent$/)
+		).toBe('Enjoy the game!')
+		expect(
+			JSON.parse(
+				(await redisCache.get(
+					`pluto:game-channel:v1:guild:${gameId}`,
+				)) ?? '{}',
+			),
+		).toMatchObject({ channelId: 'channel', delivery: 'unsent' })
 	})
 	it('finishes a known empty channel after a post-create hold and reschedule', async () => {
 		mocks.afterCreate = () => {
