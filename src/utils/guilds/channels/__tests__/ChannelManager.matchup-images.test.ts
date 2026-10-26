@@ -49,9 +49,13 @@ import type {
 function ledgerWith(record: GameChannelRecord | null = null) {
 	return {
 		get: vi.fn(async () => record),
-		beginCreation: vi.fn(async () => ({ firstAttemptAt: 0 })),
+		beginCreation: vi.fn(async () => ({
+			firstAttemptAt: 0,
+			lastAttemptAt: 0,
+		})),
 		recordChannel: vi.fn(async () => undefined),
 		markSent: vi.fn(async () => undefined),
+		ownerOf: vi.fn(async () => null),
 	} satisfies GameChannelLedger
 }
 
@@ -249,6 +253,7 @@ describe('ChannelManager matchup attachments', () => {
 				{} as any,
 				ledgerWith({
 					firstAttemptAt: 0,
+					lastAttemptAt: 0,
 					channelId: 'text',
 					delivery: 'sent',
 				}),

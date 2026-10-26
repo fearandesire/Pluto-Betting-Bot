@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import {
 	ChannelType,
 	type Guild,
@@ -45,4 +46,30 @@ export async function createGameChannel(
 		topic: gameChannelTopic(guild),
 		parent: options.parent,
 	})
+}
+
+/**
+ * Reads the identity markers channels carried before #742 so their state moves
+ * into the ledger instead of being lost. Remove after 2026-11-08: game
+ * channels are deleted after their game, so none can remain by then.
+ * `v1` marks a V1 channel, which has no V2 delivery phase.
+ */
+export function legacyTopicDelivery(
+	topic: string | null | undefined,
+	guildId: string,
+	gameId: string,
+): 'v1' | 'unsent' | 'sent' | null {
+	const marker = `pluto-game:${createHash('sha256').update(`${guildId}:${gameId}`).digest('hex').slice(0, 24)}`
+	if (topic === marker) return 'v1'
+	if (topic === `${marker} | pluto-presentation:v2`) return 'sent'
+	if (topic === `${marker} | pluto-presentation:v2:unsent`) return 'unsent'
+	return null
+}
+
+/** Swaps a legacy marker topic for the guild's member-facing topic. */
+export async function replaceLegacyTopic(
+	channel: Pick<TextChannel, 'setTopic'>,
+	guild: Pick<GuildEligibility, 'guildId' | 'gameChannelTopic'>,
+): Promise<void> {
+	await channel.setTopic(gameChannelTopic(guild))
 }

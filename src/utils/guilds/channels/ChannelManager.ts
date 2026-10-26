@@ -37,11 +37,11 @@ import {
 } from './ChannelCreationWorkflow.js'
 import { RedisPresentationLock } from './channel-presentation-lock.js'
 import {
-	adoptableGameChannels,
 	type GameChannelLedger,
+	locateGameChannel,
 	RedisGameChannelLedger,
 } from './game-channel-ledger.js'
-import { createGameChannel } from './game-channel-topic.js'
+import { createGameChannel, replaceLegacyTopic } from './game-channel-topic.js'
 import { resolveMatchupImage } from './matchup-image-resolver.js'
 
 export const V2_PRESENTATION_FOOTER = 'Pluto | dev. fenixforever'
@@ -118,11 +118,7 @@ export default class ChannelManager {
 				reservations: this.reservations,
 				discord: {
 					findExisting: (_intent, knownChannelId) =>
-						this.findGameChannel(
-							intent,
-							guild.gameCategoryId,
-							knownChannelId,
-						),
+						this.findGameChannel(intent, guild, knownChannelId),
 					completeExisting: (_intent, channelId) =>
 						this.completeExistingChannel(channel, guild, channelId),
 					create: () =>
@@ -149,7 +145,7 @@ export default class ChannelManager {
 
 	private async findGameChannel(
 		intent: ChannelIntent,
-		gameCategoryId: string,
+		eligibility: GuildEligibility,
 		knownChannelId?: string,
 	): Promise<{ id: string } | null> {
 		const guild = SapDiscClient.guilds.cache.get(intent.guildId)
@@ -167,16 +163,17 @@ export default class ChannelManager {
 				? guild.channels.cache
 				: ((await guild.channels.fetch().catch(() => null)) ??
 					guild.channels.cache)
-		const textChannels = channels.filter(
-			(candidate) => candidate.type === ChannelType.GuildText,
+		const located = await locateGameChannel(
+			this.ledger,
+			{ ...intent, gameCategoryId: eligibility.gameCategoryId },
+			[...channels.values()].filter(
+				(candidate): candidate is TextChannel =>
+					candidate.type === ChannelType.GuildText,
+			),
 		)
-		const record = await this.ledger.get(intent.guildId, intent.gameId)
-		const [found] = adoptableGameChannels(
-			textChannels.values(),
-			{ channelName: intent.channelName, gameCategoryId },
-			record,
-		)
-		return found ? { id: found.id } : null
+		if (located?.via === 'legacy')
+			await replaceLegacyTopic(located.channel, eligibility)
+		return located ? { id: located.channel.id } : null
 	}
 
 	private async createReservedChannel(

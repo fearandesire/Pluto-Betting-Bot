@@ -14,11 +14,11 @@ import {
 	RedisPresentationLock,
 } from './channel-presentation-lock.js'
 import {
-	adoptableGameChannels,
 	type GameChannelLedger,
+	locateGameChannel,
 	RedisGameChannelLedger,
 } from './game-channel-ledger.js'
-import { createGameChannel } from './game-channel-topic.js'
+import { createGameChannel, replaceLegacyTopic } from './game-channel-topic.js'
 
 export interface PresentationStore {
 	load(guildId: string, gameId: string): Promise<ChannelPresentationState>
@@ -259,38 +259,40 @@ export class DiscordPresentationPort implements PresentationDiscord {
 		channel: ChannelAggregatedV2,
 		channelId?: string,
 	) {
-		if (channelId) return (await this.text(guild.guildId, channelId)).id
+		const key = {
+			guildId: guild.guildId,
+			gameId: channel.id,
+			channelName: channel.channelname,
+			gameCategoryId: guild.gameCategoryId,
+		}
+		if (channelId) {
+			const known = await this.text(guild.guildId, channelId)
+			// A channel Khronos knows from before #742 has its state in the topic.
+			if (!(await this.ledger.get(guild.guildId, channel.id))) {
+				const located = await locateGameChannel(this.ledger, key, [
+					known,
+				])
+				if (located?.via === 'legacy')
+					await replaceLegacyTopic(known, guild)
+			}
+			return known.id
+		}
 		const server = SapDiscClient.guilds.cache.get(guild.guildId)
 		if (!server) throw new Error('Guild unavailable')
-		const record = await this.ledger.get(guild.guildId, channel.id)
 		const channels = await server.channels.fetch()
-		if (record?.channelId) {
-			const known = channels.get(record.channelId)
-			return known?.type === ChannelType.GuildText ? known.id : null
-		}
-		const matches = adoptableGameChannels(
+		const located = await locateGameChannel(
+			this.ledger,
+			key,
 			[...channels.values()].filter(
 				(candidate): candidate is TextChannel =>
 					candidate?.type === ChannelType.GuildText,
 			),
-			{
-				channelName: channel.channelname,
-				gameCategoryId: guild.gameCategoryId,
-			},
-			record,
-		)
-		if (matches.length > 1)
-			throw new Error('Ambiguous presentation channels')
-		const [adopted] = matches
-		if (!adopted) return null
-		// Creation stopped before the id was recorded, so nothing was sent.
-		await this.ledger.recordChannel(
-			guild.guildId,
-			channel.id,
-			adopted.id,
+			// Creation stopped before the id was recorded, so nothing was sent.
 			'unsent',
 		)
-		return adopted.id
+		if (located?.via === 'legacy')
+			await replaceLegacyTopic(located.channel, guild)
+		return located?.channel.id ?? null
 	}
 	async create(
 		guild: GuildEligibility,

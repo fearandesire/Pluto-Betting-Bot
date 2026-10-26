@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { SnowflakeUtil } from 'discord.js'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -10,69 +11,110 @@ vi.mock('../../../logging/WinstonLogger.js', () => ({
 
 import { InMemoryRedis } from '../../../cache/redis-instance.js'
 import {
-	adoptableGameChannels,
+	locateGameChannel,
 	RedisGameChannelLedger,
 } from '../game-channel-ledger.js'
 
 const at = (ms: number) => SnowflakeUtil.generate({ timestamp: ms }).toString()
-const intent = { channelName: 'away-at-home', gameCategoryId: 'category' }
+const key = {
+	guildId: 'guild',
+	gameId: 'game-a',
+	channelName: 'away-at-home',
+	gameCategoryId: 'category',
+}
 const channel = (id: string, overrides = {}) => ({
 	id,
 	name: 'away-at-home',
 	parentId: 'category',
+	topic: 'Enjoy the game!',
 	...overrides,
 })
+const legacyMarker = (gameId: string) =>
+	`pluto-game:${createHash('sha256').update(`guild:${gameId}`).digest('hex').slice(0, 24)}`
 
-describe('game channel recovery', () => {
-	it('adopts nothing for a game that never tried to create a channel', () => {
-		expect(
-			adoptableGameChannels([channel(at(2_000_000))], intent, null),
-		).toEqual([])
+function ledgerAt(start: number) {
+	let now = start
+	const ledger = new RedisGameChannelLedger(new InMemoryRedis(), () => now)
+	return { ledger, advance: (ms: number) => (now += ms) }
+}
+
+describe('locateGameChannel', () => {
+	it('adopts nothing for a game that never tried to create a channel', async () => {
+		const { ledger } = ledgerAt(2_000_000)
+		await expect(
+			locateGameChannel(ledger, key, [channel(at(2_000_000))]),
+		).resolves.toBeNull()
 	})
 
-	it("does not adopt an earlier game's same-name channel", () => {
-		const previousGame = channel(at(1_000_000))
-		const thisGame = channel(at(2_000_000))
-		expect(
-			adoptableGameChannels([previousGame, thisGame], intent, {
-				firstAttemptAt: 2_000_000,
-			}),
-		).toEqual([thisGame])
+	it('finds a recorded channel after members rename or move it', async () => {
+		const { ledger } = ledgerAt(2_000_000)
+		await ledger.recordChannel('guild', 'game-a', 'renamed')
+		const renamed = channel('renamed', { name: 'chat', parentId: 'other' })
+		await expect(
+			locateGameChannel(ledger, key, [renamed]),
+		).resolves.toEqual({ channel: renamed, via: 'recorded' })
 	})
 
-	it('ignores same-name channels outside the game category', () => {
-		expect(
-			adoptableGameChannels(
-				[channel(at(2_000_000), { parentId: 'elsewhere' })],
-				intent,
-				{ firstAttemptAt: 2_000_000 },
+	it("recovers only a channel created during this game's attempts", async () => {
+		const { ledger, advance } = ledgerAt(2_000_000)
+		await ledger.beginCreation('guild', 'game-a')
+		advance(600_000)
+		await ledger.beginCreation('guild', 'game-a')
+		const earlierGame = channel(at(1_000_000))
+		const retryChannel = channel(at(2_600_500))
+		const laterGame = channel(at(5_000_000))
+		await expect(
+			locateGameChannel(
+				ledger,
+				key,
+				[earlierGame, retryChannel, laterGame],
+				'unsent',
 			),
-		).toEqual([])
-	})
-})
-
-describe('RedisGameChannelLedger', () => {
-	it('keeps the first attempt time across retries', async () => {
-		let now = 1_000
-		const ledger = new RedisGameChannelLedger(
-			new InMemoryRedis(),
-			() => now,
-		)
-		await ledger.beginCreation('guild', 'game')
-		now = 9_000
-		await expect(ledger.beginCreation('guild', 'game')).resolves.toEqual({
-			firstAttemptAt: 1_000,
-		})
-		await ledger.recordChannel('guild', 'game', 'channel', 'unsent')
-		await expect(ledger.get('guild', 'game')).resolves.toEqual({
-			firstAttemptAt: 1_000,
-			channelId: 'channel',
+		).resolves.toEqual({ channel: retryChannel, via: 'recovered' })
+		await expect(ledger.get('guild', 'game-a')).resolves.toMatchObject({
+			firstAttemptAt: 2_000_000,
+			channelId: retryChannel.id,
 			delivery: 'unsent',
 		})
 	})
 
+	it("never recovers another game's recorded channel", async () => {
+		const { ledger } = ledgerAt(2_000_000)
+		await ledger.beginCreation('guild', 'game-a')
+		const gameB = channel(at(2_000_100))
+		await ledger.recordChannel('guild', 'game-b', gameB.id)
+		await expect(
+			locateGameChannel(ledger, key, [gameB]),
+		).resolves.toBeNull()
+	})
+
+	it.each([
+		['', undefined],
+		[' | pluto-presentation:v2', 'sent'],
+		[' | pluto-presentation:v2:unsent', 'unsent'],
+	] as const)(
+		'carries a pre-#742 marker topic%s into the ledger',
+		async (suffix, delivery) => {
+			const { ledger } = ledgerAt(2_000_000)
+			const legacy = channel('legacy', {
+				topic: `${legacyMarker('game-a')}${suffix}`,
+			})
+			const otherGame = channel('other', {
+				topic: legacyMarker('game-b'),
+			})
+			await expect(
+				locateGameChannel(ledger, key, [otherGame, legacy]),
+			).resolves.toEqual({ channel: legacy, via: 'legacy' })
+			const record = await ledger.get('guild', 'game-a')
+			expect(record?.channelId).toBe('legacy')
+			expect(record?.delivery).toBe(delivery)
+		},
+	)
+})
+
+describe('RedisGameChannelLedger', () => {
 	it('records a send only once, for the channel it created', async () => {
-		const ledger = new RedisGameChannelLedger(new InMemoryRedis())
+		const { ledger } = ledgerAt(1_000)
 		await ledger.beginCreation('guild', 'game')
 		await ledger.recordChannel('guild', 'game', 'channel', 'unsent')
 		await expect(ledger.markSent('guild', 'game', 'other')).rejects.toThrow(
@@ -82,8 +124,6 @@ describe('RedisGameChannelLedger', () => {
 		await expect(
 			ledger.markSent('guild', 'game', 'channel'),
 		).rejects.toThrow('requires reconciliation')
-		await expect(ledger.get('guild', 'game')).resolves.toMatchObject({
-			delivery: 'sent',
-		})
+		await expect(ledger.ownerOf('channel')).resolves.toBe('guild:game')
 	})
 })
