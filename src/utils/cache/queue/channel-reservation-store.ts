@@ -2,7 +2,6 @@ export interface ChannelIntent {
 	guildId: string
 	gameId: string
 	channelName: string
-	marker: string
 }
 
 export type ChannelReservation =

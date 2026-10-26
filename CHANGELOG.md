@@ -1,5 +1,33 @@
 # Changelog
 
+## [4.14.9](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.14.8...v4.14.9) (2026-10-26)
+
+
+### Bug Fixes
+
+* **khronos:** bump @pluto-khronos/* to 3.14.0 ([380796b](https://github.com/fearandesire/Pluto-Betting-Bot/commit/380796bb40ee03a871f5c023a21ab430fa7f58fa))
+
+## [4.14.8](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.14.7...v4.14.8) (2026-10-26)
+
+
+### Bug Fixes
+
+* **channels:** show a friendly topic instead of internal game markers ([#742](https://github.com/fearandesire/Pluto-Betting-Bot/issues/742)) ([129c0d9](https://github.com/fearandesire/Pluto-Betting-Bot/commit/129c0d9e65743d678475bfd80754cc02e54d4fa9))
+
+## [4.14.7](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.14.6...v4.14.7) (2026-10-26)
+
+
+### Bug Fixes
+
+* **khronos:** bump @pluto-khronos/* to 3.13.0 ([a16d722](https://github.com/fearandesire/Pluto-Betting-Bot/commit/a16d7228d00c6c7ff9c0bf411f59dcf599f2295f))
+
+## [4.14.6](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.14.5...v4.14.6) (2026-10-24)
+
+
+### Bug Fixes
+
+* **bet:** keep the match cache refreshing so /bet lists current games ([#739](https://github.com/fearandesire/Pluto-Betting-Bot/issues/739)) ([68b2558](https://github.com/fearandesire/Pluto-Betting-Bot/commit/68b2558313ff37c4480d9182fbb471d6dd7d3fda))
+
 ## [4.14.5](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.14.4...v4.14.5) (2026-10-21)
 
 

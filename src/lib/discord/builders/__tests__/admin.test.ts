@@ -74,7 +74,7 @@ describe('admin builders (classic, pre-migration)', () => {
 			{ name: 'Gamescategory', value: 'Not set' },
 			{ name: 'Bettingchan', value: '123' },
 		])
-		expect(json.fields).toHaveLength(7)
+		expect(json.fields).toHaveLength(8)
 	})
 
 	it('F3 predictionsTemplateEmbed + predictionField', () => {

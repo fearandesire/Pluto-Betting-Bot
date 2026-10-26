@@ -1,4 +1,3 @@
-import { createHash } from 'node:crypto'
 import type { SportsServing } from '@pluto-khronos/types'
 import {
 	AttachmentBuilder,
@@ -38,25 +37,32 @@ import {
 } from './ChannelCreationWorkflow.js'
 import { RedisPresentationLock } from './channel-presentation-lock.js'
 import {
-	findExistingGameChannel,
-	V2_PRESENTATION_FOOTER,
-	V2_PRESENTATION_TOPIC_SUFFIX,
-} from './channel-reconciliation.js'
+	createRecordedGameChannel,
+	type GameChannelLedger,
+	locateGameChannel,
+	RedisGameChannelLedger,
+} from './game-channel-ledger.js'
+import { createGameChannel, replaceLegacyTopic } from './game-channel-topic.js'
 import { resolveMatchupImage } from './matchup-image-resolver.js'
+
+export const V2_PRESENTATION_FOOTER = 'Pluto | dev. fenixforever'
 
 /**
  * Handle interactions between Pluto API & Discord user interface/interactions
  */
 export default class ChannelManager {
 	private readonly API_URL: string
-	private readonly reservations: RedisChannelReservationStore
 	private ep: {
 		gchan: string
 	}
 
-	constructor(reservations = new RedisChannelReservationStore(redisCache)) {
+	constructor(
+		private readonly reservations = new RedisChannelReservationStore(
+			redisCache,
+		),
+		private readonly ledger: GameChannelLedger = new RedisGameChannelLedger(),
+	) {
 		this.API_URL = `${env.KH_API_URL}`
-		this.reservations = reservations
 		this.ep = {
 			gchan: '/channels',
 		}
@@ -112,13 +118,8 @@ export default class ChannelManager {
 			const workflow = new ChannelCreationWorkflow({
 				reservations: this.reservations,
 				discord: {
-					findByMarker: (_intent, knownChannelId) =>
-						this.findChannelByMarker(
-							guild.guildId,
-							intent,
-							guild.gameCategoryId,
-							knownChannelId,
-						),
+					findExisting: (_intent, knownChannelId) =>
+						this.findGameChannel(intent, guild, knownChannelId),
 					completeExisting: (_intent, channelId) =>
 						this.completeExistingChannel(channel, guild, channelId),
 					create: () =>
@@ -140,20 +141,15 @@ export default class ChannelManager {
 			guildId: guild.guildId,
 			gameId: channel.id,
 			channelName: channel.channelname,
-			marker: `pluto-game:${createHash('sha256')
-				.update(`${guild.guildId}:${channel.id}`)
-				.digest('hex')
-				.slice(0, 24)}`,
 		}
 	}
 
-	private async findChannelByMarker(
-		guildId: string,
+	private async findGameChannel(
 		intent: ChannelIntent,
-		gameCategoryId: string,
+		eligibility: GuildEligibility,
 		knownChannelId?: string,
 	): Promise<{ id: string } | null> {
-		const guild = SapDiscClient.guilds.cache.get(guildId)
+		const guild = SapDiscClient.guilds.cache.get(intent.guildId)
 		if (!guild) return null
 		const knownChannel = knownChannelId
 			? (guild.channels.cache.get(knownChannelId) ??
@@ -168,15 +164,17 @@ export default class ChannelManager {
 				? guild.channels.cache
 				: ((await guild.channels.fetch().catch(() => null)) ??
 					guild.channels.cache)
-		const textChannels = channels.filter(
-			(candidate) => candidate.type === ChannelType.GuildText,
+		const located = await locateGameChannel(
+			this.ledger,
+			{ ...intent, gameCategoryId: eligibility.gameCategoryId },
+			[...channels.values()].filter(
+				(candidate): candidate is TextChannel =>
+					candidate.type === ChannelType.GuildText,
+			),
 		)
-		const found = findExistingGameChannel(
-			textChannels.values(),
-			intent,
-			gameCategoryId,
-		)
-		return found ? { id: found.id } : null
+		if (located?.via === 'legacy')
+			await replaceLegacyTopic(located.channel, eligibility)
+		return located ? { id: located.channel.id } : null
 	}
 
 	private async createReservedChannel(
@@ -209,12 +207,15 @@ export default class ChannelManager {
 		if (!gameCategory || gameCategory.type !== ChannelType.GuildCategory) {
 			throw new Error('Game category is unavailable')
 		}
-		const gameChannel = await locatedGuild.channels.create({
-			name: channel.channelname,
-			type: ChannelType.GuildText,
-			topic: intent.marker,
-			parent: gameCategory as CategoryChannelResolvable,
-		})
+		const gameChannel = await createRecordedGameChannel(
+			this.ledger,
+			intent,
+			() =>
+				createGameChannel(locatedGuild, guild, {
+					name: channel.channelname,
+					parent: gameCategory as CategoryChannelResolvable,
+				}),
+		)
 		return {
 			channelId: gameChannel.id,
 			complete: () =>
@@ -234,10 +235,9 @@ export default class ChannelManager {
 		if (!existing || existing.type !== ChannelType.GuildText) {
 			throw new Error('Reserved game channel is unavailable')
 		}
-		if (
-			existing.topic ===
-			`${this.channelIntent(channel, guild).marker}${V2_PRESENTATION_TOPIC_SUFFIX}`
-		)
+		// A V2 presentation that already sent owns this channel's card.
+		const record = await this.ledger.get(guild.guildId, channel.id)
+		if (record?.channelId === channelId && record.delivery === 'sent')
 			return
 		const favoredTeamInfo = await teamResolver.resolve(
 			channel.matchOdds.favored,
@@ -327,7 +327,6 @@ export default class ChannelManager {
 	async preparePresentationMessage(
 		channel: ChannelAggregatedV2,
 		guild: GuildEligibility,
-		marker?: string,
 	): Promise<MessageCreateOptions> {
 		const favored =
 			channel.betting.state === 'available'
@@ -350,7 +349,7 @@ export default class ChannelManager {
 			favoredTeamInfo,
 			matchImg,
 		})
-		if (marker && message.embeds?.[0] instanceof EmbedBuilder) {
+		if (message.embeds?.[0] instanceof EmbedBuilder) {
 			message.embeds[0].setFooter({
 				text: V2_PRESENTATION_FOOTER,
 			})
@@ -362,15 +361,10 @@ export default class ChannelManager {
 		target: TextChannel,
 		channel: ChannelAggregatedV2,
 		guild: GuildEligibility,
-		marker: string,
 		messageId?: string,
 		beforeWrite?: () => Promise<void>,
 	): Promise<string> {
-		const payload = await this.preparePresentationMessage(
-			channel,
-			guild,
-			marker,
-		)
+		const payload = await this.preparePresentationMessage(channel, guild)
 		if (!messageId) {
 			await beforeWrite?.()
 			return (await target.send(payload)).id

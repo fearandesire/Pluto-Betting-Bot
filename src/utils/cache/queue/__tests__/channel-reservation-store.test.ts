@@ -68,7 +68,6 @@ const intent: ChannelIntent = {
 	guildId: 'guild-1',
 	gameId: 'game-1',
 	channelName: 'away-at-home',
-	marker: 'pluto-game:guild-1:game-1',
 }
 
 describe('RedisChannelReservationStore', () => {
