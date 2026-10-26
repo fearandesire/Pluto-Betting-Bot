@@ -62,7 +62,10 @@ describe('admin builders (classic, pre-migration)', () => {
 	it('F2 guildConfigViewEmbed lists every setting type', () => {
 		const json = guildConfigViewEmbed({
 			guildName: 'G',
-			defined: new Map([['BETTING_CHAN', '123']]),
+			defined: new Map([
+				['BETTING_CHAN', '123'],
+				['PROPS_ENABLED', 'false'],
+			]),
 			username: 'u',
 			avatarUrl: AVATAR,
 		}).toJSON()
@@ -74,7 +77,11 @@ describe('admin builders (classic, pre-migration)', () => {
 			{ name: 'Gamescategory', value: 'Not set' },
 			{ name: 'Bettingchan', value: '123' },
 		])
-		expect(json.fields).toHaveLength(8)
+		expect(json.fields).toHaveLength(9)
+		expect(json.fields).toContainEqual({
+			name: 'Propsenabled',
+			value: 'false',
+		})
 	})
 
 	it('F3 predictionsTemplateEmbed + predictionField', () => {
