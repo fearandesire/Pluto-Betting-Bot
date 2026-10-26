@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.14.9](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.14.8...v4.14.9) (2026-10-26)
+
+
+### Bug Fixes
+
+* **khronos:** bump @pluto-khronos/* to 3.14.0 ([380796b](https://github.com/fearandesire/Pluto-Betting-Bot/commit/380796bb40ee03a871f5c023a21ab430fa7f58fa))
+
 ## [4.14.8](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.14.7...v4.14.8) (2026-10-26)
 
 
