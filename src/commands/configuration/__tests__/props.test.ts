@@ -259,6 +259,7 @@ describe('/props', () => {
 				setting_value: CHANNEL_ID,
 			})
 			expect(replyText(interaction)).toContain('Something went wrong')
+			expect(replyText(interaction)).toContain('/props status')
 			expect(replyText(interaction)).not.toContain('Daily props enabled')
 		})
 	})

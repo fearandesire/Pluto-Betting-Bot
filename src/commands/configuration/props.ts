@@ -146,7 +146,11 @@ export class UserCommand extends Subcommand {
 			)
 			await guildConfig.setPropsEnabled(interaction.guildId, true)
 		} catch (error) {
-			return this.replyWithError(interaction, error)
+			return this.replyWithError(
+				interaction,
+				error,
+				'Pluto could not finish setup. Run /props status, then try enabling again.',
+			)
 		}
 		return interaction.editReply(propsEnabledPayload(channel.id))
 	}
@@ -194,17 +198,13 @@ export class UserCommand extends Subcommand {
 	private replyWithError(
 		interaction: Subcommand.ChatInputCommandInteraction,
 		error: unknown,
+		summary = 'Pluto could not reach the props settings. Please try again.',
 	) {
 		this.container.logger.error(error)
 		const detail =
 			error instanceof Error && error.message
 				? error.message
 				: 'Unknown error'
-		return interaction.editReply(
-			propsErrorPayload(
-				'Pluto could not reach the props settings. Please try again.',
-				detail,
-			),
-		)
+		return interaction.editReply(propsErrorPayload(summary, detail))
 	}
 }
