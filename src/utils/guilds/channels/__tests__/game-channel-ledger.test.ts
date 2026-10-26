@@ -55,13 +55,15 @@ describe('locateGameChannel', () => {
 		).resolves.toEqual({ channel: renamed, via: 'recorded' })
 	})
 
-	it("recovers only a channel created during this game's attempts", async () => {
+	it("recovers only a channel created during this game's settled attempts", async () => {
 		const { ledger, advance } = ledgerAt(2_000_000)
 		await ledger.beginCreation('guild', 'game-a')
 		advance(600_000)
 		await ledger.beginCreation('guild', 'game-a')
+		advance(2_000)
+		await ledger.settleAttempt('guild', 'game-a')
 		const earlierGame = channel(at(1_000_000))
-		const retryChannel = channel(at(2_600_500))
+		const retryChannel = channel(at(2_601_000))
 		const laterGame = channel(at(5_000_000))
 		await expect(
 			locateGameChannel(
@@ -75,6 +77,17 @@ describe('locateGameChannel', () => {
 			firstAttemptAt: 2_000_000,
 			channelId: retryChannel.id,
 			delivery: 'unsent',
+		})
+	})
+
+	it('recovers a rate-limited create that landed after the process stopped', async () => {
+		const { ledger } = ledgerAt(2_000_000)
+		await ledger.beginCreation('guild', 'game-a')
+		// discord.js waited out a 65s Retry-After; the call never settled here.
+		const late = channel(at(2_065_000))
+		await expect(locateGameChannel(ledger, key, [late])).resolves.toEqual({
+			channel: late,
+			via: 'recovered',
 		})
 	})
 

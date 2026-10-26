@@ -11,11 +11,15 @@ import { legacyTopicDelivery } from './game-channel-topic.js'
  *
  * A crash between Discord's create call and recording the channel id is
  * recovered by adopting a same-name channel created during one of this game's
- * creation attempts that no other game owns.
+ * creation attempts that no other game owns. An attempt that never settled
+ * (the process stopped mid-call, possibly while discord.js waited out a rate
+ * limit) leaves the window open: its channel can appear arbitrarily late.
  */
 const gameChannelRecordSchema = z.object({
 	firstAttemptAt: z.number().int().nonnegative(),
 	lastAttemptAt: z.number().int().nonnegative(),
+	/** Set when the latest attempt's create call returned or threw. */
+	lastAttemptSettledAt: z.number().int().nonnegative().optional(),
 	channelId: z.string().min(1).optional(),
 	/** V2 only: `sent` is written before the first send so a lost reply stays ambiguous. */
 	delivery: z.enum(['unsent', 'sent']).optional(),
@@ -26,6 +30,7 @@ export type GameChannelDelivery = NonNullable<GameChannelRecord['delivery']>
 export interface GameChannelLedger {
 	get(guildId: string, gameId: string): Promise<GameChannelRecord | null>
 	beginCreation(guildId: string, gameId: string): Promise<GameChannelRecord>
+	settleAttempt(guildId: string, gameId: string): Promise<void>
 	recordChannel(
 		guildId: string,
 		gameId: string,
@@ -48,8 +53,6 @@ const KEY_PREFIX = 'pluto:game-channel:v1:'
 const OWNER_PREFIX = 'pluto:game-channel-owner:v1:'
 const RECORD_TTL_SECONDS = 2 * 24 * 60 * 60
 const CLOCK_SKEW_MS = 5_000
-/** Upper bound on one Discord create call after its attempt was recorded. */
-const CREATE_CALL_MS = 60_000
 
 export class RedisGameChannelLedger implements GameChannelLedger {
 	constructor(
@@ -72,10 +75,26 @@ export class RedisGameChannelLedger implements GameChannelLedger {
 		const now = this.now()
 		const current = await this.get(guildId, gameId)
 		const next: GameChannelRecord = current
-			? { ...current, lastAttemptAt: now }
+			? {
+					firstAttemptAt: current.firstAttemptAt,
+					lastAttemptAt: now,
+					...(current.channelId
+						? { channelId: current.channelId }
+						: {}),
+					...(current.delivery ? { delivery: current.delivery } : {}),
+				}
 			: { firstAttemptAt: now, lastAttemptAt: now }
 		await this.write(guildId, gameId, next)
 		return next
+	}
+
+	async settleAttempt(guildId: string, gameId: string) {
+		const current = await this.get(guildId, gameId)
+		if (!current) return
+		await this.write(guildId, gameId, {
+			...current,
+			lastAttemptSettledAt: this.now(),
+		})
 	}
 
 	async recordChannel(
@@ -89,6 +108,7 @@ export class RedisGameChannelLedger implements GameChannelLedger {
 		await this.write(guildId, gameId, {
 			firstAttemptAt: current?.firstAttemptAt ?? now,
 			lastAttemptAt: current?.lastAttemptAt ?? now,
+			lastAttemptSettledAt: current?.lastAttemptSettledAt ?? now,
 			channelId,
 			...(delivery ? { delivery } : {}),
 		})
@@ -199,10 +219,13 @@ export async function locateGameChannel<T extends GameChannelCandidate>(
 export function attemptWindowChannels<T extends GameChannelCandidate>(
 	channels: Iterable<T>,
 	intent: Pick<GameChannelKey, 'channelName' | 'gameCategoryId'>,
-	record: Pick<GameChannelRecord, 'firstAttemptAt' | 'lastAttemptAt'>,
+	record: Pick<GameChannelRecord, 'firstAttemptAt' | 'lastAttemptSettledAt'>,
 ): T[] {
 	const earliest = record.firstAttemptAt - CLOCK_SKEW_MS
-	const latest = record.lastAttemptAt + CREATE_CALL_MS
+	const latest =
+		record.lastAttemptSettledAt === undefined
+			? Number.POSITIVE_INFINITY
+			: record.lastAttemptSettledAt + CLOCK_SKEW_MS
 	return [...channels].filter((channel) => {
 		const createdAt = SnowflakeUtil.timestampFrom(channel.id)
 		return (

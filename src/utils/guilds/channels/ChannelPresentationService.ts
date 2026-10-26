@@ -310,7 +310,7 @@ export class DiscordPresentationPort implements PresentationDiscord {
 		const created = await createGameChannel(server, guild, {
 			name: channel.channelname,
 			parent: category.id,
-		})
+		}).finally(() => this.ledger.settleAttempt(guild.guildId, channel.id))
 		await this.ledger.recordChannel(
 			guild.guildId,
 			channel.id,

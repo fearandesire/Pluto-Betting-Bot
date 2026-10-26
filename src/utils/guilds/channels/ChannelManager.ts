@@ -210,7 +210,9 @@ export default class ChannelManager {
 		const gameChannel = await createGameChannel(locatedGuild, guild, {
 			name: channel.channelname,
 			parent: gameCategory as CategoryChannelResolvable,
-		})
+		}).finally(() =>
+			this.ledger.settleAttempt(intent.guildId, intent.gameId),
+		)
 		await this.ledger.recordChannel(
 			intent.guildId,
 			intent.gameId,

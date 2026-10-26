@@ -53,6 +53,7 @@ function ledgerWith(record: GameChannelRecord | null = null) {
 			firstAttemptAt: 0,
 			lastAttemptAt: 0,
 		})),
+		settleAttempt: vi.fn(async () => undefined),
 		recordChannel: vi.fn(async () => undefined),
 		markSent: vi.fn(async () => undefined),
 		ownerOf: vi.fn(async () => null),
