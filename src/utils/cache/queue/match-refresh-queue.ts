@@ -1,11 +1,9 @@
-import type { MatchDetailDto } from '@pluto-khronos/api-client'
 import { type Job, Queue, Worker } from 'bullmq'
 import { registerShutdownQueue } from '../../../lib/startup/shutdown-registry.js'
-import MatchApiWrapper from '../../api/Khronos/matches/matchApiWrapper.js'
+import MatchCacheService from '../../api/routes/cache/match-cache-service.js'
 import { logger } from '../../logging/WinstonLogger.js'
 import { CacheManager } from '../cache-manager.js'
 import { REDIS_CONFIG } from '../data/config.js'
-import { isDuplicateJobError } from './match-refresh-utils.js'
 
 interface MatchRefreshJobData {
 	reason?: string
@@ -14,7 +12,6 @@ interface MatchRefreshJobData {
 interface MatchRefreshResult {
 	success: boolean
 	matchCount?: number
-	nextRefreshAt?: number | null
 	error?: string
 }
 
@@ -24,11 +21,9 @@ export class MatchRefreshQueue {
 	private static readonly QUEUE_NAME = 'match-refresh'
 	private static readonly MAX_ATTEMPTS = 3
 	private static readonly BACKOFF_DELAY = 1000
-	private static readonly CACHE_TTL_SECONDS = 86400
-	private static readonly REFRESH_LEAD_MS = 5 * 60 * 1000
-	private static readonly DEFAULT_REFRESH_DELAY_MS = 5 * 60 * 1000
+	private static readonly SCHEDULER_ID = 'match-refresh-interval'
+	private static readonly REFRESH_INTERVAL_MS = 5 * 60 * 1000
 	private static readonly DEFAULT_DRAIN_TIMEOUT_MS = 30_000
-	private isClosing = false
 	private activeJobs = new Set<Promise<MatchRefreshResult>>()
 
 	constructor() {
@@ -74,31 +69,18 @@ export class MatchRefreshQueue {
 		})
 	}
 
-	public async enqueueInitialRefresh(): Promise<void> {
-		await this.enqueueRefresh('startup', 'initial')
-	}
-
-	public async enqueueRefresh(
-		reason: string,
-		jobId?: string,
-		delayMs?: number,
-	): Promise<void> {
-		try {
-			await this.queue.add(
-				'refresh',
-				{ reason },
-				{
-					jobId,
-					delay: delayMs,
-					removeOnComplete: true,
-				},
-			)
-		} catch (error) {
-			if (this.isDuplicateJobError(error)) {
-				return
-			}
-			throw error
-		}
+	/**
+	 * Registers the recurring refresh and runs one immediately. The scheduler
+	 * is upserted by a stable id, so restarts never stack duplicates, and a
+	 * failed run never stops the next one.
+	 */
+	public async start(): Promise<void> {
+		await this.queue.upsertJobScheduler(
+			MatchRefreshQueue.SCHEDULER_ID,
+			{ every: MatchRefreshQueue.REFRESH_INTERVAL_MS },
+			{ name: 'refresh', data: { reason: 'scheduled' } },
+		)
+		await this.queue.add('refresh', { reason: 'startup' })
 	}
 
 	private setupWorkerEvents(): void {
@@ -116,7 +98,6 @@ export class MatchRefreshQueue {
 						jobId: job.id,
 						reason: job.data?.reason,
 						matchCount: result.matchCount,
-						nextRefreshAt: result.nextRefreshAt,
 					},
 				})
 			},
@@ -155,29 +136,11 @@ export class MatchRefreshQueue {
 	private async processJob(
 		job: Job<MatchRefreshJobData>,
 	): Promise<MatchRefreshResult> {
-		const cache = new CacheManager()
-
 		try {
-			const response = await new MatchApiWrapper().getAllMatches()
-			const matches = response?.matches
-
-			if (!Array.isArray(matches) || matches.length === 0) {
-				throw new Error('No matches returned from API')
-			}
-
-			await cache.set(
-				'matches',
-				matches,
-				MatchRefreshQueue.CACHE_TTL_SECONDS,
-			)
-
-			const nextRefreshAt = await this.scheduleNext(matches)
-
-			return {
-				success: true,
-				matchCount: matches.length,
-				nextRefreshAt,
-			}
+			const matchCount = await new MatchCacheService(
+				new CacheManager(),
+			).refreshMatches()
+			return { success: true, matchCount }
 		} catch (error) {
 			const errorMessage =
 				error instanceof Error ? error.message : String(error)
@@ -210,7 +173,6 @@ export class MatchRefreshQueue {
 	public async close(
 		drainTimeoutMs = MatchRefreshQueue.DEFAULT_DRAIN_TIMEOUT_MS,
 	): Promise<boolean> {
-		this.isClosing = true
 		await this.worker.pause(true)
 		const deadline = Date.now() + drainTimeoutMs
 		let forceClose = false
@@ -235,52 +197,7 @@ export class MatchRefreshQueue {
 		await this.queue.close()
 		return forceClose
 	}
-
-	private async scheduleNext(
-		matches: MatchDetailDto[],
-	): Promise<number | null> {
-		if (this.isClosing) return null
-
-		const now = Date.now()
-		const upcomingTimes = matches
-			.map((match) => {
-				if (!match.commence_time) return null
-				const time = new Date(match.commence_time).getTime()
-				return Number.isNaN(time) ? null : time
-			})
-			.filter((time): time is number => time !== null && time > now)
-			.sort((a, b) => a - b)
-
-		const nextMatchTime = upcomingTimes[0]
-		const refreshAt = nextMatchTime
-			? Math.max(nextMatchTime - MatchRefreshQueue.REFRESH_LEAD_MS, now)
-			: now + MatchRefreshQueue.DEFAULT_REFRESH_DELAY_MS
-		const delayMs = Math.max(refreshAt - now, 0)
-		const jobId = `refresh-${refreshAt}`
-
-		try {
-			await this.enqueueRefresh('scheduled', jobId, delayMs)
-		} catch (error) {
-			logger.warn({
-				message: 'Failed to schedule next match refresh',
-				source: 'MatchRefreshQueue:scheduleNext',
-				data: {
-					jobId,
-					error:
-						error instanceof Error ? error.message : String(error),
-				},
-			})
-		}
-
-		return refreshAt
-	}
-
-	private isDuplicateJobError(error: unknown): boolean {
-		return isDuplicateJobError(error)
-	}
 }
-
-export { isDuplicateJobError } from './match-refresh-utils.js'
 
 // Singleton instance - lazily initialized
 let matchRefreshQueueInstance: MatchRefreshQueue | null = null

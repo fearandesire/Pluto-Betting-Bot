@@ -14,7 +14,6 @@ const intent = {
 	guildId: 'guild-1',
 	gameId: 'game-1',
 	channelName: 'away-at-home',
-	marker: 'pluto-game:guild-1:game-1',
 }
 
 function ports(): ChannelCreationPorts {
@@ -27,7 +26,7 @@ function ports(): ChannelCreationPorts {
 			release: vi.fn().mockResolvedValue(true),
 		},
 		discord: {
-			findByMarker: vi.fn().mockResolvedValue(null),
+			findExisting: vi.fn().mockResolvedValue(null),
 			create: vi.fn().mockResolvedValue({
 				channelId: 'discord-channel-1',
 				complete: vi.fn().mockResolvedValue(undefined),
@@ -77,7 +76,7 @@ describe('ChannelCreationWorkflow', () => {
 			state: 'created',
 			channelId: 'discord-channel-1',
 		})
-		injected.discord.findByMarker = vi
+		injected.discord.findExisting = vi
 			.fn()
 			.mockResolvedValue({ id: 'discord-channel-1' })
 
@@ -95,7 +94,7 @@ describe('ChannelCreationWorkflow', () => {
 		injected.discord.create = vi
 			.fn()
 			.mockRejectedValue(new Error('request lost'))
-		injected.discord.findByMarker = vi
+		injected.discord.findExisting = vi
 			.fn()
 			.mockResolvedValueOnce(null)
 			.mockResolvedValue(channel)
@@ -146,7 +145,7 @@ describe('ChannelCreationWorkflow', () => {
 				state: 'created',
 				channelId: 'discord-channel-1',
 			})
-		injected.discord.findByMarker = vi
+		injected.discord.findExisting = vi
 			.fn()
 			.mockResolvedValueOnce(null)
 			.mockResolvedValue({ id: 'discord-channel-1' })
@@ -169,7 +168,7 @@ describe('ChannelCreationWorkflow', () => {
 		let resolveLookup:
 			| ((channel: { id: string } | null) => void)
 			| undefined
-		injected.discord.findByMarker = vi.fn(
+		injected.discord.findExisting = vi.fn(
 			() =>
 				new Promise<{ id: string } | null>(
 					(resolve) => (resolveLookup = resolve),
@@ -227,7 +226,7 @@ describe('ChannelCreationWorkflow', () => {
 			channelId: 'deleted-channel',
 		})
 		injected.reservations.reclaimCreated = vi.fn().mockResolvedValue(true)
-		injected.discord.findByMarker = vi.fn().mockResolvedValue(null)
+		injected.discord.findExisting = vi.fn().mockResolvedValue(null)
 
 		const result = await new ChannelCreationWorkflow(injected).run(intent)
 

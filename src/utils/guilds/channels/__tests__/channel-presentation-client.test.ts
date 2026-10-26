@@ -29,6 +29,10 @@ describe('ChannelPresentationClient', () => {
 					setting_type: 'PREFERRED_TEAMS',
 					setting_value: ' Boston Celtics, Detroit Pistons ',
 				},
+				{
+					setting_type: 'GAME_CHANNEL_TOPIC',
+					setting_value: 'Talk the game here',
+				},
 			],
 		} as unknown as Awaited<ReturnType<typeof GuildsInstance.getGuildById>>)
 
@@ -36,6 +40,7 @@ describe('ChannelPresentationClient', () => {
 			guildId: 'guild',
 			sport: 'nba',
 			preferredTeams: ['Boston Celtics', 'Detroit Pistons'],
+			gameChannelTopic: 'Talk the game here',
 		})
 		expect(GuildsInstance.getGuildById).toHaveBeenCalledWith({
 			id: 'guild',
@@ -57,8 +62,8 @@ describe('ChannelPresentationClient', () => {
 			],
 		} as unknown as Awaited<ReturnType<typeof GuildsInstance.getGuildById>>)
 
-		await expect(client.guild('guild')).resolves.toMatchObject({
-			preferredTeams: [],
-		})
+		const guild = await client.guild('guild')
+		expect(guild).toMatchObject({ preferredTeams: [] })
+		expect(guild.gameChannelTopic).toBeUndefined()
 	})
 })

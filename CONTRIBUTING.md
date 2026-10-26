@@ -45,3 +45,9 @@ Be respectful, specific, and constructive in reviews. Contributions are evaluate
 The gate checks static linkage, literal dynamic import targets, and compiled
 BullBoard authentication, HTML rendering, and queue summaries. It does not prove
 full bot startup, external service connectivity, or live Discord behavior.
+
+## Discord-visible fields
+
+| Rule | Enforcement |
+| --- | --- |
+| Game channel topics show only the guild's `GAME_CHANNEL_TOPIC` setting (default `Enjoy the game!`). Never store identity, markers, or delivery state in a field server members can see or edit. Create game channels with `createGameChannel()`; keep per-game channel state in `game-channel-ledger.ts`. | `topic-ownership.test.ts` fails when any file other than `game-channel-topic.ts` writes a topic or a `pluto-game:` marker. `gameChannelTopic()` falls back to the default for marker-like or over-length values, and Khronos rejects them when the setting is saved. |

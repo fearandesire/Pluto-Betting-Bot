@@ -18,13 +18,13 @@ importers:
         version: 2.0.0
       '@bull-board/api':
         specifier: ^9.10.4
-        version: 9.10.4(@bull-board/ui@9.10.4(bullmq@6.3.16(ioredis@6.0.0)(pg@8.23.1))(typescript@7.0.2))(bullmq@6.3.16(ioredis@6.0.0)(pg@8.23.1))(typescript@7.0.2)
+        version: 9.10.4(@bull-board/ui@9.10.4(bullmq@6.3.19(ioredis@6.0.0)(pg@8.23.1))(typescript@7.0.2))(bullmq@6.3.19(ioredis@6.0.0)(pg@8.23.1))(typescript@7.0.2)
       '@bull-board/koa':
         specifier: ^9.10.4
-        version: 9.10.4(@babel/core@7.29.7)(@types/koa@3.0.3)(bullmq@6.3.16(ioredis@6.0.0)(pg@8.23.1))(handlebars@4.7.10)(lodash@4.18.1)(typescript@7.0.2)
+        version: 9.10.4(@babel/core@7.29.7)(@types/koa@3.0.3)(bullmq@6.3.19(ioredis@6.0.0)(pg@8.23.1))(handlebars@4.7.10)(lodash@4.18.1)(typescript@7.0.2)
       '@bull-board/ui':
         specifier: ^9.10.4
-        version: 9.10.4(bullmq@6.3.16(ioredis@6.0.0)(pg@8.23.1))(typescript@7.0.2)
+        version: 9.10.4(bullmq@6.3.19(ioredis@6.0.0)(pg@8.23.1))(typescript@7.0.2)
       '@faker-js/faker':
         specifier: ^10.6.0
         version: 10.6.0
@@ -41,11 +41,11 @@ importers:
         specifier: ^15.7.0
         version: 15.7.0(koa@3.2.1)
       '@pluto-khronos/api-client':
-        specifier: 3.12.0
-        version: 3.12.0
+        specifier: 3.14.0
+        version: 3.14.0
       '@pluto-khronos/types':
-        specifier: 3.12.0
-        version: 3.12.0(discord.js@14.27.0)
+        specifier: 3.14.0
+        version: 3.14.0(discord.js@14.27.0)
       '@sapphire/decorators':
         specifier: ^6.1.1
         version: 6.2.0
@@ -101,11 +101,11 @@ importers:
         specifier: ^1.20.0
         version: 1.20.0
       body-parser:
-        specifier: ^2.3.0
-        version: 2.3.0
+        specifier: ^2.4.0
+        version: 2.4.0
       bullmq:
-        specifier: ^6.3.16
-        version: 6.3.16(ioredis@6.0.0)(pg@8.23.1)
+        specifier: ^6.3.19
+        version: 6.3.19(ioredis@6.0.0)(pg@8.23.1)
       color:
         specifier: ^5.0.3
         version: 5.0.3
@@ -125,8 +125,8 @@ importers:
         specifier: ^3.2.0
         version: 3.2.0(date-fns@4.4.0)
       discord-api-types:
-        specifier: ^0.38.56
-        version: 0.38.56
+        specifier: ^0.38.57
+        version: 0.38.57
       discord.js:
         specifier: ^14.27.0
         version: 14.27.0
@@ -185,17 +185,17 @@ importers:
         specifier: ^12.7.1
         version: 12.7.1(pg-query-stream@4.17.0(pg@8.23.1))
       puppeteer:
-        specifier: ^25.14.0
-        version: 25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0)
+        specifier: ^25.15.0
+        version: 25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0)
       puppeteer-extra:
         specifier: ^3.3.6
-        version: 3.3.6(puppeteer-core@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0))
+        version: 3.3.6(puppeteer-core@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0))
       puppeteer-extra-plugin-recaptcha:
         specifier: ^3.6.8
-        version: 3.6.8(puppeteer-extra@3.3.6(puppeteer-core@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0)))
+        version: 3.6.8(puppeteer-extra@3.3.6(puppeteer-core@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0)))
       puppeteer-extra-plugin-stealth:
         specifier: ^2.11.2
-        version: 2.11.2(puppeteer-extra@3.3.6(puppeteer-core@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0)))
+        version: 2.11.2(puppeteer-extra@3.3.6(puppeteer-core@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0)))
       resolve-team:
         specifier: ^2.0.4
         version: 2.0.4
@@ -1877,11 +1877,11 @@ packages:
     resolution: {integrity: sha512-SEeaJLb3qBNF/OaXnaR1NmmBbFYk1zC0ZH/52fATcRPLFg/p791YrcyFFy44Bo9sLaGuSuLp5Q6axbb/O+v/RA==}
     engines: {node: ^14.18.0 || >=16.0.0}
 
-  '@pluto-khronos/api-client@3.12.0':
-    resolution: {integrity: sha512-48XOFKYWMkisZBUA0NgBbLIkIkzam26ziRbCt+8MzhMqigREinEjbKBoPsmH7Iy0OVNIInteyDMGmOaHRDbiOw==}
+  '@pluto-khronos/api-client@3.14.0':
+    resolution: {integrity: sha512-Awjr6mkfkrDsD3Bem8C98JTzbSuITNTishVSrrQIIuFlR0WV60N6Rv5k0CDqLCe6Quse+pugu4VfbZN50HX9wg==}
 
-  '@pluto-khronos/types@3.12.0':
-    resolution: {integrity: sha512-hostwTOEcsB9kFnLF92In6Rn3PhWUUOUYOF5uZfJpTSc5/uiYLHll8J9y3QXUWC4NfTqKOuc/AUFEAkBLY+Vaw==}
+  '@pluto-khronos/types@3.14.0':
+    resolution: {integrity: sha512-3vyPct/voPQD7HIVlzfQI/H+4DRFjn6lV/F1PF9siYAnSWzWs5lgwku1Bm8n4pE/JV2QBFToU9n0dVJDocJycQ==}
     peerDependencies:
       discord.js: ^14.0.0
 
@@ -3255,8 +3255,8 @@ packages:
   bluebird@3.7.2:
     resolution: {integrity: sha512-XpNj6GDQzdfW+r2Wnn7xiSAd7TM3jzkxGXBGTtWKuSXv1xUV+azxAm8jdWZN06QTQk+2N2XB9jRDkvbmQmcRtg==}
 
-  body-parser@2.3.0:
-    resolution: {integrity: sha512-2cGmJupaNgg+QUwVLAucDuWuoMZ6EX9iHDRswZ5lsNYEmwPaRknMPCLZz07yTzVq/83p4o/wzbDZbBrTvGGTIw==}
+  body-parser@2.4.0:
+    resolution: {integrity: sha512-Ifk1KcLrxaGt1occQagQNFNNOqRt1LFuehEnHHzB8Z6cRgIxRU1TBaiIsUiCdA+gy5PL7Y1IX31DNKkRmxtXjQ==}
     engines: {node: '>=18'}
 
   brace-expansion@1.1.14:
@@ -3303,8 +3303,8 @@ packages:
   buffer@5.7.1:
     resolution: {integrity: sha512-EHcyIPBQ4BSGlvjB16k5KgAJ27CIsHY/2JBmCRReo48y9rQ3MaUzWX3KVlBa4U7MyX02HdVj0K7C3WaB3ju7FQ==}
 
-  bullmq@6.3.16:
-    resolution: {integrity: sha512-savxnrdqckobnm31XWwCKTAswkxrNIqLD/PsdwgYaDpst0UdULu/QjOtPdn86KNrBq8WoHKhJvbgGK13dgPJ8w==}
+  bullmq@6.3.19:
+    resolution: {integrity: sha512-nmTRaSHp5DGLHsTCjZlm4+QlULsXRPOqjj+C4cmjcXp8DdOOT9ATtFuuugwqUX362rClQ0J6R6g33jdJiM2gZg==}
     engines: {node: '>=14.17.0'}
     peerDependencies:
       bullmq-otel: '>=2.0.0'
@@ -3634,6 +3634,10 @@ packages:
     resolution: {integrity: sha512-j/O/d7GcZCyNl7/hwZAb606rzqkyvaDctLmckbxLzHvFBzTJHuGEdodATcP3yIRoDrLHkIATJuvzbFlp/ki2cQ==}
     engines: {node: '>=18'}
 
+  content-type@2.1.0:
+    resolution: {integrity: sha512-mj7UPXE0jaqaOsukNZRUEfEi2AcL7C/vwmwcHV0O97eO1E1pxBZuyjlZrx5seTaNBg1U6+o35wpa35Qfcc+7ag==}
+    engines: {node: '>=18'}
+
   convert-gitmoji@0.1.5:
     resolution: {integrity: sha512-4wqOafJdk2tqZC++cjcbGcaJ13BZ3kwldf06PTiAQRAB76Z1KJwZNL1SaRZMi2w1FM9RYTgZ6QErS8NUl/GBmQ==}
 
@@ -3827,8 +3831,8 @@ packages:
     resolution: {integrity: sha512-WkrWp9GR4KXfKGYzOLmTuGVi1UWFfws377n9cc55/tb6DuqyF6pcQ5AbiHEshaDpY9v6oaSr2XCDidGmMwdzIA==}
     engines: {node: '>=8'}
 
-  discord-api-types@0.38.56:
-    resolution: {integrity: sha512-Hti4RZsGvF5C7SM8rF2MDHtIm0Hyfrlk84GpEA29nj91tvVVMvX+oQSCodu10t2ZcjFGofq8TX0YyC04B2E69Q==}
+  discord-api-types@0.38.57:
+    resolution: {integrity: sha512-R1CTSSt4RshqCq23j2Xq2ZscvzB4LzG9OB1CYQdKUGdw8Ti/oF/72EEtK2mNpagG/Vj9NcBT7dw9lKLf+Dacfg==}
 
   discord.js@14.27.0:
     resolution: {integrity: sha512-qHbFlFG2N7y3LjPySYsL6A1+BnX6bkTVgo842EX0CqVPk/KTMwZkojPHEXKsQUpWZNyz5BISNHK1cPpQw0+m4A==}
@@ -4522,6 +4526,10 @@ packages:
 
   iconv-lite@0.7.2:
     resolution: {integrity: sha512-im9DjEDQ55s9fL4EYzOAv0yMqmMBSZp6G0VvFyTMPKWxiSBHUj9NW/qqLmXUwXrrM7AvqSlTCfvqRb0cM8yYqw==}
+    engines: {node: '>=0.10.0'}
+
+  iconv-lite@0.7.3:
+    resolution: {integrity: sha512-IKXpvIzjnC9XTAUbVBcMfGS0EPaIXtW6v+zr+RRp+hqULEpo0owZax6wyRwPOJbWbzjYspQwusTsfVr0ifh4uQ==}
     engines: {node: '>=0.10.0'}
 
   ieee754@1.2.1:
@@ -6103,8 +6111,8 @@ packages:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
     engines: {node: '>=6'}
 
-  puppeteer-core@25.14.0:
-    resolution: {integrity: sha512-LQitnes3tBeVbdZ7V/4iwJPLZGgkl9uBVK0W7YYMh68j/3Y9eNuvj4yl+Fdo7zN0SuajOMrhd7aPj3DifK8k6A==}
+  puppeteer-core@25.15.0:
+    resolution: {integrity: sha512-DEk7S2tlBDp4+iXdnHjFmMofoqVftlz1JO4eyE+oBSiQIfIVTYq8hWF1EsjmRvD49chxGX3oKQT5hX2dnIIDdg==}
     engines: {node: '>=22.12.0'}
 
   puppeteer-extra-plugin-recaptcha@3.6.8:
@@ -6182,8 +6190,8 @@ packages:
       puppeteer-core:
         optional: true
 
-  puppeteer@25.14.0:
-    resolution: {integrity: sha512-+s1Iqbl9DsGLOaQdgCQyhtgHZsF9hi4Iu8iuBqxzraxUXoRG1QkYQI0CA1/VsNK1gZWJfs50BL/oOb1L+Yz8Yg==}
+  puppeteer@25.15.0:
+    resolution: {integrity: sha512-b+2Ye8C55Fi1u+w680WdDx4QWE4NVM1MKpB8YRXkbBngf335e/omAKI5/lPTSaAMmqHw199eEf90iFXPjJUYCw==}
     engines: {node: '>=22.12.0'}
     hasBin: true
 
@@ -7643,20 +7651,20 @@ snapshots:
 
   '@borewit/text-codec@0.2.1': {}
 
-  '@bull-board/api@9.10.4(@bull-board/ui@9.10.4(bullmq@6.3.16(ioredis@6.0.0)(pg@8.23.1))(typescript@7.0.2))(bullmq@6.3.16(ioredis@6.0.0)(pg@8.23.1))(typescript@7.0.2)':
+  '@bull-board/api@9.10.4(@bull-board/ui@9.10.4(bullmq@6.3.19(ioredis@6.0.0)(pg@8.23.1))(typescript@7.0.2))(bullmq@6.3.19(ioredis@6.0.0)(pg@8.23.1))(typescript@7.0.2)':
     dependencies:
-      '@bull-board/ui': 9.10.4(bullmq@6.3.16(ioredis@6.0.0)(pg@8.23.1))(typescript@7.0.2)
+      '@bull-board/ui': 9.10.4(bullmq@6.3.19(ioredis@6.0.0)(pg@8.23.1))(typescript@7.0.2)
       redis-info: 3.1.0
       valibot: 1.5.0(typescript@7.0.2)
     optionalDependencies:
-      bullmq: 6.3.16(ioredis@6.0.0)(pg@8.23.1)
+      bullmq: 6.3.19(ioredis@6.0.0)(pg@8.23.1)
     transitivePeerDependencies:
       - typescript
 
-  '@bull-board/koa@9.10.4(@babel/core@7.29.7)(@types/koa@3.0.3)(bullmq@6.3.16(ioredis@6.0.0)(pg@8.23.1))(handlebars@4.7.10)(lodash@4.18.1)(typescript@7.0.2)':
+  '@bull-board/koa@9.10.4(@babel/core@7.29.7)(@types/koa@3.0.3)(bullmq@6.3.19(ioredis@6.0.0)(pg@8.23.1))(handlebars@4.7.10)(lodash@4.18.1)(typescript@7.0.2)':
     dependencies:
-      '@bull-board/api': 9.10.4(@bull-board/ui@9.10.4(bullmq@6.3.16(ioredis@6.0.0)(pg@8.23.1))(typescript@7.0.2))(bullmq@6.3.16(ioredis@6.0.0)(pg@8.23.1))(typescript@7.0.2)
-      '@bull-board/ui': 9.10.4(bullmq@6.3.16(ioredis@6.0.0)(pg@8.23.1))(typescript@7.0.2)
+      '@bull-board/api': 9.10.4(@bull-board/ui@9.10.4(bullmq@6.3.19(ioredis@6.0.0)(pg@8.23.1))(typescript@7.0.2))(bullmq@6.3.19(ioredis@6.0.0)(pg@8.23.1))(typescript@7.0.2)
+      '@bull-board/ui': 9.10.4(bullmq@6.3.19(ioredis@6.0.0)(pg@8.23.1))(typescript@7.0.2)
       '@koa/bodyparser': 6.1.0(koa@3.2.1)
       '@koa/router': 15.7.0(koa@3.2.1)
       '@ladjs/koa-views': 9.0.0(@babel/core@7.29.7)(@types/koa@3.0.3)(ejs@6.0.1)(handlebars@4.7.10)(lodash@4.18.1)
@@ -7718,9 +7726,9 @@ snapshots:
       - walrus
       - whiskers
 
-  '@bull-board/ui@9.10.4(bullmq@6.3.16(ioredis@6.0.0)(pg@8.23.1))(typescript@7.0.2)':
+  '@bull-board/ui@9.10.4(bullmq@6.3.19(ioredis@6.0.0)(pg@8.23.1))(typescript@7.0.2)':
     dependencies:
-      '@bull-board/api': 9.10.4(@bull-board/ui@9.10.4(bullmq@6.3.16(ioredis@6.0.0)(pg@8.23.1))(typescript@7.0.2))(bullmq@6.3.16(ioredis@6.0.0)(pg@8.23.1))(typescript@7.0.2)
+      '@bull-board/api': 9.10.4(@bull-board/ui@9.10.4(bullmq@6.3.19(ioredis@6.0.0)(pg@8.23.1))(typescript@7.0.2))(bullmq@6.3.19(ioredis@6.0.0)(pg@8.23.1))(typescript@7.0.2)
     transitivePeerDependencies:
       - bull
       - bullmq
@@ -7755,7 +7763,7 @@ snapshots:
       '@discordjs/formatters': 0.6.2
       '@discordjs/util': 1.2.0
       '@sapphire/shapeshift': 4.0.0
-      discord-api-types: 0.38.56
+      discord-api-types: 0.38.57
       fast-deep-equal: 3.1.3
       ts-mixer: 6.0.4
       tslib: 2.8.1
@@ -7766,7 +7774,7 @@ snapshots:
 
   '@discordjs/formatters@0.6.2':
     dependencies:
-      discord-api-types: 0.38.56
+      discord-api-types: 0.38.57
 
   '@discordjs/rest@2.6.1':
     dependencies:
@@ -7775,7 +7783,7 @@ snapshots:
       '@sapphire/async-queue': 1.5.5
       '@sapphire/snowflake': 3.5.5
       '@vladfrangu/async_event_emitter': 2.4.7
-      discord-api-types: 0.38.56
+      discord-api-types: 0.38.57
       magic-bytes.js: 1.13.0
       tslib: 2.8.1
       undici: 6.24.1
@@ -7787,14 +7795,14 @@ snapshots:
       '@sapphire/async-queue': 1.5.5
       '@sapphire/snowflake': 3.5.5
       '@vladfrangu/async_event_emitter': 2.4.7
-      discord-api-types: 0.38.56
+      discord-api-types: 0.38.57
       magic-bytes.js: 1.13.0
       tslib: 2.8.1
       undici: 6.29.0
 
   '@discordjs/util@1.2.0':
     dependencies:
-      discord-api-types: 0.38.56
+      discord-api-types: 0.38.57
 
   '@discordjs/ws@1.2.3':
     dependencies:
@@ -7804,7 +7812,7 @@ snapshots:
       '@sapphire/async-queue': 1.5.5
       '@types/ws': 8.18.2
       '@vladfrangu/async_event_emitter': 2.4.7
-      discord-api-types: 0.38.56
+      discord-api-types: 0.38.57
       tslib: 2.8.1
       ws: 8.22.0
     transitivePeerDependencies:
@@ -8931,9 +8939,9 @@ snapshots:
 
   '@pkgr/core@0.3.6': {}
 
-  '@pluto-khronos/api-client@3.12.0': {}
+  '@pluto-khronos/api-client@3.14.0': {}
 
-  '@pluto-khronos/types@3.12.0(discord.js@14.27.0)':
+  '@pluto-khronos/types@3.14.0(discord.js@14.27.0)':
     dependencies:
       discord.js: 14.27.0
       resolve-team: 2.0.4
@@ -9164,11 +9172,11 @@ snapshots:
 
   '@sapphire/discord-utilities@3.5.0':
     dependencies:
-      discord-api-types: 0.38.56
+      discord-api-types: 0.38.57
 
   '@sapphire/discord-utilities@4.0.0':
     dependencies:
-      discord-api-types: 0.38.56
+      discord-api-types: 0.38.57
 
   '@sapphire/discord.js-utilities@7.3.3':
     dependencies:
@@ -10164,13 +10172,13 @@ snapshots:
 
   bluebird@3.7.2: {}
 
-  body-parser@2.3.0:
+  body-parser@2.4.0:
     dependencies:
       bytes: 3.1.2
-      content-type: 2.0.0
+      content-type: 2.1.0
       debug: 4.4.3(supports-color@8.1.1)
       http-errors: 2.0.1
-      iconv-lite: 0.7.2
+      iconv-lite: 0.7.3
       on-finished: 2.4.1
       qs: 6.16.1
       raw-body: 3.0.2
@@ -10228,7 +10236,7 @@ snapshots:
       base64-js: 1.5.1
       ieee754: 1.2.1
 
-  bullmq@6.3.16(ioredis@6.0.0)(pg@8.23.1):
+  bullmq@6.3.19(ioredis@6.0.0)(pg@8.23.1):
     dependencies:
       cron-parser: 5.10.2
       msgpackr: 2.1.0
@@ -10553,6 +10561,8 @@ snapshots:
 
   content-type@2.0.0: {}
 
+  content-type@2.1.0: {}
+
   convert-gitmoji@0.1.5: {}
 
   convert-hrtime@5.0.0: {}
@@ -10707,7 +10717,7 @@ snapshots:
     dependencies:
       path-type: 4.0.0
 
-  discord-api-types@0.38.56: {}
+  discord-api-types@0.38.57: {}
 
   discord.js@14.27.0:
     dependencies:
@@ -10718,7 +10728,7 @@ snapshots:
       '@discordjs/util': 1.2.0
       '@discordjs/ws': 1.2.3
       '@sapphire/snowflake': 3.5.5
-      discord-api-types: 0.38.56
+      discord-api-types: 0.38.57
       fast-deep-equal: 3.1.3
       lodash.snakecase: 4.1.1
       magic-bytes.js: 1.13.0
@@ -11590,6 +11600,10 @@ snapshots:
       safer-buffer: 2.1.2
 
   iconv-lite@0.7.2:
+    dependencies:
+      safer-buffer: 2.1.2
+
+  iconv-lite@0.7.3:
     dependencies:
       safer-buffer: 2.1.2
 
@@ -13368,7 +13382,7 @@ snapshots:
 
   punycode@2.3.1: {}
 
-  puppeteer-core@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0):
+  puppeteer-core@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0):
     dependencies:
       '@puppeteer/browsers': 3.2.5(proxy-agent@8.0.2)(yauzl@3.4.0)
       chromium-bidi: 157.0.8090-0(devtools-protocol@0.0.1696802)
@@ -13382,76 +13396,76 @@ snapshots:
       - utf-8-validate
       - yauzl
 
-  puppeteer-extra-plugin-recaptcha@3.6.8(puppeteer-extra@3.3.6(puppeteer-core@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0))):
+  puppeteer-extra-plugin-recaptcha@3.6.8(puppeteer-extra@3.3.6(puppeteer-core@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0))):
     dependencies:
       debug: 4.4.1
       merge-deep: 3.0.3
-      puppeteer-extra-plugin: 3.2.3(puppeteer-extra@3.3.6(puppeteer-core@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0)))
+      puppeteer-extra-plugin: 3.2.3(puppeteer-extra@3.3.6(puppeteer-core@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0)))
     optionalDependencies:
-      puppeteer-extra: 3.3.6(puppeteer-core@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0))
+      puppeteer-extra: 3.3.6(puppeteer-core@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0))
     transitivePeerDependencies:
       - supports-color
 
-  puppeteer-extra-plugin-stealth@2.11.2(puppeteer-extra@3.3.6(puppeteer-core@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0))):
+  puppeteer-extra-plugin-stealth@2.11.2(puppeteer-extra@3.3.6(puppeteer-core@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0))):
     dependencies:
       debug: 4.4.1
-      puppeteer-extra-plugin: 3.2.3(puppeteer-extra@3.3.6(puppeteer-core@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0)))
-      puppeteer-extra-plugin-user-preferences: 2.4.1(puppeteer-extra@3.3.6(puppeteer-core@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0)))
+      puppeteer-extra-plugin: 3.2.3(puppeteer-extra@3.3.6(puppeteer-core@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0)))
+      puppeteer-extra-plugin-user-preferences: 2.4.1(puppeteer-extra@3.3.6(puppeteer-core@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0)))
     optionalDependencies:
-      puppeteer-extra: 3.3.6(puppeteer-core@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0))
+      puppeteer-extra: 3.3.6(puppeteer-core@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0))
     transitivePeerDependencies:
       - supports-color
 
-  puppeteer-extra-plugin-user-data-dir@2.4.1(puppeteer-extra@3.3.6(puppeteer-core@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0))):
+  puppeteer-extra-plugin-user-data-dir@2.4.1(puppeteer-extra@3.3.6(puppeteer-core@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0))):
     dependencies:
       debug: 4.4.3(supports-color@8.1.1)
       fs-extra: 10.1.0
-      puppeteer-extra-plugin: 3.2.3(puppeteer-extra@3.3.6(puppeteer-core@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0)))
+      puppeteer-extra-plugin: 3.2.3(puppeteer-extra@3.3.6(puppeteer-core@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0)))
       rimraf: 3.0.2
     optionalDependencies:
-      puppeteer-extra: 3.3.6(puppeteer-core@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0))
+      puppeteer-extra: 3.3.6(puppeteer-core@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0))
     transitivePeerDependencies:
       - supports-color
 
-  puppeteer-extra-plugin-user-preferences@2.4.1(puppeteer-extra@3.3.6(puppeteer-core@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0))):
+  puppeteer-extra-plugin-user-preferences@2.4.1(puppeteer-extra@3.3.6(puppeteer-core@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0))):
     dependencies:
       debug: 4.4.3(supports-color@8.1.1)
       deepmerge: 4.3.1
-      puppeteer-extra-plugin: 3.2.3(puppeteer-extra@3.3.6(puppeteer-core@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0)))
-      puppeteer-extra-plugin-user-data-dir: 2.4.1(puppeteer-extra@3.3.6(puppeteer-core@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0)))
+      puppeteer-extra-plugin: 3.2.3(puppeteer-extra@3.3.6(puppeteer-core@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0)))
+      puppeteer-extra-plugin-user-data-dir: 2.4.1(puppeteer-extra@3.3.6(puppeteer-core@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0)))
     optionalDependencies:
-      puppeteer-extra: 3.3.6(puppeteer-core@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0))
+      puppeteer-extra: 3.3.6(puppeteer-core@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0))
     transitivePeerDependencies:
       - supports-color
 
-  puppeteer-extra-plugin@3.2.3(puppeteer-extra@3.3.6(puppeteer-core@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0))):
+  puppeteer-extra-plugin@3.2.3(puppeteer-extra@3.3.6(puppeteer-core@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0))):
     dependencies:
       '@types/debug': 4.1.12
       debug: 4.4.3(supports-color@8.1.1)
       merge-deep: 3.0.3
     optionalDependencies:
-      puppeteer-extra: 3.3.6(puppeteer-core@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0))
+      puppeteer-extra: 3.3.6(puppeteer-core@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0))
     transitivePeerDependencies:
       - supports-color
 
-  puppeteer-extra@3.3.6(puppeteer-core@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0)):
+  puppeteer-extra@3.3.6(puppeteer-core@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0))(puppeteer@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0)):
     dependencies:
       '@types/debug': 4.1.12
       debug: 4.4.1
       deepmerge: 4.3.1
     optionalDependencies:
-      puppeteer: 25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0)
-      puppeteer-core: 25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0)
+      puppeteer: 25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0)
+      puppeteer-core: 25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0)
     transitivePeerDependencies:
       - supports-color
 
-  puppeteer@25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0):
+  puppeteer@25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0):
     dependencies:
       '@puppeteer/browsers': 3.2.5(proxy-agent@8.0.2)(yauzl@3.4.0)
       chromium-bidi: 157.0.8090-0(devtools-protocol@0.0.1696802)
       devtools-protocol: 0.0.1696802
       lilconfig: 3.1.4
-      puppeteer-core: 25.14.0(proxy-agent@8.0.2)(yauzl@3.4.0)
+      puppeteer-core: 25.15.0(proxy-agent@8.0.2)(yauzl@3.4.0)
       typed-query-selector: 2.12.3
     transitivePeerDependencies:
       - bufferutil
@@ -13489,7 +13503,7 @@ snapshots:
     dependencies:
       bytes: 3.1.2
       http-errors: 2.0.1
-      iconv-lite: 0.7.2
+      iconv-lite: 0.7.3
       unpipe: 1.0.0
 
   rc9@2.1.2:
@@ -14362,7 +14376,7 @@ snapshots:
 
   type-is@2.1.0:
     dependencies:
-      content-type: 2.0.0
+      content-type: 2.1.0
       media-typer: 1.1.0
       mime-types: 3.0.2
 
