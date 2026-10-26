@@ -13,7 +13,7 @@ export interface CreatedChannel {
 }
 
 export interface ChannelCreationDiscordPort {
-	findByMarker(
+	findExisting(
 		intent: ChannelIntent,
 		knownChannelId?: string,
 	): Promise<{ id: string } | null>
@@ -106,7 +106,7 @@ export class ChannelCreationWorkflow {
 	): Promise<ChannelCreationOutcome> {
 		const reservation = await this.ports.reservations.reserve(intent, owner)
 		if (reservation.state === 'created') {
-			const existing = await this.ports.discord.findByMarker(
+			const existing = await this.ports.discord.findExisting(
 				intent,
 				reservation.channelId,
 			)
@@ -137,7 +137,7 @@ export class ChannelCreationWorkflow {
 		})
 		this.activeRenewals.set(owner, stopRenewal)
 		try {
-			const existing = await this.ports.discord.findByMarker(intent)
+			const existing = await this.ports.discord.findExisting(intent)
 			if (leaseLost) throw new LeaseLostError()
 			if (existing) {
 				await this.recordIfOwned(intent, owner, existing.id)
@@ -182,7 +182,7 @@ export class ChannelCreationWorkflow {
 			}
 			let existing: { id: string } | null
 			try {
-				existing = await this.ports.discord.findByMarker(intent)
+				existing = await this.ports.discord.findExisting(intent)
 			} catch {
 				await this.releaseLease(intent, owner).catch((releaseError) =>
 					logLeaseError('release', releaseError),
@@ -406,21 +406,21 @@ function logLeaseError(operation: string, error: unknown): void {
 function logLeaseLeftToExpire(intent: ChannelIntent): void {
 	logger.warn({
 		message: 'lease left to expire',
-		channelKey: intent.marker,
+		channelKey: `${intent.guildId}:${intent.gameId}`,
 	})
 }
 
 function logWaitedForInFlight(intent: ChannelIntent): void {
 	logger.warn({
 		message: 'waited for in-flight creation',
-		channelKey: intent.marker,
+		channelKey: `${intent.guildId}:${intent.gameId}`,
 	})
 }
 
 function logInFlightTimeout(intent: ChannelIntent): void {
 	logger.warn({
 		message: 'in-flight creation exceeded shutdown budget',
-		channelKey: intent.marker,
+		channelKey: `${intent.guildId}:${intent.gameId}`,
 	})
 }
 

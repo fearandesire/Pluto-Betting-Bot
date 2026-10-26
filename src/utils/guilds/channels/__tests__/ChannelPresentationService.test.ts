@@ -100,13 +100,11 @@ beforeEach(() => {
 			return 'channel'
 		}),
 		findMessage: vi.fn(async () => (messageExists ? 'message' : null)),
-		write: vi.fn(
-			async (_guild, _channel, presentation, _marker, messageId) => {
-				writes.push({ messageId, state: presentation.betting.state })
-				messageExists = true
-				return 'message'
-			},
-		),
+		write: vi.fn(async (_guild, _channel, presentation, messageId) => {
+			writes.push({ messageId, state: presentation.betting.state })
+			messageExists = true
+			return 'message'
+		}),
 	}
 	service = new ChannelPresentationService(
 		store,

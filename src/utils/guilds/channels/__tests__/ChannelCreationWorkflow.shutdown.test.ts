@@ -71,7 +71,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 			leaseSeconds: 300,
 		})
 		let resolveLookup!: (channel: { id: string } | null) => void
-		const findByMarker = vi
+		const findExisting = vi
 			.fn()
 			.mockImplementationOnce(
 				() =>
@@ -80,7 +80,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 					}),
 			)
 			.mockResolvedValue(null)
-		const injected = workflowPorts(store, { findByMarker })
+		const injected = workflowPorts(store, { findExisting })
 		const workflow = new ChannelCreationWorkflow(injected)
 		const refresh = vi.spyOn(storeRedis, 'refreshIfOwned')
 		const run = workflow.run(intent)
@@ -173,7 +173,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 		const store = new RedisChannelReservationStore(storeRedis, {
 			leaseSeconds: 300,
 		})
-		const findByMarker = vi.fn().mockResolvedValue(null)
+		const findExisting = vi.fn().mockResolvedValue(null)
 		let rejectRelease!: (error: Error) => void
 		const release = vi.fn(
 			() =>
@@ -183,7 +183,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 		)
 		const workflow = new ChannelCreationWorkflow(
 			workflowPorts(reservationsWithRelease(store, release), {
-				findByMarker,
+				findExisting,
 				create: vi.fn().mockRejectedValue(new Error('create failed')),
 			}),
 		)
@@ -198,7 +198,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 
 		expect(warn).toHaveBeenCalledWith({
 			message: 'lease left to expire',
-			channelKey: intent.marker,
+			channelKey: `${intent.guildId}:${intent.gameId}`,
 		})
 
 		rejectRelease(new Error('redis unavailable'))
@@ -250,7 +250,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 		})
 		expect(warn).toHaveBeenCalledWith({
 			message: 'in-flight creation exceeded shutdown budget',
-			channelKey: intent.marker,
+			channelKey: `${intent.guildId}:${intent.gameId}`,
 		})
 		await redis.del(keyFor(intent))
 	})
@@ -269,7 +269,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 		const completeEntered = new Promise<void>((resolve) => {
 			resolveCompleteEntered = resolve
 		})
-		const findByMarker = vi
+		const findExisting = vi
 			.fn()
 			.mockResolvedValueOnce(null)
 			.mockResolvedValue({ id: 'discord-channel-existing' })
@@ -279,7 +279,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 		})
 		const workflow = new ChannelCreationWorkflow(
 			workflowPorts(store, {
-				findByMarker,
+				findExisting,
 				create: vi.fn().mockRejectedValue(new Error('create failed')),
 				completeExisting,
 			}),
@@ -303,7 +303,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 		})
 		expect(warn).toHaveBeenCalledWith({
 			message: 'in-flight creation exceeded shutdown budget',
-			channelKey: intent.marker,
+			channelKey: `${intent.guildId}:${intent.gameId}`,
 		})
 		await redis.del(keyFor(intent))
 	})
@@ -349,11 +349,11 @@ describeWithRedis('channel creation lease shutdown', () => {
 
 		expect(warn).toHaveBeenCalledWith({
 			message: 'waited for in-flight creation',
-			channelKey: intent.marker,
+			channelKey: `${intent.guildId}:${intent.gameId}`,
 		})
 		expect(warn).not.toHaveBeenCalledWith({
 			message: 'lease left to expire',
-			channelKey: intent.marker,
+			channelKey: `${intent.guildId}:${intent.gameId}`,
 		})
 		await redis.del(keyFor(intent))
 	})
@@ -364,7 +364,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 		const store = new RedisChannelReservationStore(storeRedis, {
 			leaseSeconds: 300,
 		})
-		const findByMarker = vi.fn().mockResolvedValue(null)
+		const findExisting = vi.fn().mockResolvedValue(null)
 		let resolveRetry!: (released: boolean) => void
 		let retryStarted!: () => void
 		const retryEntered = new Promise<void>((resolve) => {
@@ -384,7 +384,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 		release.mockRejectedValueOnce(new Error('initial release failed'))
 		const workflow = new ChannelCreationWorkflow(
 			workflowPorts(reservationsWithRelease(store, release), {
-				findByMarker,
+				findExisting,
 				create: vi.fn().mockRejectedValue(new Error('create failed')),
 			}),
 		)
@@ -400,7 +400,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 		expect(release).toHaveBeenCalledTimes(2)
 		expect(warn).toHaveBeenCalledWith({
 			message: 'lease left to expire',
-			channelKey: intent.marker,
+			channelKey: `${intent.guildId}:${intent.gameId}`,
 		})
 
 		resolveRetry(true)
@@ -415,7 +415,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 		const store = new RedisChannelReservationStore(storeRedis, {
 			leaseSeconds: 300,
 		})
-		const findByMarker = vi.fn().mockResolvedValue(null)
+		const findExisting = vi.fn().mockResolvedValue(null)
 		let rejectCreate!: (error: Error) => void
 		const create = vi.fn(
 			() =>
@@ -443,7 +443,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 			})
 		const workflow = new ChannelCreationWorkflow(
 			workflowPorts(reservationsWithRelease(store, release), {
-				findByMarker,
+				findExisting,
 				create,
 			}),
 		)
@@ -477,7 +477,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 		await expect(close).resolves.not.toThrow()
 		expect(warn).toHaveBeenCalledWith({
 			message: 'lease left to expire',
-			channelKey: intent.marker,
+			channelKey: `${intent.guildId}:${intent.gameId}`,
 		})
 
 		resolveRetry(true)
@@ -492,7 +492,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 			leaseSeconds: 300,
 		})
 		let resolveLookup!: (channel: { id: string } | null) => void
-		const findByMarker = vi.fn().mockImplementationOnce(
+		const findExisting = vi.fn().mockImplementationOnce(
 			() =>
 				new Promise<{ id: string } | null>((resolve) => {
 					resolveLookup = resolve
@@ -521,7 +521,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 			)
 		const workflow = new ChannelCreationWorkflow(
 			workflowPorts(reservationsWithRelease(store, release, refresh), {
-				findByMarker,
+				findExisting,
 			}),
 		)
 		const run = workflow.run(intent)
@@ -735,7 +735,7 @@ function workflowPorts(
 	return {
 		reservations: store,
 		discord: {
-			findByMarker: vi.fn().mockResolvedValue(null),
+			findExisting: vi.fn().mockResolvedValue(null),
 			create: vi.fn().mockResolvedValue({
 				channelId: 'discord-channel-1',
 				complete: vi.fn().mockResolvedValue(undefined),
@@ -767,7 +767,6 @@ function uniqueIntent(label: string): ChannelIntent {
 		guildId: 'shutdown-test-guild',
 		gameId: id,
 		channelName: 'shutdown-test-channel',
-		marker: `pluto-test-channel:${id}`,
 	}
 }
 
