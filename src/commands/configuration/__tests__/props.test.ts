@@ -146,7 +146,7 @@ describe('/props', () => {
 	})
 
 	describe('enable', () => {
-		it('writes PROPS_ENABLED=true, then the channel, and confirms', async () => {
+		it('keeps props disabled until the channel is saved, then enables and confirms', async () => {
 			const interaction = makeInteraction()
 
 			await command.handleEnable(interaction as never)
@@ -160,7 +160,7 @@ describe('/props', () => {
 						createConfigDto: {
 							guild_id: GUILD_ID,
 							setting_type: 'PROPS_ENABLED',
-							setting_value: 'true',
+							setting_value: 'false',
 						},
 					},
 				],
@@ -170,6 +170,15 @@ describe('/props', () => {
 							guild_id: GUILD_ID,
 							setting_type: 'PREDICTIONS_CHAN',
 							setting_value: CHANNEL_ID,
+						},
+					},
+				],
+				[
+					{
+						createConfigDto: {
+							guild_id: GUILD_ID,
+							setting_type: 'PROPS_ENABLED',
+							setting_value: 'true',
 						},
 					},
 				],
@@ -226,6 +235,31 @@ describe('/props', () => {
 			expect(text).toContain('Something went wrong')
 			expect(text).toContain('503 upstream')
 			expect(text).not.toContain('enabled')
+		})
+		it('never re-enables an old channel when saving the new channel fails', async () => {
+			mockSetGuildConfig.mockResolvedValueOnce(undefined)
+			mockSetGuildConfig.mockRejectedValueOnce(
+				new Error('channel save failed'),
+			)
+			const interaction = makeInteraction()
+
+			await command.handleEnable(interaction as never)
+
+			expect(mockSetGuildConfig).toHaveBeenCalledTimes(2)
+			expect(
+				mockSetGuildConfig.mock.calls[0]![0].createConfigDto,
+			).toMatchObject({
+				setting_type: 'PROPS_ENABLED',
+				setting_value: 'false',
+			})
+			expect(
+				mockSetGuildConfig.mock.calls[1]![0].createConfigDto,
+			).toMatchObject({
+				setting_type: 'PREDICTIONS_CHAN',
+				setting_value: CHANNEL_ID,
+			})
+			expect(replyText(interaction)).toContain('Something went wrong')
+			expect(replyText(interaction)).not.toContain('Daily props enabled')
 		})
 	})
 

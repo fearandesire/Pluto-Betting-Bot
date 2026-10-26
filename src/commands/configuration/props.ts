@@ -135,15 +135,16 @@ export class UserCommand extends Subcommand {
 			)
 		}
 
-		// PROPS_ENABLED goes first: if it fails, the channel is untouched, so a
-		// server that had no channel does not start receiving props.
+		// Keep posting disabled until the channel write succeeds. Re-enabling
+		// first could reactivate an old channel if saving the new one fails.
 		try {
 			const guildConfig = new GuildConfigWrapper()
-			await guildConfig.setPropsEnabled(interaction.guildId, true)
+			await guildConfig.setPropsEnabled(interaction.guildId, false)
 			await guildConfig.setPredictionsChannel(
 				interaction.guildId,
 				channel.id,
 			)
+			await guildConfig.setPropsEnabled(interaction.guildId, true)
 		} catch (error) {
 			return this.replyWithError(interaction, error)
 		}

@@ -7,11 +7,9 @@ import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js'
 
 /**
  * Khronos skips a guild's daily props when this row is `'false'`; a missing
- * row means enabled. Not in @pluto-khronos/api-client 3.12.0 yet, so it is
- * cast through the generated enum until the next client release adds it.
+ * row means enabled. The generated enum is available from client 3.15.0.
  */
-export const PROPS_ENABLED_SETTING =
-	'PROPS_ENABLED' as CreateConfigDtoSettingTypeEnum
+export const PROPS_ENABLED_SETTING = CreateConfigDtoSettingTypeEnum.PropsEnabled
 
 export default class GuildConfigWrapper {
 	private discordConfigApi: DiscordConfigApi
