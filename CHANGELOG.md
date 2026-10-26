@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.14.8](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.14.7...v4.14.8) (2026-10-26)
+
+
+### Bug Fixes
+
+* **channels:** show a friendly topic instead of internal game markers ([#742](https://github.com/fearandesire/Pluto-Betting-Bot/issues/742)) ([129c0d9](https://github.com/fearandesire/Pluto-Betting-Bot/commit/129c0d9e65743d678475bfd80754cc02e54d4fa9))
+
 ## [4.14.7](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.14.6...v4.14.7) (2026-10-26)
 
 
