@@ -10,7 +10,10 @@ vi.mock('../../../logging/WinstonLogger.js', () => ({
 }))
 
 import { InMemoryRedis } from '../../../cache/redis-instance.js'
+import { ChannelCreationBusyError } from '../ChannelCreationWorkflow.js'
+import { RedisPresentationLock } from '../channel-presentation-lock.js'
 import {
+	createRecordedGameChannel,
 	locateGameChannel,
 	RedisGameChannelLedger,
 } from '../game-channel-ledger.js'
@@ -34,7 +37,12 @@ const legacyMarker = (gameId: string) =>
 
 function ledgerAt(start: number) {
 	let now = start
-	const ledger = new RedisGameChannelLedger(new InMemoryRedis(), () => now)
+	const redis = new InMemoryRedis()
+	const ledger = new RedisGameChannelLedger(
+		redis,
+		() => now,
+		new RedisPresentationLock(redis),
+	)
 	return { ledger, advance: (ms: number) => (now += ms) }
 }
 
@@ -89,6 +97,34 @@ describe('locateGameChannel', () => {
 			channel: late,
 			via: 'recovered',
 		})
+	})
+
+	it("never adopts another same-name game's channel mid-creation", async () => {
+		const { ledger, advance } = ledgerAt(2_000_000)
+		// Game A stopped mid-create long ago and never settled.
+		await ledger.beginCreation('guild', 'game-a')
+		advance(3_600_000)
+		const gameB = channel(at(5_600_000))
+		let recoveryDuringB: Promise<unknown> | undefined
+		await createRecordedGameChannel(
+			ledger,
+			{ ...key, gameId: 'game-b' },
+			async () => {
+				// Discord created B's channel; its id is not recorded yet.
+				recoveryDuringB = locateGameChannel(ledger, key, [gameB])
+				await recoveryDuringB.catch(() => undefined)
+				return gameB
+			},
+		)
+		await expect(recoveryDuringB).rejects.toBeInstanceOf(
+			ChannelCreationBusyError,
+		)
+		await expect(
+			locateGameChannel(ledger, key, [gameB]),
+		).resolves.toBeNull()
+		await expect(ledger.get('guild', 'game-a')).resolves.not.toHaveProperty(
+			'channelId',
+		)
 	})
 
 	it("never recovers another game's recorded channel", async () => {

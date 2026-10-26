@@ -37,6 +37,7 @@ import {
 } from './ChannelCreationWorkflow.js'
 import { RedisPresentationLock } from './channel-presentation-lock.js'
 import {
+	createRecordedGameChannel,
 	type GameChannelLedger,
 	locateGameChannel,
 	RedisGameChannelLedger,
@@ -206,17 +207,14 @@ export default class ChannelManager {
 		if (!gameCategory || gameCategory.type !== ChannelType.GuildCategory) {
 			throw new Error('Game category is unavailable')
 		}
-		await this.ledger.beginCreation(intent.guildId, intent.gameId)
-		const gameChannel = await createGameChannel(locatedGuild, guild, {
-			name: channel.channelname,
-			parent: gameCategory as CategoryChannelResolvable,
-		}).finally(() =>
-			this.ledger.settleAttempt(intent.guildId, intent.gameId),
-		)
-		await this.ledger.recordChannel(
-			intent.guildId,
-			intent.gameId,
-			gameChannel.id,
+		const gameChannel = await createRecordedGameChannel(
+			this.ledger,
+			intent,
+			() =>
+				createGameChannel(locatedGuild, guild, {
+					name: channel.channelname,
+					parent: gameCategory as CategoryChannelResolvable,
+				}),
 		)
 		return {
 			channelId: gameChannel.id,

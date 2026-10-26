@@ -57,6 +57,11 @@ function ledgerWith(record: GameChannelRecord | null = null) {
 		recordChannel: vi.fn(async () => undefined),
 		markSent: vi.fn(async () => undefined),
 		ownerOf: vi.fn(async () => null),
+		exclusive: <T>(
+			_guild: string,
+			_name: string,
+			action: () => Promise<T>,
+		) => action(),
 	} satisfies GameChannelLedger
 }
 

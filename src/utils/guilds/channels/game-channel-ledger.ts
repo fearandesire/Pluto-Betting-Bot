@@ -3,6 +3,10 @@ import { z } from 'zod'
 import redisCache, {
 	type RedisCacheClient,
 } from '../../cache/redis-instance.js'
+import {
+	type PresentationLock,
+	RedisPresentationLock,
+} from './channel-presentation-lock.js'
 import { legacyTopicDelivery } from './game-channel-topic.js'
 
 /**
@@ -14,6 +18,8 @@ import { legacyTopicDelivery } from './game-channel-topic.js'
  * creation attempts that no other game owns. An attempt that never settled
  * (the process stopped mid-call, possibly while discord.js waited out a rate
  * limit) leaves the window open: its channel can appear arbitrarily late.
+ * Creating and recovering hold one lock per guild and channel name, so a
+ * recovery never sees another same-name game between its create and record.
  */
 const gameChannelRecordSchema = z.object({
 	firstAttemptAt: z.number().int().nonnegative(),
@@ -40,6 +46,12 @@ export interface GameChannelLedger {
 	markSent(guildId: string, gameId: string, channelId: string): Promise<void>
 	/** `guildId:gameId` of the game that recorded this channel, if any. */
 	ownerOf(channelId: string): Promise<string | null>
+	/** Runs `action` holding the lock for one channel name in a guild. */
+	exclusive<T>(
+		guildId: string,
+		channelName: string,
+		action: () => Promise<T>,
+	): Promise<T>
 }
 
 export interface GameChannelCandidate {
@@ -61,7 +73,19 @@ export class RedisGameChannelLedger implements GameChannelLedger {
 			'get' | 'set'
 		> = redisCache,
 		private readonly now: () => number = Date.now,
+		private readonly lock: PresentationLock = new RedisPresentationLock(),
 	) {}
+
+	exclusive<T>(
+		guildId: string,
+		channelName: string,
+		action: () => Promise<T>,
+	): Promise<T> {
+		return this.lock.run(
+			`game-channel-name:${encodeURIComponent(guildId)}:${encodeURIComponent(channelName.toLowerCase())}`,
+			() => action(),
+		)
+	}
 
 	async get(guildId: string, gameId: string) {
 		const raw = await this.redis.get(ledgerKey(guildId, gameId))
@@ -197,22 +221,51 @@ export async function locateGameChannel<T extends GameChannelCandidate>(
 	}
 
 	if (!record) return null
-	const owner = ownerId(key.guildId, key.gameId)
-	const recovered: T[] = []
-	for (const channel of attemptWindowChannels(candidates, key, record)) {
-		const recordedOwner = await ledger.ownerOf(channel.id)
-		if (!recordedOwner || recordedOwner === owner) recovered.push(channel)
-	}
-	if (recovered.length > 1) throw new Error('Ambiguous game channels')
-	const [channel] = recovered
-	if (!channel) return null
-	await ledger.recordChannel(
-		key.guildId,
-		key.gameId,
-		channel.id,
-		recoveredDelivery,
-	)
-	return { channel, via: 'recovered' }
+	return ledger.exclusive(key.guildId, key.channelName, async () => {
+		const owner = ownerId(key.guildId, key.gameId)
+		const recovered: T[] = []
+		for (const channel of attemptWindowChannels(candidates, key, record)) {
+			const recordedOwner = await ledger.ownerOf(channel.id)
+			if (!recordedOwner || recordedOwner === owner)
+				recovered.push(channel)
+		}
+		if (recovered.length > 1) throw new Error('Ambiguous game channels')
+		const [channel] = recovered
+		if (!channel) return null
+		await ledger.recordChannel(
+			key.guildId,
+			key.gameId,
+			channel.id,
+			recoveredDelivery,
+		)
+		return { channel, via: 'recovered' as const }
+	})
+}
+
+/**
+ * The one way to create a game channel and record it: holds the channel-name
+ * lock from the first attempt marker until the channel and its owner are
+ * recorded.
+ */
+export function createRecordedGameChannel<C extends { id: string }>(
+	ledger: GameChannelLedger,
+	key: Pick<GameChannelKey, 'guildId' | 'gameId' | 'channelName'>,
+	create: () => Promise<C>,
+	delivery?: 'unsent',
+): Promise<C> {
+	return ledger.exclusive(key.guildId, key.channelName, async () => {
+		await ledger.beginCreation(key.guildId, key.gameId)
+		const created = await create().finally(() =>
+			ledger.settleAttempt(key.guildId, key.gameId),
+		)
+		await ledger.recordChannel(
+			key.guildId,
+			key.gameId,
+			created.id,
+			delivery,
+		)
+		return created
+	})
 }
 
 /** Same-name game-category channels created during this game's attempts. */

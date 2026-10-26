@@ -14,6 +14,7 @@ import {
 	RedisPresentationLock,
 } from './channel-presentation-lock.js'
 import {
+	createRecordedGameChannel,
 	type GameChannelLedger,
 	locateGameChannel,
 	RedisGameChannelLedger,
@@ -306,15 +307,18 @@ export class DiscordPresentationPort implements PresentationDiscord {
 		await beforeEffect?.()
 		if (!canCreatePresentation(channel))
 			throw new Error('Presentation creation window or evidence expired')
-		await this.ledger.beginCreation(guild.guildId, channel.id)
-		const created = await createGameChannel(server, guild, {
-			name: channel.channelname,
-			parent: category.id,
-		}).finally(() => this.ledger.settleAttempt(guild.guildId, channel.id))
-		await this.ledger.recordChannel(
-			guild.guildId,
-			channel.id,
-			created.id,
+		const created = await createRecordedGameChannel(
+			this.ledger,
+			{
+				guildId: guild.guildId,
+				gameId: channel.id,
+				channelName: channel.channelname,
+			},
+			() =>
+				createGameChannel(server, guild, {
+					name: channel.channelname,
+					parent: category.id,
+				}),
 			'unsent',
 		)
 		return created.id
