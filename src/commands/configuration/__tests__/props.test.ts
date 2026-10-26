@@ -38,6 +38,7 @@ const { expectV2Payload, toJsonComponents } = await import(
 
 const GUILD_ID = '555171631539028000'
 const CHANNEL_ID = '1100000000000000001'
+const OTHER_CHANNEL_ID = '1100000000000000002'
 const ALL_PERMISSIONS = [
 	PermissionFlagsBits.ViewChannel,
 	PermissionFlagsBits.SendMessages,
@@ -45,10 +46,12 @@ const ALL_PERMISSIONS = [
 	PermissionFlagsBits.ReadMessageHistory,
 ]
 
-function makeInteraction(opts: { permissions?: bigint[] } = {}) {
+function makeInteraction(
+	opts: { permissions?: bigint[]; channelId?: string } = {},
+) {
 	const me = { id: 'bot' }
 	const channel = {
-		id: CHANNEL_ID,
+		id: opts.channelId ?? CHANNEL_ID,
 		permissionsFor: vi.fn(
 			() => new PermissionsBitField(opts.permissions ?? ALL_PERMISSIONS),
 		),
@@ -66,6 +69,31 @@ function makeInteraction(opts: { permissions?: bigint[] } = {}) {
 }
 
 type Interaction = ReturnType<typeof makeInteraction>
+
+type ConfigWrite = {
+	createConfigDto: { setting_type: string; setting_value: string }
+}
+
+/** Every Khronos config write in order, as `setting_type:setting_value`. */
+function writes(): string[] {
+	return mockSetGuildConfig.mock.calls.map((call) => {
+		const { setting_type, setting_value } = (call[0] as ConfigWrite)
+			.createConfigDto
+		return `${setting_type}:${setting_value}`
+	})
+}
+
+function deferred() {
+	let resolve!: () => void
+	const promise = new Promise<void>((done) => {
+		resolve = done
+	})
+	return { promise, resolve }
+}
+
+function flushMicrotasks() {
+	return new Promise((resolve) => setTimeout(resolve, 0))
+}
 
 /** Text of every text display in the single reply, joined by newlines. */
 function replyText(interaction: Interaction): string {
@@ -349,6 +377,97 @@ describe('/props', () => {
 			expect(text).toContain('Daily props: not set up')
 			expect(text).toContain('/props enable')
 			expect(text).not.toContain('<#')
+		})
+	})
+
+	describe('overlapping setup', () => {
+		it('does not let a paused enable undo a later failed enable', async () => {
+			const gate = deferred()
+			mockSetGuildConfig.mockImplementation(
+				async (request: ConfigWrite) => {
+					const { setting_type, setting_value } =
+						request.createConfigDto
+					if (setting_type !== 'PREDICTIONS_CHAN') return
+					if (setting_value === CHANNEL_ID) await gate.promise
+					if (setting_value === OTHER_CHANNEL_ID) {
+						throw new Error('channel save failed')
+					}
+				},
+			)
+			const first = makeInteraction()
+			const second = makeInteraction({ channelId: OTHER_CHANNEL_ID })
+
+			const firstRun = command.handleEnable(first as never)
+			// The first request is paused with its channel write in flight.
+			await flushMicrotasks()
+			expect(writes()).toEqual([
+				'PROPS_ENABLED:false',
+				`PREDICTIONS_CHAN:${CHANNEL_ID}`,
+			])
+
+			const secondRun = command.handleEnable(second as never)
+			await flushMicrotasks()
+			// The second request must wait for the first to finish.
+			expect(writes()).toHaveLength(2)
+
+			gate.resolve()
+			await Promise.all([firstRun, secondRun])
+
+			expect(writes()).toEqual([
+				'PROPS_ENABLED:false',
+				`PREDICTIONS_CHAN:${CHANNEL_ID}`,
+				'PROPS_ENABLED:true',
+				'PROPS_ENABLED:false',
+				`PREDICTIONS_CHAN:${OTHER_CHANNEL_ID}`,
+			])
+			expect(replyText(first)).toContain('Daily props enabled')
+			expect(replyText(second)).toContain('Something went wrong')
+			// The failed setup leaves posting off; nothing re-enables it after.
+			const recorded = writes()
+			expect(recorded[recorded.length - 1]).toBe(
+				`PREDICTIONS_CHAN:${OTHER_CHANNEL_ID}`,
+			)
+			const enabledWrites = recorded.filter((write) =>
+				write.startsWith('PROPS_ENABLED'),
+			)
+			expect(enabledWrites[enabledWrites.length - 1]).toBe(
+				'PROPS_ENABLED:false',
+			)
+		})
+
+		it('runs a disable after the enable it overlapped', async () => {
+			const gate = deferred()
+			mockSetGuildConfig.mockImplementation(
+				async (request: ConfigWrite) => {
+					if (
+						request.createConfigDto.setting_type ===
+						'PREDICTIONS_CHAN'
+					) {
+						await gate.promise
+					}
+				},
+			)
+			const enable = makeInteraction()
+			const disable = makeInteraction()
+
+			const enableRun = command.handleEnable(enable as never)
+			await flushMicrotasks()
+			expect(writes()).toHaveLength(2)
+
+			const disableRun = command.handleDisable(disable as never)
+			await flushMicrotasks()
+			expect(writes()).toHaveLength(2)
+
+			gate.resolve()
+			await Promise.all([enableRun, disableRun])
+
+			expect(writes()).toEqual([
+				'PROPS_ENABLED:false',
+				`PREDICTIONS_CHAN:${CHANNEL_ID}`,
+				'PROPS_ENABLED:true',
+				'PROPS_ENABLED:false',
+			])
+			expect(replyText(disable)).toContain('stop from the next run')
 		})
 	})
 })

@@ -60,6 +60,32 @@ export function resolvePropsSetting(
 		: { kind: 'enabled', channelId }
 }
 
+/**
+ * Setup writes for one guild run one request at a time. An enable that pauses
+ * between its channel save and its final PROPS_ENABLED write must not resume
+ * after a later enable or disable, or it would undo that request's outcome.
+ */
+const guildWriteQueues = new Map<string, Promise<void>>()
+
+function withGuildWriteLock<T>(
+	guildId: string,
+	task: () => Promise<T>,
+): Promise<T> {
+	const previous = guildWriteQueues.get(guildId) ?? Promise.resolve()
+	const result = previous.then(task)
+	const tail = result.then(
+		() => undefined,
+		() => undefined,
+	)
+	guildWriteQueues.set(guildId, tail)
+	void tail.then(() => {
+		if (guildWriteQueues.get(guildId) === tail) {
+			guildWriteQueues.delete(guildId)
+		}
+	})
+	return result
+}
+
 @ApplyOptions<Subcommand.Options>({
 	name: 'props',
 	description: 'Turn daily player props on or off for this server',
@@ -122,6 +148,7 @@ export class UserCommand extends Subcommand {
 			)
 		}
 
+		const guildId = interaction.guildId
 		const channel = interaction.options.getChannel('channel', true, [
 			...PROPS_CHANNEL_TYPES,
 		])
@@ -137,14 +164,15 @@ export class UserCommand extends Subcommand {
 
 		// Keep posting disabled until the channel write succeeds. Re-enabling
 		// first could reactivate an old channel if saving the new one fails.
+		// Holding the guild lock for all three writes stops this setup from
+		// resuming after a later enable or disable and undoing it.
 		try {
-			const guildConfig = new GuildConfigWrapper()
-			await guildConfig.setPropsEnabled(interaction.guildId, false)
-			await guildConfig.setPredictionsChannel(
-				interaction.guildId,
-				channel.id,
-			)
-			await guildConfig.setPropsEnabled(interaction.guildId, true)
+			await withGuildWriteLock(guildId, async () => {
+				const guildConfig = new GuildConfigWrapper()
+				await guildConfig.setPropsEnabled(guildId, false)
+				await guildConfig.setPredictionsChannel(guildId, channel.id)
+				await guildConfig.setPropsEnabled(guildId, true)
+			})
 		} catch (error) {
 			return this.replyWithError(
 				interaction,
@@ -167,7 +195,9 @@ export class UserCommand extends Subcommand {
 		}
 
 		try {
-			await new GuildConfigWrapper().setPropsEnabled(guildId, false)
+			await withGuildWriteLock(guildId, () =>
+				new GuildConfigWrapper().setPropsEnabled(guildId, false),
+			)
 		} catch (error) {
 			return this.replyWithError(interaction, error)
 		}
