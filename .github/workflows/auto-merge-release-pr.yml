@@ -31,9 +31,12 @@ permissions:
   pull-requests: write
   issues: write
 
+# A newer event supersedes a running one, so a stale approval run cannot arm
+# after the label was removed, `hold` was set or the head moved. The script
+# also re-reads live state before it writes.
 concurrency:
   group: release-batch-gate-${{ github.event.pull_request.number }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 env:
   READY_LABEL: release-ready
@@ -70,28 +73,36 @@ jobs:
       - name: Arm or disarm auto-merge
         env:
           GH_TOKEN: ${{ steps.app.outputs.token }}
-          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
           ACTION: ${{ github.event.action }}
-          READY: ${{ contains(github.event.pull_request.labels.*.name, 'release-ready') }}
-          HELD: ${{ contains(github.event.pull_request.labels.*.name, 'hold') }}
+          # The head this event saw. Approval is only valid for this commit.
+          EVENT_HEAD: ${{ github.event.pull_request.head.sha }}
         run: |
           set -euo pipefail
-          disarm() { gh pr merge --disable-auto "$PR_URL" 2>/dev/null || true; }
+          pr="repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER"
+          disarm() { gh pr merge "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --disable-auto 2>/dev/null || true; }
+
+          # Refresh mutable state immediately before writing; event labels can be stale.
+          live=$(gh api "$pr")
+          state=$(jq -r .state <<<"$live")
+          live_head=$(jq -r .head.sha <<<"$live")
+          ready=$(jq -r --arg l "$READY_LABEL" '[.labels[].name] | index($l) != null' <<<"$live")
+          held=$(jq -r --arg l "$HOLD_LABEL" '[.labels[].name] | index($l) != null' <<<"$live")
 
           if [ "$ACTION" = synchronize ]; then
             # The batch changed after it was approved. Withdraw the approval.
-            if [ "$READY" = true ]; then
-              gh pr edit "$PR_URL" --remove-label "$READY_LABEL" || true
+            if [ "$ready" = true ]; then
+              gh pr edit "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --remove-label "$READY_LABEL" || true
             fi
             disarm
             echo "Batch changed; release-ready withdrawn. Re-apply it to cut this batch." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
 
-          if [ "$READY" = true ] && [ "$HELD" != true ]; then
-            gh pr merge --auto --squash "$PR_URL"
+          if [ "$state" = open ] && [ "$ready" = true ] && [ "$held" != true ] && [ "$live_head" = "$EVENT_HEAD" ]; then
+            gh pr merge "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --auto --squash --match-head-commit "$EVENT_HEAD"
             echo "Armed: this release batch merges when Verify is green." >> "$GITHUB_STEP_SUMMARY"
           else
             disarm
-            echo "Not armed: waiting for the release-ready label (or hold is set)." >> "$GITHUB_STEP_SUMMARY"
+            echo "Not armed: needs release-ready on the current head, and no hold." >> "$GITHUB_STEP_SUMMARY"
           fi
