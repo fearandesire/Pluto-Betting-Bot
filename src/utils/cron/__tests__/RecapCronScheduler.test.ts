@@ -72,3 +72,58 @@ describe('RecapCronScheduler', () => {
 		)
 	})
 })
+
+describe('period winners crons', () => {
+	const run = () => vi.fn(async () => ({ posted: 0, skipped: 0, failed: 0 }))
+
+	it('matches the weekly and monthly defaults', () => {
+		const monday = new Date('2026-07-13T09:30:00.000Z')
+		const firstOfMonth = new Date('2026-08-01T09:30:00.000Z')
+		expect(matchesCronExpression('30 9 * * 1', monday)).toBe(true)
+		expect(matchesCronExpression('30 9 * * 1', firstOfMonth)).toBe(false)
+		expect(matchesCronExpression('30 9 1 * *', firstOfMonth)).toBe(true)
+		expect(matchesCronExpression('30 9 1 * *', monday)).toBe(false)
+	})
+
+	it('catches up the weekly cron later on Monday only', async () => {
+		const runWeeklyRecap = run()
+		const scheduler = new RecapCronScheduler(
+			{ runWeeklyRecap },
+			'30 9 * * 1',
+			undefined,
+			'PERIOD_WINNERS_WEEKLY_CRON',
+		)
+
+		expect(
+			await scheduler.tick(new Date('2026-07-14T10:00:00.000Z'), true),
+		).toBe(false)
+		expect(
+			await scheduler.tick(new Date('2026-07-13T09:29:00.000Z'), true),
+		).toBe(false)
+		expect(
+			await scheduler.tick(new Date('2026-07-13T14:00:00.000Z'), true),
+		).toBe(true)
+		expect(runWeeklyRecap).toHaveBeenCalledTimes(1)
+	})
+
+	it('catches up the monthly cron later on the 1st only', async () => {
+		const runWeeklyRecap = run()
+		const scheduler = new RecapCronScheduler(
+			{ runWeeklyRecap },
+			'30 9 1 * *',
+			undefined,
+			'PERIOD_WINNERS_MONTHLY_CRON',
+		)
+
+		expect(
+			await scheduler.tick(new Date('2026-08-02T10:00:00.000Z'), true),
+		).toBe(false)
+		expect(
+			await scheduler.tick(new Date('2026-08-01T20:00:00.000Z'), true),
+		).toBe(true)
+		expect(runWeeklyRecap).toHaveBeenCalledWith(
+			new Date('2026-08-01T20:00:00.000Z'),
+			true,
+		)
+	})
+})

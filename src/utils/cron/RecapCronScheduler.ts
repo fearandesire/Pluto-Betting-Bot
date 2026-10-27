@@ -124,11 +124,12 @@ export class RecapCronScheduler {
 		private readonly recapService: Pick<RecapCronService, 'runWeeklyRecap'>,
 		private readonly expression: string,
 		private readonly pollIntervalMs = POLL_INTERVAL_MS,
+		private readonly name = 'RECAP_CRON',
 	) {
 		this.validExpression = isValidCronExpression(expression)
 		if (!this.validExpression) {
 			logger.error({
-				message: 'Weekly recap scheduler disabled: invalid RECAP_CRON',
+				message: `Weekly recap scheduler disabled: invalid ${name}`,
 				metadata: { expression },
 			})
 		}
