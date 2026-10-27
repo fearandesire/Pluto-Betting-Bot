@@ -49,6 +49,26 @@ describe('buildWeeklyRecapEmbeds', () => {
 		expect(json.fields?.[2]?.value).toContain('75.0%')
 	})
 
+	it('keeps the NFL description wording', () => {
+		const [embed] = buildWeeklyRecapEmbeds(recap, 'nfl')
+		expect(embed.toJSON().description).toBe(
+			'Sleeper-aligned window: **Jul 6 – Jul 12** · Season 2026',
+		)
+	})
+
+	it('titles the NBA recap with the sport and drops Sleeper wording', () => {
+		const [embed] = buildWeeklyRecapEmbeds(
+			{ ...recap, window: { ...recap.window, week_number: 28 } },
+			'nba',
+		)
+		const json = embed.toJSON()
+
+		expect(json.title).toBe('📊 NBA Week 28 Recap')
+		expect(json.description).toBe(
+			'Weekly window: **Jul 6 – Jul 12** · Season 2026',
+		)
+	})
+
 	it('renders a friendly quiet-week state', () => {
 		const [embed] = buildWeeklyRecapEmbeds({
 			...recap,

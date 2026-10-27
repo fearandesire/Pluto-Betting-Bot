@@ -1,31 +1,36 @@
-import { container } from '@sapphire/framework'
 import { getISOWeek, getISOWeekYear } from 'date-fns'
-import { ChannelType, type TextChannel } from 'discord.js'
+import type { TextChannel } from 'discord.js'
 import type RecapWrapper from '../api/Khronos/recap/recap-wrapper.js'
-import type { WeeklyRecapResponse } from '../api/Khronos/recap/recap-wrapper.js'
+import type {
+	RecapSport,
+	WeeklyRecapResponse,
+} from '../api/Khronos/recap/recap-wrapper.js'
 import type { CacheManager } from '../cache/cache-manager.js'
 import { buildWeeklyRecapEmbeds } from '../embeds/weekly-recap.embed.js'
 import { logger } from '../logging/WinstonLogger.js'
+import {
+	claimDelivery,
+	type DeliveryCache,
+	type DeliveryChannelResolver,
+	errorMessage,
+	getErrorStatus,
+	persistDeliveryMarker,
+	releaseDeliveryClaim,
+	resolveDeliveryChannel,
+} from './delivery.js'
 
 const RECAP_DEDUP_TTL_SECONDS = 8 * 24 * 60 * 60
-const RECAP_CLAIM_TTL_SECONDS = 5 * 60
+const RECAP_EVENT = 'weekly_recap'
 
-export interface RecapChannelResolver {
-	getBettingChannel(guildId: string): Promise<TextChannel>
-}
+export type RecapChannelResolver = DeliveryChannelResolver
 
 export interface RecapCronOptions {
 	guildIds: string[]
 	enabled?: boolean
 	channelId?: string
 	weekOffset?: number
-}
-
-interface RecapCache {
-	get(key: string): Promise<unknown>
-	set(key: string, value: unknown, ttl?: number): Promise<unknown>
-	setIfAbsent?(key: string, value: unknown, ttl?: number): Promise<boolean>
-	del?(key: string): Promise<unknown>
+	/** Also post an NBA recap per guild (RECAP_NBA_ENABLED). */
+	nbaEnabled?: boolean
 }
 
 export interface RecapRunResult {
@@ -50,22 +55,36 @@ function dedupKey(
 	guildId: string,
 	data: WeeklyRecapResponse,
 	now: Date,
+	sport: RecapSport,
 ): string {
 	const { seasonYear, weekNumber } = resolveWeekIdentity(data, now)
-	return `recap:posted:${guildId}:${seasonYear}:${weekNumber}`
+	// The NFL key predates multi-sport recaps and must not change.
+	const prefix = sport === 'nfl' ? 'recap:posted' : `recap:posted:${sport}`
+	return `${prefix}:${guildId}:${seasonYear}:${weekNumber}`
+}
+
+function isEmptyWeek(data: WeeklyRecapResponse): boolean {
+	return (
+		data.total_predictions === 0 &&
+		data.biggest_single_win === null &&
+		data.biggest_parlay_win === null
+	)
 }
 
 /**
  * Pulls a weekly recap from Khronos and delivers one digest per configured
- * guild. The service owns idempotency and failure isolation; the scheduler
- * only decides when this method runs.
+ * guild and sport. The service owns idempotency and failure isolation; the
+ * scheduler only decides when this method runs.
  */
 export class RecapCronService {
 	private readonly recapApi: Pick<RecapWrapper, 'getWeeklyRecap'>
-	private readonly cache: RecapCache
+	private readonly cache: DeliveryCache
 	private readonly channelResolver: RecapChannelResolver
 	private readonly options: Required<
-		Pick<RecapCronOptions, 'guildIds' | 'enabled' | 'weekOffset'>
+		Pick<
+			RecapCronOptions,
+			'guildIds' | 'enabled' | 'weekOffset' | 'nbaEnabled'
+		>
 	> &
 		Pick<RecapCronOptions, 'channelId'>
 
@@ -83,6 +102,7 @@ export class RecapCronService {
 			enabled: options.enabled ?? true,
 			channelId: options.channelId,
 			weekOffset: options.weekOffset ?? -1,
+			nbaEnabled: options.nbaEnabled ?? false,
 		}
 	}
 
@@ -101,182 +121,118 @@ export class RecapCronService {
 		}
 
 		for (const guildId of this.options.guildIds) {
-			try {
-				const recap = await this.recapApi.getWeeklyRecap(
+			await this.runGuildRecap(
+				guildId,
+				'nfl',
+				now,
+				allowProcessingReclaim,
+				result,
+			)
+			if (this.options.nbaEnabled) {
+				await this.runGuildRecap(
 					guildId,
-					this.options.weekOffset,
-				)
-				const key = dedupKey(guildId, recap, now)
-
-				const claimed = await this.claimDelivery(
-					key,
+					'nba',
+					now,
 					allowProcessingReclaim,
+					result,
 				)
-				if (!claimed) {
-					result.skipped++
-					await logger.info({
-						message: 'weekly_recap_skipped',
-						metadata: { reason: 'dedup', guild_id: guildId, key },
-					})
-					continue
-				}
-
-				let channel: TextChannel
-				try {
-					channel = await this.getRecapChannel(guildId)
-					await channel.send({
-						embeds: buildWeeklyRecapEmbeds(recap),
-					})
-				} catch (error) {
-					await this.releaseDeliveryClaim(key)
-					throw error
-				}
-				try {
-					await this.cache.set(key, true, RECAP_DEDUP_TTL_SECONDS)
-				} catch (error) {
-					await logger.warn({
-						message: 'weekly_recap_dedup_persist_failed',
-						metadata: {
-							guild_id: guildId,
-							key,
-							error:
-								error instanceof Error
-									? error.message
-									: String(error),
-						},
-					})
-					try {
-						// Keep a durable sent marker lease when the first marker write
-						// fails. This closes the post-send crash/retry window without
-						// ever treating a failed Discord send as delivered.
-						await this.cache.set(
-							key,
-							{ status: 'sent' },
-							RECAP_DEDUP_TTL_SECONDS,
-						)
-					} catch (fallbackError) {
-						await logger.error({
-							message: 'weekly_recap_dedup_fallback_failed',
-							metadata: {
-								guild_id: guildId,
-								key,
-								error:
-									fallbackError instanceof Error
-										? fallbackError.message
-										: String(fallbackError),
-							},
-						})
-					}
-				}
-				result.posted++
-
-				await logger.info({
-					message: 'weekly_recap_posted',
-					metadata: {
-						guild_id: guildId,
-						week_number: recap.window.week_number,
-						channel_id: channel.id,
-					},
-				})
-			} catch (error) {
-				result.failed++
-				await logger.error({
-					message: 'weekly_recap_skipped',
-					metadata: {
-						reason: 'error',
-						guild_id: guildId,
-						status: this.getErrorStatus(error),
-						error:
-							error instanceof Error
-								? error.message
-								: String(error),
-					},
-				})
 			}
 		}
 
 		return result
 	}
 
-	private async getRecapChannel(guildId: string): Promise<TextChannel> {
-		if (!this.options.channelId) {
-			return await this.channelResolver.getBettingChannel(guildId)
-		}
+	private async runGuildRecap(
+		guildId: string,
+		sport: RecapSport,
+		now: Date,
+		allowProcessingReclaim: boolean,
+		result: RecapRunResult,
+	): Promise<void> {
+		const sportMetadata = sport === 'nfl' ? {} : { sport }
+		try {
+			// NFL keeps the legacy request: the default sport needs no param.
+			const recap =
+				sport === 'nfl'
+					? await this.recapApi.getWeeklyRecap(
+							guildId,
+							this.options.weekOffset,
+						)
+					: await this.recapApi.getWeeklyRecap(guildId, -1, sport)
 
-		const channel = await container.client.channels.fetch(
-			this.options.channelId,
-		)
-		if (!channel || channel.type !== ChannelType.GuildText) {
-			throw new Error(
-				`Recap channel ${this.options.channelId} is missing or not a text channel`,
+			if (sport !== 'nfl' && isEmptyWeek(recap)) {
+				result.skipped++
+				await logger.info({
+					message: 'weekly_recap_skipped',
+					metadata: {
+						reason: 'empty_week',
+						guild_id: guildId,
+						...sportMetadata,
+					},
+				})
+				return
+			}
+
+			const key = dedupKey(guildId, recap, now, sport)
+			const claimed = await claimDelivery(
+				this.cache,
+				key,
+				allowProcessingReclaim,
 			)
-		}
-		if (channel.guild.id !== guildId) {
-			await logger.warn({
-				message: 'weekly_recap_channel_override_mismatch',
+			if (!claimed) {
+				result.skipped++
+				await logger.info({
+					message: 'weekly_recap_skipped',
+					metadata: { reason: 'dedup', guild_id: guildId, key },
+				})
+				return
+			}
+
+			let channel: TextChannel
+			try {
+				channel = await resolveDeliveryChannel(
+					this.channelResolver,
+					guildId,
+					this.options.channelId,
+					RECAP_EVENT,
+				)
+				await channel.send({
+					embeds: buildWeeklyRecapEmbeds(recap, sport),
+				})
+			} catch (error) {
+				await releaseDeliveryClaim(this.cache, key, RECAP_EVENT)
+				throw error
+			}
+			await persistDeliveryMarker(
+				this.cache,
+				key,
+				RECAP_DEDUP_TTL_SECONDS,
+				RECAP_EVENT,
+				guildId,
+			)
+			result.posted++
+
+			await logger.info({
+				message: 'weekly_recap_posted',
 				metadata: {
 					guild_id: guildId,
-					channel_id: this.options.channelId,
-					channel_guild_id: channel.guild.id,
+					week_number: recap.window.week_number,
+					channel_id: channel.id,
+					...sportMetadata,
 				},
 			})
-			return await this.channelResolver.getBettingChannel(guildId)
-		}
-		return channel
-	}
-
-	private async claimDelivery(
-		key: string,
-		allowProcessingReclaim: boolean,
-	): Promise<boolean> {
-		if (allowProcessingReclaim) {
-			const existing = await this.cache.get(key)
-			const isProcessing =
-				typeof existing === 'object' &&
-				existing !== null &&
-				(existing as { status?: unknown }).status === 'processing'
-			if (isProcessing) {
-				if (!this.cache.del) return false
-				await this.cache.del(key)
-			}
-		}
-
-		if (this.cache.setIfAbsent) {
-			return await this.cache.setIfAbsent(
-				key,
-				{ status: 'processing' },
-				RECAP_CLAIM_TTL_SECONDS,
-			)
-		}
-		if (await this.cache.get(key)) return false
-		await this.cache.set(
-			key,
-			{ status: 'processing' },
-			RECAP_CLAIM_TTL_SECONDS,
-		)
-		return true
-	}
-
-	private async releaseDeliveryClaim(key: string): Promise<void> {
-		try {
-			if (this.cache.del) await this.cache.del(key)
 		} catch (error) {
-			await logger.warn({
-				message: 'weekly_recap_claim_release_failed',
+			result.failed++
+			await logger.error({
+				message: 'weekly_recap_skipped',
 				metadata: {
-					key,
-					error:
-						error instanceof Error ? error.message : String(error),
+					reason: 'error',
+					guild_id: guildId,
+					...sportMetadata,
+					status: getErrorStatus(error),
+					error: errorMessage(error),
 				},
 			})
 		}
-	}
-
-	private getErrorStatus(error: unknown): number | undefined {
-		if (!error || typeof error !== 'object') return undefined
-		const response = (error as { response?: { status?: unknown } }).response
-		return typeof response?.status === 'number'
-			? response.status
-			: undefined
 	}
 }

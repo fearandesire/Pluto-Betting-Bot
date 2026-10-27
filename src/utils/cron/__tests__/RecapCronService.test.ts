@@ -11,6 +11,7 @@ vi.mock('../../logging/WinstonLogger.js', () => ({
 }))
 
 import type { WeeklyRecapResponse } from '../../api/Khronos/recap/recap-wrapper.js'
+import { logger } from '../../logging/WinstonLogger.js'
 import { RecapCronService } from '../RecapCronService.js'
 
 const recap: WeeklyRecapResponse = {
@@ -43,18 +44,22 @@ function makeHarness() {
 			return 1
 		}),
 	}
-	const channel = {
-		id: 'recap-channel',
-		send: vi.fn(async () => ({ id: 'message-1' })),
-	} as unknown as TextChannel
+	const send = vi.fn(async (_payload: unknown) => ({ id: 'message-1' }))
+	const channel = { id: 'recap-channel', send } as unknown as TextChannel
 	const channelResolver = {
 		getBettingChannel: vi.fn(async () => channel),
 	}
 	const recapApi = {
-		getWeeklyRecap: vi.fn(async () => recap),
+		getWeeklyRecap: vi.fn(
+			async (
+				_guildId: string,
+				_weekOffset?: number,
+				_sport?: 'nfl' | 'nba',
+			) => recap,
+		),
 	}
 
-	return { cache, channel, channelResolver, recapApi }
+	return { cache, channel, send, channelResolver, recapApi }
 }
 
 describe('RecapCronService', () => {
@@ -175,5 +180,160 @@ describe('RecapCronService', () => {
 			'recap:posted:guild-1:2026:19',
 		)
 		expect(harness.channel.send).toHaveBeenCalledTimes(1)
+	})
+
+	it('keeps the NFL request and key untouched when NBA is disabled', async () => {
+		const harness = makeHarness()
+		const service = new RecapCronService(
+			harness.recapApi,
+			harness.cache,
+			harness.channelResolver,
+			{ guildIds: ['guild-1'] },
+		)
+
+		await service.runWeeklyRecap()
+
+		expect(harness.recapApi.getWeeklyRecap).toHaveBeenCalledTimes(1)
+		expect(harness.recapApi.getWeeklyRecap).toHaveBeenCalledWith(
+			'guild-1',
+			-1,
+		)
+		const [payload] = harness.send.mock.calls[0] as unknown as [
+			{ embeds: Array<{ toJSON(): { title?: string } }> },
+		]
+		expect(payload.embeds[0].toJSON().title).toBe('📊 Week 19 Recap')
+	})
+
+	describe('NBA pass', () => {
+		const nbaRecap: WeeklyRecapResponse = {
+			...recap,
+			window: { ...recap.window, week_number: 28, sport: 'nba' },
+		}
+
+		function makeNbaHarness(nba: WeeklyRecapResponse = nbaRecap) {
+			const harness = makeHarness()
+			harness.recapApi.getWeeklyRecap.mockImplementation(
+				async (
+					_guildId: string,
+					_offset?: number,
+					sport?: 'nfl' | 'nba',
+				) => (sport === 'nba' ? nba : recap),
+			)
+			return harness
+		}
+
+		it('posts an NBA recap with its own dedup key after the NFL one', async () => {
+			const harness = makeNbaHarness()
+			const service = new RecapCronService(
+				harness.recapApi,
+				harness.cache,
+				harness.channelResolver,
+				{ guildIds: ['guild-1'], nbaEnabled: true },
+			)
+
+			expect(await service.runWeeklyRecap()).toEqual({
+				posted: 2,
+				skipped: 0,
+				failed: 0,
+			})
+			expect(harness.recapApi.getWeeklyRecap).toHaveBeenNthCalledWith(
+				2,
+				'guild-1',
+				-1,
+				'nba',
+			)
+			expect(harness.cache.set).toHaveBeenCalledWith(
+				'recap:posted:nba:guild-1:2026:28',
+				true,
+				691200,
+			)
+			const titles = harness.send.mock.calls.map(
+				(call) =>
+					(
+						call[0] as unknown as {
+							embeds: Array<{ toJSON(): { title?: string } }>
+						}
+					).embeds[0].toJSON().title,
+			)
+			expect(titles).toEqual(['📊 Week 19 Recap', '📊 NBA Week 28 Recap'])
+		})
+
+		it('replays idempotently', async () => {
+			const harness = makeNbaHarness()
+			const service = new RecapCronService(
+				harness.recapApi,
+				harness.cache,
+				harness.channelResolver,
+				{ guildIds: ['guild-1'], nbaEnabled: true },
+			)
+
+			await service.runWeeklyRecap()
+			expect(await service.runWeeklyRecap()).toEqual({
+				posted: 0,
+				skipped: 2,
+				failed: 0,
+			})
+			expect(harness.channel.send).toHaveBeenCalledTimes(2)
+		})
+
+		it('posts nothing for an empty NBA week', async () => {
+			const harness = makeNbaHarness({
+				...nbaRecap,
+				total_predictions: 0,
+				correct_predictions: 0,
+			})
+			const service = new RecapCronService(
+				harness.recapApi,
+				harness.cache,
+				harness.channelResolver,
+				{ guildIds: ['guild-1'], nbaEnabled: true },
+			)
+
+			expect(await service.runWeeklyRecap()).toEqual({
+				posted: 1,
+				skipped: 1,
+				failed: 0,
+			})
+			expect(harness.channel.send).toHaveBeenCalledTimes(1)
+			expect(harness.cache.set).not.toHaveBeenCalledWith(
+				expect.stringContaining('recap:posted:nba'),
+				expect.anything(),
+				expect.anything(),
+			)
+			expect(logger.info).toHaveBeenCalledWith({
+				message: 'weekly_recap_skipped',
+				metadata: {
+					reason: 'empty_week',
+					guild_id: 'guild-1',
+					sport: 'nba',
+				},
+			})
+		})
+
+		it('does not let an NBA failure affect the NFL post', async () => {
+			const harness = makeNbaHarness()
+			harness.recapApi.getWeeklyRecap.mockImplementation(
+				async (
+					_guildId: string,
+					_offset?: number,
+					sport?: 'nfl' | 'nba',
+				) => {
+					if (sport === 'nba') throw new Error('Khronos 503')
+					return recap
+				},
+			)
+			const service = new RecapCronService(
+				harness.recapApi,
+				harness.cache,
+				harness.channelResolver,
+				{ guildIds: ['guild-1'], nbaEnabled: true },
+			)
+
+			expect(await service.runWeeklyRecap()).toEqual({
+				posted: 1,
+				skipped: 0,
+				failed: 1,
+			})
+		})
 	})
 })
