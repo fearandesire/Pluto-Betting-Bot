@@ -1,6 +1,7 @@
 import { helpfooter } from '@pluto-config'
 import embedColors from '../../../lib/colorsConfig.js'
 import { plutoDocsUrl, plutoLogoUrl } from '../../../lib/configs/constants.js'
+import env from '../../../lib/startup/env.js'
 import { patreonUrl } from '../../../utils/api/patreon/interfaces.js'
 import { APP_VERSION } from '../../../utils/scripts/pkg-version.js'
 
@@ -25,6 +26,10 @@ export default class PlutoInfo {
 				help: 'View information on how to use the bot',
 				commands: 'View all commands',
 				bethistory: 'View the track record of your bets',
+				// Only listed while the command is registered.
+				...(env.PROFILE_ENABLED && {
+					profile: 'View a profile card with your stats and badges',
+				}),
 			},
 		}
 		const formatCommands = (cmds: {
