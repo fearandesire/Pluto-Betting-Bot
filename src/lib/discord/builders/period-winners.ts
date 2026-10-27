@@ -18,10 +18,10 @@ function formatProfit(netProfit: number): string {
 	return `${netProfit > 0 ? '+' : ''}${netProfit.toFixed(2)}`
 }
 
-/** Khronos reports ROI as a percentage, like the recap's accuracy; null when nothing was staked. */
+/** Khronos reports ROI as a ratio (0.25 is 25%); null when nothing was staked. */
 function formatRoi(roi: number | null): string {
 	return roi !== null && Number.isFinite(roi)
-		? `ROI ${roi.toFixed(1)}%`
+		? `ROI ${(roi * 100).toFixed(1)}%`
 		: 'ROI n/a'
 }
 

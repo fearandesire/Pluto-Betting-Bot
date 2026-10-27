@@ -15,7 +15,7 @@ const entry = (overrides: Partial<PeriodWinner> = {}): PeriodWinner => ({
 	user_id: '111',
 	rank: 1,
 	net_profit: 250.5,
-	roi: 12.34,
+	roi: 0.1234,
 	settled_bets: 8,
 	total_staked: 2000,
 	...overrides,
