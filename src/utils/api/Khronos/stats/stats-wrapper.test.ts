@@ -1,4 +1,5 @@
-import { describe, expect, it, vi } from 'vitest'
+import { StatsApi } from '@pluto-khronos/api-client'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({ fetchApi: vi.fn() }))
 
@@ -10,9 +11,11 @@ vi.mock('../KhronosInstances.js', () => ({
 	},
 }))
 
-const { default: StatsWrapper, parsePredictionStats } = await import(
-	'./stats-wrapper.js'
-)
+const {
+	default: StatsWrapper,
+	PropStatsUnavailableError,
+	parsePredictionStats,
+} = await import('./stats-wrapper.js')
 
 describe('parsePredictionStats', () => {
 	it('accepts both generated camel-case and wire snake-case fields', () => {
@@ -77,5 +80,36 @@ describe('parsePredictionStats', () => {
 			'https://khronos.test/api/khronos/v1/prediction/stats/user-1?guild_id=guild-1',
 			expect.anything(),
 		)
+	})
+})
+
+describe('getPropBettingStats', () => {
+	afterEach(() => {
+		delete (StatsApi.prototype as unknown as Record<string, unknown>)
+			.getPropBettingStats
+	})
+
+	it('throws a clear error when the generated client lacks the method', async () => {
+		await expect(
+			new StatsWrapper().getPropBettingStats({ userId: 'user-1' }),
+		).rejects.toBeInstanceOf(PropStatsUnavailableError)
+	})
+
+	it('delegates to the generated client with the request', async () => {
+		const payload = { user_id: 'user-1', markets: [] }
+		const method = vi.fn().mockResolvedValue(payload)
+		;(
+			StatsApi.prototype as unknown as Record<string, unknown>
+		).getPropBettingStats = method
+
+		const request = {
+			userId: 'user-1',
+			sport: 'nba' as const,
+			guildId: 'g1',
+		}
+		await expect(
+			new StatsWrapper().getPropBettingStats(request),
+		).resolves.toBe(payload)
+		expect(method).toHaveBeenCalledWith(request)
 	})
 })
