@@ -13,6 +13,10 @@ import embedColors from '../../colorsConfig.js'
 /** Formatted money strings shared by the pending and confirmed bet slips. */
 export type BetAmounts = { betAmount: string; payout: string; profit: string }
 
+/** Shown before and after confirming: odds can move, but payout is frozen at confirmation. */
+export const ODDS_CHANGE_NOTICE =
+	'Odds can change before the game. Your payout is locked in when you confirm your bet.'
+
 export function formatBetStr({ betAmount, payout, profit }: BetAmounts) {
 	const b = '**'
 	return `${b}${betAmount}${b} -> ${b}${payout}${b}\n${b}Profit:${b} ${b}${profit}${b}`
@@ -76,7 +80,7 @@ export function pendingBetslip(d: {
 	const embed = new EmbedBuilder()
 		.setTitle('Pending Betslip')
 		.setDescription(
-			`## ${d.chosenTeam} *vs.* ${d.opponent}\n**${d.teamLabel}** | **${d.date}**\n${formatBetStr(d.amounts)}\n*Confirm your bet via the buttons below*`,
+			`## ${d.chosenTeam} *vs.* ${d.opponent}\n**${d.teamLabel}** | **${d.date}**\n${formatBetStr(d.amounts)}\n*Confirm your bet via the buttons below*\n*${ODDS_CHANGE_NOTICE}*`,
 		)
 		.setThumbnail(d.avatarUrl)
 		.setColor(embedColors.PlutoYellow)
@@ -111,7 +115,9 @@ export function betConfirmedEmbed(d: {
 		)
 		.setColor(embedColors.success)
 		.setThumbnail(d.avatarUrl)
-		.setFooter({ text: `Bet ID: ${d.betId} | ${d.footer}` })
+		.setFooter({
+			text: `Bet ID: ${d.betId} | ${d.footer} | ${ODDS_CHANGE_NOTICE}`,
+		})
 }
 
 /** A6: public "placed a bet" announcement. */

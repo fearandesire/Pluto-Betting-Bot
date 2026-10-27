@@ -30,7 +30,7 @@ describe('betting builders (classic, pre-migration)', () => {
 		expect(embeds[0].toJSON()).toEqual({
 			title: 'Pending Betslip',
 			description:
-				'## Boston Celtics *vs.* Lakers\n**Boston Celtics** | **10/5/2026 - 7:30 PM EDT**\n**$100.00** -> **$166.67**\n**Profit:** **$66.67**\n*Confirm your bet via the buttons below*',
+				'## Boston Celtics *vs.* Lakers\n**Boston Celtics** | **10/5/2026 - 7:30 PM EDT**\n**$100.00** -> **$166.67**\n**Profit:** **$66.67**\n*Confirm your bet via the buttons below*\n*Odds can change before the game. Your payout is locked in when you confirm your bet.*',
 			thumbnail: { url: avatar },
 			color: 0xd8b21a,
 		})
@@ -71,7 +71,10 @@ describe('betting builders (classic, pre-migration)', () => {
 				'## Celtics *vs.* Lakers\n**Celtics** | **D**\n**$100.00** -> **$166.67**\n**Profit:** **$66.67**',
 			color: 0x57f287,
 			thumbnail: { url: avatar },
-			footer: { text: 'Bet ID: 48213 | foot', icon_url: undefined },
+			footer: {
+				text: 'Bet ID: 48213 | foot | Odds can change before the game. Your payout is locked in when you confirm your bet.',
+				icon_url: undefined,
+			},
 		})
 	})
 
