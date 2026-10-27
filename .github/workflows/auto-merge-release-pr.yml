@@ -9,7 +9,7 @@
 # auto-merge on the release PR only after a human applies `release-ready`:
 #
 #   label `release-ready`  -> arm auto-merge (merges once `Verify` is green)
-#   label `hold`           -> disarm
+#   label `hold`           -> disarm (re-apply release-ready to resume)
 #   new commits on the PR  -> label removed and disarmed (release-please pushed
 #                             more work into the batch; re-approve it)
 #
@@ -75,6 +75,7 @@ jobs:
           GH_TOKEN: ${{ steps.app.outputs.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           ACTION: ${{ github.event.action }}
+          LABEL: ${{ github.event.label.name }}
           # The head this event saw. Approval is only valid for this commit.
           EVENT_HEAD: ${{ github.event.pull_request.head.sha }}
         run: |
@@ -99,10 +100,13 @@ jobs:
             exit 0
           fi
 
-          if [ "$state" = open ] && [ "$ready" = true ] && [ "$held" != true ] && [ "$live_head" = "$EVENT_HEAD" ]; then
+          # Only the event that applies release-ready can arm, and only for the head it
+          # saw. Any other event (a new head, an unrelated label, hold removed) can
+          # disarm but never arm, so a stale label cannot carry approval to a new head.
+          if [ "$ACTION" = labeled ] && [ "$LABEL" = "$READY_LABEL" ] && [ "$state" = open ] && [ "$ready" = true ] && [ "$held" != true ] && [ "$live_head" = "$EVENT_HEAD" ]; then
             gh pr merge "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --auto --squash --match-head-commit "$EVENT_HEAD"
             echo "Armed: this release batch merges when Verify is green." >> "$GITHUB_STEP_SUMMARY"
           else
             disarm
-            echo "Not armed: needs release-ready on the current head, and no hold." >> "$GITHUB_STEP_SUMMARY"
+            echo "Not armed. Applying release-ready (with no hold) arms the current head; if the label is already on, remove and re-apply it."  >> "$GITHUB_STEP_SUMMARY"
           fi
