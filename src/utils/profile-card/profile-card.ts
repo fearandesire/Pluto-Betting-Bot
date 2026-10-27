@@ -105,11 +105,8 @@ const formatMoney = (amount: number, signed = false): string => {
 	return `${signed && amount > 0 ? '+' : ''}$${abs}`
 }
 
-const formatPercent = (rate: number): string => {
-	// Khronos may send 0-1 or 0-100; a value above 1 is already a percentage.
-	const pct = rate <= 1 ? rate * 100 : rate
-	return `${Math.round(pct)}%`
-}
+// Khronos sends the prediction hit rate as a 0-1 ratio.
+const formatPercent = (rate: number): string => `${Math.round(rate * 100)}%`
 
 function avatarInitial(name: string): string {
 	for (const ch of name) {
