@@ -15,7 +15,7 @@ export const fullCard: ProfileCardData = {
 		prediction_hit_rate: 0.625,
 	},
 	badges: [
-		'Hot Streak Hunter',
+		'Sharp Eye',
 		'First Win',
 		'Parlay Pioneer',
 		'Prediction Prophet',
