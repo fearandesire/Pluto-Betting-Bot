@@ -66,6 +66,7 @@ const envSchema = z
 		RECAP_CHANNEL_ID: z.string().optional(),
 		RECAP_ENABLED: z.boolean().default(true),
 		RECAP_GUILD_IDS: z.string().default(''),
+		PROFILE_ENABLED: z.boolean().default(false),
 		PLUTO_SYSTEM_MODE: z.boolean().default(false),
 		PLUTO_SYSTEM_ALLOW: z.boolean().default(false),
 	})
@@ -211,6 +212,7 @@ export function parseStartupEnv(
 		RECAP_CHANNEL_ID: source.RECAP_CHANNEL_ID,
 		RECAP_ENABLED: source.RECAP_ENABLED !== 'false',
 		RECAP_GUILD_IDS: source.RECAP_GUILD_IDS || source.GUILD_ID || '',
+		PROFILE_ENABLED: envFlag(source.PROFILE_ENABLED),
 		PLUTO_SYSTEM_MODE: envFlag(source.PLUTO_SYSTEM_MODE),
 		PLUTO_SYSTEM_ALLOW: envFlag(source.PLUTO_SYSTEM_ALLOW),
 	})
@@ -263,6 +265,7 @@ if (shouldLogDebug) {
 		RECAP_CHANNEL_ID: env.RECAP_CHANNEL_ID,
 		RECAP_ENABLED: env.RECAP_ENABLED,
 		RECAP_GUILD_IDS: env.RECAP_GUILD_IDS,
+		PROFILE_ENABLED: env.PROFILE_ENABLED,
 		// Redacted sensitive fields
 		TOKEN: '[REDACTED]',
 		KH_API_TOKEN: '[REDACTED]',

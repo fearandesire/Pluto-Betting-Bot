@@ -35,6 +35,9 @@ RUN pnpm build
 FROM base AS production
 WORKDIR /app
 
+# Fonts for the /profile card (SVG text rendered by sharp needs a system font)
+RUN apt-get update && apt-get install -y --no-install-recommends fonts-dejavu-core && rm -rf /var/lib/apt/lists/*
+
 # Copy built files and production dependencies
 COPY --from=builder /app/package.json /app/pnpm-lock.yaml ./
 COPY --from=builder /app/dist ./dist
