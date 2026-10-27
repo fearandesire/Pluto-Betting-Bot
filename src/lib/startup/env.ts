@@ -66,6 +66,10 @@ const envSchema = z
 		RECAP_CHANNEL_ID: z.string().optional(),
 		RECAP_ENABLED: z.boolean().default(true),
 		RECAP_GUILD_IDS: z.string().default(''),
+		RECAP_NBA_ENABLED: z.boolean().default(false),
+		PERIOD_WINNERS_ENABLED: z.boolean().default(false),
+		PERIOD_WINNERS_WEEKLY_CRON: z.string().default('30 9 * * 1'),
+		PERIOD_WINNERS_MONTHLY_CRON: z.string().default('30 9 1 * *'),
 		PLUTO_SYSTEM_MODE: z.boolean().default(false),
 		PLUTO_SYSTEM_ALLOW: z.boolean().default(false),
 	})
@@ -211,6 +215,10 @@ export function parseStartupEnv(
 		RECAP_CHANNEL_ID: source.RECAP_CHANNEL_ID,
 		RECAP_ENABLED: source.RECAP_ENABLED !== 'false',
 		RECAP_GUILD_IDS: source.RECAP_GUILD_IDS || source.GUILD_ID || '',
+		RECAP_NBA_ENABLED: envFlag(source.RECAP_NBA_ENABLED),
+		PERIOD_WINNERS_ENABLED: envFlag(source.PERIOD_WINNERS_ENABLED),
+		PERIOD_WINNERS_WEEKLY_CRON: source.PERIOD_WINNERS_WEEKLY_CRON,
+		PERIOD_WINNERS_MONTHLY_CRON: source.PERIOD_WINNERS_MONTHLY_CRON,
 		PLUTO_SYSTEM_MODE: envFlag(source.PLUTO_SYSTEM_MODE),
 		PLUTO_SYSTEM_ALLOW: envFlag(source.PLUTO_SYSTEM_ALLOW),
 	})
@@ -263,6 +271,10 @@ if (shouldLogDebug) {
 		RECAP_CHANNEL_ID: env.RECAP_CHANNEL_ID,
 		RECAP_ENABLED: env.RECAP_ENABLED,
 		RECAP_GUILD_IDS: env.RECAP_GUILD_IDS,
+		RECAP_NBA_ENABLED: env.RECAP_NBA_ENABLED,
+		PERIOD_WINNERS_ENABLED: env.PERIOD_WINNERS_ENABLED,
+		PERIOD_WINNERS_WEEKLY_CRON: env.PERIOD_WINNERS_WEEKLY_CRON,
+		PERIOD_WINNERS_MONTHLY_CRON: env.PERIOD_WINNERS_MONTHLY_CRON,
 		// Redacted sensitive fields
 		TOKEN: '[REDACTED]',
 		KH_API_TOKEN: '[REDACTED]',

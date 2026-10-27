@@ -36,6 +36,10 @@ const baseEnv: ParsedStartupEnv = {
 	RECAP_CRON: '0 9 * * 1',
 	RECAP_ENABLED: true,
 	RECAP_GUILD_IDS: '',
+	RECAP_NBA_ENABLED: false,
+	PERIOD_WINNERS_ENABLED: false,
+	PERIOD_WINNERS_WEEKLY_CRON: '30 9 * * 1',
+	PERIOD_WINNERS_MONTHLY_CRON: '30 9 1 * *',
 	PLUTO_SYSTEM_MODE: false,
 	PLUTO_SYSTEM_ALLOW: false,
 }

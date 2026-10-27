@@ -11,6 +11,7 @@ import { Cache } from '../cache/cache-manager.js'
 import { logger } from '../logging/WinstonLogger.js'
 import { ActivePropsService } from '../props/ActivePropsService.js'
 import { PropsCacheService } from '../props/PropCacheService.js'
+import { PeriodWinnersCronService } from './PeriodWinnersCronService.js'
 import { PropsCronScheduler } from './PropsCronScheduler.js'
 import { PropsCronService } from './PropsCronService.js'
 import { RecapCronScheduler } from './RecapCronScheduler.js'
@@ -112,6 +113,7 @@ export async function initializeRecapCron(): Promise<RecapCronScheduler | null> 
 				enabled: env.RECAP_ENABLED,
 				channelId: env.RECAP_CHANNEL_ID,
 				weekOffset: -1,
+				nbaEnabled: env.RECAP_NBA_ENABLED,
 			},
 		)
 		const scheduler = new RecapCronScheduler(service, env.RECAP_CRON)
@@ -136,7 +138,97 @@ export async function initializeRecapCron(): Promise<RecapCronScheduler | null> 
 	}
 }
 
+/**
+ * Initialize the opt-in period winners posts (weekly and monthly). Inert
+ * unless PERIOD_WINNERS_ENABLED is set; NBA additionally needs
+ * RECAP_NBA_ENABLED. Reuses the recap scheduler for its UTC cron matching and
+ * restart catch-up.
+ */
+export async function initializePeriodWinnersCron(): Promise<
+	RecapCronScheduler[]
+> {
+	const guildIds = (env.RECAP_GUILD_IDS || process.env.GUILD_ID || '')
+		.split(',')
+		.map((guildId) => guildId.trim())
+		.filter(Boolean)
+
+	if (
+		env.USE_MOCK_DATA ||
+		!env.PERIOD_WINNERS_ENABLED ||
+		guildIds.length === 0
+	) {
+		await logger.info({
+			message: 'period_winners_skipped',
+			metadata: {
+				reason: env.USE_MOCK_DATA
+					? 'mock_data'
+					: !env.PERIOD_WINNERS_ENABLED
+						? 'disabled'
+						: 'no_guilds_configured',
+			},
+		})
+		return []
+	}
+
+	try {
+		const service = new PeriodWinnersCronService(
+			new RecapWrapper(),
+			Cache(),
+			new GuildWrapper(),
+			{
+				guildIds,
+				enabled: true,
+				channelId: env.RECAP_CHANNEL_ID,
+				sports: env.RECAP_NBA_ENABLED ? ['nfl', 'nba'] : ['nfl'],
+			},
+		)
+		const schedulers = (
+			[
+				['weekly', env.PERIOD_WINNERS_WEEKLY_CRON],
+				['monthly', env.PERIOD_WINNERS_MONTHLY_CRON],
+			] as const
+		).map(([period, expression]) => {
+			const scheduler = new RecapCronScheduler(
+				{
+					runWeeklyRecap: (now, allowProcessingReclaim) =>
+						service.runPeriodWinners(
+							period,
+							allowProcessingReclaim,
+						),
+				},
+				expression,
+				undefined,
+				`PERIOD_WINNERS_${period.toUpperCase()}_CRON`,
+			)
+			scheduler.start()
+			return scheduler
+		})
+		await logger.info({
+			message: 'Period winners schedulers initialized and started',
+			metadata: {
+				guild_count: guildIds.length,
+				nba: env.RECAP_NBA_ENABLED,
+			},
+		})
+		return schedulers
+	} catch (error) {
+		await logger.error({
+			message: 'period_winners_skipped',
+			metadata: {
+				reason: 'client_unavailable',
+				error: error instanceof Error ? error.message : String(error),
+			},
+		})
+		return []
+	}
+}
+
 let recapCronScheduler: RecapCronScheduler | null = null
+let periodWinnersSchedulers: RecapCronScheduler[] = []
+
+export function getPeriodWinnersSchedulers(): RecapCronScheduler[] {
+	return periodWinnersSchedulers
+}
 
 export function getRecapCronScheduler(): RecapCronScheduler | null {
 	return recapCronScheduler
@@ -150,6 +242,7 @@ setTimeout(async () => {
 		setPropsCronScheduler(scheduler)
 		const recapScheduler = await initializeRecapCron()
 		recapCronScheduler = recapScheduler
+		periodWinnersSchedulers = await initializePeriodWinnersCron()
 	} catch (error) {
 		await logger.error({
 			message: 'Failed to initialize props cron scheduler',
