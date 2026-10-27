@@ -81,32 +81,37 @@ describe('NotificationService.processParlayResult', () => {
 		['won', '🎉 Parlay Won! 🎉', 0x57f287],
 		['busted', '❌ Parlay Busted', 0xff6961],
 		['push_refunded', '🔄 Parlay Refunded', 0xffa500],
-	] as const)('sends a distinct %s multi-leg embed', async (kind, title, color) => {
-		await new NotificationService().processParlayResult(makePayload(kind))
+	] as const)(
+		'sends a distinct %s multi-leg embed',
+		async (kind, title, color) => {
+			await new NotificationService().processParlayResult(
+				makePayload(kind),
+			)
 
-		expect(mocks.fetch).toHaveBeenCalledWith('user-1')
-		expect(mocks.send).toHaveBeenCalledOnce()
-		const [message] = mocks.send.mock.calls[0] as [
-			{ embeds: Array<{ toJSON: () => Record<string, unknown> }> },
-		]
-		const embed = message.embeds[0].toJSON()
-		expect(embed.title).toBe(title)
-		expect(embed.color).toBe(color)
-		expect(embed.fields).toEqual(
-			expect.arrayContaining([
-				expect.objectContaining({ name: '🧾 Legs' }),
-				expect.objectContaining({
-					name: '📈 Combined Odds',
-					value: '+377',
-				}),
-			]),
-		)
-		const legsField = (
-			embed.fields as Array<{ name: string; value: string }>
-		).find((field) => field.name === '🧾 Legs')
-		expect(legsField?.value).toContain('+125')
-		expect(legsField?.value).toContain('-110')
-	})
+			expect(mocks.fetch).toHaveBeenCalledWith('user-1')
+			expect(mocks.send).toHaveBeenCalledOnce()
+			const [message] = mocks.send.mock.calls[0] as [
+				{ embeds: Array<{ toJSON: () => Record<string, unknown> }> },
+			]
+			const embed = message.embeds[0].toJSON()
+			expect(embed.title).toBe(title)
+			expect(embed.color).toBe(color)
+			expect(embed.fields).toEqual(
+				expect.arrayContaining([
+					expect.objectContaining({ name: '🧾 Legs' }),
+					expect.objectContaining({
+						name: '📈 Combined Odds',
+						value: '+377',
+					}),
+				]),
+			)
+			const legsField = (
+				embed.fields as Array<{ name: string; value: string }>
+			).find((field) => field.name === '🧾 Legs')
+			expect(legsField?.value).toContain('+125')
+			expect(legsField?.value).toContain('-110')
+		},
+	)
 
 	it('logs Discord delivery errors as critical and does not throw', async () => {
 		mocks.fetch.mockRejectedValue(new Error('DMs closed'))
