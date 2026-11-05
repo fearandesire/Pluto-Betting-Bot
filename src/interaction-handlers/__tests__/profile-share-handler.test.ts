@@ -182,6 +182,34 @@ describe('ProfileShareHandler', () => {
 		expect(interaction.editReply).toHaveBeenCalledOnce()
 	})
 
+	it('releases the claim when deferring the update fails', async () => {
+		const interaction = makeInteraction()
+		interaction.deferUpdate.mockRejectedValueOnce(new Error('expired'))
+		const handler = makeHandler()
+		const route = { ownerId: OWNER, targetId: TARGET }
+		await handler.run(interaction as never, route)
+
+		await handler.run(interaction as never, route)
+		expect(interaction.reply).not.toHaveBeenCalled()
+		expect(interaction.editReply).toHaveBeenCalledOnce()
+	})
+
+	it('forgets claims after the interaction window so the set stays bounded', async () => {
+		vi.useFakeTimers()
+		try {
+			const interaction = makeInteraction()
+			const handler = makeHandler()
+			const route = { ownerId: OWNER, targetId: TARGET }
+			await handler.run(interaction as never, route)
+			vi.advanceTimersByTime(16 * 60 * 1000)
+
+			await handler.run(interaction as never, route)
+			expect(interaction.reply).not.toHaveBeenCalled()
+		} finally {
+			vi.useRealTimers()
+		}
+	})
+
 	it('does not re-post when only the button update fails', async () => {
 		const interaction = makeInteraction()
 		interaction.editReply.mockRejectedValue(new Error('token expired'))

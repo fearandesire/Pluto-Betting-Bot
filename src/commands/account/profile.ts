@@ -6,6 +6,7 @@ import {
 	profileNoticePayload,
 } from '../../lib/discord/builders/profile.js'
 import env from '../../lib/startup/env.js'
+import { handleNewUser } from '../../utils/api/common/handleNewUser.js'
 import AchievementsWrapper from '../../utils/api/Khronos/achievements/achievements-wrapper.js'
 import { AccountsWrapper } from '../../utils/api/requests/accounts/AccountManager.js'
 import { loadProfileCardData } from '../../utils/profile-card/load-profile-card-data.js'
@@ -57,12 +58,23 @@ export class UserCommand extends Command {
 		}
 
 		try {
+			const accounts = new AccountsWrapper()
 			const displayName =
 				interaction.guild?.members.cache.get(target.id)?.displayName ??
 				target.globalName ??
 				target.username
 			const data = await loadProfileCardData(
-				{ accounts: new AccountsWrapper(), achievements },
+				{
+					accounts: {
+						getProfile: async (id) => {
+							const profile = await accounts.getProfile(id)
+							// Same welcome flow as /account profile for first-time users.
+							handleNewUser(profile)
+							return profile
+						},
+					},
+					achievements,
+				},
 				target.id,
 				displayName,
 			)

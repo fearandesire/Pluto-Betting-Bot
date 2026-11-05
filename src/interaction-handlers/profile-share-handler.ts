@@ -15,8 +15,17 @@ import { logger } from '../utils/logging/WinstonLogger.js'
 const MAX_CARD_BYTES = 2 * 1024 * 1024
 const DISCORD_CDN_HOSTS = ['cdn.discordapp.com', 'media.discordapp.net']
 
-/** Ephemeral message ids already shared; one public post per card. */
-const claimed = new Set<string>()
+/** Interaction tokens last 15 minutes, so a claim older than that can never matter. */
+const CLAIM_TTL_MS = 15 * 60 * 1000
+
+/** Ephemeral message ids already shared (id to claim time); one public post per card. */
+const claimed = new Map<string, number>()
+
+function pruneClaims(now: number) {
+	for (const [id, at] of claimed) {
+		if (now - at > CLAIM_TTL_MS) claimed.delete(id)
+	}
+}
 
 const notice = (content: string) =>
 	v2Payload({ blocks: [text(content)], ephemeral: true })
@@ -66,15 +75,17 @@ export class ProfileShareHandler extends InteractionHandler {
 		}
 
 		const messageId = interaction.message.id
+		const now = Date.now()
+		pruneClaims(now)
 		if (claimed.has(messageId)) {
 			await interaction.reply(notice('This card was already shared.'))
 			return
 		}
-		claimed.add(messageId)
+		claimed.set(messageId, now)
 
-		await interaction.deferUpdate()
 		let png: Buffer
 		try {
+			await interaction.deferUpdate()
 			png = await fetchCardPng(interaction)
 			await interaction.followUp(
 				profileSharedPayload(png, interaction.user.id),
