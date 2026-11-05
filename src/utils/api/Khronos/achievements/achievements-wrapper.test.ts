@@ -2,6 +2,14 @@ import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('../KhronosInstances.js', () => ({ KH_API_CONFIG: {} }))
 
+// Simulate a generated client that predates AchievementsApi, whatever
+// version is installed, so the "unavailable" path stays covered after the
+// client bump.
+vi.mock('@pluto-khronos/api-client', async (importOriginal) => {
+	const actual = await importOriginal<Record<string, unknown>>()
+	return { ...actual, AchievementsApi: undefined }
+})
+
 const { default: AchievementsWrapper, isAchievementsApiAvailable } =
 	await import('./achievements-wrapper.js')
 
