@@ -15,7 +15,7 @@ import { logger } from '../utils/logging/WinstonLogger.js'
 const MAX_CARD_BYTES = 2 * 1024 * 1024
 const DISCORD_CDN_HOSTS = ['cdn.discordapp.com', 'media.discordapp.net']
 
-/** Interaction tokens last 15 minutes, so a claim older than that can never matter. */
+/** Bounds the claim map. A re-share after this window is equivalent to re-running /profile. */
 const CLAIM_TTL_MS = 15 * 60 * 1000
 
 /** Ephemeral message ids already shared (id to claim time); one public post per card. */
