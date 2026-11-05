@@ -1,5 +1,9 @@
 import type { OverallStatsDto } from '@pluto-khronos/api-client'
 import { Colors, EmbedBuilder } from 'discord.js'
+import type {
+	PropBettingStats,
+	PropMarketStats,
+} from '../../../utils/api/Khronos/stats/stats-wrapper.js'
 import embedColors from '../../colorsConfig.js'
 
 type SuccessData = {
@@ -131,6 +135,105 @@ export function h2hNoStatsEmbed(footer: string) {
 		title: '❌ No Betting Stats Available',
 		description:
 			"You don't have enough betting history to display statistics.",
+		footer: { text: footer },
+	}
+}
+
+const PROP_MARKET_LABELS: Record<string, string> = {
+	player_points: 'Points',
+	player_rebounds: 'Rebounds',
+	player_assists: 'Assists',
+}
+const PROP_STATS_MAX_MARKETS = 8
+
+/** Readable label for a prop market key; unknown keys are title-cased without `player_`. */
+export function propMarketLabel(key: string): string {
+	const known = PROP_MARKET_LABELS[key]
+	if (known) return known
+	return (
+		key
+			.replace(/^player_/, '')
+			.split('_')
+			.filter(Boolean)
+			.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+			.join(' ') || key
+	)
+}
+
+const formatRecord = (
+	m: Pick<PropMarketStats, 'correct' | 'incorrect' | 'pushes'>,
+) => `${m.correct}-${m.incorrect}${m.pushes > 0 ? `-${m.pushes}` : ''}`
+const formatHitRate = (rate: number | null) =>
+	rate === null ? 'n/a' : `${rate.toFixed(1)}%`
+
+function propMarketLine(m: PropMarketStats) {
+	const parts = [
+		`**${propMarketLabel(m.market_key)}**`,
+		formatRecord(m),
+		formatHitRate(m.hit_rate),
+	]
+	if (m.avg_offered_line !== null) {
+		parts.push(`avg line ${m.avg_offered_line}`)
+	}
+	return parts.join(' · ')
+}
+
+/** /stats props: hit rate only; props are free predictions, not money bets. */
+export function propStatsEmbed(
+	username: string,
+	s: PropBettingStats,
+	footer: string,
+) {
+	const sport = s.sport ? ` (${s.sport.toUpperCase()})` : ''
+	const shown = s.markets.slice(0, PROP_STATS_MAX_MARKETS)
+	const hidden = s.markets.length - shown.length
+	const overall = [
+		`Record: **${formatRecord(s)}**`,
+		`Hit Rate: **${formatHitRate(s.hit_rate)}**`,
+		`Settled: **${s.total_settled}**`,
+	]
+	if (s.pending > 0) overall.push(`Pending: **${s.pending}**`)
+
+	const fields = [
+		{ name: '📊 Overall', value: overall.join('\n'), inline: false },
+	]
+	if (shown.length > 0) {
+		const lines = shown.map(propMarketLine)
+		if (hidden > 0) lines.push(`*+${hidden} more*`)
+		fields.push({
+			name: '🎯 By Market',
+			value: lines.join('\n'),
+			inline: false,
+		})
+	}
+
+	return {
+		color: Colors.Blue,
+		title: `🎯 ${username}'s Prop Stats${sport}`,
+		fields,
+		timestamp: new Date().toISOString(),
+		footer: { text: footer },
+	}
+}
+
+/** /stats props empty state. */
+export function propNoStatsEmbed(footer: string) {
+	return {
+		color: Colors.Red,
+		title: '❌ No Prop Stats Available',
+		description:
+			"You haven't settled any prop predictions yet. Make a few predictions and check back after they settle.",
+		footer: { text: footer },
+	}
+}
+
+/** /stats props failure notice (endpoint unavailable or request failed). */
+export function propStatsErrorEmbed(footer: string) {
+	return {
+		color: Colors.Red,
+		title: '⚠️ Prop Stats Unavailable',
+		description:
+			'Prop stats are not available right now. Please try again later.',
 		footer: { text: footer },
 	}
 }
