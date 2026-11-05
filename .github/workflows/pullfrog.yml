@@ -17,6 +17,8 @@ permissions:
 jobs:
   pullfrog:
     runs-on: ubuntu-latest
+    # Recent successful runs finished in 2–7 min. 20 caps a hung agent.
+    timeout-minutes: 20
     permissions:
       id-token: write
       contents: read

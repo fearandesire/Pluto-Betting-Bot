@@ -51,15 +51,22 @@ on:
     # this trigger avoids runs for release-please's package.json-only commits.
     paths: [pnpm-lock.yaml]
 
+# Git writes and the pull request use the App token minted in the bump job.
+# The default token only reads the landed commit.
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
+
+# Dispatch and push runs are not pull requests, so they never cancel each other.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: false
 
 jobs:
   bump:
     name: Bump @pluto-khronos/* packages
     if: github.event_name == 'repository_dispatch'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Validate dispatch payload
@@ -263,6 +270,7 @@ jobs:
     name: Notify Khronos bump landed
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       contents: read
     env:

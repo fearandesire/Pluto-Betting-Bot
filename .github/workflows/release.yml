@@ -4,13 +4,19 @@ on:
   push:
     branches: [main]
 
+# Checkout only. release-please and the Pluto-Docs dispatch use the App token.
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
+
+# Push to main. Each run is its own group so releases never cancel each other.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: false
 
 jobs:
   release:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
 

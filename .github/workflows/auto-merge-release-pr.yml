@@ -26,8 +26,9 @@ on:
     types: [opened, synchronize, reopened, labeled, unlabeled]
     branches: [main]
 
+# GITHUB_TOKEN only creates the release-ready label. Merge and label edits on
+# the PR use the App token minted below.
 permissions:
-  contents: read
   pull-requests: write
   issues: write
 
@@ -46,6 +47,7 @@ jobs:
   auto-merge:
     name: Arm release batch when labeled
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     if: >-
       startsWith(github.head_ref, 'release-please--') &&
       github.event.pull_request.head.repo.full_name == github.repository
