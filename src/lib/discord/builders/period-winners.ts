@@ -35,6 +35,7 @@ function formatRow(entry: PeriodWinner, prefix = ''): string {
  */
 export function periodWinnersPayload(data: PeriodWinnersResponse) {
 	const winners = data.winners.slice(0, MAX_WINNERS)
+	const hiddenWinners = data.winners.length - winners.length
 	const shareRank = winners.every(
 		(winner) => winner.rank === winners[0]?.rank,
 	)
@@ -62,7 +63,9 @@ export function periodWinnersPayload(data: PeriodWinnersResponse) {
 					.map((winner) =>
 						formatRow(winner, shareRank ? '' : `${winner.rank}. `),
 					)
-					.join('\n')}`,
+					.join(
+						'\n',
+					)}${hiddenWinners > 0 ? `\nand ${hiddenWinners} more` : ''}`,
 			),
 			...(rows.length > 0
 				? [

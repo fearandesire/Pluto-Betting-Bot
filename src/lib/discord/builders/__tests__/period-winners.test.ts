@@ -11,6 +11,8 @@ import {
 } from '../../v2/__tests__/v2-assert.js'
 import { periodWinnersPayload } from '../period-winners.js'
 
+const MAX_WINNERS_SHOWN = 5
+
 const entry = (overrides: Partial<PeriodWinner> = {}): PeriodWinner => ({
 	user_id: '111',
 	rank: 1,
@@ -74,6 +76,18 @@ describe('periodWinnersPayload', () => {
 		expect(winner).toContain('**Co-winners (tied at #1)**')
 		expect(winner).toContain('<@111>')
 		expect(winner).toContain('<@222> — **+250.50** · ROI n/a')
+	})
+
+	it('says how many tied winners were left out of the list', () => {
+		const tied = Array.from({ length: 8 }, (_, i) =>
+			entry({ user_id: `t${i}` }),
+		)
+		const payload = periodWinnersPayload(
+			data({ winners: tied, leaderboard: tied }),
+		)
+		const winner = contents(payload)[1]
+		expect(winner.match(/<@t/g)).toHaveLength(MAX_WINNERS_SHOWN)
+		expect(winner).toContain(`and ${8 - MAX_WINNERS_SHOWN} more`)
 	})
 
 	it('caps the leaderboard at five rows and flags unresolved events', () => {
