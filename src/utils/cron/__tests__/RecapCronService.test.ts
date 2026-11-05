@@ -222,6 +222,25 @@ describe('RecapCronService', () => {
 			return harness
 		}
 
+		it('forwards a non-default weekOffset to the NBA pass', async () => {
+			const harness = makeNbaHarness()
+			const service = new RecapCronService(
+				harness.recapApi,
+				harness.cache,
+				harness.channelResolver,
+				{ guildIds: ['guild-1'], nbaEnabled: true, weekOffset: -2 },
+			)
+
+			await service.runWeeklyRecap()
+
+			expect(harness.recapApi.getWeeklyRecap).toHaveBeenNthCalledWith(
+				2,
+				'guild-1',
+				-2,
+				'nba',
+			)
+		})
+
 		it('posts an NBA recap with its own dedup key after the NFL one', async () => {
 			const harness = makeNbaHarness()
 			const service = new RecapCronService(

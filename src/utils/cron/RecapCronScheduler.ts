@@ -139,7 +139,7 @@ export class RecapCronScheduler {
 		if (this.interval || !this.validExpression) return
 		this.tick(new Date(), true).catch((error) => {
 			logger.error({
-				message: 'Weekly recap scheduler startup tick failed',
+				message: `${this.name} scheduler startup tick failed`,
 				metadata: {
 					error:
 						error instanceof Error ? error.message : String(error),
@@ -149,7 +149,7 @@ export class RecapCronScheduler {
 		this.interval = setInterval(() => {
 			this.tick().catch((error) => {
 				logger.error({
-					message: 'Weekly recap scheduler tick failed',
+					message: `${this.name} scheduler tick failed`,
 					metadata: {
 						error:
 							error instanceof Error
