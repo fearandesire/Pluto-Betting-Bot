@@ -84,7 +84,9 @@ jobs:
           # Already off is fine; a failed request to turn it off must fail the run, or
           # a hold or withdrawn approval would look applied while auto-merge stays armed.
           disarm() {
-            [ "$(gh api "$pr" --jq '.auto_merge != null')" = true ] || return 0
+            armed=$(gh api "$pr" --jq '.auto_merge != null') \
+              || { echo "::error::Could not verify auto-merge state on #$PR_NUMBER; it may still merge. Disable it by hand."; exit 1; }
+            [ "$armed" = true ] || return 0
             gh pr merge "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --disable-auto \
               || { echo "::error::Could not disable auto-merge on #$PR_NUMBER; it may still merge. Disable it by hand."; exit 1; }
           }
