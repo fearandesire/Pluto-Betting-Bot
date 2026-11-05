@@ -36,6 +36,7 @@ const baseEnv: ParsedStartupEnv = {
 	RECAP_CRON: '0 9 * * 1',
 	RECAP_ENABLED: true,
 	PROFILE_ENABLED: false,
+	STATS_PROPS_ENABLED: false,
 	RECAP_GUILD_IDS: '',
 	PLUTO_SYSTEM_MODE: false,
 	PLUTO_SYSTEM_ALLOW: false,

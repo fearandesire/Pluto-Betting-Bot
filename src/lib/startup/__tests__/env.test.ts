@@ -157,4 +157,12 @@ describe('Pluto system startup env gate', () => {
 				.PROFILE_ENABLED,
 		).toBe(true)
 	})
+
+	it('keeps /stats props off unless STATS_PROPS_ENABLED is true', () => {
+		expect(parseStartupEnv(requiredEnv).STATS_PROPS_ENABLED).toBe(false)
+		expect(
+			parseStartupEnv({ ...requiredEnv, STATS_PROPS_ENABLED: 'true' })
+				.STATS_PROPS_ENABLED,
+		).toBe(true)
+	})
 })

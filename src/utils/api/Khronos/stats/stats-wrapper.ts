@@ -96,6 +96,50 @@ export function parsePredictionStats(payload: unknown): PredictionStats {
 	}
 }
 
+export type PropStatsSport = 'nfl' | 'nba'
+
+export interface PropMarketStats {
+	market_key: string
+	total_settled: number
+	correct: number
+	incorrect: number
+	pushes: number
+	voids: number
+	pending: number
+	hit_rate: number | null
+	avg_offered_line: number | null
+}
+
+/** Khronos `GET /stats/props/:userId` contract, kept local until the client release ships it. */
+export interface PropBettingStats {
+	user_id: string
+	sport: PropStatsSport | null
+	total_settled: number
+	correct: number
+	incorrect: number
+	pushes: number
+	voids: number
+	pending: number
+	hit_rate: number | null
+	markets: PropMarketStats[]
+}
+
+export interface PropBettingStatsRequest {
+	userId: string
+	sport?: PropStatsSport
+	guildId?: string
+}
+
+/** Thrown when the installed generated client predates the prop stats endpoint. */
+export class PropStatsUnavailableError extends Error {
+	constructor() {
+		super(
+			'Khronos StatsApi.getPropBettingStats is unavailable; update @pluto-khronos/api-client to the release that adds prop betting stats',
+		)
+		this.name = 'PropStatsUnavailableError'
+	}
+}
+
 export default class StatsWrapper {
 	private readonly statsApi: StatsApi
 
@@ -108,6 +152,20 @@ export default class StatsWrapper {
 	): Promise<OverallStatsDto> {
 		const response = await this.statsApi.getOverallH2hBettingStats(params)
 		return response
+	}
+
+	async getPropBettingStats(
+		params: PropBettingStatsRequest,
+	): Promise<PropBettingStats> {
+		const { getPropBettingStats } = this.statsApi as unknown as {
+			getPropBettingStats?: (
+				request: PropBettingStatsRequest,
+			) => Promise<PropBettingStats>
+		}
+		if (typeof getPropBettingStats !== 'function') {
+			throw new PropStatsUnavailableError()
+		}
+		return await getPropBettingStats.call(this.statsApi, params)
 	}
 
 	async getPredictionStats(

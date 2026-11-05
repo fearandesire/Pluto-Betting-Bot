@@ -1,37 +1,57 @@
-# Auto-merge release-please PRs
+# Batched releases
 #
-# release-please (in release.yml) opens a `release-please--*` PR that bumps the
-# version + CHANGELOG. This workflow enables GitHub auto-merge (squash) on that
-# PR so it merges itself once the required `Verify` check passes — the second
-# half of the zero-touch cascade (the first half is khronos-client-update.yml).
+# release-please (in release.yml) keeps ONE open `release-please--*` PR that
+# accumulates every releasable commit merged to main and holds the version bump
+# and CHANGELOG. Merging that PR publishes the GitHub release, and the release
+# event triggers Deploy (image to GHCR, then Watchtower adopts `latest`).
 #
-# Merging the release PR to main fires release.yml's release-please step again,
-# which publishes the GitHub release, which triggers the Deploy job. No human
-# click is needed anywhere in the release path.
+# So merging feature work to main does NOT ship it. This workflow arms squash
+# auto-merge on the release PR only after a human applies `release-ready`:
 #
-# Scope guard: only same-repo `release-please--*` head branches. Forks and
-# regular feature PRs are ignored. `pull_request` (not `_target`) is safe here
-# because release-please branches are always same-repo and need repo secrets.
+#   label `release-ready`  -> arm auto-merge (merges once `Verify` is green)
+#   label `hold`           -> disarm (re-apply release-ready to resume)
+#   new commits on the PR  -> label removed and disarmed (release-please pushed
+#                             more work into the batch; re-approve it)
+#
+# Critical fixes use the same path: label the open release PR right away.
+# Policy: release/release-policy.md in the project files.
+#
+# Everything merged to main must therefore be safe to ship at any time: new
+# behaviour behind a default-off flag, additive migrations only.
 
 name: Auto-merge release PRs
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, labeled, unlabeled]
     branches: [main]
 
 permissions:
   contents: read
   pull-requests: write
+  issues: write
+
+# A newer event supersedes a running one, so a stale approval run cannot arm
+# after the label was removed, `hold` was set or the head moved. The script
+# also re-reads live state before it writes.
+concurrency:
+  group: release-batch-gate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  READY_LABEL: release-ready
+  HOLD_LABEL: hold
 
 jobs:
   auto-merge:
-    name: Enable auto-merge
+    name: Arm release batch when labeled
     runs-on: ubuntu-latest
     if: >-
       startsWith(github.head_ref, 'release-please--') &&
       github.event.pull_request.head.repo.full_name == github.repository
     steps:
+      # The App token (not GITHUB_TOKEN) arms the merge: a merge made with the
+      # default token would not fire the push/release workflows downstream.
       - name: Mint App token
         uses: actions/create-github-app-token@v3
         id: app
@@ -41,8 +61,52 @@ jobs:
           owner: fearandesire
           repositories: Pluto-Betting-Bot
 
-      - name: Enable auto-merge (squash)
+      - name: Ensure the release-ready label exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh label create "$READY_LABEL" --repo "$GITHUB_REPOSITORY" \
+            --color 0e8a16 \
+            --description "Cut this release batch: the open release PR merges once Verify is green" \
+            2>/dev/null || true
+
+      - name: Arm or disarm auto-merge
         env:
           GH_TOKEN: ${{ steps.app.outputs.token }}
-          PR_URL: ${{ github.event.pull_request.html_url }}
-        run: gh pr merge --auto --squash "$PR_URL"
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          ACTION: ${{ github.event.action }}
+          LABEL: ${{ github.event.label.name }}
+          # The head this event saw. Approval is only valid for this commit.
+          EVENT_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          pr="repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER"
+          disarm() { gh pr merge "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --disable-auto 2>/dev/null || true; }
+
+          # Refresh mutable state immediately before writing; event labels can be stale.
+          live=$(gh api "$pr")
+          state=$(jq -r .state <<<"$live")
+          live_head=$(jq -r .head.sha <<<"$live")
+          ready=$(jq -r --arg l "$READY_LABEL" '[.labels[].name] | index($l) != null' <<<"$live")
+          held=$(jq -r --arg l "$HOLD_LABEL" '[.labels[].name] | index($l) != null' <<<"$live")
+
+          if [ "$ACTION" = synchronize ]; then
+            # The batch changed after it was approved. Withdraw the approval.
+            if [ "$ready" = true ]; then
+              gh pr edit "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --remove-label "$READY_LABEL" || true
+            fi
+            disarm
+            echo "Batch changed; release-ready withdrawn. Re-apply it to cut this batch." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          # Only the event that applies release-ready can arm, and only for the head it
+          # saw. Any other event (a new head, an unrelated label, hold removed) can
+          # disarm but never arm, so a stale label cannot carry approval to a new head.
+          if [ "$ACTION" = labeled ] && [ "$LABEL" = "$READY_LABEL" ] && [ "$state" = open ] && [ "$ready" = true ] && [ "$held" != true ] && [ "$live_head" = "$EVENT_HEAD" ]; then
+            gh pr merge "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --auto --squash --match-head-commit "$EVENT_HEAD"
+            echo "Armed: this release batch merges when Verify is green." >> "$GITHUB_STEP_SUMMARY"
+          else
+            disarm
+            echo "Not armed. Applying release-ready (with no hold) arms the current head; if the label is already on, remove and re-apply it."  >> "$GITHUB_STEP_SUMMARY"
+          fi
