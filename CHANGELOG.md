@@ -1,5 +1,19 @@
 # Changelog
 
+## [4.16.1](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.16.0...v4.16.1) (2026-10-28)
+
+
+### Bug Fixes
+
+* **khronos:** bump @pluto-khronos/* to 3.15.1 ([59f8a47](https://github.com/fearandesire/Pluto-Betting-Bot/commit/59f8a4792c24d47515055b7e46fab0b633cd2552))
+
+## [4.16.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.15.0...v4.16.0) (2026-10-27)
+
+
+### Features
+
+* **betting:** warn that odds can change and payout locks on confirm ([#751](https://github.com/fearandesire/Pluto-Betting-Bot/issues/751)) ([ec54bcc](https://github.com/fearandesire/Pluto-Betting-Bot/commit/ec54bcc5c1753c411bb99f3691d52201056534ef))
+
 ## [4.15.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.14.10...v4.15.0) (2026-10-26)
 
 
