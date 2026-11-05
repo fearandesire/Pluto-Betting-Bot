@@ -79,6 +79,7 @@ Status: 📸 before captured · 🔁 migrated · ✅ merged and verified live
 | D4 | /leaderboard | account | `pagination-utilities.ts` | | 📸 |
 | D5 | /stats h2h | account | `commands/stats/stats.ts` | | 📸 |
 | D6 | Welcome DM | account | `WelcomeMessageService` | | 📸 |
+| D7 | /stats props (flag `STATS_PROPS_ENABLED`) | account | `commands/stats/stats.ts` | | 📸 |
 | E1 | Bet result DM | notifications | `notifications.service.notifyUser` | | 📸 |
 | E2 | Parlay result DMs | notifications | `notifications.service.buildParlayEmbeds` | | 📸 |
 | E3 | Big-win announcement | notifications | `BigWinAnnouncementService` | | 📸 |

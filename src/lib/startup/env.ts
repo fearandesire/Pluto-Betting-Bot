@@ -70,6 +70,7 @@ const envSchema = z
 		PERIOD_WINNERS_ENABLED: z.boolean().default(false),
 		PERIOD_WINNERS_WEEKLY_CRON: z.string().default('30 9 * * 1'),
 		PERIOD_WINNERS_MONTHLY_CRON: z.string().default('30 9 1 * *'),
+		STATS_PROPS_ENABLED: z.boolean().default(false),
 		PLUTO_SYSTEM_MODE: z.boolean().default(false),
 		PLUTO_SYSTEM_ALLOW: z.boolean().default(false),
 	})
@@ -219,6 +220,7 @@ export function parseStartupEnv(
 		PERIOD_WINNERS_ENABLED: envFlag(source.PERIOD_WINNERS_ENABLED),
 		PERIOD_WINNERS_WEEKLY_CRON: source.PERIOD_WINNERS_WEEKLY_CRON,
 		PERIOD_WINNERS_MONTHLY_CRON: source.PERIOD_WINNERS_MONTHLY_CRON,
+		STATS_PROPS_ENABLED: envFlag(source.STATS_PROPS_ENABLED),
 		PLUTO_SYSTEM_MODE: envFlag(source.PLUTO_SYSTEM_MODE),
 		PLUTO_SYSTEM_ALLOW: envFlag(source.PLUTO_SYSTEM_ALLOW),
 	})
@@ -275,6 +277,7 @@ if (shouldLogDebug) {
 		PERIOD_WINNERS_ENABLED: env.PERIOD_WINNERS_ENABLED,
 		PERIOD_WINNERS_WEEKLY_CRON: env.PERIOD_WINNERS_WEEKLY_CRON,
 		PERIOD_WINNERS_MONTHLY_CRON: env.PERIOD_WINNERS_MONTHLY_CRON,
+		STATS_PROPS_ENABLED: env.STATS_PROPS_ENABLED,
 		// Redacted sensitive fields
 		TOKEN: '[REDACTED]',
 		KH_API_TOKEN: '[REDACTED]',
