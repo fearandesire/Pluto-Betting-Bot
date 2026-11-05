@@ -84,12 +84,16 @@ describe('parsePredictionStats', () => {
 })
 
 describe('getPropBettingStats', () => {
+	const proto = StatsApi.prototype as unknown as Record<string, unknown>
+	const original = proto.getPropBettingStats
+
 	afterEach(() => {
-		delete (StatsApi.prototype as unknown as Record<string, unknown>)
-			.getPropBettingStats
+		if (original === undefined) delete proto.getPropBettingStats
+		else proto.getPropBettingStats = original
 	})
 
 	it('throws a clear error when the generated client lacks the method', async () => {
+		delete proto.getPropBettingStats
 		await expect(
 			new StatsWrapper().getPropBettingStats({ userId: 'user-1' }),
 		).rejects.toBeInstanceOf(PropStatsUnavailableError)
@@ -98,9 +102,7 @@ describe('getPropBettingStats', () => {
 	it('delegates to the generated client with the request', async () => {
 		const payload = { user_id: 'user-1', markets: [] }
 		const method = vi.fn().mockResolvedValue(payload)
-		;(
-			StatsApi.prototype as unknown as Record<string, unknown>
-		).getPropBettingStats = method
+		proto.getPropBettingStats = method
 
 		const request = {
 			userId: 'user-1',
