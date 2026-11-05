@@ -71,6 +71,59 @@ jobs:
              ]}]}')
           curl -sf -H "Content-Type: application/json" -d "$payload" "$DISCORD_WEBHOOK"
 
+      # Patch notes for the docs site. Pluto-Docs changelog-release.yml wakes on
+      # this `pluto-release` dispatch and reads the release itself from the public
+      # API, so the payload is just a poke with the tag. The fnx-cascade-bot App
+      # must be installed on Pluto-Docs with contents:write for the dispatch to be
+      # accepted; a daily schedule there catches anything this step misses.
+      - name: Mint App token for Pluto-Docs
+        id: docs_app
+        if: steps.release.outputs.release_created == 'true'
+        continue-on-error: true
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.CASCADE_APP_ID }}
+          private-key: ${{ secrets.CASCADE_APP_PRIVATE_KEY }}
+          owner: fearandesire
+          repositories: Pluto-Docs
+
+      - name: Send release to Pluto-Docs changelog
+        id: docs_dispatch
+        if: steps.release.outputs.release_created == 'true' && steps.docs_app.outcome == 'success'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ steps.docs_app.outputs.token }}
+          TAG: ${{ steps.release.outputs.tag_name }}
+        run: |
+          set -euo pipefail
+          jq -n --arg tag "$TAG" '{event_type:"pluto-release",client_payload:{tag:$tag}}' \
+            | gh api repos/fearandesire/Pluto-Docs/dispatches --method POST --input -
+
+      - name: Notify Discord — docs changelog not sent
+        if: always() && steps.release.outputs.release_created == 'true' && steps.docs_dispatch.outcome != 'success'
+        continue-on-error: true
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_CICD_WEBHOOK }}
+          VERSION: ${{ steps.release.outputs.tag_name }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [[ -z "$DISCORD_WEBHOOK" ]]; then
+            echo "::warning::Docs changelog dispatch did not run for $VERSION"
+            exit 0
+          fi
+          payload=$(jq -n \
+            --arg version "$VERSION" \
+            --arg runurl "$RUN_URL" \
+            '{embeds:[{title:"🟡 Docs changelog not updated",
+              description:("The release published, but the Pluto-Docs dispatch did not go out (is fnx-cascade-bot installed on Pluto-Docs?). The daily Pluto-Docs schedule will pick up " + $version + ", or run its Changelog release workflow now."),
+              color:16705372,fields:[
+               {name:"Service",value:"Pluto",inline:true},
+               {name:"Stage",value:"Docs changelog",inline:true},
+               {name:"Version",value:$version,inline:true},
+               {name:"Run",value:$runurl,inline:false}
+             ]}]}')
+          curl -sf -H "Content-Type: application/json" -d "$payload" "$DISCORD_WEBHOOK"
+
       - name: Notify Discord — failure
         if: failure()
         continue-on-error: true
