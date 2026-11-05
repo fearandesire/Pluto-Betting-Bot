@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
 	achievementsAvailable: true,
 	warn: vi.fn(),
 	error: vi.fn(),
+	handleNewUser: vi.fn(),
 }))
 
 vi.mock('../../../lib/startup/env.js', () => ({ default: mocks.env }))
@@ -31,6 +32,10 @@ vi.mock(
 		}),
 	}),
 )
+
+vi.mock('../../../utils/api/common/handleNewUser.js', () => ({
+	handleNewUser: mocks.handleNewUser,
+}))
 
 vi.mock('../../../utils/api/requests/accounts/AccountManager.js', () => ({
 	AccountsWrapper: vi.fn().mockImplementation(function () {
@@ -156,6 +161,10 @@ describe('/profile', () => {
 		expect(mocks.evaluate).toHaveBeenCalledWith(TARGET)
 		expect(mocks.get).not.toHaveBeenCalled()
 		expect(mocks.getProfile).toHaveBeenCalledWith(TARGET)
+		expect(mocks.handleNewUser).toHaveBeenCalledWith({
+			level: 12,
+			tier: 'Bronze',
+		})
 
 		const payload = interaction.editReply.mock.calls[0][0]
 		expectV2Payload(payload, {
