@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockGetPropBettingStats = vi.fn()
+const mockEnv = vi.hoisted(() => ({ STATS_PROPS_ENABLED: true }))
+
+vi.mock('../../lib/startup/env.js', () => ({ default: mockEnv }))
 
 vi.mock('../../utils/api/Khronos/stats/stats-wrapper.js', async () => {
 	class PropStatsUnavailableError extends Error {}
@@ -54,7 +57,10 @@ const zeroed = {
 }
 
 describe('/stats props', () => {
-	beforeEach(() => vi.clearAllMocks())
+	beforeEach(() => {
+		vi.clearAllMocks()
+		mockEnv.STATS_PROPS_ENABLED = true
+	})
 
 	it('defers, passes the sport filter and renders stats', async () => {
 		mockGetPropBettingStats.mockResolvedValue({
@@ -109,5 +115,51 @@ describe('/stats props', () => {
 
 		expect(logger.error).toHaveBeenCalled()
 		expect(interaction.editReply).toHaveBeenCalledOnce()
+	})
+
+	it('answers without calling Khronos when STATS_PROPS_ENABLED is off', async () => {
+		mockEnv.STATS_PROPS_ENABLED = false
+		const interaction = {
+			...makeInteraction(),
+			reply: vi.fn().mockResolvedValue(undefined),
+		}
+		await makeCommand().viewPropStats(interaction as never)
+
+		expect(mockGetPropBettingStats).not.toHaveBeenCalled()
+		expect(interaction.deferReply).not.toHaveBeenCalled()
+		expect(interaction.reply).toHaveBeenCalledOnce()
+	})
+
+	it('registers the props subcommand only when the flag is on', () => {
+		const register = (enabled: boolean) => {
+			mockEnv.STATS_PROPS_ENABLED = enabled
+			const names: string[] = []
+			const builder = {
+				setName: () => builder,
+				setDescription: () => builder,
+				setContexts: () => builder,
+				addSubcommandGroup: () => builder,
+				addSubcommand: (fn: (sub: unknown) => unknown) => {
+					const sub = {
+						setName: (n: string) => {
+							names.push(n)
+							return sub
+						},
+						setDescription: () => sub,
+						addStringOption: () => sub,
+					}
+					fn(sub)
+					return builder
+				},
+			}
+			const registry = {
+				registerChatInputCommand: (fn: (b: unknown) => unknown) =>
+					fn(builder),
+			}
+			makeCommand().registerApplicationCommands(registry as never)
+			return names
+		}
+		expect(register(false)).toEqual([])
+		expect(register(true)).toEqual(['props'])
 	})
 })

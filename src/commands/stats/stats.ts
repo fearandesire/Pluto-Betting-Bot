@@ -1,5 +1,6 @@
 import { ApplyOptions } from '@sapphire/decorators'
 import { Subcommand } from '@sapphire/plugin-subcommands'
+import { MessageFlags } from 'discord.js'
 import {
 	h2hNoStatsEmbed,
 	h2hStatsEmbed,
@@ -8,6 +9,7 @@ import {
 	propStatsErrorEmbed,
 } from '../../lib/discord/builders/account.js'
 import { helpfooter } from '../../lib/PlutoConfig.js'
+import env from '../../lib/startup/env.js'
 import StatsWraps, {
 	type PropStatsSport,
 	PropStatsUnavailableError,
@@ -34,7 +36,7 @@ import StatsWraps, {
 })
 export class UserCommand extends Subcommand {
 	public override registerApplicationCommands(registry: Subcommand.Registry) {
-		registry.registerChatInputCommand((builder) =>
+		registry.registerChatInputCommand((builder) => {
 			builder
 				.setName(this.name)
 				.setDescription(this.description)
@@ -49,7 +51,8 @@ export class UserCommand extends Subcommand {
 								.setDescription('View your h2h betting stats'),
 						),
 				)
-				.addSubcommand((subcommand) =>
+			if (env.STATS_PROPS_ENABLED) {
+				builder.addSubcommand((subcommand) =>
 					subcommand
 						.setName('props')
 						.setDescription('View your prop prediction hit rate')
@@ -65,8 +68,10 @@ export class UserCommand extends Subcommand {
 									{ name: 'NFL', value: 'nfl' },
 								),
 						),
-				),
-		)
+				)
+			}
+			return builder
+		})
 	}
 
 	public async viewH2hStats(
@@ -107,6 +112,12 @@ export class UserCommand extends Subcommand {
 	public async viewPropStats(
 		interaction: Subcommand.ChatInputCommandInteraction,
 	) {
+		if (!env.STATS_PROPS_ENABLED) {
+			return await interaction.reply({
+				content: 'Prop stats are not available yet.',
+				flags: MessageFlags.Ephemeral,
+			})
+		}
 		try {
 			await interaction.deferReply()
 			const sport = interaction.options.getString(
