@@ -146,6 +146,18 @@ describe('Pluto system startup env gate', () => {
 		).toThrow(/AXIOM_ORG_ID/)
 	})
 
+	it('keeps /profile off unless PROFILE_ENABLED is true', () => {
+		expect(parseStartupEnv(requiredEnv).PROFILE_ENABLED).toBe(false)
+		expect(
+			parseStartupEnv({ ...requiredEnv, PROFILE_ENABLED: 'false' })
+				.PROFILE_ENABLED,
+		).toBe(false)
+		expect(
+			parseStartupEnv({ ...requiredEnv, PROFILE_ENABLED: 'true' })
+				.PROFILE_ENABLED,
+		).toBe(true)
+	})
+
 	it('keeps /stats props off unless STATS_PROPS_ENABLED is true', () => {
 		expect(parseStartupEnv(requiredEnv).STATS_PROPS_ENABLED).toBe(false)
 		expect(

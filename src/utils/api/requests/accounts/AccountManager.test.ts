@@ -28,15 +28,13 @@ vi.mock('../../patreon/Patreon-Facade.js', () => ({ default: {} }))
 import { AccountManager } from './AccountManager.js'
 
 function fixture(targetId = 'target') {
-	const getProfile = vi
-		.fn()
-		.mockResolvedValue({
-			userid: targetId,
-			balance: 125,
-			level: 2,
-			tier: 'bronze',
-			isNewUser: false,
-		})
+	const getProfile = vi.fn().mockResolvedValue({
+		userid: targetId,
+		balance: 125,
+		level: 2,
+		tier: 'bronze',
+		isNewUser: false,
+	})
 	const members = {
 		cache: new Map(),
 		fetch: vi.fn().mockRejectedValue(new Error('Unknown member')),
