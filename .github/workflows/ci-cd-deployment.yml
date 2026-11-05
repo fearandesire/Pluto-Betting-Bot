@@ -106,8 +106,18 @@ jobs:
           PLUTO_REQUIRE_REDIS_TESTS: "1"
           PLUTO_TEST_REDIS_URL: redis://localhost:6379/15
 
-      - name: Build
-        run: pnpm build
+      - name: Verify real user journeys and build
+        run: pnpm verify
+
+      - name: Upload verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pluto-verification-${{ github.sha }}
+          path: .verification/
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: warn
 
       - name: Verify production dist
         run: pnpm verify:dist
