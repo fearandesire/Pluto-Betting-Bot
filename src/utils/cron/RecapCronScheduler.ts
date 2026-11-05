@@ -129,7 +129,7 @@ export class RecapCronScheduler {
 		this.validExpression = isValidCronExpression(expression)
 		if (!this.validExpression) {
 			logger.error({
-				message: `Weekly recap scheduler disabled: invalid ${name}`,
+				message: `${name} scheduler disabled: invalid cron expression`,
 				metadata: { expression },
 			})
 		}

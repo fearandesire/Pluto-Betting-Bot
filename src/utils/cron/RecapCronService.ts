@@ -158,7 +158,11 @@ export class RecapCronService {
 							guildId,
 							this.options.weekOffset,
 						)
-					: await this.recapApi.getWeeklyRecap(guildId, -1, sport)
+					: await this.recapApi.getWeeklyRecap(
+							guildId,
+							this.options.weekOffset,
+							sport,
+						)
 
 			if (sport !== 'nfl' && isEmptyWeek(recap)) {
 				result.skipped++
