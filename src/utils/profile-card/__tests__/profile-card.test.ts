@@ -67,6 +67,21 @@ describe('buildProfileCardSvg', () => {
 		expect(svg).not.toContain('>b6<')
 	})
 
+	it('keeps wide badge pills inside the panel by dropping a third row', () => {
+		const wide = (c: string) => c.repeat(40)
+		const svg = buildProfileCardSvg({
+			...fullCard,
+			badges: ['a', 'b', 'c', 'd', 'e'].map(wide),
+		})
+		const bottoms = [
+			...svg.matchAll(/<rect x="\d+" y="(\d+)" width="\d+" height="34"/g),
+		]
+			.map((m) => Number(m[1]) + 34)
+			.filter((bottom) => bottom > 290)
+		expect(bottoms.length).toBeGreaterThan(0)
+		expect(Math.max(...bottoms)).toBeLessThanOrEqual(412)
+	})
+
 	it('escapes markup in user-controlled names', () => {
 		const svg = buildProfileCardSvg({
 			...fullCard,

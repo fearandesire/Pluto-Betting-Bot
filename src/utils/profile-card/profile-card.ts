@@ -194,6 +194,8 @@ function buildBadgePills(badges: string[], originY: number): string {
 	const pillHeight = 34
 	const gapX = 12
 	const gapY = 12
+	// Two rows fit inside the inner panel; pills that would start a third are dropped.
+	const maxBottom = originY + 2 * pillHeight + gapY
 	let x = PAD
 	let y = originY
 	const out: string[] = []
@@ -204,6 +206,7 @@ function buildBadgePills(badges: string[], originY: number): string {
 			x = PAD
 			y += pillHeight + gapY
 		}
+		if (y + pillHeight > maxBottom) break
 		out.push(
 			`<rect x="${x}" y="${y}" width="${width}" height="${pillHeight}" rx="${pillHeight / 2}" fill="${COLORS.tile}" stroke="${COLORS.gold}" stroke-width="1.5"/>`,
 			`<circle cx="${x + 17}" cy="${y + pillHeight / 2}" r="4" fill="${COLORS.gold}"/>`,
