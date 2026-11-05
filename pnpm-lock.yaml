@@ -41,11 +41,11 @@ importers:
         specifier: ^15.7.0
         version: 15.7.0(koa@3.2.1)
       '@pluto-khronos/api-client':
-        specifier: 3.15.0
-        version: 3.15.0
+        specifier: 3.15.1
+        version: 3.15.1
       '@pluto-khronos/types':
-        specifier: 3.15.0
-        version: 3.15.0(discord.js@14.27.0)
+        specifier: 3.15.1
+        version: 3.15.1(discord.js@14.27.0)
       '@sapphire/decorators':
         specifier: ^6.1.1
         version: 6.2.0
@@ -1877,11 +1877,11 @@ packages:
     resolution: {integrity: sha512-SEeaJLb3qBNF/OaXnaR1NmmBbFYk1zC0ZH/52fATcRPLFg/p791YrcyFFy44Bo9sLaGuSuLp5Q6axbb/O+v/RA==}
     engines: {node: ^14.18.0 || >=16.0.0}
 
-  '@pluto-khronos/api-client@3.15.0':
-    resolution: {integrity: sha512-ma/y4FlZEosyUJhjc1kdcAJr2TQ3gPly2M4l4+2nZ4z6klql1nwFTik5l44QOOtuc+TuPvi9UH/pHHFE6K7BCg==}
+  '@pluto-khronos/api-client@3.15.1':
+    resolution: {integrity: sha512-WGWW/myBVF+CfEYPmWQzZyC7ytF4dTprVi1uRo4Yj2TYCud6nhnCLSEMlF8XQa12qLUrEZHyxdT3So50V1LL+w==}
 
-  '@pluto-khronos/types@3.15.0':
-    resolution: {integrity: sha512-xD4EgdT+XSrwyN6ciZxT94QAANhMqtuzLXfl1Nvfz0fz0VBMv5qesW2FdifYcrAChjNRzPWcvtOKFh0f2A+ypw==}
+  '@pluto-khronos/types@3.15.1':
+    resolution: {integrity: sha512-EPfXZZMup2589DbxQJ7U8oVCRj1gEl9cKn6cHlweP/ICTsTsFtuY1/ArVK6urG4UFSKYFYojQhoYmbO+8JBCVA==}
     peerDependencies:
       discord.js: ^14.0.0
 
@@ -8939,9 +8939,9 @@ snapshots:
 
   '@pkgr/core@0.3.6': {}
 
-  '@pluto-khronos/api-client@3.15.0': {}
+  '@pluto-khronos/api-client@3.15.1': {}
 
-  '@pluto-khronos/types@3.15.0(discord.js@14.27.0)':
+  '@pluto-khronos/types@3.15.1(discord.js@14.27.0)':
     dependencies:
       discord.js: 14.27.0
       resolve-team: 2.0.4
