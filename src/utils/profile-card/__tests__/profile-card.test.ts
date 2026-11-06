@@ -127,6 +127,11 @@ describe('buildProfileCardSvg', () => {
 			badgeIconMarkup('first_win'),
 		)
 		expect(badgeIconMarkup(undefined)).toBe(badgeIconMarkup('first_win'))
+		for (const inherited of ['constructor', 'toString', '__proto__']) {
+			expect(badgeIconMarkup(inherited)).toBe(
+				badgeIconMarkup('first_win'),
+			)
+		}
 		const svg = buildProfileCardSvg({
 			...fullCard,
 			badges: [{ key: 'courtside', name: 'Courtside' }],

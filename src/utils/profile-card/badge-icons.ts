@@ -60,7 +60,7 @@ const BADGE_ICONS: Record<string, string> = {
 
 /** Inner markup for a badge key; unknown or missing keys get the star. */
 export function badgeIconMarkup(key: string | undefined): string {
-	return (key && BADGE_ICONS[key]) || star
+	return key && Object.hasOwn(BADGE_ICONS, key) ? BADGE_ICONS[key] : star
 }
 
 export const BADGE_ICON_KEYS = Object.keys(BADGE_ICONS)
