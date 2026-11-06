@@ -1,5 +1,19 @@
 # Changelog
 
+## [4.17.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.16.1...v4.17.0) (2026-11-06)
+
+
+### Features
+
+* **profile:** add /profile card with cosmetic achievements ([#754](https://github.com/fearandesire/Pluto-Betting-Bot/issues/754)) ([a517d16](https://github.com/fearandesire/Pluto-Betting-Bot/commit/a517d169b5501ca44650de271f661bac0a0e3f59))
+* **recap:** add nba weekly recap and period winners posts ([#752](https://github.com/fearandesire/Pluto-Betting-Bot/issues/752)) ([9c6f62c](https://github.com/fearandesire/Pluto-Betting-Bot/commit/9c6f62cc730e5a4200416f16d7b8ca3ed3656076))
+* **stats:** add /stats props subcommand ([#753](https://github.com/fearandesire/Pluto-Betting-Bot/issues/753)) ([9a26ce2](https://github.com/fearandesire/Pluto-Betting-Bot/commit/9a26ce274f53548b0279ba43ae5e5628260ba527))
+
+
+### Bug Fixes
+
+* **khronos:** bump @pluto-khronos/* to 3.16.0 ([fb3c5fa](https://github.com/fearandesire/Pluto-Betting-Bot/commit/fb3c5fa00f5d9926fd50a717bfafaaf76d08172d))
+
 ## [4.16.1](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.16.0...v4.16.1) (2026-10-28)
 
 
