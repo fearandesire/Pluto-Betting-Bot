@@ -1,9 +1,16 @@
 import sharp from 'sharp'
 import type { AchievementSummary } from '../api/Khronos/achievements/achievements-wrapper.js'
+import { BADGE_ICON_SIZE, badgeIconMarkup } from './badge-icons.js'
 
 export const PROFILE_CARD_WIDTH = 800
 export const PROFILE_CARD_HEIGHT = 420
 export const MAX_PROFILE_BADGES = 5
+
+export interface ProfileBadge {
+	/** Khronos achievement key; picks the icon. Unknown keys get a star. */
+	key?: string
+	name: string
+}
 
 export interface ProfileCardData {
 	displayName: string
@@ -13,8 +20,8 @@ export interface ProfileCardData {
 	level: number | null
 	/** null when achievements could not be loaded. */
 	summary: AchievementSummary | null
-	/** Names of earned badges, newest first. */
-	badges: string[]
+	/** Earned badges, newest first. */
+	badges: ProfileBadge[]
 	/** Total earned badges, which may exceed `badges.length`. */
 	earnedCount?: number
 }
@@ -189,19 +196,21 @@ function buildTiles(summary: AchievementSummary | null): Tile[] {
 	]
 }
 
-function buildBadgePills(badges: string[], originY: number): string {
+function buildBadgePills(badges: ProfileBadge[], originY: number): string {
 	const maxRight = PROFILE_CARD_WIDTH - PAD
 	const pillHeight = 34
 	const gapX = 12
 	const gapY = 12
+	const iconSize = 22
+	const iconScale = iconSize / BADGE_ICON_SIZE
 	// Two rows fit inside the inner panel; pills that would start a third are dropped.
 	const maxBottom = originY + 2 * pillHeight + gapY
 	let x = PAD
 	let y = originY
 	const out: string[] = []
-	for (const raw of badges.slice(0, MAX_PROFILE_BADGES)) {
-		const name = fitText(clean(raw) || 'Badge', 15, 300)
-		const width = Math.ceil(textWidth(name, 15)) + 36
+	for (const badge of badges.slice(0, MAX_PROFILE_BADGES)) {
+		const name = fitText(clean(badge.name) || 'Badge', 15, 300)
+		const width = Math.ceil(textWidth(name, 15)) + 54
 		if (x + width > maxRight && x > PAD) {
 			x = PAD
 			y += pillHeight + gapY
@@ -209,9 +218,9 @@ function buildBadgePills(badges: string[], originY: number): string {
 		if (y + pillHeight > maxBottom) break
 		out.push(
 			`<rect x="${x}" y="${y}" width="${width}" height="${pillHeight}" rx="${pillHeight / 2}" fill="${COLORS.tile}" stroke="${COLORS.gold}" stroke-width="1.5"/>`,
-			`<circle cx="${x + 17}" cy="${y + pillHeight / 2}" r="4" fill="${COLORS.gold}"/>`,
+			`<g transform="translate(${x + 11} ${y + (pillHeight - iconSize) / 2}) scale(${iconScale})" color="${COLORS.gold}" fill="none" stroke="${COLORS.gold}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${badgeIconMarkup(badge.key)}</g>`,
 			text({
-				x: x + 30,
+				x: x + 41,
 				y: y + 22,
 				size: 15,
 				fill: COLORS.text,

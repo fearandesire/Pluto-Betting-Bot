@@ -59,7 +59,7 @@ export async function loadProfileCardData(
 		summary: achievements?.summary ?? null,
 		badges: (achievements?.earned ?? [])
 			.slice(0, MAX_PROFILE_BADGES)
-			.map((badge) => badge.name),
+			.map((badge) => ({ key: badge.key, name: badge.name })),
 		earnedCount: achievements?.earned.length,
 	}
 }

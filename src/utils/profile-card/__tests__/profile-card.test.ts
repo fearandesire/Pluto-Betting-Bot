@@ -1,5 +1,6 @@
 import sharp from 'sharp'
 import { describe, expect, it } from 'vitest'
+import { BADGE_ICON_KEYS, badgeIconMarkup } from '../badge-icons.js'
 import {
 	buildProfileCardSvg,
 	MAX_PROFILE_BADGES,
@@ -54,13 +55,15 @@ describe('buildProfileCardSvg', () => {
 		expect(svg).toContain('$612.75')
 		expect(svg).toContain('63%')
 		expect(svg).toContain('8 EARNED')
-		for (const badge of fullCard.badges) expect(svg).toContain(badge)
+		for (const badge of fullCard.badges) expect(svg).toContain(badge.name)
 	})
 
 	it('shows only the latest five badges', () => {
 		const svg = buildProfileCardSvg({
 			...fullCard,
-			badges: ['b1', 'b2', 'b3', 'b4', 'b5', 'b6', 'b7'],
+			badges: ['b1', 'b2', 'b3', 'b4', 'b5', 'b6', 'b7'].map((name) => ({
+				name,
+			})),
 		})
 		expect(MAX_PROFILE_BADGES).toBe(5)
 		expect(svg).toContain('>b5<')
@@ -71,7 +74,7 @@ describe('buildProfileCardSvg', () => {
 		const wide = (c: string) => c.repeat(40)
 		const svg = buildProfileCardSvg({
 			...fullCard,
-			badges: ['a', 'b', 'c', 'd', 'e'].map(wide),
+			badges: ['a', 'b', 'c', 'd', 'e'].map((c) => ({ name: wide(c) })),
 		})
 		const bottoms = [
 			...svg.matchAll(/<rect x="\d+" y="(\d+)" width="\d+" height="34"/g),
@@ -80,6 +83,32 @@ describe('buildProfileCardSvg', () => {
 			.filter((bottom) => bottom > 290)
 		expect(bottoms.length).toBeGreaterThan(0)
 		expect(Math.max(...bottoms)).toBeLessThanOrEqual(412)
+	})
+
+	it('draws a distinct icon per achievement key and a star for unknown keys', () => {
+		const keys = [
+			'first_win',
+			'ten_wins',
+			'fifty_wins',
+			'in_the_black',
+			'sharp_eye',
+			'prop_hunter',
+			'parlay_pro',
+			'courtside',
+		]
+		expect(BADGE_ICON_KEYS).toEqual(keys)
+		const markup = new Set(keys.map((key) => badgeIconMarkup(key)))
+		expect(markup.size).toBe(keys.length)
+		expect(badgeIconMarkup('unknown_future_key')).toBe(
+			badgeIconMarkup('first_win'),
+		)
+		expect(badgeIconMarkup(undefined)).toBe(badgeIconMarkup('first_win'))
+		const svg = buildProfileCardSvg({
+			...fullCard,
+			badges: [{ key: 'courtside', name: 'Courtside' }],
+		})
+		expect(svg).toContain(badgeIconMarkup('courtside'))
+		expect(svg).not.toContain('r="4" fill="#d8b21a"')
 	})
 
 	it('escapes markup in user-controlled names', () => {
