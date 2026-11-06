@@ -21,7 +21,12 @@ export const fullCard: ProfileCardData = {
 		{ key: 'ten_wins', name: 'Ten Wins' },
 		{ key: 'first_win', name: 'First Win' },
 	],
-	earnedCount: 8,
+	locked: [
+		{ key: 'fifty_wins', name: 'Fifty Wins' },
+		{ key: 'in_the_black', name: 'In the Black' },
+		{ key: 'prop_hunter', name: 'Prop Hunter' },
+	],
+	earnedCount: 5,
 }
 
 export const emptyCard: ProfileCardData = {
@@ -39,6 +44,16 @@ export const emptyCard: ProfileCardData = {
 		prediction_hit_rate: null,
 	},
 	badges: [],
+	locked: [
+		{ key: 'first_win', name: 'First Win' },
+		{ key: 'ten_wins', name: 'Ten Wins' },
+		{ key: 'fifty_wins', name: 'Fifty Wins' },
+		{ key: 'in_the_black', name: 'In the Black' },
+		{ key: 'sharp_eye', name: 'Sharp Eye' },
+		{ key: 'prop_hunter', name: 'Prop Hunter' },
+		{ key: 'parlay_pro', name: 'Parlay Pro' },
+		{ key: 'courtside', name: 'Courtside' },
+	],
 }
 
 export const stressCard: ProfileCardData = {

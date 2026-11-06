@@ -15,20 +15,20 @@ const PNG_SIGNATURE = Buffer.from([
 ])
 
 describe('renderProfileCard', () => {
-	it('returns an 800x420 PNG', async () => {
+	it('returns an 800x480 PNG', async () => {
 		const png = await renderProfileCard(fullCard)
 		expect(png.subarray(0, 8).equals(PNG_SIGNATURE)).toBe(true)
 		const meta = await sharp(png).metadata()
 		expect(meta.width).toBe(PROFILE_CARD_WIDTH)
 		expect(meta.height).toBe(PROFILE_CARD_HEIGHT)
 		expect(PROFILE_CARD_WIDTH).toBe(800)
-		expect(PROFILE_CARD_HEIGHT).toBe(420)
+		expect(PROFILE_CARD_HEIGHT).toBe(480)
 	})
 
 	it('renders every fixture without throwing', async () => {
 		for (const card of [fullCard, emptyCard, stressCard]) {
 			const meta = await sharp(await renderProfileCard(card)).metadata()
-			expect([meta.width, meta.height]).toEqual([800, 420])
+			expect([meta.width, meta.height]).toEqual([800, 480])
 		}
 	})
 
@@ -54,35 +54,59 @@ describe('buildProfileCardSvg', () => {
 		expect(svg).toContain('+$1,342.50')
 		expect(svg).toContain('$612.75')
 		expect(svg).toContain('63%')
-		expect(svg).toContain('8 EARNED')
+		expect(svg).toContain('5 EARNED')
 		for (const badge of fullCard.badges) expect(svg).toContain(badge.name)
 	})
 
-	it('shows only the latest five badges', () => {
+	it('shows at most eight medallions, earned first and locked after', () => {
+		const earned = ['e1', 'e2', 'e3'].map((name) => ({ name }))
+		const locked = ['l1', 'l2', 'l3', 'l4', 'l5', 'l6'].map((name) => ({
+			name,
+		}))
 		const svg = buildProfileCardSvg({
 			...fullCard,
-			badges: ['b1', 'b2', 'b3', 'b4', 'b5', 'b6', 'b7'].map((name) => ({
-				name,
-			})),
+			badges: earned,
+			locked,
+			earnedCount: 3,
 		})
-		expect(MAX_PROFILE_BADGES).toBe(5)
-		expect(svg).toContain('>b5<')
-		expect(svg).not.toContain('>b6<')
+		expect(MAX_PROFILE_BADGES).toBe(8)
+		expect(svg).toContain('>e3<')
+		expect(svg).toContain('>l5<')
+		expect(svg).not.toContain('>l6<')
+		expect(svg.indexOf('>e1<')).toBeLessThan(svg.indexOf('>l1<'))
 	})
 
-	it('keeps wide badge pills inside the panel by dropping a third row', () => {
-		const wide = (c: string) => c.repeat(40)
+	it('keeps every medallion label inside its slot', () => {
 		const svg = buildProfileCardSvg({
 			...fullCard,
-			badges: ['a', 'b', 'c', 'd', 'e'].map((c) => ({ name: wide(c) })),
+			badges: Array.from({ length: 8 }, (_, i) => ({
+				name: `${'W'.repeat(40)}${i}`,
+			})),
+			locked: [],
+			earnedCount: 8,
 		})
-		const bottoms = [
-			...svg.matchAll(/<rect x="\d+" y="(\d+)" width="\d+" height="34"/g),
-		]
-			.map((m) => Number(m[1]) + 34)
-			.filter((bottom) => bottom > 290)
-		expect(bottoms.length).toBeGreaterThan(0)
-		expect(Math.max(...bottoms)).toBeLessThanOrEqual(412)
+		expect(svg).toContain('...')
+		expect(svg).not.toContain('W'.repeat(40))
+	})
+
+	it('draws locked badges dimmed without the earned glow', () => {
+		const svg = buildProfileCardSvg({
+			...emptyCard,
+			locked: [{ key: 'courtside', name: 'Courtside' }],
+		})
+		expect(svg).toContain('Courtside')
+		expect(svg).not.toContain('filter="url(#blur)"')
+		expect(svg).toContain(
+			'No badges yet. Place a bet to start earning them.',
+		)
+	})
+
+	it('colours the tier chip and glow by tier', () => {
+		const gold = buildProfileCardSvg({ ...fullCard, tier: 'Gold' })
+		const emerald = buildProfileCardSvg({ ...fullCard, tier: 'Emerald' })
+		expect(gold).toContain('fill="#f5cf47"')
+		expect(emerald).toContain('#3ddc97')
+		expect(emerald).not.toContain('fill="#f5cf47"/>\n')
 	})
 
 	it('draws a distinct icon per achievement key and a star for unknown keys', () => {
@@ -108,7 +132,6 @@ describe('buildProfileCardSvg', () => {
 			badges: [{ key: 'courtside', name: 'Courtside' }],
 		})
 		expect(svg).toContain(badgeIconMarkup('courtside'))
-		expect(svg).not.toContain('r="4" fill="#d8b21a"')
 	})
 
 	it('escapes markup in user-controlled names', () => {
