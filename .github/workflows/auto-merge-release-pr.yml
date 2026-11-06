@@ -81,7 +81,15 @@ jobs:
         run: |
           set -euo pipefail
           pr="repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER"
-          disarm() { gh pr merge "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --disable-auto 2>/dev/null || true; }
+          # Already off is fine; a failed request to turn it off must fail the run, or
+          # a hold or withdrawn approval would look applied while auto-merge stays armed.
+          disarm() {
+            armed=$(gh api "$pr" --jq '.auto_merge != null') \
+              || { echo "::error::Could not verify auto-merge state on #$PR_NUMBER; it may still merge. Disable it by hand."; exit 1; }
+            [ "$armed" = true ] || return 0
+            gh pr merge "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --disable-auto \
+              || { echo "::error::Could not disable auto-merge on #$PR_NUMBER; it may still merge. Disable it by hand."; exit 1; }
+          }
 
           # Refresh mutable state immediately before writing; event labels can be stale.
           live=$(gh api "$pr")
