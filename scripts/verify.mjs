@@ -128,6 +128,9 @@ try {
 		try {
 			const receiptPath = step.receipt ? resolve(out, step.receipt) : ''
 			if (receiptPath) await rm(receiptPath, { force: true })
+			// Signals can arrive during either filesystem await above. Keep
+			// this admission check and child assignment in one synchronous turn.
+			if (interrupted) throw new Error(interrupted)
 			current = spawn(step.command[0], step.command.slice(1), {
 				cwd: root,
 				detached: process.platform !== 'win32',

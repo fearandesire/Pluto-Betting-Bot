@@ -65,13 +65,17 @@ function manifest(root: string) {
 		),
 	)
 }
-function run(root: string) {
-	const result = spawnSync(process.execPath, ['scripts/verify.mjs'], {
-		cwd: root,
-		env: { PATH: process.env.PATH, VERIFY_SEED: '1234' },
-		encoding: 'utf8',
-		timeout: 15000,
-	})
+function run(root: string, args: string[] = []) {
+	const result = spawnSync(
+		process.execPath,
+		[...args, 'scripts/verify.mjs'],
+		{
+			cwd: root,
+			env: { PATH: process.env.PATH, VERIFY_SEED: '1234' },
+			encoding: 'utf8',
+			timeout: 15000,
+		},
+	)
 	expect(result.error).toBeUndefined()
 	return { result, evidence: manifest(root) }
 }
@@ -82,6 +86,78 @@ afterEach(() => {
 })
 
 describe('verification evidence contract', () => {
+	describe.skipIf(process.platform === 'win32')(
+		'pre-spawn interruption',
+		() => {
+			it.each([
+				['writeFile', 'SIGTERM'],
+				['writeFile', 'SIGINT'],
+				['rm', 'SIGTERM'],
+				['rm', 'SIGINT'],
+			])(
+				'does not admit a driver after %s receives %s',
+				(boundary, signal) => {
+					const root = fixture([
+						step(
+							"require('node:fs').writeFileSync('.verification/launched', 'unexpected')",
+							{ receipt: 'dashboard.json' },
+						),
+						step(''),
+					])
+					// Intercept the real async filesystem boundary, then deliver an OS
+					// signal and wait for its handler before allowing the await to resume.
+					writeFileSync(
+						path.join(root, 'boundary.mjs'),
+						`
+import fs from 'node:fs/promises'
+import { syncBuiltinESMExports } from 'node:module'
+const boundary = ${JSON.stringify(boundary)}
+const signal = ${JSON.stringify(signal)}
+const original = fs[boundary]
+let fired = false
+fs[boundary] = async (...args) => {
+  const result = await original(...args)
+  const atBoundary = boundary === 'rm'
+    ? args[0].endsWith('dashboard.json')
+    : args[0].endsWith('manifest.json') && JSON.parse(args[1]).checks[0].status === 'running'
+  if (!fired && atBoundary) {
+    fired = true
+    await new Promise(resolve => {
+      const keepAlive = setInterval(() => {}, 1000)
+      process.once(signal, () => {
+        clearInterval(keepAlive)
+        resolve()
+      })
+      process.kill(process.pid, signal)
+    })
+  }
+  return result
+}
+syncBuiltinESMExports()
+`,
+					)
+					const { result, evidence } = run(root, [
+						'--import',
+						'./boundary.mjs',
+					])
+					expect(result.status).toBe(1)
+					expect(
+						existsSync(path.join(root, '.verification/launched')),
+					).toBe(false)
+					expect(evidence.checks[0]).toMatchObject({
+						status: 'failed',
+						reason: signal,
+					})
+					expect(evidence.checks[1].status).toBe('skipped')
+					expect(evidence).toMatchObject({
+						status: 'failed',
+						cleanup: true,
+						sourceUnchanged: true,
+					})
+				},
+			)
+		},
+	)
 	it('retains clean source, logs, driver receipt and explicit optional skips', () => {
 		const root = fixture([step(receipt, { receipt: 'dashboard.json' })])
 		const { result, evidence } = run(root)
