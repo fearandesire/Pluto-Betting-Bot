@@ -65,6 +65,8 @@
 			"scripts/validate-matchup-assets.test.ts",
 			"scripts/verify-matchup-container.mjs",
 			"scripts/verify-production-runtime.mjs",
+			"scripts/verify.mjs",
+			"scripts/verify.test.ts",
 			"!*.env.d.ts",
 			"!src/env.d.ts",
 			"!package.json",

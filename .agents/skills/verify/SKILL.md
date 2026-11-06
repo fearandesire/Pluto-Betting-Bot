@@ -19,15 +19,15 @@ Use an owned worktree. The command owns its child processes and scratch files. I
 
 ## Doctor
 
-The runner records `git rev-parse HEAD`, the tree, dirty status and a fingerprint of the current diff plus untracked source. Each driver checks usability before actions: CLI help and parsed output for Dexter, HTTP readiness for Nocturne, or HTTP/auth/content for Pluto. Any unexpected result fails the command. Inspect the failing run's manifest/log before a fresh run; never reuse an unverified shared instance.
+The runner records `git rev-parse HEAD`, the tree, dirty status and a fingerprint of the current diff plus untracked source. The dashboard driver checks HTTP/auth/content through the compiled Koa/BullBoard setup. Any unexpected result fails the command. Inspect the failing run's manifest/log before a fresh run; never reuse an unverified shared instance.
 
 ## Drive
 
-The feature map supplies the concrete production entrypoints and observable outcomes. The command also runs 200 generated examples per property with fast-check. The manifest records the seed; rerun with `VERIFY_SEED=<seed> node scripts/verify.mjs` on POSIX, or set `$env:VERIFY_SEED` in PowerShell. fast-check prints the seed and shrinking path on failure. The tests protect the existing critical module, not a duplicate implementation.
+The feature map supplies the concrete production entrypoints and observable outcomes. The command also runs coordinator failure-contract tests and 200 generated examples per odds property with fast-check. The manifest records the seed; rerun with `VERIFY_SEED=<seed> node scripts/verify.mjs` on POSIX, or set `$env:VERIFY_SEED` in PowerShell. fast-check prints the seed and shrinking path on failure. The tests protect the existing critical module, not a duplicate implementation.
 
 ## Evidence
 
-Every run writes `.verification/<UTC timestamp>-<id>/manifest.json`, per-step logs and driver receipts. It records actual source SHA/tree/fingerprint, dirty state, UTC times, command arguments, durations and passed/failed/skipped checks. Required skips/failures cannot produce a pass. Optional live external checks are listed with reasons; an offline pass proves only the stated scope. Run after the final commit to bind evidence to that exact clean SHA, and before creating or updating each PR. CI invokes the same command in its existing validation job and uploads the run directory even on failure.
+Every run writes `.verification/<UTC timestamp>-<id>/manifest.json` and per-step logs. The final dashboard check links `dashboard.json`, written by the driver after assertions and server shutdown; the coordinator requires its passed status and matching source stamp. Evidence records actual source SHA/tree/fingerprint, dirty state, UTC times, command arguments, durations and passed/failed/skipped checks. Required skips/failures cannot produce a pass. Optional live external checks are listed with reasons; an offline pass proves only the stated scope. Run after the final commit to bind evidence to that exact clean SHA, and before creating or updating each PR. CI invokes the same command in its existing validation job and uploads the run directory even on failure.
 
 ## Cleanup
 

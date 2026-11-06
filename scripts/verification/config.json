@@ -3,7 +3,7 @@
   "scope": "Compiled production Koa/BullBoard dashboard: authentication, HTML and queue summaries; existing isolated queue-I/O driver.",
   "steps": [
     {
-      "name": "American odds conservation and ordering properties",
+      "name": "Verification coordinator contracts and American odds properties",
       "command": [
         "corepack",
         "pnpm@10",
@@ -11,6 +11,7 @@
         "vitest",
         "run",
         "src/utils/betting/american-odds.property.test.ts",
+        "scripts/verify.test.ts",
         "--maxWorkers=2"
       ]
     },
@@ -29,10 +30,16 @@
         "node",
         "scripts/verify-production-runtime.mjs"
       ],
+      "receipt": "dashboard.json",
       "timeoutMs": 90000
     }
   ],
   "skipped": [
+    {
+      "name": "Real queue I/O",
+      "required": false,
+      "reason": "The compiled dashboard uses synthetic queue state through real BullBoard adapters; no live Redis queues are driven."
+    },
     {
       "name": "Live Discord betting and Khronos settlement",
       "required": false,
