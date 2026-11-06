@@ -1,5 +1,11 @@
-import { AttachmentBuilder, ButtonBuilder, ButtonStyle } from 'discord.js'
-import { accent, footer, gallery, text, v2Payload } from '../v2/kit.js'
+import {
+	AttachmentBuilder,
+	ButtonBuilder,
+	ButtonStyle,
+	MediaGalleryBuilder,
+	MediaGalleryItemBuilder,
+} from 'discord.js'
+import { accent, footer, text, v2Payload } from '../v2/kit.js'
 
 export const PROFILE_CARD_FILENAME = 'profile-card.png'
 
@@ -32,38 +38,48 @@ export function decodeProfileShare(customId: string): ProfileShareRoute | null {
 	return { ownerId, targetId }
 }
 
-const cardAttachment = (png: Buffer) =>
+const cardAttachment = (png: Buffer, description: string) =>
 	new AttachmentBuilder(png, {
 		name: PROFILE_CARD_FILENAME,
-		description: 'Pluto profile card',
+		description,
 	})
+
+const cardGallery = (description: string) =>
+	new MediaGalleryBuilder().addItems(
+		new MediaGalleryItemBuilder()
+			.setURL(`attachment://${PROFILE_CARD_FILENAME}`)
+			.setDescription(description),
+	)
 
 /** Ephemeral reply: the card plus the Share button (disabled once shared). */
 export function profileCardPayload(opts: {
 	png: Buffer
 	route: ProfileShareRoute
 	shared?: boolean
+	description?: string
 }) {
+	const description = opts.description ?? 'Pluto profile card'
 	const button = new ButtonBuilder()
 		.setCustomId(encodeProfileShare(opts.route))
 		.setLabel(opts.shared ? 'Shared' : 'Share to channel')
 		.setStyle(ButtonStyle.Secondary)
 		.setDisabled(Boolean(opts.shared))
 	return v2Payload({
-		blocks: [gallery([`attachment://${PROFILE_CARD_FILENAME}`])],
+		blocks: [cardGallery(description)],
 		actions: [[button]],
-		files: [cardAttachment(opts.png)],
+		files: [cardAttachment(opts.png, description)],
 	})
 }
 
 /** Public post made by the Share button. Names the sharer without pinging. */
-export function profileSharedPayload(png: Buffer, sharerId: string) {
+export function profileSharedPayload(
+	png: Buffer,
+	sharerId: string,
+	description = 'Pluto profile card',
+) {
 	return v2Payload({
-		blocks: [
-			gallery([`attachment://${PROFILE_CARD_FILENAME}`]),
-			footer(`Shared by <@${sharerId}>`),
-		],
-		files: [cardAttachment(png)],
+		blocks: [cardGallery(description), footer(`Shared by <@${sharerId}>`)],
+		files: [cardAttachment(png, description)],
 	})
 }
 

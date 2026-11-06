@@ -15,13 +15,13 @@ export const fullCard: ProfileCardData = {
 		prediction_hit_rate: 0.625,
 	},
 	badges: [
-		'Sharp Eye',
-		'First Win',
-		'Parlay Pioneer',
-		'Prediction Prophet',
-		'Early Bird',
+		{ key: 'parlay_pro', name: 'Parlay Pro' },
+		{ key: 'sharp_eye', name: 'Sharp Eye' },
+		{ key: 'in_the_black', name: 'In the Black' },
+		{ key: 'ten_wins', name: 'Ten Wins' },
+		{ key: 'first_win', name: 'First Win' },
 	],
-	earnedCount: 8,
+	earnedCount: 5,
 }
 
 export const emptyCard: ProfileCardData = {
@@ -56,11 +56,14 @@ export const stressCard: ProfileCardData = {
 		prediction_hit_rate: 0.5133,
 	},
 	badges: [
-		'An Extremely Long Achievement Name That Keeps Going',
-		'Badge Two',
-		'Badge Three',
-		'Badge Four Is Longer',
-		'Badge Five',
+		{
+			key: 'unknown',
+			name: 'An Extremely Long Achievement Name That Keeps Going',
+		},
+		{ key: 'fifty_wins', name: 'Fifty Wins' },
+		{ key: 'courtside', name: 'Courtside' },
+		{ key: 'prop_hunter', name: 'Prop Hunter' },
+		{ key: 'constructor', name: 'Unknown Award' },
 	],
 	earnedCount: 12,
 }

@@ -1,0 +1,880 @@
+{
+  "populated": {
+    "before": {
+      "bytes": 34167,
+      "width": 800,
+      "height": 420
+    },
+    "after": {
+      "bytes": 89573,
+      "width": 1000,
+      "height": 800
+    },
+    "timings": {
+      "before": {
+        "samples": 12,
+        "warmMedianMs": 6.808633999999984,
+        "warmMaxMs": 14.240137000000004
+      },
+      "after": {
+        "samples": 12,
+        "warmMedianMs": 13.136234999999942,
+        "warmMaxMs": 27.218514000000027
+      }
+    },
+    "textBounds": [
+      {
+        "text": "PLUTO",
+        "x": 91,
+        "y": 33,
+        "width": 93.578125,
+        "height": 24
+      },
+      {
+        "text": "PLAYER PROFILE",
+        "x": 809.34375,
+        "y": 38,
+        "width": 142.65625,
+        "height": 16
+      },
+      {
+        "text": "FenixPlays",
+        "x": 48,
+        "y": 89,
+        "width": 282.140625,
+        "height": 60
+      },
+      {
+        "text": "GOLD / LEVEL 38",
+        "x": 96,
+        "y": 165,
+        "width": 159.75,
+        "height": 20
+      },
+      {
+        "text": "RECORD",
+        "x": 48,
+        "y": 265,
+        "width": 65.890625,
+        "height": 16
+      },
+      {
+        "text": "18–11–2",
+        "x": 48,
+        "y": 293,
+        "width": 134.859375,
+        "height": 38
+      },
+      {
+        "text": "Wins / losses / pushes",
+        "x": 48,
+        "y": 339,
+        "width": 142.865234375,
+        "height": 15
+      },
+      {
+        "text": "NET PROFIT",
+        "x": 304,
+        "y": 265,
+        "width": 92.25,
+        "height": 16
+      },
+      {
+        "text": "+$1,342.50",
+        "x": 304,
+        "y": 294,
+        "width": 186.640625,
+        "height": 36
+      },
+      {
+        "text": "Settled head-to-head bets",
+        "x": 304,
+        "y": 339,
+        "width": 170.5029296875,
+        "height": 15
+      },
+      {
+        "text": "BEST WIN",
+        "x": 556,
+        "y": 265,
+        "width": 76.796875,
+        "height": 16
+      },
+      {
+        "text": "$612.75",
+        "x": 556,
+        "y": 293,
+        "width": 134.859375,
+        "height": 38
+      },
+      {
+        "text": "Highest payout",
+        "x": 556,
+        "y": 339,
+        "width": 99.09375,
+        "height": 15
+      },
+      {
+        "text": "HIT RATE",
+        "x": 800,
+        "y": 265,
+        "width": 70.71875,
+        "height": 16
+      },
+      {
+        "text": "63%",
+        "x": 800,
+        "y": 293,
+        "width": 58.53125,
+        "height": 38
+      },
+      {
+        "text": "Predictions",
+        "x": 800,
+        "y": 339,
+        "width": 71.5810546875,
+        "height": 15
+      },
+      {
+        "text": "THE HONOURS",
+        "x": 48,
+        "y": 409,
+        "width": 153.625,
+        "height": 19
+      },
+      {
+        "text": "5 EARNED",
+        "x": 872.390625,
+        "y": 411,
+        "width": 79.609375,
+        "height": 16
+      },
+      {
+        "text": "LATEST",
+        "x": 318.21875,
+        "y": 473,
+        "width": 59.78125,
+        "height": 15
+      },
+      {
+        "text": "All Legs Home",
+        "x": 71,
+        "y": 648,
+        "width": 208.796875,
+        "height": 33
+      },
+      {
+        "text": "First winning parlay",
+        "x": 72,
+        "y": 689,
+        "width": 156.65625,
+        "height": 19
+      },
+      {
+        "text": "",
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0
+      },
+      {
+        "text": "The Line Reader",
+        "x": 521,
+        "y": 455,
+        "width": 202.34765625,
+        "height": 28
+      },
+      {
+        "text": "60%+ hit rate · 20+ predictions",
+        "x": 521,
+        "y": 487,
+        "width": 255.21875,
+        "height": 19
+      },
+      {
+        "text": "In the Black",
+        "x": 521,
+        "y": 527,
+        "width": 147.5625,
+        "height": 28
+      },
+      {
+        "text": "Net positive · 10+ settled H2H bets",
+        "x": 521,
+        "y": 559,
+        "width": 284.234375,
+        "height": 19
+      },
+      {
+        "text": "Double Figures",
+        "x": 521,
+        "y": 599,
+        "width": 187.171875,
+        "height": 28
+      },
+      {
+        "text": "10 head-to-head wins",
+        "x": 521,
+        "y": 631,
+        "width": 174.34375,
+        "height": 19
+      },
+      {
+        "text": "Opening Score",
+        "x": 521,
+        "y": 671,
+        "width": 180.84375,
+        "height": 28
+      },
+      {
+        "text": "First head-to-head win",
+        "x": 521,
+        "y": 703,
+        "width": 179.3125,
+        "height": 19
+      },
+      {
+        "text": "PLUTO / THE RECORD SPEAKS",
+        "x": 48,
+        "y": 765,
+        "width": 204.578125,
+        "height": 14
+      },
+      {
+        "text": "Achievements are cosmetic",
+        "x": 772.1875,
+        "y": 764,
+        "width": 179.8125,
+        "height": 15
+      }
+    ],
+    "textOutsideCanvas": []
+  },
+  "empty": {
+    "before": {
+      "bytes": 30455,
+      "width": 800,
+      "height": 420
+    },
+    "after": {
+      "bytes": 67413,
+      "width": 1000,
+      "height": 800
+    },
+    "timings": {
+      "before": {
+        "samples": 12,
+        "warmMedianMs": 5.700635999999918,
+        "warmMaxMs": 8.784550000000081
+      },
+      "after": {
+        "samples": 12,
+        "warmMedianMs": 10.17556599999989,
+        "warmMaxMs": 20.137860000000046
+      }
+    },
+    "textBounds": [
+      {
+        "text": "PLUTO",
+        "x": 91,
+        "y": 33,
+        "width": 93.578125,
+        "height": 24
+      },
+      {
+        "text": "PLAYER PROFILE",
+        "x": 809.34375,
+        "y": 38,
+        "width": 142.65625,
+        "height": 16
+      },
+      {
+        "text": "NewPlayer",
+        "x": 48,
+        "y": 89,
+        "width": 288.5546875,
+        "height": 60
+      },
+      {
+        "text": "BRONZE / LEVEL 0",
+        "x": 96,
+        "y": 165,
+        "width": 172.78125,
+        "height": 20
+      },
+      {
+        "text": "RECORD",
+        "x": 48,
+        "y": 265,
+        "width": 65.890625,
+        "height": 16
+      },
+      {
+        "text": "0–0–0",
+        "x": 48,
+        "y": 293,
+        "width": 96.328125,
+        "height": 38
+      },
+      {
+        "text": "Wins / losses / pushes",
+        "x": 48,
+        "y": 339,
+        "width": 142.865234375,
+        "height": 15
+      },
+      {
+        "text": "NET PROFIT",
+        "x": 304,
+        "y": 265,
+        "width": 92.25,
+        "height": 16
+      },
+      {
+        "text": "$0.00",
+        "x": 304,
+        "y": 293,
+        "width": 96.328125,
+        "height": 38
+      },
+      {
+        "text": "Settled head-to-head bets",
+        "x": 304,
+        "y": 339,
+        "width": 170.5029296875,
+        "height": 15
+      },
+      {
+        "text": "BEST WIN",
+        "x": 556,
+        "y": 265,
+        "width": 76.796875,
+        "height": 16
+      },
+      {
+        "text": "—",
+        "x": 556,
+        "y": 293,
+        "width": 20,
+        "height": 38
+      },
+      {
+        "text": "Highest payout",
+        "x": 556,
+        "y": 339,
+        "width": 99.09375,
+        "height": 15
+      },
+      {
+        "text": "HIT RATE",
+        "x": 800,
+        "y": 265,
+        "width": 70.71875,
+        "height": 16
+      },
+      {
+        "text": "—",
+        "x": 800,
+        "y": 293,
+        "width": 20,
+        "height": 38
+      },
+      {
+        "text": "Predictions",
+        "x": 800,
+        "y": 339,
+        "width": 71.5810546875,
+        "height": 15
+      },
+      {
+        "text": "THE HONOURS",
+        "x": 48,
+        "y": 409,
+        "width": 153.625,
+        "height": 19
+      },
+      {
+        "text": "0 EARNED",
+        "x": 872.390625,
+        "y": 411,
+        "width": 79.609375,
+        "height": 16
+      },
+      {
+        "text": "A fresh scorecard.",
+        "x": 279,
+        "y": 510,
+        "width": 316.953125,
+        "height": 40
+      },
+      {
+        "text": "Your earned achievements will appear here.",
+        "x": 279,
+        "y": 563,
+        "width": 441.140625,
+        "height": 24
+      },
+      {
+        "text": "Every honour records a settled result.",
+        "x": 280,
+        "y": 603,
+        "width": 340.03125,
+        "height": 21
+      },
+      {
+        "text": "PLUTO / THE RECORD SPEAKS",
+        "x": 48,
+        "y": 765,
+        "width": 204.578125,
+        "height": 14
+      },
+      {
+        "text": "Achievements are cosmetic",
+        "x": 772.1875,
+        "y": 764,
+        "width": 179.8125,
+        "height": 15
+      }
+    ],
+    "textOutsideCanvas": []
+  },
+  "unavailable": {
+    "before": {
+      "bytes": 27022,
+      "width": 800,
+      "height": 420
+    },
+    "after": {
+      "bytes": 64923,
+      "width": 1000,
+      "height": 800
+    },
+    "timings": {
+      "before": {
+        "samples": 12,
+        "warmMedianMs": 5.173292000000174,
+        "warmMaxMs": 5.5790230000000065
+      },
+      "after": {
+        "samples": 12,
+        "warmMedianMs": 9.45597100000009,
+        "warmMaxMs": 10.564535999999862
+      }
+    },
+    "textBounds": [
+      {
+        "text": "PLUTO",
+        "x": 91,
+        "y": 33,
+        "width": 93.578125,
+        "height": 24
+      },
+      {
+        "text": "PLAYER PROFILE",
+        "x": 809.34375,
+        "y": 38,
+        "width": 142.65625,
+        "height": 16
+      },
+      {
+        "text": "FenixPlays",
+        "x": 48,
+        "y": 89,
+        "width": 282.140625,
+        "height": 60
+      },
+      {
+        "text": "GOLD / LEVEL 38",
+        "x": 96,
+        "y": 165,
+        "width": 159.75,
+        "height": 20
+      },
+      {
+        "text": "RECORD",
+        "x": 48,
+        "y": 265,
+        "width": 65.890625,
+        "height": 16
+      },
+      {
+        "text": "—",
+        "x": 48,
+        "y": 293,
+        "width": 20,
+        "height": 38
+      },
+      {
+        "text": "Wins / losses / pushes",
+        "x": 48,
+        "y": 339,
+        "width": 142.865234375,
+        "height": 15
+      },
+      {
+        "text": "NET PROFIT",
+        "x": 304,
+        "y": 265,
+        "width": 92.25,
+        "height": 16
+      },
+      {
+        "text": "—",
+        "x": 304,
+        "y": 293,
+        "width": 20,
+        "height": 38
+      },
+      {
+        "text": "Settled head-to-head bets",
+        "x": 304,
+        "y": 339,
+        "width": 170.5029296875,
+        "height": 15
+      },
+      {
+        "text": "BEST WIN",
+        "x": 556,
+        "y": 265,
+        "width": 76.796875,
+        "height": 16
+      },
+      {
+        "text": "—",
+        "x": 556,
+        "y": 293,
+        "width": 20,
+        "height": 38
+      },
+      {
+        "text": "Highest payout",
+        "x": 556,
+        "y": 339,
+        "width": 99.09375,
+        "height": 15
+      },
+      {
+        "text": "HIT RATE",
+        "x": 800,
+        "y": 265,
+        "width": 70.71875,
+        "height": 16
+      },
+      {
+        "text": "—",
+        "x": 800,
+        "y": 293,
+        "width": 20,
+        "height": 38
+      },
+      {
+        "text": "Predictions",
+        "x": 800,
+        "y": 339,
+        "width": 71.5810546875,
+        "height": 15
+      },
+      {
+        "text": "THE HONOURS",
+        "x": 48,
+        "y": 409,
+        "width": 153.625,
+        "height": 19
+      },
+      {
+        "text": "DATA UNAVAILABLE",
+        "x": 799.734375,
+        "y": 411,
+        "width": 152.265625,
+        "height": 16
+      },
+      {
+        "text": "The honours are unavailable.",
+        "x": 280,
+        "y": 510,
+        "width": 503.234375,
+        "height": 40
+      },
+      {
+        "text": "Achievement data could not be loaded.",
+        "x": 280,
+        "y": 563,
+        "width": 394.171875,
+        "height": 24
+      },
+      {
+        "text": "Try /profile again in a moment.",
+        "x": 279,
+        "y": 603,
+        "width": 277.609375,
+        "height": 21
+      },
+      {
+        "text": "PLUTO / THE RECORD SPEAKS",
+        "x": 48,
+        "y": 765,
+        "width": 204.578125,
+        "height": 14
+      },
+      {
+        "text": "Achievements are cosmetic",
+        "x": 772.1875,
+        "y": 764,
+        "width": 179.8125,
+        "height": 15
+      }
+    ],
+    "textOutsideCanvas": []
+  },
+  "stress": {
+    "before": {
+      "bytes": 41193,
+      "width": 800,
+      "height": 420
+    },
+    "after": {
+      "bytes": 93618,
+      "width": 1000,
+      "height": 800
+    },
+    "timings": {
+      "before": {
+        "samples": 12,
+        "warmMedianMs": 8.119860000000017,
+        "warmMaxMs": 9.957247000000052
+      },
+      "after": {
+        "samples": 12,
+        "warmMedianMs": 15.050277000000051,
+        "warmMaxMs": 19.565679000000046
+      }
+    },
+    "textBounds": [
+      {
+        "text": "PLUTO",
+        "x": 91,
+        "y": 33,
+        "width": 93.578125,
+        "height": 24
+      },
+      {
+        "text": "PLAYER PROFILE",
+        "x": 809.34375,
+        "y": 38,
+        "width": 142.65625,
+        "height": 16
+      },
+      {
+        "text": "A Very Long Display…",
+        "x": 47,
+        "y": 89,
+        "width": 585.859375,
+        "height": 60
+      },
+      {
+        "text": "DIAMOND / LEVEL 100",
+        "x": 96,
+        "y": 165,
+        "width": 209.03125,
+        "height": 20
+      },
+      {
+        "text": "RECORD",
+        "x": 48,
+        "y": 265,
+        "width": 65.890625,
+        "height": 16
+      },
+      {
+        "text": "540–430–29",
+        "x": 48,
+        "y": 293,
+        "width": 192.65625,
+        "height": 38
+      },
+      {
+        "text": "Wins / losses / pushes",
+        "x": 48,
+        "y": 339,
+        "width": 142.865234375,
+        "height": 15
+      },
+      {
+        "text": "NET PROFIT",
+        "x": 304,
+        "y": 265,
+        "width": 92.25,
+        "height": 16
+      },
+      {
+        "text": "−$123,456.78",
+        "x": 304,
+        "y": 299,
+        "width": 187.84375,
+        "height": 30
+      },
+      {
+        "text": "Settled head-to-head bets",
+        "x": 304,
+        "y": 339,
+        "width": 170.5029296875,
+        "height": 15
+      },
+      {
+        "text": "BEST WIN",
+        "x": 556,
+        "y": 265,
+        "width": 76.796875,
+        "height": 16
+      },
+      {
+        "text": "$98,765.43",
+        "x": 556,
+        "y": 296,
+        "width": 174.609375,
+        "height": 34
+      },
+      {
+        "text": "Highest payout",
+        "x": 556,
+        "y": 339,
+        "width": 99.09375,
+        "height": 15
+      },
+      {
+        "text": "HIT RATE",
+        "x": 800,
+        "y": 265,
+        "width": 70.71875,
+        "height": 16
+      },
+      {
+        "text": "51%",
+        "x": 800,
+        "y": 293,
+        "width": 58.53125,
+        "height": 38
+      },
+      {
+        "text": "Predictions",
+        "x": 800,
+        "y": 339,
+        "width": 71.5810546875,
+        "height": 15
+      },
+      {
+        "text": "THE HONOURS",
+        "x": 48,
+        "y": 409,
+        "width": 153.625,
+        "height": 19
+      },
+      {
+        "text": "12 EARNED / LATEST 5",
+        "x": 773.0625,
+        "y": 411,
+        "width": 178.9375,
+        "height": 16
+      },
+      {
+        "text": "LATEST",
+        "x": 318.21875,
+        "y": 473,
+        "width": 59.78125,
+        "height": 15
+      },
+      {
+        "text": "An Extremely L…",
+        "x": 71,
+        "y": 648,
+        "width": 248.984375,
+        "height": 33
+      },
+      {
+        "text": "Earned achievement",
+        "x": 72,
+        "y": 689,
+        "width": 165.625,
+        "height": 19
+      },
+      {
+        "text": "",
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0
+      },
+      {
+        "text": "Club Fifty",
+        "x": 521,
+        "y": 455,
+        "width": 121.34375,
+        "height": 28
+      },
+      {
+        "text": "50 head-to-head wins",
+        "x": 521,
+        "y": 487,
+        "width": 174.34375,
+        "height": 19
+      },
+      {
+        "text": "Courtside",
+        "x": 521,
+        "y": 527,
+        "width": 118.953125,
+        "height": 28
+      },
+      {
+        "text": "10 correct NBA predictions",
+        "x": 521,
+        "y": 559,
+        "width": 214.140625,
+        "height": 19
+      },
+      {
+        "text": "Player’s Edge",
+        "x": 521,
+        "y": 599,
+        "width": 167.390625,
+        "height": 28
+      },
+      {
+        "text": "10 correct player props",
+        "x": 521,
+        "y": 631,
+        "width": 186.609375,
+        "height": 19
+      },
+      {
+        "text": "Unknown Award",
+        "x": 521,
+        "y": 671,
+        "width": 201.703125,
+        "height": 28
+      },
+      {
+        "text": "Earned achievement",
+        "x": 521,
+        "y": 703,
+        "width": 165.625,
+        "height": 19
+      },
+      {
+        "text": "PLUTO / THE RECORD SPEAKS",
+        "x": 48,
+        "y": 765,
+        "width": 204.578125,
+        "height": 14
+      },
+      {
+        "text": "Achievements are cosmetic",
+        "x": 772.1875,
+        "y": 764,
+        "width": 179.8125,
+        "height": 15
+      }
+    ],
+    "textOutsideCanvas": []
+  }
+}

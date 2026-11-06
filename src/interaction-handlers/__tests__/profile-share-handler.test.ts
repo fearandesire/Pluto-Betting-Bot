@@ -32,7 +32,11 @@ const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 1, 2, 3])
 let messageSeq = 0
 
 function makeInteraction(
-	opts: { userId?: string; attachmentUrl?: string | null } = {},
+	opts: {
+		userId?: string
+		attachmentUrl?: string | null
+		description?: string
+	} = {},
 ) {
 	messageSeq += 1
 	const url = opts.attachmentUrl === undefined ? CDN_URL : opts.attachmentUrl
@@ -41,7 +45,10 @@ function makeInteraction(
 		user: { id: opts.userId ?? OWNER },
 		message: {
 			id: `message-${messageSeq}`,
-			attachments: { first: () => (url ? { url } : undefined) },
+			attachments: {
+				first: () =>
+					url ? { url, description: opts.description } : undefined,
+			},
 		},
 		reply: vi.fn(),
 		deferUpdate: vi.fn(),
@@ -155,6 +162,25 @@ describe('ProfileShareHandler', () => {
 			/Couldn't share/,
 		)
 		expect(interaction.editReply).not.toHaveBeenCalled()
+	})
+
+	it('preserves the image text equivalent when sharing and updating the original card', async () => {
+		const description =
+			'Player profile. Opening Score (First head-to-head win).'
+		const interaction = makeInteraction({ description })
+		await makeHandler().run(interaction as never, {
+			ownerId: OWNER,
+			targetId: TARGET,
+		})
+		for (const call of [interaction.followUp, interaction.editReply]) {
+			const payload = call.mock.calls[0][0]
+			expect(payload.files[0].description).toBe(description)
+			const gallery = toJsonComponents(payload)[0]
+				.components?.[0] as unknown as {
+				items: Array<{ description: string }>
+			}
+			expect(gallery.items[0].description).toBe(description)
+		}
 	})
 
 	it('releases the claim when sharing fails so the user can retry', async () => {

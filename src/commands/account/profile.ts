@@ -10,7 +10,10 @@ import { handleNewUser } from '../../utils/api/common/handleNewUser.js'
 import AchievementsWrapper from '../../utils/api/Khronos/achievements/achievements-wrapper.js'
 import { AccountsWrapper } from '../../utils/api/requests/accounts/AccountManager.js'
 import { loadProfileCardData } from '../../utils/profile-card/load-profile-card-data.js'
-import { renderProfileCard } from '../../utils/profile-card/profile-card.js'
+import {
+	describeProfileCard,
+	renderProfileCard,
+} from '../../utils/profile-card/profile-card.js'
 
 @ApplyOptions<Command.Options>({
 	description: '🪪 View a profile card with stats and badges',
@@ -87,6 +90,7 @@ export class UserCommand extends Command {
 			return await interaction.editReply(
 				profileCardPayload({
 					png,
+					description: describeProfileCard(data),
 					route: {
 						ownerId: interaction.user.id,
 						targetId: target.id,

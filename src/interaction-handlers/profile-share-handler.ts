@@ -84,11 +84,13 @@ export class ProfileShareHandler extends InteractionHandler {
 		claimed.set(messageId, now)
 
 		let png: Buffer
+		const description =
+			interaction.message.attachments.first()?.description ?? undefined
 		try {
 			await interaction.deferUpdate()
 			png = await fetchCardPng(interaction)
 			await interaction.followUp(
-				profileSharedPayload(png, interaction.user.id),
+				profileSharedPayload(png, interaction.user.id, description),
 			)
 		} catch (error) {
 			claimed.delete(messageId)
@@ -109,7 +111,12 @@ export class ProfileShareHandler extends InteractionHandler {
 		// Already public. A failed button update must not trigger a second post.
 		try {
 			await interaction.editReply({
-				...profileCardPayload({ png, route, shared: true }),
+				...profileCardPayload({
+					png,
+					route,
+					shared: true,
+					description,
+				}),
 				flags: v2EditFlags(),
 			})
 		} catch (error) {
