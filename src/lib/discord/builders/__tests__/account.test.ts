@@ -5,6 +5,10 @@ import {
 	h2hStatsEmbed,
 	leaderboardPageEmbed,
 	profileDescription,
+	propMarketLabel,
+	propNoStatsEmbed,
+	propStatsEmbed,
+	propStatsErrorEmbed,
 	successEmbed,
 	welcomeEmbed,
 } from '../account.js'
@@ -144,5 +148,95 @@ describe('account builders (classic, pre-migration)', () => {
 			color: 0x5865f2,
 			timestamp: NOW.toISOString(),
 		})
+	})
+})
+
+describe('prop stats builders', () => {
+	const market = (key: string, over = {}) => ({
+		market_key: key,
+		total_settled: 10,
+		correct: 6,
+		incorrect: 3,
+		pushes: 1,
+		voids: 0,
+		pending: 0,
+		hit_rate: 66.67,
+		avg_offered_line: 24.5,
+		...over,
+	})
+	const stats = (over = {}) => ({
+		user_id: 'u1',
+		sport: null,
+		total_settled: 10,
+		correct: 6,
+		incorrect: 3,
+		pushes: 1,
+		voids: 0,
+		pending: 2,
+		hit_rate: 66.67,
+		markets: [market('player_points')],
+		...over,
+	})
+
+	it('maps market labels', () => {
+		expect(propMarketLabel('player_points')).toBe('Points')
+		expect(propMarketLabel('player_rebounds')).toBe('Rebounds')
+		expect(propMarketLabel('player_assists')).toBe('Assists')
+		expect(propMarketLabel('player_pass_yds')).toBe('Pass Yds')
+		expect(propMarketLabel('receptions')).toBe('Receptions')
+	})
+
+	it('renders overall record and market lines', () => {
+		const embed = propStatsEmbed('Tester', stats({ sport: 'nba' }), 'foot')
+		expect(embed.title).toBe("🎯 Tester's Prop Stats (NBA)")
+		expect(embed.fields[0]?.value).toBe(
+			'Record: **6-3-1**\nHit Rate: **66.7%**\nSettled: **10**\nPending: **2**',
+		)
+		expect(embed.fields[1]?.value).toBe(
+			'**Points** · 6-3-1 · 66.7% · avg line 24.5',
+		)
+	})
+
+	it('omits pushes, pending and avg line when absent, and shows n/a for null hit rate', () => {
+		const embed = propStatsEmbed(
+			'Tester',
+			stats({
+				pending: 0,
+				pushes: 0,
+				hit_rate: null,
+				markets: [
+					market('player_assists', {
+						pushes: 0,
+						hit_rate: null,
+						avg_offered_line: null,
+					}),
+				],
+			}),
+			'foot',
+		)
+		expect(embed.fields[0]?.value).toContain('Hit Rate: **n/a**')
+		expect(embed.fields[0]?.value).not.toContain('Pending')
+		expect(embed.fields[1]?.value).toBe('**Assists** · 6-3 · n/a')
+	})
+
+	it('truncates to the top 8 markets', () => {
+		const markets = Array.from({ length: 10 }, (_, i) =>
+			market(`player_m${i}`),
+		)
+		const value = propStatsEmbed('Tester', stats({ markets }), 'foot')
+			.fields[1]?.value
+		expect(value?.split('\n')).toHaveLength(9)
+		expect(value).toContain('M7')
+		expect(value).not.toContain('M8')
+		expect(value).toContain('+2 more')
+	})
+
+	it('has empty and error states', () => {
+		expect(propNoStatsEmbed('foot').title).toBe(
+			'❌ No Prop Stats Available',
+		)
+		expect(propStatsErrorEmbed('foot').title).toBe(
+			'⚠️ Prop Stats Unavailable',
+		)
 	})
 })

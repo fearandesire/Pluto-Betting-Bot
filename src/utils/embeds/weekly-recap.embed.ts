@@ -1,6 +1,9 @@
 import { EmbedBuilder } from 'discord.js'
 import embedColors from '../../lib/colorsConfig.js'
-import type { WeeklyRecapResponse } from '../api/Khronos/recap/recap-wrapper.js'
+import type {
+	RecapSport,
+	WeeklyRecapResponse,
+} from '../api/Khronos/recap/recap-wrapper.js'
 
 const MAX_PREDICTORS = 5
 const MAX_DISPLAY_NAME_LENGTH = 32
@@ -26,11 +29,16 @@ function formatDelta(delta: number): string {
 	return `${delta > 0 ? '+' : ''}${delta.toFixed(1)} pp`
 }
 
-function formatDateRange(data: WeeklyRecapEmbedData): string {
+function formatDateRange(
+	data: WeeklyRecapEmbedData,
+	sport: RecapSport,
+): string {
 	const start = new Date(data.window.start_date)
 	const end = new Date(data.window.end_date)
 	if (Number.isNaN(start.valueOf()) || Number.isNaN(end.valueOf())) {
-		return 'Sleeper-aligned weekly window'
+		return sport === 'nfl'
+			? 'Sleeper-aligned weekly window'
+			: 'Weekly window'
 	}
 
 	return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })} – ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })}`
@@ -80,17 +88,19 @@ function buildWinLines(data: WeeklyRecapEmbedData): string {
  */
 export function buildWeeklyRecapEmbeds(
 	data: WeeklyRecapEmbedData,
+	sport: RecapSport = 'nfl',
 ): EmbedBuilder[] {
+	const sportPrefix = sport === 'nfl' ? '' : `${sport.toUpperCase()} `
 	const weekLabel = data.window.week_number
 		? `Week ${data.window.week_number}`
 		: 'Weekly Recap'
 	const accuracy = Number.isFinite(data.accuracy) ? data.accuracy : 0
 
 	const embed = new EmbedBuilder()
-		.setTitle(`📊 ${weekLabel} Recap`)
+		.setTitle(`📊 ${sportPrefix}${weekLabel} Recap`)
 		.setColor(embedColors.PlutoBlue)
 		.setDescription(
-			`Sleeper-aligned window: **${formatDateRange(data)}**${data.window.season_year ? ` · Season ${data.window.season_year}` : ''}`,
+			`${sport === 'nfl' ? 'Sleeper-aligned window' : 'Weekly window'}: **${formatDateRange(data, sport)}**${data.window.season_year ? ` · Season ${data.window.season_year}` : ''}`,
 		)
 		.addFields(
 			{

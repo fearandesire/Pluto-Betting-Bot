@@ -89,14 +89,13 @@ describe('V2PaginationHandler', () => {
 		expect(i.reply).not.toHaveBeenCalled()
 	})
 
-	it.each([
-		'prop_abc',
-		'matchup_btn_confirm',
-		'pg.v2.h-owned.1.next',
-	])('parse returns none for %s', (customId) => {
-		const i = makeInteraction({ customId })
-		expect(handler.parse(i as never)).toEqual({ kind: 'none' })
-	})
+	it.each(['prop_abc', 'matchup_btn_confirm', 'pg.v2.h-owned.1.next'])(
+		'parse returns none for %s',
+		(customId) => {
+			const i = makeInteraction({ customId })
+			expect(handler.parse(i as never)).toEqual({ kind: 'none' })
+		},
+	)
 
 	it('rejects a non-owner with an ephemeral V2 notice and does not load', async () => {
 		const i = makeInteraction({
