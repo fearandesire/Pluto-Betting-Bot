@@ -11,12 +11,17 @@ const DEFAULT_TIMEOUT_MS = 30_000
  * published. The runtime constructor is resolved from that generated client
  * so this module does not introduce a hand-written HTTP implementation.
  */
+export type RecapSport = 'nfl' | 'nba'
+export type WinnersPeriod = 'weekly' | 'monthly' | 'season'
+
 export interface WeeklyRecapResponse {
 	window: {
 		start_date: string
 		end_date: string
 		week_number?: number
 		season_year?: number
+		/** Echoed by Khronos when a sport was requested. */
+		sport?: RecapSport
 	}
 	total_predictions: number
 	correct_predictions: number
@@ -47,17 +52,56 @@ export interface WeeklyRecapResponse {
 export interface WeeklyRecapRequest {
 	guildId: string
 	weekOffset?: number
+	sport?: RecapSport
+}
+
+export interface PeriodWinner {
+	user_id: string
+	rank: number
+	net_profit: number
+	roi: number | null
+	settled_bets: number
+	total_staked: number
+}
+
+/** `winners` is empty when nobody profited; `leaderboard` holds the top 5. */
+export interface PeriodWinnersResponse {
+	sport: RecapSport
+	period: WinnersPeriod
+	window: {
+		start_date: string
+		end_date: string
+		label: string
+	}
+	participants: number
+	unresolved_events: number
+	winners: PeriodWinner[]
+	leaderboard: PeriodWinner[]
+}
+
+export interface PeriodWinnersRequest {
+	guildId: string
+	sport: RecapSport
+	period: WinnersPeriod
+	periodOffset?: number
 }
 
 export interface RecapApiClient {
 	getWeeklyRecap(
 		guildId: string,
 		weekOffset?: number,
+		sport?: RecapSport,
 	): Promise<WeeklyRecapResponse>
+	getPeriodWinners?(
+		request: PeriodWinnersRequest,
+	): Promise<PeriodWinnersResponse>
 }
 
 interface GeneratedRecapApiClient {
 	getWeeklyRecap(request: WeeklyRecapRequest): Promise<WeeklyRecapResponse>
+	getPeriodWinners?(
+		request: PeriodWinnersRequest,
+	): Promise<PeriodWinnersResponse>
 }
 
 type RecapApiConstructor = new (
@@ -81,7 +125,9 @@ export default class RecapWrapper implements RecapApiClient {
 					recapApi.getWeeklyRecap(
 						request.guildId,
 						request.weekOffset,
+						request.sport,
 					),
+				getPeriodWinners: recapApi.getPeriodWinners?.bind(recapApi),
 			}
 			return
 		}
@@ -98,10 +144,48 @@ export default class RecapWrapper implements RecapApiClient {
 	async getWeeklyRecap(
 		guildId: string,
 		weekOffset = -1,
+		sport?: RecapSport,
 	): Promise<WeeklyRecapResponse> {
-		return await pTimeout(
-			this.recapApi.getWeeklyRecap({ guildId, weekOffset }),
+		const recap = await pTimeout(
+			this.recapApi.getWeeklyRecap(
+				sport
+					? { guildId, weekOffset, sport }
+					: { guildId, weekOffset },
+			),
 			{ milliseconds: DEFAULT_TIMEOUT_MS },
 		)
+		// A generated client that predates the sport param drops it silently and
+		// answers with the default sport. Fail closed instead of mislabelling.
+		if (sport && recap.window.sport !== sport) {
+			throw new Error(
+				`Khronos recap returned sport ${recap.window.sport ?? 'unknown'} for requested sport ${sport}; update @pluto-khronos/api-client`,
+			)
+		}
+		return recap
+	}
+
+	async getPeriodWinners(
+		request: PeriodWinnersRequest,
+	): Promise<PeriodWinnersResponse> {
+		if (!this.recapApi.getPeriodWinners) {
+			throw new Error(
+				'Khronos RecapApi.getPeriodWinners is unavailable; update @pluto-khronos/api-client to the release with period winners before enabling PERIOD_WINNERS_ENABLED',
+			)
+		}
+		const winners = await pTimeout(
+			this.recapApi.getPeriodWinners(request),
+			{
+				milliseconds: DEFAULT_TIMEOUT_MS,
+			},
+		)
+		if (
+			winners.sport !== request.sport ||
+			winners.period !== request.period
+		) {
+			throw new Error(
+				`Khronos period winners returned ${winners.sport}/${winners.period} for requested ${request.sport}/${request.period}`,
+			)
+		}
+		return winners
 	}
 }

@@ -6,17 +6,17 @@ on:
   workflow_run:
     workflows:
       [
-        "CodeQL",
-        "Dependabot Updates",
         "Dependabot auto-merge",
-        "Release",
+        "Auto-merge release PRs",
         "CI/CD Pipeline",
-        "Copilot cloud agent",
-        "Copilot code review",
         "Khronos client update",
         "PR Title",
-        "Auto-merge release PRs",
         "Pullfrog",
+        "Release",
+        "Copilot code review",
+        "Copilot cloud agent",
+        "Dependabot Updates",
+        "CodeQL",
       ]
     types: [completed]
 
@@ -27,5 +27,5 @@ jobs:
       pull-requests: write
       checks: read
       statuses: read
-    uses: fearandesire/ci-shared/.github/workflows/ready-when-green.yml@v1
+    uses: fearandesire/ci-shared/.github/workflows/ready-when-green.yml@v2
     secrets: inherit
