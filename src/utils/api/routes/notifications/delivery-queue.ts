@@ -1,7 +1,10 @@
 import { type Job, Queue, Worker } from 'bullmq'
 import { registerShutdownQueue } from '../../../../lib/startup/shutdown-registry.js'
 import { bullmqTelemetry } from '../../../../lib/telemetry/bullmq-telemetry.js'
-import { withJobRequestId } from '../../../../lib/telemetry/request-context.js'
+import {
+	withJobEventRequestId,
+	withJobRequestId,
+} from '../../../../lib/telemetry/request-context.js'
 import {
 	type AlertReporter,
 	getDefaultAlertReporter,
@@ -336,9 +339,12 @@ export class NotificationDeliveryQueue {
 					},
 				},
 			)
-			this.worker.on('failed', (job, error) => {
-				void this.handleJobFailed(job, error).catch(() => undefined)
-			})
+			this.worker.on(
+				'failed',
+				withJobEventRequestId((job, error) => {
+					void this.handleJobFailed(job, error).catch(() => undefined)
+				}),
+			)
 			this.unregisterShutdownQueue = registerShutdownQueue(
 				NOTIFICATION_DELIVERY_QUEUE,
 				this,
