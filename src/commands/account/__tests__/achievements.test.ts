@@ -155,7 +155,7 @@ describe('/achievements', () => {
 			'## Achievements: t\n-# 1 of 2 badges earned',
 		)
 		expect(texts(payload)[1]).toContain('**Opening Score**')
-		expect(texts(payload)[2]).toContain('H2H wins 4/10')
+		expect(texts(payload)[2]).toContain('Head-to-head wins 4/10')
 	})
 
 	it('refuses bots', async () => {

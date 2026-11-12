@@ -87,10 +87,10 @@ function legacyGates(
 ): GateView[] {
 	if (entry.key === 'in_the_black') {
 		return [
-			count('Settled H2H bets', summary.settled_bets, 10),
+			count('Settled head-to-head bets', summary.settled_bets, 10),
 			formatGate({
 				metric: 'net_profit',
-				label: 'Net H2H profit',
+				label: 'Net head-to-head profit',
 				unit: 'currency',
 				comparator: 'gt',
 				target: 0,
