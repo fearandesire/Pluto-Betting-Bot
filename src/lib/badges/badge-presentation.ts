@@ -71,7 +71,7 @@ export const BADGE_PRESENTATION: Readonly<Record<string, BadgePresentation>> = {
 	due_a_win: {
 		label: 'Due a Win',
 		criteria:
-			'Have 5 bets, predictions or parlays settle. Wins and losses both count.',
+			'Have 5 bets, predictions or parlays settle. Any result counts, even a push.',
 		kind: 'career',
 		emojiName: 'p_due_a_win',
 		progressLabel: 'Settled picks',
