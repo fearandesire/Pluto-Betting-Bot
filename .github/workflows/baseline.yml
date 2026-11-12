@@ -1,0 +1,251 @@
+# fearandesire/Pluto-Betting-Bot: .github/workflows/baseline.yml (kit-managed; do not edit here; change the kit or the repo override)
+# Pilot form: pr-context and pr-media. The baseline gate job joins this file in phase 2.
+name: baseline
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited, labeled, unlabeled]   # edited: pr-context acts on title edits only (its `if`); pr-media re-checks body edits
+  push:
+    branches: [main]            # sync.mjs renders the repo override sync.target_branch here
+    paths: [".github/**", "AGENTS.md", "CLAUDE.md", "REVIEW.md"]
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: baseline-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+jobs:
+  # Service buttons for THIS PR only (docs/baseline.md#service-buttons). No checkout: the rules and script are rendered
+  # into this file by the sync, and the PR's changed files come from the API. Writes only between the kit:services markers.
+  # Its own body edit (GITHUB_TOKEN) does not trigger another run.
+  pr-context:
+    # Body-only edits skip without a runner (no minutes); a title edit can add or remove a Linear key.
+    if: >-
+      github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository &&
+      (github.event.action != 'edited' || github.event.changes.title != null)
+    runs-on: ubicloud-standard-2-ubuntu-2404
+    timeout-minutes: 2
+    permissions:
+      pull-requests: write      # read files + labels, update the body; nothing else
+    concurrency:
+      group: kit-pr-context-${{ github.event.pull_request.number }}
+      cancel-in-progress: true  # pull_request only (see `if`)
+    steps:
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          KIT_SERVICES: '{"assetsBase":"https://raw.githubusercontent.com/charyon/assets/9ff764a737890ced24f75f115ce049e3ba56a472","rules":[]}'
+        with:
+          script: |
+            // charyon/repository-kit: baseline/pr-context.mjs (draft)
+            // Writes service buttons into a PR description, only for services this PR touches, and only between
+            //   <!-- kit:services:start --> and <!-- kit:services:end -->.
+            // Everything outside the markers is never modified. Running twice gives the same body (no update call).
+            // No markers (author deleted them) = no-op. Pure functions first; run() is the only part that calls the API.
+            // The sync inlines this file (minus `export`) into actions/github-script in .github/workflows/baseline.yml.
+
+            const START = '<!-- kit:services:start -->'
+            const END = '<!-- kit:services:end -->'
+            const HTTPS = /^https:\/\/[^\s"<>]+$/
+
+            // Glob subset: ** (any depth, incl. none), * (within a segment), ? , {a,b} (not nested). Matched against the full repo path.
+            // An unterminated or nested { throws, so resolveRules() stops the sync before a broken rule reaches a consumer.
+            function globToRegExp(glob) {
+              let re = ''
+              for (let i = 0; i < glob.length; i++) {
+                const c = glob[i]
+                if (c === '*' && glob[i + 1] === '*') {
+                  i++
+                  if (glob[i + 1] === '/') { i++; re += '(?:.*/)?' } else re += '.*'
+                } else if (c === '*') re += '[^/]*'
+                else if (c === '?') re += '[^/]'
+                else if (c === '{') {
+                  const j = glob.indexOf('}', i)
+                  if (j === -1) throw new Error(`glob "${glob}": unterminated {`)
+                  if (glob.slice(i + 1, j).includes('{')) throw new Error(`glob "${glob}": nested { is not supported`)
+                  re += '(?:' + glob.slice(i + 1, j).split(',').map((s) => s.replace(/[.+^$()|[\]\\]/g, '\\$&')).join('|') + ')'; i = j }
+                else re += c.replace(/[.+^$()|[\]\\]/g, '\\$&')
+              }
+              return new RegExp('^' + re + '$')
+            }
+
+            // catalog: parsed services.yml; override: repo-override `services:` array (the allowlist).
+            function resolveRules(catalog, override = []) {
+              const seen = new Set()
+              return override.map((o) => {
+                const base = catalog.services?.[o.id]
+                if (!base) throw new Error(`unknown service "${o.id}"`)
+                if (seen.has(o.id)) throw new Error(`service "${o.id}" listed twice`)
+                seen.add(o.id)
+                const r = { id: o.id, title: base.title, label: base.label,
+                  href: o.href ?? base.href, paths: o.paths ?? base.paths ?? [], labels: o.labels ?? base.labels ?? [], refs: o.refs ?? base.refs ?? null }
+                if (!r.href) throw new Error(`service "${o.id}" needs href in the repo override`)
+                if (o.id === 'linear' && !r.refs) throw new Error('service "linear" needs refs in the repo override')
+                for (const g of r.paths) { try { globToRegExp(g) } catch (err) { throw new Error(`service "${o.id}" paths: ${err.message}`) } }
+                if (r.refs) { try { new RegExp(`\\b(?:${r.refs})\\b`, 'i') } catch (err) { throw new Error(`service "${o.id}" refs is not a valid regular expression: ${err.message}`) } }
+                if (r.href.includes('{ref}') && !r.refs) throw new Error(`service "${o.id}" uses {ref} without refs`)
+                if (!r.paths.length && !r.labels.length && !r.refs) throw new Error(`service "${o.id}" has no trigger (paths, labels or refs)`)
+                return r
+              })
+            }
+
+            // pr: { repo, number, headSha, headRef, title, labels: [names], files: [{filename, previous_filename?}] }
+            function selectServices(rules, pr) {
+              const paths = pr.files.flatMap((f) => [f.filename, f.previous_filename].filter(Boolean))
+              const out = []
+              for (const r of rules) {
+                const why = []
+                const res = r.paths.map(globToRegExp)
+                const hit = paths.find((p) => res.some((re) => re.test(p)))
+                if (hit) why.push(`path ${hit}`)
+                const lab = r.labels.find((l) => pr.labels.includes(l))
+                if (lab) why.push(`label ${lab}`)
+                let ref = null
+                if (r.refs) {
+                  const re = new RegExp(`\\b(?:${r.refs})\\b`, 'i')
+                  const m = re.exec(pr.title ?? '') ?? re.exec(pr.headRef ?? '')
+                  if (m) { ref = m[0].toUpperCase(); why.push(`ref ${ref}`) }
+                }
+                if (!why.length) continue
+                if (r.href.includes('{ref}') && !ref) continue        // link needs a ref this PR does not have
+                const href = r.href.replaceAll('{repo}', pr.repo).replaceAll('{pr}', String(pr.number))
+                  .replaceAll('{head_sha}', pr.headSha ?? '').replaceAll('{head_ref}', encodeURIComponent(pr.headRef ?? '')).replaceAll('{ref}', ref ?? '')
+                if (!HTTPS.test(href)) throw new Error(`service "${r.id}" href is not https after substitution: ${href}`)
+                out.push({ ...r, href, why })
+              }
+              return out
+            }
+
+            const attr = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
+            function renderButtons(selected, assetsBase) {
+              return selected.map((s) =>
+                `<a href="${attr(s.href)}"><picture><source media="(prefers-color-scheme: dark)" srcset="${assetsBase}/buttons/${s.id}-dark.svg">` +
+                `<img src="${assetsBase}/buttons/${s.id}-light.svg" alt="${attr(`${s.label} (${s.title})`)}" height="20" align="absmiddle"></picture></a>`).join('&nbsp;')
+            }
+
+            // Replace only what sits between the markers. Keeps the body's line ending style.
+            function applyBlock(body, inner) {
+              if (typeof body !== 'string') return { changed: false, body, reason: 'empty body' }
+              const s = body.indexOf(START), e = body.indexOf(END)
+              if (s < 0 || e < 0) return { changed: false, body, reason: 'no kit:services markers (author removed them)' }
+              if (e < s || body.indexOf(START, s + 1) >= 0 || body.indexOf(END, e + 1) >= 0) return { changed: false, body, reason: 'markers out of order or repeated' }
+              const nl = body.includes('\r\n') ? '\r\n' : '\n'
+              const next = body.slice(0, s + START.length) + nl + (inner ? inner + nl : '') + body.slice(e)
+              return { changed: next !== body, body: next, reason: next !== body ? 'updated' : 'already current' }
+            }
+
+            // config: { assetsBase, rules } (rules already resolved by the sync and embedded in the workflow)
+            async function run({ github, context, core, config }) {
+              const { owner, repo } = context.repo
+              const number = context.payload.pull_request.number
+              const files = await github.paginate(github.rest.pulls.listFiles, { owner, repo, pull_number: number, per_page: 100 })
+              const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: number })   // fresh body, not the event copy
+              const selected = selectServices(config.rules, {
+                repo: `${owner}/${repo}`, number, headSha: pr.head.sha, headRef: pr.head.ref, title: pr.title,
+                labels: pr.labels.map((l) => l.name), files })
+              const result = applyBlock(pr.body, renderButtons(selected, config.assetsBase))
+              core.info(`services: ${selected.map((s) => `${s.id} (${s.why.join(', ')})`).join('; ') || 'none'}; body: ${result.reason}`)
+              if (!result.changed) return result
+              try {
+                await github.rest.pulls.update({ owner, repo, pull_number: number, body: result.body })
+              } catch (err) {
+                if (err.status === 403) { core.notice('kit:services: no write access to this PR (fork?); buttons not updated'); return { ...result, changed: false, reason: 'forbidden' } }
+                throw err
+              }
+              return result
+            }
+
+            return await run({ github, context, core, config: JSON.parse(process.env.KIT_SERVICES) })
+
+  # Media hosting (docs/pr-bodies.md#media): fails when an embed is not on R2 (older ImgBB images still pass).
+  # Reads the event's body, so it needs no token scope; it runs again on every body edit.
+  pr-media:
+    if: github.event_name == 'pull_request'
+    runs-on: ubicloud-standard-2-ubuntu-2404
+    timeout-minutes: 2
+    permissions: {}
+    concurrency:
+      group: kit-pr-media-${{ github.event.pull_request.number }}
+      cancel-in-progress: true  # pull_request only (see `if`)
+    steps:
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            // Media hosting for PR bodies (docs/pr-bodies.md#media). Images, videos and GIFs load from the R2 agent-media bucket.
+            // Private-repo links (blob/...?raw=true, raw.githubusercontent, user-attachments) show as empty squares in the
+            // GitHub mobile app, and other hosts drift. Pure functions plus run(); the sync inlines this file into baseline.yml.
+            const VIDEO_HOSTS = ['pub-d2ec45ebfe5f4142847cc16da3ae409b.r2.dev']
+            const IMAGE_HOSTS = [...VIDEO_HOSTS, 'i.ibb.co']   // i.ibb.co: older PR bodies still pass when edited; upload new images to R2
+            const DECOR_HOSTS = ['img.shields.io']   // badges, not evidence
+            const VIDEO = /\.(mp4|webm|mov|gif)$/i
+            const MEDIA = /\.(png|jpe?g|webp|avif|svg|mp4|webm|mov|gif)$/i
+            const ATTACHMENT = /\/user-attachments\/assets\/|user-images\.githubusercontent\.com|private-user-images/
+
+            // Prose and code that mention a URL are not embeds: drop comments, fenced and inline code, and the kit:services block.
+            function stripNonEmbeds(body) {
+              return String(body ?? '')
+                .replace(/<!-- kit:services:start -->[\s\S]*?<!-- kit:services:end -->/g, '')
+                .replace(/<!--[\s\S]*?-->/g, '')
+                .replace(/^[ \t]*(`{3,}|~{3,})[^\n]*\n[\s\S]*?^[ \t]*\1[ \t]*$/gm, '')
+                .replace(/`[^`\n]*`/g, '')
+            }
+
+            // Every embedded image or video, plus plain links that point at a media file.
+            function mediaUrls(body) {
+              const text = stripNonEmbeds(body)
+              const out = []
+              for (const m of text.matchAll(/<(img|video|source)\b[^>]*?\bsrc\s*=\s*["']?([^"'\s>]+)/gi)) out.push({ url: m[2], embed: true, video: m[1].toLowerCase() !== 'img' })
+              for (const m of text.matchAll(/!\[[^\]]*\]\(\s*<?([^)\s>]+)/g)) out.push({ url: m[1], embed: true })
+              const refs = new Map([...text.matchAll(/^[ \t]{0,3}\[([^\]]+)\]:[ \t]*<?([^\s>]+)/gm)].map((m) => [m[1].trim().toLowerCase(), m[2]]))
+              for (const m of text.matchAll(/!\[([^\]]*)\](?:\[([^\]]*)\])?(?![(:])/g)) {
+                const url = refs.get((m[2] || m[1]).trim().toLowerCase())   // full, collapsed ([]) and shortcut references
+                if (url) out.push({ url, embed: true })
+              }
+              for (const m of text.matchAll(/(?<!!)\[[^\]]*\]\(\s*<?([^)\s>]+)/g)) out.push({ url: m[1], embed: false })
+              for (const m of text.matchAll(/(?<![("'=<])\bhttps?:\/\/[^\s)<>"']+/g)) out.push({ url: m[0], embed: false })
+              const seen = new Set()
+              return out.filter(({ url, embed }) => (embed || MEDIA.test(pathOf(url)) || ATTACHMENT.test(url)) && !seen.has(url) && seen.add(url))
+            }
+
+            function pathOf(url) {
+              try { return new URL(url).pathname } catch { return url.split(/[?#]/)[0] }
+            }
+            function hostOf(url) {
+              try { return new URL(url).host.toLowerCase() } catch { return '' }
+            }
+
+            function checkMedia(body) {
+              const problems = []
+              for (const { url, video: tag } of mediaUrls(body)) {
+                const host = hostOf(url)
+                const video = tag || VIDEO.test(pathOf(url))
+                if (video ? VIDEO_HOSTS.includes(host) : [...IMAGE_HOSTS, ...DECOR_HOSTS].includes(host)) continue
+                problems.push({ url, want: 'R2 agent-media', why: reason(url, host) })
+              }
+              return problems
+            }
+
+            function reason(url, host) {
+              if (/\/blob\/[^?#]+\?raw=true/.test(url) || host === 'raw.githubusercontent.com') return 'a repo file link: empty in GitHub mobile for a private repo'
+              if (ATTACHMENT.test(url)) return 'a GitHub attachment: expires and needs a session'
+              if (!host) return 'a relative path: it does not load from a PR body'
+              return `hosted on ${host}`
+            }
+
+            function report(problems) {
+              if (!problems.length) return 'PR media: every embed is on an approved host.'
+              return [
+                `PR media: ${problems.length} embed(s) on the wrong host (repository-kit docs/pr-bodies.md#media).`,
+                ...problems.map((p) => `- ${p.url}\n  ${p.why}. Host it on ${p.want}.`),
+                `Put images, videos and GIFs in the R2 bucket agent-media and link https://${VIDEO_HOSTS[0]}/<key>.`,
+                'Edit the PR body; this check re-runs on the edit.',
+              ].join('\n')
+            }
+
+            async function run({ context, core }) {
+              const pr = context.payload.pull_request
+              if (pr.user?.type === 'Bot') { core.info('PR media: bot-authored PR, skipped'); return [] }
+              const problems = checkMedia(pr.body)
+              if (problems.length) core.setFailed(report(problems))
+              else core.info(report(problems))
+              return problems
+            }
+
+            return await run({ context, core })
