@@ -25,10 +25,10 @@ Before you open a pull request, run `pnpm typecheck`, `pnpm test:run` and `pnpm 
 
 Typecheck, tests, build and the Components V2 screen dumps need no `.env` file and no credentials. That covers most changes.
 
-To start the bot itself, you need your own Discord application and a Redis instance:
+To start the bot itself, you need your own Discord application. With `USE_MOCK_DATA=true` the bot uses an in-memory cache and skips Redis-backed startup services, so no Redis is needed:
 
 1. Copy `.env.example` to `.env`.
-2. Set `TOKEN` to your own test bot's token, and point `R_HOST`, `R_PORT` and `R_PASS` at your Redis.
+2. Set `TOKEN` to your own test bot's token. Leave the `R_*` placeholders as they are; set them to a real Redis only for a run with `USE_MOCK_DATA=false`.
 3. Keep `USE_MOCK_DATA=true` and set `MOCK_GUILD_BETTING_CHAN_ID` and `DEV_GUILD_GAMES_CATEGORY_ID` to a channel and a category in your own test server.
 4. Run `pnpm dev`.
 
