@@ -151,6 +151,7 @@ export class ProfileViewHandler extends InteractionHandler {
 					model: loaded.model,
 					route: { ownerId: action.ownerId },
 					expanded: action.kind === 'expand',
+					shared: claimed.has(interaction.message.id),
 					page: action.kind === 'expand' ? action.page : 0,
 				}),
 			),
