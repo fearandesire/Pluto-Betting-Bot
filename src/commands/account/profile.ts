@@ -17,7 +17,6 @@ import { renderProfileCard } from '../../utils/profile-card/profile-card.js'
 })
 export class UserCommand extends Command {
 	public override registerApplicationCommands(registry: Command.Registry) {
-		// Stays unregistered until Khronos ships the achievements API.
 		if (!env.PROFILE_ENABLED) return
 		registry.registerChatInputCommand((builder) =>
 			builder //
@@ -63,7 +62,7 @@ export class UserCommand extends Command {
 				interaction.guild?.members.cache.get(target.id)?.displayName ??
 				target.globalName ??
 				target.username
-			const data = await loadProfileCardData(
+			const loaded = await loadProfileCardData(
 				{
 					accounts: {
 						getProfile: async (id) => {
@@ -78,12 +77,12 @@ export class UserCommand extends Command {
 				target.id,
 				displayName,
 			)
-			if (!data) {
+			if (!loaded) {
 				return notice(
 					'Could not load that profile right now. Please try again.',
 				)
 			}
-			const png = await renderProfileCard(data)
+			const png = await renderProfileCard(loaded.card)
 			return await interaction.editReply(
 				profileCardPayload({
 					png,
@@ -91,6 +90,7 @@ export class UserCommand extends Command {
 						ownerId: interaction.user.id,
 						targetId: target.id,
 					},
+					badgeLine: loaded.badgeLine,
 				}),
 			)
 		} catch (error) {

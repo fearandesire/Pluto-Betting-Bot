@@ -44,6 +44,9 @@ vi.mock('../../../utils/api/requests/accounts/AccountManager.js', () => ({
 }))
 
 const { UserCommand } = await import('../profile.js')
+const { readProfileBadgeLine } = await import(
+	'../../../lib/discord/builders/profile.js'
+)
 const { expectV2Payload, toJsonComponents } = await import(
 	'../../../lib/discord/v2/__tests__/v2-assert.js'
 )
@@ -54,7 +57,12 @@ const TARGET = '222222222222222222'
 const dto = {
 	user_id: TARGET,
 	earned: [
-		{ key: 'a', name: 'First Win', description: '', awarded_at: 'x' },
+		{
+			key: 'first_win',
+			name: 'First Win',
+			description: '',
+			awarded_at: 'x',
+		},
 		{ key: 'b', name: 'Parlay Pioneer', description: '', awarded_at: 'x' },
 	],
 	locked: [],
@@ -169,7 +177,7 @@ describe('/profile', () => {
 		const payload = interaction.editReply.mock.calls[0][0]
 		expectV2Payload(payload, {
 			flags: MessageFlags.IsComponentsV2,
-			components: 4,
+			components: 6,
 		})
 		expect(payload.files).toHaveLength(1)
 		expect(payload.files[0].name).toBe('profile-card.png')
@@ -181,8 +189,12 @@ describe('/profile', () => {
 		)[0] as unknown as {
 			components: Array<{ custom_id: string; disabled?: boolean }>
 		}
-		expect(row.components[0].custom_id).toBe(
+		expect(row.components.map((b) => b.custom_id)).toEqual([
+			`ach.v1.view.${TARGET}`,
 			`profile.v1.share.${INVOKER}.${TARGET}`,
+		])
+		expect(readProfileBadgeLine(payload)).toBe(
+			'Opening Score · Parlay Pioneer · 2 of 2 badges',
 		)
 	})
 
