@@ -61,7 +61,7 @@ export function formatGate(gate: AchievementGate): GateView {
 			text:
 				met || gate.comparator !== 'gt'
 					? value
-					: `${value}, needs above ${money(target)}`,
+					: `${value}, needs to be above ${money(target)}`,
 		}
 	}
 	return {

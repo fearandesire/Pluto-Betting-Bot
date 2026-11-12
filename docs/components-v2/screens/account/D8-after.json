@@ -13,7 +13,7 @@
 				},
 				{
 					"type": 10,
-					"content": "**Earned**\n<:p_opening_score:900000000000000001> **Opening Score**: Win a head-to-head bet.\n<:p_double_figures:900000000000000002> **Double Figures**: Win 10 head-to-head bets.\n<:p_in_the_black:900000000000000004> **In the Black**: Hold a positive net profit across at least 10 settled head-to-head bets. Held while you meet the bar.\n<:p_due_a_win:900000000000000009> **Due a Win**: Have 5 bets, predictions or parlays settle. The result does not matter."
+					"content": "**Earned**\n<:p_opening_score:900000000000000001> **Opening Score**: Win a head-to-head bet.\n<:p_double_figures:900000000000000002> **Double Figures**: Win 10 head-to-head bets.\n<:p_in_the_black:900000000000000004> **In the Black**: Hold a positive net profit across at least 10 settled head-to-head bets. You keep it only while you still qualify.\n<:p_due_a_win:900000000000000009> **Due a Win**: Have 5 bets, predictions or parlays settle. The result does not matter."
 				},
 				{
 					"type": 10,
@@ -21,7 +21,7 @@
 				},
 				{
 					"type": 10,
-					"content": "-# Badges are cosmetic. Pluto checks them when a profile or this list is opened."
+					"content": "-# Badges are just for show. Pluto updates them when you open a profile or this list."
 				}
 			]
 		}

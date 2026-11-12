@@ -98,7 +98,7 @@ describe('buildAchievementsView', () => {
 			{ label: 'Settled H2H bets', text: '10/10', met: true },
 			{
 				label: 'Net H2H profit',
-				text: '-$12.50, needs above $0.00',
+				text: '-$12.50, needs to be above $0.00',
 				met: false,
 			},
 		])
@@ -264,7 +264,7 @@ describe('formatGate', () => {
 					met,
 				}),
 			).text
-		expect(text(-12.5, false)).toBe('-$12.50, needs above $0.00')
+		expect(text(-12.5, false)).toBe('-$12.50, needs to be above $0.00')
 		expect(text(50, true)).toBe('$50.00')
 	})
 

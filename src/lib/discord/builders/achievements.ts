@@ -7,7 +7,7 @@ const SNOWFLAKE = /^\d{17,20}$/
 
 /** Above this the full text switches to compact lines, leaving room under the 4,000 V2 limit. */
 const FULL_TEXT_BUDGET = 3600
-const FORM_NOTE = 'Held while you meet the bar.'
+const FORM_NOTE = 'You keep it only while you still qualify.'
 
 export function encodeAchievementsView(targetId: string): string {
 	if (!SNOWFLAKE.test(targetId)) throw new Error('invalid achievements id')
@@ -61,7 +61,7 @@ export function achievementsPayload(
 ) {
 	const heading = `## Achievements: ${escapeMarkdown(displayName)}\n-# ${view.earned.length} of ${view.total} badges earned`
 	const footnote =
-		'Badges are cosmetic. Pluto checks them when a profile or this list is opened.'
+		'Badges are just for show. Pluto updates them when you open a profile or this list.'
 	let { earned, locked } = sections(view, false)
 	if (
 		heading.length + earned.length + locked.length + footnote.length >
