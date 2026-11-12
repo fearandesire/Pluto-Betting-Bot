@@ -8,7 +8,9 @@ vi.mock('#lib/startup/env.js', () => ({
 }))
 
 const { createLogger, logger } = await import('../WinstonLogger.js')
-const { runWithRequestId } = await import('#lib/telemetry/request-context.js')
+const { runWithRequestId, withJobEventRequestId } = await import(
+	'#lib/telemetry/request-context.js'
+)
 
 const captured: Record<string, unknown>[] = []
 const stream = new PassThrough({ objectMode: true })
@@ -58,5 +60,24 @@ describe('requestCorrelation', () => {
 			trace_id: '0af7651916cd43dd8448eb211c80319c',
 			span_id: 'b7ad6b7169203331',
 		})
+	})
+
+	it('tags a failed-job line from a worker listener with the job id', () => {
+		const onFailed = withJobEventRequestId(
+			(_job: { id?: string } | undefined, error: Error) => {
+				logger.error('Delivery job failed', {
+					event: 'notification.delivery.job_failed',
+					error: error.message,
+				})
+			},
+		)
+		onFailed({ id: '550e8400-e29b-41d4-a716-446655440111' }, new Error('x'))
+		onFailed(undefined, new Error('y'))
+
+		expect(captured[0]).toMatchObject({
+			event: 'notification.delivery.job_failed',
+			requestId: '550e8400-e29b-41d4-a716-446655440111',
+		})
+		expect(captured[1]).not.toHaveProperty('requestId')
 	})
 })

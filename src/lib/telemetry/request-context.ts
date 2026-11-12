@@ -30,3 +30,13 @@ export const withJobRequestId =
 	<J extends { id?: string }, R>(process: (job: J) => Promise<R>) =>
 	(job: J): Promise<R> =>
 		runWithRequestId(job.id ?? randomUUID(), () => process(job))
+
+/** Worker `active`, `completed` and `failed` listeners run outside the processor, so they need the job id restored. */
+export const withJobEventRequestId =
+	<J extends { id?: string } | undefined, A extends unknown[], R>(
+		listener: (job: J, ...rest: A) => R,
+	) =>
+	(job: J, ...rest: A): R =>
+		job?.id
+			? runWithRequestId(job.id, () => listener(job, ...rest))
+			: listener(job, ...rest)
