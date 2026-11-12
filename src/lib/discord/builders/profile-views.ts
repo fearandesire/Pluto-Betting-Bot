@@ -368,7 +368,9 @@ function shelf(o: ProfileViewOptions) {
 	const items = shown.length ? shown : first ? [first] : []
 	const heading = shown.length
 		? '### Latest achievements'
-		: '### Your first achievement'
+		: o.route.ownerId === o.model.userId
+			? '### Your first achievement'
+			: '### First achievement to earn'
 	const label =
 		a.earned.length > shown.length
 			? `Show all ${a.earned.length}`
