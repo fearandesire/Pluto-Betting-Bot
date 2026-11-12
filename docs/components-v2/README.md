@@ -11,7 +11,7 @@ Build every V2 message with `v2Payload()` in `src/lib/discord/v2/kit.ts`. It ret
 - It sets `MessageFlags.IsComponentsV2`, plus `MessageFlags.Ephemeral` when you pass `ephemeral: true`.
 - It sets `allowedMentions: { parse: [] }`, so `<@id>` renders as a name and never pings.
 - It admits button rows first, then fills the rest of the 40-component budget with blocks. Blocks that do not fit are dropped.
-- It clamps text across all blocks to 4000 characters and ends a cut block with `…`.
+- It caps text across all blocks at 4000 characters. A `text()` or `footer()` block that runs past the remaining budget is shortened and ends with `…`. Any other block that does not fit, such as a `section()`, is dropped along with every block after it.
 
 `v2Payload()` never throws on overflow. Tests use the strict checks instead (see [Test every builder](#test-every-builder)).
 
@@ -24,7 +24,7 @@ Build every V2 message with `v2Payload()` in `src/lib/discord/v2/kit.ts`. It ret
 | `thumbnail(url)` | Thumbnail | A section accessory. |
 | `gallery(urls)` | Media Gallery | Full-width images, such as the profile card. |
 | `accent(name)` | Container accent colour | Converts a hex string from `src/lib/colorsConfig.ts` (`success`, `error`, `warning`, `info`, `PlutoYellow`) to the number Discord needs. |
-| `v2EditFlags()` | Flags for edits | `editReply` and `followUp` after a defer. |
+| `v2EditFlags()` | Flags for edits | `editReply` after a defer. It sets only `IsComponentsV2`, so for a private `followUp` use `v2Payload({ ephemeral: true })` instead. |
 
 The other kit files cover the cases a plain send does not:
 
