@@ -1,0 +1,177 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"components": [
+		{
+			"type": 17,
+			"accent_color": 13168379,
+			"components": [
+				{
+					"type": 10,
+					"content": "## Achievements\n-# Carl  ·  9 of 10 earned"
+				},
+				{
+					"type": 14,
+					"divider": true,
+					"spacing": 1
+				},
+				{
+					"type": 9,
+					"components": [
+						{
+							"type": 10,
+							"content": "**All Legs Home**"
+						},
+						{
+							"type": 10,
+							"content": "Win a parlay."
+						},
+						{
+							"type": 10,
+							"content": "-# Earned <t:1782561600:D>"
+						}
+					],
+					"accessory": {
+						"type": 11,
+						"media": {
+							"url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAAsTAAALEwEAmpwYAAAC9UlEQVR4nO3dsW3cYAzFcY3zDZGeA2QED5HWvYsAmSC1d3CVyoBWiZDGZcD0iX2Xk06ipO/3B1ifcXx6fKRseBgAAAAAABswvTzk37XF52InTATQNxMB9M1EAH0zHVEA7VNkbzWs0OhbatgT1c0ggGKqm0EAxVQ3gwCKqW4GARRT3YwjCuAjdh/43qO6GQRQTHUzCKCYaw34+e3L6aqtNCJOOQKqm0UAK0MAwQE4QGyyJewSDhCbrYm7hACCAIyA4AC2gDACrIEhA7gDhBDoENQR17aA/DWerlrR28JdQgBBAPd2gOq3fe1kbxkP5wDVjWgEQACNA6znAC+PcbGqn8TGAdZ1AAKIvjMAAQQBGAHBAWSA6HMELF0Dl/5x5V6rHfFOQAAPBMABHjjAPUbA56+P/5QREP2MAAKIvjMAAQQBGAHBAWSAOPcIeM/qPyohMAjAISg4gEtgnH8E/O8pOH+/nbJaL1sAAbwRAAd469cBlr4NXMtiz1gDARBANw4w56Zw9hrWhgCivMkEwAGSAxgBaQTIACkDCIHZbQhcegd4en0+Xa0eEgngubzJBHDhqb/lHlDdrCcCuP8IIIDoewQQQBCAERAcQAYII0AIjHNngCW/aWwLmAkBPJeveu4AFxzglkvgHLfKnVdXl0ACGAmAA4zbOsBSh5hTa70MqrbrPOIIIICxvMkEwAGSA2wwAlrB2Fj6mUYAAaQMwAFSCDQC0hYgA+Tma+Aaq2PVHaAJgQTQbAEcoFkD+xwBecAqvwPMgQBGAih1gB/fL9fCp26xA93w83EAAkgjgAOkDGAEpBAoA6QtQAhMa6A7QLoDOATlbg9B15i7Z7sExjEywDUIYDz3KfgaBDASgBEwcgAZYDQChMBRBrAFjEKgNXDsZwuYy7UvY7rjv4KfdlIEQADJAThAGgFGQMoAMkAKgUJgdrsFVL1jaDuu6u98V1Q3oxEAATQOwAGaEWAENBlABmhCoBDYbAG2gGYNBAAAAAAAADDcmz/9XUuRmzWcXAAAAABJRU5ErkJggg=="
+						}
+					}
+				},
+				{
+					"type": 9,
+					"components": [
+						{
+							"type": 10,
+							"content": "**Double Figures**"
+						},
+						{
+							"type": 10,
+							"content": "Win 10 head-to-head bets."
+						},
+						{
+							"type": 10,
+							"content": "-# Earned <t:1778500800:D>"
+						}
+					],
+					"accessory": {
+						"type": 11,
+						"media": {
+							"url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAAsTAAALEwEAmpwYAAACvklEQVR4nO3cvY3bQBDF8S1nC1DofBNndAcswqlyBge4jKvhLnRwgApxYsEdrBMnNk4Sz/oYkvP7Ay/W7vBh5i25UCkAAAAAAAAI5fg69n8VuyI8FAZIzjFLB6ifWo9UWSgMwABdB9ABetoR8PPb15triSPg+M6s/4jK2mGAkQF0gFEHMAJGI0AGGGWAbCHwFJsMfO+RPQSeggEYoOsAOkA3AoyAnjIDZP8WkAYGSA4DJIcBksMAyWGAlRP9ALOrRBNdgOwq0Zxa2PcfL2cVXbitqETDAI0BdICmAxgBzQiQAZoMIAS27YbAS4uZ3p7p7TE1CDEGAzwvxuAMsICHMDGAETDpADLAZAQIgZMM4BQwCYHx4SiL6hKPgcPTnp4eUwMGSG62qgPEP4SBAYyAQQeQAQYj4HQIjL4ytXYNa88A0QVcuwYGiH8IlQF0gKoDGAHVCLhdBth9/hKqtaxp2GoGWGKxdwtcEwMwQNcB/pig/zqc1b07QL/w+9euTwe48gEwQNt2BmCAfZ4QeI8WawRcCQMcZAAd4PCXCU7VQwhMMgIqA+TOAJUBcp8CKgMwQJUBdIAqBBoB1SlABqiOgUJg9R7AKaD7GugY2H0O3v57gO4+QO73AJ0BGKC7EaQDdFfCjIDuTqBr4bv/yDbncolr4VcU9NYhcHdnMUBwsXcM8Lg7gdRm1WCzI4AaAzBB0wGYoBkBTNC2mwFoP7sGl/4elgE2bqiJAeIfwsAARsCgA8gAgxEgBA4ywMdOAdQWU4OQYyC1xdQgjQGOr+O7etRv1QXUgAEYoOsAOkC/+whY4ljIPgJKNNEFYIBgGKDpANEmyKwSTXQBsqtEE12A7CrRRBcgu0o00QXIrrImMm22JtrrbDIVpSba62wyFaUm2utsMhWlJtrrbDIVpSbaKwAAAAAAAAAAAAAAWBa/AcqhEOSHGSU5AAAAAElFTkSuQmCC"
+						}
+					}
+				},
+				{
+					"type": 9,
+					"components": [
+						{
+							"type": 10,
+							"content": "**Due a Win**"
+						},
+						{
+							"type": 10,
+							"content": "Have 5 bets, predictions or parlays settle. The result does not matter."
+						},
+						{
+							"type": 10,
+							"content": "-# Earned <t:1775217600:D>"
+						}
+					],
+					"accessory": {
+						"type": 11,
+						"media": {
+							"url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAAsTAAALEwEAmpwYAAAC9ElEQVR4nO3csY0bMRSE4S2HRThnARs6cHBFOFUHBtyNATlUphocGzjQuA6eIwM2IGt50q7IFb8fYHQHiSBH8+ZxRU0TAAAAAPzDr+8vcWlYpkEggMEhgMEhgMEhgIH432bXjtbzx50QwOAQwOD0JID0IUfNWPM9t5xnD3NdhAAGF8AlWgW+P4t2+vF6cfSyqOmvDb42zx7mehMEcB0C2AgO0Akc4DocYCM4QCdwgMEdoFXLVOsAPY3TivOcnhECyATAATIHUAKyEiADZBlACMxCoC4g6wK0gfk52sClT3P5+rl61J4DvOc1txjpHecAt77ubs4JCOCVANZ2gDVFtbUDpA0ccHgHIIA8dgkggEwASkDmADJAVgKEwDxOBhh9pNG7gNFHIoD2m1AIgAMUDqAEFCVABigygBBYhEBdQNEFaAOLNtA5QHEO4CCoOAhyElicBDoKLo6C654FxNvZeKtbg6d8FkAA5+o1IIDB3SJxgPabEASgBAQHkAFiJRHMXw53DSGwA2sOAtAFBAfYpg389ulj9VjrteKBc1ICCCBkAA4QQmCF3d7y90v/e+vf4845LW3y6eexaiy9zvSsGYAAjgTAAY4cQAk4KAEywGG8DLD3c4BZCCSAWRfAAWZt4JjfCJqVgLG/EjYTAAHMMgAHmGUAJWD2LEAGmD0MEgJnTwPbp3NdwIa4GXSubgPXGlNPEMCZAB59N7D1e8WKh0PuBRBAuBjCAcLNICUgXA2TAcLdQCEwXA59oi4gVihtfiKGAMJvBA0wEgdovwlBAI6CgwO0fRaw9COMrT+pZaP5KQEEELoADhDDt4FrWuySraYbypUSsKMMQACDfyFkCwFEo7lOPbL3RU07muvUI3tf1LSjuU490vui7mkkAmi/CUEAHCA4gBIQSoAMEDLA/SHQyKutwdQjNjg/TORTjxBAHlsASxBIfu4NXoIAMgEQQeYARJCVACLIMgARZCGQCLIugAjyGG0gAAAAAAAAAAAApofyG0JJNe3H5P04AAAAAElFTkSuQmCC"
+						}
+					}
+				},
+				{
+					"type": 9,
+					"components": [
+						{
+							"type": 10,
+							"content": "**Opening Score**"
+						},
+						{
+							"type": 10,
+							"content": "Win a head-to-head bet."
+						},
+						{
+							"type": 10,
+							"content": "-# Earned <t:1774785600:D>"
+						}
+					],
+					"accessory": {
+						"type": 11,
+						"media": {
+							"url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAAsTAAALEwEAmpwYAAACq0lEQVR4nO3dzZHTQBRFYYXzgmDfgSgIb4mBCEhE4bATvaOKnajZTQ02xqOflvp9p+qtsa3DfbfHzTAMAAAAAPCQOo3Lx/FxJYIAySFAcgiQHAIkf9ivTOvXj5UQIDkESA4BkkMA/IWylxwCJIcAydlDgPhSlswzXAkCFAJIgJI3AfagdQSHFUCA0AEkQCiBVkA4BegA4Rh4rvK29juJ1hO9/kyBACMBJMAoAY5cAcuP76eeagUQoOoAEqAqgVZAdQrQAWrmY+D0dZt5pQS2PvPXO7PV5/A2BCDAIgEkwGIFWAGLDqADLJcrgb9/zS/P2Uvg9KS4feY9v02XJZAAMwEkwCwBrIDZCtABZh1ACZyVwLWngCOvksUnfuTtFLDzKYAAJfcxkACFAFZAkQA6QMl5H+DsK2ByH4AAkwshEmDKdiNoq7n6t4GR9U4gAUrfAjxjqzf189vtn9Pib319N89eX7cP+BkEuBFAAtwkwJlWwCt/brUC+lsBBDgQAtx0gKOPiS0SIA54j6lPAQQoBNgqAfaYkADXSQACHAgBSu4OsJYeE2AAAfCfSIDkECA5BEjOkefrOGhaf6aXovXDCgIQICSABAgrwAoIHUAHCCXw+iWw9bd8w4bce81DTxAguQB7SPPKvyaKk5/pCXAHAiSHAMnpUYC68r7CkAkCjASQAKMEsAJGK0AHGHWAHkrgI9IXviwl8BEEuAMBkkOA5BAgOQRITiYBcAcCXJA9Ln6c9UZQSBIChFUiAUKXaLMCzjhDdlo/gCAAAUICnDcBWv8KmLrzr5AZskOAzlkbr70nQPSeEAQoBJAARQJYAcUK0AGKDqAEFiWw1X+9esaJ7KeA1g9gIgABJgkgASYrwAqYdIDjO4ApuUugKQQgQek3AQAAAAAAAAAM7fkDa6ta+Q86HEcAAAAASUVORK5CYII="
+						}
+					}
+				},
+				{
+					"type": 9,
+					"components": [
+						{
+							"type": 10,
+							"content": "**The Line Reader**"
+						},
+						{
+							"type": 10,
+							"content": "Keep a hit rate of 60% or better across at least 20 settled predictions."
+						},
+						{
+							"type": 10,
+							"content": "-# Not earned yet  ·  Settled predictions 0/20 · Prediction hit rate no predictions yet"
+						}
+					],
+					"accessory": {
+						"type": 11,
+						"media": {
+							"url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAAsTAAALEwEAmpwYAAADNUlEQVR4nO2cPW7cMBCFeRweIj0P4NJFCh9iW/cuAvgErnMDAdnKUBFAB3FDIo1LY4wUMQxjlZVESiRnvg94ZWCRfHgz/Mk6BwAAAC2SzndySbW/Cw4CAxgnkQC2SRjANgkD2CHNLPZS1f5+yAQDGCeRALZJGMA2CQPYJmEA+Aodv3ESWz7bJAxgm4QBbJM0GcB/C1JKrkG88vFlo32CvPLxZaN9grzy8WWjfYK88vFlo32CvPLxZaN9grzy8WWjfYK88vFlo32CvPLxNTVB2uU0UntSe5LTSO1J7UlOI5cGGh9Pm1R7gXyhsWAADCAkAAkglABKgNAD0AMITSBNoLALYBcgTiNsA09sA0udA2iR5yCo/iJEDNBfCdAiTwLUX4SIAUiASAK0VQLkz1REuQsrhb5j7lsoARhAuAwiAYTLIEqAcBlEDyBdXwaVfEVTsvlqRXFFE9jlkzEMMGEAEmAiASgBEyWAHmCiB6AJnGgC57r84fvtf3Wxk357/dAlcx3a1b/Nf8fct1wb82d1eVS8ZpuHAW4xwNoEuFZSjkwAv+FbSIDMBMAAwXYJwAABA1ACAglADxAoATSBDUIPENgF0AQGtoG7HQR1roGTQAwwcBRMAgzcBdQpAef7sFpCCWhnF4ABgu2TQAwQMAAlIJAA9ABBZwmQ56flarEJfF7+/bwIwgDCkzASQHgTuLEE5P7//qVxH9f8lgAl4LgeAAMYbwIxgPKDoK/v40v/xMseJSBeEbeBGEC4DWwkAZYqkgA6SwAG2AEMcKIHaC0BWtLAkzAMMPAkjAQYeBKW/ytZWhSvlI25f+dapOQArShqNwAKu8yBaxEWOxxmeNciGCBggFImePj9c1f9+zvpfPeh8eXXriIBMIBQAkgAUdsDrIESEPQt6howQMAAa5vAmx/3q9VTE+gssSUBMIAiMEAgAXo4B7jZUHb+ihKwQwJgAEVggEAJ6CEBRnYBthNgxAAYYOQcgAQYOQiiBIycBNIDjBwF0wSO3AWwCxi5DNo3CaxsA511MIBxar8kTp8SoMbfd9bBAMbBAMapbQBfWc46tRfAYwAM4EkAAAAAAAAAAAAAUM07bxGnN6s+7YsAAAAASUVORK5CYII="
+						}
+					}
+				},
+				{
+					"type": 14,
+					"divider": true,
+					"spacing": 1
+				},
+				{
+					"type": 10,
+					"content": "-# Page 2 of 2"
+				},
+				{
+					"type": 1,
+					"components": [
+						{
+							"type": 2,
+							"custom_id": "profile.v2.expand.100000000000000001.100000000000000001.0",
+							"label": "Previous",
+							"style": 2,
+							"disabled": false
+						},
+						{
+							"type": 2,
+							"custom_id": "profile.v2.expand.100000000000000001.100000000000000001.1",
+							"label": "Next",
+							"style": 2,
+							"disabled": true
+						},
+						{
+							"type": 2,
+							"custom_id": "profile.v2.collapse.100000000000000001.100000000000000001",
+							"label": "Show less",
+							"style": 2,
+							"disabled": false
+						}
+					]
+				}
+			]
+		}
+	],
+	"flags": 32768,
+	"allowedMentions": {
+		"parse": []
+	}
+}

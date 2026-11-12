@@ -21,6 +21,10 @@ export interface BadgeView {
 	kind: BadgeKind
 	state: 'earned' | 'locked'
 	emoji: string | null
+	/** Emoji image URL, or null when the emoji is not uploaded. */
+	art: string | null
+	/** ISO time the badge was earned; null for a locked badge. */
+	awardedAt: string | null
 	gates: GateView[]
 }
 
@@ -131,6 +135,8 @@ function toView(
 		kind: entry.kind ?? shim?.kind ?? 'career',
 		state,
 		emoji: shim ? registry.format(shim.emojiName) : null,
+		art: shim ? registry.url(shim.emojiName) : null,
+		awardedAt: 'awarded_at' in entry ? entry.awarded_at : null,
 		gates,
 	}
 }

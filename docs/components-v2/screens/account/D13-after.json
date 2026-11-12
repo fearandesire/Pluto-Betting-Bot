@@ -1,0 +1,54 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"components": [
+		{
+			"type": 17,
+			"accent_color": 13168379,
+			"components": [
+				{
+					"type": 10,
+					"content": "## Profile settings"
+				},
+				{
+					"type": 10,
+					"content": "Choose the view your profile opens in. Anyone who opens your profile sees it."
+				},
+				{
+					"type": 10,
+					"content": "-# Your default is Trophy Shelf."
+				},
+				{
+					"type": 1,
+					"components": [
+						{
+							"type": 3,
+							"custom_id": "profile.v2.setview.100000000000000001",
+							"placeholder": "Default profile view",
+							"options": [
+								{
+									"label": "Headline",
+									"value": "headline",
+									"description": "Balance first, then your latest achievements",
+									"default": false
+								},
+								{
+									"label": "Trophy Shelf",
+									"value": "trophy_shelf",
+									"description": "Achievement art with the rule for each",
+									"default": true
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	],
+	"flags": 32768,
+	"allowedMentions": {
+		"parse": []
+	}
+}

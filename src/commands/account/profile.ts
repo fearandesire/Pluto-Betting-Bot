@@ -11,6 +11,11 @@ import AchievementsWrapper from '../../utils/api/Khronos/achievements/achievemen
 import { AccountsWrapper } from '../../utils/api/requests/accounts/AccountManager.js'
 import { loadProfileCardData } from '../../utils/profile-card/load-profile-card-data.js'
 import { renderProfileCard } from '../../utils/profile-card/profile-card.js'
+import {
+	loadProfileForViews,
+	profileViewMessage,
+	resolveProfileSubject,
+} from '../../utils/profile-card/profile-view-service.js'
 
 @ApplyOptions<Command.Options>({
 	description: '🪪 View a profile card with stats and badges',
@@ -57,6 +62,23 @@ export class UserCommand extends Command {
 		}
 
 		try {
+			if (env.PROFILE_VIEWS_ENABLED) {
+				const subject = await resolveProfileSubject(
+					interaction,
+					target.id,
+					target,
+				)
+				const loaded = await loadProfileForViews(subject)
+				if (!loaded) {
+					return notice(
+						'Could not load that profile right now. Please try again.',
+					)
+				}
+				const message = profileViewMessage(loaded, {
+					route: { ownerId: interaction.user.id },
+				})
+				if (message) return await interaction.editReply(message)
+			}
 			const accounts = new AccountsWrapper()
 			const displayName =
 				interaction.guild?.members.cache.get(target.id)?.displayName ??

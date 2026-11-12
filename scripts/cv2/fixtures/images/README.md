@@ -4,3 +4,5 @@ Local copies of remote images used by migration surfaces, so renders are offline
 `pluto-logo.png` is the real Pluto coin logo, hosted at https://i.ibb.co/gZtJ87YV/pluto-logo.png (`plutoLogoUrl` in `src/lib/configs/constants.ts`). The bot no longer uses imgur, which is blocked in the UK.
 
 `discord-guild-icon.png` (B1 /odds thumbnail) and `match-placeholder.jpg` (B3 `attachment://match.jpg`) are labelled **placeholders**: the guild icon is per-server, and `assets/matchupimages/` is not in the repo.
+
+`badge-p_*.png` are the ten achievement emoji from `scripts/badge-emoji/application-emoji/`. The Trophy Shelf render uses them as thumbnails through fictional emoji ids (`https://cdn.discordapp.com/emojis/9000000000000000NN.png?size=128`).

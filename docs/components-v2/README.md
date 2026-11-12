@@ -83,6 +83,9 @@ Status: 📸 before captured · 🔁 migrated · ✅ merged and verified live
 | D8 | /achievements | account | `lib/discord/builders/achievements.achievementsPayload` | | 🔁 |
 | D9 | /achievements, no application emoji | account | same | | 🔁 |
 | D10 | /profile reply: badge line and Achievements button | account | `lib/discord/builders/profile.profileCardPayload` | | 🔁 |
+| D11 | /profile Headline (flag `PROFILE_VIEWS_ENABLED`) | account | `lib/discord/builders/profile-views.ts` | | 🔁 |
+| D12 | /profile Trophy Shelf (same flag, per-user opt-in) | account | same | | 🔁 |
+| D13 | /profile settings | account | same | | 🔁 |
 | E1 | Bet result DM | notifications | `notifications.service.notifyUser` | | 📸 |
 | E2 | Parlay result DMs | notifications | `notifications.service.buildParlayEmbeds` | | 📸 |
 | E3 | Big-win announcement | notifications | `BigWinAnnouncementService` | | 📸 |
