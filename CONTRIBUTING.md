@@ -73,7 +73,7 @@ Five names. Each is read from the environment first, then from `~/.config/agent-
 | `R2_ACCESS_KEY_ID` | secret | environment secret | `r2.env` |
 | `R2_SECRET_ACCESS_KEY` | secret | environment secret | `r2.env` |
 
-With `--via auto` (the default), a logged-in `cf` CLI on `PATH` performs the upload when the two keys are missing. Then only `R2_BUCKET` and `R2_PUBLIC_BASE` are required, and `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` and `R2_ACCOUNT_ID` are optional. Without a `cf` login all five are required. Exit 3 lists whichever names are still missing.
+With `--via auto` (the default), the `cf` CLI performs the upload whenever it is on `PATH` and either key is missing. The config check only looks for `cf` on `PATH`, so then only `R2_BUCKET` and `R2_PUBLIC_BASE` are required, and `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` and `R2_ACCOUNT_ID` are optional. `cf` must also be logged in: if it is not, the config check still passes and the run exits 1 at upload time. Without `cf` on `PATH` all five names are required. Exit 3 lists whichever names are still missing.
 
 The repository owner sets these. Agents never create keys, copy them between machines, or paste them into a command line, prompt, log or PR. The values do not belong in this repository. In a cloud session the environment's network allowlist must also permit the R2 API host and the public media host.
 
