@@ -126,3 +126,12 @@ This is an example only. Do not add it as a live workflow without the owner's go
 #     R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
 #   run: python3 scripts/r2-upload.py artifacts/*.png --markdown >> "$GITHUB_STEP_SUMMARY"
 ```
+
+## Logging
+
+Agents follow `.agents/skills/logging-best-practices` when they write or review log statements, adapted to a Discord bot:
+
+- Treat one slash command, button or other interaction as the "request". Emit its structured result once, with the command or custom ID, the outcome, and the duration.
+- `warn` and `debug` stay allowed alongside `info` and `error`. Existing calls at those levels are valid.
+- Log structured objects, never bare strings. Keep user and guild identifiers as fields, never as Loki labels.
+- Do not log tokens or private user data.
