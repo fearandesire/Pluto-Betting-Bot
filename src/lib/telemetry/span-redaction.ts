@@ -7,6 +7,9 @@ import type {
 
 const DISCORD_ID = /(?<!\d)\d{17,20}(?!\d)/g
 
+/** Interaction callback and webhook URLs carry a live token in the segment after the id. */
+const DISCORD_TOKEN_SEGMENT = /(\/(?:interactions|webhooks)\/[^/?#]+\/)[^/?#]+/g
+
 const REDACTED_ATTRIBUTES = [
 	'db.query.text',
 	'db.statement',
@@ -28,7 +31,7 @@ const CLIENT_ADDRESS_ATTRIBUTES = [
 ]
 
 export const redactDiscordIds = (value: string): string =>
-	value.replace(DISCORD_ID, ':id')
+	value.replace(DISCORD_TOKEN_SEGMENT, '$1{token}').replace(DISCORD_ID, ':id')
 
 export function redactSpan(span: ReadableSpan): ReadableSpan {
 	const attributes = { ...span.attributes }

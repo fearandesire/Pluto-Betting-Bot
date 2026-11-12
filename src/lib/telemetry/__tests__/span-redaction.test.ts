@@ -83,6 +83,69 @@ describe('Redis spans', () => {
 	})
 })
 
+describe('Discord token URLs', () => {
+	const TOKEN = 'aW50ZXJhY3Rpb246MTMwMDAwMDAwMDAwMDAwMDAwMTpzZWNyZXQ.x-Y_z'
+	const INTERACTION = '1300000000000000001'
+	const APP = '1200000000000000002'
+
+	it.each([
+		[
+			`https://discord.com/api/v10/interactions/${INTERACTION}/${TOKEN}/callback`,
+			'https://discord.com/api/v10/interactions/:id/{token}/callback',
+		],
+		[
+			`/api/v10/interactions/${INTERACTION}/${TOKEN}/callback?with_response=true`,
+			'/api/v10/interactions/:id/{token}/callback?with_response=true',
+		],
+		[
+			`https://discord.com/api/v10/webhooks/${APP}/${TOKEN}/messages/@original`,
+			'https://discord.com/api/v10/webhooks/:id/{token}/messages/@original',
+		],
+		[
+			`/api/v10/webhooks/${APP}/${TOKEN}/messages/${INTERACTION}`,
+			'/api/v10/webhooks/:id/{token}/messages/:id',
+		],
+		[`/webhooks/${APP}/${TOKEN}`, '/webhooks/:id/{token}'],
+		[
+			`/interactions/${INTERACTION}/${TOKEN}/callback`,
+			'/interactions/:id/{token}/callback',
+		],
+	])('redacts the token in %s', (input, expected) => {
+		const output = redactDiscordIds(input)
+		expect(output).toBe(expected)
+		expect(output).not.toContain(TOKEN)
+	})
+
+	it('keeps tokens out of exported span names and URL attributes', () => {
+		const exporter = new InMemorySpanExporter()
+		const url = `https://discord.com/api/v10/webhooks/${APP}/${TOKEN}/messages/@original`
+		const path = `/api/v10/webhooks/${APP}/${TOKEN}/messages/@original`
+		new BasicTracerProvider({
+			spanProcessors: [
+				new RedactingSpanProcessor(new SimpleSpanProcessor(exporter)),
+			],
+		})
+			.getTracer('test')
+			.startSpan(`PATCH ${path}`, {
+				attributes: {
+					'url.full': url,
+					'http.url': url,
+					'url.path': path,
+					'http.target': path,
+				},
+			})
+			.end()
+
+		const [span] = exporter.getFinishedSpans()
+		expect(
+			JSON.stringify({ name: span?.name, ...span?.attributes }),
+		).not.toContain(TOKEN)
+		expect(span?.attributes['url.full']).toBe(
+			'https://discord.com/api/v10/webhooks/:id/{token}/messages/@original',
+		)
+	})
+})
+
 describe('redactDiscordIds', () => {
 	it('leaves shorter numbers alone', () => {
 		expect(redactDiscordIds('/props/daily?limit=25&ts=1731400000000')).toBe(
