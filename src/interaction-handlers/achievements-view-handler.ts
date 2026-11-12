@@ -5,6 +5,7 @@ import {
 import { type ButtonInteraction, MessageFlags } from 'discord.js'
 import {
 	achievementsPayload,
+	decodeAchievementsPage,
 	decodeAchievementsView,
 } from '../lib/discord/builders/achievements.js'
 import { profileNoticePayload } from '../lib/discord/builders/profile.js'
@@ -25,15 +26,23 @@ export class AchievementsViewHandler extends InteractionHandler {
 	}
 
 	public override parse(interaction: ButtonInteraction) {
-		const targetId = decodeAchievementsView(interaction.customId)
-		return targetId ? this.some({ targetId }) : this.none()
+		const opened = decodeAchievementsView(interaction.customId)
+		if (opened) return this.some({ targetId: opened, page: null })
+		const paged = decodeAchievementsPage(interaction.customId)
+		return paged ? this.some(paged) : this.none()
 	}
 
 	public override async run(
 		interaction: ButtonInteraction,
-		{ targetId }: { targetId: string },
+		{ targetId, page }: { targetId: string; page: number | null },
 	) {
-		await interaction.deferReply({ flags: MessageFlags.Ephemeral })
+		// Previous and Next edit the private reply in place; the profile
+		// button opens a new private reply.
+		if (page === null) {
+			await interaction.deferReply({ flags: MessageFlags.Ephemeral })
+		} else {
+			await interaction.deferUpdate()
+		}
 		const notice = (message: string) =>
 			interaction.editReply(profileNoticePayload(message))
 
@@ -63,6 +72,7 @@ export class AchievementsViewHandler extends InteractionHandler {
 				achievementsPayload(
 					view,
 					await this.displayName(interaction, targetId),
+					{ targetId, page: page ?? 0 },
 				),
 			)
 		} catch (error) {
