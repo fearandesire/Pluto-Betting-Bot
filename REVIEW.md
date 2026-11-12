@@ -51,7 +51,7 @@ Components V2
 
 Permissions and logging
 - A new route enforces authentication explicitly (`ctx.state.apiKeyAuthenticated` or the route's own auth), and path-prefix exemptions in `apiKeyAuth.ts` stay as narrow as they are. Permission lookups fail closed: only Discord error 10007 means "not a member" (#625).
-- No header, token or payload is dumped through `logger`. A new credential header joins the redaction list in `koaSetup.ts` (#644).
+- No header, token or payload is dumped through `logger`. The access log in `koaSetup.ts` logs request headers from an allowlist (`ACCESS_LOG_OPTIONS`); a header joins it only when it carries no credential, client IP or location (#644).
 
 Khronos client bump
 - Both `@pluto-khronos/api-client` and `@pluto-khronos/types` move to the same version. Read the Khronos release notes for changed DTOs and confirm call sites using changed fields have tests.
