@@ -27,6 +27,7 @@ Exit: 0 all uploaded; 1 an upload or read-back failed; 2 usage; 3 configuration 
 from __future__ import annotations
 
 import argparse
+import contextlib
 import datetime
 import glob
 import hashlib
@@ -40,6 +41,7 @@ import secrets
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 import urllib.error
 import urllib.parse
@@ -191,14 +193,25 @@ def put_boto3(path: pathlib.Path, body: bytes, key: str, conf: dict) -> None:
         raise Fail(f"boto3 upload of {path} failed: {e}") from None
 
 
+@contextlib.contextmanager
+def captured_body(body: bytes):
+    """Stage the bytes that were hashed and will be read back, so a CLI never re-reads a file that may have grown."""
+    with tempfile.TemporaryDirectory(prefix="r2-upload-") as tmp:
+        staged = os.path.join(tmp, "body")
+        with open(staged, "wb") as f:
+            f.write(body)
+        yield staged
+
+
 def put_aws(path: pathlib.Path, body: bytes, key: str, conf: dict) -> None:
     env = {**os.environ, "AWS_ACCESS_KEY_ID": conf["R2_ACCESS_KEY_ID"],
            "AWS_SECRET_ACCESS_KEY": conf["R2_SECRET_ACCESS_KEY"], "AWS_DEFAULT_REGION": "auto"}
     env.pop("AWS_SESSION_TOKEN", None)
     env.pop("AWS_PROFILE", None)
-    cmd = ["aws", "s3api", "put-object", "--endpoint-url", endpoint_of(conf), "--bucket", conf["R2_BUCKET"],
-           "--key", key, "--body", str(path), "--content-type", content_type(path)]
-    done = subprocess.run(cmd, env=env, capture_output=True, text=True)
+    with captured_body(body) as staged:
+        cmd = ["aws", "s3api", "put-object", "--endpoint-url", endpoint_of(conf), "--bucket", conf["R2_BUCKET"],
+               "--key", key, "--body", staged, "--content-type", content_type(path)]
+        done = subprocess.run(cmd, env=env, capture_output=True, text=True)
     if done.returncode:
         raise Fail(f"aws upload of {path} failed ({done.returncode}): {(done.stderr or done.stdout).strip()[-400:]}")
 
@@ -207,9 +220,10 @@ def put_cf(path: pathlib.Path, body: bytes, key: str, conf: dict) -> None:
     env = dict(os.environ)
     if conf.get("R2_ACCOUNT_ID"):
         env["CLOUDFLARE_ACCOUNT_ID"] = conf["R2_ACCOUNT_ID"]
-    cmd = ["cf", "r2", "objects", "put", key, "--bucket-name", conf["R2_BUCKET"],
-           "--content-type", content_type(path), "--file", str(path)]
-    done = subprocess.run(cmd, env=env, capture_output=True, text=True)
+    with captured_body(body) as staged:
+        cmd = ["cf", "r2", "objects", "put", key, "--bucket-name", conf["R2_BUCKET"],
+               "--content-type", content_type(path), "--file", staged]
+        done = subprocess.run(cmd, env=env, capture_output=True, text=True)
     if done.returncode:
         raise Fail(f"cf upload of {path} failed ({done.returncode}): {(done.stderr or done.stdout).strip()[-400:]}")
 
@@ -290,7 +304,8 @@ def upload(path: pathlib.Path, repo: str, conf: dict, methods: list, verify: boo
 
 
 def markdown(item: dict) -> str:
-    stem = pathlib.PurePath(item["file"]).stem
+    stem = re.sub(r"[\r\n]+", " ", pathlib.PurePath(item["file"]).stem)
+    stem = re.sub(r"([\\`*_{}\[\]()<>#+!|~])", r"\\\1", stem)
     bang = "!" if item["content_type"].startswith("image/") else ""
     return f"{bang}[{stem}]({item['url']})"
 
@@ -307,7 +322,7 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--via", choices=("auto", "stdlib", "boto3", "aws", "cf"), default="auto")
     args = parser.parse_args(argv)
 
-    paths = [pathlib.Path(p) for a in args.files for p in (sorted(glob.glob(a)) or [a])]
+    paths = [pathlib.Path(p) for a in args.files for p in ([a] if os.path.lexists(a) else sorted(glob.glob(a)) or [a])]
     missing_files = [str(p) for p in paths if not p.is_file()]
     if missing_files:
         print("r2-upload: not a file: " + ", ".join(missing_files), file=sys.stderr)
