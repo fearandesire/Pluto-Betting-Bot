@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
-# Vendored, unmodified, from the charyon plugin's r2-upload skill (skills/r2-upload/scripts/r2-upload.py, 0.1.0).
-# Upstream changes land by re-copying the file, not by editing it here. See the visual-proof doc for usage.
+# Vendored from the charyon plugin's r2-upload skill (skills/r2-upload/scripts/r2-upload.py, 0.1.0),
+# with three local patches not yet upstream: an existing path is used literally before globbing; the
+# aws/cf paths upload a temp copy of the hashed bytes; --markdown escapes the link text. Keep these
+# patches if you re-copy from upstream before they land there. See the visual-proof doc for usage.
 # License: the plugin ships no license file for this skill, so none is added alongside it.
 """Upload media (screenshots, renders, logs) to a Cloudflare R2 bucket and print public URLs.
 

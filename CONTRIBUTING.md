@@ -55,7 +55,7 @@ full bot startup, external service connectivity, or live Discord behavior.
 
 ## Visual proof uploads
 
-`scripts/r2-upload.py` uploads screenshots, PNG renders and logs to Cloudflare R2 and prints one public URL per file, so a PR can show visual proof that reviewers can open. It is standard-library Python 3.8+ and runs the same in cloud sessions, on local machines and in GitHub Actions. The file is vendored unmodified from the charyon plugin's `r2-upload` skill; update it by re-copying, not by editing.
+`scripts/r2-upload.py` uploads screenshots, PNG renders and logs to Cloudflare R2 and prints one public URL per file, so a PR can show visual proof that reviewers can open. It is standard-library Python 3.8+ and runs the same in cloud sessions, on local machines and in GitHub Actions. The file is vendored from the charyon plugin's `r2-upload` skill with three local patches listed in its header (literal paths before globbing, a staged body for the `aws`/`cf` uploads, escaped Markdown link text). Until those patches land upstream, keep them when you re-copy the file.
 
 ### Uploads are public and permanent
 
