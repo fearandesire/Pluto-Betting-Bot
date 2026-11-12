@@ -339,16 +339,24 @@ function shelf(o: ProfileViewOptions) {
 				divider(),
 				...slice.map(shelfItem),
 				divider(),
-				footer(`Page ${page + 1} of ${pages}`),
+				...(pages > 1 ? [footer(`Page ${page + 1} of ${pages}`)] : []),
 			],
 			actions: [
 				[
-					button('Previous', step(Math.max(page - 1, 0)), page === 0),
-					button(
-						'Next',
-						step(Math.min(page + 1, pages - 1)),
-						page >= pages - 1,
-					),
+					...(pages > 1
+						? [
+								button(
+									'Previous',
+									step(Math.max(page - 1, 0)),
+									page === 0,
+								),
+								button(
+									'Next',
+									step(Math.min(page + 1, pages - 1)),
+									page >= pages - 1,
+								),
+							]
+						: []),
 					collapseButton(o),
 				],
 			],

@@ -277,3 +277,72 @@ describe('settings', () => {
 		expect(json).toMatch(/"value":"headline"[^}]*"default":false/)
 	})
 })
+
+describe('custom ids', () => {
+	const ids = (payload: unknown) =>
+		buttons(payload).map((b) => b.custom_id as string)
+
+	const states = () => {
+		const out: Array<[string, unknown]> = []
+		for (const view of ['headline', 'trophy_shelf'] as const) {
+			for (const [e, l] of [
+				[0, 0],
+				[0, 3],
+				[2, 3],
+				[5, 0],
+				[9, 1],
+				[30, 30],
+			] as const) {
+				const m = model(e, l)
+				const pages = Math.max(1, Math.ceil((e + l) / 5))
+				out.push([
+					`${view} ${e}/${l} collapsed`,
+					profileViewPayload({ view, model: m, route }),
+				])
+				out.push([
+					`${view} ${e}/${l} shared flag`,
+					profileViewPayload({ view, model: m, route, shared: true }),
+				])
+				out.push([
+					`${view} ${e}/${l} public`,
+					profileSharedViewPayload(
+						{ view, model: m, route },
+						'33333333333333333',
+					),
+				])
+				for (let page = 0; page < pages; page++)
+					out.push([
+						`${view} ${e}/${l} expanded p${page}`,
+						profileViewPayload({
+							view,
+							model: m,
+							route,
+							expanded: true,
+							page,
+						}),
+					])
+			}
+		}
+		out.push([
+			'settings',
+			profileSettingsPayload({ ownerId: OWNER, current: 'headline' }),
+		])
+		return out
+	}
+
+	it.each(states())('%s has no duplicate custom id', (_name, payload) => {
+		const list = ids(payload)
+		expect(new Set(list).size).toBe(list.length)
+	})
+
+	it('leaves out Previous and Next on a single page of achievements', () => {
+		const payload = profileViewPayload({
+			view: 'trophy_shelf',
+			model: model(3, 2),
+			route,
+			expanded: true,
+		})
+		expect(buttons(payload).map((b) => b.label)).toEqual(['Show less'])
+		expect(flat(payload)).not.toContain('Page 1 of 1')
+	})
+})
