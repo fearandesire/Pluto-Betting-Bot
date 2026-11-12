@@ -82,15 +82,17 @@ Run from the repository root.
 ```bash
 python3 scripts/r2-upload.py shot.png                      # prints the public URL
 python3 scripts/r2-upload.py out/*.png run.log --markdown  # ![shot](url) for images, [run](url) otherwise
-python3 scripts/r2-upload.py out/*.png --json              # file, key, url, content_type, bytes, sha256, via, verified
+python3 scripts/r2-upload.py out/*.png --json              # file, key, url, bucket, content_type, bytes, sha256, via, verified
 python3 scripts/r2-upload.py --help
 ```
+
+Never paste `--json` output into a PR: it contains the bucket name. `--markdown` is the format for PRs.
 
 Files land at `<repo>/<random id>/<name>`. `<repo>` is the `origin` remote's name; `--repo NAME` overrides it. Each upload is fetched back from its public URL and compared byte for byte; `--no-verify` skips that.
 
 ### In a PR
 
-Run the script once for every file, with `--markdown`, and paste the output under `## Screenshots` (or `## Validation` for logs). Videos print as links because GitHub only plays its own uploads inline.
+Run the script with `--markdown` on every file you want to show (one call accepts many files and globs), and paste the output under `## Screenshots` (or `## Validation` for logs). Videos print as links because GitHub only plays its own uploads inline.
 
 ### Exit codes
 
