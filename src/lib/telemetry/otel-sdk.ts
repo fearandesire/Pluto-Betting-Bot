@@ -17,6 +17,10 @@ const { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } = await import(
 	'@opentelemetry/semantic-conventions'
 )
 const { RedactingSpanProcessor } = await import('./span-redaction.js')
+const { AUTO_INSTRUMENTATION_CONFIG } = await import(
+	'./instrumentation-config.js'
+)
+const { registerTelemetryFlush } = await import('./telemetry-shutdown.js')
 
 const { version } = JSON.parse(
 	readFileSync(new URL('../../../package.json', import.meta.url), 'utf-8'),
@@ -35,14 +39,7 @@ const sdk = new NodeSDK({
 		),
 	],
 	instrumentations: [
-		getNodeAutoInstrumentations({
-			'@opentelemetry/instrumentation-fs': { enabled: false },
-			'@opentelemetry/instrumentation-dns': { enabled: false },
-			'@opentelemetry/instrumentation-net': { enabled: false },
-			'@opentelemetry/instrumentation-redis': { enabled: false },
-			// requestCorrelation in WinstonLogger already writes trace_id and span_id.
-			'@opentelemetry/instrumentation-winston': { enabled: false },
-		}),
+		getNodeAutoInstrumentations(AUTO_INSTRUMENTATION_CONFIG),
 	],
 })
 
@@ -66,6 +63,4 @@ try {
 	)
 }
 
-process.once('SIGTERM', () => {
-	void sdk.shutdown()
-})
+registerTelemetryFlush(() => sdk.shutdown())

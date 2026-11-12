@@ -4,6 +4,10 @@ import {
 	SimpleSpanProcessor,
 } from '@opentelemetry/sdk-trace-base'
 import { describe, expect, it } from 'vitest'
+import {
+	AUTO_INSTRUMENTATION_CONFIG,
+	redisCommandOnly,
+} from '../instrumentation-config.js'
 import { RedactingSpanProcessor, redactDiscordIds } from '../span-redaction.js'
 
 const USER = '368578308872601602'
@@ -41,6 +45,41 @@ describe('RedactingSpanProcessor', () => {
 			'http.status_code': 200,
 		})
 		expect(span?.spanContext().traceId).toMatch(/^[0-9a-f]{32}$/)
+	})
+})
+
+describe('Redis spans', () => {
+	const ledgerKey = 'pluto:game-channel-owner:v1:1300000000000000001'
+
+	it('export the command name only', () => {
+		const serializer =
+			AUTO_INSTRUMENTATION_CONFIG[
+				'@opentelemetry/instrumentation-ioredis'
+			].dbStatementSerializer
+		expect(serializer).toBe(redisCommandOnly)
+		expect(redisCommandOnly('get', [ledgerKey])).toBe('get')
+	})
+
+	it('redact ids from db statements another serializer kept', () => {
+		const exporter = new InMemorySpanExporter()
+		new BasicTracerProvider({
+			spanProcessors: [
+				new RedactingSpanProcessor(new SimpleSpanProcessor(exporter)),
+			],
+		})
+			.getTracer('test')
+			.startSpan('get', {
+				attributes: {
+					'db.statement': `get ${ledgerKey}`,
+					'db.query.text': `get ${ledgerKey}`,
+				},
+			})
+			.end()
+
+		expect(exporter.getFinishedSpans()[0]?.attributes).toEqual({
+			'db.statement': 'get pluto:game-channel-owner:v1::id',
+			'db.query.text': 'get pluto:game-channel-owner:v1::id',
+		})
 	})
 })
 

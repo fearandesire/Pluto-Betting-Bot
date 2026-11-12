@@ -7,7 +7,9 @@ import type {
 
 const DISCORD_ID = /(?<!\d)\d{17,20}(?!\d)/g
 
-const URL_ATTRIBUTES = [
+const REDACTED_ATTRIBUTES = [
+	'db.query.text',
+	'db.statement',
 	'http.route',
 	'http.target',
 	'http.url',
@@ -30,7 +32,7 @@ export const redactDiscordIds = (value: string): string =>
 
 export function redactSpan(span: ReadableSpan): ReadableSpan {
 	const attributes = { ...span.attributes }
-	for (const key of URL_ATTRIBUTES) {
+	for (const key of REDACTED_ATTRIBUTES) {
 		const value = attributes[key]
 		if (typeof value === 'string') attributes[key] = redactDiscordIds(value)
 	}
@@ -42,7 +44,7 @@ export function redactSpan(span: ReadableSpan): ReadableSpan {
 }
 
 /**
- * Keeps Discord ids out of span names and URL attributes (D11). The user id
+ * Keeps Discord ids out of span names, URL and query attributes (D11). The user id
  * stays in the one explicit `discord.user.id` attribute.
  */
 export class RedactingSpanProcessor implements SpanProcessor {
