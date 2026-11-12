@@ -1,5 +1,6 @@
 import { type Job, Queue, Worker } from 'bullmq'
 import { registerShutdownQueue } from '../../../lib/startup/shutdown-registry.js'
+import { bullmqTelemetry } from '../../../lib/telemetry/bullmq-telemetry.js'
 import { withJobRequestId } from '../../../lib/telemetry/request-context.js'
 import ChannelManager from '../../guilds/channels/ChannelManager.js'
 import { logger } from '../../logging/WinstonLogger.js'
@@ -24,6 +25,7 @@ export class ChannelDeletionQueue {
 			'channel-deletion-queue',
 			{
 				connection,
+				...bullmqTelemetry(),
 				defaultJobOptions: {
 					attempts: ChannelDeletionQueue.MAX_ATTEMPTS,
 					backoff: {
@@ -47,7 +49,7 @@ export class ChannelDeletionQueue {
 		this.worker = new Worker<ChannelDeletionJobData, ChannelDeletionResult>(
 			'channel-deletion-queue',
 			withJobRequestId(async (job) => this.runJob(job)),
-			{ connection, concurrency: 15 },
+			{ connection, ...bullmqTelemetry(), concurrency: 15 },
 		)
 
 		this.setupWorkerEvents()

@@ -1,5 +1,6 @@
 import { type Job, Queue, Worker } from 'bullmq'
 import { registerShutdownQueue } from '../../../../lib/startup/shutdown-registry.js'
+import { bullmqTelemetry } from '../../../../lib/telemetry/bullmq-telemetry.js'
 import { withJobRequestId } from '../../../../lib/telemetry/request-context.js'
 import {
 	type AlertReporter,
@@ -308,6 +309,7 @@ export class NotificationDeliveryQueue {
 			options.queue ??
 			(new Queue<DeliveryJob>(NOTIFICATION_DELIVERY_QUEUE, {
 				connection: REDIS_CONFIG,
+				...bullmqTelemetry(),
 				defaultJobOptions: {
 					attempts: 8,
 					backoff: { type: 'custom' },
@@ -321,6 +323,7 @@ export class NotificationDeliveryQueue {
 				withJobRequestId(async (job) => this.runJob(job)),
 				{
 					connection: REDIS_CONFIG,
+					...bullmqTelemetry(),
 					concurrency: 8,
 					lockDuration: 60_000,
 					stalledInterval: 30_000,

@@ -53,4 +53,4 @@ RUN --network=none pnpm verify:runtime
 
 EXPOSE 2090
 
-CMD ["doppler", "run", "--forward-signals", "--", "node", "dist/index.js"]
+CMD ["doppler", "run", "--forward-signals", "--", "node", "--import", "./dist/instrumentation.js", "dist/index.js"]

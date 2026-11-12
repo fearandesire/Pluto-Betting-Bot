@@ -1,5 +1,6 @@
 import { type Job, Queue, Worker } from 'bullmq'
 import { registerShutdownQueue } from '../../../lib/startup/shutdown-registry.js'
+import { bullmqTelemetry } from '../../../lib/telemetry/bullmq-telemetry.js'
 import { withJobRequestId } from '../../../lib/telemetry/request-context.js'
 import { createChannelPresentationService } from '../../guilds/channels/ChannelPresentationService.js'
 import { logger } from '../../logging/WinstonLogger.js'
@@ -22,7 +23,7 @@ export async function processPresentationJob(job: Pick<Job, 'data'>) {
 export class ChannelPresentationQueue {
 	readonly queue = new Queue<ChannelPresentationUpdateV1>(
 		'channel-presentation-update',
-		{ connection: REDIS_CONFIG },
+		{ connection: REDIS_CONFIG, ...bullmqTelemetry() },
 	)
 	private readonly activeJobs = new Set<Promise<void>>()
 	private readonly worker = new Worker(
@@ -36,7 +37,12 @@ export class ChannelPresentationQueue {
 				this.activeJobs.delete(task)
 			}
 		}),
-		{ connection: REDIS_CONFIG, concurrency: 10, lockDuration: 300_000 },
+		{
+			connection: REDIS_CONFIG,
+			...bullmqTelemetry(),
+			concurrency: 10,
+			lockDuration: 300_000,
+		},
 	)
 	constructor() {
 		this.worker.on('error', (error) =>
