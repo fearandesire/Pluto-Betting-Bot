@@ -84,7 +84,7 @@ describe('Redis spans', () => {
 })
 
 describe('Discord token URLs', () => {
-	const TOKEN = 'fake-interaction-token_for-tests'
+	const TOKEN = `fake-interaction-token-${'x'.repeat(40)}`
 	const INTERACTION = '1300000000000000001'
 	const APP = '1200000000000000002'
 
