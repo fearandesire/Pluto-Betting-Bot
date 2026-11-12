@@ -22,6 +22,16 @@ export const messageToMsg = winston.format((info) => {
 })
 
 /**
+ * Fills `component: 'bot'` only when neither the call site nor a child
+ * logger set one. It cannot live on `defaultMeta`: Winston assigns
+ * `defaultMeta` over the merged child and per-call meta, so it would win.
+ */
+const defaultComponent = winston.format((info) => {
+	info.component ??= 'bot'
+	return info
+})
+
+/**
  * Logger-level format: shared, transport-agnostic transformations only.
  *
  * Encoding (json, colorize, padLevels, consoleFormat) is intentionally NOT
@@ -37,6 +47,7 @@ export const messageToMsg = winston.format((info) => {
  */
 const createBaseFormat = () => {
 	return winston.format.combine(
+		defaultComponent(),
 		winston.format.errors({ stack: true }),
 		fullFormat(),
 	)
@@ -81,7 +92,9 @@ const ENV = env.NODE_ENV
  * Creates the root Winston logger.
  *
  * Identity fields (`app`, `version`, `env`) are bound on `defaultMeta` so
- * every log line carries them automatically. Per the structured-logging
+ * every log line carries them automatically. `component` is not: it
+ * defaults to `'bot'` in the format pipeline so child loggers and call
+ * sites can override it. Per the structured-logging
  * contract, callers attach **placement** (`component` + one of
  * `command`/`handler`/`job`/`route`) via {@link createLogger} child
  * loggers at module boundaries, and **operation** (`event = domain.action`)
@@ -94,7 +107,6 @@ export const createRootLogger = (config: LoggerConfig = {}) => {
 		defaultMeta: {
 			service: APP.toLowerCase().includes('pluto') ? 'pluto' : APP,
 			app: APP,
-			component: 'bot',
 			version: VERSION,
 			env: ENV,
 			environment: ENV,
