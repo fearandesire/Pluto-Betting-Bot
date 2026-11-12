@@ -15,21 +15,21 @@ export const BADGE_PRESENTATION: Readonly<Record<string, BadgePresentation>> = {
 		criteria: 'Win a head-to-head bet.',
 		kind: 'career',
 		emojiName: 'p_opening_score',
-		progressLabel: 'H2H wins',
+		progressLabel: 'Head-to-head wins',
 	},
 	ten_wins: {
 		label: 'Double Figures',
 		criteria: 'Win 10 head-to-head bets.',
 		kind: 'career',
 		emojiName: 'p_double_figures',
-		progressLabel: 'H2H wins',
+		progressLabel: 'Head-to-head wins',
 	},
 	fifty_wins: {
 		label: 'Club Fifty',
 		criteria: 'Win 50 head-to-head bets.',
 		kind: 'career',
 		emojiName: 'p_club_fifty',
-		progressLabel: 'H2H wins',
+		progressLabel: 'Head-to-head wins',
 	},
 	in_the_black: {
 		label: 'In the Black',
@@ -37,7 +37,7 @@ export const BADGE_PRESENTATION: Readonly<Record<string, BadgePresentation>> = {
 			'Hold a positive net profit across at least 10 settled head-to-head bets.',
 		kind: 'form',
 		emojiName: 'p_in_the_black',
-		progressLabel: 'Settled H2H bets',
+		progressLabel: 'Settled head-to-head bets',
 	},
 	sharp_eye: {
 		label: 'The Line Reader',
@@ -52,7 +52,7 @@ export const BADGE_PRESENTATION: Readonly<Record<string, BadgePresentation>> = {
 		criteria: 'Get 10 player prop predictions right.',
 		kind: 'career',
 		emojiName: 'p_players_edge',
-		progressLabel: 'Correct player props',
+		progressLabel: 'Correct player prop predictions',
 	},
 	parlay_pro: {
 		label: 'All Legs Home',
@@ -71,10 +71,10 @@ export const BADGE_PRESENTATION: Readonly<Record<string, BadgePresentation>> = {
 	due_a_win: {
 		label: 'Due a Win',
 		criteria:
-			'Have 5 bets, predictions or parlays settle. The result does not matter.',
+			'Have 5 bets, predictions or parlays settle. Wins and losses both count.',
 		kind: 'career',
 		emojiName: 'p_due_a_win',
-		progressLabel: 'Settled choices',
+		progressLabel: 'Settled picks',
 	},
 	trust_the_process: {
 		label: 'Trust the Process',
@@ -82,7 +82,7 @@ export const BADGE_PRESENTATION: Readonly<Record<string, BadgePresentation>> = {
 			'Have 50 bets, predictions or parlays settle across at least 20 different games.',
 		kind: 'career',
 		emojiName: 'p_trust_the_process',
-		progressLabel: 'Settled choices',
+		progressLabel: 'Settled picks',
 	},
 }
 

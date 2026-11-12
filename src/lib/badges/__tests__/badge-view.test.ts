@@ -95,9 +95,9 @@ describe('buildAchievementsView', () => {
 			none,
 		)
 		expect(view.locked[0].gates).toEqual([
-			{ label: 'Settled H2H bets', text: '10/10', met: true },
+			{ label: 'Settled head-to-head bets', text: '10/10', met: true },
 			{
-				label: 'Net H2H profit',
+				label: 'Net head-to-head profit',
 				text: '-$12.50, needs to be above $0.00',
 				met: false,
 			},
@@ -178,7 +178,7 @@ describe('buildAchievementsView', () => {
 			none,
 		)
 		expect(view.locked[0].gates).toEqual([
-			{ label: 'H2H wins', text: '4/10', met: false },
+			{ label: 'Head-to-head wins', text: '4/10', met: false },
 		])
 	})
 
