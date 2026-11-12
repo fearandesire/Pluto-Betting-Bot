@@ -58,5 +58,6 @@ Agents follow `.agents/skills/logging-best-practices` when they write or review 
 
 - Treat one slash command, button or other interaction as the "request". Emit its structured result once, with the command or custom ID, the outcome, and the duration.
 - `warn` and `debug` stay allowed alongside `info` and `error`. Existing calls at those levels are valid.
+- Pass the event object to the logger as metadata, for example `logger.info('Command completed', event)`. Do not `JSON.stringify` it, which the skill's examples do: Pluto's Winston transport already writes JSON, and a string hides the fields from Loki.
 - Log structured objects, never bare strings. Keep user and guild identifiers as fields, never as Loki labels.
 - Do not log tokens or private user data.
