@@ -268,7 +268,7 @@ def read_back(url: str, body: bytes) -> None:
     last = ""
     for attempt in range(4):
         try:
-            request = urllib.request.Request(url, headers={"User-Agent": "charyon-r2-upload"})
+            request = urllib.request.Request(url, headers={"User-Agent": "r2-upload"})
             with urllib.request.urlopen(request, timeout=60) as response:
                 got = response.read()
             if got == body:
