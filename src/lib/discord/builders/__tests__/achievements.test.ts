@@ -106,9 +106,9 @@ describe('achievementsPayload', () => {
 		})
 		expect(texts(payload)).toEqual([
 			'## Achievements: Harbor\n-# 2 of 3 badges earned',
-			`**Earned**\n<:p_opening_score:${ID}> **Opening Score**: Win a head-to-head bet.\n<:p_in_the_black:${ID}> **In the Black**: Hold a positive net profit across at least 10 settled head-to-head bets. Held while you meet the bar.`,
+			`**Earned**\n<:p_opening_score:${ID}> **Opening Score**: Win a head-to-head bet.\n<:p_in_the_black:${ID}> **In the Black**: Hold a positive net profit across at least 10 settled head-to-head bets. You keep it only while you still qualify.`,
 			'**Still to earn**\n**The Line Reader**: Keep a hit rate of 60% or better across at least 20 settled predictions.\n-# Settled predictions 20/20 (done) · Prediction hit rate 55.0% of 60%',
-			'-# Badges are cosmetic. Pluto checks them when a profile or this list is opened.',
+			'-# Badges are just for show. Pluto updates them when you open a profile or this list.',
 		])
 	})
 

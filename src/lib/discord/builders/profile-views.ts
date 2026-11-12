@@ -231,7 +231,7 @@ function headlineAchievements(o: ProfileViewOptions) {
 				...top,
 				...(lists.earned ? [text(lists.earned)] : []),
 				...(lists.open
-					? [divider(), text(`### Not yet\n${lists.open}`)]
+					? [divider(), text(`### Not earned yet\n${lists.open}`)]
 					: []),
 			],
 			row: null,
@@ -413,7 +413,7 @@ export function profileSettingsPayload(opts: {
 }) {
 	const describe: Record<ProfileView, string> = {
 		headline: 'Balance first, then your latest achievements',
-		trophy_shelf: 'Achievement art with the rule for each',
+		trophy_shelf: 'Badge art, with how to earn each one',
 	}
 	const select = new StringSelectMenuBuilder()
 		.setCustomId(
@@ -434,7 +434,7 @@ export function profileSettingsPayload(opts: {
 		blocks: [
 			text('## Profile settings'),
 			text(
-				'Choose the view your profile opens in. Anyone who opens your profile sees it.',
+				'Pick how your profile looks. Everyone who opens it sees this view.',
 			),
 			text(
 				opts.saved

@@ -14,7 +14,7 @@
 				},
 				{
 					"type": 10,
-					"content": "Choose the view your profile opens in. Anyone who opens your profile sees it."
+					"content": "Pick how your profile looks. Everyone who opens it sees this view."
 				},
 				{
 					"type": 10,
@@ -37,7 +37,7 @@
 								{
 									"label": "Trophy Shelf",
 									"value": "trophy_shelf",
-									"description": "Achievement art with the rule for each",
+									"description": "Badge art, with how to earn each one",
 									"default": true
 								}
 							]
