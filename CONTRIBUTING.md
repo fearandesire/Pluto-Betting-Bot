@@ -51,3 +51,12 @@ full bot startup, external service connectivity, or live Discord behavior.
 | Rule | Enforcement |
 | --- | --- |
 | Game channel topics show only the guild's `GAME_CHANNEL_TOPIC` setting (default `Enjoy the game!`). Never store identity, markers, or delivery state in a field server members can see or edit. Create game channels with `createGameChannel()`; keep per-game channel state in `game-channel-ledger.ts`. | `topic-ownership.test.ts` fails when any file other than `game-channel-topic.ts` writes a topic or a `pluto-game:` marker. `gameChannelTopic()` falls back to the default for marker-like or over-length values, and Khronos rejects them when the setting is saved. |
+
+## Logging
+
+Agents follow `.agents/skills/logging-best-practices` when they write or review log statements, adapted to a Discord bot:
+
+- Treat one slash command, button or other interaction as the "request". Emit its structured result once, with the command or custom ID, the outcome, and the duration.
+- `warn` and `debug` stay allowed alongside `info` and `error`. Existing calls at those levels are valid.
+- Log structured objects, never bare strings. Keep user and guild identifiers as fields, never as Loki labels.
+- Do not log tokens or private user data.
