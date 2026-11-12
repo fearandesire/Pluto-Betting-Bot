@@ -1,62 +1,95 @@
 import * as KhronosApiClient from '@pluto-khronos/api-client'
 import pTimeout from 'p-timeout'
+import { z } from 'zod'
 import { KH_API_CONFIG } from '../KhronosInstances.js'
 
 const DEFAULT_TIMEOUT_MS = 15_000
 
 /**
- * Achievements contract exposed by Khronos.
- *
- * Kept local until the generated client release containing AchievementsApi is
- * published. The runtime constructor is resolved from that generated client
- * so this module does not introduce a hand-written HTTP implementation.
+ * The generated typed methods drop JSON fields the installed client does not
+ * know. A newer server adds `track`, `kind` and `gates`, so the wrapper reads
+ * the raw body and parses it here. Fields of the released contract are
+ * required. Additive fields degrade to `undefined` when absent or malformed,
+ * which renders as the released contract.
  */
-export interface EarnedAchievement {
-	key: string
-	name: string
-	description: string
-	awarded_at: string
+const gateSchema = z.object({
+	metric: z.string(),
+	label: z.string(),
+	unit: z.string(),
+	comparator: z.string(),
+	target: z.number(),
+	current: z.number().nullable(),
+	met: z.boolean(),
+})
+
+const additive = {
+	track: z.string().optional().catch(undefined),
+	kind: z.enum(['career', 'form']).optional().catch(undefined),
 }
 
-export interface LockedAchievement {
-	key: string
-	name: string
-	description: string
-	progress: number
-	target: number
-}
+/** The typed fallback path hands back a Date; the raw body holds a string. */
+const timestamp = z
+	.union([z.string(), z.date()])
+	.transform((value) => (value instanceof Date ? value.toISOString() : value))
 
-export interface AchievementSummary {
-	settled_bets: number
-	wins: number
-	losses: number
-	pushes: number
-	net_profit: number
-	best_win_payout: number | null
-	settled_predictions: number
-	prediction_hit_rate: number | null
-}
+const earnedSchema = z.object({
+	key: z.string(),
+	name: z.string(),
+	description: z.string(),
+	awarded_at: timestamp,
+	...additive,
+})
 
-export interface UserAchievementsDto {
-	user_id: string
-	/** Newest first. */
-	earned: EarnedAchievement[]
-	locked: LockedAchievement[]
-	summary: AchievementSummary
-}
+const lockedSchema = z.object({
+	key: z.string(),
+	name: z.string(),
+	description: z.string(),
+	progress: z.number(),
+	target: z.number(),
+	...additive,
+	gates: z.array(gateSchema).optional().catch(undefined),
+})
+
+const summarySchema = z.object({
+	settled_bets: z.number(),
+	wins: z.number(),
+	losses: z.number(),
+	pushes: z.number(),
+	net_profit: z.number(),
+	best_win_payout: z.number().nullable(),
+	settled_predictions: z.number(),
+	prediction_hit_rate: z.number().nullable(),
+})
+
+const userAchievementsSchema = z.object({
+	user_id: z.string(),
+	earned: z.array(earnedSchema),
+	locked: z.array(lockedSchema),
+	summary: summarySchema,
+})
+
+export type AchievementGate = z.infer<typeof gateSchema>
+export type EarnedAchievement = z.infer<typeof earnedSchema>
+export type LockedAchievement = z.infer<typeof lockedSchema>
+export type AchievementSummary = z.infer<typeof summarySchema>
+export type UserAchievementsDto = z.infer<typeof userAchievementsSchema>
+
+export const parseUserAchievements = (body: unknown): UserAchievementsDto =>
+	userAchievementsSchema.parse(body)
 
 export interface AchievementsApiClient {
 	evaluateUserAchievements(userId: string): Promise<UserAchievementsDto>
 	getUserAchievements(userId: string): Promise<UserAchievementsDto>
 }
 
+type RawRequest = { userId: string }
+type RawResponse = { raw: { json(): Promise<unknown> } }
+
 interface GeneratedAchievementsApiClient {
-	evaluateUserAchievements(request: {
-		userId: string
-	}): Promise<UserAchievementsDto>
-	getUserAchievements(request: {
-		userId: string
-	}): Promise<UserAchievementsDto>
+	evaluateUserAchievementsRaw?(request: RawRequest): Promise<RawResponse>
+	getUserAchievementsRaw?(request: RawRequest): Promise<RawResponse>
+	evaluateUserAchievements(request: RawRequest): Promise<unknown>
+	getUserAchievements(request: RawRequest): Promise<unknown>
 }
 
 type AchievementsApiConstructor = new (
@@ -104,15 +137,30 @@ export default class AchievementsWrapper implements AchievementsApiClient {
 	async evaluateUserAchievements(
 		userId: string,
 	): Promise<UserAchievementsDto> {
-		return await pTimeout(this.api.evaluateUserAchievements({ userId }), {
-			milliseconds: DEFAULT_TIMEOUT_MS,
-		})
+		const request = { userId }
+		const raw = this.api.evaluateUserAchievementsRaw
+		return await this.read(
+			raw
+				? async () => (await raw.call(this.api, request)).raw.json()
+				: () => this.api.evaluateUserAchievements(request),
+		)
 	}
 
 	/** Read-only view of the current achievements state. */
 	async getUserAchievements(userId: string): Promise<UserAchievementsDto> {
-		return await pTimeout(this.api.getUserAchievements({ userId }), {
+		const request = { userId }
+		const raw = this.api.getUserAchievementsRaw
+		return await this.read(
+			raw
+				? async () => (await raw.call(this.api, request)).raw.json()
+				: () => this.api.getUserAchievements(request),
+		)
+	}
+
+	private async read(load: () => Promise<unknown>) {
+		const body = await pTimeout(load(), {
 			milliseconds: DEFAULT_TIMEOUT_MS,
 		})
+		return parseUserAchievements(body)
 	}
 }
