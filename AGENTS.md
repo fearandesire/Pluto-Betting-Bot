@@ -88,7 +88,7 @@ New and changed Discord messages use Components V2. The full guide is `docs/comp
 
 For ordinary authorized implementation work, invoke the installed pstack `poteto-mode` skill and its `autopilot-full` playbook. The maintained source is `fearandesire/pstack-owned`, the owner-merge fork of Michael Denyer's port (0.9.134); use the host's installed runtime adapter. The detailed repository contract is [docs/agents/pr-flow.md](docs/agents/pr-flow.md), and model roles come from the project sheet `.claude/pstack-models.md`. Confirm the skill and playbook are available in the current owner runtime before starting delivery; if unavailable, stop that delivery path and report the missing dependency.
 
-The owner opens its PR ready early and carries it into `main` through independent review, repairs, current-head checks and confirmed merge. Readiness or green CI alone does not authorize landing. Queued auto-merge is not completion. Never bypass protections. Explicit holds, human-only decisions and task-specific stops remain binding. Releases require separate authorization.
+The owner opens its PR ready early once the Pullfrog safety preflight in `docs/agents/pr-flow.md` is confirmed; held migration/freeze PRs stay draft. The owner carries it into `main` through independent review, repairs, current-head checks and confirmed merge. Readiness or green CI alone does not authorize landing. Queued auto-merge is not completion. Never bypass protections. Explicit holds, human-only decisions and task-specific stops remain binding. Releases require separate authorization.
 
 ## What is public and what is private
 
