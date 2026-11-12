@@ -14,8 +14,11 @@ import {
 	toJsonComponents,
 } from '../../v2/__tests__/v2-assert.js'
 import {
+	achievementsPageCount,
 	achievementsPayload,
+	decodeAchievementsPage,
 	decodeAchievementsView,
+	encodeAchievementsPage,
 	encodeAchievementsView,
 	profileBadgeLine,
 } from '../achievements.js'
@@ -61,6 +64,23 @@ describe('achievements view custom id', () => {
 			decodeAchievementsView('ach.v1.view.22222222222222222.x'),
 		).toBeNull()
 		expect(() => encodeAchievementsView('abc')).toThrow()
+	})
+
+	it('round-trips a page id and keeps it apart from the opening id', () => {
+		const id = encodeAchievementsPage('22222222222222222', 3)
+		expect(id).toBe('ach.v1.view.22222222222222222.3')
+		expect(decodeAchievementsPage(id)).toEqual({
+			targetId: '22222222222222222',
+			page: 3,
+		})
+		expect(decodeAchievementsView(id)).toBeNull()
+		expect(
+			decodeAchievementsPage('ach.v1.view.22222222222222222'),
+		).toBeNull()
+		expect(
+			decodeAchievementsPage('ach.v1.view.22222222222222222.x'),
+		).toBeNull()
+		expect(() => encodeAchievementsPage('22222222222222222', -1)).toThrow()
 	})
 })
 
@@ -137,13 +157,14 @@ describe('achievementsPayload', () => {
 		expect(payload.allowedMentions).toEqual({ parse: [] })
 	})
 
-	it('switches to compact lines for a 30-badge worst case and stays inside the V2 budget', () => {
+	it('splits a 30-badge worst case into pages that keep every rule', () => {
 		const long = 'x'.repeat(180)
 		const make = (i: number, state: 'earned' | 'locked'): BadgeView =>
 			badge({
 				key: `k${i}`,
 				label: `Badge Number ${i}`,
-				criteria: long,
+				criteria: `${long}${i}`,
+				kind: i % 2 ? 'form' : 'career',
 				state,
 				emoji: `<:p_opening_score:${ID}>`,
 				gates:
@@ -166,17 +187,52 @@ describe('achievementsPayload', () => {
 		const locked = Array.from({ length: 20 }, (_, i) =>
 			make(i + 10, 'locked'),
 		)
-		const payload = achievementsPayload(
-			view({ earned, locked, total: 30 }),
-			'Harbor',
+		const v = view({ earned, locked, total: 30 })
+		const pages = achievementsPageCount(v, 'Harbor')
+		expect(pages).toBeGreaterThan(1)
+
+		const seen: string[] = []
+		for (let page = 0; page < pages; page++) {
+			const payload = achievementsPayload(v, 'Harbor', {
+				targetId: ID,
+				page,
+			})
+			const body = texts(payload).join('\n')
+			seen.push(body)
+			expect(texts(payload)[0]).toContain(`Page ${page + 1} of ${pages}`)
+			const components = toJsonComponents(payload as never)
+			expect(sumTextDisplayChars(components)).toBeLessThanOrEqual(4000)
+			expect(countComponents(components)).toBeLessThanOrEqual(40)
+		}
+		const all = seen.join('\n')
+		for (const b of [...earned, ...locked]) {
+			expect(all.split(`**${b.label}**: ${b.criteria}`)).toHaveLength(2)
+		}
+		expect(all.split('Prediction hit rate 55.0% of 60%')).toHaveLength(21)
+		expect(all).toContain('You keep it only while you still qualify.')
+		expect(all).not.toContain('·  Settled')
+	})
+
+	it('shows Previous and Next only when the list spans pages', () => {
+		const single = achievementsPayload(view({}), 'Harbor', { targetId: ID })
+		expect(JSON.stringify(toJsonComponents(single as never))).not.toContain(
+			'Previous',
 		)
-		const parts = texts(payload)
-		expect(parts[1]).not.toContain(long)
-		expect(parts[2]).toContain('Prediction hit rate 55.0% of 60%')
-		expect(parts[2].split('\n')).toHaveLength(1 + 20)
-		const components = toJsonComponents(payload as never)
-		expect(sumTextDisplayChars(components)).toBeLessThanOrEqual(4000)
-		expect(countComponents(components)).toBeLessThanOrEqual(40)
+		const long = 'x'.repeat(180)
+		const many = Array.from({ length: 30 }, (_, i) =>
+			badge({ key: `k${i}`, label: `B${i}`, criteria: long }),
+		)
+		const v = view({ earned: many, locked: [], total: 30 })
+		const first = JSON.stringify(
+			toJsonComponents(
+				achievementsPayload(v, 'Harbor', {
+					targetId: ID,
+					page: 0,
+				}) as never,
+			),
+		)
+		expect(first).toContain(`ach.v1.view.${ID}.1`)
+		expect(first).toContain('Previous')
 	})
 })
 

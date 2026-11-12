@@ -63,6 +63,7 @@ const dto = {
 
 const makeInteraction = () => ({
 	deferReply: vi.fn().mockResolvedValue(undefined),
+	deferUpdate: vi.fn().mockResolvedValue(undefined),
 	editReply: vi.fn().mockResolvedValue(undefined),
 	guild: {
 		members: { cache: new Map([[TARGET, { displayName: 'Harbor' }]]) },
@@ -91,18 +92,36 @@ describe('AchievementsViewHandler', () => {
 			makeHandler().parse({ customId } as never)
 		expect(parse(`ach.v1.view.${TARGET}`)).toEqual({
 			kind: 'some',
-			value: { targetId: TARGET },
+			value: { targetId: TARGET, page: null },
 		})
 		expect(parse(`profile.v1.share.${TARGET}.${TARGET}`)).toEqual({
 			kind: 'none',
 		})
 		expect(parse('ach.v2.view.1')).toEqual({ kind: 'none' })
 		expect(parse(`ach.v1.view.${TARGET}.x`)).toEqual({ kind: 'none' })
+		expect(parse(`ach.v1.view.${TARGET}.2`)).toEqual({
+			kind: 'some',
+			value: { targetId: TARGET, page: 2 },
+		})
+	})
+
+	it('edits the private reply in place for Previous and Next', async () => {
+		const interaction = makeInteraction()
+		await makeHandler().run(interaction as never, {
+			targetId: TARGET,
+			page: 0,
+		})
+		expect(interaction.deferUpdate).toHaveBeenCalled()
+		expect(interaction.deferReply).not.toHaveBeenCalled()
+		expect(interaction.editReply).toHaveBeenCalledTimes(1)
 	})
 
 	it("replies privately with the target's list after acknowledging", async () => {
 		const interaction = makeInteraction()
-		await makeHandler().run(interaction as never, { targetId: TARGET })
+		await makeHandler().run(interaction as never, {
+			targetId: TARGET,
+			page: null,
+		})
 		expect(interaction.deferReply).toHaveBeenCalledWith({
 			flags: MessageFlags.Ephemeral,
 		})
@@ -115,7 +134,10 @@ describe('AchievementsViewHandler', () => {
 	it('answers not available when profiles are off', async () => {
 		mocks.env.PROFILE_ENABLED = false
 		const interaction = makeInteraction()
-		await makeHandler().run(interaction as never, { targetId: TARGET })
+		await makeHandler().run(interaction as never, {
+			targetId: TARGET,
+			page: null,
+		})
 		expect(texts(interaction.editReply.mock.calls[0][0])[0]).toMatch(
 			/not available yet/,
 		)
@@ -126,7 +148,10 @@ describe('AchievementsViewHandler', () => {
 		mocks.evaluate.mockRejectedValue(new Error('down'))
 		mocks.get.mockRejectedValue(new Error('down'))
 		const interaction = makeInteraction()
-		await makeHandler().run(interaction as never, { targetId: TARGET })
+		await makeHandler().run(interaction as never, {
+			targetId: TARGET,
+			page: null,
+		})
 		expect(texts(interaction.editReply.mock.calls[0][0])[0]).toMatch(
 			/Could not load achievements/,
 		)
