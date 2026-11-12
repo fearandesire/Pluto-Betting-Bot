@@ -1,4 +1,5 @@
 import type { ChannelCreationEvent } from '@pluto-khronos/types'
+import { withJobRequestId } from '../../../lib/telemetry/request-context.js'
 import { createChannelPresentationService } from '../../guilds/channels/ChannelPresentationService.js'
 import {
 	type ChannelCreationEventV2,
@@ -61,7 +62,7 @@ export class ChannelCreationQueue {
 		// Worker with explicit lockDuration
 		this.worker = new Worker<CreationJob, ChannelCreationResult>(
 			'channel-creation',
-			async (job) => this.runJob(job),
+			withJobRequestId(async (job) => this.runJob(job)),
 			{
 				connection,
 				concurrency: 15,

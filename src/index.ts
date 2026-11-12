@@ -7,6 +7,7 @@ import {
 import '@sapphire/plugin-hmr/register'
 import { GatewayIntentBits, Partials } from 'discord.js'
 import { startPluto } from './lib/startup/pluto.js'
+import { bindInteractionRequestContext } from './lib/telemetry/interaction-context.js'
 import { getDefaultAlertReporter } from './services/alerts/alert-reporter.js'
 import { GatewayConnectivityMonitor } from './services/alerts/failure-trackers.js'
 import { logger } from './utils/logging/WinstonLogger.js'
@@ -30,6 +31,8 @@ const SapDiscClient = new SapphireClient({
 	typing: true,
 	loadMessageCommandListeners: false,
 })
+
+bindInteractionRequestContext(SapDiscClient)
 
 const gatewayMonitor = new GatewayConnectivityMonitor({
 	firing: async (input) => getDefaultAlertReporter()?.firing(input),

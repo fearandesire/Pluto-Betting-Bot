@@ -1,5 +1,6 @@
 import { type Job, Queue, Worker } from 'bullmq'
 import { registerShutdownQueue } from '../../../lib/startup/shutdown-registry.js'
+import { withJobRequestId } from '../../../lib/telemetry/request-context.js'
 import MatchCacheService from '../../api/routes/cache/match-cache-service.js'
 import { logger } from '../../logging/WinstonLogger.js'
 import { CacheManager } from '../cache-manager.js'
@@ -53,7 +54,7 @@ export class MatchRefreshQueue {
 
 		this.worker = new Worker<MatchRefreshJobData, MatchRefreshResult>(
 			MatchRefreshQueue.QUEUE_NAME,
-			async (job) => this.runJob(job),
+			withJobRequestId(async (job) => this.runJob(job)),
 			{
 				connection,
 				concurrency: 1,

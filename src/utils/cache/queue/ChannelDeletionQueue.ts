@@ -1,5 +1,6 @@
 import { type Job, Queue, Worker } from 'bullmq'
 import { registerShutdownQueue } from '../../../lib/startup/shutdown-registry.js'
+import { withJobRequestId } from '../../../lib/telemetry/request-context.js'
 import ChannelManager from '../../guilds/channels/ChannelManager.js'
 import { logger } from '../../logging/WinstonLogger.js'
 import { REDIS_CONFIG } from '../data/config.js'
@@ -45,7 +46,7 @@ export class ChannelDeletionQueue {
 		// Initialize worker with proper concurrency
 		this.worker = new Worker<ChannelDeletionJobData, ChannelDeletionResult>(
 			'channel-deletion-queue',
-			async (job) => this.runJob(job),
+			withJobRequestId(async (job) => this.runJob(job)),
 			{ connection, concurrency: 15 },
 		)
 

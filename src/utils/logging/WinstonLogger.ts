@@ -1,7 +1,9 @@
+import { isSpanContextValid, trace } from '@opentelemetry/api'
 import * as winston from 'winston'
 import 'winston-transport'
 import { fullFormat } from 'winston-error-format'
 import env from '#lib/startup/env.js'
+import { currentRequestId } from '#lib/telemetry/request-context.js'
 import { createConsoleTransport } from './transports/consoleTransport.js'
 // Loki direct-ship removed: Docker stdout → Alloy is the sole production path
 // (atlas-ops contract v1 / Pluto#580).
@@ -17,6 +19,22 @@ export const messageToMsg = winston.format((info) => {
 	if (info.message != null && info.msg == null) {
 		info.msg = info.message as string
 		delete info.message
+	}
+	return info
+})
+
+/**
+ * Joins each log line to the interaction, inbound request or job it ran in
+ * (`requestId`), and to the active span (`trace_id`, `span_id`) once tracing
+ * is on. Field names match Khronos so one query spans both services.
+ */
+export const requestCorrelation = winston.format((info) => {
+	const requestId = currentRequestId()
+	if (requestId && info.requestId == null) info.requestId = requestId
+	const spanContext = trace.getActiveSpan()?.spanContext()
+	if (spanContext && isSpanContextValid(spanContext)) {
+		info.trace_id ??= spanContext.traceId
+		info.span_id ??= spanContext.spanId
 	}
 	return info
 })
@@ -39,6 +57,7 @@ const createBaseFormat = () => {
 	return winston.format.combine(
 		winston.format.errors({ stack: true }),
 		fullFormat(),
+		requestCorrelation(),
 	)
 }
 
