@@ -63,7 +63,7 @@ The bucket is public and nothing expires. The random path segment is the only pr
 
 ### Configuration
 
-Five names. Each is read from the environment first, then from `~/.config/agent-media/r2.env` (`KEY=value` lines; `R2_ENV_FILE` points at another path). Values are never printed. A missing name is reported by name.
+The script reads five settings. Each comes from the environment first, then from `~/.config/agent-media/r2.env` (`KEY=value` lines; `R2_ENV_FILE` points at another path). The script never prints a value, and it names any setting that is missing.
 
 | Name | Kind | Cloud session | Local machine |
 | --- | --- | --- | --- |
@@ -73,7 +73,7 @@ Five names. Each is read from the environment first, then from `~/.config/agent-
 | `R2_ACCESS_KEY_ID` | secret | environment secret | `r2.env` |
 | `R2_SECRET_ACCESS_KEY` | secret | environment secret | `r2.env` |
 
-With `--via auto` (the default), the `cf` CLI performs the upload whenever it is on `PATH` and either key is missing. The config check only looks for `cf` on `PATH`, so then only `R2_BUCKET` and `R2_PUBLIC_BASE` are required, and `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` and `R2_ACCOUNT_ID` are optional. `cf` must also be logged in: if it is not, the config check still passes and the run exits 1 at upload time. Without `cf` on `PATH` all five names are required. Exit 3 lists whichever names are still missing.
+With `--via auto` (the default), the script uploads through the `cf` CLI when `cf` is on `PATH` and either access key is missing. Then only `R2_BUCKET` and `R2_PUBLIC_BASE` are required. The config check does not test whether `cf` is logged in, so a logged-out `cf` passes the check and the run exits 1 at upload. Without `cf` on `PATH`, all five settings are required. Exit 3 lists the ones still missing.
 
 The repository owner sets these. Agents never create keys, copy them between machines, or paste them into a command line, prompt, log or PR. The values do not belong in this repository. In a cloud session the environment's network allowlist must also permit the R2 API host and the public media host.
 
@@ -88,7 +88,7 @@ python3 scripts/r2-upload.py out/*.png --json              # file, key, url, buc
 python3 scripts/r2-upload.py --help
 ```
 
-Never paste `--json` output into a PR: it contains the bucket name. `--markdown` is the format for PRs.
+Never paste `--json` output into a PR, because it includes the bucket name. Use `--markdown` for PRs.
 
 Files land at `<repo>/<random id>/<name>`. `<repo>` is the `origin` remote's name; `--repo NAME` overrides it. Each upload is fetched back from its public URL and compared byte for byte; `--no-verify` skips that.
 
