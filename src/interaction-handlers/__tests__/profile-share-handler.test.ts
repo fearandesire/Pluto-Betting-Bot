@@ -32,7 +32,11 @@ const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 1, 2, 3])
 let messageSeq = 0
 
 function makeInteraction(
-	opts: { userId?: string; attachmentUrl?: string | null } = {},
+	opts: {
+		userId?: string
+		attachmentUrl?: string | null
+		badgeLine?: string
+	} = {},
 ) {
 	messageSeq += 1
 	const url = opts.attachmentUrl === undefined ? CDN_URL : opts.attachmentUrl
@@ -42,6 +46,20 @@ function makeInteraction(
 		message: {
 			id: `message-${messageSeq}`,
 			attachments: { first: () => (url ? { url } : undefined) },
+			components: opts.badgeLine
+				? [
+						{
+							toJSON: () => ({
+								type: 17,
+								components: [
+									{ type: 12, items: [] },
+									{ type: 10, content: opts.badgeLine },
+									{ type: 1, components: [] },
+								],
+							}),
+						},
+					]
+				: [],
 		},
 		reply: vi.fn(),
 		deferUpdate: vi.fn(),
@@ -130,7 +148,8 @@ describe('ProfileShareHandler', () => {
 		const row = toJsonComponents(edit)[0].components?.slice(-1)[0] as {
 			components: Array<{ disabled?: boolean }>
 		}
-		expect(row.components[0].disabled).toBe(true)
+		expect(row.components[0].disabled).toBeFalsy()
+		expect(row.components[1].disabled).toBe(true)
 		expect(edit.flags & MessageFlags.Ephemeral).toBeFalsy()
 
 		// A second click on the same message must not post again.
@@ -218,5 +237,47 @@ describe('ProfileShareHandler', () => {
 		await handler.run(interaction as never, route)
 		await handler.run(interaction as never, route)
 		expect(interaction.followUp).toHaveBeenCalledOnce()
+	})
+
+	it('carries the badge line to the public post and the rebuilt reply', async () => {
+		const interaction = makeInteraction({
+			badgeLine: 'Opening Score · 1 of 10 badges',
+		})
+		await makeHandler().run(interaction as never, {
+			ownerId: OWNER,
+			targetId: TARGET,
+		})
+		const texts = (payload: unknown) =>
+			(
+				toJsonComponents(payload as never)[0].components as Array<{
+					content?: string
+				}>
+			)
+				.map((c) => c.content)
+				.filter(Boolean)
+		expect(texts(interaction.followUp.mock.calls[0][0])).toEqual([
+			'Opening Score · 1 of 10 badges',
+			`-# Shared by <@${OWNER}>`,
+		])
+		expect(texts(interaction.editReply.mock.calls[0][0])).toEqual([
+			'Opening Score · 1 of 10 badges',
+		])
+	})
+
+	it('posts a pre-deploy card exactly as before', async () => {
+		const interaction = makeInteraction()
+		await makeHandler().run(interaction as never, {
+			ownerId: OWNER,
+			targetId: TARGET,
+		})
+		const shared = interaction.followUp.mock.calls[0][0]
+		expect(toJsonComponents(shared)[0].components).toHaveLength(2)
+		expect(
+			(
+				toJsonComponents(shared)[0].components as Array<{
+					content?: string
+				}>
+			)[1].content,
+		).toBe(`-# Shared by <@${OWNER}>`)
 	})
 })

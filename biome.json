@@ -57,6 +57,8 @@
 		"includes": [
 			"src/**/*.ts",
 			"scripts/cv2/**/*.ts",
+			"scripts/badge-emoji/**/*.mjs",
+			"scripts/badge-emoji/**/*.ts",
 			"scripts/matchup-assets/**/*.mjs",
 			"scripts/matchup-assets/**/*.test.ts",
 			"scripts/assets-r2.js",

@@ -69,6 +69,7 @@ dev/
 !src/utils/dev/
 !src/utils/dev/**/*
 assets.zip
+scripts/badge-emoji/journal.*.json
 
 # More IDE Settings
 .idea/

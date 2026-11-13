@@ -1,3 +1,6 @@
+import { buildBadgeEmojiRegistry } from '../../../src/lib/badges/badge-emoji-registry.js'
+import { BADGE_PRESENTATION } from '../../../src/lib/badges/badge-presentation.js'
+import { buildAchievementsView } from '../../../src/lib/badges/badge-view.js'
 import {
 	accountCreatedEmbed,
 	h2hStatsEmbed,
@@ -7,8 +10,19 @@ import {
 	successEmbed,
 	welcomeEmbed,
 } from '../../../src/lib/discord/builders/account.js'
+import {
+	achievementsPayload,
+	profileBadgeLine,
+} from '../../../src/lib/discord/builders/achievements.js'
+import { profileCardPayload } from '../../../src/lib/discord/builders/profile.js'
 import { FALLBACK_FOOTERS } from '../../../src/lib/footers/fallbackFooters.js'
 import { plutoWelcomeMsg } from '../../../src/utils/api/common/interfaces/kh-pluto/kh-pluto.interface.js'
+import type { UserAchievementsDto } from '../../../src/utils/api/Khronos/achievements/achievements-wrapper.js'
+import { fullCard } from '../../../src/utils/profile-card/__tests__/fixtures.js'
+import {
+	MAX_PROFILE_BADGES,
+	renderProfileCard,
+} from '../../../src/utils/profile-card/profile-card.js'
 import { type ClusterFixtures, FIXED } from './types.js'
 
 // helpfooter() with Math.random = 0 picks the first fallback entry.
@@ -35,6 +49,120 @@ const leaderboard: LeaderboardEntry[] = LB_NAMES.map((memberTag, i) => ({
 	memberTag,
 	balance: (12_450.5 - i * 815.25).toFixed(2),
 }))
+
+// Fictional player. The emoji ids are fictional too, so a render shows the
+// <:name:id> token the way Discord does for an emoji the viewer cannot see.
+const EMOJI_IDS = buildBadgeEmojiRegistry(
+	Object.values(BADGE_PRESENTATION).map((badge, i) => ({
+		name: badge.emojiName,
+		id: String(900000000000000001n + BigInt(i)),
+	})),
+)
+const NO_EMOJI = buildBadgeEmojiRegistry([])
+
+const withoutFiles = <T extends { files?: unknown }>({
+	files,
+	...message
+}: T): Omit<T, 'files'> => message
+
+const earned = (key: string) => ({
+	key,
+	name: key,
+	description: '',
+	awarded_at: '2026-10-01T12:00:00.000Z',
+})
+const count = (
+	metric: string,
+	label: string,
+	current: number,
+	target: number,
+) => ({
+	metric,
+	label,
+	unit: 'count',
+	comparator: 'gte',
+	target,
+	current,
+	met: current >= target,
+})
+const achievementsFixture: UserAchievementsDto = {
+	user_id: FIXED.userId,
+	earned: ['first_win', 'ten_wins', 'in_the_black', 'due_a_win'].map(earned),
+	locked: [
+		{
+			key: 'fifty_wins',
+			name: 'Club Fifty',
+			description: 'Win 50 head-to-head bets.',
+			progress: 37,
+			target: 50,
+		},
+		{
+			key: 'sharp_eye',
+			name: 'The Line Reader',
+			description:
+				'Keep a hit rate of 60% or better across at least 20 settled predictions.',
+			progress: 19,
+			target: 20,
+			kind: 'form',
+			gates: [
+				count('settled_predictions', 'Settled predictions', 20, 20),
+				{
+					metric: 'prediction_hit_rate',
+					label: 'Prediction hit rate',
+					unit: 'ratio',
+					comparator: 'gte',
+					target: 0.6,
+					current: 0.55,
+					met: false,
+				},
+			],
+		},
+		{
+			key: 'prop_hunter',
+			name: 'Player’s Edge',
+			description: 'Get 10 player prop predictions right.',
+			progress: 6,
+			target: 10,
+		},
+		{
+			key: 'parlay_pro',
+			name: 'All Legs Home',
+			description: 'Win a parlay.',
+			progress: 0,
+			target: 1,
+		},
+		{
+			key: 'courtside',
+			name: 'Courtside',
+			description: 'Get 10 NBA predictions right.',
+			progress: 3,
+			target: 10,
+		},
+		{
+			key: 'trust_the_process',
+			name: 'Trust the Process',
+			description:
+				'Have 50 bets, predictions or parlays settle across at least 20 different games.',
+			progress: 41,
+			target: 50,
+			kind: 'career',
+			gates: [
+				count('settled_choices', 'Settled choices', 41, 50),
+				count('distinct_events', 'Different games', 17, 20),
+			],
+		},
+	],
+	summary: {
+		settled_bets: 31,
+		wins: 18,
+		losses: 11,
+		pushes: 2,
+		net_profit: 1342.5,
+		best_win_payout: 612.75,
+		settled_predictions: 40,
+		prediction_hit_rate: 0.55,
+	},
+}
 
 const fixtures: ClusterFixtures = {
 	cluster: 'account',
@@ -138,6 +266,53 @@ const fixtures: ClusterFixtures = {
 			id: 'D6',
 			name: 'Welcome DM',
 			before: () => ({ embeds: [welcomeEmbed(plutoWelcomeMsg)] }),
+		},
+		{
+			id: 'D8',
+			name: '/achievements',
+			after: () =>
+				withoutFiles(
+					achievementsPayload(
+						buildAchievementsView(achievementsFixture, EMOJI_IDS),
+						FIXED.username,
+					),
+				),
+		},
+		{
+			id: 'D9',
+			name: '/achievements (no application emoji)',
+			after: () =>
+				withoutFiles(
+					achievementsPayload(
+						buildAchievementsView(achievementsFixture, NO_EMOJI),
+						FIXED.username,
+					),
+				),
+		},
+		{
+			id: 'D10',
+			name: '/profile (badge line, Achievements button)',
+			after: async () => {
+				const png = await renderProfileCard(fullCard)
+				const view = buildAchievementsView(
+					achievementsFixture,
+					EMOJI_IDS,
+				)
+				const { files, ...message } = profileCardPayload({
+					png,
+					route: { ownerId: FIXED.userId, targetId: FIXED.userId },
+					badgeLine: profileBadgeLine(view, MAX_PROFILE_BADGES),
+				})
+				return {
+					...message,
+					files: [
+						{
+							name: 'profile-card.png',
+							url: `data:image/png;base64,${png.toString('base64')}`,
+						},
+					],
+				}
+			},
 		},
 	],
 }
