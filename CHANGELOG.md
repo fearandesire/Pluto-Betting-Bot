@@ -1,5 +1,20 @@
 # Changelog
 
+## [4.18.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.17.0...v4.18.0) (2026-11-13)
+
+
+### Features
+
+* **achievements:** badge list, approved labels, emoji registry and setup script ([#773](https://github.com/fearandesire/Pluto-Betting-Bot/issues/773)) ([e82368a](https://github.com/fearandesire/Pluto-Betting-Bot/commit/e82368a5cdec7f3be629f326f75d8b1c98d19cdb))
+* **khronos:** send X-Request-ID on every Khronos call ([#776](https://github.com/fearandesire/Pluto-Betting-Bot/issues/776)) ([c9eaff0](https://github.com/fearandesire/Pluto-Betting-Bot/commit/c9eaff041e69dd988fe24f94866d54cb58d4ca8d))
+* **profile:** add Headline and Trophy Shelf views behind PROFILE_VIEWS_ENABLED ([#782](https://github.com/fearandesire/Pluto-Betting-Bot/issues/782)) ([bf671b1](https://github.com/fearandesire/Pluto-Betting-Bot/commit/bf671b131eb03997f2fdc8d1c84198b042cb9498))
+* **telemetry:** trace Pluto with OpenTelemetry behind PLUTO_OTEL_ENABLED ([#777](https://github.com/fearandesire/Pluto-Betting-Bot/issues/777)) ([1dc1197](https://github.com/fearandesire/Pluto-Betting-Bot/commit/1dc11971e99db373a588b48abd9429ac41381dac))
+
+
+### Bug Fixes
+
+* **khronos:** bump @pluto-khronos/* to 3.17.0 ([86f2f57](https://github.com/fearandesire/Pluto-Betting-Bot/commit/86f2f5754ab717eab09b4b8209d6849bd6a1382d))
+
 ## [4.17.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.16.1...v4.17.0) (2026-11-06)
 
 
