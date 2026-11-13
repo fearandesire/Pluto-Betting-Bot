@@ -47,7 +47,7 @@ export const BADGE_PRESENTATION: Readonly<Record<string, BadgePresentation>> = {
 	sharp_eye: {
 		label: 'The Line Reader',
 		criteria:
-			'Keep a hit rate of 60% or better across at least 20 settled predictions.',
+			'Keep a hit rate of 60% or better across at least 15 settled predictions.',
 		kind: 'form',
 		emojiName: 'p_line_reader',
 		progressLabel: 'Settled predictions',
@@ -98,21 +98,21 @@ export const BADGE_PRESENTATION: Readonly<Record<string, BadgePresentation>> = {
 	},
 	armchair_expert: {
 		label: 'Armchair Expert',
-		criteria: 'Have 100 predictions settle.',
+		criteria: 'Have 25 predictions settle.',
 		kind: 'career',
 		emojiName: 'p_armchair_expert',
 		progressLabel: 'Settled predictions',
 	},
 	extra_innings: {
 		label: 'Extra Innings',
-		criteria: 'Have 200 bets, predictions or parlays settle.',
+		criteria: 'Have 150 bets, predictions or parlays settle.',
 		kind: 'career',
 		emojiName: 'p_extra_innings',
 		progressLabel: 'Settled picks',
 	},
 	on_the_money: {
 		label: 'On the Money',
-		criteria: 'Get 25 predictions right.',
+		criteria: 'Get 15 predictions right.',
 		kind: 'career',
 		emojiName: 'p_on_the_money',
 		progressLabel: 'Correct predictions',
@@ -169,15 +169,15 @@ export const BADGE_PRESENTATION: Readonly<Record<string, BadgePresentation>> = {
 	},
 	long_shot: {
 		label: 'Long Shot',
-		criteria: 'Win a parlay priced at +1000 or longer.',
+		criteria: 'Win a parlay priced at +600 or longer.',
 		kind: 'career',
 		emojiName: 'p_long_shot',
-		progressLabel: 'Won parlays at +1000 or longer',
+		progressLabel: 'Won parlays at +600 or longer',
 	},
 	buzzer_beater: {
 		label: 'Buzzer Beater',
 		criteria:
-			'Win a parlay placed in the last 10 minutes before its first game starts.',
+			'Win a parlay placed in the last 30 minutes before its first game starts.',
 		kind: 'career',
 		emojiName: 'p_buzzer_beater',
 		progressLabel: 'Won parlays placed just before the first game',
@@ -207,7 +207,7 @@ export const BADGE_PRESENTATION: Readonly<Record<string, BadgePresentation>> = {
 	},
 	underdog: {
 		label: 'Underdog',
-		criteria: 'Win 5 head-to-head bets placed at plus odds.',
+		criteria: 'Win 10 head-to-head bets placed at plus odds.',
 		kind: 'career',
 		emojiName: 'p_underdog',
 		progressLabel: 'Head-to-head wins at plus odds',

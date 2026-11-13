@@ -108,7 +108,7 @@ describe('buildAchievementsView', () => {
 		const withRate = buildAchievementsView(
 			dto({
 				locked: [
-					locked({ key: 'sharp_eye', progress: 19, target: 20 }),
+					locked({ key: 'sharp_eye', progress: 14, target: 15 }),
 				],
 				summary: {
 					...summary,
@@ -139,8 +139,8 @@ describe('buildAchievementsView', () => {
 				locked: [
 					locked({
 						key: 'sharp_eye',
-						progress: 19,
-						target: 20,
+						progress: 14,
+						target: 15,
 						kind: 'form',
 						gates: [
 							{
@@ -148,7 +148,7 @@ describe('buildAchievementsView', () => {
 								label: 'Settled predictions',
 								unit: 'count',
 								comparator: 'gte',
-								target: 20,
+								target: 15,
 								current: 20,
 								met: true,
 							},
@@ -168,8 +168,8 @@ describe('buildAchievementsView', () => {
 			none,
 		)
 		const texts = view.locked[0].gates.map((g) => g.text)
-		expect(texts).toEqual(['20/20', '55.0% of 60%'])
-		expect(texts.join(' ')).not.toContain('19/20')
+		expect(texts).toEqual(['15/15', '55.0% of 60%'])
+		expect(texts.join(' ')).not.toContain('14/15')
 	})
 
 	it('reads one gate from progress and target for a count badge', () => {

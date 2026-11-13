@@ -49,9 +49,9 @@ const body = {
 			key: 'sharp_eye',
 			name: 'The Line Reader',
 			description:
-				'Keep a hit rate of 60% or better across at least 20 settled predictions.',
-			progress: 19,
-			target: 20,
+				'Keep a hit rate of 60% or better across at least 15 settled predictions.',
+			progress: 14,
+			target: 15,
 		},
 	],
 	summary,
@@ -63,7 +63,7 @@ const gates = [
 		label: 'Settled predictions',
 		unit: 'count',
 		comparator: 'gte',
-		target: 20,
+		target: 15,
 		current: 20,
 		met: true,
 	},
@@ -187,7 +187,7 @@ describe('AchievementsWrapper', () => {
 		const result = await new AchievementsWrapper().getUserAchievements('u1')
 		expect(result.locked[0].kind).toBeUndefined()
 		expect(result.locked[0].gates).toBeUndefined()
-		expect(result.locked[0].progress).toBe(19)
+		expect(result.locked[0].progress).toBe(14)
 	})
 
 	it('rejects a body that breaks the released contract', async () => {
