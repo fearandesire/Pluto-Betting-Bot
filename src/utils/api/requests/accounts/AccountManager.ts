@@ -10,6 +10,7 @@ import _ from 'lodash'
 import { profileDescription } from '../../../../lib/discord/builders/account.js'
 import { ApiModules } from '../../../../lib/interfaces/api/api.interface.js'
 import { supportMessage } from '../../../../lib/PlutoConfig.js'
+import type { ProfileView } from '../../../../lib/profile/profile-view.js'
 import { ErrorEmbeds } from '../../../common/errors/global.js'
 import { isMockEnabled, MockBackend } from '../../../dev/index.js'
 import PaginationUtilities from '../../../embeds/pagination-utilities.js'
@@ -55,6 +56,31 @@ export class AccountsWrapper {
 		return await this.accountsApi.userProfile({
 			userid: userid,
 		})
+	}
+
+	/**
+	 * Saves the user's default /profile view. Returns false while the installed
+	 * Khronos client predates `setProfileView`, so the caller can say so.
+	 */
+	async setProfileView(userid: string, view: ProfileView): Promise<boolean> {
+		if (this.mock) {
+			this.mock.setProfileView(userid, view)
+			return true
+		}
+		const save = (
+			this.accountsApi as unknown as {
+				setProfileView?: (request: {
+					userid: string
+					setProfileViewBodyDto: { view: ProfileView }
+				}) => Promise<unknown>
+			}
+		).setProfileView
+		if (!save) return false
+		await save.call(this.accountsApi, {
+			userid,
+			setProfileViewBodyDto: { view },
+		})
+		return true
 	}
 
 	async processClaim(userid: string, patreonOverride: boolean) {

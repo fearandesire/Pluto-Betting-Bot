@@ -146,6 +146,14 @@ describe('Pluto system startup env gate', () => {
 		).toThrow(/AXIOM_ORG_ID/)
 	})
 
+	it('keeps the new profile views off unless PROFILE_VIEWS_ENABLED is true', () => {
+		expect(parseStartupEnv(requiredEnv).PROFILE_VIEWS_ENABLED).toBe(false)
+		expect(
+			parseStartupEnv({ ...requiredEnv, PROFILE_VIEWS_ENABLED: 'true' })
+				.PROFILE_VIEWS_ENABLED,
+		).toBe(true)
+	})
+
 	it('keeps /profile off unless PROFILE_ENABLED is true', () => {
 		expect(parseStartupEnv(requiredEnv).PROFILE_ENABLED).toBe(false)
 		expect(

@@ -9,11 +9,14 @@ export interface EmojiItem {
 
 export interface BadgeEmojiRegistry {
 	format(emojiName: string): string | null
+	/** CDN image of the emoji, for a section thumbnail. */
+	url(emojiName: string): string | null
 	readonly size: number
 }
 
 export const EMPTY_BADGE_EMOJI_REGISTRY: BadgeEmojiRegistry = {
 	format: () => null,
+	url: () => null,
 	size: 0,
 }
 
@@ -29,6 +32,12 @@ export function buildBadgeEmojiRegistry(
 		format: (emojiName) => {
 			const id = ids.get(emojiName)
 			return id ? `<:${emojiName}:${id}>` : null
+		},
+		url: (emojiName) => {
+			const id = ids.get(emojiName)
+			return id
+				? `https://cdn.discordapp.com/emojis/${id}.png?size=128`
+				: null
 		},
 		size: ids.size,
 	}

@@ -32,6 +32,8 @@ const badge = (over: Partial<BadgeView>): BadgeView => ({
 	kind: 'career',
 	state: 'earned',
 	emoji: null,
+	art: null,
+	awardedAt: null,
 	gates: [],
 	...over,
 })
