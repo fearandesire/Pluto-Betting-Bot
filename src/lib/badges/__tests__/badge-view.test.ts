@@ -119,9 +119,28 @@ describe('buildAchievementsView', () => {
 			none,
 		)
 		expect(withRate.locked[0].gates.map((g) => g.text)).toEqual([
-			'20/20',
+			'15/15',
 			'55.0% of 60%',
 		])
+		for (const [settled, text, met] of [
+			[14, '14/15', false],
+			[15, '15/15', true],
+		] as const) {
+			const gate = buildAchievementsView(
+				dto({
+					locked: [
+						locked({ key: 'sharp_eye', progress: 14, target: 15 }),
+					],
+					summary: {
+						...summary,
+						settled_predictions: settled,
+						prediction_hit_rate: 0.55,
+					},
+				}),
+				none,
+			).locked[0].gates[0]
+			expect(gate).toMatchObject({ text, met })
+		}
 		const empty = buildAchievementsView(
 			dto({ locked: [locked({ key: 'sharp_eye' })] }),
 			none,
