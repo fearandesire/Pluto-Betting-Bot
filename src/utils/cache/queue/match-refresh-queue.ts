@@ -1,5 +1,9 @@
 import { type Job, Queue, Worker } from 'bullmq'
 import { registerShutdownQueue } from '../../../lib/startup/shutdown-registry.js'
+import {
+	withJobEventRequestId,
+	withJobRequestId,
+} from '../../../lib/telemetry/request-context.js'
 import MatchCacheService from '../../api/routes/cache/match-cache-service.js'
 import { logger } from '../../logging/WinstonLogger.js'
 import { CacheManager } from '../cache-manager.js'
@@ -53,7 +57,7 @@ export class MatchRefreshQueue {
 
 		this.worker = new Worker<MatchRefreshJobData, MatchRefreshResult>(
 			MatchRefreshQueue.QUEUE_NAME,
-			async (job) => this.runJob(job),
+			withJobRequestId(async (job) => this.runJob(job)),
 			{
 				connection,
 				concurrency: 1,
@@ -86,50 +90,54 @@ export class MatchRefreshQueue {
 	private setupWorkerEvents(): void {
 		this.worker.on(
 			'completed',
-			(job: Job<MatchRefreshJobData, MatchRefreshResult>) => {
-				const result = job.returnvalue
-				if (!result?.success) {
-					return
-				}
-				logger.info({
-					message: 'Match refresh completed',
-					source: 'MatchRefreshQueue:worker',
-					data: {
-						jobId: job.id,
-						reason: job.data?.reason,
-						matchCount: result.matchCount,
-					},
-				})
-			},
+			withJobEventRequestId(
+				(job: Job<MatchRefreshJobData, MatchRefreshResult>) => {
+					const result = job.returnvalue
+					if (!result?.success) {
+						return
+					}
+					logger.info({
+						message: 'Match refresh completed',
+						source: 'MatchRefreshQueue:worker',
+						data: {
+							jobId: job.id,
+							reason: job.data?.reason,
+							matchCount: result.matchCount,
+						},
+					})
+				},
+			),
 		)
 
 		this.worker.on(
 			'failed',
-			(
-				job: Job<MatchRefreshJobData> | undefined,
-				error: Error,
-				prev: string,
-			) => {
-				if (!job) {
+			withJobEventRequestId(
+				(
+					job: Job<MatchRefreshJobData> | undefined,
+					error: Error,
+					prev: string,
+				) => {
+					if (!job) {
+						logger.error({
+							message: 'Match refresh failed (job unavailable)',
+							source: 'MatchRefreshQueue:worker',
+							data: { error: error.message, prev },
+						})
+						return
+					}
 					logger.error({
-						message: 'Match refresh failed (job unavailable)',
+						message: 'Match refresh failed',
 						source: 'MatchRefreshQueue:worker',
-						data: { error: error.message, prev },
+						data: {
+							jobId: job.id,
+							reason: job.data?.reason,
+							error: error.message,
+							attempts: job.attemptsMade,
+							prev,
+						},
 					})
-					return
-				}
-				logger.error({
-					message: 'Match refresh failed',
-					source: 'MatchRefreshQueue:worker',
-					data: {
-						jobId: job.id,
-						reason: job.data?.reason,
-						error: error.message,
-						attempts: job.attemptsMade,
-						prev,
-					},
-				})
-			},
+				},
+			),
 		)
 	}
 

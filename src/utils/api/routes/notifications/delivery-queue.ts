@@ -1,6 +1,10 @@
 import { type Job, Queue, Worker } from 'bullmq'
 import { registerShutdownQueue } from '../../../../lib/startup/shutdown-registry.js'
 import {
+	withJobEventRequestId,
+	withJobRequestId,
+} from '../../../../lib/telemetry/request-context.js'
+import {
 	type AlertReporter,
 	getDefaultAlertReporter,
 } from '../../../../services/alerts/alert-reporter.js'
@@ -317,7 +321,7 @@ export class NotificationDeliveryQueue {
 		if (options.startWorker !== false) {
 			this.worker = new Worker<DeliveryJob>(
 				NOTIFICATION_DELIVERY_QUEUE,
-				async (job) => this.runJob(job),
+				withJobRequestId(async (job) => this.runJob(job)),
 				{
 					connection: REDIS_CONFIG,
 					concurrency: 8,
@@ -332,9 +336,12 @@ export class NotificationDeliveryQueue {
 					},
 				},
 			)
-			this.worker.on('failed', (job, error) => {
-				void this.handleJobFailed(job, error).catch(() => undefined)
-			})
+			this.worker.on(
+				'failed',
+				withJobEventRequestId((job, error) => {
+					void this.handleJobFailed(job, error).catch(() => undefined)
+				}),
+			)
 			this.unregisterShutdownQueue = registerShutdownQueue(
 				NOTIFICATION_DELIVERY_QUEUE,
 				this,

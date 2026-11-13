@@ -1,4 +1,8 @@
 import type { ChannelCreationEvent } from '@pluto-khronos/types'
+import {
+	withJobEventRequestId,
+	withJobRequestId,
+} from '../../../lib/telemetry/request-context.js'
 import { createChannelPresentationService } from '../../guilds/channels/ChannelPresentationService.js'
 import {
 	type ChannelCreationEventV2,
@@ -61,7 +65,7 @@ export class ChannelCreationQueue {
 		// Worker with explicit lockDuration
 		this.worker = new Worker<CreationJob, ChannelCreationResult>(
 			'channel-creation',
-			async (job) => this.runJob(job),
+			withJobRequestId(async (job) => this.runJob(job)),
 			{
 				connection,
 				concurrency: 15,
@@ -84,62 +88,69 @@ export class ChannelCreationQueue {
 	}
 
 	private setupWorkerEvents(): void {
-		this.worker.on('active', (job) => {
-			logger.info({
-				message: 'Job active',
-				source: 'ChannelCreationQueue:worker',
-				data: {
-					jobId: job.id,
-					jobName: job.name,
-					channelId: job.data?.channel?.id,
-					guildId: job.data?.guild?.guildId,
-					attemptsMade: job.attemptsMade,
-				},
-			})
-		})
-
 		this.worker.on(
-			'completed',
-			async (job: Job<CreationJob, ChannelCreationResult>) => {
-				const result = job.returnvalue
+			'active',
+			withJobEventRequestId((job) => {
 				logger.info({
-					message: 'Job completed',
+					message: 'Job active',
 					source: 'ChannelCreationQueue:worker',
 					data: {
 						jobId: job.id,
 						jobName: job.name,
-						result,
-						channelId: job.data.channel.id,
-						guildId: job.data.guild.guildId,
+						channelId: job.data?.channel?.id,
+						guildId: job.data?.guild?.guildId,
+						attemptsMade: job.attemptsMade,
 					},
 				})
-			},
+			}),
+		)
+
+		this.worker.on(
+			'completed',
+			withJobEventRequestId(
+				async (job: Job<CreationJob, ChannelCreationResult>) => {
+					const result = job.returnvalue
+					logger.info({
+						message: 'Job completed',
+						source: 'ChannelCreationQueue:worker',
+						data: {
+							jobId: job.id,
+							jobName: job.name,
+							result,
+							channelId: job.data.channel.id,
+							guildId: job.data.guild.guildId,
+						},
+					})
+				},
+			),
 		)
 
 		this.worker.on(
 			'failed',
-			(job: Job<CreationJob> | undefined, err: Error) => {
-				if (!job) {
+			withJobEventRequestId(
+				(job: Job<CreationJob> | undefined, err: Error) => {
+					if (!job) {
+						logger.error({
+							message: 'Channel creation failed - job undefined',
+							source: 'ChannelCreationQueue:worker',
+							data: { error: err?.message },
+						})
+						return
+					}
 					logger.error({
-						message: 'Channel creation failed - job undefined',
+						message: 'Job failed',
 						source: 'ChannelCreationQueue:worker',
-						data: { error: err?.message },
+						data: {
+							jobId: job.id,
+							jobName: job.name,
+							error: err?.message,
+							attemptsMade: job.attemptsMade,
+							channelId: job.data?.channel?.id,
+							guildId: job.data?.guild?.guildId,
+						},
 					})
-					return
-				}
-				logger.error({
-					message: 'Job failed',
-					source: 'ChannelCreationQueue:worker',
-					data: {
-						jobId: job.id,
-						jobName: job.name,
-						error: err?.message,
-						attemptsMade: job.attemptsMade,
-						channelId: job.data?.channel?.id,
-						guildId: job.data?.guild?.guildId,
-					},
-				})
-			},
+				},
+			),
 		)
 
 		this.worker.on('error', (err) => {

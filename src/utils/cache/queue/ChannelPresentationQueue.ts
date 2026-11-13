@@ -1,5 +1,6 @@
 import { type Job, Queue, Worker } from 'bullmq'
 import { registerShutdownQueue } from '../../../lib/startup/shutdown-registry.js'
+import { withJobRequestId } from '../../../lib/telemetry/request-context.js'
 import { createChannelPresentationService } from '../../guilds/channels/ChannelPresentationService.js'
 import { logger } from '../../logging/WinstonLogger.js'
 import {
@@ -26,7 +27,7 @@ export class ChannelPresentationQueue {
 	private readonly activeJobs = new Set<Promise<void>>()
 	private readonly worker = new Worker(
 		'channel-presentation-update',
-		async (job) => {
+		withJobRequestId(async (job: Job) => {
 			const task = processPresentationJob(job)
 			this.activeJobs.add(task)
 			try {
@@ -34,7 +35,7 @@ export class ChannelPresentationQueue {
 			} finally {
 				this.activeJobs.delete(task)
 			}
-		},
+		}),
 		{ connection: REDIS_CONFIG, concurrency: 10, lockDuration: 300_000 },
 	)
 	constructor() {
