@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "kit": "charyon/repository-kit",
+  "baseline": "baseline-v1",
+  "kitCommit": "acf549587c7e43452d98921d0932d4a628c7753e",
+  "assetsBase": "https://raw.githubusercontent.com/charyon/assets/9ff764a737890ced24f75f115ce049e3ba56a472",
+  "files": {
+    ".github/PULL_REQUEST_TEMPLATE.md": {
+      "src": "baseline/templates/PULL_REQUEST_TEMPLATE.md",
+      "render": "template",
+      "sha256": "d81f418db337b065e7c0cf2855b0ad57fff11d39b1d0628a27812975724f0279"
+    },
+    ".github/PULL_REQUEST_TEMPLATE/docs.md": {
+      "src": "baseline/templates/PULL_REQUEST_TEMPLATE/docs.md",
+      "render": "template",
+      "sha256": "995f038a0c71f6961a528409b7d7505b0e3d5192e72c16fb3f5e7b73d4a45271"
+    },
+    ".github/labels.yml": {
+      "src": "baseline/labels.yml",
+      "render": "copy",
+      "sha256": "5b86d6b06cd830c021f99c3e5bed1496d46928cea67e7025942c6395af6d1233"
+    },
+    ".github/workflows/baseline.yml": {
+      "src": "baseline/callers/baseline.yml",
+      "render": "workflow",
+      "sha256": "44af45ee7cae67e981d5d735cdabec936d4fffae6785d9993d2c2659126b8c3d"
+    }
+  },
+  "inputs": {
+    ".github/repo-override.yml": null
+  }
+}
