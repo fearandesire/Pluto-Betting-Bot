@@ -97,11 +97,11 @@ describe('achievementsPayload', () => {
 		key: 'sharp_eye',
 		label: 'The Line Reader',
 		criteria:
-			'Keep a hit rate of 60% or better across at least 20 settled predictions.',
+			'Keep a hit rate of 60% or better across at least 15 settled predictions.',
 		kind: 'form',
 		state: 'locked',
 		gates: [
-			{ label: 'Settled predictions', text: '20/20', met: true },
+			{ label: 'Settled predictions', text: '15/15', met: true },
 			{ label: 'Prediction hit rate', text: '55.0% of 60%', met: false },
 		],
 	})
@@ -125,7 +125,7 @@ describe('achievementsPayload', () => {
 		expect(texts(payload)).toEqual([
 			'## Achievements: Harbor\n-# 2 of 3 badges earned',
 			`**Earned**\n<:p_opening_score:${ID}> **Opening Score**: Win a head-to-head bet.\n<:p_in_the_black:${ID}> **In the Black**: Hold a positive net profit across at least 10 settled head-to-head bets. You keep it only while you still qualify.`,
-			'**Still to earn**\n**The Line Reader**: Keep a hit rate of 60% or better across at least 20 settled predictions.\n-# Settled predictions 20/20 (done) · Prediction hit rate 55.0% of 60%',
+			'**Still to earn**\n**The Line Reader**: Keep a hit rate of 60% or better across at least 15 settled predictions.\n-# Settled predictions 15/15 (done) · Prediction hit rate 55.0% of 60%',
 			'-# Badges are just for show. Pluto updates them when you open a profile or this list.',
 		])
 	})
