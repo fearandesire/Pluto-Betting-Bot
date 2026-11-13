@@ -272,6 +272,13 @@ describe('formatGate', () => {
 		expect(formatGate(gate({ unit: 'weird' })).text).toBe('4/10')
 	})
 
+	it('says progress is not tracked when Khronos does not store the data yet', () => {
+		expect(
+			formatGate(gate({ tracked: false, current: null, met: false })),
+		).toEqual({ label: 'L', met: false, text: 'progress not tracked yet' })
+		expect(formatGate(gate({ tracked: true })).text).toBe('4/10')
+	})
+
 	it('shows a missing current value as no data yet', () => {
 		expect(formatGate(gate({ unit: 'ratio', current: null })).text).toBe(
 			'no predictions yet',
@@ -298,6 +305,26 @@ describe('catalogue shim', () => {
 			['courtside', 'Courtside', 'career'],
 			['due_a_win', 'Due a Win', 'career'],
 			['trust_the_process', 'Trust the Process', 'career'],
+			['match_point', 'Match Point', 'career'],
+			['armchair_expert', 'Armchair Expert', 'career'],
+			['extra_innings', 'Extra Innings', 'career'],
+			['on_the_money', 'On the Money', 'career'],
+			['bench_buddy', 'Bench Buddy', 'career'],
+			['refs_fault', 'Ref’s Fault', 'career'],
+			['statistically_fine', 'Statistically Fine', 'form'],
+			['ice_in_the_veins', 'Ice in the Veins', 'career'],
+			['hat_trick', 'Hat Trick', 'career'],
+			['next_year_fc', 'Next Year FC', 'career'],
+			['clean_sweep', 'Clean Sweep', 'career'],
+			['long_shot', 'Long Shot', 'career'],
+			['buzzer_beater', 'Buzzer Beater', 'career'],
+			['one_leg_short', 'One Leg Short', 'career'],
+			['reverse_jinx', 'Reverse Jinx', 'career'],
+			['emotional_hedge', 'Emotional Hedge', 'career'],
+			['underdog', 'Underdog', 'career'],
+			['home_turf', 'Home Turf', 'career'],
+			['photo_finish', 'Photo Finish', 'career'],
+			['cashout_regret', 'Cashout Regret', 'career'],
 		])
 	})
 
@@ -316,5 +343,8 @@ describe('catalogue shim', () => {
 		)
 		for (const [key, badge] of Object.entries(BADGE_PRESENTATION))
 			expect(byKey.get(key), key).toBe(badge.emojiName)
+		expect(Object.keys(BADGE_PRESENTATION).sort()).toEqual(
+			[...byKey.keys()].sort(),
+		)
 	})
 })

@@ -20,6 +20,8 @@ const gateSchema = z.object({
 	target: z.number(),
 	current: z.number().nullable(),
 	met: z.boolean(),
+	/** False while Khronos does not store the data yet; older servers omit it. */
+	tracked: z.boolean().optional().catch(undefined),
 })
 
 const additive = {

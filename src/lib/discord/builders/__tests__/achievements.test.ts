@@ -215,6 +215,80 @@ describe('achievementsPayload', () => {
 		expect(all).not.toContain('·  Settled')
 	})
 
+	it('pages the real 30-badge catalogue with every rule and progress line', () => {
+		const registry = buildBadgeEmojiRegistry(
+			Object.values(BADGE_PRESENTATION).map((b) => ({
+				name: b.emojiName,
+				id: ID,
+			})),
+		)
+		const untracked = new Set([
+			'underdog',
+			'home_turf',
+			'photo_finish',
+			'cashout_regret',
+		])
+		const locked = Object.entries(BADGE_PRESENTATION).map(([key, b]) => ({
+			key,
+			name: b.label,
+			description: b.criteria,
+			kind: b.kind,
+			track: 'h2h',
+			progress: 0,
+			target: 1,
+			gates: [
+				{
+					metric: key,
+					label: b.progressLabel,
+					unit: 'count',
+					comparator: 'gte',
+					target: 1000,
+					current: untracked.has(key) ? null : 999,
+					met: false,
+					tracked: !untracked.has(key),
+				},
+			],
+		}))
+		const v = buildAchievementsView(
+			{
+				user_id: ID,
+				earned: [],
+				locked,
+				summary: {
+					settled_bets: 0,
+					wins: 0,
+					losses: 0,
+					pushes: 0,
+					net_profit: 0,
+					best_win_payout: null,
+					settled_predictions: 0,
+					prediction_hit_rate: null,
+				},
+			},
+			registry,
+		)
+		expect(v.total).toBe(30)
+		const pages = achievementsPageCount(v, 'A'.repeat(32))
+		const seen: string[] = []
+		for (let page = 0; page < pages; page++) {
+			const payload = achievementsPayload(v, 'A'.repeat(32), {
+				targetId: ID,
+				page,
+			})
+			const components = toJsonComponents(payload as never)
+			expect(sumTextDisplayChars(components)).toBeLessThanOrEqual(4000)
+			expect(countComponents(components)).toBeLessThanOrEqual(40)
+			seen.push(texts(payload).join('\n'))
+		}
+		const all = seen.join('\n')
+		for (const [key, b] of Object.entries(BADGE_PRESENTATION)) {
+			expect(all, key).toContain(`**${b.label}**: ${b.criteria}`)
+			expect(all, key).toContain(`<:${b.emojiName}:${ID}>`)
+		}
+		expect(all.split('progress not tracked yet')).toHaveLength(5)
+		expect(all.split('999/1000')).toHaveLength(27)
+	})
+
 	it('shows Previous and Next only when the list spans pages', () => {
 		const single = achievementsPayload(view({}), 'Harbor', { targetId: ID })
 		expect(JSON.stringify(toJsonComponents(single as never))).not.toContain(
