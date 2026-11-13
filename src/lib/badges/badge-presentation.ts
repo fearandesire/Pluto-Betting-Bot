@@ -8,7 +8,12 @@ export interface BadgePresentation {
 	progressLabel: string
 }
 
-/** Covers servers that predate `kind`; a server that sends it supplies its own text. */
+/**
+ * Covers servers that predate `kind`; a server that sends it supplies its own
+ * text. One entry per badge in the emoji manifest. The four data-contract
+ * badges (underdog, home_turf, photo_finish, cashout_regret) show "progress
+ * not tracked yet" while Khronos reports their gate as untracked.
+ */
 export const BADGE_PRESENTATION: Readonly<Record<string, BadgePresentation>> = {
 	first_win: {
 		label: 'Opening Score',
@@ -83,6 +88,151 @@ export const BADGE_PRESENTATION: Readonly<Record<string, BadgePresentation>> = {
 		kind: 'career',
 		emojiName: 'p_trust_the_process',
 		progressLabel: 'Settled picks',
+	},
+	match_point: {
+		label: 'Match Point',
+		criteria: 'Win 25 head-to-head bets.',
+		kind: 'career',
+		emojiName: 'p_match_point',
+		progressLabel: 'Head-to-head wins',
+	},
+	armchair_expert: {
+		label: 'Armchair Expert',
+		criteria: 'Have 100 predictions settle.',
+		kind: 'career',
+		emojiName: 'p_armchair_expert',
+		progressLabel: 'Settled predictions',
+	},
+	extra_innings: {
+		label: 'Extra Innings',
+		criteria: 'Have 200 bets, predictions or parlays settle.',
+		kind: 'career',
+		emojiName: 'p_extra_innings',
+		progressLabel: 'Settled picks',
+	},
+	on_the_money: {
+		label: 'On the Money',
+		criteria: 'Get 25 predictions right.',
+		kind: 'career',
+		emojiName: 'p_on_the_money',
+		progressLabel: 'Correct predictions',
+	},
+	bench_buddy: {
+		label: 'Bench Buddy',
+		criteria: 'Have a head-to-head bet settle as a push.',
+		kind: 'career',
+		emojiName: 'p_bench_buddy',
+		progressLabel: 'Head-to-head pushes',
+	},
+	refs_fault: {
+		label: 'Ref’s Fault',
+		criteria: 'Lose 10 head-to-head bets.',
+		kind: 'career',
+		emojiName: 'p_refs_fault',
+		progressLabel: 'Head-to-head losses',
+	},
+	statistically_fine: {
+		label: 'Statistically Fine',
+		criteria:
+			'Lose more head-to-head bets than you win across at least 20 settled head-to-head bets.',
+		kind: 'form',
+		emojiName: 'p_statistically_fine',
+		progressLabel: 'Settled head-to-head bets',
+	},
+	ice_in_the_veins: {
+		label: 'Ice in the Veins',
+		criteria: 'Win a head-to-head bet with a stake of 1,000 or more.',
+		kind: 'career',
+		emojiName: 'p_ice_in_the_veins',
+		progressLabel: 'Largest winning head-to-head stake',
+	},
+	hat_trick: {
+		label: 'Hat Trick',
+		criteria: 'Get 3 predictions right on the same game.',
+		kind: 'career',
+		emojiName: 'p_hat_trick',
+		progressLabel: 'Most correct predictions on one game',
+	},
+	next_year_fc: {
+		label: 'Next Year FC',
+		criteria: 'Have predictions settle in 2 different seasons.',
+		kind: 'career',
+		emojiName: 'p_next_year_fc',
+		progressLabel: 'Seasons with settled predictions',
+	},
+	clean_sweep: {
+		label: 'Clean Sweep',
+		criteria: 'Win a parlay with 4 or more legs.',
+		kind: 'career',
+		emojiName: 'p_clean_sweep',
+		progressLabel: 'Won parlays with 4 or more legs',
+	},
+	long_shot: {
+		label: 'Long Shot',
+		criteria: 'Win a parlay priced at +1000 or longer.',
+		kind: 'career',
+		emojiName: 'p_long_shot',
+		progressLabel: 'Won parlays at +1000 or longer',
+	},
+	buzzer_beater: {
+		label: 'Buzzer Beater',
+		criteria:
+			'Win a parlay placed in the last 10 minutes before its first game starts.',
+		kind: 'career',
+		emojiName: 'p_buzzer_beater',
+		progressLabel: 'Won parlays placed just before the first game',
+	},
+	one_leg_short: {
+		label: 'One Leg Short',
+		criteria: 'Lose a parlay on exactly one leg after every other leg won.',
+		kind: 'career',
+		emojiName: 'p_one_leg_short',
+		progressLabel: 'Parlays lost on one leg',
+	},
+	reverse_jinx: {
+		label: 'Reverse Jinx',
+		criteria:
+			'Win a head-to-head bet on a team whose last bet from you lost.',
+		kind: 'career',
+		emojiName: 'p_reverse_jinx',
+		progressLabel: 'Wins on a team that lost your last bet on it',
+	},
+	emotional_hedge: {
+		label: 'Emotional Hedge',
+		criteria:
+			'Bet on one team and predict the other on the same game, so one of them wins.',
+		kind: 'career',
+		emojiName: 'p_emotional_hedge',
+		progressLabel: 'Games where your bet and prediction split',
+	},
+	underdog: {
+		label: 'Underdog',
+		criteria: 'Win 5 head-to-head bets placed at plus odds.',
+		kind: 'career',
+		emojiName: 'p_underdog',
+		progressLabel: 'Head-to-head wins at plus odds',
+	},
+	home_turf: {
+		label: 'Home Turf',
+		criteria: 'Win 10 head-to-head bets on the home team.',
+		kind: 'career',
+		emojiName: 'p_home_turf',
+		progressLabel: 'Head-to-head wins on the home team',
+	},
+	photo_finish: {
+		label: 'Photo Finish',
+		criteria:
+			'Win a head-to-head bet on a game decided by 3 points or fewer.',
+		kind: 'career',
+		emojiName: 'p_photo_finish',
+		progressLabel: 'Head-to-head wins in close games',
+	},
+	cashout_regret: {
+		label: 'Cashout Regret',
+		criteria: 'Cancel a head-to-head bet whose team went on to win.',
+		kind: 'career',
+		emojiName: 'p_cashout_regret',
+		progressLabel: 'Cancelled bets whose team won',
 	},
 }
 

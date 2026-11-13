@@ -31,6 +31,7 @@ export interface AchievementsView {
 }
 
 const NO_PREDICTIONS = 'no predictions yet'
+export const NOT_TRACKED = 'progress not tracked yet'
 
 const money = (value: number) =>
 	`${value < 0 ? '-' : ''}$${Math.abs(value).toFixed(2)}`
@@ -43,6 +44,7 @@ const percentTarget = (ratio: number) => `${Number((ratio * 100).toFixed(1))}%`
 
 export function formatGate(gate: AchievementGate): GateView {
 	const { label, met, current, target } = gate
+	if (gate.tracked === false) return { label, met: false, text: NOT_TRACKED }
 	if (gate.unit === 'ratio') {
 		return {
 			label,
