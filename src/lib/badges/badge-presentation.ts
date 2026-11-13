@@ -148,10 +148,10 @@ export const BADGE_PRESENTATION: Readonly<Record<string, BadgePresentation>> = {
 	},
 	hat_trick: {
 		label: 'Hat Trick',
-		criteria: 'Get 3 predictions right on the same game.',
+		criteria: 'Get 3 predictions right in a row.',
 		kind: 'career',
 		emojiName: 'p_hat_trick',
-		progressLabel: 'Most correct predictions on one game',
+		progressLabel: 'Best run of correct predictions',
 	},
 	next_year_fc: {
 		label: 'Next Year FC',
