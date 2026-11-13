@@ -84,11 +84,17 @@ New and changed Discord messages use Components V2. The full guide is `docs/comp
 - Fill in `.github/PULL_REQUEST_TEMPLATE.md`. Changes users can see need a screenshot.
 - Keep one concern per pull request.
 
+## PR Delivery
+
+For ordinary authorized implementation work, invoke the installed pstack `poteto-mode` skill and its `autopilot-full` playbook. The maintained source is `fearandesire/pstack-owned`, the owner-merge fork of Michael Denyer's port (0.9.134); use the host's installed runtime adapter. The detailed repository contract is [docs/agents/pr-flow.md](docs/agents/pr-flow.md), and model roles come from the project sheet `.claude/pstack-models.md`. Confirm the skill and playbook are available in the current owner runtime before starting delivery; if unavailable, stop that delivery path and report the missing dependency.
+
+The owner opens its PR ready early once the Pullfrog safety preflight in `docs/agents/pr-flow.md` is confirmed; held migration/freeze PRs stay draft. The owner carries it into `main` through independent review, repairs, current-head checks and confirmed merge. Readiness or green CI alone does not authorize landing. Queued auto-merge is not completion. Never bypass protections. Explicit holds, human-only decisions and task-specific stops remain binding. Releases require separate authorization.
+
 ## What is public and what is private
 
 This repository is public. Everything you commit, and every pull request, issue and comment, is public.
 
 - Commit only what an outside contributor can use: code, tests, public docs and placeholder configuration.
 - Keep these out of tracked files: tokens and keys, real guild, channel and user IDs, hostnames and IP addresses, secret-manager project or config names, observability stack names, deploy and release runbooks, and the contents of private repositories.
-- Keep private notes in files that git ignores: `AGENTS.local.md`, `CLAUDE.local.md`, `.claude/` and `docs/agents/`.
+- Keep private notes in files that git ignores: `AGENTS.local.md`, `CLAUDE.local.md`, `.claude/` and `docs/agents/`. The exceptions are `.claude/pstack-models.md` and `docs/agents/pr-flow.md`, which are public.
 - If you are not sure whether something is public, leave it out and ask a maintainer.
