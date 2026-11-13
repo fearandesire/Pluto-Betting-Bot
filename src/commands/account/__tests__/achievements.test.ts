@@ -198,4 +198,48 @@ describe('/achievements', () => {
 			/not available yet/,
 		)
 	})
+
+	it('shows Previous and Next when the 30-badge list spans pages', async () => {
+		const { BADGE_PRESENTATION } = await import(
+			'../../../lib/badges/badge-presentation.js'
+		)
+		const locked = Object.entries(BADGE_PRESENTATION).map(([key, b]) => ({
+			key,
+			name: b.label,
+			description: b.criteria,
+			kind: b.kind,
+			progress: 0,
+			target: 10,
+			gates: [
+				{
+					metric: key,
+					label: b.progressLabel,
+					unit: 'count',
+					comparator: 'gte',
+					target: 10,
+					current: 3,
+					met: false,
+				},
+				{
+					metric: 'distinct_events',
+					label: 'Different games',
+					unit: 'count',
+					comparator: 'gte',
+					target: 20,
+					current: 7,
+					met: false,
+				},
+			],
+		}))
+		mocks.evaluate.mockResolvedValue({ ...dto, earned: [], locked })
+		const interaction = makeInteraction()
+
+		await run(interaction)
+
+		const payload = interaction.editReply.mock.calls[0][0]
+		const json = JSON.stringify(toJsonComponents(payload as never))
+		expect(texts(payload)[0]).toMatch(/Page 1 of [2-9]/)
+		expect(json).toContain('Next')
+		expect(json).toContain(`ach.v1.view.${INVOKER}.1`)
+	})
 })

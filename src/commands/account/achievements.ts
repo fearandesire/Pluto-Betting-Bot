@@ -64,7 +64,7 @@ export class UserCommand extends Command {
 				target.globalName ??
 				target.username
 			return await interaction.editReply(
-				achievementsPayload(view, displayName),
+				achievementsPayload(view, displayName, { targetId: target.id }),
 			)
 		} catch (error) {
 			this.container.logger.error('Failed to build achievements list', {
