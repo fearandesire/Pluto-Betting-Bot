@@ -114,3 +114,6 @@ yalc.lock
 
 # Build-only recovered artwork cache; serving assets live in pinned R2 archives.
 scripts/matchup-assets/originals/*.png
+
+# Runtime verification evidence remains local / CI artifacts.
+.verification/
