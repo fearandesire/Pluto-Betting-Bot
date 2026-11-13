@@ -33,6 +33,10 @@ Use `pnpm lint` to apply the repository's formatting and lint checks. Do not com
 - Confirm that the pull request contains no secrets or private operational details.
 - Reviewers, human and AI, start from `REVIEW.md`: it maps paths to blast radius and lists the checks for each.
 
+## What's public and what's private
+
+This repository is public, and so is every pull request, issue and comment on it. Commit only what an outside contributor can use. Tokens, real guild, channel and user IDs, hostnames, secret-manager names, observability stack names, deploy and release runbooks, and the contents of private repositories stay out. AI agent rules live in the public `AGENTS.md` (imported by `CLAUDE.md`). Private notes go in the git-ignored `AGENTS.local.md`, `CLAUDE.local.md`, `.claude/` or `docs/agents/`. When in doubt, leave it out and ask a maintainer.
+
 Be respectful, specific, and constructive in reviews. Contributions are evaluated on correctness, maintainability, tests, and compatibility with the existing client behavior.
 
 ## Compiled runtime validation

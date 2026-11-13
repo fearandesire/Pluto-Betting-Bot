@@ -31,7 +31,7 @@ duplicate_prompt_examples = false
 
 # codebase context: load repo metadata from canonical documentation
 add_repo_metadata = true
-add_repo_metadata_file_list = ["README.md", "docs/overview.md", "docs/architecture/command-handlers-and-errors.md"]
+add_repo_metadata_file_list = ["README.md", "AGENTS.md", "CONTRIBUTING.md"]
 
 # ignore logic (avoid reviewing bot PRs / WIP PRs)
 ignore_pr_title = ["^\\[WIP\\]", "^WIP", "^Draft", "^\\[Auto\\]", "^Auto"]
@@ -63,7 +63,7 @@ num_max_findings = 5
 extra_instructions = """
 This repo is Pluto: a Discord bot (TypeScript, Sapphire Framework, discord.js). It talks to Khronos API for business logic; it does not run NestJS or own a DB.
 
-Use canonical docs strictly: README.md, docs/overview.md, docs/architecture/command-handlers-and-errors.md.
+Use canonical docs strictly: README.md, AGENTS.md, CONTRIBUTING.md.
 
 Noise control — do NOT:
 - Add generic PII/compliance disclaimers; only flag secrets/PII when the diff shows tokens, creds, or personal data.
