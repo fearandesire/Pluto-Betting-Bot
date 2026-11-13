@@ -80,6 +80,9 @@ Status: 📸 before captured · 🔁 migrated · ✅ merged and verified live
 | D5 | /stats h2h | account | `commands/stats/stats.ts` | | 📸 |
 | D6 | Welcome DM | account | `WelcomeMessageService` | | 📸 |
 | D7 | /stats props (flag `STATS_PROPS_ENABLED`) | account | `commands/stats/stats.ts` | | 📸 |
+| D8 | /achievements | account | `lib/discord/builders/achievements.achievementsPayload` | | 🔁 |
+| D9 | /achievements, no application emoji | account | same | | 🔁 |
+| D10 | /profile reply: badge line and Achievements button | account | `lib/discord/builders/profile.profileCardPayload` | | 🔁 |
 | E1 | Bet result DM | notifications | `notifications.service.notifyUser` | | 📸 |
 | E2 | Parlay result DMs | notifications | `notifications.service.buildParlayEmbeds` | | 📸 |
 | E3 | Big-win announcement | notifications | `BigWinAnnouncementService` | | 📸 |
