@@ -10,7 +10,9 @@ import {
 	yellow,
 } from 'colorette'
 
+import { startBadgeEmojiRegistry } from '../lib/badges/badge-emoji-registry.js'
 import { FooterManager } from '../lib/footers/FooterManager.js'
+import env from '../lib/startup/env.js'
 
 const dev = process.env.NODE_ENV !== 'production'
 
@@ -28,6 +30,24 @@ export class UserEvent extends Listener {
 			} catch (error) {
 				this.container.logger.error(
 					`FooterManager initialization failed: ${error instanceof Error ? error.message : error}`,
+				)
+			}
+		})
+		setImmediate(async () => {
+			try {
+				const { client } = this.container
+				await startBadgeEmojiRegistry({
+					enabled: env.PROFILE_ENABLED,
+					fetchEmojis: async () =>
+						(await client.application.emojis.fetch()).values(),
+					onError: (error) =>
+						this.container.logger.warn(
+							`Badge emoji refresh failed: ${error instanceof Error ? error.message : error}`,
+						),
+				})
+			} catch (error) {
+				this.container.logger.error(
+					`Badge emoji registry failed to start: ${error instanceof Error ? error.message : error}`,
 				)
 			}
 		})

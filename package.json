@@ -39,7 +39,8 @@
 		"assets:build": "node scripts/matchup-assets/build.mjs",
 		"assets:validate": "node scripts/validate-matchup-assets.mjs",
 		"assets:pack": "node scripts/assets-r2.js pack",
-		"assets:hydrate": "node scripts/assets-r2.js hydrate"
+		"assets:hydrate": "node scripts/assets-r2.js hydrate",
+		"emoji:setup": "node scripts/badge-emoji/setup.mjs"
 	},
 	"lint-staged": {
 		"*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
