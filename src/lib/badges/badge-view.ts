@@ -104,7 +104,7 @@ function legacyGates(
 	if (entry.key === 'sharp_eye') {
 		const rate = summary.prediction_hit_rate
 		return [
-			count('Settled predictions', summary.settled_predictions, 20),
+			count('Settled predictions', summary.settled_predictions, entry.target),
 			formatGate({
 				metric: 'prediction_hit_rate',
 				label: 'Prediction hit rate',
