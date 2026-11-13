@@ -1,4 +1,5 @@
 import type { ChannelCreationEvent } from '@pluto-khronos/types'
+import { bullmqTelemetry } from '../../../lib/telemetry/bullmq-telemetry.js'
 import {
 	withJobEventRequestId,
 	withJobRequestId,
@@ -45,6 +46,7 @@ export class ChannelCreationQueue {
 			'channel-creation',
 			{
 				connection,
+				...bullmqTelemetry(),
 				defaultJobOptions: {
 					attempts: ChannelCreationQueue.MAX_ATTEMPTS,
 					backoff: {
@@ -68,6 +70,7 @@ export class ChannelCreationQueue {
 			withJobRequestId(async (job) => this.runJob(job)),
 			{
 				connection,
+				...bullmqTelemetry(),
 				concurrency: 15,
 				lockDuration: ChannelCreationQueue.LOCK_DURATION,
 				settings: {

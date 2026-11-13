@@ -1,4 +1,5 @@
 import { logger } from '../../utils/logging/WinstonLogger.js'
+import { flushTelemetry as flushTelemetryDefault } from '../telemetry/telemetry-shutdown.js'
 import {
 	getRegisteredShutdownQueues,
 	registerShutdownQueue,
@@ -27,6 +28,7 @@ export interface InstallShutdownHandlersOptions {
 	processLike?: ShutdownProcess
 	closeQueues?: (timeoutMs: number) => Promise<boolean | void>
 	exitProcess?: (code: number) => never | void
+	flushTelemetry?: () => Promise<void>
 	queueShutdownTimeoutMs?: number
 }
 
@@ -51,6 +53,7 @@ export function installShutdownHandlers({
 	processLike = process,
 	closeQueues = closeQueueWorkers,
 	exitProcess = process.exit,
+	flushTelemetry = flushTelemetryDefault,
 	queueShutdownTimeoutMs = QUEUE_SHUTDOWN_TIMEOUT_MS,
 }: InstallShutdownHandlersOptions): () => void {
 	let shutdownPromise: Promise<void> | undefined
@@ -97,6 +100,7 @@ export function installShutdownHandlers({
 					if (hardExitTimer) clearTimeout(hardExitTimer)
 					if (!timedOut) {
 						client.destroy()
+						await flushTelemetry()
 						exitProcess(failed ? 1 : 0)
 					}
 				}

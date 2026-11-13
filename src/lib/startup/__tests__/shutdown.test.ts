@@ -101,6 +101,46 @@ describe('Pluto graceful shutdown', () => {
 		expect(closeMatchRefreshQueue).toHaveBeenCalledOnce()
 	})
 
+	it('exits only after the telemetry flush settles', async () => {
+		let finishFlush!: () => void
+		const flushTelemetry = vi.fn(
+			() =>
+				new Promise<void>((resolve) => {
+					finishFlush = () => {
+						events.push('telemetry flushed')
+						resolve()
+					}
+				}),
+		)
+		const client = { destroy: vi.fn(() => events.push('client destroyed')) }
+		const exitProcess = vi.fn(() => events.push('process exited'))
+		const handlers = new Map<string, () => void>()
+
+		installShutdownHandlers({
+			client,
+			processLike: {
+				on: vi.fn((signal: string, handler: () => void) => {
+					handlers.set(signal, handler)
+				}),
+				removeListener: vi.fn(),
+			},
+			exitProcess,
+			flushTelemetry,
+		})
+
+		handlers.get('SIGTERM')?.()
+		await vi.waitFor(() => expect(flushTelemetry).toHaveBeenCalledOnce())
+		expect(exitProcess).not.toHaveBeenCalled()
+
+		finishFlush()
+		await vi.waitFor(() => expect(exitProcess).toHaveBeenCalledWith(0))
+		expect(events).toEqual([
+			'client destroyed',
+			'telemetry flushed',
+			'process exited',
+		])
+	})
+
 	it('destroys the client only after every queue has closed', async () => {
 		let resolveChannelCreation!: () => void
 		const channelCreationClosed = new Promise<void>((resolve) => {

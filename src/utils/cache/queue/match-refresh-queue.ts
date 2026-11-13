@@ -1,5 +1,6 @@
 import { type Job, Queue, Worker } from 'bullmq'
 import { registerShutdownQueue } from '../../../lib/startup/shutdown-registry.js'
+import { bullmqTelemetry } from '../../../lib/telemetry/bullmq-telemetry.js'
 import {
 	withJobEventRequestId,
 	withJobRequestId,
@@ -37,6 +38,7 @@ export class MatchRefreshQueue {
 			MatchRefreshQueue.QUEUE_NAME,
 			{
 				connection,
+				...bullmqTelemetry(),
 				defaultJobOptions: {
 					attempts: MatchRefreshQueue.MAX_ATTEMPTS,
 					backoff: {
@@ -60,6 +62,7 @@ export class MatchRefreshQueue {
 			withJobRequestId(async (job) => this.runJob(job)),
 			{
 				connection,
+				...bullmqTelemetry(),
 				concurrency: 1,
 			},
 		)
