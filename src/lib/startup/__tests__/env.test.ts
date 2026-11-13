@@ -174,3 +174,15 @@ describe('Pluto system startup env gate', () => {
 		).toBe(true)
 	})
 })
+
+describe('PROJECT_VERSION', () => {
+	it('reports the package version, not a configured value', () => {
+		const { version } = JSON.parse(readFileSync('package.json', 'utf-8'))
+		const parsed = parseStartupEnv({
+			...requiredEnv,
+			PROJECT_VERSION: 'v3.0.1',
+		})
+
+		expect(parsed.PROJECT_VERSION).toBe(`v${version}`)
+	})
+})

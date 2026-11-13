@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { PACKAGE_VERSION } from './version.js'
 
 const envFlag = (value: unknown): boolean =>
 	value === true || value === 'true' || value === '1'
@@ -18,7 +19,7 @@ const envSchema = z
 			'Discord bot token used for authentication',
 		),
 		PREFIX: z.string(),
-		PROJECT_VERSION: z.string(),
+		PROJECT_VERSION: z.string().min(1),
 		KH_API_URL: z.url(),
 		KH_API_TOKEN: requiredString(
 			'KH_API_TOKEN is required for Khronos API authentication',
@@ -175,7 +176,8 @@ export function parseStartupEnv(
 		NODE_ENV: source.NODE_ENV,
 		TOKEN: source.TOKEN,
 		PREFIX: source.PREFIX,
-		PROJECT_VERSION: source.PROJECT_VERSION,
+		// Always the shipped package version: a configured value goes stale.
+		PROJECT_VERSION: `v${PACKAGE_VERSION}`,
 		KH_API_URL: source.KH_API_URL,
 		KH_API_TOKEN: source.KH_API_TOKEN,
 		R_HOST: source.R_HOST,
