@@ -256,7 +256,7 @@ Status: 📸 before captured · 🔁 migrated · ✅ merged and verified live
 | E2 | Parlay result DMs | notifications | `notifications.service.buildParlayEmbeds` | | 📸 |
 | E3 | Big-win announcement | notifications | `BigWinAnnouncementService` | | 📸 |
 | E4 | Weekly recap | notifications | `weekly-recap.embed.ts` | | 📸 |
-| F1 | /config footer (admin) | admin | `commands/admin/config.ts` | | 📸 |
+| F1 | /footer-config footer (admin) | admin | `commands/admin/config.ts` | | 📸 |
 | F2 | /config set/view | admin | `commands/configuration/config.ts` | | 📸 |
 | F3 | /admin predictions view | admin | `admin-predictions-handler.ts` | | 📸 |
 | F4 | /admin predictions delete | admin | same | | 📸 |
