@@ -1,5 +1,18 @@
 # Changelog
 
+## [4.19.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.18.0...v4.19.0) (2026-11-14)
+
+
+### Features
+
+* **channels:** log game_channel.stage per game and stop logging create bodies ([#793](https://github.com/fearandesire/Pluto-Betting-Bot/issues/793)) ([68c24c0](https://github.com/fearandesire/Pluto-Betting-Bot/commit/68c24c09309b2ba75bcd4860efd7a63da55a1a01))
+
+
+### Bug Fixes
+
+* **khronos:** bump @pluto-khronos/* to 3.17.1 ([3f57d67](https://github.com/fearandesire/Pluto-Betting-Bot/commit/3f57d6765faff53dd9901e8fe3702d9b6ac16deb))
+* **startup:** report the package version in logs and the banner ([#789](https://github.com/fearandesire/Pluto-Betting-Bot/issues/789)) ([76e1022](https://github.com/fearandesire/Pluto-Betting-Bot/commit/76e102265d55d7cc63d403fc5679185c1cd2e409))
+
 ## [4.18.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.17.0...v4.18.0) (2026-11-13)
 
 
