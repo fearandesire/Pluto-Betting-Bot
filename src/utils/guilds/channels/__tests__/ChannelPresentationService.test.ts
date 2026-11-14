@@ -490,6 +490,33 @@ describe('game_channel.stage events', () => {
 			line('posted', 'held', 'awaiting_initial_odds'),
 		])
 	})
+	it('tags a store failure after creation as a posting failure', async () => {
+		const loadError = new Error('redis went away')
+		vi.mocked(store.load)
+			.mockImplementationOnce(async () => structuredClone(state))
+			.mockImplementationOnce(async () => structuredClone(state))
+			.mockRejectedValueOnce(loadError)
+		await expect(service.apply('guild', gameId, true)).rejects.toBe(
+			loadError,
+		)
+		expect(stageLines()).toEqual([line('created', 'ok', 'created')])
+		expect(stageFailureOf(loadError)).toMatchObject({
+			stage: 'posted',
+			reason: 'post_failed',
+		})
+	})
+	it('tags an existing channel with an unconfirmed message as needing reconciliation', async () => {
+		channelExists = true
+		messageExists = false
+		const error = await service
+			.apply('guild', gameId, true)
+			.catch((caught: unknown) => caught)
+		expect(stageFailureOf(error)).toMatchObject({
+			stage: 'posted',
+			reason: 'needs_reconciliation',
+		})
+		expect(stageLines()).toEqual([])
+	})
 	it('tags a failed post for the worker instead of logging a second line', async () => {
 		const writeError = new Error('boom: secret')
 		vi.mocked(discord.write).mockRejectedValueOnce(writeError)

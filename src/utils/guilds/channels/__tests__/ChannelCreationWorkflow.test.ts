@@ -143,7 +143,10 @@ describe('ChannelCreationWorkflow game_channel.stage', () => {
 		const injected = ports()
 		injected.discord.findExisting = vi.fn().mockResolvedValue({ id: 'c' })
 		await new ChannelCreationWorkflow(injected).run(hexIntent)
-		expect(stageLines()).toEqual(expected('ok', 'reconciled'))
+		expect(stageLines()).toEqual([
+			line('created', 'ok', 'reconciled'),
+			line('posted', 'skipped', 'adopted_without_post'),
+		])
 	})
 	it('leaves a held reservation to the caller, which throws it to the worker', async () => {
 		const injected = ports()

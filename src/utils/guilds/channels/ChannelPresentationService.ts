@@ -167,8 +167,17 @@ export class ChannelPresentationService {
 						channelId,
 					))
 				)
-					throw new Error(
-						'Presentation message receipt requires reconciliation',
+					throw tagStageFailure(
+						new Error(
+							'Presentation message receipt requires reconciliation',
+						),
+						{
+							stage: 'posted',
+							reason: 'needs_reconciliation',
+							gameId,
+							guildId,
+							sport: state.desiredPresentation.sport,
+						},
 					)
 			} else {
 				if (state.channelId || !allowCreate)
@@ -234,18 +243,19 @@ export class ChannelPresentationService {
 						? { outcome: 'ok', reason: 'reconciled' }
 						: { outcome: 'duplicate', reason: 'already_created' }),
 			})
-			if (!(await refresh('posted'))) return
-			await check()
-			if (!hasInitialOddsCompletion(state)) {
-				log({
-					stage: 'posted',
-					outcome: 'held',
-					reason: 'awaiting_initial_odds',
-				})
-				return
-			}
+			// Every failure from here on happens to a channel that exists.
 			const edited = messageId !== null
 			try {
+				if (!(await refresh('posted'))) return
+				await check()
+				if (!hasInitialOddsCompletion(state)) {
+					log({
+						stage: 'posted',
+						outcome: 'held',
+						reason: 'awaiting_initial_odds',
+					})
+					return
+				}
 				messageId = await this.discord.write(
 					guild,
 					channelId,

@@ -157,6 +157,12 @@ export class ChannelCreationWorkflow {
 					outcome: 'ok',
 					reason: 'reconciled',
 				})
+				// This path adopts the channel and sends nothing, so say so.
+				logStage(intent, {
+					stage: 'posted',
+					outcome: 'skipped',
+					reason: 'adopted_without_post',
+				})
 				return { state: 'reconciled', channelId: existing.id }
 			}
 
