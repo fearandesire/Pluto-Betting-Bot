@@ -182,7 +182,7 @@ describe('RecapCronService', () => {
 		expect(harness.channel.send).toHaveBeenCalledTimes(1)
 	})
 
-	it('keeps the NFL request and key untouched when NBA is disabled', async () => {
+	it('requests an NFL-only recap and keeps the NFL key when NBA is disabled', async () => {
 		const harness = makeHarness()
 		const service = new RecapCronService(
 			harness.recapApi,
@@ -197,6 +197,12 @@ describe('RecapCronService', () => {
 		expect(harness.recapApi.getWeeklyRecap).toHaveBeenCalledWith(
 			'guild-1',
 			-1,
+			'nfl',
+		)
+		expect(harness.cache.set).toHaveBeenCalledWith(
+			'recap:posted:guild-1:2026:19',
+			true,
+			691200,
 		)
 		const [payload] = harness.send.mock.calls[0] as unknown as [
 			{ embeds: Array<{ toJSON(): { title?: string } }> },
