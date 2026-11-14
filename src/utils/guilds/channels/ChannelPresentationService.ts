@@ -7,6 +7,11 @@ import {
 	initialOddsCompletionSchema,
 } from '../../cache/data/channel-presentation-contract.js'
 import type { GuildEligibility } from '../../cache/data/schemas.js'
+import {
+	type GameChannelStageEvent,
+	logGameChannelStage,
+} from '../../logging/game-channel-stage.js'
+import { LeaseLostError } from './ChannelCreationWorkflow.js'
 import ChannelManager, { V2_PRESENTATION_FOOTER } from './ChannelManager.js'
 import { ChannelPresentationClient } from './channel-presentation-client.js'
 import {
@@ -72,15 +77,54 @@ export class ChannelPresentationService {
 			let state = await this.store.load(guildId, gameId)
 			if (state.guildId !== guildId || state.gameId !== gameId)
 				throw new Error('Presentation identity mismatch')
-			if (state.appliedRevision === state.desiredRevision) return
-			if (!hasInitialOddsCompletion(state)) return
+			const log = (
+				event: Pick<
+					GameChannelStageEvent,
+					'stage' | 'outcome' | 'reason'
+				>,
+			) =>
+				logGameChannelStage({
+					...event,
+					gameId,
+					guildId,
+					sport: state.desiredPresentation.sport,
+				})
+			if (state.appliedRevision === state.desiredRevision) {
+				log({
+					stage: 'posted',
+					outcome: 'duplicate',
+					reason: 'revision_already_applied',
+				})
+				return
+			}
+			if (!hasInitialOddsCompletion(state)) {
+				log({
+					stage: 'created',
+					outcome: 'held',
+					reason: 'awaiting_initial_odds',
+				})
+				return
+			}
 			const refresh = async () => {
 				const current = await this.store.load(guildId, gameId)
 				if (current.guildId !== guildId || current.gameId !== gameId)
 					throw new Error('Presentation identity mismatch')
-				if (current.appliedRevision === current.desiredRevision)
+				if (current.appliedRevision === current.desiredRevision) {
+					log({
+						stage: 'created',
+						outcome: 'duplicate',
+						reason: 'revision_already_applied',
+					})
 					return false
-				if (!hasInitialOddsCompletion(current)) return false
+				}
+				if (!hasInitialOddsCompletion(current)) {
+					log({
+						stage: 'created',
+						outcome: 'held',
+						reason: 'awaiting_initial_odds',
+					})
+					return false
+				}
 				state = current
 				return true
 			}
@@ -103,7 +147,9 @@ export class ChannelPresentationService {
 				state.channelId ?? undefined,
 			)
 			let messageId: string | null = null
+			let creation: 'created' | 'existing' | 'reconciled' = 'created'
 			if (channelId) {
+				creation = state.channelId ? 'existing' : 'reconciled'
 				messageId = await this.discord.findMessage(
 					guildId,
 					channelId,
@@ -141,13 +187,36 @@ export class ChannelPresentationService {
 						state.desiredPresentation,
 						creationGuild.preferredTeams,
 					)
-				)
+				) {
+					log({
+						stage: 'created',
+						outcome: 'skipped',
+						reason: 'not_eligible',
+					})
 					return
-				if (!canCreatePresentation(state.desiredPresentation)) return
+				}
+				const blocked = creationBlock(state.desiredPresentation)
+				if (blocked) {
+					log({ stage: 'created', ...blocked })
+					return
+				}
 				if (!(await refresh())) return
 				await check()
-				if (!hasInitialOddsCompletion(state)) return
-				if (!canCreatePresentation(state.desiredPresentation)) return
+				if (!hasInitialOddsCompletion(state)) {
+					log({
+						stage: 'created',
+						outcome: 'held',
+						reason: 'awaiting_initial_odds',
+					})
+					return
+				}
+				const blockedAfterRefresh = creationBlock(
+					state.desiredPresentation,
+				)
+				if (blockedAfterRefresh) {
+					log({ stage: 'created', ...blockedAfterRefresh })
+					return
+				}
 				channelId = await this.discord.create(
 					creationGuild,
 					state.desiredPresentation,
@@ -155,21 +224,51 @@ export class ChannelPresentationService {
 				)
 				guild = creationGuild
 			}
+			log({
+				stage: 'created',
+				...(creation === 'created'
+					? { outcome: 'ok', reason: 'created' }
+					: creation === 'reconciled'
+						? { outcome: 'ok', reason: 'reconciled' }
+						: { outcome: 'duplicate', reason: 'already_created' }),
+			})
 			if (!(await refresh())) return
 			await check()
-			if (!hasInitialOddsCompletion(state)) return
-			messageId = await this.discord.write(
-				guild,
-				channelId,
-				state.desiredPresentation,
-				messageId ?? undefined,
-				beforeEffect,
-			)
-			await check()
-			await this.store.ack(guildId, gameId, {
-				revision: state.desiredRevision,
-				channelId,
-				messageId,
+			if (!hasInitialOddsCompletion(state)) {
+				log({
+					stage: 'posted',
+					outcome: 'held',
+					reason: 'awaiting_initial_odds',
+				})
+				return
+			}
+			const edited = messageId !== null
+			try {
+				messageId = await this.discord.write(
+					guild,
+					channelId,
+					state.desiredPresentation,
+					messageId ?? undefined,
+					beforeEffect,
+				)
+				await check()
+				await this.store.ack(guildId, gameId, {
+					revision: state.desiredRevision,
+					channelId,
+					messageId,
+				})
+			} catch (error) {
+				log({
+					stage: 'posted',
+					outcome: 'failed',
+					reason: postFailureReason(error),
+				})
+				throw error
+			}
+			log({
+				stage: 'posted',
+				outcome: 'ok',
+				reason: edited ? 'message_updated' : 'posted',
 			})
 		})
 	}
@@ -226,17 +325,35 @@ export function canCreatePresentation(
 	channel: ChannelAggregatedV2,
 	now = Date.now(),
 ): boolean {
+	return creationBlock(channel, now) === null
+}
+
+/** Why a game cannot get a channel right now, or null when it can. */
+export function creationBlock(
+	channel: ChannelAggregatedV2,
+	now = Date.now(),
+): Pick<GameChannelStageEvent, 'outcome' | 'reason'> | null {
 	const tipoff = new Date(channel.gametime).getTime()
 	const observed = Date.parse(channel.schedule_observed_at ?? '')
-	return (
-		channel.status === 'scheduled' &&
-		tipoff > now &&
-		tipoff <= now + 60 * 60 * 1000 &&
-		Boolean(channel.schedule_provider && channel.schedule_snapshot_ref) &&
-		Number.isFinite(observed) &&
-		observed <= now &&
-		now - observed <= 6 * 60 * 60 * 1000
-	)
+	if (channel.status !== 'scheduled')
+		return { outcome: 'skipped', reason: 'not_scheduled' }
+	if (tipoff <= now) return { outcome: 'skipped', reason: 'tipoff_passed' }
+	if (tipoff > now + 60 * 60 * 1000)
+		return { outcome: 'deferred', reason: 'creation_window_not_open' }
+	if (!(channel.schedule_provider && channel.schedule_snapshot_ref))
+		return { outcome: 'held', reason: 'missing_schedule_evidence' }
+	if (!Number.isFinite(observed) || observed > now)
+		return { outcome: 'held', reason: 'invalid_schedule_evidence' }
+	if (now - observed > 6 * 60 * 60 * 1000)
+		return { outcome: 'held', reason: 'stale_schedule_evidence' }
+	return null
+}
+
+function postFailureReason(error: unknown): string {
+	if (error instanceof LeaseLostError) return 'lease_lost'
+	const message = error instanceof Error ? error.message : ''
+	if (message.includes('reconciliation')) return 'needs_reconciliation'
+	return 'post_failed'
 }
 
 export class DiscordPresentationPort implements PresentationDiscord {

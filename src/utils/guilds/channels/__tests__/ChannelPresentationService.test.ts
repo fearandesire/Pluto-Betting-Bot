@@ -7,7 +7,7 @@ vi.mock('../../../../lib/startup/env.js', () => ({
 	default: { USE_MOCK_DATA: true },
 }))
 vi.mock('../../../logging/WinstonLogger.js', () => ({
-	logger: { info: vi.fn(), warn: vi.fn() },
+	logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }))
 vi.mock('../channel-presentation-client.js', () => ({
 	ChannelPresentationClient: class {},
@@ -18,6 +18,7 @@ import {
 	channelAggregatedV2Schema,
 } from '../../../cache/data/channel-presentation-contract.js'
 import { InMemoryRedis } from '../../../cache/redis-instance.js'
+import { logger } from '../../../logging/WinstonLogger.js'
 import {
 	ChannelPresentationService,
 	type PresentationDiscord,
@@ -65,7 +66,29 @@ let channelExists: boolean
 let messageExists: boolean
 let writes: Array<{ messageId?: string; state: string }>
 let service: ChannelPresentationService
+const stageLines = () =>
+	(['info', 'warn', 'error'] as const)
+		.flatMap((level) => vi.mocked(logger[level]).mock.calls)
+		.map(([line]) => line as Record<string, unknown>)
+		.filter((line) => line.event === 'game_channel.stage')
+		.map(({ stage, outcome, reason, game_id, guild_id, sport }) => ({
+			stage,
+			outcome,
+			reason,
+			game_id,
+			guild_id,
+			sport,
+		}))
+const line = (stage: string, outcome: string, reason: string) => ({
+	stage,
+	outcome,
+	reason,
+	game_id: gameId.replaceAll('-', ''),
+	guild_id: 'guild',
+	sport: 'nba',
+})
 beforeEach(() => {
+	vi.clearAllMocks()
 	vi.useFakeTimers({ toFake: ['Date'] })
 	vi.setSystemTime(new Date('2026-10-20T22:30:00Z'))
 	state = {
@@ -362,3 +385,93 @@ describe('durable presentation delivery', () => {
 })
 
 afterEach(() => vi.useRealTimers())
+
+describe('game_channel.stage events', () => {
+	it('reports a new channel and its first post as ok', async () => {
+		await service.apply('guild', gameId, true)
+		expect(stageLines()).toEqual([
+			line('created', 'ok', 'created'),
+			line('posted', 'ok', 'posted'),
+		])
+	})
+	it('reports an adopted channel as reconciled', async () => {
+		channelExists = true
+		messageExists = true
+		await service.apply('guild', gameId, true)
+		expect(stageLines()).toEqual([
+			line('created', 'ok', 'reconciled'),
+			line('posted', 'ok', 'message_updated'),
+		])
+	})
+	it('reports a channel the state already knows as a duplicate', async () => {
+		channelExists = true
+		messageExists = true
+		state.channelId = 'channel'
+		state.messageId = 'message'
+		await service.apply('guild', gameId, true)
+		expect(stageLines()).toEqual([
+			line('created', 'duplicate', 'already_created'),
+			line('posted', 'ok', 'message_updated'),
+		])
+	})
+	it('reports a replayed revision as a duplicate', async () => {
+		state.appliedRevision = 1
+		await service.apply('guild', gameId, true)
+		expect(stageLines()).toEqual([
+			line('posted', 'duplicate', 'revision_already_applied'),
+		])
+	})
+	it('reports a missing odds proof as held', async () => {
+		delete state.desiredPresentation.initial_odds_completion
+		await service.apply('guild', gameId, true)
+		expect(stageLines()).toEqual([
+			line('created', 'held', 'awaiting_initial_odds'),
+		])
+	})
+	it('reports a guild that follows other teams as not eligible', async () => {
+		vi.mocked(store.guild).mockResolvedValue({
+			...guild,
+			preferredTeams: ['Los Angeles Lakers'],
+		})
+		await service.apply('guild', gameId, true)
+		expect(stageLines()).toEqual([
+			line('created', 'skipped', 'not_eligible'),
+		])
+	})
+	it('reports a game past tipoff as skipped', async () => {
+		state.desiredPresentation.gametime = new Date('2026-10-20T22:00:00Z')
+		await service.apply('guild', gameId, true)
+		expect(stageLines()).toEqual([
+			line('created', 'skipped', 'tipoff_passed'),
+		])
+	})
+	it('reports a game outside the creation window as deferred', async () => {
+		state.desiredPresentation.gametime = new Date('2026-10-21T22:00:00Z')
+		await service.apply('guild', gameId, true)
+		expect(stageLines()).toEqual([
+			line('created', 'deferred', 'creation_window_not_open'),
+		])
+	})
+	it('reports stale schedule evidence as held', async () => {
+		state.desiredPresentation.schedule_observed_at = '2026-10-20T10:00:00Z'
+		await service.apply('guild', gameId, true)
+		expect(stageLines()).toEqual([
+			line('created', 'held', 'stale_schedule_evidence'),
+		])
+	})
+	it('reports a failed post after the channel was created', async () => {
+		vi.mocked(discord.write).mockRejectedValueOnce(
+			new Error('boom: secret'),
+		)
+		await expect(service.apply('guild', gameId, true)).rejects.toThrow(
+			'boom',
+		)
+		expect(stageLines()).toEqual([
+			line('created', 'ok', 'created'),
+			line('posted', 'failed', 'post_failed'),
+		])
+		expect(
+			JSON.stringify(vi.mocked(logger.error).mock.calls),
+		).not.toContain('secret')
+	})
+})

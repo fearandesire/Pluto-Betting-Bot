@@ -5,6 +5,10 @@ import type {
 	ChannelReservation,
 	ChannelReservationStore,
 } from '../../cache/queue/channel-reservation-store.js'
+import {
+	type GameChannelOutcome,
+	logGameChannelStage,
+} from '../../logging/game-channel-stage.js'
 import { logger } from '../../logging/WinstonLogger.js'
 
 export interface CreatedChannel {
@@ -91,7 +95,9 @@ export class ChannelCreationWorkflow {
 		this.activeRuns.set(owner, activeRun)
 		const execution = this.execute(intent, owner)
 		try {
-			return await execution
+			const outcome = await execution
+			logCreationOutcome(intent, outcome)
+			return outcome
 		} finally {
 			activeRun.settled = true
 			resolveSettled()
@@ -393,6 +399,29 @@ export class ChannelCreationWorkflow {
 		this.stopRenewal(owner)
 		this.removeLease(owner)
 	}
+}
+
+const CREATION_STAGE_OUTCOME: Record<
+	ChannelCreationOutcome['state'],
+	{ outcome: GameChannelOutcome; reason: string }
+> = {
+	created: { outcome: 'ok', reason: 'created' },
+	'already-created': { outcome: 'duplicate', reason: 'already_created' },
+	reconciled: { outcome: 'ok', reason: 'reconciled' },
+	busy: { outcome: 'deferred', reason: 'reservation_busy' },
+}
+
+function logCreationOutcome(
+	intent: ChannelIntent,
+	result: ChannelCreationOutcome,
+): void {
+	logGameChannelStage({
+		stage: 'created',
+		gameId: intent.gameId,
+		sport: intent.sport,
+		guildId: intent.guildId,
+		...CREATION_STAGE_OUTCOME[result.state],
+	})
 }
 
 function logLeaseError(operation: string, error: unknown): void {

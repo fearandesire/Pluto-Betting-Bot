@@ -7,6 +7,7 @@ import Router from '@koa/router'
 import _ from 'lodash'
 import type { IncomingChannelData } from '../../../cache/data/schemas.js'
 import ChannelManager from '../../../guilds/channels/ChannelManager.js'
+import { canonicalGameId } from '../../../logging/game-channel-stage.js'
 import { logger } from '../../../logging/WinstonLogger.js'
 
 const ChannelsRoutes = new Router()
@@ -17,8 +18,18 @@ const ChannelsRoutes = new Router()
  */
 ChannelsRoutes.post('/channels/create', async (ctx: any) => {
 	const channelManager = new ChannelManager()
+	const body = ctx.request.body
+	const incoming: unknown[] = Array.isArray(body?.channels)
+		? body.channels
+		: []
 	logger.info('Received request to create channels', {
-		body: ctx.request.body,
+		channelCount: incoming.length,
+		guildCount: Array.isArray(body?.guilds) ? body.guilds.length : 0,
+		gameIds: incoming
+			.slice(0, 50)
+			.map((channel) =>
+				canonicalGameId((channel as { id?: unknown })?.id),
+			),
 	})
 	await channelManager.validateAndParseChannels(ctx.request.body)
 	const { channels, guilds } = ctx.request.body as IncomingChannelData
@@ -49,9 +60,8 @@ ChannelsRoutes.delete('/channels/delete', async (ctx: any) => {
 		const { channelNames }: { channelNames: string[] } = ctx.request.body
 
 		if (channelNames === null) {
-			console.error({
+			logger.warn('No channel names were received.', {
 				route: '/channels/delete',
-				message: 'No channel names were received.',
 			})
 			ctx.body = {
 				message: 'No channel names were received.',
@@ -60,11 +70,10 @@ ChannelsRoutes.delete('/channels/delete', async (ctx: any) => {
 			return
 		}
 		if (!_.isArray(channelNames)) {
-			console.error({
-				route: '/channels/delete',
-				message:
-					'Unable to process channels to delete; Invalid data received.',
-			})
+			logger.warn(
+				'Unable to process channels to delete; Invalid data received.',
+				{ route: '/channels/delete' },
+			)
 			ctx.body = {
 				message:
 					'Unable to process channels to delete; Invalid data received.',
@@ -76,16 +85,19 @@ ChannelsRoutes.delete('/channels/delete', async (ctx: any) => {
 			const channelManager = new ChannelManager()
 			await channelManager.deleteChan(channelName)
 		}
-		console.log({
+		logger.info('Completed channel deletion.', {
 			route: '/channels/delete',
-			message: 'Completed channel deletion.',
+			channelCount: channelNames.length,
 		})
 		ctx.body = {
 			message: 'Channels deleted.',
 			statusCode: 200,
 		}
 	} catch (e) {
-		console.log(e)
+		logger.error('Channel deletion failed', {
+			route: '/channels/delete',
+			error: e instanceof Error ? e.message : String(e),
+		})
 	}
 })
 
