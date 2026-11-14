@@ -23,9 +23,12 @@ export const currentRequestId = (): string | undefined =>
 export const currentUpstreamRequestId = (): string | undefined =>
 	storage.getStore()?.upstreamRequestId
 
-/** Work outside any interaction, inbound request or job still gets an id Khronos can log. */
+/**
+ * Khronos-bound calls carry the upstream run id when the job has one, so one id joins a cron run across services.
+ * Work outside any interaction, inbound request or job still gets an id Khronos can log.
+ */
 export const outboundRequestId = (): string =>
-	currentRequestId() ?? randomUUID()
+	currentUpstreamRequestId() ?? currentRequestId() ?? randomUUID()
 
 export const withRequestIdHeader = <I extends RequestInit>(init?: I): I => {
 	const headers = new Headers(init?.headers)

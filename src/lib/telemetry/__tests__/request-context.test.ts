@@ -20,6 +20,20 @@ describe('withRequestIdHeader', () => {
 		expect(headers.get('x-api-key')).toBe('k')
 	})
 
+	it('prefers the upstream run id over the job id', () => {
+		const init = runWithRequestId(
+			'job-1',
+			() => withRequestIdHeader(),
+			'cron-x',
+		)
+		expect(new Headers(init.headers).get(REQUEST_ID_HEADER)).toBe('cron-x')
+	})
+
+	it('falls back to the job id without an upstream id', () => {
+		const init = runWithRequestId('job-1', () => withRequestIdHeader())
+		expect(new Headers(init.headers).get(REQUEST_ID_HEADER)).toBe('job-1')
+	})
+
 	it('generates an id when no context is active', () => {
 		const headers = new Headers(withRequestIdHeader().headers)
 		expect(headers.get(REQUEST_ID_HEADER)).toMatch(UUID)

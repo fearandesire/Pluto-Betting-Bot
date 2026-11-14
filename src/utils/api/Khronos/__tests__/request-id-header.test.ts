@@ -16,6 +16,9 @@ vi.stubGlobal('fetch', fetchMock)
 
 const { KH_API_CONFIG } = await import('../KhronosInstances.js')
 const { AxiosKhronosInstance } = await import('../../common/axios-config.js')
+const { ChannelPresentationClient } = await import(
+	'../../../guilds/channels/channel-presentation-client.js'
+)
 const { runWithRequestId } = await import(
 	'../../../../lib/telemetry/request-context.js'
 )
@@ -71,5 +74,32 @@ describe('X-Request-ID on Khronos calls', () => {
 	it('axios client generates an id outside any context', async () => {
 		const headers = await sendAxios()
 		expect(String(headers?.get('X-Request-ID'))).toMatch(/^[0-9a-f-]{36}$/)
+	})
+
+	it('fetch and axios clients prefer the upstream run id over the job id', async () => {
+		await runWithRequestId(
+			'job-1',
+			() => KH_API_CONFIG.fetchApi?.('http://khronos.test/x', {}),
+			'cron-x',
+		)
+		expect(sentFetchHeaders().get('x-request-id')).toBe('cron-x')
+		const headers = await runWithRequestId('job-1', sendAxios, 'cron-x')
+		expect(headers?.get('X-Request-ID')).toBe('cron-x')
+	})
+
+	it('presentation ack carries the upstream run id, or the job id without one', async () => {
+		const receipt = { revision: 1, channelId: 'c', messageId: 'm' }
+		const ack = (upstream?: string) =>
+			runWithRequestId(
+				'job-1',
+				() => new ChannelPresentationClient().ack('g', 'e', receipt),
+				upstream,
+			)
+		fetchMock.mockClear()
+		await ack('cron-x').catch(() => undefined)
+		expect(fetchMock.mock.lastCall?.[0]).toContain('/ack')
+		expect(sentFetchHeaders().get('x-request-id')).toBe('cron-x')
+		await ack().catch(() => undefined)
+		expect(sentFetchHeaders().get('x-request-id')).toBe('job-1')
 	})
 })
