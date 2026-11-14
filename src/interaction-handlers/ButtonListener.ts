@@ -7,7 +7,9 @@ import type { ButtonInteraction } from 'discord.js'
 import _ from 'lodash'
 import {
 	betCanceledEmbed,
+	doubleDownBtnPrefix,
 	formatPredictionConfirmation,
+	parseDoubleDownConfirmId,
 	predictionPlacedEmbed,
 } from '../lib/discord/builders/betting.js'
 import { ApiModules } from '../lib/interfaces/api/api.interface.js'
@@ -18,6 +20,7 @@ import {
 } from '../utils/api/common/bets/BetsCacheService.js'
 import { BetslipManager } from '../utils/api/Khronos/bets/BetslipsManager.js'
 import BetslipWrapper from '../utils/api/Khronos/bets/betslip-wrapper.js'
+import { runDoubleDown } from '../utils/api/Khronos/bets/doubledown-flow.js'
 import { ApiErrorHandler } from '../utils/api/Khronos/error-handling/ApiErrorHandler.js'
 import PredictionApiWrapper from '../utils/api/Khronos/prediction/predictionApiWrapper.js'
 import PropsApiWrapper from '../utils/api/Khronos/props/props-api-wrapper.js'
@@ -56,6 +59,26 @@ export class ButtonHandler extends InteractionHandler {
 			// ? Extract outcome UUID from button ID (format: prop_{uuid})
 			const outcomeUuid = interaction.customId.replace('prop_', '')
 			return this.some({ outcomeUuid })
+		}
+
+		// ? Double down re-prompt after a moved price
+		if (_.startsWith(interaction.customId, doubleDownBtnPrefix)) {
+			await interaction.deferUpdate()
+			const confirm = parseDoubleDownConfirmId(interaction.customId)
+			if (confirm) {
+				await runDoubleDown(
+					interaction,
+					confirm.betId,
+					confirm.expectedOdds,
+				)
+			} else {
+				await interaction.editReply({
+					content: 'Double down cancelled.',
+					embeds: [],
+					components: [],
+				})
+			}
+			return this.none()
 		}
 
 		// Handle matchup buttons

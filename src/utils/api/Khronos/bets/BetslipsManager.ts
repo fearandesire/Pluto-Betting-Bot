@@ -4,6 +4,7 @@ import type {
 	BetslipWithAggregationDTO,
 	DoubleDownDto,
 	InitBetslipRespDTO,
+	OddsChangedDetailsDto,
 	PlaceBetDto,
 	PlacedBetslip,
 } from '@pluto-khronos/api-client'
@@ -21,6 +22,7 @@ import {
 	betConfirmedEmbed,
 	betPlacedAnnouncementEmbed,
 	formatMatchDate,
+	oddsChangedNotice,
 	parlayPlacedAnnouncementEmbed,
 	pendingBetslip,
 } from '../../../../lib/discord/builders/betting.js'
@@ -40,6 +42,7 @@ import PatreonFacade from '../../patreon/Patreon-Facade.js'
 import { ApiErrorHandler } from '../error-handling/ApiErrorHandler.js'
 import GuildWrapper from '../guild/guild-wrapper.js'
 import BetslipWrapper from './betslip-wrapper.js'
+import { formatAmericanOdds, parseOddsChanged } from './odds-changed.js'
 
 interface InitializeParams {
 	team: string
@@ -209,6 +212,15 @@ export class BetslipManager {
 				})
 			}
 		} catch (error) {
+			const oddsChanged = await parseOddsChanged(error)
+			if (oddsChanged) {
+				return this.repromptOddsChanged(
+					interaction,
+					betDetails,
+					matchInfo,
+					oddsChanged,
+				)
+			}
 			const errEmbed = await ErrorEmbeds.internalErr(
 				'Failed to place your bet due to an internal error. Please try again later.',
 			)
@@ -226,6 +238,54 @@ export class BetslipManager {
 				ephemeral: true,
 			})
 		}
+	}
+
+	/**
+	 * Khronos wrote nothing and kept the pending slip. Store the new price so the
+	 * next confirm sends it, and show the new payout with the same buttons.
+	 */
+	private async repromptOddsChanged(
+		interaction: CommandInteraction | ButtonInteraction,
+		betDetails: PlaceBetDto,
+		matchInfo: IMatchInfoArgs,
+		details: OddsChangedDetailsDto,
+	) {
+		logger.warn('Bet price changed before confirm', {
+			event: 'betslip.price.odds_changed',
+			user_id: betDetails.userid,
+			team: details.team,
+			expected_odds: details.expected_odds,
+			current_odds: details.current_odds,
+		})
+		await this.betCacheService.updateUserBet(betDetails.userid, {
+			selected_odds: details.current_odds,
+			profit: details.profit,
+			payout: details.payout,
+		})
+		const { betAmount, profit, payout } =
+			await MoneyFormatter.formatAmounts({
+				amount: details.amount,
+				profit: details.profit,
+				payout: details.payout,
+			})
+		const chosenTeam = (await findEmoji(details.team)) || details.team
+		const opponent =
+			(await findEmoji(matchInfo.opponent)) ||
+			_.last(matchInfo.opponent.split(' '))!
+		return interaction.editReply(
+			pendingBetslip({
+				chosenTeam,
+				opponent,
+				teamLabel: _.upperFirst(details.team),
+				date: formatMatchDate(matchInfo.dateofmatchup),
+				amounts: { betAmount, payout, profit },
+				avatarUrl: interaction.user.displayAvatarURL(),
+				notice: oddsChangedNotice(
+					formatAmericanOdds(details.expected_odds),
+					formatAmericanOdds(details.current_odds),
+				),
+			}),
+		)
 	}
 
 	private isDefinitiveBusinessFailure(value: unknown): boolean {
@@ -474,10 +534,21 @@ export class BetslipManager {
 		return message
 	}
 
-	async doubleDown(userId: string, betId: number): Promise<DoubleDownDto> {
+	/**
+	 * Doubles a bet at the price the user last confirmed (`offered_price`), or at
+	 * `expectedOdds` when they re-confirm after a 409 ODDS_CHANGED.
+	 */
+	async doubleDown(
+		userId: string,
+		betId: number,
+		expectedOdds?: number,
+	): Promise<DoubleDownDto> {
+		const odds =
+			expectedOdds ?? (await this.betslipInstance.offeredPrice(betId))
 		const response = await this.betslipInstance.doubleDown({
 			userId,
 			betId,
+			...(odds === undefined ? {} : { expectedOdds: odds }),
 		})
 		handleNewUser(response)
 		return response

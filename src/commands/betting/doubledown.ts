@@ -1,17 +1,10 @@
 import { ApplyOptions } from '@sapphire/decorators'
 import { Command } from '@sapphire/framework'
 import { InteractionContextType } from 'discord.js'
-import { doubleDownEmbed } from '../../lib/discord/builders/betting.js'
-import { ApiModules } from '../../lib/interfaces/api/api.interface.js'
 import { isApiError } from './../../lib/interfaces/errors/api-errors.js'
 import env from '../../lib/startup/env.js'
-import { BetsCacheService } from '../../utils/api/common/bets/BetsCacheService.js'
-import MoneyFormatter from '../../utils/api/common/money-formatting/money-format.js'
-import { BetslipManager } from '../../utils/api/Khronos/bets/BetslipsManager.js'
-import BetslipWrapper from '../../utils/api/Khronos/bets/betslip-wrapper.js'
-import { ApiErrorHandler } from '../../utils/api/Khronos/error-handling/ApiErrorHandler.js'
+import { runDoubleDown } from '../../utils/api/Khronos/bets/doubledown-flow.js'
 import PatreonFacade from '../../utils/api/patreon/Patreon-Facade.js'
-import { CacheManager } from '../../utils/cache/cache-manager.js'
 import { ErrorEmbeds } from '../../utils/common/errors/global.js'
 
 @ApplyOptions<Command.Options>({
@@ -57,37 +50,6 @@ export class UserCommand extends Command {
 			return
 		}
 		const betId = interaction.options.getInteger('betid', true)
-		try {
-			const betslipManager = new BetslipManager(
-				new BetslipWrapper(),
-				new BetsCacheService(new CacheManager()),
-			)
-			const newBetDetails = await betslipManager.doubleDown(
-				interaction.user.id,
-				betId,
-			)
-			const { newBetAmount, newProfit, newPayout, newBalance } =
-				newBetDetails.betslip
-			// Format the money
-			const formattedAmount = MoneyFormatter.toUSD(newBetAmount)
-			const formattedPayout = MoneyFormatter.toUSD(newPayout)
-			const formattedProfit = MoneyFormatter.toUSD(newProfit)
-			const formattedBalance = MoneyFormatter.toUSD(newBalance)
-			const modifiedBetEmbed = doubleDownEmbed({
-				amount: formattedAmount,
-				payout: formattedPayout,
-				profit: formattedProfit,
-				balance: formattedBalance,
-				avatarUrl: interaction.user.displayAvatarURL(),
-			})
-			return interaction.editReply({ embeds: [modifiedBetEmbed] })
-		} catch (err) {
-			await new ApiErrorHandler().handle(
-				interaction,
-				err,
-				ApiModules.betting,
-			)
-			return
-		}
+		return runDoubleDown(interaction, betId)
 	}
 }
