@@ -5,14 +5,29 @@ import {
 	oddsChangedNotice,
 } from '../../../../lib/discord/builders/betting.js'
 import { ApiModules } from '../../../../lib/interfaces/api/api.interface.js'
+import { isApiError } from '../../../../lib/interfaces/errors/api-errors.js'
+import env from '../../../../lib/startup/env.js'
 import { CacheManager } from '../../../cache/cache-manager.js'
+import { ErrorEmbeds } from '../../../common/errors/global.js'
 import { logger } from '../../../logging/WinstonLogger.js'
 import { BetsCacheService } from '../../common/bets/BetsCacheService.js'
 import MoneyFormatter from '../../common/money-formatting/money-format.js'
+import PatreonFacade from '../../patreon/Patreon-Facade.js'
 import { ApiErrorHandler } from '../error-handling/ApiErrorHandler.js'
 import { BetslipManager } from './BetslipsManager.js'
 import BetslipWrapper from './betslip-wrapper.js'
 import { formatAmericanOdds, parseOddsChanged } from './odds-changed.js'
+
+/** Error to show when the user may not double down now, or null. */
+export async function doubleDownGateError(userId: string) {
+	if (env.MAINTENANCE_MODE) return ErrorEmbeds.maintenanceMode()
+	const member = await PatreonFacade.memberDetails(userId)
+	if (!member || isApiError(member)) return ErrorEmbeds.patreonMembersOnly()
+	return null
+}
+
+/** Double downs in flight in this process; doubledown has no idempotency key. */
+const inFlight = new Set<string>()
 
 /**
  * Doubles a bet and renders the result into the deferred interaction. When
@@ -24,6 +39,9 @@ export async function runDoubleDown(
 	betId: number,
 	expectedOdds?: number,
 ) {
+	const key = `${interaction.user.id}:${betId}`
+	if (inFlight.has(key)) return
+	inFlight.add(key)
 	const manager = new BetslipManager(
 		new BetslipWrapper(),
 		new BetsCacheService(new CacheManager()),
@@ -74,5 +92,7 @@ export async function runDoubleDown(
 				avatarUrl: interaction.user.displayAvatarURL(),
 			}),
 		)
+	} finally {
+		inFlight.delete(key)
 	}
 }

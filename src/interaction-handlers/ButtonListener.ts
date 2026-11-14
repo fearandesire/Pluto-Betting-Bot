@@ -9,7 +9,7 @@ import {
 	betCanceledEmbed,
 	doubleDownBtnPrefix,
 	formatPredictionConfirmation,
-	parseDoubleDownConfirmId,
+	parseDoubleDownButton,
 	predictionPlacedEmbed,
 } from '../lib/discord/builders/betting.js'
 import { ApiModules } from '../lib/interfaces/api/api.interface.js'
@@ -20,7 +20,10 @@ import {
 } from '../utils/api/common/bets/BetsCacheService.js'
 import { BetslipManager } from '../utils/api/Khronos/bets/BetslipsManager.js'
 import BetslipWrapper from '../utils/api/Khronos/bets/betslip-wrapper.js'
-import { runDoubleDown } from '../utils/api/Khronos/bets/doubledown-flow.js'
+import {
+	doubleDownGateError,
+	runDoubleDown,
+} from '../utils/api/Khronos/bets/doubledown-flow.js'
 import { ApiErrorHandler } from '../utils/api/Khronos/error-handling/ApiErrorHandler.js'
 import PredictionApiWrapper from '../utils/api/Khronos/prediction/predictionApiWrapper.js'
 import PropsApiWrapper from '../utils/api/Khronos/props/props-api-wrapper.js'
@@ -64,20 +67,29 @@ export class ButtonHandler extends InteractionHandler {
 		// ? Double down re-prompt after a moved price
 		if (_.startsWith(interaction.customId, doubleDownBtnPrefix)) {
 			await interaction.deferUpdate()
-			const confirm = parseDoubleDownConfirmId(interaction.customId)
-			if (confirm) {
-				await runDoubleDown(
-					interaction,
-					confirm.betId,
-					confirm.expectedOdds,
-				)
-			} else {
+			const button = parseDoubleDownButton(interaction.customId)
+			if (button.kind !== 'confirm') {
 				await interaction.editReply({
-					content: 'Double down cancelled.',
+					content:
+						button.kind === 'cancel'
+							? 'Double down cancelled.'
+							: 'This prompt has expired. Run `/doubledown` again.',
 					embeds: [],
 					components: [],
 				})
+				return this.none()
 			}
+			// Remove the buttons first so a second click has nothing to press.
+			await interaction.editReply({ components: [] })
+			const blocked = await doubleDownGateError(interaction.user.id)
+			if (blocked) {
+				await interaction.editReply({
+					embeds: [blocked],
+					components: [],
+				})
+				return this.none()
+			}
+			await runDoubleDown(interaction, button.betId, button.expectedOdds)
 			return this.none()
 		}
 

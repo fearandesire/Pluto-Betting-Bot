@@ -257,6 +257,17 @@ export class BetslipManager {
 			expected_odds: details.expected_odds,
 			current_odds: details.current_odds,
 		})
+		const cached = await this.betCacheService.getUserBet(betDetails.userid)
+		const placementId = (
+			betDetails as PlaceBetDto & { placement_id?: string }
+		).placement_id
+		if (!cached || cached.placement_id !== placementId) {
+			// A newer slip replaced this one; do not write this quote into it.
+			const errEmbed = await ErrorEmbeds.internalErr(
+				'The odds changed and this betslip is no longer current. Start the bet again with `/bet`.',
+			)
+			return interaction.editReply({ embeds: [errEmbed], components: [] })
+		}
 		await this.betCacheService.updateUserBet(betDetails.userid, {
 			selected_odds: details.current_odds,
 			profit: details.profit,

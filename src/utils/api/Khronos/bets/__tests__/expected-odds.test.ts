@@ -128,6 +128,40 @@ describe('expected_odds on place', () => {
 		expect(next.expected_odds).toBe(-120)
 		expect(next.placement_id).toBe('p-1')
 	})
+
+	it('does not write a stale 409 into a newer slip', async () => {
+		await service.cacheUserBet('u1', initBetslip as never)
+		const stale = await service.sanitize((await service.getUserBet('u1'))!)
+		await service.cacheUserBet('u1', {
+			...initBetslip,
+			placement_id: 'p-2',
+		} as never)
+		const wrapper = {
+			finalize: vi.fn().mockRejectedValue(oddsChangedError('place')),
+		}
+		const interaction = {
+			deferred: true,
+			replied: false,
+			user: { id: 'u1', displayAvatarURL: () => 'https://a/x.png' },
+			editReply: vi.fn(async () => ({})),
+			followUp: vi.fn(),
+		}
+		await new BetslipManager(wrapper as never, service).placeBet(
+			interaction as never,
+			stale,
+			{
+				opponent: initBetslip.opponent,
+				dateofmatchup: initBetslip.dateofmatchup,
+			},
+		)
+		const reply = (interaction.editReply.mock.calls[0] as unknown[])[0] as {
+			components: unknown[]
+		}
+		expect(reply.components).toEqual([])
+		const current = await service.getUserBet('u1')
+		expect(current?.selected_odds).toBe(-150)
+		expect(current?.placement_id).toBe('p-2')
+	})
 })
 
 describe('expected_odds on doubledown', () => {
@@ -187,7 +221,7 @@ describe('parseOddsChanged', () => {
 
 describe('doubledown re-prompt button', () => {
 	it('carries the new price back to the confirm', async () => {
-		const { doubleDownReprompt, parseDoubleDownConfirmId } = await import(
+		const { doubleDownReprompt, parseDoubleDownButton } = await import(
 			'../../../../../lib/discord/builders/betting.js'
 		)
 		const { embeds, components } = doubleDownReprompt({
@@ -201,10 +235,16 @@ describe('doubledown re-prompt button', () => {
 		})
 		expect(embeds[0].toJSON().description).toContain('$383.33')
 		const id = components[0].toJSON().components[0] as { custom_id: string }
-		expect(parseDoubleDownConfirmId(id.custom_id)).toEqual({
+		expect(parseDoubleDownButton(id.custom_id)).toEqual({
+			kind: 'confirm',
 			betId: 7,
 			expectedOdds: -120,
 		})
-		expect(parseDoubleDownConfirmId('doubledown_cancel')).toBeNull()
+		expect(parseDoubleDownButton('dd.v1.cancel')).toEqual({
+			kind: 'cancel',
+		})
+		expect(parseDoubleDownButton('dd.v0.confirm.7.1')).toEqual({
+			kind: 'stale',
+		})
 	})
 })

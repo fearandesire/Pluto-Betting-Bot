@@ -202,19 +202,31 @@ export function oddsChangedNotice(previous: string, current: string) {
 	return `**The odds changed from ${previous} to ${current}.** Review the new payout and confirm again.`
 }
 
-export const doubleDownBtnPrefix = 'doubledown_' as const
-export const doubleDownCancelId = `${doubleDownBtnPrefix}cancel` as const
+/**
+ * Versioned double-down re-prompt IDs: `dd.v1.confirm.<betId>.<odds>` and
+ * `dd.v1.cancel`. An unknown version parses as `stale`.
+ */
+export const doubleDownBtnPrefix = 'dd.' as const
+export const doubleDownCancelId = 'dd.v1.cancel' as const
 
 export function doubleDownConfirmId(betId: number, expectedOdds: number) {
-	return `${doubleDownBtnPrefix}confirm:${betId}:${expectedOdds}`
+	return `dd.v1.confirm.${betId}.${expectedOdds}`
 }
 
-export function parseDoubleDownConfirmId(
-	customId: string,
-): { betId: number; expectedOdds: number } | null {
-	const match = /^doubledown_confirm:(\d+):(-?\d+)$/.exec(customId)
-	if (!match) return null
-	return { betId: Number(match[1]), expectedOdds: Number(match[2]) }
+export type DoubleDownButton =
+	| { kind: 'confirm'; betId: number; expectedOdds: number }
+	| { kind: 'cancel' }
+	| { kind: 'stale' }
+
+export function parseDoubleDownButton(customId: string): DoubleDownButton {
+	if (customId === doubleDownCancelId) return { kind: 'cancel' }
+	const match = /^dd\.v1\.confirm\.(\d+)\.(-?\d+)$/.exec(customId)
+	if (!match) return { kind: 'stale' }
+	return {
+		kind: 'confirm',
+		betId: Number(match[1]),
+		expectedOdds: Number(match[2]),
+	}
 }
 
 /** Double down re-prompt after Khronos refused a moved price. Amounts are the whole bet after confirming. */
