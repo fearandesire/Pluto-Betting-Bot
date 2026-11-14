@@ -25,7 +25,9 @@ vi.mock('../channel-presentation-lock.js', () => ({
 	},
 }))
 
+import { stageFailureOf } from '../../../logging/game-channel-stage.js'
 import { logger } from '../../../logging/WinstonLogger.js'
+import { ChannelCreationBusyError } from '../ChannelCreationWorkflow.js'
 import ChannelManager from '../ChannelManager.js'
 
 const gameId = '0f0e0d0c-0b0a-4908-8706-050403020100'
@@ -105,6 +107,29 @@ describe('ChannelManager eligibility game_channel.stage', () => {
 				sport: 'nfl',
 			},
 		])
+	})
+})
+
+describe('ChannelManager creation failures', () => {
+	it('throws a busy reservation tagged with the game, logging nothing itself', async () => {
+		const reservations = {
+			reserve: vi.fn(async () => ({ state: 'busy' })),
+		}
+		const error = await new ChannelManager(reservations as any, {} as any)
+			.processChannels({
+				channels: [channel()],
+				guilds: [guild()],
+			} as any)
+			.catch((caught: unknown) => caught)
+		expect(error).toBeInstanceOf(ChannelCreationBusyError)
+		expect(stageFailureOf(error)).toEqual({
+			stage: 'created',
+			reason: 'reservation_busy',
+			gameId,
+			sport: 'nba',
+			guildId: 'guild-1',
+		})
+		expect(stageLines()).toEqual([])
 	})
 })
 

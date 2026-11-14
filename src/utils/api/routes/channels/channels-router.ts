@@ -7,7 +7,11 @@ import Router from '@koa/router'
 import _ from 'lodash'
 import type { IncomingChannelData } from '../../../cache/data/schemas.js'
 import ChannelManager from '../../../guilds/channels/ChannelManager.js'
-import { canonicalGameId } from '../../../logging/game-channel-stage.js'
+import {
+	canonicalGameId,
+	logGameChannelStage,
+	stageFailureOf,
+} from '../../../logging/game-channel-stage.js'
 import { logger } from '../../../logging/WinstonLogger.js'
 
 const ChannelsRoutes = new Router()
@@ -39,6 +43,9 @@ ChannelsRoutes.post('/channels/create', async (ctx: any) => {
 			guilds,
 		})
 	} catch (err) {
+		// No queue worker reports direct calls, so the route owns the failed line.
+		const failure = stageFailureOf(err)
+		if (failure) logGameChannelStage({ ...failure, outcome: 'failed' })
 		logger.error('Error creating channels', {
 			error: err,
 		})

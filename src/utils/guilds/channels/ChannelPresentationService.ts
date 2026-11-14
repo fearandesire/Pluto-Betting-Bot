@@ -8,8 +8,10 @@ import {
 } from '../../cache/data/channel-presentation-contract.js'
 import type { GuildEligibility } from '../../cache/data/schemas.js'
 import {
+	type GameChannelStage,
 	type GameChannelStageEvent,
 	logGameChannelStage,
+	tagStageFailure,
 } from '../../logging/game-channel-stage.js'
 import { LeaseLostError } from './ChannelCreationWorkflow.js'
 import ChannelManager, { V2_PRESENTATION_FOOTER } from './ChannelManager.js'
@@ -99,19 +101,19 @@ export class ChannelPresentationService {
 			}
 			if (!hasInitialOddsCompletion(state)) {
 				log({
-					stage: 'created',
+					stage: state.channelId ? 'posted' : 'created',
 					outcome: 'held',
 					reason: 'awaiting_initial_odds',
 				})
 				return
 			}
-			const refresh = async () => {
+			const refresh = async (stage: GameChannelStage) => {
 				const current = await this.store.load(guildId, gameId)
 				if (current.guildId !== guildId || current.gameId !== gameId)
 					throw new Error('Presentation identity mismatch')
 				if (current.appliedRevision === current.desiredRevision) {
 					log({
-						stage: 'created',
+						stage,
 						outcome: 'duplicate',
 						reason: 'revision_already_applied',
 					})
@@ -119,7 +121,7 @@ export class ChannelPresentationService {
 				}
 				if (!hasInitialOddsCompletion(current)) {
 					log({
-						stage: 'created',
+						stage,
 						outcome: 'held',
 						reason: 'awaiting_initial_odds',
 					})
@@ -200,7 +202,7 @@ export class ChannelPresentationService {
 					log({ stage: 'created', ...blocked })
 					return
 				}
-				if (!(await refresh())) return
+				if (!(await refresh('created'))) return
 				await check()
 				if (!hasInitialOddsCompletion(state)) {
 					log({
@@ -232,7 +234,7 @@ export class ChannelPresentationService {
 						? { outcome: 'ok', reason: 'reconciled' }
 						: { outcome: 'duplicate', reason: 'already_created' }),
 			})
-			if (!(await refresh())) return
+			if (!(await refresh('posted'))) return
 			await check()
 			if (!hasInitialOddsCompletion(state)) {
 				log({
@@ -258,12 +260,13 @@ export class ChannelPresentationService {
 					messageId,
 				})
 			} catch (error) {
-				log({
+				throw tagStageFailure(error, {
 					stage: 'posted',
-					outcome: 'failed',
 					reason: postFailureReason(error),
+					gameId,
+					guildId,
+					sport: state.desiredPresentation.sport,
 				})
-				throw error
 			}
 			log({
 				stage: 'posted',
@@ -337,6 +340,8 @@ export function creationBlock(
 	const observed = Date.parse(channel.schedule_observed_at ?? '')
 	if (channel.status !== 'scheduled')
 		return { outcome: 'skipped', reason: 'not_scheduled' }
+	if (!Number.isFinite(tipoff))
+		return { outcome: 'skipped', reason: 'invalid_gametime' }
 	if (tipoff <= now) return { outcome: 'skipped', reason: 'tipoff_passed' }
 	if (tipoff > now + 60 * 60 * 1000)
 		return { outcome: 'deferred', reason: 'creation_window_not_open' }

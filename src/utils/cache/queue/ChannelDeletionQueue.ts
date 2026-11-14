@@ -87,6 +87,7 @@ export class ChannelDeletionQueue {
 						})
 					}
 				},
+				topLevelJobRequestId,
 			),
 		)
 
@@ -105,6 +106,7 @@ export class ChannelDeletionQueue {
 						},
 					})
 				},
+				topLevelJobRequestId,
 			),
 		)
 	}

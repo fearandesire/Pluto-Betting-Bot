@@ -323,7 +323,7 @@ export class NotificationDeliveryQueue {
 		if (options.startWorker !== false) {
 			this.worker = new Worker<DeliveryJob>(
 				NOTIFICATION_DELIVERY_QUEUE,
-				withJobRequestId(async (job) => this.runJob(job)),
+				withJobRequestId(async (job) => this.runJob(job), undefined),
 				{
 					connection: REDIS_CONFIG,
 					...bullmqTelemetry(),
@@ -343,7 +343,7 @@ export class NotificationDeliveryQueue {
 				'failed',
 				withJobEventRequestId((job, error) => {
 					void this.handleJobFailed(job, error).catch(() => undefined)
-				}),
+				}, undefined),
 			)
 			this.unregisterShutdownQueue = registerShutdownQueue(
 				NOTIFICATION_DELIVERY_QUEUE,

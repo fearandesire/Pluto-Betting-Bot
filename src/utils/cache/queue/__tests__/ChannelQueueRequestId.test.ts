@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
 	processors: new Map<string, (job: unknown) => Promise<unknown>>(),
+	listeners: new Map<string, (...args: unknown[]) => unknown>(),
 }))
 
 vi.mock('bullmq', () => ({
@@ -12,7 +13,9 @@ vi.mock('bullmq', () => ({
 		constructor(name: string, process: (job: unknown) => Promise<unknown>) {
 			mocks.processors.set(name, process)
 		}
-		on() {}
+		on(event: string, listener: (...args: unknown[]) => unknown) {
+			mocks.listeners.set(`${mocks.processors.size}:${event}`, listener)
+		}
 		async pause() {}
 		async close() {}
 	},
@@ -24,9 +27,21 @@ vi.mock('../../../../lib/telemetry/bullmq-telemetry.js', () => ({
 vi.mock('../../../../lib/startup/shutdown-registry.js', () => ({
 	registerShutdownQueue: vi.fn(),
 }))
-vi.mock('../../../logging/WinstonLogger.js', () => ({
-	logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
-}))
+vi.mock('../../../logging/WinstonLogger.js', async () => {
+	const { currentJobId, currentRequestId } = await import(
+		'../../../../lib/telemetry/request-context.js'
+	)
+	// The ids the real logger format would add at this moment.
+	const log = () =>
+		vi.fn((line: object) => ({
+			...line,
+			requestId: currentRequestId(),
+			job_id: currentJobId(),
+		}))
+	return {
+		logger: { info: log(), warn: log(), error: log(), debug: log() },
+	}
+})
 vi.mock('../../../guilds/channels/ChannelManager.js', async () => {
 	const { logGameChannelStage } = await import(
 		'../../../logging/game-channel-stage.js'
@@ -61,6 +76,7 @@ vi.mock('../../../guilds/channels/ChannelPresentationService.js', async () => {
 	}
 })
 
+import { tagStageFailure } from '../../../logging/game-channel-stage.js'
 import { logger } from '../../../logging/WinstonLogger.js'
 
 await import('../ChannelDeletionQueue.js')
@@ -69,7 +85,7 @@ await import('../ChannelPresentationQueue.js')
 const stageLines = () =>
 	vi
 		.mocked(logger.info)
-		.mock.calls.map(([line]) => line as Record<string, unknown>)
+		.mock.results.map(({ value }) => value as Record<string, unknown>)
 		.filter((line) => line.event === 'game_channel.stage')
 
 const GAME = '0f0e0d0c-0b0a-4908-8706-050403020100'
@@ -111,30 +127,35 @@ const presentation = (extra: object) => ({
 
 beforeEach(() => vi.clearAllMocks())
 
-describe('channel deletion job request_id', () => {
+describe('channel deletion job requestId', () => {
 	const run = (data: object) =>
 		mocks.processors.get('channel-deletion-queue')?.({ id: 'job-d', data })
 
-	it('reads the top-level requestId', async () => {
+	it('is the top-level upstream id, with the BullMQ id as job_id', async () => {
 		await run({ channelName: 'nba-a-vs-b', requestId: 'cron-del-1' })
 		expect(stageLines()[0]).toMatchObject({
 			stage: 'deleted',
-			request_id: 'cron-del-1',
+			requestId: 'cron-del-1',
+			job_id: 'job-d',
 		})
+		expect(stageLines()[0]).not.toHaveProperty('request_id')
 	})
-	it('omits it when absent', async () => {
+	it('is the job id when the payload has none', async () => {
 		await run({ channelName: 'nba-a-vs-b' })
 		expect(stageLines()).toHaveLength(1)
-		expect(stageLines()[0]?.request_id).toBeUndefined()
+		expect(stageLines()[0]).toMatchObject({
+			requestId: 'job-d',
+			job_id: 'job-d',
+		})
 	})
-	it('omits an unsafe id and still runs the job', async () => {
+	it('ignores an unsafe id and still runs the job', async () => {
 		await run({ channelName: 'nba-a-vs-b', requestId: 'bad id!' })
 		expect(stageLines()).toHaveLength(1)
-		expect(stageLines()[0]?.request_id).toBeUndefined()
+		expect(stageLines()[0]?.requestId).toBe('job-d')
 	})
 })
 
-describe('channel presentation job request_id', () => {
+describe('channel presentation job requestId', () => {
 	const run = (job: object) =>
 		mocks.processors.get('channel-presentation-update')?.(job)
 
@@ -142,12 +163,58 @@ describe('channel presentation job request_id', () => {
 		await run(presentation({ requestId: 'caller-42' }))
 		expect(stageLines()[0]).toMatchObject({
 			stage: 'posted',
-			request_id: 'caller-42',
+			requestId: 'caller-42',
+			job_id: 'job-p',
 		})
 	})
-	it('omits it when absent', async () => {
+	it('is the job id when absent', async () => {
 		await run(presentation({}))
 		expect(stageLines()).toHaveLength(1)
-		expect(stageLines()[0]?.request_id).toBeUndefined()
+		expect(stageLines()[0]?.requestId).toBe('job-p')
+	})
+})
+
+describe('channel presentation worker failures', () => {
+	// The presentation worker is the second Worker constructed in this file.
+	const onFailed = () => mocks.listeners.get('2:failed')
+	const levelLines = (level: 'warn' | 'error') =>
+		vi
+			.mocked(logger[level])
+			.mock.results.map(({ value }) => value as Record<string, unknown>)
+			.filter((line) => line?.event === 'game_channel.stage')
+
+	it('reports an update failure as a posting failure', () => {
+		onFailed()?.(
+			{ ...presentation({}), attemptsMade: 1, opts: { attempts: 1 } },
+			new Error('Presentation update has no confirmed channel'),
+		)
+		expect(levelLines('error')).toEqual([
+			expect.objectContaining({
+				stage: 'posted',
+				outcome: 'failed',
+				reason: 'post_failed',
+				game_id: GAME.replaceAll('-', ''),
+				guild_id: 'guild-1',
+				requestId: 'job-p',
+			}),
+		])
+	})
+	it('keeps the stage and reason a tagged error carries', () => {
+		onFailed()?.(
+			{ ...presentation({}), attemptsMade: 1, opts: { attempts: 3 } },
+			tagStageFailure(new Error('lost'), {
+				stage: 'posted',
+				reason: 'lease_lost',
+				gameId: GAME,
+			}),
+		)
+		expect(levelLines('warn')).toEqual([
+			expect.objectContaining({
+				stage: 'posted',
+				outcome: 'retrying',
+				reason: 'lease_lost',
+				attempt: 1,
+			}),
+		])
 	})
 })

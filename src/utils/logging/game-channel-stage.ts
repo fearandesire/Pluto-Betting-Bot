@@ -1,4 +1,3 @@
-import { currentUpstreamRequestId } from '../../lib/telemetry/request-context.js'
 import { logger } from './WinstonLogger.js'
 
 export type GameChannelStage = 'created' | 'posted' | 'deleted'
@@ -61,6 +60,34 @@ export const creationJobRequestId = (job: { data?: unknown }) =>
 export const topLevelJobRequestId = (job: { data?: unknown }) =>
 	safeRequestId(fieldOf(job.data, 'requestId'))
 
+type StageFailure = Pick<
+	GameChannelStageEvent,
+	'stage' | 'reason' | 'gameId' | 'sport' | 'guildId'
+>
+
+const STAGE_FAILURE = Symbol('gameChannelStageFailure')
+
+/**
+ * Records which stage a thrown error broke, so the one place that reports the
+ * failure (the queue worker or the route) names that stage instead of guessing.
+ * The first tag wins: the innermost code knows the stage best.
+ */
+export function tagStageFailure<E>(error: E, failure: StageFailure): E {
+	if (
+		typeof error === 'object' &&
+		error !== null &&
+		!(STAGE_FAILURE in error)
+	)
+		Object.defineProperty(error, STAGE_FAILURE, { value: failure })
+	return error
+}
+
+export function stageFailureOf(error: unknown): StageFailure | undefined {
+	return typeof error === 'object' && error !== null
+		? (error as { [STAGE_FAILURE]?: StageFailure })[STAGE_FAILURE]
+		: undefined
+}
+
 const LEVEL = {
 	failed: 'error',
 	retrying: 'warn',
@@ -86,7 +113,6 @@ export function logGameChannelStage(event: GameChannelStageEvent): void {
 		attempt: event.attempt,
 		guild_id: event.guildId,
 		channel_name: event.channelName,
-		request_id: currentUpstreamRequestId(),
 		ts: new Date().toISOString(),
 	})
 }

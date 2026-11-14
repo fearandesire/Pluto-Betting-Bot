@@ -16,6 +16,7 @@ vi.mock('../../../../logging/WinstonLogger.js', () => ({
 	logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }))
 
+import { tagStageFailure } from '../../../../logging/game-channel-stage.js'
 import { logger } from '../../../../logging/WinstonLogger.js'
 import ChannelsRoutes from '../channels-router.js'
 
@@ -51,6 +52,35 @@ describe('POST /channels/create logging', () => {
 		const logged = JSON.stringify(vi.mocked(logger.info).mock.calls)
 		expect(logged).not.toContain('secret-chan')
 		expect(logged).not.toContain('Detroit Pistons')
+	})
+	it('logs the stage a direct call failed at, since no worker will', async () => {
+		mocks.process.mockRejectedValueOnce(
+			tagStageFailure(new Error('send failed'), {
+				stage: 'posted',
+				reason: 'post_failed',
+				gameId: '0F0E0D0C-0B0A-4908-8706-050403020100',
+				sport: 'nba',
+				guildId: 'guild-1',
+			}),
+		)
+		await expect(
+			handler(
+				'POST',
+				'/channels/create',
+			)({
+				request: { body: { channels: [], guilds: [] } },
+			}),
+		).rejects.toThrow('send failed')
+		expect(logger.error).toHaveBeenCalledWith(
+			expect.objectContaining({
+				event: 'game_channel.stage',
+				stage: 'posted',
+				outcome: 'failed',
+				reason: 'post_failed',
+				game_id: '0f0e0d0c0b0a49088706050403020100',
+				guild_id: 'guild-1',
+			}),
+		)
 	})
 	it('survives a malformed body', async () => {
 		await handler(

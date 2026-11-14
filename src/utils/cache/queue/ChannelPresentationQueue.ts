@@ -1,9 +1,16 @@
 import { type Job, Queue, Worker } from 'bullmq'
 import { registerShutdownQueue } from '../../../lib/startup/shutdown-registry.js'
 import { bullmqTelemetry } from '../../../lib/telemetry/bullmq-telemetry.js'
-import { withJobRequestId } from '../../../lib/telemetry/request-context.js'
+import {
+	withJobEventRequestId,
+	withJobRequestId,
+} from '../../../lib/telemetry/request-context.js'
 import { createChannelPresentationService } from '../../guilds/channels/ChannelPresentationService.js'
-import { topLevelJobRequestId } from '../../logging/game-channel-stage.js'
+import {
+	logGameChannelStage,
+	stageFailureOf,
+	topLevelJobRequestId,
+} from '../../logging/game-channel-stage.js'
 import { logger } from '../../logging/WinstonLogger.js'
 import {
 	type ChannelPresentationUpdateV1,
@@ -46,6 +53,27 @@ export class ChannelPresentationQueue {
 		},
 	)
 	constructor() {
+		this.worker.on(
+			'failed',
+			withJobEventRequestId((job: Job | undefined, error: Error) => {
+				if (!job) return
+				// Updates never create, so an untagged failure is a posting failure.
+				const failure = stageFailureOf(error) ?? {
+					stage: 'posted' as const,
+					reason: 'post_failed',
+					gameId: job.data?.gameId,
+					guildId: job.data?.guildId,
+				}
+				logGameChannelStage({
+					...failure,
+					outcome:
+						job.attemptsMade >= (job.opts.attempts ?? 1)
+							? 'failed'
+							: 'retrying',
+					attempt: job.attemptsMade,
+				})
+			}, topLevelJobRequestId),
+		)
 		this.worker.on('error', (error) =>
 			logger.error({
 				message: 'Presentation worker error',

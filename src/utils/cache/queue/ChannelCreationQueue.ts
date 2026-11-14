@@ -23,6 +23,7 @@ import ChannelManager from '../../guilds/channels/ChannelManager.js'
 import {
 	creationJobRequestId,
 	logGameChannelStage,
+	stageFailureOf,
 } from '../../logging/game-channel-stage.js'
 import { logger } from '../../logging/WinstonLogger.js'
 import { REDIS_CONFIG } from '../data/config.js'
@@ -115,7 +116,7 @@ export class ChannelCreationQueue {
 						attemptsMade: job.attemptsMade,
 					},
 				})
-			}),
+			}, creationJobRequestId),
 		)
 
 		this.worker.on(
@@ -135,6 +136,7 @@ export class ChannelCreationQueue {
 						},
 					})
 				},
+				creationJobRequestId,
 			),
 		)
 
@@ -162,14 +164,15 @@ export class ChannelCreationQueue {
 							guildId: job.data?.guild?.guildId,
 						},
 					})
+					const failure = stageFailureOf(err)
 					logGameChannelStage({
-						stage: 'created',
+						stage: failure?.stage ?? 'created',
 						outcome:
 							job.attemptsMade >=
 							ChannelCreationQueue.MAX_ATTEMPTS
 								? 'failed'
 								: 'retrying',
-						reason: creationFailureReason(err),
+						reason: failure?.reason ?? creationFailureReason(err),
 						attempt: job.attemptsMade,
 						gameId: job.data?.channel?.id,
 						sport: job.data?.channel?.sport,

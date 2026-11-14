@@ -4,9 +4,13 @@ import { randomUUID } from 'node:crypto'
 export const REQUEST_ID_HEADER = 'X-Request-ID'
 
 type RequestContext = {
+	/**
+	 * The run-correlation key. Inside a job that carries Khronos' id this is that id,
+	 * so one value joins a cron run across services.
+	 */
 	readonly requestId: string
-	/** The id the upstream caller (Khronos cron or API) put on the job payload. */
-	readonly upstreamRequestId?: string
+	/** The BullMQ job id, set only inside a job. */
+	readonly jobId?: string
 }
 
 const storage = new AsyncLocalStorage<RequestContext>()
@@ -14,21 +18,17 @@ const storage = new AsyncLocalStorage<RequestContext>()
 export const runWithRequestId = <T>(
 	requestId: string,
 	fn: () => T,
-	upstreamRequestId?: string,
-): T => storage.run({ requestId, upstreamRequestId }, fn)
+	jobId?: string,
+): T => storage.run({ requestId, jobId }, fn)
 
 export const currentRequestId = (): string | undefined =>
 	storage.getStore()?.requestId
 
-export const currentUpstreamRequestId = (): string | undefined =>
-	storage.getStore()?.upstreamRequestId
+export const currentJobId = (): string | undefined => storage.getStore()?.jobId
 
-/**
- * Khronos-bound calls carry the upstream run id when the job has one, so one id joins a cron run across services.
- * Work outside any interaction, inbound request or job still gets an id Khronos can log.
- */
+/** Work outside any interaction, inbound request or job still gets an id Khronos can log. */
 export const outboundRequestId = (): string =>
-	currentUpstreamRequestId() ?? currentRequestId() ?? randomUUID()
+	currentRequestId() ?? randomUUID()
 
 export const withRequestIdHeader = <I extends RequestInit>(init?: I): I => {
 	const headers = new Headers(init?.headers)
@@ -38,32 +38,41 @@ export const withRequestIdHeader = <I extends RequestInit>(init?: I): I => {
 	return { ...init, headers } as I
 }
 
-type UpstreamRequestId<J> = (job: NoInfer<J>) => string | undefined
+/** Reads the upstream run id off a job payload. Queues without one pass `undefined`. */
+export type UpstreamRequestId<J> =
+	| ((job: NonNullable<J>) => string | undefined)
+	| undefined
 
-/** BullMQ processors run outside the request that enqueued them, so the job id is their request id. */
+const runInJob = <J extends { id?: string }, R>(
+	job: J,
+	jobId: string,
+	upstreamRequestId: UpstreamRequestId<J>,
+	fn: () => R,
+): R => runWithRequestId(upstreamRequestId?.(job) ?? jobId, fn, jobId)
+
+/** BullMQ processors run outside the request that enqueued them, so the job supplies the ids. */
 export const withJobRequestId =
 	<J extends { id?: string }, R>(
 		process: (job: J) => Promise<R>,
-		upstreamRequestId?: UpstreamRequestId<J>,
+		upstreamRequestId: UpstreamRequestId<NoInfer<J>>,
 	) =>
 	(job: J): Promise<R> =>
-		runWithRequestId(
-			job.id ?? randomUUID(),
-			() => process(job),
-			upstreamRequestId?.(job),
+		runInJob(job, job.id ?? randomUUID(), upstreamRequestId, () =>
+			process(job),
 		)
 
-/** Worker `active`, `completed` and `failed` listeners run outside the processor, so they need the job id restored. */
+/**
+ * Worker `active`, `completed` and `failed` listeners run outside the processor, so
+ * they restore the same ids. Pass the processor's extractor so both agree.
+ */
 export const withJobEventRequestId =
 	<J extends { id?: string } | undefined, A extends unknown[], R>(
 		listener: (job: J, ...rest: A) => R,
-		upstreamRequestId?: (job: NonNullable<J>) => string | undefined,
+		upstreamRequestId: UpstreamRequestId<NoInfer<J>>,
 	) =>
 	(job: J, ...rest: A): R =>
 		job?.id
-			? runWithRequestId(
-					job.id,
-					() => listener(job, ...rest),
-					upstreamRequestId?.(job as NonNullable<J>),
+			? runInJob(job as NonNullable<J>, job.id, upstreamRequestId, () =>
+					listener(job, ...rest),
 				)
 			: listener(job, ...rest)

@@ -28,19 +28,27 @@ vi.mock('../../../guilds/channels/ChannelPresentationService.js', () => ({
 vi.mock('../../../guilds/channels/ChannelManager.js', () => ({
 	default: class {},
 }))
-vi.mock('../../../logging/WinstonLogger.js', () => ({
-	logger: {
-		info: vi.fn(),
-		warn: vi.fn(),
-		error: vi.fn(),
-		debug: vi.fn(),
-	},
-}))
+vi.mock('../../../logging/WinstonLogger.js', async () => {
+	const { currentJobId, currentRequestId } = await import(
+		'../../../../lib/telemetry/request-context.js'
+	)
+	// The ids the real logger format would add at this moment.
+	const log = () =>
+		vi.fn((line: object) => ({
+			...line,
+			requestId: currentRequestId(),
+			job_id: currentJobId(),
+		}))
+	return {
+		logger: { info: log(), warn: log(), error: log(), debug: log() },
+	}
+})
 
 import {
 	ChannelCreationBusyError,
 	LeaseLostError,
 } from '../../../guilds/channels/ChannelCreationWorkflow.js'
+import { tagStageFailure } from '../../../logging/game-channel-stage.js'
 import { logger } from '../../../logging/WinstonLogger.js'
 import { creationFailureReason } from '../ChannelCreationQueue.js'
 
@@ -72,6 +80,25 @@ describe('channel creation worker game_channel.stage', () => {
 			}),
 		)
 	})
+	it('reports a post that failed after creation under posted', () => {
+		mocks.handlers.failed?.(
+			job(1),
+			tagStageFailure(new Error('write failed'), {
+				stage: 'posted',
+				reason: 'post_failed',
+			}),
+		)
+		expect(logger.warn).toHaveBeenCalledWith(
+			expect.objectContaining({
+				event: 'game_channel.stage',
+				stage: 'posted',
+				outcome: 'retrying',
+				reason: 'post_failed',
+				attempt: 1,
+				game_id: '0f0e0d0c0b0a49088706050403020100',
+			}),
+		)
+	})
 	it('reports the last failed attempt as failed', () => {
 		mocks.handlers.failed?.(job(3), new Error('discord said no: token'))
 		const stage = vi
@@ -87,11 +114,11 @@ describe('channel creation worker game_channel.stage', () => {
 	})
 })
 
-describe('channel creation worker request_id', () => {
+describe('channel creation worker requestId', () => {
 	const stageLine = () =>
 		vi
 			.mocked(logger.warn)
-			.mock.calls.map(([line]) => line as Record<string, unknown>)
+			.mock.results.map(({ value }) => value as Record<string, unknown>)
 			.find((line) => line.event === 'game_channel.stage')
 
 	it('reads it from job.data.metadata.requestId', () => {
@@ -102,12 +129,15 @@ describe('channel creation worker request_id', () => {
 			},
 			new Error('x'),
 		)
-		expect(stageLine()?.request_id).toBe('cron-abc')
+		expect(stageLine()).toMatchObject({
+			requestId: 'cron-abc',
+			job_id: 'job-1',
+		})
+		expect(stageLine()).not.toHaveProperty('request_id')
 	})
-	it('omits it for jobs from older Khronos', () => {
+	it('is the job id for jobs from older Khronos', () => {
 		mocks.handlers.failed?.(job(1), new Error('x'))
-		expect(stageLine()).toBeDefined()
-		expect(stageLine()?.request_id).toBeUndefined()
+		expect(stageLine()?.requestId).toBe('job-1')
 	})
 	it('drops an unsafe id instead of logging it', () => {
 		mocks.handlers.failed?.(
@@ -117,7 +147,7 @@ describe('channel creation worker request_id', () => {
 			},
 			new Error('x'),
 		)
-		expect(stageLine()?.request_id).toBeUndefined()
+		expect(stageLine()?.requestId).toBe('job-1')
 	})
 })
 

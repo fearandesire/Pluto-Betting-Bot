@@ -83,31 +83,25 @@ describe('logGameChannelStage', () => {
 	)
 })
 
-describe('request_id', () => {
-	const ok = { stage: 'created', outcome: 'ok', reason: 'created' } as const
-	const lastLine = () =>
-		vi.mocked(logger.info).mock.calls.slice(-1)[0]?.[0] as Record<
-			string,
-			unknown
-		>
-
-	it('carries the upstream id of the job in progress', () => {
+describe('run correlation', () => {
+	it('leaves requestId and job_id to the logger instead of a request_id field', () => {
 		runWithRequestId(
+			'cron-x',
+			() =>
+				logGameChannelStage({
+					stage: 'created',
+					outcome: 'ok',
+					reason: 'created',
+				}),
 			'job-1',
-			() => logGameChannelStage(ok),
-			'cron-6f1c2d1e-8a8f-4c53-9f0e-2c3a1b9d7e10',
 		)
-		expect(lastLine().request_id).toBe(
-			'cron-6f1c2d1e-8a8f-4c53-9f0e-2c3a1b9d7e10',
-		)
-	})
-	it('omits it when the job carried none', () => {
-		runWithRequestId('job-1', () => logGameChannelStage(ok))
-		expect('request_id' in lastLine()).toBe(true)
-		expect(JSON.parse(JSON.stringify(lastLine()))).not.toHaveProperty(
+		expect(vi.mocked(logger.info).mock.lastCall?.[0]).not.toHaveProperty(
 			'request_id',
 		)
 	})
+})
+
+describe('job request ids', () => {
 	it.each([
 		undefined,
 		42,

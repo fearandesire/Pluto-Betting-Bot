@@ -18,9 +18,11 @@ import {
 	channelAggregatedV2Schema,
 } from '../../../cache/data/channel-presentation-contract.js'
 import { InMemoryRedis } from '../../../cache/redis-instance.js'
+import { stageFailureOf } from '../../../logging/game-channel-stage.js'
 import { logger } from '../../../logging/WinstonLogger.js'
 import {
 	ChannelPresentationService,
+	canCreatePresentation,
 	type PresentationDiscord,
 	type PresentationStore,
 } from '../ChannelPresentationService.js'
@@ -459,17 +461,49 @@ describe('game_channel.stage events', () => {
 			line('created', 'held', 'stale_schedule_evidence'),
 		])
 	})
-	it('reports a failed post after the channel was created', async () => {
-		vi.mocked(discord.write).mockRejectedValueOnce(
-			new Error('boom: secret'),
-		)
+	it('reports a game with an unreadable tipoff as skipped', async () => {
+		state.desiredPresentation.gametime = new Date(Number.NaN)
+		expect(canCreatePresentation(state.desiredPresentation)).toBe(false)
+		await service.apply('guild', gameId, true)
+		expect(discord.create).not.toHaveBeenCalled()
+		expect(stageLines()).toEqual([
+			line('created', 'skipped', 'invalid_gametime'),
+		])
+	})
+	it('reports an odds proof that expires during creation as a posting hold', async () => {
+		vi.mocked(discord.create).mockImplementationOnce(async () => {
+			vi.setSystemTime(new Date('2026-10-20T22:50:00Z'))
+			channelExists = true
+			return 'channel'
+		})
+		await service.apply('guild', gameId, true)
+		expect(stageLines()).toEqual([
+			line('created', 'ok', 'created'),
+			line('posted', 'held', 'awaiting_initial_odds'),
+		])
+	})
+	it('reports an existing channel waiting on its odds proof as a posting hold', async () => {
+		delete state.desiredPresentation.initial_odds_completion
+		state.channelId = 'channel'
+		await service.apply('guild', gameId, true)
+		expect(stageLines()).toEqual([
+			line('posted', 'held', 'awaiting_initial_odds'),
+		])
+	})
+	it('tags a failed post for the worker instead of logging a second line', async () => {
+		const writeError = new Error('boom: secret')
+		vi.mocked(discord.write).mockRejectedValueOnce(writeError)
 		await expect(service.apply('guild', gameId, true)).rejects.toThrow(
 			'boom',
 		)
-		expect(stageLines()).toEqual([
-			line('created', 'ok', 'created'),
-			line('posted', 'failed', 'post_failed'),
-		])
+		expect(stageLines()).toEqual([line('created', 'ok', 'created')])
+		expect(stageFailureOf(writeError)).toEqual({
+			stage: 'posted',
+			reason: 'post_failed',
+			gameId,
+			guildId: 'guild',
+			sport: state.desiredPresentation.sport,
+		})
 		expect(
 			JSON.stringify(vi.mocked(logger.error).mock.calls),
 		).not.toContain('secret')
