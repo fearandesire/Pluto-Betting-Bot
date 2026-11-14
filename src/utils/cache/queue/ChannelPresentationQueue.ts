@@ -3,6 +3,7 @@ import { registerShutdownQueue } from '../../../lib/startup/shutdown-registry.js
 import { bullmqTelemetry } from '../../../lib/telemetry/bullmq-telemetry.js'
 import { withJobRequestId } from '../../../lib/telemetry/request-context.js'
 import { createChannelPresentationService } from '../../guilds/channels/ChannelPresentationService.js'
+import { topLevelJobRequestId } from '../../logging/game-channel-stage.js'
 import { logger } from '../../logging/WinstonLogger.js'
 import {
 	type ChannelPresentationUpdateV1,
@@ -36,7 +37,7 @@ export class ChannelPresentationQueue {
 			} finally {
 				this.activeJobs.delete(task)
 			}
-		}),
+		}, topLevelJobRequestId),
 		{
 			connection: REDIS_CONFIG,
 			...bullmqTelemetry(),

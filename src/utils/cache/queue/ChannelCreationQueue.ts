@@ -20,7 +20,10 @@ import {
 	LeaseLostError,
 } from '../../guilds/channels/ChannelCreationWorkflow.js'
 import ChannelManager from '../../guilds/channels/ChannelManager.js'
-import { logGameChannelStage } from '../../logging/game-channel-stage.js'
+import {
+	creationJobRequestId,
+	logGameChannelStage,
+} from '../../logging/game-channel-stage.js'
 import { logger } from '../../logging/WinstonLogger.js'
 import { REDIS_CONFIG } from '../data/config.js'
 
@@ -71,7 +74,10 @@ export class ChannelCreationQueue {
 		// Worker with explicit lockDuration
 		this.worker = new Worker<CreationJob, ChannelCreationResult>(
 			'channel-creation',
-			withJobRequestId(async (job) => this.runJob(job)),
+			withJobRequestId(
+				async (job) => this.runJob(job),
+				creationJobRequestId,
+			),
 			{
 				connection,
 				...bullmqTelemetry(),
@@ -170,6 +176,7 @@ export class ChannelCreationQueue {
 						guildId: job.data?.guild?.guildId,
 					})
 				},
+				creationJobRequestId,
 			),
 		)
 

@@ -1,3 +1,4 @@
+import { currentUpstreamRequestId } from '../../lib/telemetry/request-context.js'
 import { logger } from './WinstonLogger.js'
 
 export type GameChannelStage = 'created' | 'posted' | 'deleted'
@@ -40,6 +41,26 @@ export function gameChannelSport(raw: unknown): 'nba' | 'nfl' | undefined {
 	return undefined
 }
 
+const REQUEST_ID = /^[A-Za-z0-9._:-]{1,128}$/
+
+/** The id as given when it is a short safe string, else undefined. Never throws. */
+export function safeRequestId(raw: unknown): string | undefined {
+	return typeof raw === 'string' && REQUEST_ID.test(raw) ? raw : undefined
+}
+
+const fieldOf = (value: unknown, key: string): unknown =>
+	typeof value === 'object' && value !== null
+		? (value as Record<string, unknown>)[key]
+		: undefined
+
+/** Channel creation jobs carry Khronos' id in `metadata.requestId`. */
+export const creationJobRequestId = (job: { data?: unknown }) =>
+	safeRequestId(fieldOf(fieldOf(job.data, 'metadata'), 'requestId'))
+
+/** Deletion and presentation-update jobs carry it at the top level of the payload. */
+export const topLevelJobRequestId = (job: { data?: unknown }) =>
+	safeRequestId(fieldOf(job.data, 'requestId'))
+
 const LEVEL = {
 	failed: 'error',
 	retrying: 'warn',
@@ -65,6 +86,7 @@ export function logGameChannelStage(event: GameChannelStageEvent): void {
 		attempt: event.attempt,
 		guild_id: event.guildId,
 		channel_name: event.channelName,
+		request_id: currentUpstreamRequestId(),
 		ts: new Date().toISOString(),
 	})
 }

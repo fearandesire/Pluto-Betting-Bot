@@ -87,6 +87,40 @@ describe('channel creation worker game_channel.stage', () => {
 	})
 })
 
+describe('channel creation worker request_id', () => {
+	const stageLine = () =>
+		vi
+			.mocked(logger.warn)
+			.mock.calls.map(([line]) => line as Record<string, unknown>)
+			.find((line) => line.event === 'game_channel.stage')
+
+	it('reads it from job.data.metadata.requestId', () => {
+		mocks.handlers.failed?.(
+			{
+				...job(1),
+				data: { ...job(1).data, metadata: { requestId: 'cron-abc' } },
+			},
+			new Error('x'),
+		)
+		expect(stageLine()?.request_id).toBe('cron-abc')
+	})
+	it('omits it for jobs from older Khronos', () => {
+		mocks.handlers.failed?.(job(1), new Error('x'))
+		expect(stageLine()).toBeDefined()
+		expect(stageLine()?.request_id).toBeUndefined()
+	})
+	it('drops an unsafe id instead of logging it', () => {
+		mocks.handlers.failed?.(
+			{
+				...job(1),
+				data: { ...job(1).data, metadata: { requestId: 'a b\n' } },
+			},
+			new Error('x'),
+		)
+		expect(stageLine()?.request_id).toBeUndefined()
+	})
+})
+
 describe('creationFailureReason', () => {
 	it.each([
 		[new ChannelCreationBusyError(), 'reservation_busy'],
