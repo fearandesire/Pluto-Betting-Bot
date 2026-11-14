@@ -1,9 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('../../../logging/WinstonLogger.js', () => ({
-	logger: { warn: vi.fn() },
+	logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }))
 
+import { stageFailureOf } from '../../../logging/game-channel-stage.js'
+import { logger } from '../../../logging/WinstonLogger.js'
 import {
 	type ChannelCreationPorts,
 	ChannelCreationWorkflow,
@@ -50,6 +52,119 @@ class ReservationStub {
 		return true
 	}
 }
+
+const stageLines = () =>
+	vi
+		.mocked(logger.info)
+		.mock.calls.map(([line]) => line as Record<string, unknown>)
+		.filter((line) => line.event === 'game_channel.stage')
+		.map(({ stage, outcome, reason, game_id, guild_id, sport }) => ({
+			stage,
+			outcome,
+			reason,
+			game_id,
+			guild_id,
+			sport,
+		}))
+
+describe('ChannelCreationWorkflow game_channel.stage', () => {
+	const hexIntent = {
+		guildId: 'guild-1',
+		gameId: '0F0E0D0C-0B0A-4908-8706-050403020100',
+		channelName: 'away-at-home',
+		sport: 'basketball_nba',
+	}
+	const line = (stage: string, outcome: string, reason: string) => ({
+		stage,
+		outcome,
+		reason,
+		game_id: '0f0e0d0c0b0a49088706050403020100',
+		guild_id: 'guild-1',
+		sport: 'nba',
+	})
+	const expected = (outcome: string, reason: string) => [
+		line('created', outcome, reason),
+	]
+	afterEach(() => vi.clearAllMocks())
+	it('reports a new channel as ok', async () => {
+		await new ChannelCreationWorkflow(ports()).run(hexIntent)
+		// ports() findExisting returns null, so the channel is created.
+		expect(stageLines()).toEqual([
+			line('created', 'ok', 'created'),
+			line('posted', 'ok', 'posted'),
+		])
+	})
+	it('reports a failed first message as a posting failure, not a creation one', async () => {
+		const injected = ports()
+		const sendError = new Error('discord send failed')
+		injected.discord.create = vi.fn().mockResolvedValue({
+			channelId: 'c',
+			complete: vi.fn().mockRejectedValue(sendError),
+		})
+		await expect(
+			new ChannelCreationWorkflow(injected).run(hexIntent),
+		).rejects.toBe(sendError)
+		expect(stageLines()).toEqual([line('created', 'ok', 'created')])
+		expect(stageFailureOf(sendError)).toMatchObject({
+			stage: 'posted',
+			reason: 'post_failed',
+		})
+	})
+	it('reports whether an existing channel needed its message', async () => {
+		const injected = ports()
+		injected.reservations.reserve = vi
+			.fn()
+			.mockResolvedValue({ state: 'created', channelId: 'c' })
+		injected.discord.findExisting = vi.fn().mockResolvedValue({ id: 'c' })
+		injected.discord.completeExisting = vi
+			.fn()
+			.mockResolvedValueOnce('already_sent')
+			.mockResolvedValueOnce('sent')
+		const workflow = new ChannelCreationWorkflow(injected)
+		await workflow.run(hexIntent)
+		await workflow.run(hexIntent)
+		expect(stageLines()).toEqual([
+			line('created', 'duplicate', 'already_created'),
+			line('posted', 'duplicate', 'already_posted'),
+			line('created', 'duplicate', 'already_created'),
+			line('posted', 'ok', 'posted'),
+		])
+	})
+	it('reports a recorded channel as a duplicate', async () => {
+		const injected = ports()
+		injected.reservations.reserve = vi
+			.fn()
+			.mockResolvedValue({ state: 'created', channelId: 'c' })
+		injected.discord.findExisting = vi.fn().mockResolvedValue({ id: 'c' })
+		await new ChannelCreationWorkflow(injected).run(hexIntent)
+		expect(stageLines()).toEqual(expected('duplicate', 'already_created'))
+	})
+	it('reports an adopted channel as reconciled', async () => {
+		const injected = ports()
+		injected.discord.findExisting = vi.fn().mockResolvedValue({ id: 'c' })
+		await new ChannelCreationWorkflow(injected).run(hexIntent)
+		expect(stageLines()).toEqual([
+			line('created', 'ok', 'reconciled'),
+			line('posted', 'skipped', 'adopted_without_post'),
+		])
+	})
+	it('leaves a held reservation to the caller, which throws it to the worker', async () => {
+		const injected = ports()
+		injected.reservations.reserve = vi
+			.fn()
+			.mockResolvedValue({ state: 'busy' })
+		await new ChannelCreationWorkflow(injected).run(hexIntent)
+		expect(stageLines()).toEqual([])
+	})
+	it('reports nothing when creation throws, leaving it to the queue', async () => {
+		const injected = ports()
+		injected.discord.create = vi.fn().mockRejectedValue(new Error('x'))
+		await expect(
+			new ChannelCreationWorkflow(injected).run(hexIntent),
+		).rejects.toThrow('x')
+		expect(stageLines()).toEqual([])
+	})
+})
 
 describe('ChannelCreationWorkflow', () => {
 	afterEach(() => vi.useRealTimers())

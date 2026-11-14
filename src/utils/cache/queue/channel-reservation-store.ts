@@ -2,6 +2,8 @@ export interface ChannelIntent {
 	guildId: string
 	gameId: string
 	channelName: string
+	/** Only labels stage logs; it is not part of the reservation key. */
+	sport?: string
 }
 
 export type ChannelReservation =

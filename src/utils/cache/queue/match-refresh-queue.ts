@@ -59,7 +59,7 @@ export class MatchRefreshQueue {
 
 		this.worker = new Worker<MatchRefreshJobData, MatchRefreshResult>(
 			MatchRefreshQueue.QUEUE_NAME,
-			withJobRequestId(async (job) => this.runJob(job)),
+			withJobRequestId(async (job) => this.runJob(job), undefined),
 			{
 				connection,
 				...bullmqTelemetry(),
@@ -109,6 +109,7 @@ export class MatchRefreshQueue {
 						},
 					})
 				},
+				undefined,
 			),
 		)
 
@@ -140,6 +141,7 @@ export class MatchRefreshQueue {
 						},
 					})
 				},
+				undefined,
 			),
 		)
 	}

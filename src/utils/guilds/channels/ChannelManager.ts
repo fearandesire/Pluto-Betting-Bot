@@ -29,11 +29,16 @@ import {
 } from '../../cache/queue/channel-reservation-store.js'
 import redisCache from '../../cache/redis-instance.js'
 import StringUtils from '../../common/string-utils.js'
+import {
+	logGameChannelStage,
+	tagStageFailure,
+} from '../../logging/game-channel-stage.js'
 import { logger } from '../../logging/WinstonLogger.js'
 import {
 	ChannelCreationBusyError,
 	ChannelCreationWorkflow,
 	type CreatedChannel,
+	creationErrorReason,
 } from './ChannelCreationWorkflow.js'
 import { RedisPresentationLock } from './channel-presentation-lock.js'
 import {
@@ -79,6 +84,17 @@ export default class ChannelManager {
 			const eligibleChannels = channels.filter((channel) =>
 				guild.eligibleMatches.includes(channel.id),
 			)
+			for (const channel of channels) {
+				if (!guild.eligibleMatches.includes(channel.id))
+					logGameChannelStage({
+						stage: 'created',
+						outcome: 'skipped',
+						reason: 'not_eligible',
+						gameId: channel.id,
+						sport: channel.sport,
+						guildId: guild.guildId,
+					})
+			}
 			for (const channel of eligibleChannels) {
 				await this.processChannel(channel, [guild])
 			}
@@ -113,6 +129,18 @@ export default class ChannelManager {
 			(guild) => guild.sport === channel.sport,
 		)
 
+		for (const guild of guilds) {
+			if (guild.sport !== channel.sport)
+				logGameChannelStage({
+					stage: 'created',
+					outcome: 'skipped',
+					reason: 'wrong_sport',
+					gameId: channel.id,
+					sport: channel.sport,
+					guildId: guild.guildId,
+				})
+		}
+
 		for (const guild of eligibleGuilds) {
 			const intent = this.channelIntent(channel, guild)
 			const workflow = new ChannelCreationWorkflow({
@@ -126,9 +154,27 @@ export default class ChannelManager {
 						this.createReservedChannel(channel, guild, intent),
 				},
 			})
-			const outcome = await workflow.run(intent)
+			const ids = {
+				gameId: channel.id,
+				sport: channel.sport,
+				guildId: guild.guildId,
+			}
+			let outcome: Awaited<ReturnType<typeof workflow.run>>
+			try {
+				outcome = await workflow.run(intent)
+			} catch (error) {
+				throw tagStageFailure(error, {
+					...ids,
+					stage: 'created',
+					reason: creationErrorReason(error),
+				})
+			}
 			if (outcome.state === 'busy') {
-				throw new ChannelCreationBusyError()
+				throw tagStageFailure(new ChannelCreationBusyError(), {
+					...ids,
+					stage: 'created',
+					reason: 'reservation_busy',
+				})
 			}
 		}
 	}
@@ -141,6 +187,7 @@ export default class ChannelManager {
 			guildId: guild.guildId,
 			gameId: channel.id,
 			channelName: channel.channelname,
+			sport: channel.sport,
 		}
 	}
 
@@ -227,7 +274,7 @@ export default class ChannelManager {
 		channel: ChannelAggregated,
 		guild: GuildEligibility,
 		channelId: string,
-	): Promise<void> {
+	): Promise<'sent' | 'already_sent'> {
 		const locatedGuild = SapDiscClient.guilds.cache.get(guild.guildId)
 		const existing =
 			locatedGuild?.channels.cache.get(channelId) ??
@@ -238,7 +285,7 @@ export default class ChannelManager {
 		// A V2 presentation that already sent owns this channel's card.
 		const record = await this.ledger.get(guild.guildId, channel.id)
 		if (record?.channelId === channelId && record.delivery === 'sent')
-			return
+			return 'already_sent'
 		const favoredTeamInfo = await teamResolver.resolve(
 			channel.matchOdds.favored,
 			{ sport: channel.sport.toLowerCase(), full: true },
@@ -268,9 +315,10 @@ export default class ChannelManager {
 				),
 			)
 		) {
-			return
+			return 'already_sent'
 		}
 		await existing.send(messageOptions)
+		return 'sent'
 	}
 
 	private async prepareGameMessage(
@@ -443,11 +491,38 @@ export default class ChannelManager {
 	 */
 	async deleteChan(channelName: string) {
 		const gameChans = await this.locateChannel(channelName)
-		if (gameChans.length === 0) {
+		if (!gameChans?.length) {
+			logGameChannelStage({
+				stage: 'deleted',
+				outcome: 'skipped',
+				reason: 'channel_not_found',
+				channelName,
+			})
 			return
 		}
 		for (const gameChan of gameChans) {
-			await gameChan.delete()
+			const owner = await this.ledger
+				.ownerOf(gameChan.id)
+				.catch(() => null)
+			const event = {
+				stage: 'deleted',
+				gameId: owner
+					? decodeURIComponent(owner.split(':')[1] ?? '')
+					: undefined,
+				guildId: gameChan.guildId,
+				channelName,
+			} as const
+			try {
+				await gameChan.delete()
+			} catch (error) {
+				logGameChannelStage({
+					...event,
+					outcome: 'failed',
+					reason: 'discord_delete_failed',
+				})
+				throw error
+			}
+			logGameChannelStage({ ...event, outcome: 'ok', reason: 'deleted' })
 		}
 	}
 }

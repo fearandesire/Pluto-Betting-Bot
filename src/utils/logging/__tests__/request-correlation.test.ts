@@ -8,9 +8,9 @@ vi.mock('#lib/startup/env.js', () => ({
 }))
 
 const { createLogger, logger } = await import('../WinstonLogger.js')
-const { runWithRequestId, withJobEventRequestId } = await import(
-	'#lib/telemetry/request-context.js'
-)
+const { runWithRequestId, withJobEventRequestId, withJobRequestId } =
+	await import('#lib/telemetry/request-context.js')
+const { logGameChannelStage } = await import('../game-channel-stage.js')
 
 const captured: Record<string, unknown>[] = []
 const stream = new PassThrough({ objectMode: true })
@@ -70,6 +70,7 @@ describe('requestCorrelation', () => {
 					error: error.message,
 				})
 			},
+			undefined,
 		)
 		onFailed({ id: '550e8400-e29b-41d4-a716-446655440111' }, new Error('x'))
 		onFailed(undefined, new Error('y'))
@@ -79,5 +80,41 @@ describe('requestCorrelation', () => {
 			requestId: '550e8400-e29b-41d4-a716-446655440111',
 		})
 		expect(captured[1]).not.toHaveProperty('requestId')
+	})
+
+	it('uses the upstream run id as requestId and the BullMQ id as job_id in a job', async () => {
+		const process = withJobRequestId(
+			async (_job: { id: string; upstream?: string }) =>
+				logGameChannelStage({
+					stage: 'created',
+					outcome: 'ok',
+					reason: 'created',
+				}),
+			(job) => job.upstream,
+		)
+		await process({ id: '42', upstream: 'cron-6f1c2d1e' })
+		await process({ id: '43' })
+		logger.info('outside')
+
+		expect(captured[0]).toMatchObject({
+			event: 'game_channel.stage',
+			requestId: 'cron-6f1c2d1e',
+			job_id: '42',
+		})
+		expect(captured[0]).not.toHaveProperty('request_id')
+		expect(captured[1]).toMatchObject({ requestId: '43', job_id: '43' })
+		expect(captured[2]).not.toHaveProperty('job_id')
+	})
+
+	it('gives a worker listener the same ids as its processor', () => {
+		const onFailed = withJobEventRequestId(
+			(_job: { id: string; upstream?: string }) => logger.warn('failed'),
+			(job) => job.upstream,
+		)
+		onFailed({ id: '42', upstream: 'cron-6f1c2d1e' })
+		expect(captured[0]).toMatchObject({
+			requestId: 'cron-6f1c2d1e',
+			job_id: '42',
+		})
 	})
 })

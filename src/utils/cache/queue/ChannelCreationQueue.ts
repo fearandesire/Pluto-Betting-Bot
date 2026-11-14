@@ -15,8 +15,16 @@ type CreationJob = ChannelCreationEvent | ChannelCreationEventV2
 import { channelCreationEventSchema } from '@pluto-khronos/types'
 import { type Job, Queue, QueueEvents, Worker } from 'bullmq'
 import { registerShutdownQueue } from '../../../lib/startup/shutdown-registry.js'
-import { ChannelCreationBusyError } from '../../guilds/channels/ChannelCreationWorkflow.js'
+import {
+	ChannelCreationBusyError,
+	LeaseLostError,
+} from '../../guilds/channels/ChannelCreationWorkflow.js'
 import ChannelManager from '../../guilds/channels/ChannelManager.js'
+import {
+	creationJobRequestId,
+	logGameChannelStage,
+	stageFailureOf,
+} from '../../logging/game-channel-stage.js'
 import { logger } from '../../logging/WinstonLogger.js'
 import { REDIS_CONFIG } from '../data/config.js'
 
@@ -67,7 +75,10 @@ export class ChannelCreationQueue {
 		// Worker with explicit lockDuration
 		this.worker = new Worker<CreationJob, ChannelCreationResult>(
 			'channel-creation',
-			withJobRequestId(async (job) => this.runJob(job)),
+			withJobRequestId(
+				async (job) => this.runJob(job),
+				creationJobRequestId,
+			),
 			{
 				connection,
 				...bullmqTelemetry(),
@@ -105,7 +116,7 @@ export class ChannelCreationQueue {
 						attemptsMade: job.attemptsMade,
 					},
 				})
-			}),
+			}, creationJobRequestId),
 		)
 
 		this.worker.on(
@@ -125,6 +136,7 @@ export class ChannelCreationQueue {
 						},
 					})
 				},
+				creationJobRequestId,
 			),
 		)
 
@@ -152,7 +164,22 @@ export class ChannelCreationQueue {
 							guildId: job.data?.guild?.guildId,
 						},
 					})
+					const failure = stageFailureOf(err)
+					logGameChannelStage({
+						stage: failure?.stage ?? 'created',
+						outcome:
+							job.attemptsMade >=
+							ChannelCreationQueue.MAX_ATTEMPTS
+								? 'failed'
+								: 'retrying',
+						reason: failure?.reason ?? creationFailureReason(err),
+						attempt: job.attemptsMade,
+						gameId: job.data?.channel?.id,
+						sport: job.data?.channel?.sport,
+						guildId: job.data?.guild?.guildId,
+					})
 				},
+				creationJobRequestId,
 			),
 		)
 
@@ -287,20 +314,6 @@ export class ChannelCreationQueue {
 			const errorMessage =
 				err instanceof Error ? err.message : String(err)
 
-			// Log final attempt explicitly
-			if (job.attemptsMade >= ChannelCreationQueue.MAX_ATTEMPTS) {
-				logger.error({
-					message: 'Max attempts reached for channel creation',
-					source: 'ChannelCreationQueue:processJob',
-					data: {
-						jobId: job.id,
-						attemptsMade: job.attemptsMade,
-						maxAttempts: ChannelCreationQueue.MAX_ATTEMPTS,
-						error: errorMessage,
-					},
-				})
-			}
-
 			// rethrow to let BullMQ handle retry/backoff
 			throw err instanceof Error ? err : new Error(errorMessage)
 		}
@@ -351,6 +364,17 @@ export class ChannelCreationQueue {
 }
 
 export const channelCreationQueue = new ChannelCreationQueue()
+
+/** BullMQ counts an attempt only after it fails, so `failed` is the first place the final one is visible. */
+export function creationFailureReason(error: Error | undefined): string {
+	if (error instanceof ChannelCreationBusyError) return 'reservation_busy'
+	if (error instanceof LeaseLostError) return 'lease_lost'
+	const message = error?.message ?? ''
+	if (message.startsWith('Invalid job data')) return 'invalid_job_data'
+	if (message.startsWith('Unsupported channel creation schema'))
+		return 'unsupported_schema'
+	return 'creation_failed'
+}
 
 export function channelCreationRetryDelay(
 	attemptsMade: number,

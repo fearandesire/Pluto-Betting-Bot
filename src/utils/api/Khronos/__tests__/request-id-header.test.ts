@@ -16,7 +16,10 @@ vi.stubGlobal('fetch', fetchMock)
 
 const { KH_API_CONFIG } = await import('../KhronosInstances.js')
 const { AxiosKhronosInstance } = await import('../../common/axios-config.js')
-const { runWithRequestId } = await import(
+const { ChannelPresentationClient } = await import(
+	'../../../guilds/channels/channel-presentation-client.js'
+)
+const { runWithRequestId, withJobRequestId } = await import(
 	'../../../../lib/telemetry/request-context.js'
 )
 
@@ -43,6 +46,12 @@ const sendAxios = async () => {
 	})
 	return sent?.headers
 }
+
+const inJob = <R>(fn: () => Promise<R>, upstream?: string) =>
+	withJobRequestId(
+		async (_job: { id: string; upstream?: string }) => fn(),
+		(job) => job.upstream,
+	)({ id: 'job-1', upstream })
 
 describe('X-Request-ID on Khronos calls', () => {
 	it('fetch client forwards the active request id with its own headers', async () => {
@@ -71,5 +80,30 @@ describe('X-Request-ID on Khronos calls', () => {
 	it('axios client generates an id outside any context', async () => {
 		const headers = await sendAxios()
 		expect(String(headers?.get('X-Request-ID'))).toMatch(/^[0-9a-f-]{36}$/)
+	})
+
+	it('fetch and axios clients send the upstream run id inside a job', async () => {
+		await inJob(
+			async () => KH_API_CONFIG.fetchApi?.('http://khronos.test/x', {}),
+			'cron-x',
+		)
+		expect(sentFetchHeaders().get('x-request-id')).toBe('cron-x')
+		const headers = await inJob(sendAxios, 'cron-x')
+		expect(headers?.get('X-Request-ID')).toBe('cron-x')
+	})
+
+	it('presentation ack carries the upstream run id, or the job id without one', async () => {
+		const receipt = { revision: 1, channelId: 'c', messageId: 'm' }
+		const ack = (upstream?: string) =>
+			inJob(
+				() => new ChannelPresentationClient().ack('g', 'e', receipt),
+				upstream,
+			)
+		fetchMock.mockClear()
+		await ack('cron-x').catch(() => undefined)
+		expect(fetchMock.mock.lastCall?.[0]).toContain('/ack')
+		expect(sentFetchHeaders().get('x-request-id')).toBe('cron-x')
+		await ack().catch(() => undefined)
+		expect(sentFetchHeaders().get('x-request-id')).toBe('job-1')
 	})
 })
