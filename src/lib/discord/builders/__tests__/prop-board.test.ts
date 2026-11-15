@@ -5,10 +5,19 @@ import {
 	expectV2Payload,
 	toJsonComponents,
 } from '../../v2/__tests__/v2-assert.js'
-import { propBoardPayload } from '../prop-board.js'
+import {
+	boardBrowseLines,
+	decodePropsBrowseCustomId,
+	propBoardPayload,
+	propsBrowseCustomId,
+} from '../prop-board.js'
 
 const prop = {
+	event_id: 'evt-bills-chiefs',
 	commence_time: '2026-10-04T20:25:00Z',
+	home_team: 'Kansas City Chiefs',
+	away_team: 'Buffalo Bills',
+	sport_title: 'NFL',
 	market_key: 'player_pass_yds',
 	description: 'Patrick Mahomes',
 	point: 274.5,
@@ -103,5 +112,64 @@ describe('propBoardPayload', () => {
 		}>
 		expect(container.components[1].content).toContain('Player props')
 		expect(container.components[1].content).not.toContain('<t:')
+	})
+})
+
+describe('Browse more', () => {
+	it('adds a Browse more row only when a token is available', () => {
+		const token = '0123456789abcdef'
+		const withBrowse = propBoardPayload({
+			props: [prop],
+			sport: 'nfl',
+			teams,
+			browseToken: token,
+		})
+		const withoutBrowse = propBoardPayload({
+			props: [prop],
+			sport: 'nfl',
+			teams,
+		})
+		const buttonIds = (payload: unknown) =>
+			toJsonComponents(payload as never)
+				.flatMap((container) => container.components ?? [])
+				.flatMap((row) => row.components ?? [])
+				.map((button) => (button as { custom_id?: string }).custom_id)
+				.filter(Boolean)
+		expect(buttonIds(withBrowse)).toContain(propsBrowseCustomId(token))
+		expect(buttonIds(withoutBrowse)).not.toContain(
+			propsBrowseCustomId(token),
+		)
+	})
+
+	it('round-trips a valid token and rejects anything else', () => {
+		const token = '0123456789abcdef'
+		expect(decodePropsBrowseCustomId(propsBrowseCustomId(token))).toBe(
+			token,
+		)
+		expect(decodePropsBrowseCustomId('props.browse.v1.SHORT')).toBeNull()
+		expect(
+			decodePropsBrowseCustomId('props.browse.v2.0123456789abcdef'),
+		).toBeNull()
+		expect(decodePropsBrowseCustomId('pg.v1.h-owned.1.next')).toBeNull()
+	})
+
+	it('lists every pair under its game in tip-off order', () => {
+		const late = {
+			...prop,
+			event_id: 'late',
+			commence_time: '2026-10-05T23:00:00Z',
+			home_team: 'Late Home',
+			away_team: 'Late Away',
+			description: 'Zed',
+			over: { ...prop.over, outcome_uuid: 'over-late' },
+			under: { ...prop.under, outcome_uuid: 'under-late' },
+		} as ProcessedPropDto
+		const lines = boardBrowseLines([late, prop, second], 'nfl')
+		expect(lines[0]).toContain('Buffalo Bills vs. Kansas City Chiefs')
+		expect(lines[1]).toContain('Josh Allen')
+		expect(lines[2]).toContain('Patrick Mahomes')
+		expect(lines[3]).toContain('Late Away vs. Late Home')
+		expect(lines[4]).toContain('Zed')
+		expect(lines[1]).toContain('Passing Touchdowns O/U `1.5`')
 	})
 })
