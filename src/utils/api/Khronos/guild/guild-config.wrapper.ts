@@ -2,6 +2,7 @@ import {
 	type CreateConfigDto,
 	CreateConfigDtoSettingTypeEnum,
 	DiscordConfigApi,
+	type Guild,
 } from '@pluto-khronos/api-client'
 import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js'
 
@@ -10,6 +11,19 @@ import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js'
  * row means enabled. The generated enum is available from client 3.15.0.
  */
 export const PROPS_ENABLED_SETTING = CreateConfigDtoSettingTypeEnum.PropsEnabled
+
+/** A missing LOGS_ENABLED row means enabled; only `'false'` turns posts off. */
+export const LOGS_ENABLED_SETTING = CreateConfigDtoSettingTypeEnum.LogsEnabled
+
+export function isLogsChannelEnabled(
+	config: Guild['config'] | undefined,
+): boolean {
+	return !(config ?? []).some(
+		(row) =>
+			row.setting_type === LOGS_ENABLED_SETTING &&
+			row.setting_value === 'false',
+	)
+}
 
 export default class GuildConfigWrapper {
 	private discordConfigApi: DiscordConfigApi
