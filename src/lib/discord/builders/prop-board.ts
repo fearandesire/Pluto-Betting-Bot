@@ -36,8 +36,10 @@ export function propBoardPayload(args: {
 	props: readonly ProcessedPropDto[]
 	sport: 'nfl' | 'nba'
 	teams: PropBoardTeams
+	/** Scope token for the ephemeral Browse more list; omitted when unavailable. */
+	browseToken?: string
 }): V2MessagePayload {
-	const { props, sport, teams } = args
+	const { props, sport, teams, browseToken } = args
 	const pairs = props.slice(0, PROP_BOARD_MAX_PAIRS)
 	const sportEmoji = sport === 'nfl' ? '🏈' : '🏀'
 	const kickoff = kickoffStamp(pairs[0]?.commence_time)
@@ -54,6 +56,7 @@ export function propBoardPayload(args: {
 	for (const prop of pairs) {
 		blocks.push(text(propLine(prop)), choiceRow(prop))
 	}
+	if (browseToken) blocks.push(browseRow(browseToken))
 	blocks.push(footer('Tap Over or Under to pick. Each prop grades in place.'))
 
 	return v2Payload({ blocks, accent: teams.homeColor })
@@ -94,6 +97,31 @@ function choiceRow(
 	)
 }
 
+/** Opens the whole day's props as an ephemeral, paginated list. */
+export const BROWSE_CUSTOM_ID_PREFIX = 'props.browse.v1.'
+
+export function propsBrowseCustomId(token: string): string {
+	return `${BROWSE_CUSTOM_ID_PREFIX}${token}`
+}
+
+export function decodePropsBrowseCustomId(customId: string): string | null {
+	if (!customId.startsWith(BROWSE_CUSTOM_ID_PREFIX)) return null
+	const token = customId.slice(BROWSE_CUSTOM_ID_PREFIX.length)
+	return /^[a-f0-9]{16}$/.test(token) ? token : null
+}
+
+function browseRow(
+	token: string,
+): ActionRowBuilder<MessageActionRowComponentBuilder> {
+	return new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
+		new ButtonBuilder()
+			.setCustomId(propsBrowseCustomId(token))
+			.setLabel('Browse more')
+			.setEmoji('📋')
+			.setStyle(ButtonStyle.Secondary),
+	)
+}
+
 function choiceButton(
 	outcomeUuid: string,
 	label: string,
@@ -105,4 +133,57 @@ function choiceButton(
 		.setLabel(label)
 		.setEmoji(emoji)
 		.setStyle(style)
+}
+
+/**
+ * Every pair in the post as a per-game list for the ephemeral Browse more
+ * view. Games run in tip-off order and pairs by player, matching the boards.
+ */
+export function boardBrowseLines(
+	props: readonly ProcessedPropDto[],
+	sport: 'nfl' | 'nba',
+): string[] {
+	const sportEmoji = sport === 'nfl' ? '🏈' : '🏀'
+	const byEvent = new Map<string, ProcessedPropDto[]>()
+	for (const prop of props) {
+		const group = byEvent.get(prop.event_id) ?? []
+		group.push(prop)
+		byEvent.set(prop.event_id, group)
+	}
+	const tipoff = (group: ProcessedPropDto[]) =>
+		Math.min(...group.map((prop) => Date.parse(prop.commence_time) || 0))
+	const lines: string[] = []
+	for (const group of [...byEvent.values()].sort(
+		(left, right) => tipoff(left) - tipoff(right),
+	)) {
+		const first = group[0]
+		const kickoff = kickoffStamp(first.commence_time)
+		lines.push(
+			[
+				`### ${sportEmoji} ${first.away_team} vs. ${first.home_team}`,
+				kickoff ?? null,
+			]
+				.filter(Boolean)
+				.join(' · '),
+		)
+		for (const prop of [...group].sort(
+			(left, right) =>
+				left.description.localeCompare(right.description) ||
+				left.market_key.localeCompare(right.market_key),
+		)) {
+			lines.push(
+				`**${prop.description}** · ${marketName(prop)} · Over ${formatPrice(prop.over.price)} / Under ${formatPrice(prop.under.price)}`,
+			)
+		}
+	}
+	return lines
+}
+
+function marketName(prop: ProcessedPropDto): string {
+	const name = StringUtils.toTitleCase(
+		MarketKeyTranslations[prop.market_key] || prop.market_key,
+	)
+	return prop.point === null || prop.point === undefined
+		? name
+		: `${name} O/U \`${prop.point}\``
 }

@@ -58,6 +58,15 @@ const dailyPropOutcomeSchema = z.object({
 	price: z.number().int(),
 })
 
+const propBoardSchema = z.object({
+	event_id: z.string().min(1),
+	over_outcome_uuids: z.array(z.string().uuid()).min(1).max(4),
+})
+
+const propBoardsFieldSchema = z.object({
+	boards: z.array(propBoardSchema).min(1).optional(),
+})
+
 const fallbackDailyPropsPayloadSchema = z.object({
 	props: z.array(
 		z.object({
@@ -81,6 +90,7 @@ const fallbackDailyPropsPayloadSchema = z.object({
 			sport: z.string().min(1),
 		}),
 	),
+	...propBoardsFieldSchema.shape,
 })
 
 const fallbackPropSettledNotificationSchema = z.object({
@@ -207,11 +217,20 @@ export const notificationBetResultsSchema = supportsLegacyNotificationPushes(
 	? sharedPayloadExports.notificationBetResultsSchema
 	: fallbackNotificationBetResultsSchema
 
-export const dailyPropsPayloadSchema = isUsableSchema(
+const baseDailyPropsPayloadSchema = isUsableSchema(
 	sharedPayloadExports.dailyPropsPayloadSchema,
 )
 	? sharedPayloadExports.dailyPropsPayloadSchema
 	: fallbackDailyPropsPayloadSchema
+
+/**
+ * `boards` is a newer Khronos field, so validate it locally until every
+ * deployment runs a types package that carries it. The intersection keeps the
+ * published props/guilds contract as the single source of truth.
+ */
+export const dailyPropsPayloadSchema = baseDailyPropsPayloadSchema.and(
+	propBoardsFieldSchema,
+)
 
 export const propSettledNotificationSchema = isUsableSchema(
 	sharedPayloadExports.propSettledNotificationSchema,

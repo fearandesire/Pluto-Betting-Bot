@@ -1,0 +1,26 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"components": [
+		{
+			"type": 17,
+			"components": [
+				{
+					"type": 10,
+					"content": "## All props"
+				},
+				{
+					"type": 10,
+					"content": "### 🏈 Buffalo Bills vs. Kansas City Chiefs · <t:1791145500:f>\n**Isiah Pacheco** · Rush Yards O/U `64.5` · Over -110 / Under -110\n**Josh Allen** · Passing Touchdowns O/U `1.5` · Over +120 / Under -140\n**Patrick Mahomes** · Passing Yards O/U `274.5` · Over -115 / Under -105\n**Travis Kelce** · Reception Yards O/U `58.5` · Over -105 / Under -115"
+				},
+				{
+					"type": 10,
+					"content": "-# Page 1/1"
+				}
+			]
+		}
+	],
+	"flags": 32768
+}
