@@ -133,7 +133,7 @@ export class PropPickerHandler extends InteractionHandler {
 			...picked,
 		]
 		session.selected = next.slice(0, PROP_PICKER_MAX_SELECTED)
-		await savePropPickerSession(token, session)
+		if (!(await this.persist(interaction, token, session))) return
 		await interaction.editReply({
 			...propPickerPayload(
 				session,
@@ -155,7 +155,7 @@ export class PropPickerHandler extends InteractionHandler {
 		const last = paginatePropPickerPairs(session.pairs, session.page)
 		const target = Math.min(Math.max(0, last.page + delta), last.pages - 1)
 		session.page = target
-		await savePropPickerSession(token, session)
+		if (!(await this.persist(interaction, token, session))) return
 		await interaction.editReply({
 			...propPickerPayload(session),
 			flags: v2EditFlags(),
@@ -169,11 +169,28 @@ export class PropPickerHandler extends InteractionHandler {
 	): Promise<void> {
 		await interaction.deferUpdate()
 		session.selected = []
-		await savePropPickerSession(token, session)
+		if (!(await this.persist(interaction, token, session))) return
 		await interaction.editReply({
 			...propPickerPayload(session),
 			flags: v2EditFlags(),
 		})
+	}
+
+	/** Saves the session; on failure tells the admin and leaves the message as is. */
+	private async persist(
+		interaction: MessageComponentInteraction,
+		token: string,
+		session: PropPickerSession,
+	): Promise<boolean> {
+		if (await savePropPickerSession(token, session)) return true
+		await interaction
+			.followUp(
+				propPickerNotice(
+					"Couldn't save your picks, so nothing changed. Try again.",
+				),
+			)
+			.catch(() => undefined)
+		return false
 	}
 
 	private async post(
@@ -197,7 +214,8 @@ export class PropPickerHandler extends InteractionHandler {
 			recheck = await this.service.recheck(session)
 		} catch {
 			await interaction.editReply({
-				...propPickerNotice(
+				...propPickerPayload(
+					session,
 					"Couldn't check prices. Nothing was posted; try again.",
 				),
 				flags: v2EditFlags(),
@@ -210,7 +228,13 @@ export class PropPickerHandler extends InteractionHandler {
 				(key) => !missing.has(key),
 			)
 			session.prices = recheck.prices
-			await savePropPickerSession(token, session)
+			if (!(await this.persist(interaction, token, session))) {
+				await interaction.editReply({
+					...propPickerPayload(session),
+					flags: v2EditFlags(),
+				})
+				return
+			}
 			const parts: string[] = []
 			const missingKeys = new Set(recheck.missing.map((pair) => pair.key))
 			const moved = recheck.changes.filter(
@@ -236,7 +260,25 @@ export class PropPickerHandler extends InteractionHandler {
 			})
 			return
 		}
-		const result = await this.service.post(session)
+		let result
+		try {
+			result = await this.service.post(session)
+		} catch (error) {
+			logger.error({
+				method: 'PropPickerHandler',
+				event: 'props.pick.post_failed',
+				userId: interaction.user.id,
+				error: error instanceof Error ? error.message : String(error),
+			})
+			await interaction.editReply({
+				...propPickerPayload(
+					session,
+					"Couldn't post the props. Check the channel before trying again.",
+				),
+				flags: v2EditFlags(),
+			})
+			return
+		}
 		await clearPropPickerSession(token)
 		await interaction.editReply({
 			...propPickerPostedPayload(result),

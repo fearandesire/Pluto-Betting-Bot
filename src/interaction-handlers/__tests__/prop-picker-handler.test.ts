@@ -303,6 +303,51 @@ describe('PropPickerHandler', () => {
 		expect(current.selected).toEqual([current.pairs[0]!.key])
 	})
 
+	it('keeps the picker usable when the price check fails', async () => {
+		const current = session()
+		current.selected = [current.pairs[0]!.key]
+		state.load.mockResolvedValue(current)
+		state.recheck.mockRejectedValue(new Error('network down'))
+		const post = interaction('post')
+
+		await makeHandler().run(post as never, { action: 'post', token: TOKEN })
+
+		const calls = post.editReply.mock.calls as unknown[][]
+		const json = JSON.stringify(calls[calls.length - 1]?.[0])
+		expect(json).toContain(`props.pick.v1.post.${TOKEN}`)
+	})
+
+	it('keeps the picker usable when posting fails', async () => {
+		const current = session()
+		current.selected = [current.pairs[0]!.key]
+		state.load.mockResolvedValue(current)
+		state.post.mockRejectedValue(new Error('boom'))
+		const post = interaction('post')
+
+		await makeHandler().run(post as never, { action: 'post', token: TOKEN })
+
+		const calls = post.editReply.mock.calls as unknown[][]
+		const json = JSON.stringify(calls[calls.length - 1]?.[0])
+		expect(json).toContain("Couldn't post the props")
+		expect(json).toContain(`props.pick.v1.post.${TOKEN}`)
+		expect(state.clear).not.toHaveBeenCalled()
+	})
+
+	it('reports an ephemeral error when a pick cannot be saved', async () => {
+		state.save.mockResolvedValue(false)
+		const select = interaction('select', { values: ['0'] })
+
+		await makeHandler().run(select as never, {
+			action: 'select',
+			token: TOKEN,
+		})
+
+		expect(select.editReply).not.toHaveBeenCalled()
+		expect(
+			firstText((select.followUp.mock.calls as unknown[][])[0]?.[0]),
+		).toContain("Couldn't save")
+	})
+
 	it('posts when the prices still match and clears the session', async () => {
 		const current = session()
 		current.selected = [current.pairs[0]!.key]

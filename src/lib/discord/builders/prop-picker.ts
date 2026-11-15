@@ -64,11 +64,24 @@ function formatPrice(price: number): string {
 	return `${price > 0 ? '+' : ''}${price}`
 }
 
+function currentPrice(
+	session: PropPickerSession,
+	pair: PropPickerSession['pairs'][number],
+): { over: number; under: number } {
+	return (
+		session.prices[pair.key] ?? {
+			over: pair.overPrice,
+			under: pair.underPrice,
+		}
+	)
+}
+
 function pairLine(
+	session: PropPickerSession,
 	index: number,
 	pair: PropPickerSession['pairs'][number],
 ): string {
-	const price = { over: pair.overPrice, under: pair.underPrice }
+	const price = currentPrice(session, pair)
 	const point =
 		pair.line === null || pair.line === undefined ? '' : ` \`${pair.line}\``
 	return `${index + 1}. **${pair.player ?? 'Prop'}** · ${marketName(pair.marketKey)}${point} — Over ${formatPrice(price.over)} / Under ${formatPrice(price.under)}`
@@ -105,7 +118,7 @@ export function propPickerPayload(
 		blocks.push(
 			text(
 				pageData.items
-					.map((pair, index) => pairLine(index, pair))
+					.map((pair, index) => pairLine(session, index, pair))
 					.join('\n'),
 			),
 		)
@@ -140,15 +153,18 @@ function selectMenu(
 				0,
 				100,
 			),
-			description:
-				`Over ${formatPrice(pair.overPrice)} / Under ${formatPrice(pair.underPrice)}`.slice(
-					0,
-					100,
-				),
+			description: describePrice(currentPrice(session, pair)),
 			// Page-local index keeps the value under Discord's 100-char cap.
 			value: String(index),
 			default: selected.has(pair.key),
 		})),
+	)
+}
+
+function describePrice(price: { over: number; under: number }): string {
+	return `Over ${formatPrice(price.over)} / Under ${formatPrice(price.under)}`.slice(
+		0,
+		100,
 	)
 }
 

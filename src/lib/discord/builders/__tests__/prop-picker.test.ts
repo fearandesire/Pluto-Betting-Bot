@@ -120,6 +120,16 @@ describe('propPickerPayload', () => {
 		])
 	})
 
+	it('shows rechecked prices in the list and the select', () => {
+		const session = makeSession(2)
+		session.prices[session.pairs[0]!.key] = { over: -135, under: 115 }
+		const json = JSON.stringify(propPickerPayload(session))
+
+		expect(json).toContain('Over -135 / Under +115')
+		expect(json).toContain('Over -110 / Under +100')
+		expect(json.match(/Over -135 \/ Under \+115/g)).toHaveLength(2)
+	})
+
 	it('marks selections from another page and keeps the warning', () => {
 		const session = makeSession(30)
 		session.selected = [session.pairs[0]!.key]
