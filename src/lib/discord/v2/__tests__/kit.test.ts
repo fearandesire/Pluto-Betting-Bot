@@ -1,4 +1,10 @@
-import { ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js'
+import {
+	ActionRowBuilder,
+	ButtonBuilder,
+	ButtonStyle,
+	type MessageActionRowComponentBuilder,
+	MessageFlags,
+} from 'discord.js'
 import { describe, expect, it } from 'vitest'
 import {
 	accent,
@@ -55,6 +61,27 @@ describe('v2Payload', () => {
 		const blocks = Array.from({ length: 60 }, (_, i) => text(`line ${i}`))
 		const p = v2Payload({ blocks })
 		expect(() => assertV2Budget(p)).not.toThrow()
+	})
+
+	it('interleaves rows between blocks in the order given', () => {
+		const row =
+			new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
+				new ButtonBuilder()
+					.setCustomId('t.v1.go')
+					.setLabel('Go')
+					.setStyle(ButtonStyle.Primary),
+			)
+		const p = v2Payload({ blocks: [text('first'), row, text('second')] })
+		// container + text + row + button + text
+		expectV2Payload(p, {
+			flags: MessageFlags.IsComponentsV2,
+			components: 5,
+		})
+		const [container] = toJsonComponents(p) as Array<{
+			components: Array<{ type: number; content?: string }>
+		}>
+		expect(container.components.map((c) => c.type)).toEqual([10, 1, 10])
+		expect(container.components[2].content).toBe('second')
 	})
 
 	it('puts action rows inside the container', () => {

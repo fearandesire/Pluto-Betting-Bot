@@ -1,0 +1,145 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"flags": 32768,
+	"components": [
+		{
+			"type": 17,
+			"accent_color": 14882871,
+			"components": [
+				{
+					"type": 10,
+					"content": "## 🎯 Accuracy Challenge"
+				},
+				{
+					"type": 10,
+					"content": "### 🏈 BUF vs. KC\n<t:1791145500:f> • Player props"
+				},
+				{
+					"type": 10,
+					"content": "**Patrick Mahomes** • O/U `274.5` Passing Yards\nOver -115 • Under -105"
+				},
+				{
+					"type": 1,
+					"components": [
+						{
+							"type": 2,
+							"emoji": {
+								"name": "⬆️",
+								"animated": false
+							},
+							"custom_id": "prop_7d0c7a52-1f0e-4a8e-9c35-2b6f0f1a0001",
+							"label": "Over",
+							"style": 3
+						},
+						{
+							"type": 2,
+							"emoji": {
+								"name": "⬇️",
+								"animated": false
+							},
+							"custom_id": "prop_7d0c7a52-1f0e-4a8e-9c35-2b6f0f1a0002",
+							"label": "Under",
+							"style": 4
+						}
+					]
+				},
+				{
+					"type": 10,
+					"content": "**Josh Allen** • O/U `1.5` Passing Touchdowns\nOver +120 • Under -140\n**Result: Under ✅ — 0**\n-# 📊 61% of 23 predictors got it right."
+				},
+				{
+					"type": 1,
+					"components": [
+						{
+							"type": 2,
+							"emoji": {
+								"name": "⬆️",
+								"animated": false
+							},
+							"custom_id": "prop_7d0c7a52-1f0e-4a8e-9c35-2b6f0f1a0003",
+							"label": "Over",
+							"style": 3,
+							"disabled": true
+						},
+						{
+							"type": 2,
+							"emoji": {
+								"name": "⬇️",
+								"animated": false
+							},
+							"custom_id": "prop_7d0c7a52-1f0e-4a8e-9c35-2b6f0f1a0004",
+							"label": "Under",
+							"style": 4,
+							"disabled": true
+						}
+					]
+				},
+				{
+					"type": 10,
+					"content": "**Travis Kelce** • O/U `58.5` Reception Yards\nOver -105 • Under -115"
+				},
+				{
+					"type": 1,
+					"components": [
+						{
+							"type": 2,
+							"emoji": {
+								"name": "⬆️",
+								"animated": false
+							},
+							"custom_id": "prop_7d0c7a52-1f0e-4a8e-9c35-2b6f0f1a0005",
+							"label": "Over",
+							"style": 3
+						},
+						{
+							"type": 2,
+							"emoji": {
+								"name": "⬇️",
+								"animated": false
+							},
+							"custom_id": "prop_7d0c7a52-1f0e-4a8e-9c35-2b6f0f1a0006",
+							"label": "Under",
+							"style": 4
+						}
+					]
+				},
+				{
+					"type": 10,
+					"content": "**Isiah Pacheco** • O/U `64.5` Rush Yards\nOver -110 • Under -110"
+				},
+				{
+					"type": 1,
+					"components": [
+						{
+							"type": 2,
+							"emoji": {
+								"name": "⬆️",
+								"animated": false
+							},
+							"custom_id": "prop_7d0c7a52-1f0e-4a8e-9c35-2b6f0f1a0007",
+							"label": "Over",
+							"style": 3
+						},
+						{
+							"type": 2,
+							"emoji": {
+								"name": "⬇️",
+								"animated": false
+							},
+							"custom_id": "prop_7d0c7a52-1f0e-4a8e-9c35-2b6f0f1a0008",
+							"label": "Under",
+							"style": 4
+						}
+					]
+				},
+				{
+					"type": 10,
+					"content": "-# Tap Over or Under to pick. Each prop grades in place."
+				}
+			]
+		}
+	]
+}

@@ -4,6 +4,9 @@ import type { RedisCacheClient } from '../../../../cache/redis-instance.js'
 
 const mocks = vi.hoisted(() => ({
 	fetchChannel: vi.fn(),
+	redisSet: vi.fn(),
+	redisDel: vi.fn(),
+	redisCompareAndRemove: vi.fn(),
 	logger: {
 		info: vi.fn(),
 		error: vi.fn(),
@@ -26,6 +29,15 @@ vi.mock('../../../../logging/WinstonLogger.js', () => ({
 	logger: mocks.logger,
 }))
 
+vi.mock('../../../../cache/redis-instance.js', () => ({
+	default: {
+		set: mocks.redisSet,
+		del: mocks.redisDel,
+		compareAndRemove: mocks.redisCompareAndRemove,
+	},
+}))
+
+import { propBoardPayload } from '../../../../../lib/discord/builders/prop-board.js'
 import { deliveryEnvelopeSchema } from '../delivery-contract.js'
 import {
 	type DeliveryDispatcher,
@@ -78,6 +90,8 @@ function createMessage() {
 				inline: true,
 			}),
 		],
+		components: [],
+		flags: { has: () => false },
 		edit: vi.fn(),
 	} as any
 	message.edit.mockImplementation(async (options: { embeds: unknown[] }) => {
@@ -104,6 +118,9 @@ function fakeRedis(): RedisCacheClient {
 describe('NotificationService.processPropSettled', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
+		mocks.redisSet.mockResolvedValue('OK')
+		mocks.redisDel.mockResolvedValue(1)
+		mocks.redisCompareAndRemove.mockResolvedValue(true)
 	})
 
 	it('edits the original embed with result/tallies and removes stale buttons', async () => {
@@ -339,5 +356,150 @@ describe('NotificationService.processPropSettled', () => {
 		} finally {
 			await queue.close()
 		}
+	})
+	it('edits only the graded row of a V2 board and keeps the other rows', async () => {
+		const boardProp = {
+			commence_time: '2026-10-04T20:25:00Z',
+			market_key: 'player_pass_yds',
+			description: 'Patrick Mahomes',
+			point: 274.5,
+			over: { outcome_uuid: 'over-1', outcome_name: 'Over', price: -115 },
+			under: {
+				outcome_uuid: 'under-1',
+				outcome_name: 'Under',
+				price: 105,
+			},
+		}
+		const second = {
+			...boardProp,
+			description: 'Josh Allen',
+			market_key: 'player_pass_tds',
+			point: 1.5,
+			over: { outcome_uuid: 'over-2', outcome_name: 'Over', price: 120 },
+			under: {
+				outcome_uuid: 'under-2',
+				outcome_name: 'Under',
+				price: -140,
+			},
+		}
+		const payloadV2 = propBoardPayload({
+			props: [boardProp, second] as never,
+			sport: 'nfl',
+			teams: {
+				homeAbbrev: ['KC'],
+				awayAbbrev: ['BUF'],
+				homeColor: 0xe31837,
+			},
+		})
+		const message = {
+			embeds: [],
+			components: payloadV2.components,
+			flags: { has: () => true },
+			edit: vi.fn(),
+		} as any
+		message.edit.mockImplementation(
+			async (options: { components: unknown[] }) => {
+				message.components = options.components
+				return message
+			},
+		)
+		const channel = {
+			guildId: 'guild-1',
+			isTextBased: () => true,
+			messages: { fetch: vi.fn().mockResolvedValue(message) },
+		}
+		mocks.fetchChannel.mockResolvedValue(channel)
+
+		await new NotificationService().processPropSettled({
+			...payload,
+			outcome_uuid: 'under-2',
+			result: 'lost',
+			winning_side_display: 'Over',
+			actual_value: 0,
+		})
+
+		expect(message.edit).toHaveBeenCalledOnce()
+		const edit = message.edit.mock.calls[0][0] as {
+			embeds?: unknown[]
+			components: Array<{ components: Array<any> }>
+		}
+		expect(edit.embeds).toBeUndefined()
+		const rows = edit.components[0].components
+		expect(rows[3].components.map((b: any) => b.disabled)).toEqual([
+			undefined,
+			undefined,
+		])
+		expect(rows[5].components.map((b: any) => b.disabled)).toEqual([
+			true,
+			true,
+		])
+		expect(rows[4].content).toContain('**Result: Over ❌ — 0**')
+	})
+
+	it('refuses to start a second edit while the message lock is held', async () => {
+		const message = createMessage()
+		const channel = {
+			guildId: 'guild-1',
+			isTextBased: () => true,
+			messages: { fetch: vi.fn().mockResolvedValue(message) },
+		}
+		mocks.fetchChannel.mockResolvedValue(channel)
+		mocks.redisSet.mockResolvedValueOnce(null)
+
+		await expect(
+			new NotificationService().deliverPropSettlementMessage(
+				payload,
+				payload.messages[0],
+			),
+		).rejects.toMatchObject({ code: 'PROP_SETTLEMENT_BUSY' })
+		expect(message.edit).not.toHaveBeenCalled()
+		expect(mocks.redisCompareAndRemove).not.toHaveBeenCalled()
+	})
+
+	it('releases the message lock after a successful edit', async () => {
+		const message = createMessage()
+		const channel = {
+			guildId: 'guild-1',
+			isTextBased: () => true,
+			messages: { fetch: vi.fn().mockResolvedValue(message) },
+		}
+		mocks.fetchChannel.mockResolvedValue(channel)
+
+		await new NotificationService().deliverPropSettlementMessage(
+			payload,
+			payload.messages[0],
+		)
+
+		expect(mocks.redisSet).toHaveBeenCalledWith(
+			'props:settlement-lock:guild-1:channel-1:message-1',
+			expect.any(String),
+			'EX',
+			30,
+			'NX',
+		)
+		expect(mocks.redisCompareAndRemove).toHaveBeenCalledOnce()
+	})
+
+	it('edits without the lock when Redis is unavailable', async () => {
+		const message = createMessage()
+		const channel = {
+			guildId: 'guild-1',
+			isTextBased: () => true,
+			messages: { fetch: vi.fn().mockResolvedValue(message) },
+		}
+		mocks.fetchChannel.mockResolvedValue(channel)
+		mocks.redisSet.mockRejectedValueOnce(new Error('redis down'))
+
+		await new NotificationService().deliverPropSettlementMessage(
+			payload,
+			payload.messages[0],
+		)
+
+		expect(message.edit).toHaveBeenCalledOnce()
+		expect(mocks.logger.warn).toHaveBeenCalledWith(
+			expect.objectContaining({
+				event: 'prop.settlement.lock_unavailable',
+			}),
+		)
 	})
 })
