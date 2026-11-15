@@ -235,8 +235,11 @@ export async function initializePeriodWinnersCron(): Promise<
 	}
 }
 
-const WEEKLY_LEADERBOARD_CRON = '0 9 * * 1'
-const MONTHLY_LEADERBOARD_CRON = '0 9 1 * *'
+// Sunday evening still inside the current Eastern week.
+const WEEKLY_LEADERBOARD_CRON = '0 23 * * 0'
+// Fires on the last possible days; the service posts only on the real last
+// Eastern day so the board covers the whole month.
+const MONTHLY_LEADERBOARD_CRON = '0 23 28-31 * *'
 
 /**
  * Auto-posts the props prediction leaderboard for the current Eastern week and

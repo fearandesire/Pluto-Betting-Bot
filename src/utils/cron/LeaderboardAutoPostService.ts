@@ -28,6 +28,27 @@ export interface LeaderboardAutoPostOptions {
 	enabled?: boolean
 }
 
+function easternParts(now: Date): { date: string; day: string } {
+	const parts = new Intl.DateTimeFormat('en-CA', {
+		timeZone: 'America/New_York',
+		year: 'numeric',
+		month: '2-digit',
+		day: '2-digit',
+	}).formatToParts(now)
+	const value = (type: string) =>
+		parts.find((part) => part.type === type)?.value ?? ''
+	return {
+		date: `${value('year')}-${value('month')}-${value('day')}`,
+		day: value('day'),
+	}
+}
+
+/** True on the last Eastern calendar day, so a monthly post covers the month. */
+function isLastEasternDay(now: Date): boolean {
+	const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000)
+	return easternParts(tomorrow).day === '01'
+}
+
 function easternDate(now: Date): string {
 	return new Intl.DateTimeFormat('en-CA', {
 		timeZone: 'America/New_York',
@@ -82,6 +103,14 @@ export class LeaderboardAutoPostService {
 					reason: this.options.enabled ? 'no_targets' : 'disabled',
 					period,
 				},
+			})
+			return result
+		}
+
+		if (period === 'month' && !isLastEasternDay(now)) {
+			await logger.info({
+				message: 'leaderboard_post_skipped',
+				metadata: { reason: 'not_month_end', period },
 			})
 			return result
 		}

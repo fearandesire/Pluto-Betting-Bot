@@ -113,8 +113,49 @@ describe('LeaderboardAutoPostService', () => {
 		expect(send).not.toHaveBeenCalled()
 	})
 
+	it('posts a monthly board only on the last Eastern day', async () => {
+		const { send } = harness()
+		const monthly = new LeaderboardAutoPostService(
+			{
+				getLeaderboard: vi.fn(async () => ({
+					entries: [],
+					total_users: 0,
+				})),
+			},
+			{ get: vi.fn(), set: vi.fn() },
+			{ getBettingChannel: vi.fn() },
+			{
+				period: 'month',
+				targets: [{ guildId: 'guild-1', channelId: 'channel-1' }],
+			},
+		)
+
+		await expect(
+			monthly.runWeeklyRecap(new Date('2026-11-29T23:00:00.000Z')),
+		).resolves.toEqual({ posted: 0, skipped: 0, failed: 0 })
+
+		const posting = new LeaderboardAutoPostService(
+			{
+				getLeaderboard: vi.fn(async () => ({
+					entries: [],
+					total_users: 0,
+				})),
+			},
+			{ get: vi.fn(), set: vi.fn() },
+			{ getBettingChannel: vi.fn() },
+			{
+				period: 'month',
+				targets: [{ guildId: 'guild-1', channelId: 'channel-1' }],
+			},
+		)
+		await expect(
+			posting.runWeeklyRecap(new Date('2026-11-30T23:00:00.000Z')),
+		).resolves.toEqual({ posted: 0, skipped: 1, failed: 0 })
+		expect(send).not.toHaveBeenCalled()
+	})
+
 	it('does not resolve a channel when no target is enabled', async () => {
-		const { service, send } = harness()
+		const { send } = harness()
 		const disabled = new LeaderboardAutoPostService(
 			{ getLeaderboard: vi.fn() },
 			{ get: vi.fn(), set: vi.fn() },
