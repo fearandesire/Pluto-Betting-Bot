@@ -201,13 +201,17 @@ export class PropPickerHandler extends InteractionHandler {
 			session.prices = recheck.prices
 			await savePropPickerSession(token, session)
 			const parts: string[] = []
-			if (recheck.changes.length > 0) {
-				const labels = recheck.changes
+			const missingKeys = new Set(recheck.missing.map((pair) => pair.key))
+			const moved = recheck.changes.filter(
+				(change) => !missingKeys.has(change.key),
+			)
+			if (moved.length > 0) {
+				const labels = moved
 					.slice(0, 3)
 					.map((change) => change.label)
 					.join(', ')
 				parts.push(
-					`Prices moved for ${recheck.changes.length} prop${recheck.changes.length === 1 ? '' : 's'}: ${labels}. Review the prices, then press Post again.`,
+					`Prices moved for ${moved.length} prop${moved.length === 1 ? '' : 's'}: ${labels}. Review the prices, then press Post again.`,
 				)
 			}
 			if (recheck.missing.length > 0) {

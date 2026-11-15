@@ -253,6 +253,36 @@ describe('PropPickerHandler', () => {
 		expect(state.save).toHaveBeenCalled()
 	})
 
+	it('removes a vanished pair without claiming a price move', async () => {
+		const current = session()
+		current.selected = [current.pairs[0]!.key]
+		state.load.mockResolvedValue(current)
+		state.recheck.mockResolvedValue({
+			changes: [
+				{
+					key: current.pairs[0]!.key,
+					label: 'Player 1 · player_points · 10.5',
+					before: { over: -110, under: 100 },
+					after: { over: -110, under: 100 },
+				},
+			],
+			missing: [current.pairs[0]],
+			prices: current.prices,
+		})
+		const post = interaction('post')
+
+		await makeHandler().run(post as never, {
+			action: 'post',
+			token: TOKEN,
+		})
+
+		const calls = post.editReply.mock.calls as unknown[][]
+		const payload = JSON.stringify(calls[calls.length - 1]?.[0])
+		expect(payload).toContain('no longer quoted')
+		expect(payload).not.toContain('Prices moved')
+		expect(current.selected).toHaveLength(0)
+	})
+
 	it('posts when the prices still match and clears the session', async () => {
 		const current = session()
 		current.selected = [current.pairs[0]!.key]
