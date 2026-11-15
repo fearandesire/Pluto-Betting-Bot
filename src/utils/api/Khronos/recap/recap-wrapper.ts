@@ -86,6 +86,22 @@ export interface PeriodWinnersRequest {
 	periodOffset?: number
 }
 
+export interface GuildRecapSettings {
+	guild_id: string
+	channel_id: string | null
+	enabled: boolean
+	nba_enabled: boolean
+	weekly_leaderboard_enabled: boolean
+	monthly_leaderboard_enabled: boolean
+	updated_at?: string
+	updated_by?: string | null
+}
+
+/** A guild without a row keeps the RECAP_* environment defaults. */
+export interface RecapSettingsClient {
+	getSettings(): Promise<GuildRecapSettings[]>
+}
+
 export interface RecapApiClient {
 	getWeeklyRecap(
 		guildId: string,
@@ -115,7 +131,9 @@ const GeneratedRecapApi = (
 /**
  * Generated-client wrapper for Khronos weekly recap data.
  */
-export default class RecapWrapper implements RecapApiClient {
+export default class RecapWrapper
+	implements RecapApiClient, RecapSettingsClient
+{
 	private readonly recapApi: GeneratedRecapApiClient
 
 	constructor(recapApi?: RecapApiClient) {
@@ -187,5 +205,70 @@ export default class RecapWrapper implements RecapApiClient {
 			)
 		}
 		return winners
+	}
+
+	/**
+	 * Loads the per-guild recap settings that replace the RECAP_* defaults.
+	 * Uses the raw transport because the installed generated client predates
+	 * the settings endpoint.
+	 */
+	async getSettings(): Promise<GuildRecapSettings[]> {
+		const fetchApi = KH_API_CONFIG.fetchApi ?? fetch
+		const response = await pTimeout(
+			fetchApi(
+				`${KH_API_CONFIG.basePath.replace(/\/$/, '')}/api/khronos/v1/recap/settings`,
+				{
+					method: 'GET',
+					headers: {
+						...KH_API_CONFIG.headers,
+						Accept: 'application/json',
+					},
+				},
+			),
+			{ milliseconds: DEFAULT_TIMEOUT_MS },
+		)
+		if (!response.ok) {
+			throw new Error(
+				`Khronos recap settings request failed (${response.status})`,
+			)
+		}
+		const body: unknown = await response.json()
+		if (!Array.isArray(body)) {
+			throw new Error(
+				'Khronos returned an invalid recap settings payload',
+			)
+		}
+		return body.map((row) => {
+			if (!row || typeof row !== 'object') {
+				throw new Error(
+					'Khronos returned an invalid recap settings row',
+				)
+			}
+			const value = row as Record<string, unknown>
+			if (typeof value.guild_id !== 'string') {
+				throw new Error('Khronos recap settings row has no guild_id')
+			}
+			return {
+				guild_id: value.guild_id,
+				channel_id:
+					typeof value.channel_id === 'string'
+						? value.channel_id
+						: null,
+				enabled: value.enabled === true,
+				nba_enabled: value.nba_enabled === true,
+				weekly_leaderboard_enabled:
+					value.weekly_leaderboard_enabled === true,
+				monthly_leaderboard_enabled:
+					value.monthly_leaderboard_enabled === true,
+				updated_at:
+					typeof value.updated_at === 'string'
+						? value.updated_at
+						: undefined,
+				updated_by:
+					typeof value.updated_by === 'string'
+						? value.updated_by
+						: null,
+			}
+		})
 	}
 }

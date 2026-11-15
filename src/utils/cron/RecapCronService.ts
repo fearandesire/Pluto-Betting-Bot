@@ -24,8 +24,19 @@ const RECAP_EVENT = 'weekly_recap'
 
 export type RecapChannelResolver = DeliveryChannelResolver
 
+/** One guild's recap target, usually loaded from Khronos recap settings. */
+export interface RecapGuildTarget {
+	guildId: string
+	channelId?: string
+	/** Also post an NBA recap for this guild. */
+	nbaEnabled?: boolean
+}
+
 export interface RecapCronOptions {
-	guildIds: string[]
+	/** Legacy environment-driven guild list; used when targets is empty. */
+	guildIds?: string[]
+	/** Per-guild settings. When present, these replace guildIds. */
+	targets?: RecapGuildTarget[]
 	enabled?: boolean
 	channelId?: string
 	weekOffset?: number
@@ -81,10 +92,7 @@ export class RecapCronService {
 	private readonly cache: DeliveryCache
 	private readonly channelResolver: RecapChannelResolver
 	private readonly options: Required<
-		Pick<
-			RecapCronOptions,
-			'guildIds' | 'enabled' | 'weekOffset' | 'nbaEnabled'
-		>
+		Pick<RecapCronOptions, 'targets' | 'enabled' | 'weekOffset'>
 	> &
 		Pick<RecapCronOptions, 'channelId'>
 
@@ -97,12 +105,19 @@ export class RecapCronService {
 		this.recapApi = recapApi
 		this.cache = cache
 		this.channelResolver = channelResolver
+		const legacyGuildIds = (options.guildIds ?? []).filter(Boolean)
+		const targets = options.targets?.length
+			? options.targets
+			: legacyGuildIds.map((guildId) => ({
+					guildId,
+					channelId: options.channelId,
+					nbaEnabled: options.nbaEnabled ?? false,
+				}))
 		this.options = {
-			guildIds: options.guildIds.filter(Boolean),
+			targets,
 			enabled: options.enabled ?? true,
 			channelId: options.channelId,
 			weekOffset: options.weekOffset ?? -1,
-			nbaEnabled: options.nbaEnabled ?? false,
 		}
 	}
 
@@ -120,17 +135,17 @@ export class RecapCronService {
 			return result
 		}
 
-		for (const guildId of this.options.guildIds) {
+		for (const target of this.options.targets) {
 			await this.runGuildRecap(
-				guildId,
+				target,
 				'nfl',
 				now,
 				allowProcessingReclaim,
 				result,
 			)
-			if (this.options.nbaEnabled) {
+			if (target.nbaEnabled) {
 				await this.runGuildRecap(
-					guildId,
+					target,
 					'nba',
 					now,
 					allowProcessingReclaim,
@@ -143,12 +158,13 @@ export class RecapCronService {
 	}
 
 	private async runGuildRecap(
-		guildId: string,
+		target: RecapGuildTarget,
 		sport: RecapSport,
 		now: Date,
 		allowProcessingReclaim: boolean,
 		result: RecapRunResult,
 	): Promise<void> {
+		const guildId = target.guildId
 		const sportMetadata = sport === 'nfl' ? {} : { sport }
 		try {
 			// Without a sport Khronos counts every sport, so always send one.
@@ -191,7 +207,7 @@ export class RecapCronService {
 				channel = await resolveDeliveryChannel(
 					this.channelResolver,
 					guildId,
-					this.options.channelId,
+					target.channelId ?? this.options.channelId,
 					RECAP_EVENT,
 				)
 				await channel.send({
