@@ -41,6 +41,7 @@ The other kit files cover the cases a plain send does not:
 | `/props enable`, `disable`, `status` | `src/lib/discord/builders/props-settings.ts` | `src/commands/configuration/props.ts` | Ephemeral |
 | Period winners post | `periodWinnersPayload()` in `src/lib/discord/builders/period-winners.ts` | `src/utils/cron/PeriodWinnersCronService.ts` | Public, in a channel |
 | `/parlay` builder | `ParlayBuilderService.render()` in `src/services/ParlayBuilderService.ts` | `src/commands/betting/parlay.ts` and the parlay handlers | Ephemeral |
+| `/admin props pick` | `propPickerPayload()` in `src/lib/discord/builders/prop-picker.ts` | `src/utils/admin-handlers/admin-prop-picker-handler.ts` and `src/interaction-handlers/prop-picker-handler.ts` | Ephemeral |
 | Error notices on V2 screens | `sendErrorNotice()` in `src/lib/discord/v2/notice.ts` | `src/listeners/chatInputCommandError.ts`, `src/utils/api/Khronos/error-handling/ApiErrorHandler.ts` | Ephemeral |
 
 The parlay builder predates the kit. It builds its container by hand and does not set `allowedMentions`. Treat it as an example of layout, not of the kit, and move it to `v2Payload()` when you next change it.
