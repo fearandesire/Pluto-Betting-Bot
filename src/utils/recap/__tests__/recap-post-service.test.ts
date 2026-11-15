@@ -97,9 +97,9 @@ describe('RecapPostService', () => {
 			0,
 			'nfl',
 		)
-		expect(send).toHaveBeenCalledWith({
-			embeds: expect.any(Array),
-		})
+		expect(send).toHaveBeenCalledWith(
+			expect.objectContaining({ components: expect.any(Array) }),
+		)
 	})
 
 	it('posts the closed monthly period winners', async () => {

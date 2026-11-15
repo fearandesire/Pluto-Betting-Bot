@@ -1,12 +1,12 @@
 import type { TextChannel } from 'discord.js'
 import { periodWinnersPayload } from '../../lib/discord/builders/period-winners.js'
+import { weeklyRecapPayload } from '../../lib/discord/builders/weekly-recap.js'
 import type RecapWrapper from '../api/Khronos/recap/recap-wrapper.js'
 import type { RecapSport } from '../api/Khronos/recap/recap-wrapper.js'
 import {
 	type DeliveryChannelResolver,
 	resolveDeliveryChannel,
 } from '../cron/delivery.js'
-import { buildWeeklyRecapEmbeds } from '../embeds/weekly-recap.embed.js'
 
 export const RECAP_POST_TYPES = ['weekly', 'monthly'] as const
 export type RecapPostType = (typeof RECAP_POST_TYPES)[number]
@@ -53,9 +53,9 @@ export class RecapPostService {
 				0,
 				request.sport,
 			)
-			const message = await channel.send({
-				embeds: buildWeeklyRecapEmbeds(recap, request.sport),
-			})
+			const message = await channel.send(
+				weeklyRecapPayload(recap, request.sport),
+			)
 			return { channel_id: channel.id, message_id: message.id }
 		}
 
