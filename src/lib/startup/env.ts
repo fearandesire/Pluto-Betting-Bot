@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { PACKAGE_VERSION } from './version.js'
 
 const envFlag = (value: unknown): boolean =>
 	value === true || value === 'true' || value === '1'
@@ -18,7 +19,7 @@ const envSchema = z
 			'Discord bot token used for authentication',
 		),
 		PREFIX: z.string(),
-		PROJECT_VERSION: z.string(),
+		PROJECT_VERSION: z.string().min(1),
 		KH_API_URL: z.url(),
 		KH_API_TOKEN: requiredString(
 			'KH_API_TOKEN is required for Khronos API authentication',
@@ -67,6 +68,7 @@ const envSchema = z
 		RECAP_ENABLED: z.boolean().default(true),
 		RECAP_GUILD_IDS: z.string().default(''),
 		PROFILE_ENABLED: z.boolean().default(false),
+		PROFILE_VIEWS_ENABLED: z.boolean().default(false),
 		RECAP_NBA_ENABLED: z.boolean().default(false),
 		PERIOD_WINNERS_ENABLED: z.boolean().default(false),
 		PERIOD_WINNERS_WEEKLY_CRON: z.string().default('30 9 * * 1'),
@@ -174,7 +176,8 @@ export function parseStartupEnv(
 		NODE_ENV: source.NODE_ENV,
 		TOKEN: source.TOKEN,
 		PREFIX: source.PREFIX,
-		PROJECT_VERSION: source.PROJECT_VERSION,
+		// Always the shipped package version: a configured value goes stale.
+		PROJECT_VERSION: `v${PACKAGE_VERSION}`,
 		KH_API_URL: source.KH_API_URL,
 		KH_API_TOKEN: source.KH_API_TOKEN,
 		R_HOST: source.R_HOST,
@@ -218,6 +221,7 @@ export function parseStartupEnv(
 		RECAP_ENABLED: source.RECAP_ENABLED !== 'false',
 		RECAP_GUILD_IDS: source.RECAP_GUILD_IDS || source.GUILD_ID || '',
 		PROFILE_ENABLED: envFlag(source.PROFILE_ENABLED),
+		PROFILE_VIEWS_ENABLED: envFlag(source.PROFILE_VIEWS_ENABLED),
 		RECAP_NBA_ENABLED: envFlag(source.RECAP_NBA_ENABLED),
 		PERIOD_WINNERS_ENABLED: envFlag(source.PERIOD_WINNERS_ENABLED),
 		PERIOD_WINNERS_WEEKLY_CRON: source.PERIOD_WINNERS_WEEKLY_CRON,
@@ -276,6 +280,7 @@ if (shouldLogDebug) {
 		RECAP_ENABLED: env.RECAP_ENABLED,
 		RECAP_GUILD_IDS: env.RECAP_GUILD_IDS,
 		PROFILE_ENABLED: env.PROFILE_ENABLED,
+		PROFILE_VIEWS_ENABLED: env.PROFILE_VIEWS_ENABLED,
 		RECAP_NBA_ENABLED: env.RECAP_NBA_ENABLED,
 		PERIOD_WINNERS_ENABLED: env.PERIOD_WINNERS_ENABLED,
 		PERIOD_WINNERS_WEEKLY_CRON: env.PERIOD_WINNERS_WEEKLY_CRON,

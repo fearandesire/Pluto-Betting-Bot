@@ -14,8 +14,7 @@ This docs tree captures Pluto client architecture notes, operational guides, and
 ## CI/CD
 
 - [Khronos client update workflow](ci-cd-khronos-client-update.md)
-- [Khronos release cascade](https://github.com/fearandesire/khronos/blob/main/docs/ci-cd-release-cascade.md)
 
 ## Cross-service context
 
-- [Khronos cross-service overview](https://github.com/fearandesire/khronos/blob/main/docs/architecture/cross-service-overview.md)
+The Khronos release cascade and the cross-service contract are documented in the private Khronos repository.

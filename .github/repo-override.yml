@@ -1,0 +1,4 @@
+# repository-kit baseline override (docs/baseline.md#repo-override in charyon/repository-kit)
+schema: 2
+labels:
+  keep: [good first issue, help wanted]   # public repo that takes outside contributions

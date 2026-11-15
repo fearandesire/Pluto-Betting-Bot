@@ -8,8 +8,29 @@ import { createApiKeyAuthMiddleware } from './apiKeyAuth.js'
 import { setupBullBoard } from './bullBoard.js'
 import { createErrorHandler } from './errorHandler.js'
 import { createHealthMiddleware } from './health.js'
-import { captureRequestIdentity } from './logging.js'
 import { createRequestIdMiddleware } from './requestId.js'
+
+/**
+ * Request headers are logged from an allowlist. Loki keeps logs past
+ * credential rotation, and Cloudflare adds the client IP and geo headers
+ * (`cf-connecting-ip`, `x-forwarded-for`, `cf-ipcountry` and others) to
+ * every request, so a denylist leaks each new one.
+ */
+export const ACCESS_LOG_OPTIONS = {
+	transports: [createConsoleTransport()],
+	reqKeys: ['url', 'method', 'httpVersion', 'href', 'query', 'length'],
+	reqSelect: [
+		'header.host',
+		'header.user-agent',
+		'header.x-service-name',
+		'header.x-request-id',
+		'header.idempotency-key',
+		'header.content-type',
+		'header.content-length',
+	],
+	reqUnselect: [],
+	resUnselect: ['header.set-cookie'],
+}
 
 /**
  * Sets up and configures the Koa application with all middleware and plugins
@@ -20,24 +41,7 @@ export async function setupKoaApp(): Promise<Koa> {
 	// Add request ID middleware before any other middleware
 	app.use(createRequestIdMiddleware())
 
-	// Capture request identity (User-Agent, X-Service-Name) for logging
-	app.use(captureRequestIdentity())
-
-	// Add logging middleware. Credential headers are stripped before the
-	// request/response ever reaches winston -- they must never appear in
-	// Grafana Cloud Loki, which retains logs beyond credential rotation.
-	app.use(
-		logger({
-			transports: [createConsoleTransport()],
-			reqUnselect: [
-				'header.cookie',
-				'header.x-api-key',
-				'header.admin-token',
-				'header.authorization',
-			],
-			resUnselect: ['header.set-cookie'],
-		}),
-	)
+	app.use(logger(ACCESS_LOG_OPTIONS))
 
 	// Internal harness readiness endpoint; mutation routes remain API-key protected.
 	app.use(createHealthMiddleware())

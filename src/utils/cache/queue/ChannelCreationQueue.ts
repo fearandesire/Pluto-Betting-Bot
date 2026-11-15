@@ -1,4 +1,9 @@
 import type { ChannelCreationEvent } from '@pluto-khronos/types'
+import { bullmqTelemetry } from '../../../lib/telemetry/bullmq-telemetry.js'
+import {
+	withJobEventRequestId,
+	withJobRequestId,
+} from '../../../lib/telemetry/request-context.js'
 import { createChannelPresentationService } from '../../guilds/channels/ChannelPresentationService.js'
 import {
 	type ChannelCreationEventV2,
@@ -10,8 +15,16 @@ type CreationJob = ChannelCreationEvent | ChannelCreationEventV2
 import { channelCreationEventSchema } from '@pluto-khronos/types'
 import { type Job, Queue, QueueEvents, Worker } from 'bullmq'
 import { registerShutdownQueue } from '../../../lib/startup/shutdown-registry.js'
-import { ChannelCreationBusyError } from '../../guilds/channels/ChannelCreationWorkflow.js'
+import {
+	ChannelCreationBusyError,
+	LeaseLostError,
+} from '../../guilds/channels/ChannelCreationWorkflow.js'
 import ChannelManager from '../../guilds/channels/ChannelManager.js'
+import {
+	creationJobRequestId,
+	logGameChannelStage,
+	stageFailureOf,
+} from '../../logging/game-channel-stage.js'
 import { logger } from '../../logging/WinstonLogger.js'
 import { REDIS_CONFIG } from '../data/config.js'
 
@@ -41,6 +54,7 @@ export class ChannelCreationQueue {
 			'channel-creation',
 			{
 				connection,
+				...bullmqTelemetry(),
 				defaultJobOptions: {
 					attempts: ChannelCreationQueue.MAX_ATTEMPTS,
 					backoff: {
@@ -61,9 +75,13 @@ export class ChannelCreationQueue {
 		// Worker with explicit lockDuration
 		this.worker = new Worker<CreationJob, ChannelCreationResult>(
 			'channel-creation',
-			async (job) => this.runJob(job),
+			withJobRequestId(
+				async (job) => this.runJob(job),
+				creationJobRequestId,
+			),
 			{
 				connection,
+				...bullmqTelemetry(),
 				concurrency: 15,
 				lockDuration: ChannelCreationQueue.LOCK_DURATION,
 				settings: {
@@ -84,62 +102,85 @@ export class ChannelCreationQueue {
 	}
 
 	private setupWorkerEvents(): void {
-		this.worker.on('active', (job) => {
-			logger.info({
-				message: 'Job active',
-				source: 'ChannelCreationQueue:worker',
-				data: {
-					jobId: job.id,
-					jobName: job.name,
-					channelId: job.data?.channel?.id,
-					guildId: job.data?.guild?.guildId,
-					attemptsMade: job.attemptsMade,
-				},
-			})
-		})
-
 		this.worker.on(
-			'completed',
-			async (job: Job<CreationJob, ChannelCreationResult>) => {
-				const result = job.returnvalue
+			'active',
+			withJobEventRequestId((job) => {
 				logger.info({
-					message: 'Job completed',
+					message: 'Job active',
 					source: 'ChannelCreationQueue:worker',
 					data: {
 						jobId: job.id,
 						jobName: job.name,
-						result,
-						channelId: job.data.channel.id,
-						guildId: job.data.guild.guildId,
+						channelId: job.data?.channel?.id,
+						guildId: job.data?.guild?.guildId,
+						attemptsMade: job.attemptsMade,
 					},
 				})
-			},
+			}, creationJobRequestId),
+		)
+
+		this.worker.on(
+			'completed',
+			withJobEventRequestId(
+				async (job: Job<CreationJob, ChannelCreationResult>) => {
+					const result = job.returnvalue
+					logger.info({
+						message: 'Job completed',
+						source: 'ChannelCreationQueue:worker',
+						data: {
+							jobId: job.id,
+							jobName: job.name,
+							result,
+							channelId: job.data.channel.id,
+							guildId: job.data.guild.guildId,
+						},
+					})
+				},
+				creationJobRequestId,
+			),
 		)
 
 		this.worker.on(
 			'failed',
-			(job: Job<CreationJob> | undefined, err: Error) => {
-				if (!job) {
+			withJobEventRequestId(
+				(job: Job<CreationJob> | undefined, err: Error) => {
+					if (!job) {
+						logger.error({
+							message: 'Channel creation failed - job undefined',
+							source: 'ChannelCreationQueue:worker',
+							data: { error: err?.message },
+						})
+						return
+					}
 					logger.error({
-						message: 'Channel creation failed - job undefined',
+						message: 'Job failed',
 						source: 'ChannelCreationQueue:worker',
-						data: { error: err?.message },
+						data: {
+							jobId: job.id,
+							jobName: job.name,
+							error: err?.message,
+							attemptsMade: job.attemptsMade,
+							channelId: job.data?.channel?.id,
+							guildId: job.data?.guild?.guildId,
+						},
 					})
-					return
-				}
-				logger.error({
-					message: 'Job failed',
-					source: 'ChannelCreationQueue:worker',
-					data: {
-						jobId: job.id,
-						jobName: job.name,
-						error: err?.message,
-						attemptsMade: job.attemptsMade,
-						channelId: job.data?.channel?.id,
+					const failure = stageFailureOf(err)
+					logGameChannelStage({
+						stage: failure?.stage ?? 'created',
+						outcome:
+							job.attemptsMade >=
+							ChannelCreationQueue.MAX_ATTEMPTS
+								? 'failed'
+								: 'retrying',
+						reason: failure?.reason ?? creationFailureReason(err),
+						attempt: job.attemptsMade,
+						gameId: job.data?.channel?.id,
+						sport: job.data?.channel?.sport,
 						guildId: job.data?.guild?.guildId,
-					},
-				})
-			},
+					})
+				},
+				creationJobRequestId,
+			),
 		)
 
 		this.worker.on('error', (err) => {
@@ -273,20 +314,6 @@ export class ChannelCreationQueue {
 			const errorMessage =
 				err instanceof Error ? err.message : String(err)
 
-			// Log final attempt explicitly
-			if (job.attemptsMade >= ChannelCreationQueue.MAX_ATTEMPTS) {
-				logger.error({
-					message: 'Max attempts reached for channel creation',
-					source: 'ChannelCreationQueue:processJob',
-					data: {
-						jobId: job.id,
-						attemptsMade: job.attemptsMade,
-						maxAttempts: ChannelCreationQueue.MAX_ATTEMPTS,
-						error: errorMessage,
-					},
-				})
-			}
-
 			// rethrow to let BullMQ handle retry/backoff
 			throw err instanceof Error ? err : new Error(errorMessage)
 		}
@@ -337,6 +364,17 @@ export class ChannelCreationQueue {
 }
 
 export const channelCreationQueue = new ChannelCreationQueue()
+
+/** BullMQ counts an attempt only after it fails, so `failed` is the first place the final one is visible. */
+export function creationFailureReason(error: Error | undefined): string {
+	if (error instanceof ChannelCreationBusyError) return 'reservation_busy'
+	if (error instanceof LeaseLostError) return 'lease_lost'
+	const message = error?.message ?? ''
+	if (message.startsWith('Invalid job data')) return 'invalid_job_data'
+	if (message.startsWith('Unsupported channel creation schema'))
+		return 'unsupported_schema'
+	return 'creation_failed'
+}
 
 export function channelCreationRetryDelay(
 	attemptsMade: number,

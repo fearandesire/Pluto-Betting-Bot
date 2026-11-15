@@ -1,5 +1,6 @@
 import type { Context, Next } from 'koa'
 import { v4 as uuidv4 } from 'uuid'
+import { runWithRequestId } from '../../../../lib/telemetry/request-context.js'
 
 /**
  * Creates and returns the request ID middleware
@@ -15,6 +16,6 @@ export function createRequestIdMiddleware() {
 
 		ctx.state.reqId = existingRequestId || uuidv4()
 		ctx.set('reqId', ctx.state.reqId)
-		await next()
+		await runWithRequestId(ctx.state.reqId, next)
 	}
 }

@@ -5,6 +5,11 @@ import type {
 	ChannelReservation,
 	ChannelReservationStore,
 } from '../../cache/queue/channel-reservation-store.js'
+import {
+	type GameChannelStageEvent,
+	logGameChannelStage,
+	tagStageFailure,
+} from '../../logging/game-channel-stage.js'
 import { logger } from '../../logging/WinstonLogger.js'
 
 export interface CreatedChannel {
@@ -17,7 +22,11 @@ export interface ChannelCreationDiscordPort {
 		intent: ChannelIntent,
 		knownChannelId?: string,
 	): Promise<{ id: string } | null>
-	completeExisting?(intent: ChannelIntent, channelId: string): Promise<void>
+	/** Sends the game message unless the channel already has it. */
+	completeExisting?(
+		intent: ChannelIntent,
+		channelId: string,
+	): Promise<'sent' | 'already_sent'>
 	create(intent: ChannelIntent): Promise<CreatedChannel>
 }
 
@@ -89,9 +98,8 @@ export class ChannelCreationWorkflow {
 			}),
 		}
 		this.activeRuns.set(owner, activeRun)
-		const execution = this.execute(intent, owner)
 		try {
-			return await execution
+			return await this.execute(intent, owner)
 		} finally {
 			activeRun.settled = true
 			resolveSettled()
@@ -110,10 +118,13 @@ export class ChannelCreationWorkflow {
 				intent,
 				reservation.channelId,
 			)
-			if (existing && this.ports.discord.completeExisting) {
-				await this.ports.discord.completeExisting(intent, existing.id)
-			}
 			if (existing) {
+				logStage(intent, {
+					stage: 'created',
+					outcome: 'duplicate',
+					reason: 'already_created',
+				})
+				await this.completeExisting(intent, existing.id)
 				return {
 					state: 'already-created',
 					channelId: reservation.channelId,
@@ -141,6 +152,17 @@ export class ChannelCreationWorkflow {
 			if (leaseLost) throw new LeaseLostError()
 			if (existing) {
 				await this.recordIfOwned(intent, owner, existing.id)
+				logStage(intent, {
+					stage: 'created',
+					outcome: 'ok',
+					reason: 'reconciled',
+				})
+				// This path adopts the channel and sends nothing, so say so.
+				logStage(intent, {
+					stage: 'posted',
+					outcome: 'skipped',
+					reason: 'adopted_without_post',
+				})
 				return { state: 'reconciled', channelId: existing.id }
 			}
 
@@ -170,7 +192,25 @@ export class ChannelCreationWorkflow {
 			created = await this.ports.discord.create(intent)
 			await this.recordIfOwned(intent, owner, created.channelId)
 			recorded = true
-			await created.complete()
+			logStage(intent, {
+				stage: 'created',
+				outcome: 'ok',
+				reason: 'created',
+			})
+			try {
+				await created.complete()
+			} catch (error) {
+				throw tagStageFailure(error, {
+					...stageIds(intent),
+					stage: 'posted',
+					reason: 'post_failed',
+				})
+			}
+			logStage(intent, {
+				stage: 'posted',
+				outcome: 'ok',
+				reason: 'posted',
+			})
 			return { state: 'created', channelId: created.channelId }
 		} catch (error) {
 			if (created && recorded) throw error
@@ -191,12 +231,12 @@ export class ChannelCreationWorkflow {
 			}
 			if (existing) {
 				await this.recordIfOwned(intent, owner, existing.id)
-				if (this.ports.discord.completeExisting) {
-					await this.ports.discord.completeExisting(
-						intent,
-						existing.id,
-					)
-				}
+				logStage(intent, {
+					stage: 'created',
+					outcome: 'ok',
+					reason: 'reconciled',
+				})
+				await this.completeExisting(intent, existing.id)
 				return { state: 'reconciled', channelId: existing.id }
 			}
 			await this.releaseLease(intent, owner)
@@ -204,6 +244,36 @@ export class ChannelCreationWorkflow {
 		} finally {
 			this.stopRenewal(owner)
 		}
+	}
+
+	private async completeExisting(
+		intent: ChannelIntent,
+		channelId: string,
+	): Promise<void> {
+		if (!this.ports.discord.completeExisting) return
+		let delivery: 'sent' | 'already_sent'
+		try {
+			delivery = await this.ports.discord.completeExisting(
+				intent,
+				channelId,
+			)
+		} catch (error) {
+			throw tagStageFailure(error, {
+				...stageIds(intent),
+				stage: 'posted',
+				reason: 'post_failed',
+			})
+		}
+		logStage(
+			intent,
+			delivery === 'sent'
+				? { stage: 'posted', outcome: 'ok', reason: 'posted' }
+				: {
+						stage: 'posted',
+						outcome: 'duplicate',
+						reason: 'already_posted',
+					},
+		)
 	}
 
 	async close(): Promise<void> {
@@ -393,6 +463,26 @@ export class ChannelCreationWorkflow {
 		this.stopRenewal(owner)
 		this.removeLease(owner)
 	}
+}
+
+const stageIds = (intent: ChannelIntent) => ({
+	gameId: intent.gameId,
+	sport: intent.sport,
+	guildId: intent.guildId,
+})
+
+function logStage(
+	intent: ChannelIntent,
+	event: Pick<GameChannelStageEvent, 'stage' | 'outcome' | 'reason'>,
+): void {
+	logGameChannelStage({ ...stageIds(intent), ...event })
+}
+
+/** Reason code for a V1 creation error that carries no stage tag. */
+export function creationErrorReason(error: unknown): string {
+	if (error instanceof ChannelCreationBusyError) return 'reservation_busy'
+	if (error instanceof LeaseLostError) return 'lease_lost'
+	return 'creation_failed'
 }
 
 function logLeaseError(operation: string, error: unknown): void {

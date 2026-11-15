@@ -1,6 +1,12 @@
 import { type Job, Queue, Worker } from 'bullmq'
 import { registerShutdownQueue } from '../../../lib/startup/shutdown-registry.js'
+import { bullmqTelemetry } from '../../../lib/telemetry/bullmq-telemetry.js'
+import {
+	withJobEventRequestId,
+	withJobRequestId,
+} from '../../../lib/telemetry/request-context.js'
 import ChannelManager from '../../guilds/channels/ChannelManager.js'
+import { topLevelJobRequestId } from '../../logging/game-channel-stage.js'
 import { logger } from '../../logging/WinstonLogger.js'
 import { REDIS_CONFIG } from '../data/config.js'
 import type {
@@ -23,6 +29,7 @@ export class ChannelDeletionQueue {
 			'channel-deletion-queue',
 			{
 				connection,
+				...bullmqTelemetry(),
 				defaultJobOptions: {
 					attempts: ChannelDeletionQueue.MAX_ATTEMPTS,
 					backoff: {
@@ -45,8 +52,11 @@ export class ChannelDeletionQueue {
 		// Initialize worker with proper concurrency
 		this.worker = new Worker<ChannelDeletionJobData, ChannelDeletionResult>(
 			'channel-deletion-queue',
-			async (job) => this.runJob(job),
-			{ connection, concurrency: 15 },
+			withJobRequestId(
+				async (job) => this.runJob(job),
+				topLevelJobRequestId,
+			),
+			{ connection, ...bullmqTelemetry(), concurrency: 15 },
 		)
 
 		this.setupWorkerEvents()
@@ -61,35 +71,43 @@ export class ChannelDeletionQueue {
 	private setupWorkerEvents(): void {
 		this.worker.on(
 			'completed',
-			async (job: Job<ChannelDeletionJobData, ChannelDeletionResult>) => {
-				const result = await job.returnvalue
-				if (result.success) {
-					logger.info({
-						message: 'Channel deletion successful',
-						source: 'ChannelDeletionQueue:worker',
-						data: {
-							channelName: job.data.channelName,
-							jobId: job.data.jobId,
-						},
-					})
-				}
-			},
+			withJobEventRequestId(
+				async (
+					job: Job<ChannelDeletionJobData, ChannelDeletionResult>,
+				) => {
+					const result = await job.returnvalue
+					if (result.success) {
+						logger.info({
+							message: 'Channel deletion successful',
+							source: 'ChannelDeletionQueue:worker',
+							data: {
+								channelName: job.data.channelName,
+								jobId: job.data.jobId,
+							},
+						})
+					}
+				},
+				topLevelJobRequestId,
+			),
 		)
 
 		this.worker.on(
 			'failed',
-			(job: Job<ChannelDeletionJobData>, error: Error) => {
-				logger.error({
-					message: 'Channel deletion failed',
-					source: 'ChannelDeletionQueue:worker',
-					data: {
-						error: error.message,
-						attempts: job.attemptsMade,
-						channelName: job.data.channelName,
-						jobId: job.data.jobId,
-					},
-				})
-			},
+			withJobEventRequestId(
+				(job: Job<ChannelDeletionJobData>, error: Error) => {
+					logger.error({
+						message: 'Channel deletion failed',
+						source: 'ChannelDeletionQueue:worker',
+						data: {
+							error: error.message,
+							attempts: job.attemptsMade,
+							channelName: job.data.channelName,
+							jobId: job.data.jobId,
+						},
+					})
+				},
+				topLevelJobRequestId,
+			),
 		)
 	}
 

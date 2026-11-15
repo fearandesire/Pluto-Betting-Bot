@@ -19,6 +19,7 @@ import { readFileSync } from 'fs'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 import env from '../../../lib/startup/env.js'
+import { withRequestIdHeader } from '../../../lib/telemetry/request-context.js'
 import { getDefaultAlertReporter } from '../../../services/alerts/alert-reporter.js'
 import { ConsecutiveFailureTracker } from '../../../services/alerts/failure-trackers.js'
 
@@ -98,9 +99,9 @@ const retryingFetch = fetchRetry(global.fetch, {
 	},
 })
 
-const observedFetch: typeof retryingFetch = async (...args) => {
+const observedFetch: typeof retryingFetch = async (input, init) => {
 	try {
-		const response = await retryingFetch(...args)
+		const response = await retryingFetch(input, withRequestIdHeader(init))
 		if (response.ok) {
 			void khronosConnectivity.success().catch(() => undefined)
 		} else if (response.status === 429 || response.status >= 500) {

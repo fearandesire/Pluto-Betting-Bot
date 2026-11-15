@@ -1,0 +1,117 @@
+# charyon/repository-kit: baseline/labels.yml — the one label list for every enrolled repo.
+# Draft built from data/labels.tsv (373 labels, 13 repos) and open-usage counts read 2026-10-17 ET.
+#
+# How the sync applies this file (PLAN.md §9):
+#   status: active   -> create if missing; fix color/description if different.
+#   status: retired  -> delete ONLY when no open issue or PR carries it; otherwise keep it and report it.
+#   aliases          -> old names of this label. If only the old name exists: rename it (usage is kept).
+#                       If both exist: move the label on open items, then treat the old one as retired.
+#   not in this file -> never touched. Labels that are neither here nor in the repo override are reported as unmanaged.
+#   Deleting an entry from this file does nothing. To remove a label, mark it retired first.
+# Every change lands as a dry-run diff first, then is applied by the sync bot (issues: write) after this file merges.
+# Names are lower-case; colors are 6-hex without '#'. Linear (team TF) should use the same names; see `linear:`.
+version: 1
+
+labels:
+  # ---- holds: stop auto-merge (merge-eligibility HOLD_LABELS, eligibility.mjs:19-20) ----
+  - name: wip
+    color: "FBCA04"
+    description: "Not ready. Blocks auto-merge."
+    status: active
+    linear: wip
+
+  # ---- triage (saga docs/agents/triage-labels.md vocabulary; khronos/duelforge docs say ready-for-agent) ----
+  - name: needs-triage
+    color: "D4C5F9"
+    description: "Not yet sorted by a maintainer"
+    status: active
+    linear: needs-triage
+  - name: needs-info
+    color: "D876E3"
+    description: "Waiting on the reporter"
+    status: active
+    aliases: [status:needs-information]
+    linear: needs-info
+  - name: needs-human
+    color: "1D76DB"
+    description: "Needs a human decision or action. Blocks auto-merge."
+    status: active
+    aliases: [agent-needs-human, ready-for-human]
+    linear: needs-human
+  - name: wontfix
+    color: "FFFFFF"
+    description: "Will not be worked on"
+    status: active
+    linear: wontfix
+  - name: duplicate
+    color: "CFD3D7"
+    description: "Already tracked elsewhere"
+    status: active
+    linear: duplicate
+
+  # ---- type (engineering-policy governance.md:17, aligned to Linear's `type` group) ----
+  - name: type:bug
+    color: "D73A4A"
+    description: "Something is broken"
+    status: active
+    aliases: [bug, fix]
+    linear: type:bug
+  - name: type:feature
+    color: "A2EEEF"
+    description: "New capability or improvement"
+    status: active
+    aliases: [enhancement, feature]
+    linear: type:feature
+  - name: type:docs
+    color: "0075CA"
+    description: "Documentation only"
+    status: active
+    aliases: [documentation]
+    linear: type:docs
+  - name: type:chore
+    color: "95A2B3"
+    description: "Maintenance: tooling, deps, cleanup"
+    status: active
+    aliases: [type:maintenance, chore]
+    linear: type:chore
+  - name: type:security
+    color: "B60205"
+    description: "Security fix or hardening"
+    status: active
+    aliases: [security]
+    linear: security               # Linear has plain `security`, no type:security
+
+  # ---- priority (governance.md:17; Linear uses its native Priority field instead) ----
+  - { name: priority:p0, color: "B60205", description: "Drop everything",      status: active, aliases: [P0, priority:critical] }
+  - { name: priority:p1, color: "D93F0B", description: "Next up",              status: active, aliases: [P1, priority:high] }
+  - { name: priority:p2, color: "FBCA04", description: "Planned",              status: active, aliases: [P2, priority:medium, priority:normal] }
+  - { name: priority:p3, color: "C2E0C6", description: "Whenever",             status: active, aliases: [P3, priority:low] }
+
+  # ---- risk / status (governance.md:17) ----
+  - { name: risk:low,       color: "C2E0C6", description: "Low blast radius",    status: active }
+  - { name: risk:medium,    color: "FBCA04", description: "Medium blast radius", status: active }
+  - { name: risk:high,      color: "D93F0B", description: "High blast radius",   status: active }
+  - { name: status:blocked, color: "E99695", description: "Waiting on something outside this repo", status: active }
+
+  # ---- automation ----
+  - name: dependencies
+    color: "0366D6"
+    description: "Dependency update (Renovate/Dependabot)"
+    status: active
+    linear: dependencies
+  - name: baseline-sync
+    color: "5319E7"
+    description: "Opened by the sync bot from repository-kit"
+    status: active
+
+  # ---- retired: removed only where no open issue/PR uses them; otherwise reported and kept ----
+  - { name: agent-ready, status: retired, reason: "Owner task scope and pstack evidence replace label-driven readiness" }
+  - { name: invalid,          status: retired, reason: "Use wontfix or close" }
+  - { name: question,         status: retired, reason: "Use Discussions or needs-info" }
+  - { name: good first issue, status: retired, reason: "Solo-owner repos; Pluto keeps it via repo override labels.keep" }
+  - { name: help wanted,      status: retired, reason: "Solo-owner repos; Pluto keeps it via repo override labels.keep" }
+
+# Never managed, never reported as unmanaged: names created by tools.
+ignore:
+  - "autorelease: *"     # release-please
+  - "Review effort */5"  # PR-review bot (goracle)

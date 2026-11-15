@@ -261,8 +261,8 @@ describeWithRedis('channel creation lease shutdown', () => {
 		const store = new RedisChannelReservationStore(storeRedis, {
 			leaseSeconds: 300,
 		})
-		let resolveCompletion!: () => void
-		const completion = new Promise<void>((resolve) => {
+		let resolveCompletion!: (value: 'sent') => void
+		const completion = new Promise<'sent'>((resolve) => {
 			resolveCompletion = resolve
 		})
 		let resolveCompleteEntered!: () => void
@@ -295,7 +295,7 @@ describeWithRedis('channel creation lease shutdown', () => {
 		const refreshCount = refresh.mock.calls.length
 		await vi.advanceTimersByTimeAsync(60_000)
 		expect(refresh).toHaveBeenCalledTimes(refreshCount)
-		resolveCompletion()
+		resolveCompletion('sent')
 
 		await expect(run).resolves.toEqual({
 			state: 'reconciled',

@@ -11,13 +11,17 @@ import AchievementsWrapper from '../../utils/api/Khronos/achievements/achievemen
 import { AccountsWrapper } from '../../utils/api/requests/accounts/AccountManager.js'
 import { loadProfileCardData } from '../../utils/profile-card/load-profile-card-data.js'
 import { renderProfileCard } from '../../utils/profile-card/profile-card.js'
+import {
+	loadProfileForViews,
+	profileViewMessage,
+	resolveProfileSubject,
+} from '../../utils/profile-card/profile-view-service.js'
 
 @ApplyOptions<Command.Options>({
 	description: '🪪 View a profile card with stats and badges',
 })
 export class UserCommand extends Command {
 	public override registerApplicationCommands(registry: Command.Registry) {
-		// Stays unregistered until Khronos ships the achievements API.
 		if (!env.PROFILE_ENABLED) return
 		registry.registerChatInputCommand((builder) =>
 			builder //
@@ -58,12 +62,29 @@ export class UserCommand extends Command {
 		}
 
 		try {
+			if (env.PROFILE_VIEWS_ENABLED) {
+				const subject = await resolveProfileSubject(
+					interaction,
+					target.id,
+					target,
+				)
+				const loaded = await loadProfileForViews(subject)
+				if (!loaded) {
+					return notice(
+						'Could not load that profile right now. Please try again.',
+					)
+				}
+				const message = profileViewMessage(loaded, {
+					route: { ownerId: interaction.user.id },
+				})
+				if (message) return await interaction.editReply(message)
+			}
 			const accounts = new AccountsWrapper()
 			const displayName =
 				interaction.guild?.members.cache.get(target.id)?.displayName ??
 				target.globalName ??
 				target.username
-			const data = await loadProfileCardData(
+			const loaded = await loadProfileCardData(
 				{
 					accounts: {
 						getProfile: async (id) => {
@@ -78,12 +99,12 @@ export class UserCommand extends Command {
 				target.id,
 				displayName,
 			)
-			if (!data) {
+			if (!loaded) {
 				return notice(
 					'Could not load that profile right now. Please try again.',
 				)
 			}
-			const png = await renderProfileCard(data)
+			const png = await renderProfileCard(loaded.card)
 			return await interaction.editReply(
 				profileCardPayload({
 					png,
@@ -91,6 +112,7 @@ export class UserCommand extends Command {
 						ownerId: interaction.user.id,
 						targetId: target.id,
 					},
+					badgeLine: loaded.badgeLine,
 				}),
 			)
 		} catch (error) {

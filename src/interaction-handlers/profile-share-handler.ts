@@ -8,6 +8,7 @@ import {
 	type ProfileShareRoute,
 	profileCardPayload,
 	profileSharedPayload,
+	readProfileBadgeLine,
 } from '../lib/discord/builders/profile.js'
 import { text, v2EditFlags, v2Payload } from '../lib/discord/v2/kit.js'
 import { logger } from '../utils/logging/WinstonLogger.js'
@@ -84,11 +85,13 @@ export class ProfileShareHandler extends InteractionHandler {
 		claimed.set(messageId, now)
 
 		let png: Buffer
+		let badgeLine: string | null = null
 		try {
 			await interaction.deferUpdate()
 			png = await fetchCardPng(interaction)
+			badgeLine = readProfileBadgeLine(interaction.message)
 			await interaction.followUp(
-				profileSharedPayload(png, interaction.user.id),
+				profileSharedPayload(png, interaction.user.id, badgeLine),
 			)
 		} catch (error) {
 			claimed.delete(messageId)
@@ -109,7 +112,7 @@ export class ProfileShareHandler extends InteractionHandler {
 		// Already public. A failed button update must not trigger a second post.
 		try {
 			await interaction.editReply({
-				...profileCardPayload({ png, route, shared: true }),
+				...profileCardPayload({ png, route, shared: true, badgeLine }),
 				flags: v2EditFlags(),
 			})
 		} catch (error) {

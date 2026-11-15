@@ -51,4 +51,24 @@ export const IMAGE_CACHE: Record<string, string> = {
 	'https://cdn.discordapp.com/embed/avatars/0.png': 'discord-avatar-0.png',
 	'https://cdn.discordapp.com/icons/200000000000000002/0b1c2d3e4f.jpg':
 		'discord-guild-icon.png',
+	'https://cdn.discordapp.com/emojis/900000000000000001.png?size=128':
+		'badge-p_opening_score.png',
+	'https://cdn.discordapp.com/emojis/900000000000000002.png?size=128':
+		'badge-p_double_figures.png',
+	'https://cdn.discordapp.com/emojis/900000000000000003.png?size=128':
+		'badge-p_club_fifty.png',
+	'https://cdn.discordapp.com/emojis/900000000000000004.png?size=128':
+		'badge-p_in_the_black.png',
+	'https://cdn.discordapp.com/emojis/900000000000000005.png?size=128':
+		'badge-p_line_reader.png',
+	'https://cdn.discordapp.com/emojis/900000000000000006.png?size=128':
+		'badge-p_players_edge.png',
+	'https://cdn.discordapp.com/emojis/900000000000000007.png?size=128':
+		'badge-p_all_legs_home.png',
+	'https://cdn.discordapp.com/emojis/900000000000000008.png?size=128':
+		'badge-p_courtside.png',
+	'https://cdn.discordapp.com/emojis/900000000000000009.png?size=128':
+		'badge-p_due_a_win.png',
+	'https://cdn.discordapp.com/emojis/900000000000000010.png?size=128':
+		'badge-p_trust_the_process.png',
 }

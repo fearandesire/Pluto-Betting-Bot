@@ -25,6 +25,7 @@ import {
 	PlacedBetslipBetresultEnum,
 } from '@pluto-khronos/api-client'
 import { DEV_IDS } from '../../lib/configs/constants.js'
+import type { ProfileView } from '../../lib/profile/profile-view.js'
 import env from '../../lib/startup/env.js'
 import { DiscordConfigEnums } from '../api/common/interfaces/kh-pluto/kh-pluto.interface.js'
 import type {
@@ -560,8 +561,15 @@ export class MockBackend {
 		}
 	}
 
-	getProfile(userId: string): GetProfileDto {
+	private profileViews = new Map<string, ProfileView>()
+
+	setProfileView(userId: string, view: ProfileView) {
+		this.profileViews.set(userId, view)
+	}
+
+	getProfile(userId: string): GetProfileDto & { profile_view?: ProfileView } {
 		return {
+			profile_view: this.profileViews.get(userId),
 			statusCode: 200,
 			userid: userId,
 			balance: this.store.getBalance(userId),

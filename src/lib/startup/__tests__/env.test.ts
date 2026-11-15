@@ -146,6 +146,14 @@ describe('Pluto system startup env gate', () => {
 		).toThrow(/AXIOM_ORG_ID/)
 	})
 
+	it('keeps the new profile views off unless PROFILE_VIEWS_ENABLED is true', () => {
+		expect(parseStartupEnv(requiredEnv).PROFILE_VIEWS_ENABLED).toBe(false)
+		expect(
+			parseStartupEnv({ ...requiredEnv, PROFILE_VIEWS_ENABLED: 'true' })
+				.PROFILE_VIEWS_ENABLED,
+		).toBe(true)
+	})
+
 	it('keeps /profile off unless PROFILE_ENABLED is true', () => {
 		expect(parseStartupEnv(requiredEnv).PROFILE_ENABLED).toBe(false)
 		expect(
@@ -164,5 +172,17 @@ describe('Pluto system startup env gate', () => {
 			parseStartupEnv({ ...requiredEnv, STATS_PROPS_ENABLED: 'true' })
 				.STATS_PROPS_ENABLED,
 		).toBe(true)
+	})
+})
+
+describe('PROJECT_VERSION', () => {
+	it('reports the package version, not a configured value', () => {
+		const { version } = JSON.parse(readFileSync('package.json', 'utf-8'))
+		const parsed = parseStartupEnv({
+			...requiredEnv,
+			PROJECT_VERSION: 'v3.0.1',
+		})
+
+		expect(parsed.PROJECT_VERSION).toBe(`v${version}`)
 	})
 })

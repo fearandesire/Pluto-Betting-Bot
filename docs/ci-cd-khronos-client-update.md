@@ -2,10 +2,6 @@
 
 Pluto updates `@pluto-khronos/api-client` and `@pluto-khronos/types` through `.github/workflows/khronos-client-update.yml`.
 
-Related Khronos docs:
-
-- [Khronos release cascade](https://github.com/fearandesire/khronos/blob/main/docs/ci-cd-release-cascade.md)
-
 ## Triggers
 
 The bump job runs on `repository_dispatch` with event type `khronos-release`.
@@ -128,6 +124,6 @@ This tells release-please to classify the eventual squash merge as `fix(khronos)
 
 ## Recovery
 
-If Pluto did not receive or process a Khronos release dispatch, recover from Khronos by rerunning or repairing the dispatch workflow in `.github/workflows/pluto-dispatch.yml`.
+If Pluto did not receive or process a Khronos release dispatch, a maintainer reruns the dispatch from Khronos.
 
 After redispatch, confirm that Pluto updated the static `deps/khronos-update` branch and that the PR body points at the expected Khronos version and commit.

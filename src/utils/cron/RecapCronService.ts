@@ -151,18 +151,12 @@ export class RecapCronService {
 	): Promise<void> {
 		const sportMetadata = sport === 'nfl' ? {} : { sport }
 		try {
-			// NFL keeps the legacy request: the default sport needs no param.
-			const recap =
-				sport === 'nfl'
-					? await this.recapApi.getWeeklyRecap(
-							guildId,
-							this.options.weekOffset,
-						)
-					: await this.recapApi.getWeeklyRecap(
-							guildId,
-							this.options.weekOffset,
-							sport,
-						)
+			// Without a sport Khronos counts every sport, so always send one.
+			const recap = await this.recapApi.getWeeklyRecap(
+				guildId,
+				this.options.weekOffset,
+				sport,
+			)
 
 			if (sport !== 'nfl' && isEmptyWeek(recap)) {
 				result.skipped++

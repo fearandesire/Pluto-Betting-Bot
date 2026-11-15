@@ -3,6 +3,10 @@ import { readFileSync } from 'fs'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 import env from '../../../lib/startup/env.js'
+import {
+	outboundRequestId,
+	REQUEST_ID_HEADER,
+} from '../../../lib/telemetry/request-context.js'
 
 /**
  * Axios Instance(s) configured for our needs to reduce redundant specifications/setup
@@ -26,5 +30,11 @@ const KhronosStandardConfig = {
 }
 
 const AxiosKhronosInstance = axios.create(KhronosStandardConfig)
+AxiosKhronosInstance.interceptors.request.use((config) => {
+	if (!config.headers.has(REQUEST_ID_HEADER)) {
+		config.headers.set(REQUEST_ID_HEADER, outboundRequestId())
+	}
+	return config
+})
 
 export { AxiosKhronosInstance }

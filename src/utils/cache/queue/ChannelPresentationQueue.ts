@@ -1,6 +1,16 @@
 import { type Job, Queue, Worker } from 'bullmq'
 import { registerShutdownQueue } from '../../../lib/startup/shutdown-registry.js'
+import { bullmqTelemetry } from '../../../lib/telemetry/bullmq-telemetry.js'
+import {
+	withJobEventRequestId,
+	withJobRequestId,
+} from '../../../lib/telemetry/request-context.js'
 import { createChannelPresentationService } from '../../guilds/channels/ChannelPresentationService.js'
+import {
+	logGameChannelStage,
+	stageFailureOf,
+	topLevelJobRequestId,
+} from '../../logging/game-channel-stage.js'
 import { logger } from '../../logging/WinstonLogger.js'
 import {
 	type ChannelPresentationUpdateV1,
@@ -21,12 +31,12 @@ export async function processPresentationJob(job: Pick<Job, 'data'>) {
 export class ChannelPresentationQueue {
 	readonly queue = new Queue<ChannelPresentationUpdateV1>(
 		'channel-presentation-update',
-		{ connection: REDIS_CONFIG },
+		{ connection: REDIS_CONFIG, ...bullmqTelemetry() },
 	)
 	private readonly activeJobs = new Set<Promise<void>>()
 	private readonly worker = new Worker(
 		'channel-presentation-update',
-		async (job) => {
+		withJobRequestId(async (job: Job) => {
 			const task = processPresentationJob(job)
 			this.activeJobs.add(task)
 			try {
@@ -34,10 +44,36 @@ export class ChannelPresentationQueue {
 			} finally {
 				this.activeJobs.delete(task)
 			}
+		}, topLevelJobRequestId),
+		{
+			connection: REDIS_CONFIG,
+			...bullmqTelemetry(),
+			concurrency: 10,
+			lockDuration: 300_000,
 		},
-		{ connection: REDIS_CONFIG, concurrency: 10, lockDuration: 300_000 },
 	)
 	constructor() {
+		this.worker.on(
+			'failed',
+			withJobEventRequestId((job: Job | undefined, error: Error) => {
+				if (!job) return
+				// Updates never create, so an untagged failure is a posting failure.
+				const failure = stageFailureOf(error) ?? {
+					stage: 'posted' as const,
+					reason: 'post_failed',
+					gameId: job.data?.gameId,
+					guildId: job.data?.guildId,
+				}
+				logGameChannelStage({
+					...failure,
+					outcome:
+						job.attemptsMade >= (job.opts.attempts ?? 1)
+							? 'failed'
+							: 'retrying',
+					attempt: job.attemptsMade,
+				})
+			}, topLevelJobRequestId),
+		)
 		this.worker.on('error', (error) =>
 			logger.error({
 				message: 'Presentation worker error',

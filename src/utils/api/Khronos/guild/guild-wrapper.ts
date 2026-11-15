@@ -15,6 +15,7 @@ import {
 import { isMockEnabled, MockBackend } from '../../../dev/index.js'
 import { DiscordConfigEnums } from '../../common/interfaces/kh-pluto/kh-pluto.interface.js'
 import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js'
+import { isLogsChannelEnabled } from './guild-config.wrapper.js'
 
 /**
  * Wrapper class for guild-related operations
@@ -99,6 +100,19 @@ export default class GuildWrapper {
 		channelTypeLabel: string,
 	): Promise<TextChannel> {
 		const guild = await this.getGuild(guildId)
+		return this.resolveConfiguredChannel(
+			guild,
+			configType,
+			channelTypeLabel,
+		)
+	}
+
+	private async resolveConfiguredChannel(
+		guild: Guild,
+		configType: DiscordConfigEnums,
+		channelTypeLabel: string,
+	): Promise<TextChannel> {
+		const guildId = guild.guild_id
 		if (!guild.config || guild.config.length === 0) {
 			throw new Error('Guild does not have any configuration set')
 		}
@@ -148,12 +162,14 @@ export default class GuildWrapper {
 	/**
 	 * Retrieves the configured log channel for a guild
 	 * @param guildId - Discord guild ID
-	 * @returns TextChannel for logging
+	 * @returns TextChannel for logging, or null when the guild disabled log posts
 	 * @throws Error if guild has no configuration or log channel not found
 	 */
-	async getLogChannel(guildId: string): Promise<TextChannel> {
-		return this.getConfiguredChannel(
-			guildId,
+	async getLogChannel(guildId: string): Promise<TextChannel | null> {
+		const guild = await this.getGuild(guildId)
+		if (!isLogsChannelEnabled(guild.config)) return null
+		return this.resolveConfiguredChannel(
+			guild,
 			DiscordConfigEnums.LOGS_CHAN,
 			'log',
 		)
@@ -273,7 +289,7 @@ export default class GuildWrapper {
 	 * Sends a message to the guild's configured log channel
 	 * @param guildId - Discord guild ID
 	 * @param options - Discord message options (embeds, components, content, etc.)
-	 * @returns The sent message
+	 * @returns The sent message, or null when LOGS_ENABLED is false
 	 * @throws Error if log channel not configured or message send fails
 	 * @example
 	 * ```typescript
@@ -285,8 +301,9 @@ export default class GuildWrapper {
 	async sendToLogChannel(
 		guildId: string,
 		options: MessageCreateOptions,
-	): Promise<Message> {
+	): Promise<Message | null> {
 		const logChannel = await this.getLogChannel(guildId)
+		if (!logChannel) return null
 		return await logChannel.send(options)
 	}
 
