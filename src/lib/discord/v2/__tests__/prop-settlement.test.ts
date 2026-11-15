@@ -111,6 +111,19 @@ describe('settleV2BoardComponents', () => {
 		expect(text.filter((line) => line.startsWith('-# 📊'))).toHaveLength(1)
 	})
 
+	it('keeps a pathological row under the text budget and still shows the result', () => {
+		const components = boardComponents()
+		const rows = containerRows(components)
+		rows[4].content = 'x'.repeat(3000)
+
+		const settled = settleV2BoardComponents(components, settlement)
+		const content = containerRows(settled.components)[4].content ?? ''
+
+		expect(content.length).toBeLessThanOrEqual(900)
+		expect(content).toContain('**Result: Over ✅ — 2**')
+		expect(content).toContain('-# 📊')
+	})
+
 	it('leaves a board unchanged when the outcome is not on it', () => {
 		const before = JSON.stringify(boardComponents())
 		const result = settleV2BoardComponents(boardComponents(), {

@@ -278,6 +278,7 @@ export default class NotificationService {
 	 */
 	async processPropSettled(data: PropSettledNotification): Promise<void> {
 		const processedMessages = new Set<string>()
+		let busy: unknown
 		for (const reference of data.messages) {
 			const messageKey = `${reference.guild_id}:${reference.channel_id}:${reference.message_id}`
 			if (processedMessages.has(messageKey)) continue
@@ -285,6 +286,16 @@ export default class NotificationService {
 			try {
 				await this.deliverPropSettlementMessage(data, reference)
 			} catch (error) {
+				if (
+					(error as { code?: string } | undefined)?.code ===
+					'PROP_SETTLEMENT_BUSY'
+				) {
+					// Another delivery is editing this message. Keep going with
+					// the rest, then answer 500 so the caller retries instead of
+					// reporting a settlement that did not land.
+					busy ??= error
+					continue
+				}
 				logger.warn({
 					method: this.processPropSettled.name,
 					event: 'prop.notification.message_update_failed',
@@ -299,6 +310,7 @@ export default class NotificationService {
 				})
 			}
 		}
+		if (busy) throw busy
 	}
 
 	/** Deliver exactly one prop message, allowing the durable worker to retry it. */
@@ -328,9 +340,14 @@ export default class NotificationService {
 				{ code: 'PROP_SETTLEMENT_BUSY' },
 			)
 		}
+		const renewal =
+			lock === 'acquired'
+				? this.startPropSettlementLease(lockKey, lockToken)
+				: undefined
 		try {
 			await this.updatePropSettlementMessage(client, data, reference)
 		} finally {
+			if (renewal) clearInterval(renewal)
 			if (lock === 'acquired')
 				await this.releasePropSettlementLock(lockKey, lockToken)
 		}
@@ -355,7 +372,10 @@ export default class NotificationService {
 			throw error
 		}
 
-		const message = await channel.messages.fetch(reference.message_id)
+		const message = await channel.messages.fetch({
+			message: reference.message_id,
+			force: true,
+		})
 		const components = toComponentJsonList(message.components)
 
 		if (isV2Message(message)) {
@@ -411,7 +431,7 @@ export default class NotificationService {
 			const { default: redisCache } = await import(
 				'../../../cache/redis-instance.js'
 			)
-			const result = await redisCache.set(key, token, 'EX', 30, 'NX')
+			const result = await redisCache.set(key, token, 'EX', 60, 'NX')
 			return result === 'OK' ? 'acquired' : 'busy'
 		} catch (error) {
 			logger.warn({
@@ -421,6 +441,47 @@ export default class NotificationService {
 				error: error instanceof Error ? error.message : String(error),
 			})
 			return 'unavailable'
+		}
+	}
+
+	/**
+	 * Discord rate-limit waits can outlive the initial lease. Renew while the
+	 * fetch-and-edit is in flight so a slow edit never loses the message.
+	 */
+	private startPropSettlementLease(
+		key: string,
+		token: string,
+	): ReturnType<typeof setInterval> {
+		const timer = setInterval(() => {
+			void this.renewPropSettlementLease(key, token)
+		}, 20_000)
+		timer.unref?.()
+		return timer
+	}
+
+	private async renewPropSettlementLease(
+		key: string,
+		token: string,
+	): Promise<void> {
+		try {
+			const { default: redisCache } = await import(
+				'../../../cache/redis-instance.js'
+			)
+			const renewed = await redisCache.refreshIfOwned(key, token, 60)
+			if (!renewed) {
+				logger.warn({
+					method: 'renewPropSettlementLease',
+					event: 'prop.settlement.lock_lost',
+					key,
+				})
+			}
+		} catch (error) {
+			logger.warn({
+				method: 'renewPropSettlementLease',
+				event: 'prop.settlement.lock_renewal_failed',
+				key,
+				error: error instanceof Error ? error.message : String(error),
+			})
 		}
 	}
 

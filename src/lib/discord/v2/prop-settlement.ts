@@ -14,6 +14,13 @@ const PROP_BUTTON_PREFIX = 'prop_'
 const RESULT_PREFIX = '**Result:'
 const TALLY_PREFIX = '-# 📊'
 
+/**
+ * One board row's share of the message text budget. Four rows plus headings
+ * and footer stay under Discord's 4000-character limit, and the result lines
+ * always survive the clamp.
+ */
+const PROP_ROW_TEXT_MAX_CHARS = 900
+
 export type ComponentJson = {
 	type?: number
 	content?: string
@@ -151,5 +158,12 @@ function mergeResult(content: string, data: PropSettledNotification): string {
 				!line.startsWith(RESULT_PREFIX) &&
 				!line.startsWith(TALLY_PREFIX),
 		)
-	return [...existing, ...propRowResultLines(data)].join('\n')
+		.join('\n')
+	const suffix = propRowResultLines(data).join('\n')
+	const room = PROP_ROW_TEXT_MAX_CHARS - suffix.length - 1
+	const head =
+		existing.length > room
+			? `${existing.slice(0, Math.max(0, room - 1))}…`
+			: existing
+	return head ? `${head}\n${suffix}` : suffix
 }
