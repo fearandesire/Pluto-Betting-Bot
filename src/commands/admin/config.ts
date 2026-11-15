@@ -18,12 +18,12 @@ const FOOTER_CATEGORY_CHOICES = Object.keys(FALLBACK_FOOTERS).map((key) => ({
  * Config command for managing bot settings
  *
  * Subcommand Groups:
- * - /config footer status - View footer cache status
- * - /config footer refresh - Force refresh footer cache
- * - /config footer list [category] - List footers in cache
+ * - /footer-config footer status - View footer cache status
+ * - /footer-config footer refresh - Force refresh footer cache
+ * - /footer-config footer list [category] - List footers in cache
  */
 @ApplyOptions<Subcommand.Options>({
-	name: 'config',
+	name: 'footer-config',
 	description: 'Configure bot settings',
 	preconditions: ['OwnerOnly'],
 	subcommands: [
@@ -177,7 +177,7 @@ export class ConfigCommand extends Subcommand {
 				// Show all categories
 				if (Object.keys(status.categoryCounts).length === 0) {
 					embed.setDescription(
-						'No footers cached. Try running `/config footer refresh`.',
+						'No footers cached. Try running `/footer-config footer refresh`.',
 					)
 				} else {
 					const categoryList = Object.entries(status.categoryCounts)

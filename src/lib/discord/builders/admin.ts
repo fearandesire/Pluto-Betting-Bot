@@ -22,7 +22,7 @@ export type FooterCacheStatus = {
 	hasAnnouncement: boolean
 }
 
-/** F1 /config footer status (owner). */
+/** F1 /footer-config footer status (owner). */
 export function footerStatusEmbed(status: FooterCacheStatus) {
 	const embed = new EmbedBuilder()
 		.setTitle('📋 Footer Cache Status')

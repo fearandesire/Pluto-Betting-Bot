@@ -156,7 +156,7 @@ const fixtures: ClusterFixtures = {
 	surfaces: [
 		{
 			id: 'F1',
-			name: '/config footer status',
+			name: '/footer-config footer status',
 			before: () => ({
 				embeds: [
 					footerStatusEmbed({
