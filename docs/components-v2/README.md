@@ -45,6 +45,19 @@ The other kit files cover the cases a plain send does not:
 
 The parlay builder predates the kit. It builds its container by hand and does not set `allowedMentions`. Treat it as an example of layout, not of the kit, and move it to `v2Payload()` when you next change it.
 
+### Prop boards
+
+A board is one game's props in one message: a heading, then each pair's text and its own Over/Under row. Rows are interleaved with their text, so `v2Payload()` took a `V2Item[]` that accepts an `ActionRowBuilder` between blocks. The board and its settlement edit are new surfaces C1b and C2b:
+
+| Surface | Builder | Edit |
+| --- | --- | --- |
+| C1b, prop board | `propBoardPayload()` in `src/lib/discord/builders/prop-board.ts` | never edited as a whole |
+| C2b, settled row | `settleV2BoardComponents()` in `src/lib/discord/v2/prop-settlement.ts` | rewrites only the graded pair's text and disables only its row |
+
+The board poster follows in a later PR; until then Khronos sends no `boards` and Pluto keeps posting one pair per message. Every settlement edit holds a per-message Redis lock, because two graded pairs on one board fetch the same message and the second write would otherwise erase the first row's result.
+
+![C1b prop board](screens/props/C1b-after.png)
+
 ## Lay out a screen
 
 Most Pluto screens follow one shape. It reads top to bottom like the embed it replaces:
