@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
 	redisSet: vi.fn(),
 	redisDel: vi.fn(),
 	redisCompareAndRemove: vi.fn(),
+	redisRefreshIfOwned: vi.fn(),
 	logger: {
 		info: vi.fn(),
 		error: vi.fn(),
@@ -34,6 +35,7 @@ vi.mock('../../../../cache/redis-instance.js', () => ({
 		set: mocks.redisSet,
 		del: mocks.redisDel,
 		compareAndRemove: mocks.redisCompareAndRemove,
+		refreshIfOwned: mocks.redisRefreshIfOwned,
 	},
 }))
 
@@ -103,6 +105,11 @@ function createMessage() {
 	return message
 }
 
+/** The service asks for a fresh message through FetchMessageOptions. */
+function fetchId(arg: unknown): string {
+	return typeof arg === 'string' ? arg : (arg as { message: string }).message
+}
+
 function fakeRedis(): RedisCacheClient {
 	const values = new Map<string, string>()
 	return {
@@ -121,6 +128,7 @@ describe('NotificationService.processPropSettled', () => {
 		mocks.redisSet.mockResolvedValue('OK')
 		mocks.redisDel.mockResolvedValue(1)
 		mocks.redisCompareAndRemove.mockResolvedValue(true)
+		mocks.redisRefreshIfOwned.mockResolvedValue(true)
 	})
 
 	it('edits the original embed with result/tallies and removes stale buttons', async () => {
@@ -134,7 +142,10 @@ describe('NotificationService.processPropSettled', () => {
 
 		await new NotificationService().processPropSettled(payload)
 
-		expect(channel.messages.fetch).toHaveBeenCalledWith('message-1')
+		expect(channel.messages.fetch).toHaveBeenCalledWith({
+			message: 'message-1',
+			force: true,
+		})
 		expect(message.edit).toHaveBeenCalledOnce()
 		const edit = message.edit.mock.calls[0][0] as {
 			embeds: Array<{
@@ -201,7 +212,10 @@ describe('NotificationService.processPropSettled', () => {
 			new NotificationService().processPropSettled(payload),
 		).resolves.toBeUndefined()
 
-		expect(channel.messages.fetch).toHaveBeenCalledWith('message-1')
+		expect(channel.messages.fetch).toHaveBeenCalledWith({
+			message: 'message-1',
+			force: true,
+		})
 		expect(mocks.logger.warn).toHaveBeenCalledWith(
 			expect.objectContaining({
 				event: 'prop.notification.message_update_failed',
@@ -219,8 +233,8 @@ describe('NotificationService.processPropSettled', () => {
 			guildId: 'guild-1',
 			isTextBased: () => true,
 			messages: {
-				fetch: vi.fn(async (messageId: string) =>
-					messages.get(messageId),
+				fetch: vi.fn(async (arg: unknown) =>
+					messages.get(fetchId(arg)),
 				),
 			},
 		}
@@ -262,8 +276,8 @@ describe('NotificationService.processPropSettled', () => {
 			guildId: 'guild-1',
 			isTextBased: () => true,
 			messages: {
-				fetch: vi.fn(async (messageId: string) => {
-					if (messageId === 'message-1') {
+				fetch: vi.fn(async (arg: unknown) => {
+					if (fetchId(arg) === 'message-1') {
 						throw Object.assign(new Error('Unknown Message'), {
 							code: 10008,
 						})
@@ -308,8 +322,8 @@ describe('NotificationService.processPropSettled', () => {
 			guildId: 'guild-1',
 			isTextBased: () => true,
 			messages: {
-				fetch: vi.fn(async (messageId: string) =>
-					messages.get(messageId),
+				fetch: vi.fn(async (arg: unknown) =>
+					messages.get(fetchId(arg)),
 				),
 			},
 		}
@@ -456,6 +470,22 @@ describe('NotificationService.processPropSettled', () => {
 		expect(mocks.redisCompareAndRemove).not.toHaveBeenCalled()
 	})
 
+	it('lets the route retry when a settlement loses the message lock', async () => {
+		const message = createMessage()
+		const channel = {
+			guildId: 'guild-1',
+			isTextBased: () => true,
+			messages: { fetch: vi.fn().mockResolvedValue(message) },
+		}
+		mocks.fetchChannel.mockResolvedValue(channel)
+		mocks.redisSet.mockResolvedValueOnce(null)
+
+		await expect(
+			new NotificationService().processPropSettled(payload),
+		).rejects.toMatchObject({ code: 'PROP_SETTLEMENT_BUSY' })
+		expect(message.edit).not.toHaveBeenCalled()
+	})
+
 	it('releases the message lock after a successful edit', async () => {
 		const message = createMessage()
 		const channel = {
@@ -474,7 +504,7 @@ describe('NotificationService.processPropSettled', () => {
 			'props:settlement-lock:guild-1:channel-1:message-1',
 			expect.any(String),
 			'EX',
-			30,
+			60,
 			'NX',
 		)
 		expect(mocks.redisCompareAndRemove).toHaveBeenCalledOnce()
