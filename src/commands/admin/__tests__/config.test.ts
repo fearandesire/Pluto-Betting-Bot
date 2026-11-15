@@ -33,9 +33,7 @@ describe('owner footer config command', () => {
 		command.registerApplicationCommands(registry as never)
 
 		expect(command.name).toBe('footer-config')
-		const [configure] = registry.registerChatInputCommand.mock.calls[0] as [
-			(builder: SlashCommandBuilder) => SlashCommandBuilder,
-		]
+		const [configure] = registry.registerChatInputCommand.mock.calls[0]
 		const json = configure(new SlashCommandBuilder()).toJSON()
 		expect(json.name).toBe('footer-config')
 		expect(json.options?.[0]?.name).toBe('footer')
