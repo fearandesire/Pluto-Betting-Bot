@@ -155,7 +155,7 @@ describe('LeaderboardAutoPostService', () => {
 	})
 
 	it('does not resolve a channel when no target is enabled', async () => {
-		const { send } = harness()
+		const { service, send } = harness()
 		const disabled = new LeaderboardAutoPostService(
 			{ getLeaderboard: vi.fn() },
 			{ get: vi.fn(), set: vi.fn() },

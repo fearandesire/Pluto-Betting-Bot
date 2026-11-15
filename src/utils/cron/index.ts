@@ -255,7 +255,7 @@ export async function initializeLeaderboardAutoPostCrons(): Promise<
 			flag: 'weekly_leaderboard_enabled' | 'monthly_leaderboard_enabled',
 		) =>
 			settings
-				.filter((row) => row.enabled && row[flag] && row.channel_id)
+				.filter((row) => row[flag] && row.channel_id)
 				.map((row) => ({
 					guildId: row.guild_id,
 					channelId: row.channel_id as string,
