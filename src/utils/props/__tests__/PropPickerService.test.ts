@@ -4,7 +4,10 @@ import {
 	EMPTY_PROP_PICKER_FILTERS,
 	paginatePropPickerPairs,
 } from '../PropPicker.js'
-import { PropPickerService } from '../PropPickerService.js'
+import {
+	PropPickerPriceCheckError,
+	PropPickerService,
+} from '../PropPickerService.js'
 
 function makeProp(index: number, overrides: Partial<PropDto> = {}): PropDto {
 	return {
@@ -164,7 +167,7 @@ describe('PropPickerService', () => {
 		expect(second.changes).toHaveLength(0)
 	})
 
-	it('drops a pair whose quote disappeared', async () => {
+	it('drops a pair whose market no longer carries the side', async () => {
 		const api = makeApi([makeProp(0)])
 		const service = new PropPickerService(api)
 		const session = await service.start({
@@ -174,10 +177,30 @@ describe('PropPickerService', () => {
 			sport: 'nba',
 		})
 		session.selected = [session.pairs[0]!.key]
-		api.getPropByUuid.mockRejectedValue(new Error('gone'))
+		const withoutUnder = makeProp(0)
+		withoutUnder.outcomes = [withoutUnder.outcomes[0]!]
+		api.getPropByUuid.mockResolvedValue(withoutUnder)
 
 		const recheck = await service.recheck(session)
 		expect(recheck.missing).toHaveLength(1)
 		expect(recheck.changes).toHaveLength(1)
+	})
+
+	it('aborts on a failed read instead of dropping the selection', async () => {
+		const api = makeApi([makeProp(0)])
+		const service = new PropPickerService(api)
+		const session = await service.start({
+			token: 'e'.repeat(16),
+			userId: 'admin-1',
+			guildId: 'guild-1',
+			sport: 'nba',
+		})
+		session.selected = [session.pairs[0]!.key]
+		api.getPropByUuid.mockRejectedValue(new Error('network down'))
+
+		await expect(service.recheck(session)).rejects.toBeInstanceOf(
+			PropPickerPriceCheckError,
+		)
+		expect(session.selected).toEqual([session.pairs[0]!.key])
 	})
 })

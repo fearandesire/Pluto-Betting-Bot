@@ -283,6 +283,26 @@ describe('PropPickerHandler', () => {
 		expect(current.selected).toHaveLength(0)
 	})
 
+	it('keeps the selection when the price check fails', async () => {
+		const current = session()
+		current.selected = [current.pairs[0]!.key]
+		state.load.mockResolvedValue(current)
+		state.recheck.mockRejectedValue(new Error('network down'))
+		const post = interaction('post')
+
+		await makeHandler().run(post as never, {
+			action: 'post',
+			token: TOKEN,
+		})
+
+		const calls = post.editReply.mock.calls as unknown[][]
+		expect(JSON.stringify(calls[calls.length - 1]?.[0])).toContain(
+			"Couldn't check prices",
+		)
+		expect(state.post).not.toHaveBeenCalled()
+		expect(current.selected).toEqual([current.pairs[0]!.key])
+	})
+
 	it('posts when the prices still match and clears the session', async () => {
 		const current = session()
 		current.selected = [current.pairs[0]!.key]

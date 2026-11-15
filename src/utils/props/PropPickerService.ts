@@ -27,6 +27,20 @@ export type PropPickerStartInput = {
 	filters?: Partial<PropPickerFilters>
 }
 
+export class PropPickerPriceCheckError extends Error {
+	constructor(
+		readonly pairKey: string,
+		cause: unknown,
+	) {
+		super(
+			`Could not re-read the quote for ${pairKey}: ${
+				cause instanceof Error ? cause.message : String(cause)
+			}`,
+		)
+		this.name = 'PropPickerPriceCheckError'
+	}
+}
+
 export type PropPickerRecheck = {
 	changes: PropPickerPriceChange[]
 	missing: PropPickerPair[]
@@ -90,8 +104,10 @@ export class PropPickerService {
 						over: over.price,
 						under: under.price,
 					})
-				} catch {
-					missing.push(pair)
+				} catch (error) {
+					// A failed read is not a vanished quote. Keep the selection
+					// and abort the post instead of silently dropping a pick.
+					throw new PropPickerPriceCheckError(pair.key, error)
 				}
 			}),
 		)

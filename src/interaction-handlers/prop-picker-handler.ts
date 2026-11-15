@@ -192,7 +192,18 @@ export class PropPickerHandler extends InteractionHandler {
 			...propPickerNotice('Checking prices before posting…'),
 			flags: v2EditFlags(),
 		})
-		const recheck = await this.service.recheck(session)
+		let recheck
+		try {
+			recheck = await this.service.recheck(session)
+		} catch {
+			await interaction.editReply({
+				...propPickerNotice(
+					"Couldn't check prices. Nothing was posted; try again.",
+				),
+				flags: v2EditFlags(),
+			})
+			return
+		}
 		if (recheck.changes.length > 0 || recheck.missing.length > 0) {
 			const missing = new Set(recheck.missing.map((pair) => pair.key))
 			session.selected = session.selected.filter(
