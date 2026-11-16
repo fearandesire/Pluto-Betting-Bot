@@ -17,13 +17,10 @@ export interface GuildPropSettings {
 	post_time: string | null
 }
 
-interface GeneratedPropSettingsClient {
-	getPropSettings(request: { guildId: string }): Promise<GuildPropSettings>
-	updatePropSettings(request: {
-		guildId: string
-		updateGuildPropSettingsDto: { strategy?: PropStrategy }
-	}): Promise<GuildPropSettings>
-}
+type GeneratedPropSettingsClient = Pick<
+	PropsApi,
+	'getPropSettings' | 'updatePropSettings'
+>
 
 /**
  * Why a settings call failed, in terms a command can turn into plain copy.
@@ -68,18 +65,13 @@ function toSettingsError(error: unknown): PropSettingsError {
 
 /**
  * Reads and updates a server's daily props settings through the generated
- * `PropsApi`. The methods exist from the client release that publishes the
- * settings routes; until then a call fails as `unavailable`.
+ * `PropsApi`.
  */
 export default class PropSettingsWrapper {
 	private readonly api: GeneratedPropSettingsClient
 
 	constructor(api?: GeneratedPropSettingsClient) {
-		this.api =
-			api ??
-			(new PropsApi(
-				KH_API_CONFIG,
-			) as unknown as GeneratedPropSettingsClient)
+		this.api = api ?? new PropsApi(KH_API_CONFIG)
 	}
 
 	/** Returns null when the server has no settings row yet. */
