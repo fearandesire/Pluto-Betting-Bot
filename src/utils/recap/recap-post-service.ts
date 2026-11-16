@@ -63,7 +63,8 @@ export class RecapPostService {
 			guildId: request.guildId,
 			sport: request.sport,
 			period: 'monthly',
-			periodOffset: 0,
+			// -1 is the closed month, the same period the scheduled post uses.
+			periodOffset: -1,
 		})
 		if (winners.winners.length === 0) {
 			throw new Error('There are no monthly winners to post yet')

@@ -9,19 +9,27 @@ import RecapWrapper from '../../Khronos/recap/recap-wrapper.js'
 
 const RecapRouter = new Router()
 
-const postRecapSchema = z.object({
-	guild_id: z.string().min(1),
-	channel_id: z.string().min(1),
+const snowflake = z.string().regex(/^\d{17,20}$/)
+
+export const postRecapSchema = z.object({
+	guild_id: snowflake,
+	channel_id: snowflake,
 	type: z.enum(['weekly', 'monthly']),
 	sport: z.enum(['nfl', 'nba']).default('nfl'),
 })
 
 /**
- * Khronos-to-Pluto trigger for a staff "post now" action. The caller is
- * already authenticated by the shared API key middleware; this route only
- * validates the payload and reports whether the message was sent.
+ * Khronos-to-Pluto trigger for a staff "post now" action. The shared API key
+ * middleware sets `apiKeyAuthenticated`; the route re-checks it so it never
+ * depends on how it is mounted.
  */
 RecapRouter.post('/recap/post', async (ctx) => {
+	if (ctx.state.apiKeyAuthenticated !== true) {
+		ctx.status = 401
+		ctx.body = { success: false, error: 'Unauthorized' }
+		return
+	}
+
 	const parsed = postRecapSchema.safeParse(ctx.request.body ?? {})
 	if (!parsed.success) {
 		ctx.status = 422

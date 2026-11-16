@@ -65,7 +65,9 @@ function harness() {
 		{ getBettingChannel: vi.fn() },
 		{
 			period: 'week',
-			targets: [{ guildId: 'guild-1', channelId: 'channel-1' }],
+			resolveTargets: async () => [
+				{ guildId: 'guild-1', channelId: 'channel-1' },
+			],
 		},
 	)
 	return { service, send, cache, leaderboardApi }
@@ -126,7 +128,9 @@ describe('LeaderboardAutoPostService', () => {
 			{ getBettingChannel: vi.fn() },
 			{
 				period: 'month',
-				targets: [{ guildId: 'guild-1', channelId: 'channel-1' }],
+				resolveTargets: async () => [
+					{ guildId: 'guild-1', channelId: 'channel-1' },
+				],
 			},
 		)
 
@@ -145,7 +149,9 @@ describe('LeaderboardAutoPostService', () => {
 			{ getBettingChannel: vi.fn() },
 			{
 				period: 'month',
-				targets: [{ guildId: 'guild-1', channelId: 'channel-1' }],
+				resolveTargets: async () => [
+					{ guildId: 'guild-1', channelId: 'channel-1' },
+				],
 			},
 		)
 		await expect(
@@ -160,7 +166,7 @@ describe('LeaderboardAutoPostService', () => {
 			{ getLeaderboard: vi.fn() },
 			{ get: vi.fn(), set: vi.fn() },
 			{ getBettingChannel: vi.fn() },
-			{ period: 'month', targets: [], enabled: false },
+			{ period: 'month', resolveTargets: async () => [], enabled: false },
 		)
 
 		await expect(disabled.runWeeklyRecap()).resolves.toEqual({
@@ -170,5 +176,72 @@ describe('LeaderboardAutoPostService', () => {
 		})
 		await service.runWeeklyRecap()
 		expect(send).toHaveBeenCalledTimes(1)
+	})
+
+	it('reads the current targets on every run', async () => {
+		const { send, cache, leaderboardApi } = harness()
+		let targets: Array<{ guildId: string; channelId: string }> = []
+		const service = new LeaderboardAutoPostService(
+			leaderboardApi,
+			cache,
+			{ getBettingChannel: vi.fn() },
+			{ period: 'week', resolveTargets: async () => targets },
+		)
+		const now = new Date('2026-11-16T09:00:00.000Z')
+
+		await expect(service.runWeeklyRecap(now)).resolves.toEqual({
+			posted: 0,
+			skipped: 0,
+			failed: 0,
+		})
+		expect(send).not.toHaveBeenCalled()
+
+		targets = [{ guildId: 'guild-2', channelId: 'channel-2' }]
+		await expect(service.runWeeklyRecap(now)).resolves.toEqual({
+			posted: 1,
+			skipped: 0,
+			failed: 0,
+		})
+		expect(leaderboardApi.getLeaderboard).toHaveBeenCalledWith(
+			expect.objectContaining({ guildId: 'guild-2' }),
+		)
+		expect(resolve).toHaveBeenCalledWith(
+			expect.anything(),
+			'guild-2',
+			'channel-2',
+			'leaderboard_post',
+		)
+
+		targets = []
+		await service.runWeeklyRecap(new Date('2026-11-23T09:00:00.000Z'))
+		expect(send).toHaveBeenCalledTimes(1)
+	})
+
+	it('skips the run when the settings read fails and recovers next run', async () => {
+		const { send, cache, leaderboardApi } = harness()
+		const resolveTargets = vi
+			.fn()
+			.mockRejectedValueOnce(new Error('settings down'))
+			.mockResolvedValue([{ guildId: 'guild-1', channelId: 'channel-1' }])
+		const service = new LeaderboardAutoPostService(
+			leaderboardApi,
+			cache,
+			{ getBettingChannel: vi.fn() },
+			{ period: 'week', resolveTargets },
+		)
+		const now = new Date('2026-11-16T09:00:00.000Z')
+
+		await expect(service.runWeeklyRecap(now)).resolves.toEqual({
+			posted: 0,
+			skipped: 0,
+			failed: 1,
+		})
+		expect(send).not.toHaveBeenCalled()
+
+		await expect(service.runWeeklyRecap(now)).resolves.toEqual({
+			posted: 1,
+			skipped: 0,
+			failed: 0,
+		})
 	})
 })

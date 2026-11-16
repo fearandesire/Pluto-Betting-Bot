@@ -116,7 +116,7 @@ describe('RecapPostService', () => {
 			guildId: 'guild-1',
 			sport: 'nba',
 			period: 'monthly',
-			periodOffset: 0,
+			periodOffset: -1,
 		})
 	})
 

@@ -37,6 +37,11 @@ export interface RecapCronOptions {
 	guildIds?: string[]
 	/** Per-guild settings. When present, these replace guildIds. */
 	targets?: RecapGuildTarget[]
+	/**
+	 * Loads the targets on every run, so settings edits apply without a
+	 * restart. Replaces `targets` and `guildIds` when present.
+	 */
+	resolveTargets?: () => Promise<RecapGuildTarget[]>
 	enabled?: boolean
 	channelId?: string
 	weekOffset?: number
@@ -94,7 +99,7 @@ export class RecapCronService {
 	private readonly options: Required<
 		Pick<RecapCronOptions, 'targets' | 'enabled' | 'weekOffset'>
 	> &
-		Pick<RecapCronOptions, 'channelId'>
+		Pick<RecapCronOptions, 'channelId' | 'resolveTargets'>
 
 	constructor(
 		recapApi: Pick<RecapWrapper, 'getWeeklyRecap'>,
@@ -117,6 +122,7 @@ export class RecapCronService {
 			targets,
 			enabled: options.enabled ?? true,
 			channelId: options.channelId,
+			resolveTargets: options.resolveTargets,
 			weekOffset: options.weekOffset ?? -1,
 		}
 	}
@@ -135,7 +141,10 @@ export class RecapCronService {
 			return result
 		}
 
-		for (const target of this.options.targets) {
+		const targets = this.options.resolveTargets
+			? await this.options.resolveTargets()
+			: this.options.targets
+		for (const target of targets) {
 			await this.runGuildRecap(
 				target,
 				'nfl',

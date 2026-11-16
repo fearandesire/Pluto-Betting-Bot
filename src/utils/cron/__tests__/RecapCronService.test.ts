@@ -361,4 +361,34 @@ describe('RecapCronService', () => {
 			})
 		})
 	})
+
+	it('re-reads resolved targets on every run', async () => {
+		const harness = makeHarness()
+		let targets: Array<{ guildId: string }> = []
+		const service = new RecapCronService(
+			harness.recapApi,
+			harness.cache,
+			harness.channelResolver,
+			{ resolveTargets: async () => targets },
+		)
+
+		expect(await service.runWeeklyRecap()).toEqual({
+			posted: 0,
+			skipped: 0,
+			failed: 0,
+		})
+		expect(harness.recapApi.getWeeklyRecap).not.toHaveBeenCalled()
+
+		targets = [{ guildId: 'guild-9' }]
+		expect(await service.runWeeklyRecap()).toEqual({
+			posted: 1,
+			skipped: 0,
+			failed: 0,
+		})
+		expect(harness.recapApi.getWeeklyRecap).toHaveBeenCalledWith(
+			'guild-9',
+			-1,
+			'nfl',
+		)
+	})
 })

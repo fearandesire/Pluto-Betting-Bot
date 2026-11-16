@@ -4,7 +4,10 @@ vi.mock('../../logging/WinstonLogger.js', () => ({
 	logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() },
 }))
 
-import { resolveRecapTargets } from '../recap-targets.js'
+import {
+	resolveLeaderboardTargets,
+	resolveRecapTargets,
+} from '../recap-targets.js'
 
 const row = (overrides: Record<string, unknown> = {}) => ({
 	guild_id: 'guild-1',
@@ -92,5 +95,41 @@ describe('resolveRecapTargets', () => {
 		expect(result.targets).toEqual([
 			{ guildId: 'env-guild', channelId: undefined, nbaEnabled: false },
 		])
+	})
+})
+
+describe('resolveLeaderboardTargets', () => {
+	it('keeps guilds that enabled the board and have a channel', async () => {
+		const targets = await resolveLeaderboardTargets(
+			{
+				getSettings: vi.fn(async () => [
+					row({ weekly_leaderboard_enabled: true }),
+					row({ guild_id: 'guild-2' }),
+					row({
+						guild_id: 'guild-3',
+						weekly_leaderboard_enabled: true,
+						channel_id: null,
+					}),
+				]),
+			},
+			'weekly_leaderboard_enabled',
+		)
+
+		expect(targets).toEqual([
+			{ guildId: 'guild-1', channelId: 'channel-1' },
+		])
+	})
+
+	it('rejects when the settings read fails', async () => {
+		await expect(
+			resolveLeaderboardTargets(
+				{
+					getSettings: vi.fn(async () => {
+						throw new Error('down')
+					}),
+				},
+				'monthly_leaderboard_enabled',
+			),
+		).rejects.toThrow('down')
 	})
 })

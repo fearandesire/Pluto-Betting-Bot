@@ -3,6 +3,24 @@ import { logger } from '../logging/WinstonLogger.js'
 import type { RecapGuildTarget } from './RecapCronService.js'
 
 /**
+ * Guilds that enabled one leaderboard auto-post and have a channel. A failed
+ * settings read rejects, so the caller can skip the run instead of treating an
+ * outage as "everyone disabled".
+ */
+export async function resolveLeaderboardTargets(
+	recapApi: Pick<RecapWrapper, 'getSettings'>,
+	flag: 'weekly_leaderboard_enabled' | 'monthly_leaderboard_enabled',
+): Promise<Array<{ guildId: string; channelId: string }>> {
+	const rows = await recapApi.getSettings()
+	return rows
+		.filter((row) => row[flag] && row.channel_id)
+		.map((row) => ({
+			guildId: row.guild_id,
+			channelId: row.channel_id as string,
+		}))
+}
+
+/**
  * Khronos settings replace the RECAP_* environment defaults as soon as at
  * least one row exists. A guild without a row falls back only when Khronos has
  * no rows at all (or the settings read fails), so deleting a row restores the

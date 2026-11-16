@@ -18,9 +18,15 @@ import { PropsCronScheduler } from './PropsCronScheduler.js'
 import { PropsCronService } from './PropsCronService.js'
 import { RecapCronScheduler } from './RecapCronScheduler.js'
 import { RecapCronService } from './RecapCronService.js'
-import { resolveRecapTargets } from './recap-targets.js'
+import {
+	resolveLeaderboardTargets,
+	resolveRecapTargets,
+} from './recap-targets.js'
 
-export { resolveRecapTargets } from './recap-targets.js'
+export {
+	resolveLeaderboardTargets,
+	resolveRecapTargets,
+} from './recap-targets.js'
 
 /**
  * Initialize and start the props cron scheduler
@@ -81,8 +87,8 @@ export function setPropsCronScheduler(scheduler: PropsCronScheduler): void {
 
 /**
  * Initialize the weekly recap digest. Recap remains opt-out by default but
- * only starts when at least one guild is configured and Khronos has shipped
- * the generated RecapApi client.
+ * only starts when Khronos has shipped the generated RecapApi client. Targets
+ * are re-read from guild settings on every run.
  */
 export async function initializeRecapCron(): Promise<RecapCronScheduler | null> {
 	const envGuildIds = (env.RECAP_GUILD_IDS || process.env.GUILD_ID || '')
@@ -102,27 +108,21 @@ export async function initializeRecapCron(): Promise<RecapCronScheduler | null> 
 
 	try {
 		const recapApi = new RecapWrapper()
-		const { targets, source } = await resolveRecapTargets(
-			recapApi,
-			envGuildIds,
-			env.RECAP_CHANNEL_ID,
-			env.RECAP_NBA_ENABLED,
-		)
-
-		if (targets.length === 0) {
-			await logger.info({
-				message: 'weekly_recap_skipped',
-				metadata: { reason: 'no_guilds_configured', source },
-			})
-			return null
-		}
-
+		// Targets load on every run so staff edits apply without a restart.
 		const service = new RecapCronService(
 			recapApi,
 			Cache(),
 			new GuildWrapper(),
 			{
-				targets,
+				resolveTargets: async () =>
+					(
+						await resolveRecapTargets(
+							recapApi,
+							envGuildIds,
+							env.RECAP_CHANNEL_ID,
+							env.RECAP_NBA_ENABLED,
+						)
+					).targets,
 				enabled: true,
 				weekOffset: -1,
 			},
@@ -131,11 +131,7 @@ export async function initializeRecapCron(): Promise<RecapCronScheduler | null> 
 		scheduler.start()
 		await logger.info({
 			message: 'Weekly recap scheduler initialized and started',
-			metadata: {
-				guild_count: targets.length,
-				source,
-				expression: env.RECAP_CRON,
-			},
+			metadata: { expression: env.RECAP_CRON },
 		})
 		return scheduler
 	} catch (error) {
@@ -243,33 +239,18 @@ const MONTHLY_LEADERBOARD_CRON = '0 23 28-31 * *'
 
 /**
  * Auto-posts the props prediction leaderboard for the current Eastern week and
- * month. Both toggles and the channel come from Khronos `guild_recap_settings`;
- * there is no environment-driven fallback because these posts are new.
+ * month. Both toggles and the channel come from Khronos `guild_recap_settings`,
+ * read on every run so enabling, disabling or moving a post applies without a
+ * restart. There is no environment-driven fallback because these posts are new.
  */
 export async function initializeLeaderboardAutoPostCrons(): Promise<
 	RecapCronScheduler[]
 > {
 	try {
-		const settings = await new RecapWrapper().getSettings()
-		const targetsFor = (
-			flag: 'weekly_leaderboard_enabled' | 'monthly_leaderboard_enabled',
-		) =>
-			settings
-				.filter((row) => row[flag] && row.channel_id)
-				.map((row) => ({
-					guildId: row.guild_id,
-					channelId: row.channel_id as string,
-				}))
-
-		const weeklyTargets = targetsFor('weekly_leaderboard_enabled')
-		const monthlyTargets = targetsFor('monthly_leaderboard_enabled')
-		if (weeklyTargets.length === 0 && monthlyTargets.length === 0) {
-			return []
-		}
-
+		const recapApi = new RecapWrapper()
 		const leaderboardApi = new LeaderboardWrapper()
 		const schedulerFor = (
-			targets: Array<{ guildId: string; channelId: string }>,
+			flag: 'weekly_leaderboard_enabled' | 'monthly_leaderboard_enabled',
 			period: 'week' | 'month',
 			expression: string,
 		) => {
@@ -277,37 +258,38 @@ export async function initializeLeaderboardAutoPostCrons(): Promise<
 				leaderboardApi,
 				Cache(),
 				new GuildWrapper(),
-				{ targets, period },
+				{
+					resolveTargets: () =>
+						resolveLeaderboardTargets(recapApi, flag),
+					period,
+				},
 			)
 			const scheduler = new RecapCronScheduler(service, expression)
 			scheduler.start()
 			return scheduler
 		}
 
-		const schedulers: RecapCronScheduler[] = []
-		if (weeklyTargets.length > 0) {
-			schedulers.push(
-				schedulerFor(weeklyTargets, 'week', WEEKLY_LEADERBOARD_CRON),
-			)
-		}
-		if (monthlyTargets.length > 0) {
-			schedulers.push(
-				schedulerFor(monthlyTargets, 'month', MONTHLY_LEADERBOARD_CRON),
-			)
-		}
+		const schedulers = [
+			schedulerFor(
+				'weekly_leaderboard_enabled',
+				'week',
+				WEEKLY_LEADERBOARD_CRON,
+			),
+			schedulerFor(
+				'monthly_leaderboard_enabled',
+				'month',
+				MONTHLY_LEADERBOARD_CRON,
+			),
+		]
 		await logger.info({
 			message: 'Leaderboard autopost schedulers initialized',
-			metadata: {
-				weekly_guilds: weeklyTargets.length,
-				monthly_guilds: monthlyTargets.length,
-			},
 		})
 		return schedulers
 	} catch (error) {
 		await logger.warn({
 			message: 'leaderboard_post_skipped',
 			metadata: {
-				reason: 'settings_unavailable',
+				reason: 'client_unavailable',
 				error: error instanceof Error ? error.message : String(error),
 			},
 		})

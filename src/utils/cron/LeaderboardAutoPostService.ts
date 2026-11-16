@@ -6,6 +6,7 @@ import { logger } from '../logging/WinstonLogger.js'
 import {
 	claimDelivery,
 	type DeliveryChannelResolver,
+	errorMessage,
 	getErrorStatus,
 	persistDeliveryMarker,
 	releaseDeliveryClaim,
@@ -23,7 +24,8 @@ export interface LeaderboardPostTarget {
 }
 
 export interface LeaderboardAutoPostOptions {
-	targets: LeaderboardPostTarget[]
+	/** Loads the current targets on every run. A rejection skips that run. */
+	resolveTargets: () => Promise<LeaderboardPostTarget[]>
 	period: 'week' | 'month'
 	enabled?: boolean
 }
@@ -71,7 +73,10 @@ function windowKey(now: Date, period: 'week' | 'month'): string {
  */
 export class LeaderboardAutoPostService {
 	private readonly options: Required<
-		Pick<LeaderboardAutoPostOptions, 'targets' | 'period' | 'enabled'>
+		Pick<
+			LeaderboardAutoPostOptions,
+			'resolveTargets' | 'period' | 'enabled'
+		>
 	>
 
 	constructor(
@@ -84,7 +89,7 @@ export class LeaderboardAutoPostService {
 		options: LeaderboardAutoPostOptions,
 	) {
 		this.options = {
-			targets: options.targets,
+			resolveTargets: options.resolveTargets,
 			period: options.period,
 			enabled: options.enabled ?? true,
 		}
@@ -95,14 +100,11 @@ export class LeaderboardAutoPostService {
 		allowProcessingReclaim = false,
 	): Promise<RecapRunResult> {
 		const result: RecapRunResult = { posted: 0, skipped: 0, failed: 0 }
-		const { targets, period } = this.options
-		if (!this.options.enabled || targets.length === 0) {
+		const { period } = this.options
+		if (!this.options.enabled) {
 			await logger.info({
 				message: 'leaderboard_post_skipped',
-				metadata: {
-					reason: this.options.enabled ? 'no_targets' : 'disabled',
-					period,
-				},
+				metadata: { reason: 'disabled', period },
 			})
 			return result
 		}
@@ -111,6 +113,29 @@ export class LeaderboardAutoPostService {
 			await logger.info({
 				message: 'leaderboard_post_skipped',
 				metadata: { reason: 'not_month_end', period },
+			})
+			return result
+		}
+
+		let targets: LeaderboardPostTarget[]
+		try {
+			targets = await this.options.resolveTargets()
+		} catch (error) {
+			result.failed++
+			await logger.warn({
+				message: 'leaderboard_post_skipped',
+				metadata: {
+					reason: 'settings_unavailable',
+					period,
+					error: errorMessage(error),
+				},
+			})
+			return result
+		}
+		if (targets.length === 0) {
+			await logger.info({
+				message: 'leaderboard_post_skipped',
+				metadata: { reason: 'no_targets', period },
 			})
 			return result
 		}
