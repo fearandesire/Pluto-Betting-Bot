@@ -27,9 +27,15 @@ interface GeneratedPropSettingsClient {
 
 /**
  * Why a settings call failed, in terms a command can turn into plain copy.
- * `rejected` is a 400, `forbidden` a 401 or 403.
+ * `rejected` is a 400, `forbidden` a 401 or 403. `unconfirmed` means the
+ * request may have reached Khronos (timeout or lost response), so the write
+ * may still land.
  */
-export type PropSettingsFailure = 'rejected' | 'forbidden' | 'unavailable'
+export type PropSettingsFailure =
+	| 'rejected'
+	| 'forbidden'
+	| 'unavailable'
+	| 'unconfirmed'
 
 export class PropSettingsError extends Error {
 	override readonly name = 'PropSettingsError'
@@ -42,6 +48,9 @@ export class PropSettingsError extends Error {
 	}
 }
 
+/** Failures after the request left Pluto: the write may still be applied. */
+const MAYBE_SENT_ERRORS = new Set(['TimeoutError', 'FetchError'])
+
 function toSettingsError(error: unknown): PropSettingsError {
 	if (error instanceof ResponseError) {
 		const { status } = error.response
@@ -50,6 +59,9 @@ function toSettingsError(error: unknown): PropSettingsError {
 			return new PropSettingsError('forbidden', status)
 		}
 		return new PropSettingsError('unavailable', status)
+	}
+	if (error instanceof Error && MAYBE_SENT_ERRORS.has(error.name)) {
+		return new PropSettingsError('unconfirmed')
 	}
 	return new PropSettingsError('unavailable')
 }

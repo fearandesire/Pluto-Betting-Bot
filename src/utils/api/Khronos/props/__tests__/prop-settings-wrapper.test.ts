@@ -70,6 +70,24 @@ describe('PropSettingsWrapper', () => {
 		).rejects.toMatchObject({ name: 'PropSettingsError', reason })
 	})
 
+	it.each(['TimeoutError', 'FetchError'])(
+		'reports %s on a write as unconfirmed, since it may still land',
+		async (name) => {
+			const lost = Object.assign(new Error('lost'), { name })
+			const wrapper = new PropSettingsWrapper({
+				getPropSettings: vi.fn(),
+				updatePropSettings: vi.fn().mockRejectedValue(lost),
+			})
+
+			await expect(
+				wrapper.setStrategy(GUILD_ID, 'smart'),
+			).rejects.toMatchObject({
+				name: 'PropSettingsError',
+				reason: 'unconfirmed',
+			})
+		},
+	)
+
 	it('reports unavailable when the client has no settings methods', async () => {
 		const wrapper = new PropSettingsWrapper({} as never)
 

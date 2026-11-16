@@ -101,6 +101,9 @@ function strategyFailureCopy(error: unknown): string {
 	if (reason === 'forbidden') {
 		return 'Pluto is not allowed to change props settings right now. Nothing was changed.'
 	}
+	if (reason === 'unconfirmed') {
+		return 'Pluto could not confirm the strategy was saved. Run /props status to see which strategy is active before trying again.'
+	}
 	return 'Pluto could not save the strategy. Nothing was changed, so please try again.'
 }
 

@@ -522,6 +522,20 @@ describe('/props', () => {
 			},
 		)
 
+		it('does not claim nothing changed when the save is unconfirmed', async () => {
+			mockSetStrategy.mockRejectedValue(
+				new PropSettingsError('unconfirmed'),
+			)
+			const interaction = strategyInteraction('smart')
+
+			await command.handleStrategy(interaction as never)
+
+			const text = replyText(interaction)
+			expect(text).toContain('could not confirm')
+			expect(text).toContain('/props status')
+			expect(text).not.toContain('Nothing was changed')
+		})
+
 		it('refuses to run outside a server', async () => {
 			const interaction = strategyInteraction('smart', null)
 
