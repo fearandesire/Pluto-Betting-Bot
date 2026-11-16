@@ -7,11 +7,15 @@ import { decodePropsBrowseCustomId } from '../lib/discord/builders/prop-board.js
 import { text, v2EditFlags, v2Payload } from '../lib/discord/v2/kit.js'
 import {
 	type PageSource,
+	PageSourceExpiredError,
 	registerPageSource,
 	renderPage,
 } from '../lib/discord/v2/paginator.js'
 import { logger } from '../utils/logging/WinstonLogger.js'
-import { loadPropBrowse } from '../utils/props/PropBrowseCache.js'
+import {
+	loadPropBrowse,
+	PROP_BROWSE_TTL_SECONDS,
+} from '../utils/props/PropBrowseCache.js'
 
 const PER_PAGE = 8
 
@@ -52,16 +56,24 @@ export class PropBrowseHandler extends InteractionHandler {
 			return
 		}
 
+		// The source holds only the token. Each page reads the list from Redis,
+		// so an expired list answers "expired" and no list stays in memory.
 		const source: PageSource = {
-			load: async (_interaction, page) => ({
-				scope: token,
-				title: state.title,
-				lines: state.lines,
-				page,
-				perPage: PER_PAGE,
-			}),
+			load: async (_interaction, page) => {
+				const current = await loadPropBrowse(token)
+				if (!current) throw new PageSourceExpiredError(token)
+				return {
+					scope: token,
+					title: current.title,
+					lines: current.lines,
+					page,
+					perPage: PER_PAGE,
+				}
+			},
 		}
-		registerPageSource(token, source)
+		registerPageSource(token, source, {
+			ttlMs: PROP_BROWSE_TTL_SECONDS * 1000,
+		})
 		try {
 			await interaction.editReply({
 				...renderPage({

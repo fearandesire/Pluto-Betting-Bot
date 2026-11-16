@@ -104,14 +104,18 @@ function choiceRow(
 /** Opens the whole day's props as an ephemeral, paginated list. */
 export const BROWSE_CUSTOM_ID_PREFIX = 'props.browse.v1.'
 
+const BROWSE_TOKEN_RE = /^[a-f0-9]{16}$/
+
 export function propsBrowseCustomId(token: string): string {
+	if (!BROWSE_TOKEN_RE.test(token))
+		throw new Error('invalid props browse token')
 	return `${BROWSE_CUSTOM_ID_PREFIX}${token}`
 }
 
 export function decodePropsBrowseCustomId(customId: string): string | null {
 	if (!customId.startsWith(BROWSE_CUSTOM_ID_PREFIX)) return null
 	const token = customId.slice(BROWSE_CUSTOM_ID_PREFIX.length)
-	return /^[a-f0-9]{16}$/.test(token) ? token : null
+	return BROWSE_TOKEN_RE.test(token) ? token : null
 }
 
 function browseRow(

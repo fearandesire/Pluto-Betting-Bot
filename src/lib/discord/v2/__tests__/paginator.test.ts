@@ -1,5 +1,5 @@
 import { ButtonStyle, MessageFlags } from 'discord.js'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { assertV2Budget } from '../kit.js'
 import {
 	decodePageNav,
@@ -263,5 +263,41 @@ describe('page source registry', () => {
 		registerPageSource('registry-test', source)
 		expect(getPageSource('registry-test')).toBe(source)
 		expect(getPageSource('nope')).toBeUndefined()
+	})
+
+	describe('page source expiry', () => {
+		afterEach(() => {
+			vi.useRealTimers()
+		})
+
+		it('drops a source after its ttl and sweeps expired ones on register', () => {
+			vi.useFakeTimers()
+			const source = { load: async () => ({}) as never }
+			registerPageSource('ttl-a', source, { ttlMs: 1000 })
+			registerPageSource('ttl-b', source, { ttlMs: 5000 })
+			registerPageSource('ttl-forever', source)
+
+			vi.advanceTimersByTime(999)
+			expect(getPageSource('ttl-a')).toBe(source)
+
+			vi.advanceTimersByTime(2)
+			expect(getPageSource('ttl-a')).toBeUndefined()
+			expect(getPageSource('ttl-b')).toBe(source)
+
+			vi.advanceTimersByTime(10_000)
+			registerPageSource('ttl-c', source, { ttlMs: 1000 })
+			expect(getPageSource('ttl-b')).toBeUndefined()
+			expect(getPageSource('ttl-forever')).toBe(source)
+		})
+
+		it('refreshes the expiry when a scope registers again', () => {
+			vi.useFakeTimers()
+			const source = { load: async () => ({}) as never }
+			registerPageSource('ttl-renew', source, { ttlMs: 1000 })
+			vi.advanceTimersByTime(800)
+			registerPageSource('ttl-renew', source, { ttlMs: 1000 })
+			vi.advanceTimersByTime(800)
+			expect(getPageSource('ttl-renew')).toBe(source)
+		})
 	})
 })

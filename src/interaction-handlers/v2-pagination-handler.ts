@@ -8,6 +8,7 @@ import {
 	decodePageNav,
 	getPageSource,
 	type PageNav,
+	PageSourceExpiredError,
 	renderPage,
 } from '../lib/discord/v2/paginator.js'
 import { logger } from '../utils/logging/WinstonLogger.js'
@@ -62,6 +63,16 @@ export class V2PaginationHandler extends InteractionHandler {
 				flags: v2EditFlags(),
 			})
 		} catch (error) {
+			if (error instanceof PageSourceExpiredError) {
+				try {
+					await interaction.followUp(
+						notice('This list expired. Run the command again.'),
+					)
+				} catch {
+					// Interaction token expired; nothing left to tell the user.
+				}
+				return
+			}
 			// Acknowledged already: tell the user instead of failing silently.
 			logger.error({
 				message: 'V2 pagination failed',
