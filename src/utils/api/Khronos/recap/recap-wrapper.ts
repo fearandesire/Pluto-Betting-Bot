@@ -1,4 +1,4 @@
-import * as KhronosApiClient from '@pluto-khronos/api-client'
+import { RecapApi } from '@pluto-khronos/api-client'
 import pTimeout from 'p-timeout'
 import { KH_API_CONFIG } from '../KhronosInstances.js'
 
@@ -7,17 +7,16 @@ const DEFAULT_TIMEOUT_MS = 30_000
 /**
  * Weekly recap contract exposed by Khronos TF-957.
  *
- * Kept local until the generated client release containing RecapApi is
- * published. The runtime constructor is resolved from that generated client
- * so this module does not introduce a hand-written HTTP implementation.
+ * Response shapes are declared locally; calls go through the generated
+ * `RecapApi`.
  */
 export type RecapSport = 'nfl' | 'nba'
 export type WinnersPeriod = 'weekly' | 'monthly' | 'season'
 
 export interface WeeklyRecapResponse {
 	window: {
-		start_date: string
-		end_date: string
+		start_date: string | Date
+		end_date: string | Date
 		week_number?: number
 		season_year?: number
 		/** Echoed by Khronos when a sport was requested. */
@@ -69,8 +68,8 @@ export interface PeriodWinnersResponse {
 	sport: RecapSport
 	period: WinnersPeriod
 	window: {
-		start_date: string
-		end_date: string
+		start_date: string | Date
+		end_date: string | Date
 		label: string
 	}
 	participants: number
@@ -120,14 +119,6 @@ interface GeneratedRecapApiClient {
 	): Promise<PeriodWinnersResponse>
 }
 
-type RecapApiConstructor = new (
-	config: typeof KH_API_CONFIG,
-) => GeneratedRecapApiClient
-
-const GeneratedRecapApi = (
-	KhronosApiClient as unknown as { RecapApi?: RecapApiConstructor }
-).RecapApi
-
 /**
  * Generated-client wrapper for Khronos weekly recap data.
  */
@@ -150,13 +141,7 @@ export default class RecapWrapper
 			return
 		}
 
-		if (!GeneratedRecapApi) {
-			throw new Error(
-				'Khronos RecapApi is unavailable; update @pluto-khronos/api-client to the TF-957 release before enabling weekly recaps',
-			)
-		}
-
-		this.recapApi = new GeneratedRecapApi(KH_API_CONFIG)
+		this.recapApi = new RecapApi(KH_API_CONFIG)
 	}
 
 	async getWeeklyRecap(
