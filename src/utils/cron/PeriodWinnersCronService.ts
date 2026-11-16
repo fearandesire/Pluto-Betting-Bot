@@ -120,7 +120,11 @@ export class PeriodWinnersCronService {
 				return
 			}
 
-			const key = `winners:posted:${guildId}:${sport}:${period}:${winners.window.start_date}`
+			const windowStart =
+				winners.window.start_date instanceof Date
+					? winners.window.start_date.toISOString()
+					: winners.window.start_date
+			const key = `winners:posted:${guildId}:${sport}:${period}:${windowStart}`
 			const claimed = await claimDelivery(
 				this.cache,
 				key,

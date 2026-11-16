@@ -1,4 +1,3 @@
-import type { LeaderboardControllerGetLeaderboardV1Request } from '@pluto-khronos/api-client'
 import type { StreakBadgeTier } from '../../../predictions/streak-display.js'
 import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js'
 
@@ -18,6 +17,18 @@ export interface LeaderboardEntryWithStreaks {
 export interface LeaderboardResponseWithStreaks {
 	entries: LeaderboardEntryWithStreaks[]
 	total_users: number
+}
+
+export const LEADERBOARD_PERIODS = ['week', 'month', 'all'] as const
+export type LeaderboardPeriod = (typeof LEADERBOARD_PERIODS)[number]
+
+export const LEADERBOARD_TYPES = ['props', 'games', 'all'] as const
+export type LeaderboardType = (typeof LEADERBOARD_TYPES)[number]
+
+export interface LeaderboardQuery {
+	guildId: string
+	period?: LeaderboardPeriod
+	type?: LeaderboardType
 }
 
 const readField = (
@@ -152,10 +163,12 @@ export default class LeaderboardWrapper {
 	 * @returns Promise resolving to leaderboard data
 	 */
 	async getLeaderboard(
-		params: LeaderboardControllerGetLeaderboardV1Request,
+		params: LeaderboardQuery,
 	): Promise<LeaderboardResponseWithStreaks> {
 		const path = '/api/khronos/v1/leaderboard'
 		const query = new URLSearchParams({ guild_id: params.guildId })
+		if (params.period) query.set('period', params.period)
+		if (params.type) query.set('type', params.type)
 		const fetchApi = this.khConfig.fetchApi ?? fetch
 		const response = await fetchApi(
 			`${this.khConfig.basePath.replace(/\/$/, '')}${path}?${query.toString()}`,

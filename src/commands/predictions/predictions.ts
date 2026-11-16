@@ -18,7 +18,11 @@ import {
 	resolveStreakBadgeTier,
 } from '../../lib/discord/builders/props.js'
 import LeaderboardWrapper, {
+	LEADERBOARD_PERIODS,
+	LEADERBOARD_TYPES,
+	type LeaderboardPeriod,
 	type LeaderboardResponseWithStreaks,
+	type LeaderboardType,
 } from '../../utils/api/Khronos/leaderboard/leaderboard-wrapper.js'
 import PredictionApiWrapper from '../../utils/api/Khronos/prediction/predictionApiWrapper.js'
 import PropsApiWrapper from '../../utils/api/Khronos/props/props-api-wrapper.js'
@@ -109,6 +113,46 @@ export class UserCommand extends Subcommand {
 							.setName('leaderboard')
 							.setDescription(
 								'View the prediction accuracy leaderboard',
+							)
+							.addStringOption((option) =>
+								option
+									.setName('period')
+									.setDescription(
+										'Calendar window in US Eastern time (default: all)',
+									)
+									.setRequired(false)
+									.addChoices(
+										...LEADERBOARD_PERIODS.map(
+											(period) => ({
+												name:
+													period === 'week'
+														? 'This week (Mon-Sun)'
+														: period === 'month'
+															? 'This month'
+															: 'All time',
+												value: period,
+											}),
+										),
+									),
+							)
+							.addStringOption((option) =>
+								option
+									.setName('type')
+									.setDescription(
+										'Market type to rank (default: all)',
+									)
+									.setRequired(false)
+									.addChoices(
+										...LEADERBOARD_TYPES.map((type) => ({
+											name:
+												type === 'props'
+													? 'Player props'
+													: type === 'games'
+														? 'Game picks'
+														: 'All markets',
+											value: type,
+										})),
+									),
 							),
 					),
 			{ idHints: PREDICTIONS_COMMAND_ID_HINTS },
@@ -284,9 +328,18 @@ export class UserCommand extends Subcommand {
 			})
 		}
 
+		const period = interaction.options.getString(
+			'period',
+		) as LeaderboardPeriod | null
+		const type = interaction.options.getString(
+			'type',
+		) as LeaderboardType | null
+
 		try {
 			const leaderboard = await new LeaderboardWrapper().getLeaderboard({
 				guildId,
+				...(period ? { period } : {}),
+				...(type ? { type } : {}),
 			})
 			if (!leaderboard.entries.length) {
 				return interaction.editReply({
