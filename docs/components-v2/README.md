@@ -38,7 +38,7 @@ The other kit files cover the cases a plain send does not:
 | --- | --- | --- | --- |
 | `/profile` card and Share button | `profileCardPayload()` in `src/lib/discord/builders/profile.ts` | `src/commands/account/profile.ts` | Ephemeral |
 | Shared profile card | `profileSharedPayload()` in the same file | `src/interaction-handlers/profile-share-handler.ts` | Public |
-| `/props enable`, `disable`, `status` | `src/lib/discord/builders/props-settings.ts` | `src/commands/configuration/props.ts` | Ephemeral |
+| `/props enable`, `disable`, `status`, `strategy` | `src/lib/discord/builders/props-settings.ts` | `src/commands/configuration/props.ts` | Ephemeral |
 | Period winners post | `periodWinnersPayload()` in `src/lib/discord/builders/period-winners.ts` | `src/utils/cron/PeriodWinnersCronService.ts` | Public, in a channel |
 | `/parlay` builder | `ParlayBuilderService.render()` in `src/services/ParlayBuilderService.ts` | `src/commands/betting/parlay.ts` and the parlay handlers | Ephemeral |
 | `/admin props pick` | `propPickerPayload()` in `src/lib/discord/builders/prop-picker.ts` | `src/utils/admin-handlers/admin-prop-picker-handler.ts` and `src/interaction-handlers/prop-picker-handler.ts` | Ephemeral |
