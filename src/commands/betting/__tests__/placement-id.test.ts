@@ -15,6 +15,8 @@ vi.mock('../../../utils/common/errors/global.js', () => ({
 	},
 }))
 
+vi.mock('../../../lib/startup/env.js', () => ({ default: {} }))
+
 vi.mock('@pluto-config', () => ({
 	betFooter: vi.fn().mockReturnValue(''),
 	supportMessage: '',

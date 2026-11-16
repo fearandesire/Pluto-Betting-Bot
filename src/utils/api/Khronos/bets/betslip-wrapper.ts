@@ -103,6 +103,13 @@ export default class BetslipWrapper {
 		})
 	}
 
+	/** American odds the bet was last confirmed at, or undefined when Khronos has none recorded. */
+	async offeredPrice(betId: number): Promise<number | undefined> {
+		if (this.mock) return undefined
+		const bet = await this.betslipApi.getBetslip({ betId })
+		return bet.offered_price ?? undefined
+	}
+
 	async doubleDown(data: DoubleDownBetRequest): Promise<DoubleDownDto> {
 		if (this.mock) return this.mock.doubleDownBet(data)
 		return await this.betslipApi.doubleDownBet(data)
