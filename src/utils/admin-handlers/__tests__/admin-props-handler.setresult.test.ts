@@ -5,6 +5,10 @@ vi.mock('../admin-predictions-handler.js', () => ({
 	AdminPredictionsHandler: class {},
 }))
 
+vi.mock('../admin-prop-picker-handler.js', () => ({
+	AdminPropPickerHandler: class {},
+}))
+
 vi.mock('../admin-props-handler.js', () => ({
 	AdminPropsHandler: class {},
 }))
@@ -12,7 +16,7 @@ vi.mock('../admin-props-handler.js', () => ({
 const { UserCommand } = await import('../../../commands/admin/admin.js')
 
 describe('/admin props command tree', () => {
-	it('registers only the supported props subcommands', () => {
+	it('registers the supported props subcommands', () => {
 		const command = Object.create(UserCommand.prototype) as InstanceType<
 			typeof UserCommand
 		>
@@ -38,6 +42,7 @@ describe('/admin props command tree', () => {
 
 		expect(propsGroup?.options?.map((option) => option.name)).toEqual([
 			'generate',
+			'pick',
 			'viewactive',
 		])
 	})

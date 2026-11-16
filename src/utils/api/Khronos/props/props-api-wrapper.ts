@@ -1,4 +1,5 @@
 import {
+	type PostPropsResponseDto,
 	type ProcessedPropDto,
 	type PropDto,
 	PropsApi,
@@ -9,6 +10,9 @@ import { z } from 'zod'
 import { logger } from '../../../logging/WinstonLogger.js'
 
 const DEFAULT_TIMEOUT_MS = 30000
+// Khronos waits for Pluto's durable receipts, which can take up to ~90s in
+// production, so the curated post needs a longer budget than a read.
+const POST_PROPS_TIMEOUT_MS = 120000
 
 import { KH_API_CONFIG } from '../KhronosInstances.js'
 
@@ -380,6 +384,62 @@ export default class PropsApiWrapper {
 			})
 
 			throw new Error(`Failed to fetch prop: ${errorMessage}`)
+		}
+	}
+
+	/**
+	 * Post a staff-curated slate through Khronos's ledger-backed endpoint.
+	 * The server resolves each pair, so only the Over outcome UUIDs travel.
+	 */
+	async postSelectedProps(input: {
+		sport: 'nba' | 'nfl'
+		outcomeUuids: string[]
+		guildIds: string[]
+	}): Promise<PostPropsResponseDto> {
+		const source = `${this.constructor.name}.${this.postSelectedProps.name}`
+		try {
+			const response = await pTimeout(
+				this.propsApi.propsControllerPostPropsV1({
+					postPropsDto: {
+						sport: input.sport,
+						outcome_uuids: input.outcomeUuids,
+						guild_ids: input.guildIds,
+					},
+				}),
+				{ milliseconds: POST_PROPS_TIMEOUT_MS },
+			)
+			await logger.info({
+				message: `Posted curated props: ${response.posted} posted, ${response.skipped} skipped, ${response.failed} failed`,
+				metadata: {
+					source,
+					sport: input.sport,
+					guild_ids: input.guildIds,
+					outcome_count: input.outcomeUuids.length,
+					posted: response.posted,
+					skipped: response.skipped,
+					failed: response.failed,
+				},
+			})
+			return response
+		} catch (error) {
+			const errorMessage =
+				error instanceof Error ? error.message : String(error)
+			const status =
+				error instanceof ResponseError
+					? error.response.status
+					: undefined
+			await logger.error({
+				message: `Failed to post curated props: ${errorMessage}`,
+				metadata: {
+					source,
+					sport: input.sport,
+					guild_ids: input.guildIds,
+					outcome_count: input.outcomeUuids.length,
+					error: errorMessage,
+					status,
+				},
+			})
+			throw new Error(`Failed to post curated props: ${errorMessage}`)
 		}
 	}
 

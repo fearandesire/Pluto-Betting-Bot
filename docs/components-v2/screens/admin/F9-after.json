@@ -1,0 +1,123 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"components": [
+		{
+			"type": 17,
+			"components": [
+				{
+					"type": 10,
+					"content": "## Pick props"
+				},
+				{
+					"type": 10,
+					"content": "Game: all · Category: all · Player: any\nSelected 6 of 25. Selections stay put when you change page."
+				},
+				{
+					"type": 10,
+					"content": "1. **LeBron James** · Points `27.5` — Over -115 / Under -105\n2. **Jayson Tatum** · Rebounds `8.5` — Over -110 / Under -110\n3. **Nikola Jokic** · Assists `9.5` — Over -105 / Under -115\n4. **Stephen Curry** · Three-pointers `4.5` — Over +120 / Under -145\n5. **Giannis Antetokounmpo** · Points `30.5` — Over -125 / Under +105\n6. **Jalen Brunson** · Assists `6.5` — Over -108 / Under -112"
+				},
+				{
+					"type": 10,
+					"content": "-# Page 1/1 · 6 props · prices are re-checked on Post"
+				},
+				{
+					"type": 1,
+					"components": [
+						{
+							"type": 3,
+							"custom_id": "props.pick.v1.select.0123456789abcdef",
+							"placeholder": "Select props on this page",
+							"min_values": 0,
+							"max_values": 6,
+							"options": [
+								{
+									"label": "1. LeBron James · Points 27.5",
+									"value": "0",
+									"description": "Over -115 / Under -105",
+									"default": true
+								},
+								{
+									"label": "2. Jayson Tatum · Rebounds 8.5",
+									"value": "1",
+									"description": "Over -110 / Under -110",
+									"default": true
+								},
+								{
+									"label": "3. Nikola Jokic · Assists 9.5",
+									"value": "2",
+									"description": "Over -105 / Under -115",
+									"default": true
+								},
+								{
+									"label": "4. Stephen Curry · Three-pointers 4.5",
+									"value": "3",
+									"description": "Over +120 / Under -145",
+									"default": true
+								},
+								{
+									"label": "5. Giannis Antetokounmpo · Points 30.5",
+									"value": "4",
+									"description": "Over -125 / Under +105",
+									"default": true
+								},
+								{
+									"label": "6. Jalen Brunson · Assists 6.5",
+									"value": "5",
+									"description": "Over -108 / Under -112",
+									"default": true
+								}
+							]
+						}
+					]
+				},
+				{
+					"type": 1,
+					"components": [
+						{
+							"type": 2,
+							"custom_id": "props.pick.v1.prev.0123456789abcdef",
+							"label": "Previous",
+							"style": 2,
+							"disabled": true
+						},
+						{
+							"type": 2,
+							"custom_id": "props.pick.v1.next.0123456789abcdef",
+							"label": "Next",
+							"style": 2,
+							"disabled": true
+						},
+						{
+							"type": 2,
+							"custom_id": "props.pick.v1.clear.0123456789abcdef",
+							"label": "Clear",
+							"style": 2,
+							"disabled": false
+						},
+						{
+							"type": 2,
+							"custom_id": "props.pick.v1.preview.0123456789abcdef",
+							"label": "Preview",
+							"style": 2,
+							"disabled": false
+						},
+						{
+							"type": 2,
+							"custom_id": "props.pick.v1.post.0123456789abcdef",
+							"label": "Post",
+							"style": 3,
+							"disabled": false
+						}
+					]
+				}
+			]
+		}
+	],
+	"flags": 32768,
+	"allowedMentions": {
+		"parse": []
+	}
+}
