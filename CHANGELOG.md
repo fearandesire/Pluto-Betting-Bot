@@ -1,5 +1,25 @@
 # Changelog
 
+## [4.20.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.19.0...v4.20.0) (2026-11-16)
+
+
+### Features
+
+* **admin:** add a hand-picked props picker to /admin props ([#805](https://github.com/fearandesire/Pluto-Betting-Bot/issues/805)) ([460da8c](https://github.com/fearandesire/Pluto-Betting-Bot/commit/460da8c988353e25f04a67328122614166bad6f8))
+* **props:** add /props strategy and show props settings in status ([#807](https://github.com/fearandesire/Pluto-Betting-Bot/issues/807)) ([bbe96a0](https://github.com/fearandesire/Pluto-Betting-Bot/commit/bbe96a0742b02105182905df78dedef629d2ab79))
+* **recap:** filter leaderboards and post recaps from guild settings ([#804](https://github.com/fearandesire/Pluto-Betting-Bot/issues/804)) ([76eadf1](https://github.com/fearandesire/Pluto-Betting-Bot/commit/76eadf19906763da2ed8be49afb7231afb9129a7))
+
+
+### Bug Fixes
+
+* **commands:** rename owner footer config to /footer-config ([#800](https://github.com/fearandesire/Pluto-Betting-Bot/issues/800)) ([325cb16](https://github.com/fearandesire/Pluto-Betting-Bot/commit/325cb164c2935d4415e381ff45636dc940bd0ba0))
+* **deps:** patch critical advisories (shell-quote) ([#770](https://github.com/fearandesire/Pluto-Betting-Bot/issues/770)) ([71c6a2e](https://github.com/fearandesire/Pluto-Betting-Bot/commit/71c6a2e47b15ec2ac1799951d60c9da328b83072))
+* **khronos:** bump @pluto-khronos/* to 3.18.0 ([5b162ff](https://github.com/fearandesire/Pluto-Betting-Bot/commit/5b162ff1465e27dc0753bfc47799c2602ad9ffaf))
+* **khronos:** bump @pluto-khronos/* to 3.18.1 ([5ed1d69](https://github.com/fearandesire/Pluto-Betting-Bot/commit/5ed1d693599189d1d56b31294d91e07c89bb5abb))
+* **khronos:** bump @pluto-khronos/* to 3.19.0 ([a105e88](https://github.com/fearandesire/Pluto-Betting-Bot/commit/a105e884a8bf42587757e9d293afa5045e9627eb))
+* **logging:** honour LOGS_ENABLED in the log channel sender ([#801](https://github.com/fearandesire/Pluto-Betting-Bot/issues/801)) ([5e99946](https://github.com/fearandesire/Pluto-Betting-Bot/commit/5e99946755792aca148c6e412bf7931757c013d7))
+* **recap:** request an NFL-only weekly recap ([#799](https://github.com/fearandesire/Pluto-Betting-Bot/issues/799)) ([47eaebb](https://github.com/fearandesire/Pluto-Betting-Bot/commit/47eaebb0f53c19abf5362593ec4f641fc7701ebe))
+
 ## [4.19.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.18.0...v4.19.0) (2026-11-14)
 
 
