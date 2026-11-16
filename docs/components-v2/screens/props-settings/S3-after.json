@@ -1,0 +1,26 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"components": [
+		{
+			"type": 17,
+			"accent_color": 11152685,
+			"components": [
+				{
+					"type": 10,
+					"content": "### Something went wrong"
+				},
+				{
+					"type": 10,
+					"content": "Pluto could not confirm the strategy was saved. Run /props status to see which strategy is active before trying again."
+				}
+			]
+		}
+	],
+	"flags": 32768,
+	"allowedMentions": {
+		"parse": []
+	}
+}

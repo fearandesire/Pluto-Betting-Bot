@@ -1,0 +1,35 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"components": [
+		{
+			"type": 17,
+			"accent_color": 5763719,
+			"components": [
+				{
+					"type": 10,
+					"content": "### Props strategy updated"
+				},
+				{
+					"type": 10,
+					"content": "Daily props will use the **Smart** strategy."
+				},
+				{
+					"type": 14,
+					"divider": true,
+					"spacing": 1
+				},
+				{
+					"type": 10,
+					"content": "-# See it any time with /props status."
+				}
+			]
+		}
+	],
+	"flags": 32768,
+	"allowedMentions": {
+		"parse": []
+	}
+}
