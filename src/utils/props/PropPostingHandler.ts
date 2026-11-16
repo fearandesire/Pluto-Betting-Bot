@@ -2,6 +2,10 @@ import { createHash } from 'node:crypto'
 import type { ProcessedPropDto } from '@pluto-khronos/api-client'
 import type { ActionRowBuilder, ButtonBuilder, EmbedBuilder } from 'discord.js'
 import {
+	boardBrowseLines,
+	propBoardPayload,
+} from '../../lib/discord/builders/prop-board.js'
+import {
 	propPostButtons,
 	propPostEmbed,
 } from '../../lib/discord/builders/props.js'
@@ -9,6 +13,7 @@ import GuildWrapper from '../api/Khronos/guild/guild-wrapper.js'
 import redisCache from '../cache/redis-instance.js'
 import TeamInfo from '../common/TeamInfo.js'
 import { logger } from '../logging/WinstonLogger.js'
+import { savePropBrowse } from './PropBrowseCache.js'
 
 /**
  * Result object returned after posting props to channel
@@ -235,6 +240,66 @@ export class PropPostingHandler {
 		}
 
 		return result
+	}
+
+	/**
+	 * Posts one game's board for the durable prop-post worker. Every pair on
+	 * the board shares the returned message id, and the Browse more list is
+	 * cached before the send so the button never points at missing state.
+	 */
+	async postPropBoard(
+		guildId: string,
+		channelId: string,
+		props: ProcessedPropDto[],
+		sport: 'nba' | 'nfl',
+		deliveryId: string,
+		destinationId: string,
+		allProps: readonly ProcessedPropDto[],
+	): Promise<PostedPropReference[]> {
+		const first = props[0]
+		if (!first) throw new Error('A prop board needs at least one pair')
+		const [homeTeamInfo, awayTeamInfo] = await Promise.all([
+			new TeamInfo().getTeamInfo(first.home_team),
+			new TeamInfo().getTeamInfo(first.away_team),
+		])
+		// Every board and guild of one delivery opens the same list, so the
+		// token (and its Redis entry) is shared per delivery and sport.
+		const token = createDeliveryNonce(deliveryId, `props-browse:${sport}`)
+			.replace(/[^a-f0-9]/g, '')
+			.slice(0, 16)
+		const browseSaved = await savePropBrowse(token, {
+			title: 'All props',
+			lines: boardBrowseLines(allProps, sport),
+		})
+		const payload = propBoardPayload({
+			props,
+			sport,
+			teams: {
+				homeAbbrev: homeTeamInfo.resolvedTeamData.abbrev,
+				awayAbbrev: awayTeamInfo.resolvedTeamData.abbrev,
+				homeColor: homeTeamInfo.color,
+			},
+			browseToken: browseSaved ? token : undefined,
+		})
+		const message = await this.guildWrapper.sendToChannel(
+			channelId,
+			{
+				...payload,
+				nonce: createDeliveryNonce(deliveryId, destinationId),
+				enforceNonce: true,
+			},
+			guildId,
+		)
+		return props.flatMap((prop) =>
+			[prop.over.outcome_uuid, prop.under.outcome_uuid].map(
+				(outcome_uuid) => ({
+					outcome_uuid,
+					guild_id: guildId,
+					channel_id: channelId,
+					message_id: message.id,
+				}),
+			),
+		)
 	}
 
 	/**

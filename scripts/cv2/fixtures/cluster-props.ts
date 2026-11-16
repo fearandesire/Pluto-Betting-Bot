@@ -5,7 +5,10 @@ import {
 } from '@pluto-khronos/api-client'
 import type { User } from 'discord.js'
 import { teamResolver } from 'resolve-team'
-import { propBoardPayload } from '../../../src/lib/discord/builders/prop-board.js'
+import {
+	boardBrowseLines,
+	propBoardPayload,
+} from '../../../src/lib/discord/builders/prop-board.js'
 import {
 	type LeaderboardRow,
 	leaderboardScore,
@@ -20,6 +23,7 @@ import {
 	propSettlementEmbed,
 	resolveStreakBadgeTier,
 } from '../../../src/lib/discord/builders/props.js'
+import { renderPage } from '../../../src/lib/discord/v2/paginator.js'
 import {
 	settleV2BoardComponents,
 	toComponentJsonList,
@@ -124,6 +128,7 @@ const propBoard = async () =>
 		props: boardProps,
 		sport: 'nfl',
 		teams: await propTeams(),
+		browseToken: '0123456789abcdef',
 	})
 
 // C5: 12 predictions → two pages of 10, so Sapphire shows its nav row.
@@ -402,6 +407,20 @@ const fixtures: ClusterFixtures = {
 					flags: payload.flags,
 					components: settled.components,
 				}
+			},
+		},
+		{
+			id: 'C3b',
+			name: 'Browse more (new V2 surface)',
+			after: () => {
+				const payload = renderPage({
+					scope: 'props-demo',
+					title: 'All props',
+					lines: boardBrowseLines(boardProps, 'nfl'),
+					page: 0,
+					perPage: 8,
+				})
+				return { components: payload.components, flags: payload.flags }
 			},
 		},
 		{

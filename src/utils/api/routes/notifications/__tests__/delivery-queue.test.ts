@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { RedisCacheClient } from '../../../../cache/redis-instance.js'
-import { deliveryEnvelopeSchema } from '../delivery-contract.js'
+import { deliveryEnvelopeSchema, destinationIds } from '../delivery-contract.js'
 import {
 	type DeliveryDispatcher,
 	type DeliveryQueuePort,
@@ -67,6 +67,75 @@ const propPostEnvelope = deliveryEnvelopeSchema.parse({
 		],
 		guilds: [
 			{ guild_id: 'guild-1', channel_id: 'channel-1', sport: 'nba' },
+		],
+	},
+})
+
+const secondBoardProp = {
+	...{
+		event_id: 'event-1',
+		commence_time: '2026-07-14T20:00:00.000Z',
+		home_team: 'Home',
+		away_team: 'Away',
+		sport_title: 'NBA',
+		market_key: 'player_points',
+		bookmaker_key: 'draftkings',
+		description: 'Second Player',
+		point: 21.5,
+	},
+	over: {
+		outcome_uuid: '550e8400-e29b-41d4-a716-446655440015',
+		outcome_name: 'Over',
+		price: 105,
+	},
+	under: {
+		outcome_uuid: '550e8400-e29b-41d4-a716-446655440016',
+		outcome_name: 'Under',
+		price: -125,
+	},
+}
+
+const boardEnvelope = deliveryEnvelopeSchema.parse({
+	delivery_id: '550e8400-e29b-41d4-a716-446655440014',
+	schema_version: 1,
+	kind: 'prop_post',
+	occurred_at: '2026-07-14T20:00:00.000Z',
+	payload: {
+		props: [
+			{
+				event_id: 'event-1',
+				commence_time: '2026-07-14T20:00:00.000Z',
+				home_team: 'Home',
+				away_team: 'Away',
+				sport_title: 'NBA',
+				market_key: 'player_points',
+				bookmaker_key: 'draftkings',
+				description: 'Player',
+				point: 20.5,
+				over: {
+					outcome_uuid: '550e8400-e29b-41d4-a716-446655440005',
+					outcome_name: 'Over',
+					price: -110,
+				},
+				under: {
+					outcome_uuid: '550e8400-e29b-41d4-a716-446655440006',
+					outcome_name: 'Under',
+					price: -110,
+				},
+			},
+			secondBoardProp,
+		],
+		guilds: [
+			{ guild_id: 'guild-1', channel_id: 'channel-1', sport: 'nba' },
+		],
+		boards: [
+			{
+				event_id: 'event-1',
+				over_outcome_uuids: [
+					'550e8400-e29b-41d4-a716-446655440005',
+					'550e8400-e29b-41d4-a716-446655440015',
+				],
+			},
 		],
 	},
 })
@@ -237,5 +306,135 @@ describe('notification delivery queue', () => {
 				message_id: 'fake-message-1',
 			},
 		])
+	})
+	it('routes a system board delivery to fake-discord once for all pairs', async () => {
+		const fetchMock = vi.fn<typeof fetch>(
+			async () =>
+				new Response(JSON.stringify({ id: 'fake-board-1' }), {
+					status: 200,
+					headers: { 'content-type': 'application/json' },
+				}),
+		)
+		vi.stubGlobal('fetch', fetchMock)
+
+		const receipt = (await new SystemDiscordDeliveryDispatcher().deliver(
+			boardEnvelope,
+			'prop-board:guild-1:channel-1:0',
+		)) as Array<{ message_id: string }>
+
+		expect(fetchMock).toHaveBeenCalledOnce()
+		expect(receipt).toHaveLength(4)
+		expect(new Set(receipt.map((ref) => ref.message_id))).toEqual(
+			new Set(['fake-board-1']),
+		)
+		const body = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body)) as {
+			props: unknown[]
+		}
+		expect(body.props).toHaveLength(2)
+	})
+
+	it('refuses a board destination that names a missing board', async () => {
+		await expect(
+			new SystemDiscordDeliveryDispatcher().deliver(
+				boardEnvelope,
+				'prop-board:guild-1:channel-1:9',
+			),
+		).rejects.toMatchObject({ status: 422 })
+	})
+
+	it('posts one board destination and records a receipt for every pair', async () => {
+		const redis = fakeRedis()
+		const store = new RedisDeliveryStore(redis)
+		const receipts = [
+			'550e8400-e29b-41d4-a716-446655440005',
+			'550e8400-e29b-41d4-a716-446655440006',
+			'550e8400-e29b-41d4-a716-446655440015',
+			'550e8400-e29b-41d4-a716-446655440016',
+		].map((outcome_uuid) => ({
+			outcome_uuid,
+			guild_id: 'guild-1',
+			channel_id: 'channel-1',
+			message_id: 'board-message-1',
+		}))
+		const dispatcher: DeliveryDispatcher = {
+			deliver: vi.fn(async () => receipts),
+		}
+		queue = new NotificationDeliveryQueue({
+			store,
+			dispatcher,
+			queue: {
+				add: vi.fn(async () => undefined),
+				close: vi.fn(async () => undefined),
+			} satisfies DeliveryQueuePort,
+			startWorker: false,
+		})
+
+		expect(destinationIds(boardEnvelope)).toEqual([
+			'prop-board:guild-1:channel-1:0',
+		])
+
+		await queue.accept(boardEnvelope)
+		await queue.processJob({ data: boardEnvelope } as never)
+
+		const record = await store.get(boardEnvelope.delivery_id)
+		expect(record?.state).toBe('delivered')
+		expect(dispatcher.deliver).toHaveBeenCalledTimes(1)
+		expect(record?.destinations[0].receipt).toHaveLength(4)
+	})
+
+	it('re-posts a board whose recorded receipt is incomplete', async () => {
+		const redis = fakeRedis()
+		const store = new RedisDeliveryStore(redis)
+		const pairReceipts = [
+			'550e8400-e29b-41d4-a716-446655440005',
+			'550e8400-e29b-41d4-a716-446655440006',
+		].map((outcome_uuid) => ({
+			outcome_uuid,
+			guild_id: 'guild-1',
+			channel_id: 'channel-1',
+			message_id: 'board-message-1',
+		}))
+		const allReceipts = [
+			...pairReceipts,
+			{
+				outcome_uuid: '550e8400-e29b-41d4-a716-446655440015',
+				guild_id: 'guild-1',
+				channel_id: 'channel-1',
+				message_id: 'board-message-1',
+			},
+			{
+				outcome_uuid: '550e8400-e29b-41d4-a716-446655440016',
+				guild_id: 'guild-1',
+				channel_id: 'channel-1',
+				message_id: 'board-message-1',
+			},
+		]
+		let calls = 0
+		const dispatcher: DeliveryDispatcher = {
+			deliver: vi.fn(async () => {
+				calls++
+				return calls === 1 ? pairReceipts : allReceipts
+			}),
+		}
+		queue = new NotificationDeliveryQueue({
+			store,
+			dispatcher,
+			queue: {
+				add: vi.fn(async () => undefined),
+				close: vi.fn(async () => undefined),
+			} satisfies DeliveryQueuePort,
+			startWorker: false,
+		})
+
+		await queue.accept(boardEnvelope)
+		await expect(
+			queue.processJob({ data: boardEnvelope } as never),
+		).rejects.toThrow(/retry/)
+		await queue.processJob({ data: boardEnvelope } as never)
+
+		const record = await store.get(boardEnvelope.delivery_id)
+		expect(record?.state).toBe('delivered')
+		expect(dispatcher.deliver).toHaveBeenCalledTimes(2)
+		expect(record?.destinations[0].receipt).toHaveLength(4)
 	})
 })

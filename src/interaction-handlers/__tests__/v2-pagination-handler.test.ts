@@ -21,9 +21,8 @@ vi.mock('../../utils/logging/WinstonLogger.js', () => ({
 	logger: { error: vi.fn(), info: vi.fn(), warn: vi.fn() },
 }))
 
-const { encodePageNav, registerPageSource } = await import(
-	'../../lib/discord/v2/paginator.js'
-)
+const { encodePageNav, PageSourceExpiredError, registerPageSource } =
+	await import('../../lib/discord/v2/paginator.js')
 const { V2PaginationHandler } = await import('../v2-pagination-handler.js')
 
 const load = vi.fn()
@@ -119,6 +118,21 @@ describe('V2PaginationHandler', () => {
 		)
 		expect(i.deferUpdate).not.toHaveBeenCalled()
 		expect(load).not.toHaveBeenCalled()
+	})
+
+	it('tells the user a list expired when its source reports it', async () => {
+		load.mockRejectedValueOnce(new PageSourceExpiredError('h-open'))
+		const i = makeInteraction({ customId: 'pg.v1.h-open.1.next' })
+		await handler.run(i as never, {
+			scope: 'h-open',
+			page: 1,
+			action: 'next',
+		})
+		expect(i.deferUpdate).toHaveBeenCalled()
+		expect(i.editReply).not.toHaveBeenCalled()
+		expect(firstText(i.followUp.mock.calls[0][0])).toBe(
+			'This list expired. Run the command again.',
+		)
 	})
 
 	it('rejects when the source message has no interaction metadata', async () => {
