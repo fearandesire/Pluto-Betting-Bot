@@ -13,6 +13,7 @@ import {
 } from '../../../../lib/discord/builders/notifications.js'
 import { propSettlementEmbed } from '../../../../lib/discord/builders/props.js'
 import { isV2Message } from '../../../../lib/discord/v2/edit.js'
+import { v2EditFlags } from '../../../../lib/discord/v2/kit.js'
 import {
 	disableSettledPropRow,
 	settleV2BoardComponents,
@@ -391,7 +392,10 @@ export default class NotificationService {
 				})
 				return
 			}
-			await message.edit({ components: settled.components as never })
+			await message.edit({
+				components: settled.components as never,
+				flags: v2EditFlags(),
+			})
 			return
 		}
 
