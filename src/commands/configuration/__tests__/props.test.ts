@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockSetGuildConfig = vi.fn()
 const mockGetGuild = vi.fn()
+const mockGetSettings = vi.fn()
+const mockSetStrategy = vi.fn()
 
 // Mock only the Khronos HTTP edge; the wrapper's own setting mapping runs for real.
 vi.mock('@pluto-khronos/api-client', async (importOriginal) => {
@@ -25,6 +27,25 @@ vi.mock('../../../utils/api/Khronos/guild/guild-wrapper.js', () => ({
 	}),
 }))
 
+vi.mock(
+	'../../../utils/api/Khronos/props/prop-settings-wrapper.js',
+	async (importOriginal) => {
+		const actual =
+			await importOriginal<
+				typeof import('../../../utils/api/Khronos/props/prop-settings-wrapper.js')
+			>()
+		return {
+			...actual,
+			default: vi.fn().mockImplementation(function () {
+				return { get: mockGetSettings, setStrategy: mockSetStrategy }
+			}),
+		}
+	},
+)
+
+const { PropSettingsError } = await import(
+	'../../../utils/api/Khronos/props/prop-settings-wrapper.js'
+)
 const {
 	MessageFlags,
 	PermissionFlagsBits,
@@ -124,6 +145,8 @@ describe('/props', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
 		mockSetGuildConfig.mockResolvedValue(undefined)
+		mockGetSettings.mockResolvedValue(null)
+		mockSetStrategy.mockResolvedValue({})
 		command = Object.create(UserCommand.prototype) as InstanceType<
 			typeof UserCommand
 		>
@@ -157,6 +180,7 @@ describe('/props', () => {
 			'enable',
 			'disable',
 			'status',
+			'strategy',
 		])
 		const enable = json.options?.[0] as {
 			options: Array<{
@@ -169,6 +193,21 @@ describe('/props', () => {
 			name: 'channel',
 			required: true,
 			channel_types: [0],
+		})
+		const strategy = json.options?.[3] as {
+			options: Array<{
+				name: string
+				required: boolean
+				choices: Array<{ name: string; value: string }>
+			}>
+		}
+		expect(strategy.options[0]).toMatchObject({
+			name: 'strategy',
+			required: true,
+			choices: [
+				{ name: 'default', value: 'default' },
+				{ name: 'smart', value: 'smart' },
+			],
 		})
 		expect(options.idHints).toEqual([])
 	})
@@ -377,6 +416,119 @@ describe('/props', () => {
 			expect(text).toContain('Daily props: not set up')
 			expect(text).toContain('/props enable')
 			expect(text).not.toContain('<#')
+		})
+	})
+
+	describe('status settings', () => {
+		const config = [
+			{ setting_type: 'PREDICTIONS_CHAN', setting_value: CHANNEL_ID },
+		]
+
+		beforeEach(() => {
+			mockGetGuild.mockResolvedValue({ guild_id: GUILD_ID, config })
+		})
+
+		it('shows the strategy and post time from the settings row', async () => {
+			mockGetSettings.mockResolvedValue({
+				guild_id: GUILD_ID,
+				strategy: 'smart',
+				enabled: true,
+				post_time: '17:30',
+			})
+			const interaction = makeInteraction()
+
+			await command.handleStatus(interaction as never)
+
+			expect(mockGetSettings).toHaveBeenCalledWith(GUILD_ID)
+			const text = replyText(interaction)
+			expect(text).toContain('**Strategy:** Smart')
+			expect(text).toContain('**Post time:** 17:30 UTC')
+		})
+
+		it('shows the defaults when the server has no settings row', async () => {
+			mockGetSettings.mockResolvedValue(null)
+			const interaction = makeInteraction()
+
+			await command.handleStatus(interaction as never)
+
+			const text = replyText(interaction)
+			expect(text).toContain('**Strategy:** Default')
+			expect(text).toContain('**Post time:** Default schedule')
+		})
+
+		it('keeps the existing status and notes settings are unavailable when the call fails', async () => {
+			mockGetSettings.mockRejectedValue(
+				new PropSettingsError('unavailable'),
+			)
+			const interaction = makeInteraction()
+
+			await command.handleStatus(interaction as never)
+
+			expectSingleV2Reply(interaction)
+			const text = replyText(interaction)
+			expect(text).toContain('Daily props: enabled')
+			expect(text).toContain(`**Channel:** <#${CHANNEL_ID}>`)
+			expect(text).toContain('settings unavailable')
+		})
+	})
+
+	describe('strategy', () => {
+		function strategyInteraction(
+			value: string,
+			guildId: string | null = GUILD_ID,
+		) {
+			return {
+				...makeInteraction(),
+				guildId,
+				options: {
+					getString: vi.fn(() => value),
+				} as unknown as Interaction['options'],
+			}
+		}
+
+		it.each(['default', 'smart'])(
+			'saves %s for the server and confirms',
+			async (value) => {
+				const interaction = strategyInteraction(value)
+
+				await command.handleStrategy(interaction as never)
+
+				expect(mockSetStrategy).toHaveBeenCalledWith(GUILD_ID, value)
+				expect(mockSetGuildConfig).not.toHaveBeenCalled()
+				expectSingleV2Reply(interaction)
+				expect(replyText(interaction)).toContain(
+					'Props strategy updated',
+				)
+			},
+		)
+
+		it.each([
+			['rejected', 'not available for this server yet'],
+			['forbidden', 'not allowed to change props settings'],
+			['unavailable', 'could not save the strategy'],
+		] as const)(
+			'explains a %s failure in plain words',
+			async (reason, copy) => {
+				mockSetStrategy.mockRejectedValue(new PropSettingsError(reason))
+				const interaction = strategyInteraction('smart')
+
+				await command.handleStrategy(interaction as never)
+
+				const text = replyText(interaction)
+				expect(text).toContain('Something went wrong')
+				expect(text).toContain(copy)
+				expect(text).toContain('Nothing was changed')
+				expect(text).not.toContain('Props strategy updated')
+			},
+		)
+
+		it('refuses to run outside a server', async () => {
+			const interaction = strategyInteraction('smart', null)
+
+			await command.handleStrategy(interaction as never)
+
+			expect(mockSetStrategy).not.toHaveBeenCalled()
+			expect(replyText(interaction)).toContain('only works in a server')
 		})
 	})
 
