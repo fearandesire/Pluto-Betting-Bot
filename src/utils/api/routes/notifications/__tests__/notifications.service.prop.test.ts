@@ -1,4 +1,4 @@
-import { EmbedBuilder } from 'discord.js'
+import { EmbedBuilder, MessageFlags } from 'discord.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { RedisCacheClient } from '../../../../cache/redis-instance.js'
 
@@ -438,6 +438,9 @@ describe('NotificationService.processPropSettled', () => {
 			components: Array<{ components: Array<any> }>
 		}
 		expect(edit.embeds).toBeUndefined()
+		expect((edit as { flags?: unknown }).flags).toBe(
+			MessageFlags.IsComponentsV2,
+		)
 		const rows = edit.components[0].components
 		expect(rows[3].components.map((b: any) => b.disabled)).toEqual([
 			undefined,
