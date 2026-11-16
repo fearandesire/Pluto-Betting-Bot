@@ -126,13 +126,47 @@ export type PageSource = {
 	ownerOnly?: boolean
 }
 
-const sources = new Map<string, PageSource>()
+/** Thrown by a source's `load` when the data behind its list is gone. */
+export class PageSourceExpiredError extends Error {
+	constructor(scope: string) {
+		super(`page source expired: ${scope}`)
+		this.name = 'PageSourceExpiredError'
+	}
+}
 
-export function registerPageSource(scope: string, source: PageSource) {
+type SourceEntry = { source: PageSource; expiresAt?: number }
+
+const sources = new Map<string, SourceEntry>()
+
+/**
+ * `ttlMs` bounds a dynamic source (one registered per message, such as a
+ * props board). It expires lazily on lookup and is swept on the next
+ * registration, so abandoned scopes do not accumulate. Without it the source
+ * lives for the process, as for a fixed command menu.
+ */
+export function registerPageSource(
+	scope: string,
+	source: PageSource,
+	opts: { ttlMs?: number } = {},
+) {
 	if (!SCOPE_RE.test(scope)) throw new Error(`invalid page scope: ${scope}`)
-	sources.set(scope, source)
+	const now = Date.now()
+	for (const [key, entry] of sources) {
+		if (entry.expiresAt !== undefined && entry.expiresAt <= now)
+			sources.delete(key)
+	}
+	sources.set(scope, {
+		source,
+		expiresAt: opts.ttlMs === undefined ? undefined : now + opts.ttlMs,
+	})
 }
 
 export function getPageSource(scope: string): PageSource | undefined {
-	return sources.get(scope)
+	const entry = sources.get(scope)
+	if (!entry) return undefined
+	if (entry.expiresAt !== undefined && entry.expiresAt <= Date.now()) {
+		sources.delete(scope)
+		return undefined
+	}
+	return entry.source
 }

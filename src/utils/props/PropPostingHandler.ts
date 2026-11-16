@@ -262,7 +262,9 @@ export class PropPostingHandler {
 			new TeamInfo().getTeamInfo(first.home_team),
 			new TeamInfo().getTeamInfo(first.away_team),
 		])
-		const token = createDeliveryNonce(deliveryId, destinationId)
+		// Every board and guild of one delivery opens the same list, so the
+		// token (and its Redis entry) is shared per delivery and sport.
+		const token = createDeliveryNonce(deliveryId, `props-browse:${sport}`)
 			.replace(/[^a-f0-9]/g, '')
 			.slice(0, 16)
 		const browseSaved = await savePropBrowse(token, {

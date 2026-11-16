@@ -22,9 +22,15 @@ vi.mock('../../utils/logging/WinstonLogger.js', () => ({
 }))
 
 const loadPropBrowse = vi.fn()
-vi.mock('../../utils/props/PropBrowseCache.js', () => ({ loadPropBrowse }))
 
-const { getPageSource } = await import('../../lib/discord/v2/paginator.js')
+vi.mock('../../utils/props/PropBrowseCache.js', () => ({
+	loadPropBrowse,
+	PROP_BROWSE_TTL_SECONDS: 7 * 24 * 60 * 60,
+}))
+
+const { getPageSource, PageSourceExpiredError } = await import(
+	'../../lib/discord/v2/paginator.js'
+)
 const { PropBrowseHandler } = await import('../prop-browse-handler.js')
 
 const TOKEN = '0123456789abcdef'
@@ -106,9 +112,49 @@ describe('PropBrowseHandler', () => {
 		const source = getPageSource(TOKEN)
 		expect(source).toBeDefined()
 		const page = await source!.load({} as never, 2)
-		expect(page.lines).toBe(state.lines)
+		expect(page.lines).toEqual(state.lines)
 		expect(page.perPage).toBe(8)
 		expect(page.page).toBe(2)
+	})
+
+	it('reads the list from the cache on every page instead of holding it', async () => {
+		const interaction = makeInteraction(`props.browse.v1.${TOKEN}`)
+		await handler.run(interaction as never, TOKEN)
+		loadPropBrowse.mockClear()
+
+		const source = getPageSource(TOKEN)!
+		await source.load({} as never, 1)
+		await source.load({} as never, 2)
+
+		expect(loadPropBrowse).toHaveBeenCalledTimes(2)
+		expect(loadPropBrowse).toHaveBeenCalledWith(TOKEN)
+	})
+
+	it('reports an expired list when the cache entry is gone mid-browse', async () => {
+		const interaction = makeInteraction(`props.browse.v1.${TOKEN}`)
+		await handler.run(interaction as never, TOKEN)
+
+		loadPropBrowse.mockResolvedValueOnce(null)
+		await expect(
+			getPageSource(TOKEN)!.load({} as never, 1),
+		).rejects.toBeInstanceOf(PageSourceExpiredError)
+	})
+
+	it('releases the registered source after the list lifetime', async () => {
+		vi.useFakeTimers()
+		try {
+			const token = 'aaaaaaaaaaaaaaaa'
+			await handler.run(
+				makeInteraction(`props.browse.v1.${token}`) as never,
+				token,
+			)
+			expect(getPageSource(token)).toBeDefined()
+
+			vi.advanceTimersByTime(7 * 24 * 60 * 60 * 1000 + 1)
+			expect(getPageSource(token)).toBeUndefined()
+		} finally {
+			vi.useRealTimers()
+		}
 	})
 
 	it('answers an expired list instead of failing silently', async () => {

@@ -153,6 +153,15 @@ describe('Browse more', () => {
 		expect(decodePropsBrowseCustomId('pg.v1.h-owned.1.next')).toBeNull()
 	})
 
+	it.each(['SHORT', '0123456789ABCDEF', '0123456789abcdeg', ''])(
+		'refuses to encode the token %j instead of emitting a dead button id',
+		(token) => {
+			expect(() => propsBrowseCustomId(token)).toThrow(
+				'invalid props browse token',
+			)
+		},
+	)
+
 	it('lists every pair under its game in tip-off order', () => {
 		const late = {
 			...prop,

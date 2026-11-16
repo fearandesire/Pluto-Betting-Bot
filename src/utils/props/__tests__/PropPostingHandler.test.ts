@@ -499,6 +499,55 @@ describe('PropPostingHandler message references and idempotency', () => {
 			expect(ids).toContain('prop_' + prop.over.outcome_uuid)
 		})
 
+		it('shares one Browse more list across boards and guilds of a delivery', async () => {
+			const handler = new PropPostingHandler()
+			await handler.postPropBoard(
+				'guild-1',
+				'channel-1',
+				props,
+				'nba',
+				'delivery-1',
+				'prop-board:guild-1:channel-1:0',
+				[...props, second],
+			)
+			await handler.postPropBoard(
+				'guild-2',
+				'channel-2',
+				[second],
+				'nba',
+				'delivery-1',
+				'prop-board:guild-2:channel-2:1',
+				[...props, second],
+			)
+
+			const keys = new Set(mocks.setex.mock.calls.map((call) => call[0]))
+			expect(keys.size).toBe(1)
+			const [first, other] = mocks.sendToChannel.mock.calls.map((call) =>
+				buttonIds(call[1]).find((id) =>
+					id.startsWith('props.browse.v1.'),
+				),
+			)
+			expect(first).toBeDefined()
+			expect(first).toBe(other)
+		})
+
+		it('keeps separate lists for different deliveries', async () => {
+			const handler = new PropPostingHandler()
+			for (const deliveryId of ['delivery-1', 'delivery-2'])
+				await handler.postPropBoard(
+					'guild-1',
+					'channel-1',
+					props,
+					'nba',
+					deliveryId,
+					'prop-board:guild-1:channel-1:0',
+					props,
+				)
+			expect(
+				new Set(mocks.setex.mock.calls.map((call) => call[0])).size,
+			).toBe(2)
+		})
+
 		it('still posts the board without Browse more when the cache is down', async () => {
 			mocks.setex.mockRejectedValueOnce(new Error('redis down'))
 
