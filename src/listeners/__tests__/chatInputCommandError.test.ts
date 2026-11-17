@@ -84,6 +84,21 @@ describe('ChatInputCommandError user-facing reply', () => {
 		)
 	})
 
+	it('placement failure → "Bet not confirmed" with the unconfirmed copy and a reference', async () => {
+		const i = chatInput({})
+		await (
+			ChatInputCommandError.prototype as never as {
+				replyWithErrorEmbed(i: unknown, name: string): Promise<void>
+			}
+		).replyWithErrorEmbed.call({}, i, 'bet')
+		const embed = embedOf(i.reply.mock.calls[0]!)
+		expect(embed.title).toBe('Bet not confirmed')
+		expect(embed.description).toBe(
+			"We couldn't confirm your bet. Check /mybets before you try again.\nReference: `23456789`",
+		)
+		expect(embed.description).not.toContain('not placed')
+	})
+
 	it('fresh interaction → ephemeral embed reply', async () => {
 		const i = chatInput({})
 		await run(i)

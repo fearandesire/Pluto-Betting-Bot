@@ -28,7 +28,7 @@ import { ApiModules } from '../../../../lib/interfaces/api/api.interface.js'
 import type { IAPIBetslipPayload } from '../../../../lib/interfaces/api/bets/betslips.interfaces.js'
 import { isApiError } from '../../../../lib/interfaces/errors/api-errors.js'
 import { reportBettingFailure } from '../../../../services/alerts/betting-ops-alert.js'
-import { betReference } from '../../../betting/bet-reference.js'
+import { unconfirmedBetDescription } from '../../../betting/bet-reference.js'
 import { findEmoji } from '../../../bot_res/findEmoji.js'
 import { ErrorEmbeds } from '../../../common/errors/global.js'
 import StringUtils from '../../../common/string-utils.js'
@@ -193,7 +193,7 @@ export class BetslipManager {
 				})
 			} else {
 				const errEmbed = await ErrorEmbeds.internalErr(
-					`Your bet was not placed, or its state is unknown. Check /mybets before you try again. Reference: \`${betReference(interaction.id)}\``,
+					unconfirmedBetDescription(interaction.id),
 				)
 				if (interaction.deferred || interaction.replied) {
 					return interaction.editReply({
@@ -212,7 +212,7 @@ export class BetslipManager {
 			}
 		} catch (error) {
 			const errEmbed = await ErrorEmbeds.internalErr(
-				`Your bet was not placed, or its state is unknown. Check /mybets before you try again. Reference: \`${betReference(interaction.id)}\``,
+				unconfirmedBetDescription(interaction.id),
 			)
 			logger.error('Failed to place bet', { error })
 			reportBettingFailure({

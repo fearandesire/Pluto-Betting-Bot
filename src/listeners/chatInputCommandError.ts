@@ -8,7 +8,10 @@ import embedColors from '../lib/colorsConfig.js'
 import { sendErrorNotice } from '../lib/discord/v2/notice.js'
 import { reportBettingFailure } from '../services/alerts/betting-ops-alert.js'
 import GuildWrapper from '../utils/api/Khronos/guild/guild-wrapper.js'
-import { betReference } from '../utils/betting/bet-reference.js'
+import {
+	betReference,
+	unconfirmedBetDescription,
+} from '../utils/betting/bet-reference.js'
 import {
 	isBettingCommand,
 	isPlacementCommand,
@@ -26,7 +29,7 @@ const log = createLogger({
 
 /**
  * What the user sees after an unexpected failure. A placement command may have
- * written the bet before it failed, so its copy says the state is unknown and
+ * written the bet before it failed, so its copy says the bet is unconfirmed and
  * points to /mybets rather than claiming the bet was not placed.
  */
 function failureCopy(commandName: string, interactionId: string) {
@@ -34,7 +37,7 @@ function failureCopy(commandName: string, interactionId: string) {
 	if (isPlacementCommand(commandName)) {
 		return {
 			title: 'Bet not confirmed',
-			description: `Your bet was not placed, or its state is unknown. Check /mybets before you try again.\n${ref}`,
+			description: unconfirmedBetDescription(interactionId),
 		}
 	}
 	return {

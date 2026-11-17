@@ -4,3 +4,10 @@
  */
 export const betReference = (interactionId: string): string =>
 	interactionId.slice(-8)
+
+/**
+ * Copy for a placement whose outcome is unknown. Every surface that reports a
+ * failed placement uses this text, so the wording cannot drift between them.
+ */
+export const unconfirmedBetDescription = (interactionId: string): string =>
+	`We couldn't confirm your bet. Check /mybets before you try again.\nReference: \`${betReference(interactionId)}\``
