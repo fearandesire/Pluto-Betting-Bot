@@ -27,6 +27,8 @@ import {
 import { ApiModules } from '../../../../lib/interfaces/api/api.interface.js'
 import type { IAPIBetslipPayload } from '../../../../lib/interfaces/api/bets/betslips.interfaces.js'
 import { isApiError } from '../../../../lib/interfaces/errors/api-errors.js'
+import { reportBettingFailure } from '../../../../services/alerts/betting-ops-alert.js'
+import { unconfirmedBetDescription } from '../../../betting/bet-reference.js'
 import { findEmoji } from '../../../bot_res/findEmoji.js'
 import { ErrorEmbeds } from '../../../common/errors/global.js'
 import StringUtils from '../../../common/string-utils.js'
@@ -191,7 +193,7 @@ export class BetslipManager {
 				})
 			} else {
 				const errEmbed = await ErrorEmbeds.internalErr(
-					'Failed to place your bet due to an unexpected response from the API. Please try again later.',
+					unconfirmedBetDescription(interaction.id),
 				)
 				if (interaction.deferred || interaction.replied) {
 					return interaction.editReply({
@@ -210,9 +212,18 @@ export class BetslipManager {
 			}
 		} catch (error) {
 			const errEmbed = await ErrorEmbeds.internalErr(
-				'Failed to place your bet due to an internal error. Please try again later.',
+				unconfirmedBetDescription(interaction.id),
 			)
 			logger.error('Failed to place bet', { error })
+			reportBettingFailure({
+				key: `bet.placement_failed:${error instanceof Error ? error.name : 'unknown'}`,
+				event: 'bet.placement_failed',
+				guildId: interaction.guildId,
+				channelId: interaction.channelId,
+				userId: interaction.user.id,
+				requestId: interaction.id,
+				error,
+			})
 			if (interaction.deferred || interaction.replied) {
 				return interaction.editReply({
 					embeds: [errEmbed],
