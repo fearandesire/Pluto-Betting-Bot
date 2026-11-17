@@ -152,6 +152,41 @@ export function traceInteractions(
 	}
 }
 
+/** Discord voids an interaction token after 3 seconds. */
+export const LATE_DISPATCH_MS = 2500
+
+/** Age of an interaction when the bot first sees it. Clock skew is clamped to zero. */
+export function dispatchLagMs(createdTimestamp: number, now: number): number {
+	return Math.max(0, now - createdTimestamp)
+}
+
+export interface LateDispatch {
+	interactionType: number
+	command?: string
+	requestId: string
+	lagMs: number
+}
+
+let onLateDispatch: ((late: LateDispatch) => void) | undefined
+
+/** Set once at startup. Interactions that arrive past the window go to it. */
+export function setLateDispatchHandler(
+	handler: (late: LateDispatch) => void,
+): void {
+	onLateDispatch = handler
+}
+
+function reportLateDispatch(interaction: Interaction, now: number): void {
+	const lagMs = dispatchLagMs(interaction.createdTimestamp, now)
+	if (lagMs <= LATE_DISPATCH_MS) return
+	onLateDispatch?.({
+		interactionType: interaction.type,
+		command: interaction.isCommand() ? interaction.commandName : undefined,
+		requestId: interaction.id,
+		lagMs,
+	})
+}
+
 function wrapInteractionEmit(
 	client: Client,
 	around: (interaction: Interaction, dispatch: () => boolean) => boolean,
@@ -159,6 +194,8 @@ function wrapInteractionEmit(
 	const emit = client.emit.bind(client) as Emit
 	client.emit = ((event: string | symbol, ...args: unknown[]) => {
 		if (event !== Events.InteractionCreate) return emit(event, ...args)
-		return around(args[0] as Interaction, () => emit(event, ...args))
+		const interaction = args[0] as Interaction
+		reportLateDispatch(interaction, Date.now())
+		return around(interaction, () => emit(event, ...args))
 	}) as Client['emit']
 }

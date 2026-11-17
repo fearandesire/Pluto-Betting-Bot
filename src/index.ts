@@ -8,8 +8,10 @@ import {
 import '@sapphire/plugin-hmr/register'
 import { GatewayIntentBits, Partials } from 'discord.js'
 import { startPluto } from './lib/startup/pluto.js'
+import { startEventLoopMonitor } from './lib/telemetry/event-loop-monitor.js'
 import {
 	bindInteractionRequestContext,
+	setLateDispatchHandler,
 	traceInteractions,
 } from './lib/telemetry/interaction-context.js'
 import { isTracingEnabled } from './lib/telemetry/tracing-flag.js'
@@ -70,6 +72,14 @@ logger.info({
 	message: 'Pluto is starting up',
 })
 
+setLateDispatchHandler((late) =>
+	logger.warn({
+		message: 'Interaction reached the bot after the acknowledgement window',
+		event: 'interaction.dispatch_late',
+		...late,
+	}),
+)
+startEventLoopMonitor()
 void startPluto({ client: SapDiscClient })
 
 export { SapDiscClient }

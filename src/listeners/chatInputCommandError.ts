@@ -6,7 +6,14 @@ import {
 import { EmbedBuilder, MessageFlags } from 'discord.js'
 import embedColors from '../lib/colorsConfig.js'
 import { sendErrorNotice } from '../lib/discord/v2/notice.js'
+import { reportBettingFailure } from '../services/alerts/betting-ops-alert.js'
 import GuildWrapper from '../utils/api/Khronos/guild/guild-wrapper.js'
+import { betReference } from '../utils/betting/bet-reference.js'
+import {
+	isBettingCommand,
+	isPlacementCommand,
+	isUnknownInteraction,
+} from '../utils/betting/betting-commands.js'
 import { createLogger } from '../utils/logging/WinstonLogger.js'
 
 /** Command categories whose errors are routed to the guild log channel. */
@@ -16,6 +23,27 @@ const log = createLogger({
 	component: 'event',
 	handler: 'chatInputCommandError',
 })
+
+/**
+ * What the user sees after an unexpected failure. A placement command may have
+ * written the bet before it failed, so its copy says the state is unknown and
+ * points to /mybets rather than claiming the bet was not placed.
+ */
+function failureCopy(commandName: string, interactionId: string) {
+	const ref = `Reference: \`${betReference(interactionId)}\``
+	if (isPlacementCommand(commandName)) {
+		return {
+			title: 'Bet not confirmed',
+			description: `Your bet was not placed, or its state is unknown. Check /mybets before you try again.\n${ref}`,
+		}
+	}
+	return {
+		title: 'Something went wrong',
+		description: isBettingCommand(commandName)
+			? `An unexpected error occurred. Please try again in a moment.\n${ref}`
+			: 'An unexpected error occurred while running this command. The issue has been logged and will be looked into.',
+	}
+}
 
 export class ChatInputCommandError extends Listener<
 	typeof Events.ChatInputCommandError
@@ -41,6 +69,24 @@ export class ChatInputCommandError extends Listener<
 			channelId: interaction.channelId,
 			err,
 		})
+
+		if (isBettingCommand(command.name)) {
+			const expired = isUnknownInteraction(err)
+			const event = expired
+				? 'interaction.expired_before_ack'
+				: 'command.failed'
+			const errorName = err instanceof Error ? err.name : 'unknown'
+			reportBettingFailure({
+				key: `${event}:${command.name}:${errorName}`,
+				event,
+				command: command.name,
+				guildId: interaction.guildId,
+				channelId: interaction.channelId,
+				userId: interaction.user.id,
+				requestId: interaction.id,
+				error: err,
+			})
+		}
 
 		// For privileged (admin / dev) commands, also post a sanitized report
 		// to the guild's configured log channel so staff can triage without
@@ -158,12 +204,11 @@ export class ChatInputCommandError extends Listener<
 		interaction: ChatInputCommandErrorPayload['interaction'],
 		commandName: string,
 	): Promise<void> {
+		const copy = failureCopy(commandName, interaction.id)
 		const embed = new EmbedBuilder()
 			.setColor(embedColors.error as `#${string}`)
-			.setTitle('Something went wrong')
-			.setDescription(
-				'An unexpected error occurred while running this command. The issue has been logged and will be looked into.',
-			)
+			.setTitle(copy.title)
+			.setDescription(copy.description)
 
 		const payload = {
 			embeds: [embed],

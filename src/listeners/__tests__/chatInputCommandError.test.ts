@@ -28,6 +28,7 @@ function chatInput(state: {
 		editReply: vi.fn(async (_p: unknown) => ({})),
 		followUp: vi.fn(async (_p: unknown) => ({})),
 		reply: vi.fn(async (_p: unknown) => ({ resource: { message: {} } })),
+		id: '1234567890123456789',
 		user: { id: 'u' },
 	}
 }

@@ -76,6 +76,11 @@ const envSchema = z
 		STATS_PROPS_ENABLED: z.boolean().default(false),
 		PLUTO_SYSTEM_MODE: z.boolean().default(false),
 		PLUTO_SYSTEM_ALLOW: z.boolean().default(false),
+		// Optional. Unset disables betting ops alerts. The value is never logged.
+		BETTING_OPS_WEBHOOK_URL: z.preprocess(
+			(value) => (value === '' ? undefined : value),
+			z.url().optional(),
+		),
 	})
 	.superRefine((data, ctx) => {
 		const systemFlagsSet = data.PLUTO_SYSTEM_MODE && data.PLUTO_SYSTEM_ALLOW
@@ -227,6 +232,7 @@ export function parseStartupEnv(
 		PERIOD_WINNERS_WEEKLY_CRON: source.PERIOD_WINNERS_WEEKLY_CRON,
 		PERIOD_WINNERS_MONTHLY_CRON: source.PERIOD_WINNERS_MONTHLY_CRON,
 		STATS_PROPS_ENABLED: envFlag(source.STATS_PROPS_ENABLED),
+		BETTING_OPS_WEBHOOK_URL: source.BETTING_OPS_WEBHOOK_URL,
 		PLUTO_SYSTEM_MODE: envFlag(source.PLUTO_SYSTEM_MODE),
 		PLUTO_SYSTEM_ALLOW: envFlag(source.PLUTO_SYSTEM_ALLOW),
 	})
