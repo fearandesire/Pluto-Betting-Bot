@@ -12,9 +12,12 @@ import {
 	type BettingOpsFailure,
 	createBettingOpsAlerter,
 	describeError,
+	webhookUrlFor,
 } from '../betting-ops-alert.js'
 
-const WEBHOOK = 'https://discord.example.invalid/api/webhooks/1/secret-token'
+// A standard channel-settings webhook, as Discord issues it.
+const WEBHOOK = 'https://discord.com/api/webhooks/123456789012345678/token-abc'
+const V2_FLAG = 1 << 15
 
 const failure = (overrides: Partial<BettingOpsFailure> = {}) => ({
 	key: 'command.failed:bet:TypeError',
@@ -28,9 +31,18 @@ const failure = (overrides: Partial<BettingOpsFailure> = {}) => ({
 	...overrides,
 })
 
-const okResponse = () => new Response(null, { status: 204 })
+const okResponse = () => new Response(null, { status: 200 })
+const rejectedResponse = () => new Response('{}', { status: 400 })
 
-function harness(send = vi.fn(async () => okResponse())) {
+type Call = [string, RequestInit]
+const callAt = (send: { mock: { calls: unknown[][] } }, i: number) =>
+	send.mock.calls[i] as unknown as Call
+const bodyAt = (send: { mock: { calls: unknown[][] } }, i: number) =>
+	JSON.parse(callAt(send, i)[1].body as string)
+
+function harness(
+	send = vi.fn(async (_url: string, _init: RequestInit) => okResponse()),
+) {
 	let t = 1_000_000
 	const alerter = createBettingOpsAlerter({
 		url: WEBHOOK,
@@ -49,19 +61,37 @@ function harness(send = vi.fn(async () => okResponse())) {
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
 
-describe('createBettingOpsAlerter', () => {
-	it('posts one embed with the failure context and the version', async () => {
+describe('webhookUrlFor', () => {
+	it('adds with_components and wait to a standard webhook URL', () => {
+		const url = new URL(webhookUrlFor(WEBHOOK))
+		expect(url.origin + url.pathname).toBe(WEBHOOK)
+		expect(url.searchParams.get('with_components')).toBe('true')
+		expect(url.searchParams.get('wait')).toBe('true')
+	})
+
+	it('keeps other query parameters such as thread_id', () => {
+		const url = new URL(webhookUrlFor(`${WEBHOOK}?thread_id=42`))
+		expect(url.searchParams.get('thread_id')).toBe('42')
+		expect(url.searchParams.get('with_components')).toBe('true')
+	})
+
+	it('is idempotent', () => {
+		const once = webhookUrlFor(WEBHOOK)
+		expect(webhookUrlFor(once)).toBe(once)
+	})
+})
+
+describe('createBettingOpsAlerter transport', () => {
+	it('posts a Components V2 payload with no content or embeds to the with_components URL', async () => {
 		const { send, alerter } = harness()
 		alerter.report(failure())
 		await flush()
 
 		expect(send).toHaveBeenCalledTimes(1)
-		const [url, init] = send.mock.calls[0] as unknown as [
-			string,
-			RequestInit,
-		]
-		expect(url).toBe(WEBHOOK)
-		const sent = JSON.parse(init.body as string)
+		expect(
+			new URL(callAt(send, 0)[0]).searchParams.get('with_components'),
+		).toBe('true')
+		const sent = bodyAt(send, 0)
 		const text = JSON.stringify(sent)
 		expect(text).toContain('Critical betting failure')
 		expect(text).toContain('service=pluto · v4.20.0')
@@ -72,7 +102,36 @@ describe('createBettingOpsAlerter', () => {
 		expect(text).toContain('**Request:** 1234567890123456789')
 		expect(text).toContain('TypeError: boom')
 		expect(sent.embeds).toBeUndefined()
-		expect(sent.flags & (1 << 15)).toBeTruthy()
+		expect(sent.content).toBeUndefined()
+		expect(sent.flags & V2_FLAG).toBeTruthy()
+		expect(sent.components.length).toBeGreaterThan(0)
+	})
+
+	it('falls back to a separate plain-text message when the V2 message is rejected', async () => {
+		const send = vi
+			.fn(async (_url: string, _init: RequestInit) => rejectedResponse())
+			.mockResolvedValueOnce(rejectedResponse())
+			.mockResolvedValueOnce(okResponse())
+		const { alerter } = harness(send)
+		alerter.report(failure())
+		await flush()
+
+		expect(send).toHaveBeenCalledTimes(2)
+		const fallback = bodyAt(send, 1)
+		expect(fallback.flags).toBeUndefined()
+		expect(fallback.allowed_mentions).toEqual({ parse: [] })
+		expect(fallback.components).toBeUndefined()
+		expect(typeof fallback.content).toBe('string')
+		expect(fallback.content).toContain('command.failed')
+		expect(fallback.content).toContain('/bet')
+		expect(fallback.content.length).toBeLessThanOrEqual(2000)
+	})
+
+	it('sends nothing extra when the V2 message is accepted', async () => {
+		const { send, alerter } = harness()
+		alerter.report(failure())
+		await flush()
+		expect(send).toHaveBeenCalledTimes(1)
 	})
 
 	it('sends at most once per key inside the dedupe window and counts the repeats', async () => {
@@ -88,11 +147,7 @@ describe('createBettingOpsAlerter', () => {
 		await flush()
 
 		expect(send).toHaveBeenCalledTimes(2)
-		const body = JSON.parse(
-			(send.mock.calls[1] as unknown as [string, RequestInit])[1]
-				.body as string,
-		)
-		expect(JSON.stringify(body)).toContain('2 repeat(s)')
+		expect(JSON.stringify(bodyAt(send, 1))).toContain('2 repeat(s)')
 	})
 
 	it('keeps a different key on its own window', async () => {
@@ -116,10 +171,12 @@ describe('createBettingOpsAlerter', () => {
 		expect(() => alerter.report(failure())).not.toThrow()
 		await flush()
 	})
+})
 
+describe('describeError', () => {
 	it('redacts URLs from the error text so the webhook address never reaches the channel', () => {
 		const text = describeError(new Error(`request to ${WEBHOOK} failed`))
-		expect(text).not.toContain('secret-token')
+		expect(text).not.toContain('token-abc')
 		expect(text).toContain('[url]')
 	})
 })

@@ -249,9 +249,7 @@ describe('H2H placement identity', () => {
 			{} as never,
 		)
 
-		expect(editReply).toHaveBeenLastCalledWith(
-			expect.not.objectContaining({ components: [] }),
-		)
+		expect(editReply).not.toHaveBeenCalled()
 		expect(clearUserBet).not.toHaveBeenCalled()
 	})
 
@@ -277,9 +275,7 @@ describe('H2H placement identity', () => {
 			{} as never,
 		)
 
-		expect(editReply).toHaveBeenCalledWith(
-			expect.not.objectContaining({ components: [] }),
-		)
+		expect(editReply).not.toHaveBeenCalled()
 		expect(finalize).toHaveBeenCalledWith({ placeBetDto: bet })
 	})
 
@@ -291,6 +287,7 @@ describe('H2H placement identity', () => {
 			{ clearUserBet: vi.fn() } as never,
 		)
 		const editReply = vi.fn()
+		const deleteReply = vi.fn(async () => undefined)
 
 		await manager.placeBet(
 			{
@@ -298,6 +295,7 @@ describe('H2H placement identity', () => {
 				replied: false,
 				editReply,
 				followUp: vi.fn(),
+				deleteReply,
 				id: '1234567890123456789',
 				user: { displayAvatarURL: () => 'avatar' },
 			} as never,
@@ -305,9 +303,7 @@ describe('H2H placement identity', () => {
 			{} as never,
 		)
 
-		expect(editReply).toHaveBeenCalledWith(
-			expect.objectContaining({ components: [] }),
-		)
+		expect(deleteReply).toHaveBeenCalledTimes(1)
 	})
 
 	it('keeps the cached placement id until a placement succeeds', async () => {
