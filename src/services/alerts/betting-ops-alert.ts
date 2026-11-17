@@ -146,6 +146,7 @@ export function createBettingOpsAlerter(
 		if (v2.ok) return
 		const fallback = await postJson({
 			username: 'Pluto ops',
+			allowed_mentions: { parse: [] },
 			content: buildFallbackContent(
 				failure,
 				suppressed,

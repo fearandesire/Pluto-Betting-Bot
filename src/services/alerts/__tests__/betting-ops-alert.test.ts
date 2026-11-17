@@ -119,6 +119,7 @@ describe('createBettingOpsAlerter transport', () => {
 		expect(send).toHaveBeenCalledTimes(2)
 		const fallback = bodyAt(send, 1)
 		expect(fallback.flags).toBeUndefined()
+		expect(fallback.allowed_mentions).toEqual({ parse: [] })
 		expect(fallback.components).toBeUndefined()
 		expect(typeof fallback.content).toBe('string')
 		expect(fallback.content).toContain('command.failed')
