@@ -5,12 +5,12 @@ import {
 } from '@sapphire/framework'
 import { EmbedBuilder, MessageFlags } from 'discord.js'
 import embedColors from '../lib/colorsConfig.js'
-import { sendErrorNotice } from '../lib/discord/v2/notice.js'
+import { sendBettingNotice, sendErrorNotice } from '../lib/discord/v2/notice.js'
 import { reportBettingFailure } from '../services/alerts/betting-ops-alert.js'
 import GuildWrapper from '../utils/api/Khronos/guild/guild-wrapper.js'
 import {
 	betReference,
-	unconfirmedBetDescription,
+	unconfirmedBetCopy,
 } from '../utils/betting/bet-reference.js'
 import {
 	isBettingCommand,
@@ -32,18 +32,16 @@ const log = createLogger({
  * written the bet before it failed, so its copy says the bet is unconfirmed and
  * points to /mybets rather than claiming the bet was not placed.
  */
-function failureCopy(commandName: string, interactionId: string) {
-	const ref = `Reference: \`${betReference(interactionId)}\``
-	if (isPlacementCommand(commandName)) {
-		return {
-			title: 'Bet not confirmed',
-			description: unconfirmedBetDescription(interactionId),
-		}
-	}
+function failureCopy(
+	commandName: string,
+	interactionId: string,
+): { title: string; description: string } {
+	if (isPlacementCommand(commandName))
+		return unconfirmedBetCopy(interactionId)
 	return {
 		title: 'Something went wrong',
 		description: isBettingCommand(commandName)
-			? `An unexpected error occurred. Please try again in a moment.\n${ref}`
+			? `An unexpected error occurred. Please try again in a moment.\nReference: \`${betReference(interactionId)}\``
 			: 'An unexpected error occurred while running this command. The issue has been logged and will be looked into.',
 	}
 }
@@ -200,7 +198,8 @@ export class ChatInputCommandError extends Listener<
 	}
 
 	/**
-	 * Replies to (or follows up on) the interaction with a clean error embed.
+	 * Replies to the interaction with a clean error. Betting commands get a
+	 * Components V2 notice. Other commands keep the classic embed path.
 	 * Handles deferred, already-replied, and fresh interaction states.
 	 */
 	private async replyWithErrorEmbed(
@@ -208,21 +207,26 @@ export class ChatInputCommandError extends Listener<
 		commandName: string,
 	): Promise<void> {
 		const copy = failureCopy(commandName, interaction.id)
-		const embed = new EmbedBuilder()
-			.setColor(embedColors.error as `#${string}`)
-			.setTitle(copy.title)
-			.setDescription(copy.description)
-
-		const payload = {
-			embeds: [embed],
-			flags: MessageFlags.Ephemeral as
-				| MessageFlags.Ephemeral
-				| MessageFlags.SuppressEmbeds
-				| MessageFlags.SuppressNotifications
-				| MessageFlags.IsComponentsV2,
-		}
-
 		try {
+			if (isBettingCommand(commandName)) {
+				await sendBettingNotice(interaction, copy)
+				return
+			}
+
+			const embed = new EmbedBuilder()
+				.setColor(embedColors.error as `#${string}`)
+				.setTitle(copy.title)
+				.setDescription(copy.description)
+
+			const payload = {
+				embeds: [embed],
+				flags: MessageFlags.Ephemeral as
+					| MessageFlags.Ephemeral
+					| MessageFlags.SuppressEmbeds
+					| MessageFlags.SuppressNotifications
+					| MessageFlags.IsComponentsV2,
+			}
+
 			// V2 reply → ephemeral V2 follow-up; classic: edit if deferred, else follow up.
 			await sendErrorNotice(interaction, embed, {
 				classic: () =>

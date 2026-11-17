@@ -24,11 +24,12 @@ import {
 	parlayPlacedAnnouncementEmbed,
 	pendingBetslip,
 } from '../../../../lib/discord/builders/betting.js'
+import { sendBettingNotice } from '../../../../lib/discord/v2/notice.js'
 import { ApiModules } from '../../../../lib/interfaces/api/api.interface.js'
 import type { IAPIBetslipPayload } from '../../../../lib/interfaces/api/bets/betslips.interfaces.js'
 import { isApiError } from '../../../../lib/interfaces/errors/api-errors.js'
 import { reportBettingFailure } from '../../../../services/alerts/betting-ops-alert.js'
-import { unconfirmedBetDescription } from '../../../betting/bet-reference.js'
+import { unconfirmedBetCopy } from '../../../betting/bet-reference.js'
 import { findEmoji } from '../../../bot_res/findEmoji.js'
 import { ErrorEmbeds } from '../../../common/errors/global.js'
 import StringUtils from '../../../common/string-utils.js'
@@ -192,28 +193,17 @@ export class BetslipManager {
 					balance: (betslip.newBalance ?? 0) + betslip.amount,
 				})
 			} else {
-				const errEmbed = await ErrorEmbeds.internalErr(
-					unconfirmedBetDescription(interaction.id),
-				)
-				if (interaction.deferred || interaction.replied) {
-					return interaction.editReply({
-						embeds: [errEmbed],
-						...(this.isDefinitiveBusinessFailure(
+				return sendBettingNotice(
+					interaction,
+					unconfirmedBetCopy(interaction.id),
+					{
+						keepOriginal: !this.isDefinitiveBusinessFailure(
 							response.statusCode,
-						)
-							? { components: [] }
-							: {}),
-					})
-				}
-				return interaction.followUp({
-					embeds: [errEmbed],
-					ephemeral: true,
-				})
+						),
+					},
+				)
 			}
 		} catch (error) {
-			const errEmbed = await ErrorEmbeds.internalErr(
-				unconfirmedBetDescription(interaction.id),
-			)
 			logger.error('Failed to place bet', { error })
 			reportBettingFailure({
 				key: `bet.placement_failed:${error instanceof Error ? error.name : 'unknown'}`,
@@ -224,18 +214,13 @@ export class BetslipManager {
 				requestId: interaction.id,
 				error,
 			})
-			if (interaction.deferred || interaction.replied) {
-				return interaction.editReply({
-					embeds: [errEmbed],
-					...(this.isDefinitiveBusinessFailure(error)
-						? { components: [] }
-						: {}),
-				})
-			}
-			return interaction.followUp({
-				embeds: [errEmbed],
-				ephemeral: true,
-			})
+			return sendBettingNotice(
+				interaction,
+				unconfirmedBetCopy(interaction.id),
+				{
+					keepOriginal: !this.isDefinitiveBusinessFailure(error),
+				},
+			)
 		}
 	}
 

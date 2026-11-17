@@ -34,13 +34,19 @@ export function describeError(error: unknown): string {
 	return raw.replace(/https?:\/\/\S+/g, '[url]').slice(0, MAX_ERROR_CHARS)
 }
 
-/** Components V2 payload, so the alert follows the repo's message rules. */
-export function buildPayload(
-	failure: BettingOpsFailure,
-	suppressed: number,
-	version: string,
-	at: Date,
-) {
+/**
+ * Channel-settings webhooks accept Components V2 only with `with_components=true`.
+ * `wait=true` returns the created message so a rejection is visible to us.
+ * Other query parameters (such as `thread_id`) are kept as they are.
+ */
+export function webhookUrlFor(raw: string): string {
+	const url = new URL(raw)
+	url.searchParams.set('wait', 'true')
+	url.searchParams.set('with_components', 'true')
+	return url.toString()
+}
+
+const rowsFor = (failure: BettingOpsFailure, suppressed: number) => {
 	const rows: [string, string][] = [
 		['Event', failure.event],
 		['Command', failure.command ? `/${failure.command}` : 'n/a'],
@@ -53,7 +59,19 @@ export function buildPayload(
 	if (suppressed > 0) {
 		rows.push(['Suppressed', `${suppressed} repeat(s) in the last 10 min`])
 	}
-	const body = rows.map(([name, value]) => `**${name}:** ${value}`).join('\n')
+	return rows
+}
+
+/** Components V2 payload, so the alert follows the repo's message rules. */
+export function buildPayload(
+	failure: BettingOpsFailure,
+	suppressed: number,
+	version: string,
+	at: Date,
+) {
+	const body = rowsFor(failure, suppressed)
+		.map(([name, value]) => `**${name}:** ${value}`)
+		.join('\n')
 	return {
 		username: 'Pluto ops',
 		...v2Payload({
@@ -64,6 +82,22 @@ export function buildPayload(
 			],
 		}),
 	}
+}
+
+/**
+ * Plain-text fallback for when the V2 message is rejected. Discord refuses
+ * `content` on a Components V2 message, so this is a separate message.
+ */
+export function buildFallbackContent(
+	failure: BettingOpsFailure,
+	suppressed: number,
+	version: string,
+	at: Date,
+): string {
+	const fields = rowsFor(failure, suppressed)
+		.map(([name, value]) => `${name}: ${value.replaceAll('`', '')}`)
+		.join(' | ')
+	return `Critical betting failure (service=pluto ${version}, ${at.toISOString()}): ${fields}`
 }
 
 export interface BettingOpsAlerterOptions {
@@ -96,27 +130,40 @@ export function createBettingOpsAlerter(
 	const timeoutMs = options.timeoutMs ?? POST_TIMEOUT_MS
 	const slots = new Map<string, Slot>()
 
-	const post = async (failure: BettingOpsFailure, suppressed: number) => {
-		const response = await send(options.url, {
+	const postJson = (body: unknown) =>
+		send(webhookUrlFor(options.url), {
 			method: 'POST',
 			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify(
-				buildPayload(
-					failure,
-					suppressed,
-					options.version,
-					new Date(now()),
-				),
-			),
+			body: JSON.stringify(body),
 			signal: AbortSignal.timeout(timeoutMs),
 		})
-		if (!response.ok) {
-			logger.warn('Betting ops alert was rejected', {
+
+	const post = async (failure: BettingOpsFailure, suppressed: number) => {
+		const at = new Date(now())
+		const v2 = await postJson(
+			buildPayload(failure, suppressed, options.version, at),
+		)
+		if (v2.ok) return
+		const fallback = await postJson({
+			username: 'Pluto ops',
+			content: buildFallbackContent(
+				failure,
+				suppressed,
+				options.version,
+				at,
+			),
+		})
+		logger.warn(
+			fallback.ok
+				? 'Betting ops alert was sent as plain text after the V2 message was rejected'
+				: 'Betting ops alert was rejected in both forms',
+			{
 				event: 'betting_ops.alert_failed',
-				status: response.status,
+				status: v2.status,
+				fallbackStatus: fallback.status,
 				alertEvent: failure.event,
-			})
-		}
+			},
+		)
 	}
 
 	const prune = (t: number) => {

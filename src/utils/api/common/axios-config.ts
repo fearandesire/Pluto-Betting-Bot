@@ -7,7 +7,7 @@ import {
 	outboundRequestId,
 	REQUEST_ID_HEADER,
 } from '../../../lib/telemetry/request-context.js'
-import { reportBettingFailure } from '../../../services/alerts/betting-ops-alert.js'
+import { checkBettingOutage } from '../Khronos/betting-outage.js'
 
 /**
  * Axios Instance(s) configured for our needs to reduce redundant specifications/setup
@@ -38,32 +38,19 @@ AxiosKhronosInstance.interceptors.request.use((config) => {
 	return config
 })
 
-const BETSLIP_PATH = /betslips\//
-
-/**
- * Pages ops when a betting request times out or Khronos returns a 5xx. The
- * alert names the route, never the path's ids, and the error is rethrown
- * unchanged so callers behave exactly as before.
- */
-function reportKhronosBettingFailure(error: unknown): void {
-	if (!axios.isAxiosError(error)) return
-	const url = error.config?.url ?? ''
-	if (!BETSLIP_PATH.test(url)) return
-	const timedOut = error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT'
-	const status = error.response?.status
-	if (!timedOut && (status === undefined || status < 500)) return
-	const route = url.split('/').slice(0, 2).join('/')
-	const cause = timedOut ? 'timeout' : `HTTP ${status}`
-	reportBettingFailure({
-		key: `khronos.betting_unavailable:${route}:${cause}`,
-		event: 'khronos.betting_unavailable',
-		requestId: String(error.config?.headers?.get(REQUEST_ID_HEADER) ?? ''),
-		error: new Error(`Khronos betting ${cause} on ${route}`),
-	})
-}
-
+// Parlay calls use this instance (ParlayApiWrapper). Betslip calls use the
+// generated client's fetch hook in KhronosInstances.ts.
 AxiosKhronosInstance.interceptors.response.use(undefined, (error: unknown) => {
-	reportKhronosBettingFailure(error)
+	if (axios.isAxiosError(error)) {
+		checkBettingOutage({
+			url: error.config?.url ?? '',
+			requestId: error.config?.headers
+				?.get(REQUEST_ID_HEADER)
+				?.toString(),
+			status: error.response?.status,
+			error,
+		})
+	}
 	return Promise.reject(error)
 })
 
