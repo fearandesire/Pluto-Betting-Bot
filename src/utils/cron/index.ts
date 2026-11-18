@@ -5,17 +5,11 @@
 import env from '../../lib/startup/env.js'
 import GuildWrapper from '../api/Khronos/guild/guild-wrapper.js'
 import LeaderboardWrapper from '../api/Khronos/leaderboard/leaderboard-wrapper.js'
-import PredictionApiWrapper from '../api/Khronos/prediction/predictionApiWrapper.js'
-import PropsApiWrapper from '../api/Khronos/props/props-api-wrapper.js'
 import RecapWrapper from '../api/Khronos/recap/recap-wrapper.js'
 import { Cache } from '../cache/cache-manager.js'
 import { logger } from '../logging/WinstonLogger.js'
-import { ActivePropsService } from '../props/ActivePropsService.js'
-import { PropsCacheService } from '../props/PropCacheService.js'
 import { LeaderboardAutoPostService } from './LeaderboardAutoPostService.js'
 import { PeriodWinnersCronService } from './PeriodWinnersCronService.js'
-import { PropsCronScheduler } from './PropsCronScheduler.js'
-import { PropsCronService } from './PropsCronService.js'
 import { RecapCronScheduler } from './RecapCronScheduler.js'
 import { RecapCronService } from './RecapCronService.js'
 import {
@@ -27,63 +21,6 @@ export {
 	resolveLeaderboardTargets,
 	resolveRecapTargets,
 } from './recap-targets.js'
-
-/**
- * Initialize and start the props cron scheduler
- * This should be called once during application startup
- */
-export async function initializePropsCron(): Promise<PropsCronScheduler> {
-	await logger.info({
-		message: 'Initializing props cron scheduler',
-		metadata: { source: 'initializePropsCron' },
-	})
-
-	// Get dependencies
-	const cacheManager = Cache()
-	const propsWrapper = new PropsApiWrapper()
-	const predictionWrapper = new PredictionApiWrapper()
-
-	// Initialize services
-	const propsCacheService = new PropsCacheService(cacheManager)
-	const activePropsService = new ActivePropsService(
-		predictionWrapper,
-		propsCacheService,
-	)
-	const cronService = new PropsCronService(
-		propsWrapper,
-		propsCacheService,
-		activePropsService,
-	)
-
-	// Create and start scheduler
-	const scheduler = new PropsCronScheduler(cronService)
-	await scheduler.start()
-
-	await logger.info({
-		message: 'Props cron scheduler initialized and started',
-		metadata: { source: 'initializePropsCron' },
-	})
-
-	return scheduler
-}
-
-// Export the scheduler instance for use in other parts of the app
-let propsCronScheduler: PropsCronScheduler | null = null
-
-/**
- * Get the singleton props cron scheduler instance
- */
-export function getPropsCronScheduler(): PropsCronScheduler | null {
-	return propsCronScheduler
-}
-
-/**
- * Set the props cron scheduler instance
- * Called by initializePropsCron
- */
-export function setPropsCronScheduler(scheduler: PropsCronScheduler): void {
-	propsCronScheduler = scheduler
-}
 
 /**
  * Initialize the weekly recap digest. Recap remains opt-out by default but
@@ -317,17 +254,15 @@ export function getLeaderboardSchedulers(): RecapCronScheduler[] {
 // We use a slight delay to ensure all dependencies are loaded
 setTimeout(async () => {
 	try {
-		const scheduler = await initializePropsCron()
-		setPropsCronScheduler(scheduler)
 		const recapScheduler = await initializeRecapCron()
 		recapCronScheduler = recapScheduler
 		periodWinnersSchedulers = await initializePeriodWinnersCron()
 		leaderboardSchedulers = await initializeLeaderboardAutoPostCrons()
 	} catch (error) {
 		await logger.error({
-			message: 'Failed to initialize props cron scheduler',
+			message: 'Failed to initialize cron schedulers',
 			metadata: {
-				source: 'initializePropsCron',
+				source: 'cron/index',
 				error: error instanceof Error ? error.message : String(error),
 			},
 		})

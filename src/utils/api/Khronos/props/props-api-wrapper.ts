@@ -67,66 +67,6 @@ export default class PropsApiWrapper {
 	}
 
 	/**
-	 * Get random props for a sport
-	 * @param sport - Sport key (nba, nfl, etc.)
-	 * @param count - Number of random props to return
-	 */
-	async getRandomProps(
-		sport: 'nba' | 'nfl',
-		count?: number,
-	): Promise<PropDto[]> {
-		const source = `${this.constructor.name}.${this.getRandomProps.name}`
-
-		try {
-			const response = await pTimeout(
-				this.propsApi.propsControllerGetRandomPropsV1({
-					sport,
-					count,
-				}),
-				{ milliseconds: DEFAULT_TIMEOUT_MS },
-			)
-
-			await logger.info({
-				message: `Retrieved ${response.length} random props for ${sport}`,
-				metadata: {
-					source,
-					sport,
-					count: response.length,
-				},
-			})
-
-			return response
-		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : String(error)
-			const status =
-				error instanceof ResponseError
-					? error.response.status
-					: undefined
-
-			await logger.error({
-				message: `Failed to fetch random props: ${errorMessage}`,
-				metadata: {
-					source,
-					sport,
-					count,
-					error: errorMessage,
-					status,
-					body:
-						error instanceof ResponseError
-							? await error.response
-									.clone()
-									.json()
-									.catch(() => null)
-							: undefined,
-				},
-			})
-
-			throw new Error(`Failed to fetch random props: ${errorMessage}`)
-		}
-	}
-
-	/**
 	 * Get a single random prop
 	 * @param sport - Sport key (nba, nfl, etc.)
 	 */
