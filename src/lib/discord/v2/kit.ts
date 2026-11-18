@@ -25,6 +25,12 @@ export type V2Block =
 	| SectionBuilder
 	| MediaGalleryBuilder
 
+/** A button row that can sit between blocks, next to the row it acts on. */
+export type V2Row = ActionRowBuilder<MessageActionRowComponentBuilder>
+
+/** Display blocks plus rows, in the exact order Discord renders them. */
+export type V2Item = V2Block | V2Row
+
 export type V2MessagePayload = {
 	components: ContainerBuilder[]
 	flags: MessageFlags.IsComponentsV2 | number
@@ -77,8 +83,11 @@ export function accent(name: keyof typeof embedColors & string): number {
 /** Flags for editReply/followUp after a plain defer. Discord rejects Ephemeral on edits. */
 export const v2EditFlags = () => MessageFlags.IsComponentsV2 as const
 
-function blockCost(block: V2Block): { components: number; chars: number } {
-	const json = block.toJSON() as {
+function blockCost(item: V2Item): { components: number; chars: number } {
+	if (item instanceof ActionRowBuilder) {
+		return { components: 1 + item.components.length, chars: 0 }
+	}
+	const json = item.toJSON() as {
 		content?: string
 		components?: Array<{ content?: string }>
 		accessory?: unknown
@@ -97,11 +106,12 @@ function blockCost(block: V2Block): { components: number; chars: number } {
 
 /**
  * Build a Components V2 message: one container holding the blocks and
- * optional button rows. Never throws on overflow — text is clamped across
- * all blocks and trailing blocks are dropped past 40 components.
+ * optional button rows. A row may sit between blocks so each control renders
+ * next to the row it acts on. Never throws on overflow — text is clamped
+ * across all blocks and items past 40 components are dropped.
  */
 export function v2Payload(opts: {
-	blocks: V2Block[]
+	blocks: V2Item[]
 	accent?: number
 	actions?: MessageActionRowComponentBuilder[][]
 	files?: AttachmentBuilder[]
@@ -110,8 +120,8 @@ export function v2Payload(opts: {
 	const container = new ContainerBuilder()
 	if (opts.accent !== undefined) container.setAccentColor(opts.accent)
 
-	// Rows are admitted first (controls matter) but only while they fit;
-	// blocks then fill whatever budget is left.
+	// Trailing actions are admitted first (controls matter) but only while
+	// they fit; blocks then fill whatever budget is left.
 	let componentsLeft = V2_MAX_COMPONENTS - 1
 	const rows: ActionRowBuilder<MessageActionRowComponentBuilder>[] = []
 	for (const r of opts.actions ?? []) {
@@ -126,12 +136,18 @@ export function v2Payload(opts: {
 	}
 	let charsLeft = V2_MAX_TEXT_CHARS
 
-	for (const block of opts.blocks) {
-		const cost = blockCost(block)
-		if (cost.components > componentsLeft || charsLeft <= 0) break
-		if (block instanceof TextDisplayBuilder && cost.chars > charsLeft) {
-			const content = block.data.content ?? ''
-			block.setContent(`${content.slice(0, charsLeft - 1)}…`)
+	for (const item of opts.blocks) {
+		const cost = blockCost(item)
+		if (cost.components > componentsLeft) break
+		if (item instanceof ActionRowBuilder) {
+			componentsLeft -= cost.components
+			container.addActionRowComponents(item)
+			continue
+		}
+		if (charsLeft <= 0) break
+		if (item instanceof TextDisplayBuilder && cost.chars > charsLeft) {
+			const content = item.data.content ?? ''
+			item.setContent(`${content.slice(0, charsLeft - 1)}…`)
 			charsLeft = 0
 		} else if (cost.chars > charsLeft) {
 			break
@@ -139,13 +155,13 @@ export function v2Payload(opts: {
 			charsLeft -= cost.chars
 		}
 		componentsLeft -= cost.components
-		if (block instanceof TextDisplayBuilder)
-			container.addTextDisplayComponents(block)
-		else if (block instanceof SeparatorBuilder)
-			container.addSeparatorComponents(block)
-		else if (block instanceof SectionBuilder)
-			container.addSectionComponents(block)
-		else container.addMediaGalleryComponents(block)
+		if (item instanceof TextDisplayBuilder)
+			container.addTextDisplayComponents(item)
+		else if (item instanceof SeparatorBuilder)
+			container.addSeparatorComponents(item)
+		else if (item instanceof SectionBuilder)
+			container.addSectionComponents(item)
+		else container.addMediaGalleryComponents(item)
 	}
 	if (rows.length) container.addActionRowComponents(rows)
 

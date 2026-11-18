@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 // Import interfaces and potentially the Discord client type
 import { container } from '@sapphire/framework'
 import { EmbedBuilder, type Message } from 'discord.js'
@@ -7,6 +7,13 @@ import {
 	parlayResultEmbeds,
 } from '../../../../lib/discord/builders/notifications.js'
 import { propSettlementEmbed } from '../../../../lib/discord/builders/props.js'
+import { isV2Message } from '../../../../lib/discord/v2/edit.js'
+import { v2EditFlags } from '../../../../lib/discord/v2/kit.js'
+import {
+	disableSettledPropRow,
+	settleV2BoardComponents,
+	toComponentJsonList,
+} from '../../../../lib/discord/v2/prop-settlement.js'
 import type {
 	BigWinAnnouncementService,
 	BigWinParlayInput,
@@ -267,6 +274,7 @@ export default class NotificationService {
 	 */
 	async processPropSettled(data: PropSettledNotification): Promise<void> {
 		const processedMessages = new Set<string>()
+		let busy: unknown
 		for (const reference of data.messages) {
 			const messageKey = `${reference.guild_id}:${reference.channel_id}:${reference.message_id}`
 			if (processedMessages.has(messageKey)) continue
@@ -274,6 +282,16 @@ export default class NotificationService {
 			try {
 				await this.deliverPropSettlementMessage(data, reference)
 			} catch (error) {
+				if (
+					(error as { code?: string } | undefined)?.code ===
+					'PROP_SETTLEMENT_BUSY'
+				) {
+					// Another delivery is editing this message. Keep going with
+					// the rest, then answer 500 so the caller retries instead of
+					// reporting a settlement that did not land.
+					busy ??= error
+					continue
+				}
 				logger.warn({
 					method: this.processPropSettled.name,
 					event: 'prop.notification.message_update_failed',
@@ -288,6 +306,7 @@ export default class NotificationService {
 				})
 			}
 		}
+		if (busy) throw busy
 	}
 
 	/** Deliver exactly one prop message, allowing the durable worker to retry it. */
@@ -301,6 +320,40 @@ export default class NotificationService {
 				'Discord client not available for prop settlement update',
 			)
 		}
+		const lockKey = [
+			'props:settlement-lock',
+			reference.guild_id,
+			reference.channel_id,
+			reference.message_id,
+		].join(':')
+		const lockToken = randomUUID()
+		const lock = await this.claimPropSettlementLock(lockKey, lockToken)
+		if (lock === 'busy') {
+			throw Object.assign(
+				new Error(
+					'Prop settlement is already updating this message; retry later',
+				),
+				{ code: 'PROP_SETTLEMENT_BUSY' },
+			)
+		}
+		const renewal =
+			lock === 'acquired'
+				? this.startPropSettlementLease(lockKey, lockToken)
+				: undefined
+		try {
+			await this.updatePropSettlementMessage(client, data, reference)
+		} finally {
+			if (renewal) clearInterval(renewal)
+			if (lock === 'acquired')
+				await this.releasePropSettlementLock(lockKey, lockToken)
+		}
+	}
+
+	private async updatePropSettlementMessage(
+		client: NonNullable<typeof container.client>,
+		data: PropSettledNotification,
+		reference: PropSettledNotification['messages'][number],
+	): Promise<void> {
 		const channel = await client.channels.fetch(reference.channel_id)
 		if (
 			!channel ||
@@ -315,7 +368,32 @@ export default class NotificationService {
 			throw error
 		}
 
-		const message = await channel.messages.fetch(reference.message_id)
+		const message = await channel.messages.fetch({
+			message: reference.message_id,
+			force: true,
+		})
+		const components = toComponentJsonList(message.components)
+
+		if (isV2Message(message)) {
+			const settled = settleV2BoardComponents(components, data)
+			if (!settled.touched) {
+				logger.warn({
+					method: this.deliverPropSettlementMessage.name,
+					event: 'prop.settlement.row_missing',
+					guild_id: reference.guild_id,
+					channel_id: reference.channel_id,
+					message_id: reference.message_id,
+					outcome_uuid: data.outcome_uuid,
+				})
+				return
+			}
+			await message.edit({
+				components: settled.components as never,
+				flags: v2EditFlags(),
+			})
+			return
+		}
+
 		const updatedEmbeds = message.embeds.map((embed, index) =>
 			index === 0
 				? this.buildPropSettlementEmbed(message, data)
@@ -328,7 +406,107 @@ export default class NotificationService {
 			Object.assign(error, { code: '10003' })
 			throw error
 		}
-		await message.edit({ embeds: updatedEmbeds, components: [] })
+		// Keep the other rows of a board alive; only the graded pair's row is
+		// retired. A legacy single-pair post therefore keeps its disabled row.
+		const settled = disableSettledPropRow(components, data.outcome_uuid)
+		await message.edit({
+			embeds: updatedEmbeds,
+			components: settled.components as never,
+		})
+	}
+
+	/**
+	 * One editor per message. Two settlements for the same board must apply in
+	 * sequence; both fetch the message, so without a lock the second write can
+	 * erase the first result. If Redis is down, log and edit anyway: a lost
+	 * update is recoverable by a later retry, but refusing every settlement is
+	 * not.
+	 */
+	private async claimPropSettlementLock(
+		key: string,
+		token: string,
+	): Promise<'acquired' | 'busy' | 'unavailable'> {
+		try {
+			const { default: redisCache } = await import(
+				'../../../cache/redis-instance.js'
+			)
+			const result = await redisCache.set(key, token, 'EX', 60, 'NX')
+			return result === 'OK' ? 'acquired' : 'busy'
+		} catch (error) {
+			logger.warn({
+				method: 'claimPropSettlementLock',
+				event: 'prop.settlement.lock_unavailable',
+				key,
+				error: error instanceof Error ? error.message : String(error),
+			})
+			return 'unavailable'
+		}
+	}
+
+	/**
+	 * Discord rate-limit waits can outlive the initial lease. Renew while the
+	 * fetch-and-edit is in flight so a slow edit never loses the message.
+	 */
+	private startPropSettlementLease(
+		key: string,
+		token: string,
+	): ReturnType<typeof setInterval> {
+		const timer = setInterval(() => {
+			void this.renewPropSettlementLease(key, token)
+		}, 20_000)
+		timer.unref?.()
+		return timer
+	}
+
+	private async renewPropSettlementLease(
+		key: string,
+		token: string,
+	): Promise<void> {
+		try {
+			const { default: redisCache } = await import(
+				'../../../cache/redis-instance.js'
+			)
+			const renewed = await redisCache.refreshIfOwned(key, token, 60)
+			if (!renewed) {
+				logger.warn({
+					method: 'renewPropSettlementLease',
+					event: 'prop.settlement.lock_lost',
+					key,
+				})
+			}
+		} catch (error) {
+			logger.warn({
+				method: 'renewPropSettlementLease',
+				event: 'prop.settlement.lock_renewal_failed',
+				key,
+				error: error instanceof Error ? error.message : String(error),
+			})
+		}
+	}
+
+	private async releasePropSettlementLock(
+		key: string,
+		token: string,
+	): Promise<void> {
+		try {
+			const { default: redisCache } = await import(
+				'../../../cache/redis-instance.js'
+			)
+			// Only remove the lock while it still holds our token and has not
+			// expired and been re-acquired by another delivery.
+			if (typeof redisCache.compareAndRemove === 'function') {
+				await redisCache.compareAndRemove(key, token)
+				return
+			}
+			await redisCache.del(key)
+		} catch (error) {
+			logger.warn({
+				method: 'releasePropSettlementLock',
+				event: 'prop.settlement.lock_release_failed',
+				key,
+				error: error instanceof Error ? error.message : String(error),
+			})
+		}
 	}
 
 	private buildPropSettlementEmbed(

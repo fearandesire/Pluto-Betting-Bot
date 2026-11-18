@@ -170,6 +170,23 @@ function formatPropTallies(data: PropSettledNotification): string {
 	return `${percentage}% of ${total} ${predictorLabel} got it right (${correct} correct, ${incorrect} incorrect).`
 }
 
+/**
+ * Two lines a board row gains on settlement: the graded result and the
+ * predictor tally. Kept separate from the classic embed fields so the row
+ * patch and the embed patch agree on the wording.
+ */
+export function propRowResultLines(
+	data: PropSettledNotification,
+): [string, string] {
+	const { correct, total } = data.tallies
+	const percentage = total === 0 ? 0 : Math.round((correct / total) * 100)
+	const predictorLabel = total === 1 ? 'predictor' : 'predictors'
+	return [
+		formatPropResult(data),
+		`-# 📊 ${percentage}% of ${total} ${predictorLabel} got it right.`,
+	]
+}
+
 // ---------------------------------------------------- C5 /predictions history
 
 /** Message template for the history paginator (surface C5). */

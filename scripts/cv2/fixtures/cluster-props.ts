@@ -5,6 +5,7 @@ import {
 } from '@pluto-khronos/api-client'
 import type { User } from 'discord.js'
 import { teamResolver } from 'resolve-team'
+import { propBoardPayload } from '../../../src/lib/discord/builders/prop-board.js'
 import {
 	type LeaderboardRow,
 	leaderboardScore,
@@ -19,6 +20,10 @@ import {
 	propSettlementEmbed,
 	resolveStreakBadgeTier,
 } from '../../../src/lib/discord/builders/props.js'
+import {
+	settleV2BoardComponents,
+	toComponentJsonList,
+} from '../../../src/lib/discord/v2/prop-settlement.js'
 import { DateManager } from '../../../src/utils/common/DateManager.js'
 import Pagination from '../../../src/utils/embeds/pagination.js'
 import { type ClusterFixtures, FIXED } from './types.js'
@@ -61,6 +66,65 @@ async function propTeams() {
 }
 
 const propPost = async () => propPostEmbed(prop, 'nfl', await propTeams())
+
+const boardProps: ProcessedPropDto[] = [
+	prop,
+	{
+		...prop,
+		description: 'Josh Allen',
+		market_key: 'player_pass_tds',
+		point: 1.5,
+		over: {
+			...prop.over,
+			outcome_uuid: '7d0c7a52-1f0e-4a8e-9c35-2b6f0f1a0003',
+			price: 120,
+		},
+		under: {
+			...prop.under,
+			outcome_uuid: '7d0c7a52-1f0e-4a8e-9c35-2b6f0f1a0004',
+			price: -140,
+		},
+	},
+	{
+		...prop,
+		description: 'Travis Kelce',
+		market_key: 'player_reception_yds',
+		point: 58.5,
+		over: {
+			...prop.over,
+			outcome_uuid: '7d0c7a52-1f0e-4a8e-9c35-2b6f0f1a0005',
+			price: -105,
+		},
+		under: {
+			...prop.under,
+			outcome_uuid: '7d0c7a52-1f0e-4a8e-9c35-2b6f0f1a0006',
+			price: -115,
+		},
+	},
+	{
+		...prop,
+		description: 'Isiah Pacheco',
+		market_key: 'player_rush_yds',
+		point: 64.5,
+		over: {
+			...prop.over,
+			outcome_uuid: '7d0c7a52-1f0e-4a8e-9c35-2b6f0f1a0007',
+			price: -110,
+		},
+		under: {
+			...prop.under,
+			outcome_uuid: '7d0c7a52-1f0e-4a8e-9c35-2b6f0f1a0008',
+			price: -110,
+		},
+	},
+]
+
+const propBoard = async () =>
+	propBoardPayload({
+		props: boardProps,
+		sport: 'nfl',
+		teams: await propTeams(),
+	})
 
 // C5: 12 predictions → two pages of 10, so Sapphire shows its nav row.
 const players: [string, string, string, number, 'over' | 'under'][] = [
@@ -300,6 +364,45 @@ const fixtures: ClusterFixtures = {
 				// deliverPropSettlementMessage edits with `components: []`.
 				components: [],
 			}),
+		},
+		{
+			id: 'C1b',
+			name: 'Prop board (new V2 surface)',
+			after: async () => {
+				const payload = await propBoard()
+				return { components: payload.components, flags: payload.flags }
+			},
+		},
+		{
+			id: 'C2b',
+			name: 'Board settlement edit (new V2 surface)',
+			after: async () => {
+				const payload = await propBoard()
+				const settled = settleV2BoardComponents(
+					toComponentJsonList(payload.components),
+					{
+						outcome_uuid: boardProps[1].under.outcome_uuid,
+						result: 'won',
+						winning_side_display: 'Under',
+						actual_value: 0,
+						market_key: boardProps[1].market_key,
+						description: boardProps[1].description,
+						point: boardProps[1].point,
+						tallies: { correct: 14, incorrect: 9, total: 23 },
+						messages: [
+							{
+								guild_id: FIXED.guildId,
+								channel_id: FIXED.channelId,
+								message_id: '400000000000000004',
+							},
+						],
+					},
+				)
+				return {
+					flags: payload.flags,
+					components: settled.components,
+				}
+			},
 		},
 		{
 			id: 'C5',
