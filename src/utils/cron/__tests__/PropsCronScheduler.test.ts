@@ -11,6 +11,7 @@ vi.mock('../../logging/WinstonLogger.js', () => ({
 
 import { logger } from '../../logging/WinstonLogger.js'
 import {
+	GUILD_REFRESH_TIMEOUT_MS,
 	PropsCronScheduler,
 	type ServedGuild,
 	type ServedGuildsProvider,
@@ -174,5 +175,30 @@ describe('PropsCronScheduler active props', () => {
 		await first
 
 		expect(cacheActivePropIds).toHaveBeenCalledTimes(1)
+	})
+
+	it('times out a stalled guild so later guilds and runs still refresh', async () => {
+		vi.useFakeTimers()
+		const { service, cacheActivePropIds } = makeCronService()
+		cacheActivePropIds.mockImplementationOnce(() => new Promise(() => {}))
+		const scheduler = new PropsCronScheduler(service, () => [
+			guild('111'),
+			guild('222'),
+		])
+
+		const run = scheduler.cacheActivePropsForServedGuilds()
+		await vi.advanceTimersByTimeAsync(GUILD_REFRESH_TIMEOUT_MS)
+		const summary = await run
+
+		expect(summary?.cached).toEqual(['222'])
+		expect(summary?.failed).toEqual([
+			{
+				guildId: '111',
+				error: `timed out after ${GUILD_REFRESH_TIMEOUT_MS}ms`,
+			},
+		])
+
+		const next = await scheduler.cacheActivePropsForServedGuilds()
+		expect(next?.cached).toEqual(['111', '222'])
 	})
 })

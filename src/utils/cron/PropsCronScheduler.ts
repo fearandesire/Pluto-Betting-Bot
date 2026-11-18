@@ -24,6 +24,24 @@ export interface ActivePropsRunSummary {
 	failed: Array<{ guildId: string; error: string }>
 }
 
+/** Longest one guild's refresh may hold up the run before it counts as failed. */
+export const GUILD_REFRESH_TIMEOUT_MS = 60 * 1000
+
+async function withTimeout<T>(work: Promise<T>, ms: number): Promise<T> {
+	let timer: NodeJS.Timeout | undefined
+	const timeout = new Promise<never>((_, reject) => {
+		timer = setTimeout(
+			() => reject(new Error(`timed out after ${ms}ms`)),
+			ms,
+		)
+	})
+	try {
+		return await Promise.race([work, timeout])
+	} finally {
+		clearTimeout(timer)
+	}
+}
+
 /**
  * Scheduler for prop caching jobs
  * Uses simple interval-based scheduling
@@ -242,7 +260,12 @@ export class PropsCronScheduler {
 				}
 
 				try {
-					await this.cronService.cacheActivePropIds(guild.id)
+					// A stalled guild must not hold the run, or the overlap guard
+					// would skip every later run.
+					await withTimeout(
+						this.cronService.cacheActivePropIds(guild.id),
+						GUILD_REFRESH_TIMEOUT_MS,
+					)
 					summary.cached.push(guild.id)
 				} catch (error) {
 					summary.failed.push({
