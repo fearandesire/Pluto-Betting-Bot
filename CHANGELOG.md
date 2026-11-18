@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.20.2](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.20.1...v4.20.2) (2026-11-18)
+
+
+### Bug Fixes
+
+* **api:** log keyless health probes at debug ([#814](https://github.com/fearandesire/Pluto-Betting-Bot/issues/814)) ([cf7adcb](https://github.com/fearandesire/Pluto-Betting-Bot/commit/cf7adcb66d97fc6daf698f6e2994f61eb93382cc))
+
 ## [4.20.1](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.20.0...v4.20.1) (2026-11-18)
 
 
