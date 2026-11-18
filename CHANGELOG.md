@@ -1,5 +1,14 @@
 # Changelog
 
+## [4.20.1](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.20.0...v4.20.1) (2026-11-18)
+
+
+### Bug Fixes
+
+* **alerts:** deliver betting ops alerts and catch Khronos placement failures ([#811](https://github.com/fearandesire/Pluto-Betting-Bot/issues/811)) ([9666609](https://github.com/fearandesire/Pluto-Betting-Bot/commit/96666091cb99e817cdca1aef42952ddabf3380a8))
+* **betting:** report critical betting failures to ops and flag unconfirmed bets ([#809](https://github.com/fearandesire/Pluto-Betting-Bot/issues/809)) ([98e30ea](https://github.com/fearandesire/Pluto-Betting-Bot/commit/98e30ea139e20fcc8be96dd0917053501212c162))
+* **khronos:** bump @pluto-khronos/* to 3.20.0 ([7d2c174](https://github.com/fearandesire/Pluto-Betting-Bot/commit/7d2c17468cbdeaf9bc770074ab686dae236c6c52))
+
 ## [4.20.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.19.0...v4.20.0) (2026-11-16)
 
 
