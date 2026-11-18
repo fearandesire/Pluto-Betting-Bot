@@ -2,6 +2,7 @@
 // Cron Job Initialization - Export and initialize cron services
 // ============================================================================
 
+import { container } from '@sapphire/framework'
 import env from '../../lib/startup/env.js'
 import GuildWrapper from '../api/Khronos/guild/guild-wrapper.js'
 import LeaderboardWrapper from '../api/Khronos/leaderboard/leaderboard-wrapper.js'
@@ -14,7 +15,10 @@ import { ActivePropsService } from '../props/ActivePropsService.js'
 import { PropsCacheService } from '../props/PropCacheService.js'
 import { LeaderboardAutoPostService } from './LeaderboardAutoPostService.js'
 import { PeriodWinnersCronService } from './PeriodWinnersCronService.js'
-import { PropsCronScheduler } from './PropsCronScheduler.js'
+import {
+	PropsCronScheduler,
+	type ServedGuildsProvider,
+} from './PropsCronScheduler.js'
 import { PropsCronService } from './PropsCronService.js'
 import { RecapCronScheduler } from './RecapCronScheduler.js'
 import { RecapCronService } from './RecapCronService.js'
@@ -27,6 +31,13 @@ export {
 	resolveLeaderboardTargets,
 	resolveRecapTargets,
 } from './recap-targets.js'
+
+/** Every guild the Discord client is in, or `null` before it is ready. */
+const listServedGuilds: ServedGuildsProvider = () => {
+	const client = container.client
+	if (!client?.isReady()) return null
+	return [...client.guilds.cache.values()]
+}
 
 /**
  * Initialize and start the props cron scheduler
@@ -56,7 +67,7 @@ export async function initializePropsCron(): Promise<PropsCronScheduler> {
 	)
 
 	// Create and start scheduler
-	const scheduler = new PropsCronScheduler(cronService)
+	const scheduler = new PropsCronScheduler(cronService, listServedGuilds)
 	await scheduler.start()
 
 	await logger.info({
