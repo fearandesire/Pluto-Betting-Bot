@@ -110,6 +110,13 @@ export default class BetslipWrapper {
 		return bet.offered_price ?? undefined
 	}
 
+	/** Current stake of a bet, or undefined in mock mode. */
+	async betAmount(betId: number): Promise<number | undefined> {
+		if (this.mock) return undefined
+		const bet = await this.betslipApi.getBetslip({ betId })
+		return bet.amount
+	}
+
 	async doubleDown(data: DoubleDownBetRequest): Promise<DoubleDownDto> {
 		if (this.mock) return this.mock.doubleDownBet(data)
 		return await this.betslipApi.doubleDownBet(data)

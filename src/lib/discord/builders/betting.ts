@@ -203,29 +203,40 @@ export function oddsChangedNotice(previous: string, current: string) {
 }
 
 /**
- * Versioned double-down re-prompt IDs: `dd.v1.confirm.<betId>.<odds>` and
+ * Versioned double-down re-prompt IDs:
+ * `dd.v1.confirm.<betId>.<odds>.<stakeCents>` and
  * `dd.v1.cancel`. An unknown version parses as `stale`.
  */
 export const doubleDownBtnPrefix = 'dd.' as const
 export const doubleDownCancelId = 'dd.v1.cancel' as const
 
-export function doubleDownConfirmId(betId: number, expectedOdds: number) {
-	return `dd.v1.confirm.${betId}.${expectedOdds}`
+export function doubleDownConfirmId(
+	betId: number,
+	expectedOdds: number,
+	stakeCents: number,
+) {
+	return `dd.v1.confirm.${betId}.${expectedOdds}.${stakeCents}`
 }
 
 export type DoubleDownButton =
-	| { kind: 'confirm'; betId: number; expectedOdds: number }
+	| {
+			kind: 'confirm'
+			betId: number
+			expectedOdds: number
+			stakeCents: number
+	  }
 	| { kind: 'cancel' }
 	| { kind: 'stale' }
 
 export function parseDoubleDownButton(customId: string): DoubleDownButton {
 	if (customId === doubleDownCancelId) return { kind: 'cancel' }
-	const match = /^dd\.v1\.confirm\.(\d+)\.(-?\d+)$/.exec(customId)
+	const match = /^dd\.v1\.confirm\.(\d+)\.(-?\d+)\.(\d+)$/.exec(customId)
 	if (!match) return { kind: 'stale' }
 	return {
 		kind: 'confirm',
 		betId: Number(match[1]),
 		expectedOdds: Number(match[2]),
+		stakeCents: Number(match[3]),
 	}
 }
 
@@ -237,6 +248,7 @@ export function doubleDownReprompt(d: {
 	payout: string
 	profit: string
 	currentOdds: number
+	stakeCents: number
 	avatarUrl: string
 }) {
 	const embed = new EmbedBuilder()
@@ -248,7 +260,9 @@ export function doubleDownReprompt(d: {
 		.setThumbnail(d.avatarUrl)
 	const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
 		new ButtonBuilder()
-			.setCustomId(doubleDownConfirmId(d.betId, d.currentOdds))
+			.setCustomId(
+				doubleDownConfirmId(d.betId, d.currentOdds, d.stakeCents),
+			)
 			.setLabel('Confirm Double Down')
 			.setStyle(ButtonStyle.Success),
 		new ButtonBuilder()

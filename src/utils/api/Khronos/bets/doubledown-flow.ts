@@ -4,6 +4,7 @@ import {
 	doubleDownResult,
 	oddsChangedNotice,
 } from '../../../../lib/discord/builders/betting.js'
+import { sendBettingNotice } from '../../../../lib/discord/v2/notice.js'
 import { ApiModules } from '../../../../lib/interfaces/api/api.interface.js'
 import { isApiError } from '../../../../lib/interfaces/errors/api-errors.js'
 import env from '../../../../lib/startup/env.js'
@@ -16,7 +17,11 @@ import PatreonFacade from '../../patreon/Patreon-Facade.js'
 import { ApiErrorHandler } from '../error-handling/ApiErrorHandler.js'
 import { BetslipManager } from './BetslipsManager.js'
 import BetslipWrapper from './betslip-wrapper.js'
-import { formatAmericanOdds, parseOddsChanged } from './odds-changed.js'
+import {
+	formatAmericanOdds,
+	parseOddsChanged,
+	StaleDoubleDownError,
+} from './odds-changed.js'
 
 /** Error to show when the user may not double down now, or null. */
 export async function doubleDownGateError(userId: string) {
@@ -38,9 +43,16 @@ export async function runDoubleDown(
 	interaction: ChatInputCommandInteraction | ButtonInteraction,
 	betId: number,
 	expectedOdds?: number,
+	expectedStakeCents?: number,
 ) {
 	const key = `${interaction.user.id}:${betId}`
-	if (inFlight.has(key)) return
+	if (inFlight.has(key)) {
+		return sendBettingNotice(interaction, {
+			title: 'Double down already in progress',
+			description:
+				'Pluto is still doubling down this bet. Check `/mybets` in a moment.',
+		})
+	}
 	inFlight.add(key)
 	const manager = new BetslipManager(
 		new BetslipWrapper(),
@@ -51,6 +63,7 @@ export async function runDoubleDown(
 			interaction.user.id,
 			betId,
 			expectedOdds,
+			expectedStakeCents,
 		)
 		return interaction.editReply(
 			doubleDownResult({
@@ -62,6 +75,13 @@ export async function runDoubleDown(
 			}),
 		)
 	} catch (error) {
+		if (error instanceof StaleDoubleDownError) {
+			return sendBettingNotice(interaction, {
+				title: 'Double down not placed',
+				description:
+					'This bet changed since this prompt. Run `/doubledown` again to see the current price.',
+			})
+		}
 		const details = await parseOddsChanged(error)
 		if (!details) {
 			await new ApiErrorHandler().handle(
@@ -89,6 +109,9 @@ export async function runDoubleDown(
 				payout: MoneyFormatter.toUSD(details.payout),
 				profit: MoneyFormatter.toUSD(details.profit),
 				currentOdds: details.current_odds,
+				stakeCents: Math.round(
+					(details.amount - details.added.amount) * 100,
+				),
 				avatarUrl: interaction.user.displayAvatarURL(),
 			}),
 		)

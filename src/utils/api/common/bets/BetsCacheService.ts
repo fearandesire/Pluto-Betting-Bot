@@ -113,6 +113,25 @@ export class BetsCacheService {
 	}
 
 	/**
+	 * Writes a new quote into the cached slip only while it is still the slip
+	 * with this placement. Returns false when another slip replaced it.
+	 */
+	async repriceIfCurrent(
+		userId: string,
+		placementId: string,
+		quote: Pick<CachedBetData, 'selected_odds' | 'profit' | 'payout'>,
+	): Promise<boolean> {
+		const existingBet = await this.getUserBet(userId)
+		if (existingBet?.placement_id !== placementId) return false
+		return this.cache.transitionIfValue(
+			this.cachePrefix + userId,
+			existingBet,
+			{ ...existingBet, ...quote },
+			this.BET_CACHE_TTL,
+		)
+	}
+
+	/**
 	 * Update cached bet data with new values (e.g., profit/payout after match selection)
 	 */
 	async updateUserBet(

@@ -29,3 +29,11 @@ export async function parseOddsChanged(
 export function formatAmericanOdds(odds: number): string {
 	return odds > 0 ? `+${odds}` : `${odds}`
 }
+
+/** The bet changed after its double-down re-prompt was shown. */
+export class StaleDoubleDownError extends Error {
+	constructor() {
+		super('The bet changed since the double-down prompt was shown')
+		this.name = 'StaleDoubleDownError'
+	}
+}

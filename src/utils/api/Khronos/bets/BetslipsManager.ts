@@ -45,7 +45,11 @@ import PatreonFacade from '../../patreon/Patreon-Facade.js'
 import { ApiErrorHandler } from '../error-handling/ApiErrorHandler.js'
 import GuildWrapper from '../guild/guild-wrapper.js'
 import BetslipWrapper from './betslip-wrapper.js'
-import { formatAmericanOdds, parseOddsChanged } from './odds-changed.js'
+import {
+	formatAmericanOdds,
+	parseOddsChanged,
+	StaleDoubleDownError,
+} from './odds-changed.js'
 
 interface InitializeParams {
 	team: string
@@ -253,46 +257,71 @@ export class BetslipManager {
 			expected_odds: details.expected_odds,
 			current_odds: details.current_odds,
 		})
-		const cached = await this.betCacheService.getUserBet(betDetails.userid)
 		const placementId = (
 			betDetails as PlaceBetDto & { placement_id?: string }
 		).placement_id
-		if (!cached || cached.placement_id !== placementId) {
-			// A newer slip replaced this one; do not write this quote into it.
-			const errEmbed = await ErrorEmbeds.internalErr(
-				'The odds changed and this betslip is no longer current. Start the bet again with `/bet`.',
+		try {
+			const cached = await this.betCacheService.getUserBet(
+				betDetails.userid,
 			)
-			return interaction.editReply({ embeds: [errEmbed], components: [] })
-		}
-		await this.betCacheService.updateUserBet(betDetails.userid, {
-			selected_odds: details.current_odds,
-			profit: details.profit,
-			payout: details.payout,
-		})
-		const { betAmount, profit, payout } =
-			await MoneyFormatter.formatAmounts({
-				amount: details.amount,
-				profit: details.profit,
-				payout: details.payout,
+			if (!placementId || cached?.placement_id !== placementId) {
+				return this.replyStaleQuote(interaction)
+			}
+			const { betAmount, profit, payout } =
+				await MoneyFormatter.formatAmounts({
+					amount: details.amount,
+					profit: details.profit,
+					payout: details.payout,
+				})
+			const chosenTeam = (await findEmoji(details.team)) || details.team
+			const opponent =
+				(await findEmoji(matchInfo.opponent)) ||
+				_.last(matchInfo.opponent.split(' '))!
+			const message = await interaction.editReply(
+				pendingBetslip({
+					chosenTeam,
+					opponent,
+					teamLabel: _.upperFirst(details.team),
+					date: formatMatchDate(matchInfo.dateofmatchup),
+					amounts: { betAmount, payout, profit },
+					avatarUrl: interaction.user.displayAvatarURL(),
+					notice: oddsChangedNotice(
+						formatAmericanOdds(details.expected_odds),
+						formatAmericanOdds(details.current_odds),
+					),
+				}),
+			)
+			const repriced = await this.betCacheService.repriceIfCurrent(
+				betDetails.userid,
+				placementId,
+				{
+					selected_odds: details.current_odds,
+					profit: details.profit,
+					payout: details.payout,
+				},
+			)
+			return repriced ? message : this.replyStaleQuote(interaction)
+		} catch (error) {
+			logger.error('Failed to re-prompt a changed price', {
+				event: 'betslip.price.reprompt_failed',
+				user_id: betDetails.userid,
+				error,
 			})
-		const chosenTeam = (await findEmoji(details.team)) || details.team
-		const opponent =
-			(await findEmoji(matchInfo.opponent)) ||
-			_.last(matchInfo.opponent.split(' '))!
-		return interaction.editReply(
-			pendingBetslip({
-				chosenTeam,
-				opponent,
-				teamLabel: _.upperFirst(details.team),
-				date: formatMatchDate(matchInfo.dateofmatchup),
-				amounts: { betAmount, payout, profit },
-				avatarUrl: interaction.user.displayAvatarURL(),
-				notice: oddsChangedNotice(
-					formatAmericanOdds(details.expected_odds),
-					formatAmericanOdds(details.current_odds),
-				),
-			}),
+			return sendBettingNotice(interaction, {
+				title: 'Your bet was not placed',
+				description:
+					'The odds changed and Pluto could not show the new price. Start the bet again with `/bet`.',
+			})
+		}
+	}
+
+	private async replyStaleQuote(
+		interaction: CommandInteraction | ButtonInteraction,
+	) {
+		const errEmbed = await ErrorEmbeds.internalErr(
+			'The odds changed and this betslip is no longer current. Start the bet again with `/bet`.',
 		)
+		return interaction.editReply({ embeds: [errEmbed], components: [] })
 	}
 
 	private isDefinitiveBusinessFailure(value: unknown): boolean {
@@ -549,9 +578,30 @@ export class BetslipManager {
 		userId: string,
 		betId: number,
 		expectedOdds?: number,
+		expectedStakeCents?: number,
 	): Promise<DoubleDownDto> {
+		if (expectedStakeCents !== undefined) {
+			const stake = await this.betslipInstance.betAmount(betId)
+			if (
+				stake !== undefined &&
+				Math.round(stake * 100) !== expectedStakeCents
+			) {
+				throw new StaleDoubleDownError()
+			}
+		}
 		const odds =
-			expectedOdds ?? (await this.betslipInstance.offeredPrice(betId))
+			expectedOdds ??
+			(await this.betslipInstance.offeredPrice(betId).catch((error) => {
+				logger.warn(
+					'Confirmed price lookup failed; doubling down without it',
+					{
+						event: 'betslip.price.lookup_failed',
+						bet_id: betId,
+						error,
+					},
+				)
+				return undefined
+			}))
 		const response = await this.betslipInstance.doubleDown({
 			userId,
 			betId,

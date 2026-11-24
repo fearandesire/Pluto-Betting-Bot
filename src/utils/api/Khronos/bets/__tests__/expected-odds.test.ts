@@ -29,7 +29,15 @@ function memoryCache() {
 		remove: vi.fn(async (k: string) => {
 			store.delete(k)
 		}),
-		transitionIfValue: vi.fn(async () => false),
+		transitionIfValue: vi.fn(
+			async (k: string, expected: unknown, next: unknown) => {
+				if (JSON.stringify(store.get(k)) !== JSON.stringify(expected)) {
+					return false
+				}
+				store.set(k, next)
+				return true
+			},
+		),
 	}
 }
 
@@ -164,7 +172,153 @@ describe('expected_odds on place', () => {
 	})
 })
 
+describe('place re-prompt races', () => {
+	function placeInteraction() {
+		return {
+			deferred: true,
+			replied: false,
+			id: 'i1',
+			user: { id: 'u1', displayAvatarURL: () => 'https://a/x.png' },
+			editReply: vi.fn(async () => ({})),
+			deleteReply: vi.fn(async () => undefined),
+			followUp: vi.fn(async () => ({})),
+		}
+	}
+
+	it('shows the new price before a confirm can send it', async () => {
+		const cache = memoryCache()
+		const service = new BetsCacheService(cache as never)
+		await service.cacheUserBet('u1', initBetslip as never)
+		const interaction = placeInteraction()
+		let priceWhenShown: number | undefined
+		interaction.editReply.mockImplementationOnce(async () => {
+			priceWhenShown = (await service.getUserBet('u1'))?.selected_odds
+			return {}
+		})
+		const wrapper = {
+			finalize: vi.fn().mockRejectedValue(oddsChangedError('place')),
+		}
+		await new BetslipManager(wrapper as never, service).placeBet(
+			interaction as never,
+			await service.sanitize((await service.getUserBet('u1'))!),
+			{
+				opponent: initBetslip.opponent,
+				dateofmatchup: initBetslip.dateofmatchup,
+			},
+		)
+		expect(priceWhenShown).toBe(-150)
+		expect((await service.getUserBet('u1'))?.selected_odds).toBe(-120)
+	})
+
+	it('does not reprice a slip replaced while the re-prompt renders', async () => {
+		const cache = memoryCache()
+		const service = new BetsCacheService(cache as never)
+		await service.cacheUserBet('u1', initBetslip as never)
+		const interaction = placeInteraction()
+		interaction.editReply.mockImplementationOnce(async () => {
+			await service.cacheUserBet('u1', {
+				...initBetslip,
+				placement_id: 'p-2',
+			} as never)
+			return {}
+		})
+		const wrapper = {
+			finalize: vi.fn().mockRejectedValue(oddsChangedError('place')),
+		}
+		await new BetslipManager(wrapper as never, service).placeBet(
+			interaction as never,
+			await service.sanitize((await service.getUserBet('u1'))!),
+			{
+				opponent: initBetslip.opponent,
+				dateofmatchup: initBetslip.dateofmatchup,
+			},
+		)
+		const current = await service.getUserBet('u1')
+		expect(current?.placement_id).toBe('p-2')
+		expect(current?.selected_odds).toBe(-150)
+		const calls = interaction.editReply.mock.calls as unknown[][]
+		const last = calls[calls.length - 1]
+		expect((last[0] as { components: unknown[] }).components).toEqual([])
+	})
+
+	it('answers the user when the cache fails during the re-prompt', async () => {
+		const cache = memoryCache()
+		const service = new BetsCacheService(cache as never)
+		await service.cacheUserBet('u1', initBetslip as never)
+		const dto = await service.sanitize((await service.getUserBet('u1'))!)
+		cache.get.mockRejectedValue(new Error('redis down'))
+		const interaction = placeInteraction()
+		const wrapper = {
+			finalize: vi.fn().mockRejectedValue(oddsChangedError('place')),
+		}
+		await new BetslipManager(wrapper as never, service).placeBet(
+			interaction as never,
+			dto,
+			{
+				opponent: initBetslip.opponent,
+				dateofmatchup: initBetslip.dateofmatchup,
+			},
+		)
+		expect(interaction.followUp).toHaveBeenCalledTimes(1)
+		expect(JSON.stringify(interaction.followUp.mock.calls[0])).toContain(
+			'Your bet was not placed',
+		)
+	})
+})
+
 describe('expected_odds on doubledown', () => {
+	it('doubles down without expected_odds when the price lookup fails', async () => {
+		const wrapper = {
+			offeredPrice: vi.fn().mockRejectedValue(new Error('timeout')),
+			doubleDown: vi.fn().mockResolvedValue({ status: 200, betslip: {} }),
+		}
+		await new BetslipManager(wrapper as never, {} as never).doubleDown(
+			'u1',
+			7,
+		)
+		expect(wrapper.doubleDown).toHaveBeenCalledWith({
+			userId: 'u1',
+			betId: 7,
+		})
+	})
+
+	it('refuses a re-confirm when the bet changed since the prompt', async () => {
+		const { StaleDoubleDownError } = await import('../odds-changed.js')
+		const wrapper = {
+			betAmount: vi.fn().mockResolvedValue(200),
+			offeredPrice: vi.fn(),
+			doubleDown: vi.fn(),
+		}
+		await expect(
+			new BetslipManager(wrapper as never, {} as never).doubleDown(
+				'u1',
+				7,
+				-120,
+				10000,
+			),
+		).rejects.toBeInstanceOf(StaleDoubleDownError)
+		expect(wrapper.doubleDown).not.toHaveBeenCalled()
+	})
+
+	it('re-confirms when the stake still matches the prompt', async () => {
+		const wrapper = {
+			betAmount: vi.fn().mockResolvedValue(100),
+			offeredPrice: vi.fn(),
+			doubleDown: vi.fn().mockResolvedValue({ status: 200, betslip: {} }),
+		}
+		await new BetslipManager(wrapper as never, {} as never).doubleDown(
+			'u1',
+			7,
+			-120,
+			10000,
+		)
+		expect(wrapper.doubleDown).toHaveBeenCalledWith({
+			userId: 'u1',
+			betId: 7,
+			expectedOdds: -120,
+		})
+	})
+
 	it('sends the price the bet was confirmed at', async () => {
 		const wrapper = {
 			offeredPrice: vi.fn().mockResolvedValue(120),
@@ -231,6 +385,7 @@ describe('doubledown re-prompt button', () => {
 			payout: '$383.33',
 			profit: '$183.33',
 			currentOdds: -120,
+			stakeCents: 10000,
 			avatarUrl: 'https://a/x.png',
 		})
 		expect(embeds[0].toJSON().description).toContain('$383.33')
@@ -239,6 +394,7 @@ describe('doubledown re-prompt button', () => {
 			kind: 'confirm',
 			betId: 7,
 			expectedOdds: -120,
+			stakeCents: 10000,
 		})
 		expect(parseDoubleDownButton('dd.v1.cancel')).toEqual({
 			kind: 'cancel',

@@ -89,7 +89,12 @@ export class ButtonHandler extends InteractionHandler {
 				})
 				return this.none()
 			}
-			await runDoubleDown(interaction, button.betId, button.expectedOdds)
+			await runDoubleDown(
+				interaction,
+				button.betId,
+				button.expectedOdds,
+				button.stakeCents,
+			)
 			return this.none()
 		}
 
