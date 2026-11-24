@@ -5,10 +5,7 @@ import {
 	deliveryReceipts,
 } from '../notifications/delivery-contract.js'
 import { getNotificationDeliveryQueue } from '../notifications/delivery-queue.js'
-import {
-	type DailyPropsPayload,
-	dailyPropsPayloadSchema,
-} from '../shared-payload-schemas.js'
+import { dailyPropsPayloadSchema } from '../shared-payload-schemas.js'
 
 const PropsRouter = new Router()
 
@@ -63,23 +60,6 @@ PropsRouter.post('/props/daily', async (ctx) => {
 		ctx.body = {
 			success: false,
 			error: 'Prop-post delivery must include at least one prop and guild.',
-		}
-		return
-	}
-
-	const boardIssue = validateBoards(parsedPayload.data)
-	if (boardIssue) {
-		logger.warn({
-			method: 'PropsRouter',
-			event: 'push_payload_rejected',
-			schema: 'dailyPropsPayload.boards',
-			issues: [{ path: ['boards'], message: boardIssue }],
-		})
-		ctx.status = 422
-		ctx.body = {
-			success: false,
-			error: `Invalid props payload. ${boardIssue}`,
-			issues: [{ path: ['boards'], message: boardIssue }],
 		}
 		return
 	}
@@ -173,36 +153,3 @@ PropsRouter.post('/props/stats/post-start', async (ctx) => {
 })
 
 export default PropsRouter
-
-/**
- * A board list must cover every pair exactly once and keep each entry on its
- * own game. Khronos groups the payload, but a producer bug must fail here
- * rather than post a partial board or a receipt the ledger cannot match.
- */
-function validateBoards(payload: DailyPropsPayload): string | null {
-	const boards = payload.boards
-	if (!boards || boards.length === 0) return null
-	const byOver = new Map(
-		payload.props.map((prop) => [prop.over.outcome_uuid, prop]),
-	)
-	const seen = new Set<string>()
-	for (const [index, board] of boards.entries()) {
-		for (const outcomeUuid of board.over_outcome_uuids) {
-			const prop = byOver.get(outcomeUuid)
-			if (!prop) {
-				return `Board ${index} names an outcome that is not in props.`
-			}
-			if (prop.event_id !== board.event_id) {
-				return `Board ${index} mixes outcomes from another game.`
-			}
-			if (seen.has(outcomeUuid)) {
-				return `Board ${index} repeats an outcome from another board.`
-			}
-			seen.add(outcomeUuid)
-		}
-	}
-	if (seen.size !== payload.props.length) {
-		return 'Every prop must belong to exactly one board.'
-	}
-	return null
-}

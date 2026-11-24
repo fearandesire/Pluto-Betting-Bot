@@ -253,7 +253,7 @@ describe('POST /props/daily', () => {
 						},
 					],
 				},
-				'not in props',
+				'not an over outcome in props',
 			],
 			[
 				'a board mixing games',
@@ -269,7 +269,7 @@ describe('POST /props/daily', () => {
 						},
 					],
 				},
-				'another game',
+				'belongs to another game',
 			],
 			[
 				'a prop missing from every board',
@@ -304,15 +304,21 @@ describe('POST /props/daily', () => {
 						},
 					],
 				},
-				'repeats an outcome',
+				'appears on more than one board',
 			],
 		])('rejects %s', async (_name, payload, message) => {
 			const response = await request(withPayload(payload))
 
 			expect(response.status).toBe(422)
 			const body = await response.json()
-			expect(body.error).toContain(message)
-			expect(body.issues[0].path).toEqual(['boards'])
+			expect(body.issues).toEqual(
+				expect.arrayContaining([
+					expect.objectContaining({
+						path: expect.arrayContaining(['boards']),
+						message: expect.stringContaining(message),
+					}),
+				]),
+			)
 			expect(acceptDetailed).not.toHaveBeenCalled()
 		})
 
