@@ -1,0 +1,39 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"components": [
+		{
+			"type": 17,
+			"accent_color": 15105570,
+			"components": [
+				{
+					"type": 10,
+					"content": "## 🔄 Bet Refunded - Game Postponed"
+				},
+				{
+					"type": 10,
+					"content": "The game was postponed and not played in time, so your bet was voided and refunded."
+				},
+				{
+					"type": 14,
+					"divider": true,
+					"spacing": 1
+				},
+				{
+					"type": 10,
+					"content": "**🎯 Team Selected** Kansas City Chiefs\n**💵 Refunded Amount** $100.00"
+				},
+				{
+					"type": 10,
+					"content": "-# Pluto | Bet ID: 48214"
+				}
+			]
+		}
+	],
+	"flags": 32768,
+	"allowedMentions": {
+		"parse": []
+	}
+}

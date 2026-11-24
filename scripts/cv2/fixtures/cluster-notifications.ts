@@ -2,6 +2,7 @@ import {
 	betResultEmbed,
 	bigWinParlayEmbed,
 	parlayResultEmbeds,
+	refundResultPayload,
 } from '../../../src/lib/discord/builders/notifications.js'
 import MoneyFormatter from '../../../src/utils/api/common/money-formatting/money-format.js'
 import type { ParlayResultNotification } from '../../../src/utils/api/routes/shared-payload-schemas.js'
@@ -88,6 +89,31 @@ const fixtures: ClusterFixtures = {
 					},
 				})
 				return { embeds: [embed] }
+			},
+		},
+		{
+			id: 'E1b',
+			name: 'Refund DM (postponed game)',
+			after: () => {
+				const refund = {
+					userId: FIXED.userId,
+					betId: 48214,
+					guildId: FIXED.guildId,
+					result: {
+						outcome: 'push',
+						team: 'Kansas City Chiefs',
+						betAmount: 100,
+						refundReason: 'postponed',
+					},
+					displayResult: {
+						outcome: 'push',
+						team: 'Kansas City Chiefs',
+						betAmount: 100,
+						refundReason: 'postponed',
+						displayBetAmount: MoneyFormatter.toUSD(100),
+					},
+				} as const
+				return refundResultPayload(refund)
 			},
 		},
 		{

@@ -1,10 +1,15 @@
 import { createHash } from 'node:crypto'
 // Import interfaces and potentially the Discord client type
 import { container } from '@sapphire/framework'
-import { EmbedBuilder, type Message } from 'discord.js'
+import {
+	EmbedBuilder,
+	type Message,
+	type MessageCreateOptions,
+} from 'discord.js'
 import {
 	betResultEmbed,
 	parlayResultEmbeds,
+	refundResultPayload,
 } from '../../../../lib/discord/builders/notifications.js'
 import { propSettlementEmbed } from '../../../../lib/discord/builders/props.js'
 import type {
@@ -451,14 +456,24 @@ export default class NotificationService {
 		options?: { throwOnFailure?: boolean; deliveryId?: string },
 	) {
 		const { userId, betId } = betData
+		if (betData.result.outcome === 'push') {
+			await this.sendEmbed(
+				userId,
+				betId,
+				refundResultPayload(betData as DisplayBetNotificationPush),
+				options,
+			)
+			return
+		}
 		const embed = betResultEmbed(betData)
-		if (embed) await this.sendEmbed(userId, betId, embed, options)
+		if (embed)
+			await this.sendEmbed(userId, betId, { embeds: [embed] }, options)
 	}
 
 	private async sendEmbed(
 		userId: string,
 		betId: number | undefined,
-		embed: EmbedBuilder,
+		message: MessageCreateOptions,
 		options?: { throwOnFailure?: boolean; deliveryId?: string },
 	): Promise<void> {
 		const client = container.client
@@ -481,14 +496,14 @@ export default class NotificationService {
 				: undefined
 			if (user) {
 				await user.send({
-					embeds: [embed],
+					...message,
 					nonce: options?.deliveryId
 						? createDeliveryNonce(options.deliveryId, 0)
 						: undefined,
 					enforceNonce: Boolean(options?.deliveryId),
 				})
 			} else {
-				await client.users.send(userId, { embeds: [embed] })
+				await client.users.send(userId, message)
 			}
 		} catch (err) {
 			logger.error({
