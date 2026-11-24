@@ -1,3 +1,4 @@
+import { MessageFlags } from 'discord.js'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ParlayResultNotification } from '../../../../utils/api/routes/shared-payload-schemas.js'
 import {
@@ -5,7 +6,17 @@ import {
 	bigWinParlayEmbed,
 	bigWinSingleBetEmbed,
 	parlayResultEmbeds,
+	refundResultPayload,
 } from '../notifications.js'
+
+const textOf = (payload: ReturnType<typeof refundResultPayload>) =>
+	(
+		payload.components[0].toJSON().components as {
+			content?: string
+		}[]
+	)
+		.filter((component) => component.content !== undefined)
+		.map((component) => component.content)
 
 const NOW = '2026-10-04T19:30:00.000Z'
 
@@ -75,7 +86,7 @@ describe('notification builders (classic, pre-migration)', () => {
 		})
 	})
 
-	it('pins the lost and push bet DMs (E1)', () => {
+	it('pins the lost bet DM (E1)', () => {
 		const lost = betResultEmbed({
 			userId: 'u',
 			result: { outcome: 'lost', team: 'Buffalo Bills', betAmount: 50 },
@@ -99,28 +110,83 @@ describe('notification builders (classic, pre-migration)', () => {
 			],
 			footer: { text: 'Pluto | Bet ID unavailable' },
 		})
+	})
 
-		const push = betResultEmbed({
-			userId: 'u',
-			betId: 7,
-			result: { outcome: 'push', team: 'Buffalo Bills', betAmount: 50 },
-			displayResult: {
-				outcome: 'push',
-				team: 'Buffalo Bills',
-				betAmount: 50,
-				displayBetAmount: '$50.00',
-			},
-		})?.toJSON()
-		expect(push).toMatchObject({
-			title: '🔄 Bet Refunded - Tie Game',
-			color: 0xffa500,
-			footer: { text: 'Pluto | Bet ID: 7' },
-		})
-		expect(push?.fields?.[2]).toEqual({
-			name: 'ℹ️ Reason',
-			value: 'The match ended in a tie. Your bet has been refunded.',
-			inline: false,
-		})
+	it.each([
+		[
+			'postponed',
+			'🔄 Bet Refunded - Game Postponed',
+			'The game was postponed and not played in time, so your bet was voided and refunded.',
+		],
+		[
+			'cancelled',
+			'🔄 Bet Refunded - Game Cancelled',
+			'The game was cancelled, so your bet was voided and refunded.',
+		],
+		[
+			'abandoned',
+			'🔄 Bet Refunded - Game Abandoned',
+			'The game was abandoned before it finished, so your bet was voided and refunded.',
+		],
+		[
+			'void',
+			'🔄 Bet Refunded - Bet Voided',
+			'Your bet was voided, so your stake has been refunded.',
+		],
+		[
+			'tie',
+			'🔄 Bet Refunded - Tie Game',
+			'The match ended in a tie. Your bet has been refunded.',
+		],
+	] as const)(
+		'names a %s refund instead of calling it a tie (E1b)',
+		(refundReason, title, reason) => {
+			const payload = refundResultPayload({
+				userId: 'u',
+				betId: 7,
+				result: {
+					outcome: 'push',
+					team: 'Buffalo Bills',
+					betAmount: 50,
+					refundReason,
+				},
+				displayResult: {
+					outcome: 'push',
+					team: 'Buffalo Bills',
+					betAmount: 50,
+					refundReason,
+					displayBetAmount: '$50.00',
+				},
+			})
+			expect(payload.flags & MessageFlags.IsComponentsV2).toBeTruthy()
+			expect(textOf(payload)).toEqual([
+				`## ${title}`,
+				reason,
+				'**🎯 Team Selected** Buffalo Bills\n**💵 Refunded Amount** $50.00',
+				'-# Pluto | Bet ID: 7',
+			])
+		},
+	)
+
+	it('treats a refund with no reason as a tie, as older Khronos builds only sent ties (E1b)', () => {
+		const texts = textOf(
+			refundResultPayload({
+				userId: 'u',
+				result: {
+					outcome: 'push',
+					team: 'Buffalo Bills',
+					betAmount: 50,
+				},
+				displayResult: {
+					outcome: 'push',
+					team: 'Buffalo Bills',
+					betAmount: 50,
+					displayBetAmount: '$50.00',
+				},
+			}),
+		)
+		expect(texts[0]).toBe('## 🔄 Bet Refunded - Tie Game')
+		expect(texts[3]).toBe('-# Pluto | Bet ID unavailable')
 	})
 
 	it('pins the won parlay DM and splits long parlays (E2)', () => {

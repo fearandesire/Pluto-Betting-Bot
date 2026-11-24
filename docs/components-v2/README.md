@@ -253,7 +253,8 @@ Status: 📸 before captured · 🔁 migrated · ✅ merged and verified live
 | D11 | /profile Headline (flag `PROFILE_VIEWS_ENABLED`) | account | `lib/discord/builders/profile-views.ts` | | 🔁 |
 | D12 | /profile Trophy Shelf (same flag, per-user opt-in) | account | same | | 🔁 |
 | D13 | /profile settings | account | same | | 🔁 |
-| E1 | Bet result DM | notifications | `notifications.service.notifyUser` | | 📸 |
+| E1 | Bet result DM (won, lost) | notifications | `notifications.service.notifyUser` | | 📸 |
+| E1b | Refund DM (tie, postponed, cancelled, abandoned, void) | notifications | `lib/discord/builders/notifications.refundResultPayload` | #818 | 🔁 |
 | E2 | Parlay result DMs | notifications | `notifications.service.buildParlayEmbeds` | | 📸 |
 | E3 | Big-win announcement | notifications | `BigWinAnnouncementService` | | 📸 |
 | E4 | Weekly recap | notifications | `weekly-recap.embed.ts` | | 📸 |

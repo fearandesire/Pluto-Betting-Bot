@@ -20,10 +20,25 @@ export interface ResultLost {
 	betAmount: number
 }
 
+/**
+ * Why Khronos refunded a bet. Payloads from Khronos builds that predate the
+ * field carry none, and those builds only sent ties.
+ */
+export const BET_REFUND_REASONS = [
+	'tie',
+	'postponed',
+	'cancelled',
+	'abandoned',
+	'void',
+] as const
+
+export type BetRefundReason = (typeof BET_REFUND_REASONS)[number]
+
 export interface ResultPush {
 	outcome: 'push'
 	team: string
 	betAmount: number
+	refundReason?: BetRefundReason
 }
 
 export interface BetNotificationBase {

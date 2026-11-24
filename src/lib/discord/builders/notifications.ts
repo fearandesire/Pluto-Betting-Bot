@@ -5,13 +5,22 @@ import type {
 } from '../../../services/engagement/BigWinAnnouncementService.js'
 import MoneyFormatter from '../../../utils/api/common/money-formatting/money-format.js'
 import type {
+	BetRefundReason,
 	DisplayBetNotification,
+	DisplayBetNotificationPush,
 	DisplayResultLost,
-	DisplayResultPush,
 	DisplayResultWon,
 } from '../../../utils/api/routes/notifications/notifications.interface.js'
 import type { ParlayResultNotification } from '../../../utils/api/routes/shared-payload-schemas.js'
 import embedColors from '../../colorsConfig.js'
+import {
+	accent,
+	divider,
+	footer,
+	text,
+	type V2MessagePayload,
+	v2Payload,
+} from '../v2/kit.js'
 
 function formatAmericanOdds(odds: number): string {
 	return odds > 0 ? `+${odds}` : `${odds}`
@@ -19,7 +28,57 @@ function formatAmericanOdds(odds: number): string {
 
 // ------------------------------------------------------------ E1 bet result DM
 
-/** Single-bet result DM (surface E1). Undefined for an unknown outcome. */
+const REFUND_COPY: Record<BetRefundReason, { title: string; reason: string }> =
+	{
+		tie: {
+			title: 'Tie Game',
+			reason: 'The match ended in a tie. Your bet has been refunded.',
+		},
+		postponed: {
+			title: 'Game Postponed',
+			reason: 'The game was postponed and not played in time, so your bet was voided and refunded.',
+		},
+		cancelled: {
+			title: 'Game Cancelled',
+			reason: 'The game was cancelled, so your bet was voided and refunded.',
+		},
+		abandoned: {
+			title: 'Game Abandoned',
+			reason: 'The game was abandoned before it finished, so your bet was voided and refunded.',
+		},
+		void: {
+			title: 'Bet Voided',
+			reason: 'Your bet was voided, so your stake has been refunded.',
+		},
+	}
+
+/** Refund DM for a tie or a voided game (surface E1b), in Components V2. */
+export function refundResultPayload(
+	betData: DisplayBetNotificationPush,
+): V2MessagePayload {
+	const { betId, displayResult } = betData
+	const refund = REFUND_COPY[displayResult.refundReason ?? 'tie']
+	const betIdLabel =
+		betId === undefined ? 'Bet ID unavailable' : `Bet ID: ${betId}`
+
+	return v2Payload({
+		accent: accent('Orange'),
+		blocks: [
+			text(`## 🔄 Bet Refunded - ${refund.title}`),
+			text(refund.reason),
+			divider(),
+			text(
+				`**🎯 Team Selected** ${displayResult.team}\n**💵 Refunded Amount** ${displayResult.displayBetAmount}`,
+			),
+			footer(`Pluto | ${betIdLabel}`),
+		],
+	})
+}
+
+/**
+ * Won or lost single-bet result DM (surface E1). Undefined for a push, which
+ * goes through `refundResultPayload`, and for an unknown outcome.
+ */
 export function betResultEmbed(
 	betData: DisplayBetNotification,
 ): EmbedBuilder | undefined {
@@ -61,32 +120,6 @@ export function betResultEmbed(
 					{
 						name: '📊 Balance Update',
 						value: `${displayOldBalance} → ${displayNewBalance}`,
-						inline: false,
-					},
-				)
-				.setTimestamp()
-				.setFooter({
-					text: `Pluto | ${betIdLabel}`,
-				})
-		}
-
-		case 'push': {
-			const { team, displayBetAmount } =
-				displayResult as DisplayResultPush
-
-			return new EmbedBuilder()
-				.setTitle('🔄 Bet Refunded - Tie Game')
-				.setColor('#ffa500')
-				.addFields(
-					{ name: '🎯 Team Selected', value: team, inline: true },
-					{
-						name: '💵 Refunded Amount',
-						value: displayBetAmount,
-						inline: true,
-					},
-					{
-						name: 'ℹ️ Reason',
-						value: 'The match ended in a tie. Your bet has been refunded.',
 						inline: false,
 					},
 				)

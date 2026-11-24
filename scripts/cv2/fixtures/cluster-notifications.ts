@@ -2,11 +2,17 @@ import {
 	betResultEmbed,
 	bigWinParlayEmbed,
 	parlayResultEmbeds,
+	refundResultPayload,
 } from '../../../src/lib/discord/builders/notifications.js'
 import MoneyFormatter from '../../../src/utils/api/common/money-formatting/money-format.js'
 import type { ParlayResultNotification } from '../../../src/utils/api/routes/shared-payload-schemas.js'
 import { buildWeeklyRecapEmbeds } from '../../../src/utils/embeds/weekly-recap.embed.js'
 import { type ClusterFixtures, FIXED } from './types.js'
+
+const withoutFiles = <T extends { files?: unknown }>({
+	files,
+	...message
+}: T): Omit<T, 'files'> => message
 
 const parlayId = '5f3c9a1e-8b2d-4c6f-9e1a-7d4b2c8f0a13'
 
@@ -88,6 +94,31 @@ const fixtures: ClusterFixtures = {
 					},
 				})
 				return { embeds: [embed] }
+			},
+		},
+		{
+			id: 'E1b',
+			name: 'Refund DM (postponed game)',
+			after: () => {
+				const refund = {
+					userId: FIXED.userId,
+					betId: 48214,
+					guildId: FIXED.guildId,
+					result: {
+						outcome: 'push',
+						team: 'Kansas City Chiefs',
+						betAmount: 100,
+						refundReason: 'postponed',
+					},
+					displayResult: {
+						outcome: 'push',
+						team: 'Kansas City Chiefs',
+						betAmount: 100,
+						refundReason: 'postponed',
+						displayBetAmount: MoneyFormatter.toUSD(100),
+					},
+				} as const
+				return withoutFiles(refundResultPayload(refund))
 			},
 		},
 		{
