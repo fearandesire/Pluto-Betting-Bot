@@ -289,6 +289,7 @@ export class BetslipManager {
 						formatAmericanOdds(details.expected_odds),
 						formatAmericanOdds(details.current_odds),
 					),
+					quotedOdds: details.current_odds,
 				}),
 			)
 			const repriced = await this.betCacheService.repriceIfCurrent(

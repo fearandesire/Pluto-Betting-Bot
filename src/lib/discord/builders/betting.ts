@@ -68,6 +68,28 @@ export function formatMatchDate(
 	return dateInput || 'TBD'
 }
 
+/**
+ * Place confirm IDs: `matchup_btn_confirm` for a fresh slip, and
+ * `matchup_btn_confirm.<odds>` for a re-prompt, so the click sends the price
+ * the user saw rather than whatever the cache holds.
+ */
+const PLACE_CONFIRM_ID = 'matchup_btn_confirm'
+
+export function placeConfirmId(quotedOdds?: number) {
+	return quotedOdds === undefined
+		? PLACE_CONFIRM_ID
+		: `${PLACE_CONFIRM_ID}.${quotedOdds}`
+}
+
+/** Null when the ID is not a place confirm. */
+export function parsePlaceConfirm(
+	customId: string,
+): { quotedOdds?: number } | null {
+	if (customId === PLACE_CONFIRM_ID) return {}
+	const match = /^matchup_btn_confirm\.(-?\d+)$/.exec(customId)
+	return match ? { quotedOdds: Number(match[1]) } : null
+}
+
 /** A1: ephemeral "Pending Betslip" with confirm/cancel buttons. */
 export function pendingBetslip(d: {
 	chosenTeam: string
@@ -78,6 +100,8 @@ export function pendingBetslip(d: {
 	avatarUrl: string
 	/** Shown above the matchup, e.g. after Khronos refused a moved price. */
 	notice?: string
+	/** The price this prompt shows; its confirm sends exactly this price. */
+	quotedOdds?: number
 }) {
 	const notice = d.notice ? `${d.notice}\n` : ''
 	const embed = new EmbedBuilder()
@@ -89,7 +113,7 @@ export function pendingBetslip(d: {
 		.setColor(embedColors.PlutoYellow)
 	const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
 		new ButtonBuilder()
-			.setCustomId('matchup_btn_confirm')
+			.setCustomId(placeConfirmId(d.quotedOdds))
 			.setLabel('Confirm Bet')
 			.setStyle(ButtonStyle.Success),
 		new ButtonBuilder()

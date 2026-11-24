@@ -129,7 +129,7 @@ describe('expected_odds on place', () => {
 		expect(text).toContain('$183.33')
 		expect(text).toContain('$83.33')
 		expect(reply.components[0].toJSON().components[0].custom_id).toBe(
-			'matchup_btn_confirm',
+			'matchup_btn_confirm.-120',
 		)
 		// The next confirm re-sends the new price and the same placement.
 		const next = await service.sanitize((await service.getUserBet('u1'))!)
@@ -370,6 +370,22 @@ describe('parseOddsChanged', () => {
 			}),
 		)
 		expect(await parseOddsChanged(other)).toBeNull()
+	})
+})
+
+describe('place confirm button', () => {
+	it('binds a re-prompt confirm to the price it shows', async () => {
+		const { parsePlaceConfirm, placeConfirmId } = await import(
+			'../../../../../lib/discord/builders/betting.js'
+		)
+		expect(parsePlaceConfirm(placeConfirmId())).toEqual({})
+		expect(parsePlaceConfirm(placeConfirmId(-120))).toEqual({
+			quotedOdds: -120,
+		})
+		expect(parsePlaceConfirm(placeConfirmId(135))).toEqual({
+			quotedOdds: 135,
+		})
+		expect(parsePlaceConfirm('matchup_btn_cancel')).toBeNull()
 	})
 })
 

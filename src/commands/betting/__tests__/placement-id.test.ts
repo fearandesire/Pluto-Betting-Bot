@@ -476,6 +476,47 @@ describe('H2H placement identity', () => {
 		)
 	})
 
+	it('sends the price a re-prompt showed even before the cache holds it', async () => {
+		const handler = new ButtonHandler({} as never, {} as never)
+		const cached = {
+			userid: 'user-1',
+			team: 'Lakers',
+			amount: 80,
+			profit: 53.33,
+			payout: 133.33,
+			selected_odds: -150,
+			opponent: 'Celtics',
+			dateofmatchup: '2026-11-25T00:30:00Z',
+			event_id: 'evt-1',
+			guild_id: 'guild-1',
+			placement_id: 'placement-1',
+		}
+		;(handler as never as { betsCacheService: unknown }).betsCacheService =
+			new BetsCacheService({
+				get: vi.fn().mockResolvedValue(cached),
+				set: vi.fn(),
+				remove: vi.fn(),
+			} as never)
+		const placeBet = vi
+			.spyOn(BetslipManager.prototype, 'placeBet')
+			.mockResolvedValue(undefined as never)
+		const interaction = {
+			customId: 'matchup_btn_confirm.-120',
+			guildId: 'guild-1',
+			user: { id: 'user-1', displayAvatarURL: () => 'avatar' },
+			deferUpdate: vi.fn(),
+			editReply: vi.fn(),
+		}
+
+		const parsed = await handler.parse(interaction as never)
+		await handler.run(interaction as never, parsed.unwrap() as never)
+
+		expect(placeBet.mock.calls[0]?.[1]).toMatchObject({
+			expected_odds: -120,
+			placement_id: 'placement-1',
+		})
+	})
+
 	it('preserves guild scope in the generated cancellation serializer', () => {
 		expect(
 			PatreonDataDtoToJSON({

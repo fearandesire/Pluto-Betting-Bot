@@ -47,11 +47,15 @@ export async function runDoubleDown(
 ) {
 	const key = `${interaction.user.id}:${betId}`
 	if (inFlight.has(key)) {
-		return sendBettingNotice(interaction, {
-			title: 'Double down already in progress',
-			description:
-				'Pluto is still doubling down this bet. Check `/mybets` in a moment.',
-		})
+		return sendBettingNotice(
+			interaction,
+			{
+				title: 'Double down already in progress',
+				description:
+					'Pluto is still doubling down this bet. Check `/mybets` in a moment.',
+			},
+			{ keepOriginal: true },
+		)
 	}
 	inFlight.add(key)
 	const manager = new BetslipManager(

@@ -10,6 +10,7 @@ import {
 	doubleDownBtnPrefix,
 	formatPredictionConfirmation,
 	parseDoubleDownButton,
+	parsePlaceConfirm,
 	predictionPlacedEmbed,
 } from '../lib/discord/builders/betting.js'
 import { ApiModules } from '../lib/interfaces/api/api.interface.js'
@@ -152,7 +153,7 @@ export class ButtonHandler extends InteractionHandler {
 			}
 
 			// Confirm button
-			if (interaction.customId === btnIds.matchup_btn_confirm) {
+			if (parsePlaceConfirm(interaction.customId)) {
 				// Defer update to modify the original ephemeral message in-place
 				await interaction.deferUpdate()
 				try {
@@ -216,13 +217,18 @@ export class ButtonHandler extends InteractionHandler {
 		}
 
 		// ? Handle Confirming A Betslip
-		if (interaction.customId === btnIds.matchup_btn_confirm) {
+		const placeConfirm = parsePlaceConfirm(interaction.customId)
+		if (placeConfirm) {
 			if ('betslip' in payload) {
 				const { betslip } = payload
 
 				// Sanitize and place the bet - all data is already in the cached betslip
-				const sanitizedBetslip =
-					await this.betsCacheService.sanitize(betslip)
+				const sanitizedBetslip = {
+					...(await this.betsCacheService.sanitize(betslip)),
+					...(placeConfirm.quotedOdds === undefined
+						? {}
+						: { expected_odds: placeConfirm.quotedOdds }),
+				}
 
 				return new BetslipManager(
 					new BetslipWrapper(),
