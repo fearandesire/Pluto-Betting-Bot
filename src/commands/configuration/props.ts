@@ -13,16 +13,23 @@ import {
 } from 'discord.js'
 import {
 	type PropsSettingState,
+	type PropsStrategyState,
 	propsDisabledPayload,
 	propsEnabledPayload,
 	propsErrorPayload,
 	propsMissingPermissionsPayload,
 	propsStatusPayload,
+	propsStrategyPayload,
 } from '../../lib/discord/builders/props-settings.js'
 import GuildConfigWrapper, {
 	PROPS_ENABLED_SETTING,
 } from '../../utils/api/Khronos/guild/guild-config.wrapper.js'
 import GuildWrapper from '../../utils/api/Khronos/guild/guild-wrapper.js'
+import PropSettingsWrapper, {
+	PROP_STRATEGIES,
+	PropSettingsError,
+	type PropStrategy,
+} from '../../utils/api/Khronos/props/prop-settings-wrapper.js'
 
 /**
  * Prop delivery (`GuildWrapper.sendToChannel`) only accepts guild text
@@ -86,6 +93,20 @@ function withGuildWriteLock<T>(
 	return result
 }
 
+function strategyFailureCopy(error: unknown): string {
+	const reason = error instanceof PropSettingsError ? error.reason : null
+	if (reason === 'rejected') {
+		return 'That strategy is not available for this server yet. Nothing was changed.'
+	}
+	if (reason === 'forbidden') {
+		return 'Pluto is not allowed to change props settings right now. Nothing was changed.'
+	}
+	if (reason === 'unconfirmed') {
+		return 'Pluto could not confirm the strategy was saved. Run /props status to see which strategy is active before trying again.'
+	}
+	return 'Pluto could not save the strategy. Nothing was changed, so please try again.'
+}
+
 @ApplyOptions<Subcommand.Options>({
 	name: 'props',
 	description: 'Turn daily player props on or off for this server',
@@ -93,6 +114,7 @@ function withGuildWriteLock<T>(
 		{ name: 'enable', chatInputRun: 'handleEnable' },
 		{ name: 'disable', chatInputRun: 'handleDisable' },
 		{ name: 'status', chatInputRun: 'handleStatus' },
+		{ name: 'strategy', chatInputRun: 'handleStrategy' },
 	],
 })
 export class UserCommand extends Subcommand {
@@ -132,6 +154,23 @@ export class UserCommand extends Subcommand {
 							.setName('status')
 							.setDescription(
 								'Show whether daily props are on and where they post',
+							),
+					)
+					.addSubcommand((subcommand) =>
+						subcommand
+							.setName('strategy')
+							.setDescription('Choose how daily props are picked')
+							.addStringOption((option) =>
+								option
+									.setName('strategy')
+									.setDescription('How props are picked')
+									.addChoices(
+										...PROP_STRATEGIES.map((value) => ({
+											name: value,
+											value,
+										})),
+									)
+									.setRequired(true),
 							),
 					),
 			{ idHints: [] },
@@ -222,7 +261,51 @@ export class UserCommand extends Subcommand {
 		} catch (error) {
 			return this.replyWithError(interaction, error)
 		}
-		return interaction.editReply(propsStatusPayload(state))
+		const settings = await this.loadStrategyState(guildId)
+		return interaction.editReply(propsStatusPayload(state, settings))
+	}
+
+	public async handleStrategy(
+		interaction: Subcommand.ChatInputCommandInteraction,
+	) {
+		await interaction.deferReply({ flags: MessageFlags.Ephemeral })
+		const guildId = interaction.guildId
+		if (!guildId) {
+			return interaction.editReply(
+				propsErrorPayload('This command only works in a server.'),
+			)
+		}
+
+		const strategy = interaction.options.getString(
+			'strategy',
+			true,
+		) as PropStrategy
+		try {
+			await new PropSettingsWrapper().setStrategy(guildId, strategy)
+		} catch (error) {
+			this.container.logger.error(error)
+			return interaction.editReply(
+				propsErrorPayload(strategyFailureCopy(error)),
+			)
+		}
+		return interaction.editReply(propsStrategyPayload(strategy))
+	}
+
+	/** A server with no settings row follows the default strategy and schedule. */
+	private async loadStrategyState(
+		guildId: string,
+	): Promise<PropsStrategyState> {
+		try {
+			const row = await new PropSettingsWrapper().get(guildId)
+			return {
+				kind: 'loaded',
+				strategy: row?.strategy ?? 'default',
+				postTime: row?.post_time ?? null,
+			}
+		} catch (error) {
+			this.container.logger.warn(error)
+			return { kind: 'unavailable' }
+		}
 	}
 
 	private replyWithError(

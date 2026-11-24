@@ -13,7 +13,12 @@ import {
 	propsPostedEmbed,
 } from '../../../src/lib/discord/builders/admin.js'
 import { commandErrorLogEmbed } from '../../../src/lib/discord/builders/admin-command-error.js'
+import { propPickerPayload } from '../../../src/lib/discord/builders/prop-picker.js'
 import { LogType } from '../../../src/utils/logging/AppLog.interface.js'
+import {
+	buildPropPickerPairs,
+	initialPropPickerPrices,
+} from '../../../src/utils/props/PropPicker.js'
 import { type ClusterFixtures, type DumpMessage, FIXED } from './types.js'
 
 /**
@@ -156,7 +161,7 @@ const fixtures: ClusterFixtures = {
 	surfaces: [
 		{
 			id: 'F1',
-			name: '/config footer status',
+			name: '/footer-config footer status',
 			before: () => ({
 				embeds: [
 					footerStatusEmbed({
@@ -281,6 +286,65 @@ const fixtures: ClusterFixtures = {
 					),
 				],
 			}),
+		},
+		{
+			id: 'F9',
+			name: '/admin props pick',
+			after: () => {
+				const players = [
+					['LeBron James', 'player_points', 27.5, -115, -105],
+					['Jayson Tatum', 'player_rebounds', 8.5, -110, -110],
+					['Nikola Jokic', 'player_assists', 9.5, -105, -115],
+					['Stephen Curry', 'player_threes', 4.5, 120, -145],
+					['Giannis Antetokounmpo', 'player_points', 30.5, -125, 105],
+					['Jalen Brunson', 'player_assists', 6.5, -108, -112],
+				] as const
+				const props = players.map(
+					([player, market, line, over, under], index) => ({
+						event_id: 'evt-lakers-celtics',
+						event_context: {
+							home_team: 'Boston Celtics',
+							away_team: 'Los Angeles Lakers',
+							commence_time: '2026-10-04T23:30:00Z',
+							sport_title: 'NBA',
+						},
+						market_key: market,
+						bookmaker_key: 'draftkings',
+						outcomes: [
+							{
+								outcome_uuid: `9f8e7d6c-0000-4000-8000-0000000f90${index}1`,
+								name: 'Over',
+								description: player,
+								price: over,
+								point: line,
+							},
+							{
+								outcome_uuid: `9f8e7d6c-0000-4000-8000-0000000f90${index}2`,
+								name: 'Under',
+								description: player,
+								price: under,
+								point: line,
+							},
+						],
+					}),
+				)
+				const pairs = buildPropPickerPairs(props)
+				const payload = propPickerPayload({
+					token: '0123456789abcdef',
+					userId: FIXED.userId,
+					guildId: FIXED.guildId,
+					sport: 'nba',
+					filters: { game: '', category: '', player: '' },
+					page: 0,
+					selected: pairs.map((pair) => pair.key),
+					pairs,
+					prices: initialPropPickerPrices(pairs),
+				})
+				return {
+					components: payload.components,
+					flags: payload.flags,
+				}
+			},
 		},
 		{
 			id: 'F8',

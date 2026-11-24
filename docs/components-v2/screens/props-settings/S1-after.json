@@ -1,0 +1,39 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"components": [
+		{
+			"type": 17,
+			"accent_color": 5763719,
+			"components": [
+				{
+					"type": 10,
+					"content": "### Daily props: enabled"
+				},
+				{
+					"type": 10,
+					"content": "**Channel:** <#300000000000000003>"
+				},
+				{
+					"type": 10,
+					"content": "**Strategy:** Smart\n**Post time:** 17:30 UTC"
+				},
+				{
+					"type": 14,
+					"divider": true,
+					"spacing": 1
+				},
+				{
+					"type": 10,
+					"content": "-# Turn them off with /props disable."
+				}
+			]
+		}
+	],
+	"flags": 32768,
+	"allowedMentions": {
+		"parse": []
+	}
+}

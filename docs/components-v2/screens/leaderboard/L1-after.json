@@ -1,0 +1,30 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"components": [
+		{
+			"type": 17,
+			"accent_color": 13168379,
+			"components": [
+				{
+					"type": 10,
+					"content": "### 🏆 Weekly props leaderboard"
+				},
+				{
+					"type": 10,
+					"content": "1. <@100000000000000001> — **134 pts** (14/17) 🔥10\n2. <@100000000000000002> — **102 pts** (11/15) 🔥5\n3. <@100000000000000003> — **84 pts** (9/12) 🔥3\n4. <@100000000000000004> — **60 pts** (7/12)"
+				},
+				{
+					"type": 10,
+					"content": "-# Top 10 · Khronos prediction leaderboard · Pluto"
+				}
+			]
+		}
+	],
+	"flags": 32768,
+	"allowedMentions": {
+		"parse": []
+	}
+}

@@ -6,7 +6,7 @@ import {
 	type RepliableInteraction,
 } from 'discord.js'
 import { isV2Message } from './edit.js'
-import { text, v2Payload } from './kit.js'
+import { accent, text, v2Payload } from './kit.js'
 
 /** `CommandInteraction` is listed because legacy callers type it that way. */
 type NoticeInteraction = RepliableInteraction | CommandInteraction
@@ -69,4 +69,30 @@ export async function sendErrorNotice(
 		? await opts.classic(embed)
 		: await interaction.editReply({ embeds: [embed] })
 	return { branch: 'classic-edit', message }
+}
+
+/**
+ * Tell the user a betting action failed, as a Components V2 ephemeral message.
+ * A deferred or classic target cannot become V2 by edit, so it is removed and
+ * the notice is a follow-up. `keepOriginal` leaves the target in place, for a
+ * failure where the bet slip must stay usable for a retry.
+ */
+export async function sendBettingNotice(
+	interaction: NoticeInteraction,
+	copy: { title: string; description: string },
+	opts: { keepOriginal?: boolean } = {},
+): Promise<Message> {
+	const payload = v2Payload({
+		accent: accent('error'),
+		blocks: [text(`**${copy.title}**\n${copy.description}`)],
+		ephemeral: true,
+	})
+	if (!interaction.deferred && !interaction.replied) {
+		const res = await interaction.reply({ ...payload, withResponse: true })
+		return res.resource?.message ?? (await interaction.fetchReply())
+	}
+	if (!opts.keepOriginal) {
+		await interaction.deleteReply().catch(() => undefined)
+	}
+	return interaction.followUp(payload)
 }

@@ -1,5 +1,4 @@
 import { container } from '@sapphire/framework'
-import type { TextChannel } from 'discord.js'
 import { isErr } from '../../lib/configs/constants.js'
 import { appLogEmbed, logTypeColors } from '../../lib/discord/builders/admin.js'
 import GuildWrapper from '../api/Khronos/guild/guild-wrapper.js'
@@ -23,16 +22,6 @@ interface LogParams {
 export default class AppLog {
 	public static async log(params: LogParams): Promise<void> {
 		try {
-			const logChannel = (await new GuildWrapper().getLogChannel(
-				params.guildId,
-			)) as TextChannel
-			if (!logChannel) {
-				console.error(
-					`Log channel not found for guild ${params.guildId}`,
-				)
-				return
-			}
-
 			const appAvatar =
 				container.client.user?.avatarURL() ??
 				container.client.user?.defaultAvatarURL ??
@@ -44,7 +33,9 @@ export default class AppLog {
 				appAvatar,
 			)
 
-			await logChannel.send({ embeds: [embed] })
+			await new GuildWrapper().sendToLogChannel(params.guildId, {
+				embeds: [embed],
+			})
 		} catch (error: unknown) {
 			const ensuredError = isErr(error)
 			console.error(

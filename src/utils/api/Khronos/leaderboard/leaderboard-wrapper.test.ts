@@ -115,6 +115,25 @@ describe('LeaderboardWrapper', () => {
 		)
 	})
 
+	it('forwards period and type as query parameters', async () => {
+		fetchApi.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			json: async () => ({ entries: [], total_users: 0 }),
+		})
+
+		await new LeaderboardWrapper().getLeaderboard({
+			guildId: 'guild-1',
+			period: 'week',
+			type: 'props',
+		})
+
+		expect(fetchApi).toHaveBeenCalledWith(
+			'https://khronos.test/api/khronos/v1/leaderboard?guild_id=guild-1&period=week&type=props',
+			expect.objectContaining({ method: 'GET' }),
+		)
+	})
+
 	it('surfaces non-success responses instead of returning an empty leaderboard', async () => {
 		fetchApi.mockResolvedValueOnce({ ok: false, status: 503 })
 

@@ -2,6 +2,7 @@ import { ApplyOptions } from '@sapphire/decorators'
 import { Subcommand } from '@sapphire/plugin-subcommands'
 import { InteractionContextType, PermissionFlagsBits } from 'discord.js'
 import { AdminPredictionsHandler } from '../../utils/admin-handlers/admin-predictions-handler.js'
+import { AdminPropPickerHandler } from '../../utils/admin-handlers/admin-prop-picker-handler.js'
 import { AdminPropsHandler } from '../../utils/admin-handlers/admin-props-handler.js'
 
 /**
@@ -11,6 +12,7 @@ import { AdminPropsHandler } from '../../utils/admin-handlers/admin-props-handle
  * - /admin predictions view <user> - View any user's predictions
  * - /admin predictions delete <user> <id> - Delete a specific prediction
  * - /admin props generate <count> - Generate and post props to channel
+ * - /admin props pick - Hand-pick props from the full slate
  * - /admin props viewactive - View all props with active predictions
  */
 @ApplyOptions<Subcommand.Options>({
@@ -34,6 +36,7 @@ import { AdminPropsHandler } from '../../utils/admin-handlers/admin-props-handle
 			type: 'group',
 			entries: [
 				{ name: 'generate', chatInputRun: 'propsGenerate' },
+				{ name: 'pick', chatInputRun: 'propsPick' },
 				{ name: 'viewactive', chatInputRun: 'propsViewactive' },
 			],
 		},
@@ -42,6 +45,7 @@ import { AdminPropsHandler } from '../../utils/admin-handlers/admin-props-handle
 export class UserCommand extends Subcommand {
 	private predictionsHandler: AdminPredictionsHandler
 	private propsHandler: AdminPropsHandler
+	private propPickerHandler: AdminPropPickerHandler
 
 	public constructor(
 		context: Subcommand.LoaderContext,
@@ -50,6 +54,7 @@ export class UserCommand extends Subcommand {
 		super(context, options)
 		this.predictionsHandler = new AdminPredictionsHandler()
 		this.propsHandler = new AdminPropsHandler()
+		this.propPickerHandler = new AdminPropPickerHandler()
 	}
 
 	public override registerApplicationCommands(registry: Subcommand.Registry) {
@@ -130,6 +135,53 @@ export class UserCommand extends Subcommand {
 							)
 							.addSubcommand((subcommand) =>
 								subcommand
+									.setName('pick')
+									.setDescription(
+										'Hand-pick props from the full slate',
+									)
+									.addStringOption((option) =>
+										option
+											.setName('sport')
+											.setDescription('Sport to browse')
+											.setRequired(true)
+											.addChoices(
+												{
+													name: 'NBA',
+													value: 'nba',
+												},
+												{
+													name: 'NFL',
+													value: 'nfl',
+												},
+											),
+									)
+									.addStringOption((option) =>
+										option
+											.setName('game')
+											.setDescription(
+												'Filter by team name (optional)',
+											)
+											.setRequired(false),
+									)
+									.addStringOption((option) =>
+										option
+											.setName('category')
+											.setDescription(
+												'Filter by market key, e.g. player_points (optional)',
+											)
+											.setRequired(false),
+									)
+									.addStringOption((option) =>
+										option
+											.setName('player')
+											.setDescription(
+												'Filter by player name (optional)',
+											)
+											.setRequired(false),
+									),
+							)
+							.addSubcommand((subcommand) =>
+								subcommand
 									.setName('viewactive')
 									.setDescription(
 										'View props with active predictions',
@@ -160,6 +212,12 @@ export class UserCommand extends Subcommand {
 		interaction: Subcommand.ChatInputCommandInteraction,
 	) {
 		return this.propsHandler.handleGenerate(interaction)
+	}
+
+	public async propsPick(
+		interaction: Subcommand.ChatInputCommandInteraction,
+	) {
+		return this.propPickerHandler.handle(interaction)
 	}
 
 	public async propsViewactive(

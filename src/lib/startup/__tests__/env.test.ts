@@ -175,6 +175,38 @@ describe('Pluto system startup env gate', () => {
 	})
 })
 
+describe('BETTING_OPS_WEBHOOK_URL', () => {
+	it('is optional, so alerts stay disabled when it is unset or empty', () => {
+		expect(
+			parseStartupEnv(requiredEnv).BETTING_OPS_WEBHOOK_URL,
+		).toBeUndefined()
+		expect(
+			parseStartupEnv({ ...requiredEnv, BETTING_OPS_WEBHOOK_URL: '' })
+				.BETTING_OPS_WEBHOOK_URL,
+		).toBeUndefined()
+	})
+
+	it('accepts a URL', () => {
+		const url = 'https://discord.example.invalid/api/webhooks/1/token'
+		expect(
+			parseStartupEnv({ ...requiredEnv, BETTING_OPS_WEBHOOK_URL: url })
+				.BETTING_OPS_WEBHOOK_URL,
+		).toBe(url)
+	})
+
+	it('rejects a value that is not a URL without echoing it', () => {
+		const bad = 'not-a-url-secret-value'
+		let message = ''
+		try {
+			parseStartupEnv({ ...requiredEnv, BETTING_OPS_WEBHOOK_URL: bad })
+		} catch (error) {
+			message = String(error)
+		}
+		expect(message).not.toBe('')
+		expect(message).not.toContain(bad)
+	})
+})
+
 describe('PROJECT_VERSION', () => {
 	it('reports the package version, not a configured value', () => {
 		const { version } = JSON.parse(readFileSync('package.json', 'utf-8'))

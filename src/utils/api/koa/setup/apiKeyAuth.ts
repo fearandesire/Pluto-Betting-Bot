@@ -3,6 +3,12 @@ import env from '../../../../lib/startup/env.js'
 import { logger } from '../../../logging/WinstonLogger.js'
 
 /**
+ * The external uptime probe calls this path without a key and expects 401.
+ * Its rejections log at debug so they do not bury real auth failures.
+ */
+export const KEYLESS_PROBE_PATH = '/api/pluto/health'
+
+/**
  * Creates and returns the API key authentication middleware
  */
 export function createApiKeyAuthMiddleware() {
@@ -21,7 +27,8 @@ export function createApiKeyAuthMiddleware() {
 				code: 'MISSING_API_KEY',
 				message: 'API key is required',
 			}
-			logger.warn('Request rejected due to missing API key', {
+			const level = ctx.path === KEYLESS_PROBE_PATH ? 'debug' : 'warn'
+			logger[level]('Request rejected due to missing API key', {
 				path: ctx.path,
 				method: ctx.method,
 				reqId: ctx.state.reqId,

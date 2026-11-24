@@ -19,9 +19,13 @@ import { readFileSync } from 'fs'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 import env from '../../../lib/startup/env.js'
-import { withRequestIdHeader } from '../../../lib/telemetry/request-context.js'
+import {
+	REQUEST_ID_HEADER,
+	withRequestIdHeader,
+} from '../../../lib/telemetry/request-context.js'
 import { getDefaultAlertReporter } from '../../../services/alerts/alert-reporter.js'
 import { ConsecutiveFailureTracker } from '../../../services/alerts/failure-trackers.js'
+import { checkBettingOutage } from './betting-outage.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -99,17 +103,32 @@ const retryingFetch = fetchRetry(global.fetch, {
 	},
 })
 
+const requestUrlOf = (input: RequestInfo | URL): string =>
+	typeof input === 'string'
+		? input
+		: input instanceof URL
+			? input.href
+			: input.url
+
+// Betting placement calls go through the generated client, so this is the hook
+// that sees them. Retries happen inside retryingFetch, so only the final outcome pages ops.
 const observedFetch: typeof retryingFetch = async (input, init) => {
+	const requestInit = withRequestIdHeader(init)
+	const url = requestUrlOf(input)
+	const requestId =
+		new Headers(requestInit.headers).get(REQUEST_ID_HEADER) ?? undefined
 	try {
-		const response = await retryingFetch(input, withRequestIdHeader(init))
+		const response = await retryingFetch(input, requestInit)
 		if (response.ok) {
 			void khronosConnectivity.success().catch(() => undefined)
 		} else if (response.status === 429 || response.status >= 500) {
 			void khronosConnectivity.failure().catch(() => undefined)
 		}
+		checkBettingOutage({ url, requestId, status: response.status })
 		return response
 	} catch (error) {
 		void khronosConnectivity.failure().catch(() => undefined)
+		checkBettingOutage({ url, requestId, error })
 		throw error
 	}
 }

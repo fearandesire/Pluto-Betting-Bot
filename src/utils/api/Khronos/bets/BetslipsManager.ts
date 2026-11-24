@@ -26,9 +26,12 @@ import {
 	parlayPlacedAnnouncementEmbed,
 	pendingBetslip,
 } from '../../../../lib/discord/builders/betting.js'
+import { sendBettingNotice } from '../../../../lib/discord/v2/notice.js'
 import { ApiModules } from '../../../../lib/interfaces/api/api.interface.js'
 import type { IAPIBetslipPayload } from '../../../../lib/interfaces/api/bets/betslips.interfaces.js'
 import { isApiError } from '../../../../lib/interfaces/errors/api-errors.js'
+import { reportBettingFailure } from '../../../../services/alerts/betting-ops-alert.js'
+import { unconfirmedBetCopy } from '../../../betting/bet-reference.js'
 import { findEmoji } from '../../../bot_res/findEmoji.js'
 import { ErrorEmbeds } from '../../../common/errors/global.js'
 import StringUtils from '../../../common/string-utils.js'
@@ -193,23 +196,15 @@ export class BetslipManager {
 					balance: (betslip.newBalance ?? 0) + betslip.amount,
 				})
 			} else {
-				const errEmbed = await ErrorEmbeds.internalErr(
-					'Failed to place your bet due to an unexpected response from the API. Please try again later.',
-				)
-				if (interaction.deferred || interaction.replied) {
-					return interaction.editReply({
-						embeds: [errEmbed],
-						...(this.isDefinitiveBusinessFailure(
+				return sendBettingNotice(
+					interaction,
+					unconfirmedBetCopy(interaction.id),
+					{
+						keepOriginal: !this.isDefinitiveBusinessFailure(
 							response.statusCode,
-						)
-							? { components: [] }
-							: {}),
-					})
-				}
-				return interaction.followUp({
-					embeds: [errEmbed],
-					ephemeral: true,
-				})
+						),
+					},
+				)
 			}
 		} catch (error) {
 			const oddsChanged = await parseOddsChanged(error)
@@ -221,22 +216,23 @@ export class BetslipManager {
 					oddsChanged,
 				)
 			}
-			const errEmbed = await ErrorEmbeds.internalErr(
-				'Failed to place your bet due to an internal error. Please try again later.',
-			)
 			logger.error('Failed to place bet', { error })
-			if (interaction.deferred || interaction.replied) {
-				return interaction.editReply({
-					embeds: [errEmbed],
-					...(this.isDefinitiveBusinessFailure(error)
-						? { components: [] }
-						: {}),
-				})
-			}
-			return interaction.followUp({
-				embeds: [errEmbed],
-				ephemeral: true,
+			reportBettingFailure({
+				key: `bet.placement_failed:${error instanceof Error ? error.name : 'unknown'}`,
+				event: 'bet.placement_failed',
+				guildId: interaction.guildId,
+				channelId: interaction.channelId,
+				userId: interaction.user.id,
+				requestId: interaction.id,
+				error,
 			})
+			return sendBettingNotice(
+				interaction,
+				unconfirmedBetCopy(interaction.id),
+				{
+					keepOriginal: !this.isDefinitiveBusinessFailure(error),
+				},
+			)
 		}
 	}
 

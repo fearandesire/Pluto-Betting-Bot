@@ -7,6 +7,8 @@ const mockGetPredictionStats = vi.fn()
 vi.mock(
 	'../../../utils/api/Khronos/leaderboard/leaderboard-wrapper.js',
 	() => ({
+		LEADERBOARD_PERIODS: ['week', 'month', 'all'],
+		LEADERBOARD_TYPES: ['props', 'games', 'all'],
 		default: vi.fn().mockImplementation(function () {
 			return { getLeaderboard: mockGetLeaderboard }
 		}),
@@ -119,6 +121,34 @@ describe('/predictions', () => {
 			'history',
 			'stats',
 			'leaderboard',
+		])
+		const leaderboard = json.options?.find(
+			(option) => option.name === 'leaderboard',
+		) as {
+			options?: Array<{
+				name: string
+				choices?: Array<{ name: string; value: string }>
+			}>
+		}
+		expect(leaderboard.options?.map((option) => option.name)).toEqual([
+			'period',
+			'type',
+		])
+		expect(
+			leaderboard.options?.find((option) => option.name === 'period')
+				?.choices,
+		).toEqual([
+			{ name: 'This week (Mon-Sun)', value: 'week' },
+			{ name: 'This month', value: 'month' },
+			{ name: 'All time', value: 'all' },
+		])
+		expect(
+			leaderboard.options?.find((option) => option.name === 'type')
+				?.choices,
+		).toEqual([
+			{ name: 'Player props', value: 'props' },
+			{ name: 'Game picks', value: 'games' },
+			{ name: 'All markets', value: 'all' },
 		])
 		expect(options.idHints).toEqual(['1298280482123026537'])
 	})

@@ -7,6 +7,7 @@ import {
 	outboundRequestId,
 	REQUEST_ID_HEADER,
 } from '../../../lib/telemetry/request-context.js'
+import { checkBettingOutage } from '../Khronos/betting-outage.js'
 
 /**
  * Axios Instance(s) configured for our needs to reduce redundant specifications/setup
@@ -35,6 +36,22 @@ AxiosKhronosInstance.interceptors.request.use((config) => {
 		config.headers.set(REQUEST_ID_HEADER, outboundRequestId())
 	}
 	return config
+})
+
+// Parlay calls use this instance (ParlayApiWrapper). Betslip calls use the
+// generated client's fetch hook in KhronosInstances.ts.
+AxiosKhronosInstance.interceptors.response.use(undefined, (error: unknown) => {
+	if (axios.isAxiosError(error)) {
+		checkBettingOutage({
+			url: error.config?.url ?? '',
+			requestId: error.config?.headers
+				?.get(REQUEST_ID_HEADER)
+				?.toString(),
+			status: error.response?.status,
+			error,
+		})
+	}
+	return Promise.reject(error)
 })
 
 export { AxiosKhronosInstance }
