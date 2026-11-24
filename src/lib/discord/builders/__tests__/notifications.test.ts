@@ -123,6 +123,61 @@ describe('notification builders (classic, pre-migration)', () => {
 		})
 	})
 
+	it.each([
+		[
+			'postponed',
+			'🔄 Bet Refunded - Game Postponed',
+			'The game was postponed and not played in time, so your bet was voided and refunded.',
+		],
+		[
+			'cancelled',
+			'🔄 Bet Refunded - Game Cancelled',
+			'The game was cancelled, so your bet was voided and refunded.',
+		],
+		[
+			'abandoned',
+			'🔄 Bet Refunded - Game Abandoned',
+			'The game was abandoned before it finished, so your bet was voided and refunded.',
+		],
+		[
+			'void',
+			'🔄 Bet Refunded - Bet Voided',
+			'Your bet was voided, so your stake has been refunded.',
+		],
+		[
+			'tie',
+			'🔄 Bet Refunded - Tie Game',
+			'The match ended in a tie. Your bet has been refunded.',
+		],
+	] as const)(
+		'names a %s refund instead of calling it a tie (E1)',
+		(refundReason, title, reason) => {
+			const push = betResultEmbed({
+				userId: 'u',
+				betId: 7,
+				result: {
+					outcome: 'push',
+					team: 'Buffalo Bills',
+					betAmount: 50,
+					refundReason,
+				},
+				displayResult: {
+					outcome: 'push',
+					team: 'Buffalo Bills',
+					betAmount: 50,
+					refundReason,
+					displayBetAmount: '$50.00',
+				},
+			})?.toJSON()
+			expect(push?.title).toBe(title)
+			expect(push?.fields?.[2]).toEqual({
+				name: 'ℹ️ Reason',
+				value: reason,
+				inline: false,
+			})
+		},
+	)
+
 	it('pins the won parlay DM and splits long parlays (E2)', () => {
 		const base: ParlayResultNotification = {
 			kind: 'won',

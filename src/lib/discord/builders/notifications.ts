@@ -5,6 +5,7 @@ import type {
 } from '../../../services/engagement/BigWinAnnouncementService.js'
 import MoneyFormatter from '../../../utils/api/common/money-formatting/money-format.js'
 import type {
+	BetRefundReason,
 	DisplayBetNotification,
 	DisplayResultLost,
 	DisplayResultPush,
@@ -18,6 +19,30 @@ function formatAmericanOdds(odds: number): string {
 }
 
 // ------------------------------------------------------------ E1 bet result DM
+
+const REFUND_COPY: Record<BetRefundReason, { title: string; reason: string }> =
+	{
+		tie: {
+			title: 'Tie Game',
+			reason: 'The match ended in a tie. Your bet has been refunded.',
+		},
+		postponed: {
+			title: 'Game Postponed',
+			reason: 'The game was postponed and not played in time, so your bet was voided and refunded.',
+		},
+		cancelled: {
+			title: 'Game Cancelled',
+			reason: 'The game was cancelled, so your bet was voided and refunded.',
+		},
+		abandoned: {
+			title: 'Game Abandoned',
+			reason: 'The game was abandoned before it finished, so your bet was voided and refunded.',
+		},
+		void: {
+			title: 'Bet Voided',
+			reason: 'Your bet was voided, so your stake has been refunded.',
+		},
+	}
 
 /** Single-bet result DM (surface E1). Undefined for an unknown outcome. */
 export function betResultEmbed(
@@ -71,11 +96,12 @@ export function betResultEmbed(
 		}
 
 		case 'push': {
-			const { team, displayBetAmount } =
+			const { team, displayBetAmount, refundReason } =
 				displayResult as DisplayResultPush
+			const refund = REFUND_COPY[refundReason ?? 'tie']
 
 			return new EmbedBuilder()
-				.setTitle('🔄 Bet Refunded - Tie Game')
+				.setTitle(`🔄 Bet Refunded - ${refund.title}`)
 				.setColor('#ffa500')
 				.addFields(
 					{ name: '🎯 Team Selected', value: team, inline: true },
@@ -86,7 +112,7 @@ export function betResultEmbed(
 					},
 					{
 						name: 'ℹ️ Reason',
-						value: 'The match ended in a tie. Your bet has been refunded.',
+						value: refund.reason,
 						inline: false,
 					},
 				)

@@ -77,6 +77,40 @@ describe('notification payload validators', () => {
 		])
 	})
 
+	it('carries Khronos refund_reason onto every push', () => {
+		const result = validateNotifyBetUsers({
+			winners: [],
+			losers: [],
+			pushes: [
+				{
+					userId: 'user-3',
+					betId: 303,
+					result: { team: 'Home', betAmount: 20, refunded: 20 },
+				},
+				{ userid: 'user-2', amount: 15, betid: 202, team: 'Away' },
+			],
+			refund_reason: 'postponed',
+		})
+
+		expect(result?.pushes?.map((push) => push.result.refundReason)).toEqual(
+			['postponed', 'postponed'],
+		)
+	})
+
+	it('ignores an unknown refund_reason rather than rejecting the refund', () => {
+		const result = validateNotifyBetUsers({
+			winners: [],
+			losers: [],
+			pushes: [
+				{ userid: 'user-2', amount: 15, betid: 202, team: 'Away' },
+			],
+			refund_reason: 'meteor',
+		})
+
+		expect(result?.pushes).toHaveLength(1)
+		expect(result?.pushes?.[0].result.refundReason).toBeUndefined()
+	})
+
 	it('accepts a realistic daily props payload', () => {
 		const result = validateDailyPropsPayload({
 			props: [

@@ -1,9 +1,18 @@
+import { z } from 'zod'
 import { logger } from '../../../logging/WinstonLogger.js'
 import {
 	dailyPropsPayloadSchema,
 	notificationBetResultsSchema,
 } from '../shared-payload-schemas.js'
-import type { NotifyBetUsers } from './notifications.interface.js'
+import {
+	BET_REFUND_REASONS,
+	type NotifyBetUsers,
+} from './notifications.interface.js'
+
+// The published 3.20.0 contract strips refund_reason, so read it on its own.
+const refundReasonSchema = z.object({
+	refund_reason: z.enum(BET_REFUND_REASONS).optional().catch(undefined),
+})
 
 export function validateNotifyBetUsers(
 	payload: unknown,
@@ -19,6 +28,10 @@ export function validateNotifyBetUsers(
 		})
 		return null
 	}
+
+	const refundReason =
+		refundReasonSchema.safeParse(payload).data?.refund_reason
+	const reason = refundReason ? { refundReason } : {}
 
 	return {
 		winners: (result.data.winners ?? []).map((winner) => {
@@ -52,13 +65,14 @@ export function validateNotifyBetUsers(
 						outcome: 'push' as const,
 						team: push.team,
 						betAmount: push.amount,
+						...reason,
 					},
 				}
 			}
 
 			return {
 				...push,
-				result: { ...push.result, outcome: 'push' as const },
+				result: { ...push.result, outcome: 'push' as const, ...reason },
 			}
 		}),
 	}
