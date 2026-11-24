@@ -9,6 +9,11 @@ import type { ParlayResultNotification } from '../../../src/utils/api/routes/sha
 import { buildWeeklyRecapEmbeds } from '../../../src/utils/embeds/weekly-recap.embed.js'
 import { type ClusterFixtures, FIXED } from './types.js'
 
+const withoutFiles = <T extends { files?: unknown }>({
+	files,
+	...message
+}: T): Omit<T, 'files'> => message
+
 const parlayId = '5f3c9a1e-8b2d-4c6f-9e1a-7d4b2c8f0a13'
 
 const leg = (
@@ -113,7 +118,7 @@ const fixtures: ClusterFixtures = {
 						displayBetAmount: MoneyFormatter.toUSD(100),
 					},
 				} as const
-				return refundResultPayload(refund)
+				return withoutFiles(refundResultPayload(refund))
 			},
 		},
 		{
