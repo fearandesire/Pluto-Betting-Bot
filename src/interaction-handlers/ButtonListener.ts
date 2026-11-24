@@ -22,7 +22,9 @@ import {
 import { BetslipManager } from '../utils/api/Khronos/bets/BetslipsManager.js'
 import BetslipWrapper from '../utils/api/Khronos/bets/betslip-wrapper.js'
 import {
+	claimDoubleDown,
 	doubleDownGateError,
+	replyDoubleDownInProgress,
 	runDoubleDown,
 } from '../utils/api/Khronos/bets/doubledown-flow.js'
 import { ApiErrorHandler } from '../utils/api/Khronos/error-handling/ApiErrorHandler.js'
@@ -67,9 +69,9 @@ export class ButtonHandler extends InteractionHandler {
 
 		// ? Double down re-prompt after a moved price
 		if (_.startsWith(interaction.customId, doubleDownBtnPrefix)) {
-			await interaction.deferUpdate()
 			const button = parseDoubleDownButton(interaction.customId)
 			if (button.kind !== 'confirm') {
+				await interaction.deferUpdate()
 				await interaction.editReply({
 					content:
 						button.kind === 'cancel'
@@ -80,23 +82,35 @@ export class ButtonHandler extends InteractionHandler {
 				})
 				return this.none()
 			}
-			// Remove the buttons first so a second click has nothing to press.
-			await interaction.editReply({ components: [] })
-			const blocked = await doubleDownGateError(interaction.user.id)
-			if (blocked) {
-				await interaction.editReply({
-					embeds: [blocked],
-					components: [],
-				})
+			const release = claimDoubleDown(interaction.user.id, button.betId)
+			if (!release) {
+				await interaction.deferUpdate()
+				await replyDoubleDownInProgress(interaction)
 				return this.none()
 			}
-			await runDoubleDown(
-				interaction,
-				button.betId,
-				button.expectedOdds,
-				button.stakeCents,
-			)
-			return this.none()
+			try {
+				await interaction.deferUpdate()
+				// Remove the buttons first so a second click has nothing to press.
+				await interaction.editReply({ components: [] })
+				const blocked = await doubleDownGateError(interaction.user.id)
+				if (blocked) {
+					await interaction.editReply({
+						embeds: [blocked],
+						components: [],
+					})
+					return this.none()
+				}
+				await runDoubleDown(
+					interaction,
+					button.betId,
+					button.expectedOdds,
+					button.stakeCents,
+					release,
+				)
+				return this.none()
+			} finally {
+				release()
+			}
 		}
 
 		// Handle matchup buttons

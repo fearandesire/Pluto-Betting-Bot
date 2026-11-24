@@ -185,7 +185,7 @@ describe('place re-prompt races', () => {
 		}
 	}
 
-	it('shows the new price before a confirm can send it', async () => {
+	it('reprices the slip before its confirm goes live', async () => {
 		const cache = memoryCache()
 		const service = new BetsCacheService(cache as never)
 		await service.cacheUserBet('u1', initBetslip as never)
@@ -206,22 +206,25 @@ describe('place re-prompt races', () => {
 				dateofmatchup: initBetslip.dateofmatchup,
 			},
 		)
-		expect(priceWhenShown).toBe(-150)
+		expect(priceWhenShown).toBe(-120)
 		expect((await service.getUserBet('u1'))?.selected_odds).toBe(-120)
 	})
 
-	it('does not reprice a slip replaced while the re-prompt renders', async () => {
+	it('does not reprice a slip replaced before the reprice', async () => {
 		const cache = memoryCache()
 		const service = new BetsCacheService(cache as never)
 		await service.cacheUserBet('u1', initBetslip as never)
 		const interaction = placeInteraction()
-		interaction.editReply.mockImplementationOnce(async () => {
-			await service.cacheUserBet('u1', {
-				...initBetslip,
-				placement_id: 'p-2',
-			} as never)
-			return {}
-		})
+		const compareAndSet = cache.transitionIfValue.getMockImplementation()!
+		cache.transitionIfValue.mockImplementationOnce(
+			async (k, expected, next) => {
+				await service.cacheUserBet('u1', {
+					...initBetslip,
+					placement_id: 'p-2',
+				} as never)
+				return compareAndSet(k, expected, next)
+			},
+		)
 		const wrapper = {
 			finalize: vi.fn().mockRejectedValue(oddsChangedError('place')),
 		}
@@ -239,6 +242,41 @@ describe('place re-prompt races', () => {
 		const calls = interaction.editReply.mock.calls as unknown[][]
 		const last = calls[calls.length - 1]
 		expect((last[0] as { components: unknown[] }).components).toEqual([])
+	})
+
+	it('shows no confirm until the reprice settles', async () => {
+		const cache = memoryCache()
+		const service = new BetsCacheService(cache as never)
+		await service.cacheUserBet('u1', initBetslip as never)
+		const interaction = placeInteraction()
+		let settle!: (ok: boolean) => void
+		cache.transitionIfValue.mockImplementationOnce(
+			() =>
+				new Promise<boolean>((r) => {
+					settle = r
+				}),
+		)
+		const wrapper = {
+			finalize: vi.fn().mockRejectedValue(oddsChangedError('place')),
+		}
+		const run = new BetslipManager(wrapper as never, service).placeBet(
+			interaction as never,
+			await service.sanitize((await service.getUserBet('u1'))!),
+			{
+				opponent: initBetslip.opponent,
+				dateofmatchup: initBetslip.dateofmatchup,
+			},
+		)
+		await vi.waitFor(() => expect(settle).toBeTypeOf('function'))
+		const shownWhilePending = interaction.editReply.mock.calls.length
+		settle(false)
+		await run
+		expect(shownWhilePending).toBe(0)
+		const calls = interaction.editReply.mock.calls as unknown[][]
+		expect(calls).toHaveLength(1)
+		expect((calls[0][0] as { components: unknown[] }).components).toEqual(
+			[],
+		)
 	})
 
 	it('answers the user when the cache fails during the re-prompt', async () => {

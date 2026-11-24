@@ -277,7 +277,17 @@ export class BetslipManager {
 			const opponent =
 				(await findEmoji(matchInfo.opponent)) ||
 				_.last(matchInfo.opponent.split(' '))!
-			const message = await interaction.editReply(
+			const repriced = await this.betCacheService.repriceIfCurrent(
+				betDetails.userid,
+				placementId,
+				{
+					selected_odds: details.current_odds,
+					profit: details.profit,
+					payout: details.payout,
+				},
+			)
+			if (!repriced) return this.replyStaleQuote(interaction)
+			return await interaction.editReply(
 				pendingBetslip({
 					chosenTeam,
 					opponent,
@@ -292,16 +302,6 @@ export class BetslipManager {
 					quotedOdds: details.current_odds,
 				}),
 			)
-			const repriced = await this.betCacheService.repriceIfCurrent(
-				betDetails.userid,
-				placementId,
-				{
-					selected_odds: details.current_odds,
-					profit: details.profit,
-					payout: details.payout,
-				},
-			)
-			return repriced ? message : this.replyStaleQuote(interaction)
 		} catch (error) {
 			logger.error('Failed to re-prompt a changed price', {
 				event: 'betslip.price.reprompt_failed',

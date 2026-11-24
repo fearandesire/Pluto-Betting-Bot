@@ -35,29 +35,47 @@ export async function doubleDownGateError(userId: string) {
 const inFlight = new Set<string>()
 
 /**
+ * Claims a double down for this process synchronously, so it must run before
+ * any await. Returns its release, or null when one is already running.
+ */
+export function claimDoubleDown(userId: string, betId: number) {
+	const key = `${userId}:${betId}`
+	if (inFlight.has(key)) return null
+	inFlight.add(key)
+	return () => {
+		inFlight.delete(key)
+	}
+}
+
+/** Private notice for an overlapping double down; keeps the shared message. */
+export function replyDoubleDownInProgress(
+	interaction: ChatInputCommandInteraction | ButtonInteraction,
+) {
+	return sendBettingNotice(
+		interaction,
+		{
+			title: 'Double down already in progress',
+			description:
+				'Pluto is still doubling down this bet. Check `/mybets` in a moment.',
+		},
+		{ keepOriginal: true },
+	)
+}
+
+/**
  * Doubles a bet and renders the result into the deferred interaction. When
  * Khronos refuses a moved price, shows the new totals with a confirm button
- * that re-sends the new price.
+ * that re-sends the new price. Pass `release` when the caller already
+ * claimed the double down with claimDoubleDown.
  */
 export async function runDoubleDown(
 	interaction: ChatInputCommandInteraction | ButtonInteraction,
 	betId: number,
 	expectedOdds?: number,
 	expectedStakeCents?: number,
+	release = claimDoubleDown(interaction.user.id, betId),
 ) {
-	const key = `${interaction.user.id}:${betId}`
-	if (inFlight.has(key)) {
-		return sendBettingNotice(
-			interaction,
-			{
-				title: 'Double down already in progress',
-				description:
-					'Pluto is still doubling down this bet. Check `/mybets` in a moment.',
-			},
-			{ keepOriginal: true },
-		)
-	}
-	inFlight.add(key)
+	if (!release) return replyDoubleDownInProgress(interaction)
 	const manager = new BetslipManager(
 		new BetslipWrapper(),
 		new BetsCacheService(new CacheManager()),
@@ -80,11 +98,15 @@ export async function runDoubleDown(
 		)
 	} catch (error) {
 		if (error instanceof StaleDoubleDownError) {
-			return sendBettingNotice(interaction, {
-				title: 'Double down not placed',
-				description:
-					'This bet changed since this prompt. Run `/doubledown` again to see the current price.',
-			})
+			return sendBettingNotice(
+				interaction,
+				{
+					title: 'Double down not placed',
+					description:
+						'This bet changed since this prompt. Run `/doubledown` again to see the current price.',
+				},
+				{ keepOriginal: true },
+			)
 		}
 		const details = await parseOddsChanged(error)
 		if (!details) {
@@ -120,6 +142,6 @@ export async function runDoubleDown(
 			}),
 		)
 	} finally {
-		inFlight.delete(key)
+		release()
 	}
 }
