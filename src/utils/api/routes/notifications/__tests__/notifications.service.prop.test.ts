@@ -513,7 +513,7 @@ describe('NotificationService.processPropSettled', () => {
 		expect(mocks.redisCompareAndRemove).toHaveBeenCalledOnce()
 	})
 
-	it('edits without the lock when Redis is unavailable', async () => {
+	it('fails the delivery for a retry instead of editing when Redis is unavailable', async () => {
 		const message = createMessage()
 		const channel = {
 			guildId: 'guild-1',
@@ -523,16 +523,38 @@ describe('NotificationService.processPropSettled', () => {
 		mocks.fetchChannel.mockResolvedValue(channel)
 		mocks.redisSet.mockRejectedValueOnce(new Error('redis down'))
 
-		await new NotificationService().deliverPropSettlementMessage(
-			payload,
-			payload.messages[0],
-		)
+		await expect(
+			new NotificationService().deliverPropSettlementMessage(
+				payload,
+				payload.messages[0],
+			),
+		).rejects.toMatchObject({ code: 'PROP_SETTLEMENT_BUSY' })
 
-		expect(message.edit).toHaveBeenCalledOnce()
+		expect(message.edit).not.toHaveBeenCalled()
 		expect(mocks.logger.warn).toHaveBeenCalledWith(
 			expect.objectContaining({
 				event: 'prop.settlement.lock_unavailable',
 			}),
 		)
+	})
+
+	it('does not edit after losing the message lock', async () => {
+		const message = createMessage()
+		const channel = {
+			guildId: 'guild-1',
+			isTextBased: () => true,
+			messages: { fetch: vi.fn().mockResolvedValue(message) },
+		}
+		mocks.fetchChannel.mockResolvedValue(channel)
+		mocks.redisRefreshIfOwned.mockResolvedValueOnce(false)
+
+		await expect(
+			new NotificationService().deliverPropSettlementMessage(
+				payload,
+				payload.messages[0],
+			),
+		).rejects.toMatchObject({ code: 'PROP_SETTLEMENT_BUSY' })
+
+		expect(message.edit).not.toHaveBeenCalled()
 	})
 })

@@ -333,24 +333,24 @@ export default class NotificationService {
 		].join(':')
 		const lockToken = randomUUID()
 		const lock = await this.claimPropSettlementLock(lockKey, lockToken)
-		if (lock === 'busy') {
-			throw Object.assign(
-				new Error(
-					'Prop settlement is already updating this message; retry later',
-				),
-				{ code: 'PROP_SETTLEMENT_BUSY' },
+		if (lock !== 'acquired') {
+			throw propSettlementBusy(
+				lock === 'busy'
+					? 'Prop settlement is already updating this message; retry later'
+					: 'Prop settlement lock is unavailable; retry later',
 			)
 		}
-		const renewal =
-			lock === 'acquired'
-				? this.startPropSettlementLease(lockKey, lockToken)
-				: undefined
+		const renewal = this.startPropSettlementLease(lockKey, lockToken)
 		try {
-			await this.updatePropSettlementMessage(client, data, reference)
+			await this.updatePropSettlementMessage(
+				client,
+				data,
+				reference,
+				() => this.assertPropSettlementLease(lockKey, lockToken),
+			)
 		} finally {
-			if (renewal) clearInterval(renewal)
-			if (lock === 'acquired')
-				await this.releasePropSettlementLock(lockKey, lockToken)
+			clearInterval(renewal)
+			await this.releasePropSettlementLock(lockKey, lockToken)
 		}
 	}
 
@@ -358,6 +358,7 @@ export default class NotificationService {
 		client: NonNullable<typeof container.client>,
 		data: PropSettledNotification,
 		reference: PropSettledNotification['messages'][number],
+		assertLease: () => Promise<void>,
 	): Promise<void> {
 		const channel = await client.channels.fetch(reference.channel_id)
 		if (
@@ -392,6 +393,7 @@ export default class NotificationService {
 				})
 				return
 			}
+			await assertLease()
 			await message.edit({
 				components: settled.components as never,
 				flags: v2EditFlags(),
@@ -414,6 +416,7 @@ export default class NotificationService {
 		// Keep the other rows of a board alive; only the graded pair's row is
 		// retired. A legacy single-pair post therefore keeps its disabled row.
 		const settled = disableSettledPropRow(components, data.outcome_uuid)
+		await assertLease()
 		await message.edit({
 			embeds: updatedEmbeds,
 			components: settled.components as never,
@@ -423,9 +426,8 @@ export default class NotificationService {
 	/**
 	 * One editor per message. Two settlements for the same board must apply in
 	 * sequence; both fetch the message, so without a lock the second write can
-	 * erase the first result. If Redis is down, log and edit anyway: a lost
-	 * update is recoverable by a later retry, but refusing every settlement is
-	 * not.
+	 * erase the first result. Without the lock nothing is edited; the delivery
+	 * fails and the queue retries it.
 	 */
 	private async claimPropSettlementLock(
 		key: string,
@@ -486,6 +488,25 @@ export default class NotificationService {
 				key,
 				error: error instanceof Error ? error.message : String(error),
 			})
+		}
+	}
+
+	/**
+	 * Confirm and extend ownership right before an edit, so a delivery whose
+	 * lease expired never overwrites the holder's snapshot.
+	 */
+	private async assertPropSettlementLease(
+		key: string,
+		token: string,
+	): Promise<void> {
+		const { default: redisCache } = await import(
+			'../../../cache/redis-instance.js'
+		)
+		const owned = await redisCache.refreshIfOwned(key, token, 60)
+		if (!owned) {
+			throw propSettlementBusy(
+				'Prop settlement lost the message lock before editing; retry later',
+			)
 		}
 	}
 
@@ -695,4 +716,8 @@ export default class NotificationService {
 			if (options?.throwOnFailure) throw err
 		}
 	}
+}
+
+function propSettlementBusy(message: string): Error {
+	return Object.assign(new Error(message), { code: 'PROP_SETTLEMENT_BUSY' })
 }

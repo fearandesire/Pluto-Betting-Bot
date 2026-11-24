@@ -14,6 +14,7 @@ import {
 	type V2MessagePayload,
 	v2Payload,
 } from '../v2/kit.js'
+import { PROP_ROW_TEXT_MAX_CHARS } from '../v2/prop-settlement.js'
 
 /** One board holds at most four pairs so a settlement row stays readable. */
 export const PROP_BOARD_MAX_PAIRS = 4
@@ -75,10 +76,13 @@ function propLine(prop: ProcessedPropDto): string {
 		prop.point === null || prop.point === undefined
 			? ''
 			: ` \`${prop.point}\``
-	return [
+	const line = [
 		`**${prop.description}** • O/U${point} ${marketName}`,
 		`Over ${formatPrice(prop.over.price)} • Under ${formatPrice(prop.under.price)}`,
 	].join('\n')
+	return line.length > PROP_ROW_TEXT_MAX_CHARS
+		? `${line.slice(0, PROP_ROW_TEXT_MAX_CHARS - 1)}…`
+		: line
 }
 
 function formatPrice(price: number): string {

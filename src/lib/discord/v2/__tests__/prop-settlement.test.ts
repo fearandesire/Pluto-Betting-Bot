@@ -1,6 +1,7 @@
 import type { ProcessedPropDto } from '@pluto-khronos/api-client'
 import { describe, expect, it } from 'vitest'
 import { propBoardPayload } from '../../builders/prop-board.js'
+import { assertV2Budget } from '../kit.js'
 import {
 	disableSettledPropRow,
 	settleV2BoardComponents,
@@ -122,6 +123,31 @@ describe('settleV2BoardComponents', () => {
 		expect(content.length).toBeLessThanOrEqual(900)
 		expect(content).toContain('**Result: Over ✅ — 2**')
 		expect(content).toContain('-# 📊')
+	})
+
+	it('keeps a near-limit board under the message budget after settling a short row', () => {
+		const long = (n: number) =>
+			({
+				...second,
+				description: 'y'.repeat(2000),
+				over: { ...second.over, outcome_uuid: `over-long-${n}` },
+				under: { ...second.under, outcome_uuid: `under-long-${n}` },
+			}) as ProcessedPropDto
+		const board = propBoardPayload({
+			props: [prop, long(1), long(2), long(3)],
+			sport: 'nfl',
+			teams,
+		})
+		expect(() => assertV2Budget(board)).not.toThrow()
+
+		const settled = settleV2BoardComponents(
+			toComponentJsonList(board.components),
+			{ ...settlement, outcome_uuid: 'over-1' },
+		)
+		expect(settled.touched).toBe(true)
+		expect(() =>
+			assertV2Budget({ components: settled.components as never }),
+		).not.toThrow()
 	})
 
 	it('leaves a board unchanged when the outcome is not on it', () => {
