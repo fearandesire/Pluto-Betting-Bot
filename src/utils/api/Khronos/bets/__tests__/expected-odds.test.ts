@@ -97,6 +97,32 @@ describe('expected_odds on place', () => {
 		expect(dto.expected_odds).toBe(-150)
 	})
 
+	it('binds the first prompt to the price it shows', async () => {
+		const interaction = {
+			user: { id: 'u1', displayAvatarURL: () => 'https://a/x.png' },
+			editReply: vi.fn(async (_payload: unknown) => ({})),
+		}
+		await new BetslipManager({} as never, service).presentBetWithPay(
+			interaction as never,
+			{
+				betslip: initBetslip as never,
+				payData: { payout: 166.67, profit: 66.67 },
+				matchInfo: {
+					opponent: initBetslip.opponent,
+					dateofmatchup: initBetslip.dateofmatchup,
+				},
+			},
+		)
+		const payload = interaction.editReply.mock.calls[0][0] as {
+			components: Array<{
+				components: Array<{ data: { custom_id: string } }>
+			}>
+		}
+		expect(payload.components[0].components[0].data.custom_id).toBe(
+			'matchup_btn_confirm.-150',
+		)
+	})
+
 	it('re-prompts with the new price and payout on 409 ODDS_CHANGED', async () => {
 		await service.cacheUserBet('u1', initBetslip as never)
 		const wrapper = {

@@ -566,6 +566,10 @@ export class BetslipManager {
 				date: formatMatchDate(dateofmatchup, betslip),
 				amounts: { betAmount, payout, profit },
 				avatarUrl: interaction.user.displayAvatarURL(),
+				// The confirm sends the price this prompt shows, not whatever
+				// the cache holds when the click lands, so a click that races a
+				// re-priced slip cannot place the bet at a price never shown.
+				quotedOdds: betslip.selected_odds,
 			}),
 		)
 		return message
