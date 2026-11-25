@@ -74,6 +74,34 @@ class DiscordDeliveryDispatcher implements DeliveryDispatcher {
 			)
 		}
 
+		if (
+			envelope.kind === 'prop_post' &&
+			destinationId.startsWith('prop-board:')
+		) {
+			const destination = parsePropBoardDestination(destinationId)
+			const props = resolveBoardProps(
+				envelope.payload,
+				destination.board_index,
+			)
+			if (!this.propPostingHandler) {
+				const module = await import(
+					'../../../props/PropPostingHandler.js'
+				)
+				this.propPostingHandler = new module.PropPostingHandler()
+			}
+			const receipt = await this.propPostingHandler.postPropBoard(
+				destination.guild_id,
+				destination.channel_id,
+				props,
+				boardSport(props),
+				envelope.delivery_id,
+				destinationId,
+				envelope.payload.props,
+			)
+			assertBoardReceipts(receipt, destination, props)
+			return receipt
+		}
+
 		if (envelope.kind === 'prop_post') {
 			const destination = parsePropPostDestination(destinationId)
 			const prop = envelope.payload.props.find(
@@ -153,6 +181,35 @@ export class SystemDiscordDeliveryDispatcher implements DeliveryDispatcher {
 				`/users/${encodeURIComponent(envelope.payload.user_id)}/messages`,
 				'POST',
 				{ destination_id: destinationId, envelope },
+			)
+		}
+
+		if (
+			envelope.kind === 'prop_post' &&
+			destinationId.startsWith('prop-board:')
+		) {
+			const destination = parsePropBoardDestination(destinationId)
+			const props = resolveBoardProps(
+				envelope.payload,
+				destination.board_index,
+			)
+			const response = await sendToFakeDiscord(
+				`/channels/${encodeURIComponent(destination.channel_id)}/messages`,
+				'POST',
+				{ destination_id: destinationId, envelope, props },
+			)
+			const messageId =
+				fakeDiscordMessageId(response) ??
+				`fake-board-${envelope.delivery_id}-${destination.channel_id}`
+			return props.flatMap((prop) =>
+				[prop.over.outcome_uuid, prop.under.outcome_uuid].map(
+					(outcome_uuid) => ({
+						outcome_uuid,
+						guild_id: destination.guild_id,
+						channel_id: destination.channel_id,
+						message_id: messageId,
+					}),
+				),
 			)
 		}
 
@@ -431,7 +488,10 @@ export class NotificationDeliveryQueue {
 			if (
 				(destination.state === 'delivered' &&
 					(record.kind !== 'prop_post' ||
-						hasPropPostReceiptPair(destination))) ||
+						hasExpectedPropPostReceipts(
+							destination,
+							record.payload,
+						))) ||
 				destination.state === 'permanent_failed'
 			)
 				continue
@@ -745,12 +805,116 @@ function parsePropPostDestination(destinationId: string): PropPostDestination {
 	}
 }
 
-function hasPropPostReceiptPair(
+type PropPostPayload = Extract<
+	DeliveryEnvelope,
+	{ kind: 'prop_post' }
+>['payload']
+
+/** A board posts one message, so its destination expects two receipts per pair. */
+function hasExpectedPropPostReceipts(
 	destination: DeliveryRecord['destinations'][number],
+	payload: DeliveryEnvelope['payload'],
 ): boolean {
-	return (
-		Array.isArray(destination.receipt) && destination.receipt.length === 2
+	if (!Array.isArray(destination.receipt)) return false
+	const expected = expectedPropPostReceipts(
+		destination.id,
+		payload as PropPostPayload,
 	)
+	return expected !== null && destination.receipt.length === expected
+}
+
+function expectedPropPostReceipts(
+	destinationId: string,
+	payload: PropPostPayload,
+): number | null {
+	if (destinationId.startsWith('prop-post:')) return 2
+	if (!destinationId.startsWith('prop-board:')) return null
+	const index = Number(destinationId.split(':')[3])
+	const board = payload.boards?.[index]
+	return board ? board.over_outcome_uuids.length * 2 : null
+}
+
+interface PropBoardDestination {
+	guild_id: string
+	channel_id: string
+	board_index: number
+}
+
+function parsePropBoardDestination(
+	destinationId: string,
+): PropBoardDestination {
+	const [prefix, guild_id, channel_id, index] = destinationId.split(':')
+	const board_index = Number(index)
+	if (
+		prefix !== 'prop-board' ||
+		!guild_id ||
+		!channel_id ||
+		!Number.isSafeInteger(board_index) ||
+		board_index < 0
+	) {
+		throw new Error(`Invalid prop-board destination ${destinationId}`)
+	}
+	return { guild_id, channel_id, board_index }
+}
+
+function resolveBoardProps(
+	payload: PropPostPayload,
+	boardIndex: number,
+): PropPostPayload['props'] {
+	const board = payload.boards?.[boardIndex]
+	if (!board) {
+		const error = new Error(
+			`Prop-board destination names missing board ${boardIndex}`,
+		)
+		Object.assign(error, { status: 422 })
+		throw error
+	}
+	const byOver = new Map(
+		payload.props.map((prop) => [prop.over.outcome_uuid, prop]),
+	)
+	return board.over_outcome_uuids.map((outcomeUuid) => {
+		const prop = byOver.get(outcomeUuid)
+		if (!prop) {
+			const error = new Error(
+				`Board ${boardIndex} names unknown outcome ${outcomeUuid}`,
+			)
+			Object.assign(error, { status: 422 })
+			throw error
+		}
+		return prop
+	})
+}
+
+function boardSport(props: PropPostPayload['props']): 'nba' | 'nfl' {
+	return props[0]?.sport_title.toLowerCase().includes('nfl') ? 'nfl' : 'nba'
+}
+
+function assertBoardReceipts(
+	receipt: readonly {
+		outcome_uuid: string
+		guild_id: string
+		channel_id: string
+	}[],
+	destination: PropBoardDestination,
+	props: PropPostPayload['props'],
+): void {
+	const expected = new Set(
+		props.flatMap((prop) => [
+			prop.over.outcome_uuid,
+			prop.under.outcome_uuid,
+		]),
+	)
+	if (
+		receipt.length !== expected.size ||
+		receipt.some(
+			(reference) =>
+				!expected.has(reference.outcome_uuid) ||
+				reference.guild_id !== destination.guild_id ||
+				reference.channel_id !== destination.channel_id,
+		)
+	) {
+		throw new Error('Prop-board destination returned incomplete receipts')
+	}
 }
 
 function isDuplicateQueueError(error: unknown): boolean {

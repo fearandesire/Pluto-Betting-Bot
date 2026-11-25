@@ -186,4 +186,167 @@ describe('POST /props/daily', () => {
 			code: 'DELIVERY_PAYLOAD_MISMATCH',
 		})
 	})
+	describe('per-game boards', () => {
+		const secondProp = {
+			...validPayload.props[0],
+			description: 'Second Player',
+			over: {
+				outcome_uuid: '550e8400-e29b-41d4-a716-446655440002',
+				outcome_name: 'Over',
+				price: 105,
+			},
+			under: {
+				outcome_uuid: '550e8400-e29b-41d4-a716-446655440003',
+				outcome_name: 'Under',
+				price: -125,
+			},
+		}
+		const twoProps = {
+			...validPayload,
+			props: [validPayload.props[0], secondProp],
+			boards: [
+				{
+					event_id: 'event-1',
+					over_outcome_uuids: [
+						validPayload.props[0].over.outcome_uuid,
+					],
+				},
+				{
+					event_id: 'event-1',
+					over_outcome_uuids: [secondProp.over.outcome_uuid],
+				},
+			],
+		}
+		const withPayload = (payload: unknown) => ({
+			...validEnvelope,
+			payload,
+		})
+
+		it('keeps boards through validation and forwards them', async () => {
+			const response = await request(withPayload(twoProps))
+
+			expect(response.status).toBe(202)
+			expect(acceptDetailed).toHaveBeenCalledWith(
+				expect.objectContaining({
+					payload: expect.objectContaining({
+						boards: twoProps.boards,
+					}),
+				}),
+			)
+		})
+
+		it.each([
+			[
+				'a board naming an outcome not in props',
+				{
+					...twoProps,
+					boards: [
+						{
+							event_id: 'event-1',
+							over_outcome_uuids: [
+								'550e8400-e29b-41d4-a716-446655440099',
+							],
+						},
+						{
+							event_id: 'event-1',
+							over_outcome_uuids: [secondProp.over.outcome_uuid],
+						},
+					],
+				},
+				'not an over outcome in props',
+			],
+			[
+				'a board mixing games',
+				{
+					...twoProps,
+					boards: [
+						{
+							event_id: 'event-2',
+							over_outcome_uuids: [
+								validPayload.props[0].over.outcome_uuid,
+								secondProp.over.outcome_uuid,
+							],
+						},
+					],
+				},
+				'belongs to another game',
+			],
+			[
+				'a prop missing from every board',
+				{
+					...twoProps,
+					boards: [
+						{
+							event_id: 'event-1',
+							over_outcome_uuids: [
+								validPayload.props[0].over.outcome_uuid,
+							],
+						},
+					],
+				},
+				'exactly one board',
+			],
+			[
+				'a repeated outcome',
+				{
+					...twoProps,
+					boards: [
+						{
+							event_id: 'event-1',
+							over_outcome_uuids: [
+								validPayload.props[0].over.outcome_uuid,
+								validPayload.props[0].over.outcome_uuid,
+							],
+						},
+						{
+							event_id: 'event-1',
+							over_outcome_uuids: [secondProp.over.outcome_uuid],
+						},
+					],
+				},
+				'appears on more than one board',
+			],
+		])('rejects %s', async (_name, payload, message) => {
+			const response = await request(withPayload(payload))
+
+			expect(response.status).toBe(422)
+			const body = await response.json()
+			expect(body.issues).toEqual(
+				expect.arrayContaining([
+					expect.objectContaining({
+						path: expect.arrayContaining(['boards']),
+						message: expect.stringContaining(message),
+					}),
+				]),
+			)
+			expect(acceptDetailed).not.toHaveBeenCalled()
+		})
+
+		it('rejects an empty boards array', async () => {
+			const response = await request(
+				withPayload({ ...twoProps, boards: [] }),
+			)
+
+			expect(response.status).toBe(422)
+			expect(acceptDetailed).not.toHaveBeenCalled()
+		})
+
+		it('rejects a board with five pairs', async () => {
+			const response = await request(
+				withPayload({
+					...validPayload,
+					boards: [
+						{
+							event_id: 'event-1',
+							over_outcome_uuids: Array(5).fill(
+								validPayload.props[0].over.outcome_uuid,
+							),
+						},
+					],
+				}),
+			)
+
+			expect(response.status).toBe(422)
+		})
+	})
 })

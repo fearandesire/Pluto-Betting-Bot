@@ -58,6 +58,11 @@ const dailyPropOutcomeSchema = z.object({
 	price: z.number().int(),
 })
 
+const propBoardSchema = z.object({
+	event_id: z.string().min(1),
+	over_outcome_uuids: z.array(z.string().uuid()).min(1).max(4),
+})
+
 const fallbackDailyPropsPayloadSchema = z.object({
 	props: z.array(
 		z.object({
@@ -81,6 +86,7 @@ const fallbackDailyPropsPayloadSchema = z.object({
 			sport: z.string().min(1),
 		}),
 	),
+	boards: z.array(propBoardSchema).min(1).optional(),
 })
 
 const fallbackPropSettledNotificationSchema = z.object({

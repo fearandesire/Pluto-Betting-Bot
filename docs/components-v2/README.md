@@ -42,6 +42,8 @@ The other kit files cover the cases a plain send does not:
 | Period winners post | `periodWinnersPayload()` in `src/lib/discord/builders/period-winners.ts` | `src/utils/cron/PeriodWinnersCronService.ts` | Public, in a channel |
 | `/parlay` builder | `ParlayBuilderService.render()` in `src/services/ParlayBuilderService.ts` | `src/commands/betting/parlay.ts` and the parlay handlers | Ephemeral |
 | `/admin props pick` | `propPickerPayload()` in `src/lib/discord/builders/prop-picker.ts` | `src/utils/admin-handlers/admin-prop-picker-handler.ts` and `src/interaction-handlers/prop-picker-handler.ts` | Ephemeral |
+| Prop board (when the payload carries `boards`) | `propBoardPayload()` in `src/lib/discord/builders/prop-board.ts` | `NotificationDeliveryQueue` via `PropPostingHandler.postPropBoard()` | Public, in a channel |
+| Browse more | `renderPage()` with `boardBrowseLines()` | `src/interaction-handlers/prop-browse-handler.ts` | Ephemeral |
 | Error notices on V2 screens | `sendErrorNotice()` in `src/lib/discord/v2/notice.ts` | `src/listeners/chatInputCommandError.ts`, `src/utils/api/Khronos/error-handling/ApiErrorHandler.ts` | Ephemeral |
 
 The parlay builder predates the kit. It builds its container by hand and does not set `allowedMentions`. Treat it as an example of layout, not of the kit, and move it to `v2Payload()` when you next change it.
@@ -55,9 +57,11 @@ A board is one game's props in one message: a heading, then each pair's text and
 | C1b, prop board | `propBoardPayload()` in `src/lib/discord/builders/prop-board.ts` | never edited as a whole |
 | C2b, settled row | `settleV2BoardComponents()` in `src/lib/discord/v2/prop-settlement.ts` | rewrites only the graded pair's text and disables only its row |
 
-The board poster follows in a later PR; until then Khronos sends no `boards` and Pluto keeps posting one pair per message. Every settlement edit holds a per-message Redis lock, because two graded pairs on one board fetch the same message and the second write would otherwise erase the first row's result.
+When the payload carries `boards`, the delivery queue posts one board per entry and guild, records a receipt for every pair on the shared message, and caches the whole post's list for the board's **Browse more** button. Without `boards`, Pluto keeps posting one pair per message. Every settlement edit holds a per-message Redis lock, because two graded pairs on one board fetch the same message and the second write would otherwise erase the first row's result.
 
 ![C1b prop board](screens/props/C1b-after.png)
+
+![C3b Browse more](screens/props/C3b-after.png)
 
 ## Lay out a screen
 

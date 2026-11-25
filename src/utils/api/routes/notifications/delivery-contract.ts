@@ -131,6 +131,14 @@ export function destinationIds(envelope: DeliveryEnvelope): string[] {
 		return [`dm:${envelope.payload.user_id}`]
 	}
 	if (envelope.kind === 'prop_post') {
+		if (envelope.payload.boards && envelope.payload.boards.length > 0) {
+			return envelope.payload.guilds.flatMap((guild) =>
+				envelope.payload.boards!.map(
+					(_board, index) =>
+						`prop-board:${guild.guild_id}:${guild.channel_id}:${index}`,
+				),
+			)
+		}
 		return envelope.payload.guilds.flatMap((guild) =>
 			envelope.payload.props.map(
 				(prop) =>
@@ -205,7 +213,13 @@ export function classifyDeliveryError(error: unknown): {
 	const candidate = error as { code?: number | string; status?: number }
 	const code = String(candidate?.code ?? '')
 	const status = candidate?.status
-	const permanentCodes = new Set(['50007', '10003', '50001', '10004'])
+	const permanentCodes = new Set([
+		'50007',
+		'10003',
+		'50001',
+		'10004',
+		'PROP_SETTLEMENT_ROW_MISSING',
+	])
 	const message = error instanceof Error ? error.message : String(error)
 	return {
 		classification:

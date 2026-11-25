@@ -1,5 +1,7 @@
 import type { ProcessedPropDto } from '@pluto-khronos/api-client'
+import { MessageFlags } from 'discord.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { toJsonComponents } from '../../../lib/discord/v2/__tests__/v2-assert.js'
 
 const mocks = vi.hoisted(() => ({
 	get: vi.fn(),
@@ -421,5 +423,154 @@ describe('PropPostingHandler message references and idempotency', () => {
 		])
 		expect(mocks.sendToChannel).toHaveBeenCalledTimes(1)
 		expect(mocks.del).not.toHaveBeenCalled()
+	})
+	describe('postPropBoard', () => {
+		const second = {
+			...prop,
+			description: 'Second Player',
+			over: {
+				...prop.over,
+				outcome_uuid: '550e8400-e29b-41d4-a716-446655440002',
+			},
+			under: {
+				...prop.under,
+				outcome_uuid: '550e8400-e29b-41d4-a716-446655440003',
+			},
+		} as ProcessedPropDto
+		const props = [prop, second]
+
+		function buttonIds(options: unknown): string[] {
+			const payload = options as { components: unknown }
+			return toJsonComponents(payload as never)
+				.flatMap((container) => container.components ?? [])
+				.flatMap((row) => row.components ?? [])
+				.map((button) => (button as { custom_id?: string }).custom_id)
+				.filter((id): id is string => Boolean(id))
+		}
+
+		it('posts one V2 board and returns a receipt per outcome on one message', async () => {
+			const receipt = await new PropPostingHandler().postPropBoard(
+				'guild-1',
+				'channel-1',
+				props,
+				'nba',
+				'delivery-1',
+				'prop-board:guild-1:channel-1:0',
+				props,
+			)
+
+			expect(receipt).toHaveLength(4)
+			expect(new Set(receipt.map((ref) => ref.message_id))).toEqual(
+				new Set(['message-1']),
+			)
+			const options = mocks.sendToChannel.mock.calls[0][1] as {
+				flags: number
+				embeds?: unknown
+			}
+			expect(options.flags).toBe(MessageFlags.IsComponentsV2)
+			expect(options.embeds).toBeUndefined()
+			expect(
+				buttonIds(options).some((id) =>
+					id.startsWith('props.browse.v1.'),
+				),
+			).toBe(true)
+		})
+
+		it('caches the whole post list for Browse more before sending', async () => {
+			await new PropPostingHandler().postPropBoard(
+				'guild-1',
+				'channel-1',
+				props,
+				'nba',
+				'delivery-1',
+				'prop-board:guild-1:channel-1:0',
+				[...props, second],
+			)
+
+			expect(mocks.setex).toHaveBeenCalledWith(
+				expect.stringMatching(/^props:browse:[a-f0-9]{16}$/),
+				7 * 24 * 60 * 60,
+				expect.stringContaining('Second Player'),
+			)
+			const options = mocks.sendToChannel.mock.calls[0][1] as unknown
+			const ids = buttonIds(options)
+			const browse = ids.find((id) => id.startsWith('props.browse.v1.'))
+			expect(browse).toBeDefined()
+			expect(ids).toContain('prop_' + prop.over.outcome_uuid)
+		})
+
+		it('shares one Browse more list across boards and guilds of a delivery', async () => {
+			const handler = new PropPostingHandler()
+			await handler.postPropBoard(
+				'guild-1',
+				'channel-1',
+				props,
+				'nba',
+				'delivery-1',
+				'prop-board:guild-1:channel-1:0',
+				[...props, second],
+			)
+			await handler.postPropBoard(
+				'guild-2',
+				'channel-2',
+				[second],
+				'nba',
+				'delivery-1',
+				'prop-board:guild-2:channel-2:1',
+				[...props, second],
+			)
+
+			const keys = new Set(mocks.setex.mock.calls.map((call) => call[0]))
+			expect(keys.size).toBe(1)
+			const [first, other] = mocks.sendToChannel.mock.calls.map((call) =>
+				buttonIds(call[1]).find((id) =>
+					id.startsWith('props.browse.v1.'),
+				),
+			)
+			expect(first).toBeDefined()
+			expect(first).toBe(other)
+		})
+
+		it('keeps separate lists for different deliveries', async () => {
+			const handler = new PropPostingHandler()
+			for (const deliveryId of ['delivery-1', 'delivery-2'])
+				await handler.postPropBoard(
+					'guild-1',
+					'channel-1',
+					props,
+					'nba',
+					deliveryId,
+					'prop-board:guild-1:channel-1:0',
+					props,
+				)
+			expect(
+				new Set(mocks.setex.mock.calls.map((call) => call[0])).size,
+			).toBe(2)
+		})
+
+		it('still posts the board without Browse more when the cache is down', async () => {
+			mocks.setex.mockRejectedValueOnce(new Error('redis down'))
+
+			const receipt = await new PropPostingHandler().postPropBoard(
+				'guild-1',
+				'channel-1',
+				props,
+				'nba',
+				'delivery-1',
+				'prop-board:guild-1:channel-1:0',
+				props,
+			)
+
+			expect(receipt).toHaveLength(4)
+			const ids = buttonIds(mocks.sendToChannel.mock.calls[0][1])
+			expect(ids.some((id) => id.startsWith('props.browse.v1.'))).toBe(
+				false,
+			)
+			expect(mocks.logger.warn).toHaveBeenCalledWith(
+				expect.objectContaining({
+					event: 'props.browse.cache_write_failed',
+				}),
+			)
+		})
 	})
 })
