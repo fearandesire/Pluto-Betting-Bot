@@ -13,7 +13,7 @@ export interface GuildPropSettings {
 	guild_id: string
 	strategy: PropStrategy
 	enabled: boolean
-	/** Daily post time as `HH:MM` UTC, or null for the default schedule. */
+	/** Daily post time as `HH:MM` UTC, or null for the shared schedule. */
 	post_time: string | null
 }
 

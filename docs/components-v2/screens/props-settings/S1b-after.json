@@ -18,11 +18,11 @@
 				},
 				{
 					"type": 10,
-					"content": "**Posting:** off. This server's props autopost settings turn posting off, even though /props is on."
+					"content": "**Posting:** off. This server's props autopost settings turn posting off."
 				},
 				{
 					"type": 10,
-					"content": "**Strategy:** Smart (saved; posts as Default while AI props are off or this server is not on the AI list)\n**Post time:** 17:30 UTC (this server's own time)"
+					"content": "**Strategy:** Smart (saved; posts as Default whenever smart cannot run, for example while AI props are off)\n**Post time:** 17:30 UTC (set for this server)"
 				},
 				{
 					"type": 14,
@@ -31,7 +31,7 @@
 				},
 				{
 					"type": 10,
-					"content": "-# Staff can turn the autopost back on in the props settings."
+					"content": "-# Pluto can't turn that back on; staff manage it in the props settings."
 				}
 			]
 		}

@@ -6,7 +6,7 @@ export type PropsSettingState =
 	| { kind: 'enabled'; channelId: string }
 	| { kind: 'disabled'; channelId: string }
 
-/** What `/props status` knows about a server's strategy and post time. */
+/** What `/props status` knows about a server's strategy, autopost toggle and post time. */
 export type PropsAutopostState =
 	| {
 			kind: 'row'
@@ -72,11 +72,19 @@ const STRATEGY_LABELS: Record<string, string> = {
 }
 
 /**
- * Khronos decides whether `smart` runs: it falls back to `default` while AI
- * props are off or the guild is not entitled, and its settings response carries
- * no effective value, so Pluto states the gate instead of claiming an outcome.
+ * Khronos decides whether `smart` runs and falls back to `default` on its own
+ * reasons: AI props off, the guild outside the AI list, a missing key, no
+ * candidates, a failed or over-budget AI call. Its settings response carries no
+ * effective value, so Pluto states the fallback rather than claiming an outcome.
  */
-const SMART_FALLBACK = 'AI props are off or this server is not on the AI list'
+const SMART_FALLBACK =
+	'posts as Default whenever smart cannot run, for example while AI props are off'
+
+/** Khronos skips a server whose own settings row turns the autopost off. */
+const AUTOPOST_OFF_LINE =
+	"**Posting:** off. This server's props autopost settings turn posting off."
+const AUTOPOST_OFF_FOOTER =
+	"Pluto can't turn that back on; staff manage it in the props settings."
 
 function strategyLines(autopost: PropsAutopostState): string {
 	if (autopost.kind === 'unavailable') {
@@ -88,11 +96,9 @@ function strategyLines(autopost: PropsAutopostState): string {
 	}
 	const strategy = STRATEGY_LABELS[autopost.strategy] ?? autopost.strategy
 	const saved =
-		autopost.strategy === 'smart'
-			? ` (saved; posts as Default while ${SMART_FALLBACK})`
-			: ''
+		autopost.strategy === 'smart' ? ` (saved; ${SMART_FALLBACK})` : ''
 	const postTime = autopost.postTime
-		? `${autopost.postTime} UTC (this server's own time)`
+		? `${autopost.postTime} UTC (set for this server)`
 		: 'Shared schedule'
 	return `**Strategy:** ${strategy}${saved}
 **Post time:** ${postTime}`
@@ -102,36 +108,35 @@ export function propsStatusPayload(
 	state: PropsSettingState,
 	autopost: PropsAutopostState,
 ) {
+	const autopostOff = autopost.kind === 'row' && !autopost.enabled
 	if (state.kind === 'not_set_up') {
 		return v2Payload({
 			accent: accent('info'),
 			blocks: [
 				text('### Daily props: not set up'),
 				text('No props channel is configured for this server.'),
-				text(strategyLines(autopost)),
-				divider(),
-				footer('Set one up with /props enable.'),
-			],
-		})
-	}
-	if (
-		state.kind === 'enabled' &&
-		autopost.kind === 'row' &&
-		!autopost.enabled
-	) {
-		return v2Payload({
-			accent: accent('warning'),
-			blocks: [
-				text('### Daily props: paused'),
-				text(`**Channel:** ${channelMention(state.channelId)}`),
-				text(
-					"**Posting:** off. This server's props autopost settings turn posting off, even though /props is on.",
-				),
+				...(autopostOff ? [text(AUTOPOST_OFF_LINE)] : []),
 				text(strategyLines(autopost)),
 				divider(),
 				footer(
-					'Staff can turn the autopost back on in the props settings.',
+					autopostOff
+						? `${AUTOPOST_OFF_FOOTER} /props enable alone would not make them post.`
+						: 'Set one up with /props enable.',
 				),
+			],
+		})
+	}
+	if (autopostOff) {
+		const paused = state.kind === 'enabled'
+		return v2Payload({
+			accent: accent('warning'),
+			blocks: [
+				text(`### Daily props: ${paused ? 'paused' : 'disabled'}`),
+				text(`**Channel:** ${channelMention(state.channelId)}`),
+				text(AUTOPOST_OFF_LINE),
+				text(strategyLines(autopost)),
+				divider(),
+				footer(AUTOPOST_OFF_FOOTER),
 			],
 		})
 	}
@@ -160,7 +165,7 @@ export function propsStrategyPayload(strategy: string) {
 			text('### Props strategy updated'),
 			text(
 				strategy === 'smart'
-					? `Smart is saved for this server. It posts as the Default strategy while ${SMART_FALLBACK}.`
+					? `Smart is saved for this server. It ${SMART_FALLBACK}.`
 					: `Daily props will use the **${label}** strategy.`,
 			),
 			divider(),

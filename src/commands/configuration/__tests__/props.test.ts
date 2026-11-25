@@ -443,10 +443,12 @@ describe('/props', () => {
 			const text = replyText(interaction)
 			expect(text).toContain('Daily props: enabled')
 			expect(text).toContain('**Strategy:** Default')
-			expect(text).toContain('**Post time:** 17:30 UTC')
+			expect(text).toContain(
+				'**Post time:** 17:30 UTC (set for this server)',
+			)
 		})
 
-		it('says a saved smart strategy posts as Default while smart is gated', async () => {
+		it('says a saved smart strategy posts as Default when smart cannot run', async () => {
 			mockGetSettings.mockResolvedValue({
 				guild_id: GUILD_ID,
 				strategy: 'smart',
@@ -459,7 +461,7 @@ describe('/props', () => {
 
 			const text = replyText(interaction)
 			expect(text).toContain('**Strategy:** Smart (saved;')
-			expect(text).toContain('posts as Default while')
+			expect(text).toContain('posts as Default whenever smart cannot run')
 			expect(text).toContain('**Post time:** Shared schedule')
 		})
 
@@ -478,11 +480,37 @@ describe('/props', () => {
 			const text = replyText(interaction)
 			expect(text).toContain('Daily props: paused')
 			expect(text).not.toContain('Daily props: enabled')
-			expect(text).toContain(
-				'props autopost settings turn posting off, even though /props is on',
-			)
+			expect(text).toContain('props autopost settings turn posting off')
 			expect(text).toContain(`**Channel:** <#${CHANNEL_ID}>`)
 			expect(text).toContain('**Post time:** 17:30 UTC')
+			// The autopost toggle is staff-managed, so the screen must not send
+			// the admin to a command that cannot clear it.
+			expect(text).toContain("Pluto can't turn that back on")
+			expect(text).not.toContain('/props enable')
+		})
+
+		it('names the autopost switch when the guild switch is also off', async () => {
+			mockGetGuild.mockResolvedValue({
+				guild_id: GUILD_ID,
+				config: [
+					...config,
+					{ setting_type: 'PROPS_ENABLED', setting_value: 'false' },
+				],
+			})
+			mockGetSettings.mockResolvedValue({
+				guild_id: GUILD_ID,
+				strategy: 'default',
+				enabled: false,
+				post_time: null,
+			})
+			const interaction = makeInteraction()
+
+			await command.handleStatus(interaction as never)
+
+			const text = replyText(interaction)
+			expect(text).toContain('Daily props: disabled')
+			expect(text).toContain('props autopost settings turn posting off')
+			expect(text).toContain("Pluto can't turn that back on")
 		})
 
 		it('shows the defaults when the server has no settings row', async () => {
@@ -549,8 +577,20 @@ describe('/props', () => {
 
 			const text = replyText(interaction)
 			expect(text).toContain('Smart is saved for this server')
-			expect(text).toContain('posts as the Default strategy while')
+			expect(text).toContain('posts as Default whenever smart cannot run')
 			expect(text).not.toContain('will use the **Smart** strategy')
+		})
+
+		it('promises the Default strategy when that is what was saved', async () => {
+			const interaction = strategyInteraction('default')
+
+			await command.handleStrategy(interaction as never)
+
+			const text = replyText(interaction)
+			expect(text).toContain(
+				'Daily props will use the **Default** strategy',
+			)
+			expect(text).not.toContain('cannot run')
 		})
 
 		it.each([
