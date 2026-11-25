@@ -12,8 +12,8 @@ import {
 	type PermissionsBitField,
 } from 'discord.js'
 import {
+	type PropsAutopostState,
 	type PropsSettingState,
-	type PropsStrategyState,
 	propsDisabledPayload,
 	propsEnabledPayload,
 	propsErrorPayload,
@@ -261,8 +261,8 @@ export class UserCommand extends Subcommand {
 		} catch (error) {
 			return this.replyWithError(interaction, error)
 		}
-		const settings = await this.loadStrategyState(guildId)
-		return interaction.editReply(propsStatusPayload(state, settings))
+		const autopost = await this.loadAutopostState(guildId)
+		return interaction.editReply(propsStatusPayload(state, autopost))
 	}
 
 	public async handleStrategy(
@@ -292,15 +292,17 @@ export class UserCommand extends Subcommand {
 	}
 
 	/** A server with no settings row follows the default strategy and schedule. */
-	private async loadStrategyState(
+	private async loadAutopostState(
 		guildId: string,
-	): Promise<PropsStrategyState> {
+	): Promise<PropsAutopostState> {
 		try {
 			const row = await new PropSettingsWrapper().get(guildId)
+			if (!row) return { kind: 'default' }
 			return {
-				kind: 'loaded',
-				strategy: row?.strategy ?? 'default',
-				postTime: row?.post_time ?? null,
+				kind: 'row',
+				strategy: row.strategy,
+				enabled: row.enabled,
+				postTime: row.post_time,
 			}
 		} catch (error) {
 			this.container.logger.warn(error)

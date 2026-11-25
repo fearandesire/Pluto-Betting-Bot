@@ -1,0 +1,43 @@
+{
+	"author": {
+		"name": "Pluto",
+		"bot": true
+	},
+	"components": [
+		{
+			"type": 17,
+			"accent_color": 15898673,
+			"components": [
+				{
+					"type": 10,
+					"content": "### Daily props: paused"
+				},
+				{
+					"type": 10,
+					"content": "**Channel:** <#300000000000000003>"
+				},
+				{
+					"type": 10,
+					"content": "**Posting:** off. This server's props autopost settings turn posting off."
+				},
+				{
+					"type": 10,
+					"content": "**Strategy:** Smart (saved; posts as Default whenever smart cannot run, for example while AI props are off)\n**Post time:** 17:30 UTC (set for this server)"
+				},
+				{
+					"type": 14,
+					"divider": true,
+					"spacing": 1
+				},
+				{
+					"type": 10,
+					"content": "-# Pluto can't turn that back on; staff manage it in the props settings."
+				}
+			]
+		}
+	],
+	"flags": 32768,
+	"allowedMentions": {
+		"parse": []
+	}
+}

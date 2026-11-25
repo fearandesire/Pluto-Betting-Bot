@@ -18,7 +18,7 @@
 				},
 				{
 					"type": 10,
-					"content": "**Strategy:** Smart\n**Post time:** 17:30 UTC"
+					"content": "**Strategy:** Smart (saved; posts as Default whenever smart cannot run, for example while AI props are off)\n**Post time:** 17:30 UTC (set for this server)"
 				},
 				{
 					"type": 14,
