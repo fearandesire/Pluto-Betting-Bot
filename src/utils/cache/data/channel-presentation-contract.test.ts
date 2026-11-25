@@ -118,10 +118,14 @@ describe('additive channel contracts', () => {
 			false,
 			false,
 			true,
-			false,
+			true,
 		])
 	})
-	it('keeps a stored schedule change and rejects a status it cannot carry', () => {
+	it('drops a change it cannot read rather than the whole card', () => {
+		const unreadable = contracts.channelAggregatedV2Schema.parse(cases[14])
+		expect(unreadable.schedule_change).toBeUndefined()
+	})
+	it('keeps a stored schedule change and drops one it cannot carry', () => {
 		const change = cases[13] as Record<string, unknown>
 		const parsed = contracts.channelAggregatedV2Schema.parse(change)
 		expect(parsed.schedule_change).toEqual({

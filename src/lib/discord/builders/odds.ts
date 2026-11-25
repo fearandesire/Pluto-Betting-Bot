@@ -54,12 +54,16 @@ export function scheduleGameLine(
 	return `**${awayTeamEmoji} ${awayTeamShort} *(${game.teamRecords[1]})*** *\`at\`* **${homeTeamEmoji} ${homeTeamShort} *(${game.teamRecords[0]})*** @ *<t:${unixTimestamp}:t>*`
 }
 
-/** A schedule change is shown only while it agrees with the card's own facts. */
+/**
+ * A stored change is shown only while it agrees with the card's own facts: a
+ * move only on a game that has not started, and a status only on a card that
+ * already says the same thing.
+ */
 const agreedScheduleChange = (args: PrepareMatchEmbed) => {
 	const change = args.scheduleChange
 	if (!change) return undefined
-	const moved = change.status === 'rescheduled' || change.status === 'delayed'
-	if (moved) {
+	if (change.status === 'rescheduled' || change.status === 'delayed') {
+		if (args.gameStatus !== 'scheduled') return undefined
 		const tipoff = args.gametime ? new Date(args.gametime).getTime() : NaN
 		return Math.abs(
 			new Date(change.effective_start_time).getTime() - tipoff,
@@ -109,7 +113,10 @@ export function matchPostEmbed(args: PrepareMatchEmbed, teamEmoji: EmojiLike) {
 			? `\n\n<t:${unixSeconds(args.gametime)}:F>`
 			: ''
 	const movedFrom =
-		change && change.original_start_time !== change.effective_start_time
+		change &&
+		(change.status === 'rescheduled' || change.status === 'delayed') &&
+		new Date(change.original_start_time).getTime() !==
+			new Date(change.effective_start_time).getTime()
 			? `\n*Was <t:${unixSeconds(change.original_start_time)}:F>*`
 			: ''
 	const favorite =

@@ -188,6 +188,63 @@ describe('odds builders (classic, pre-migration)', () => {
 		)
 	})
 
+	it('keeps the current status when a stored move outlives the tip-off', () => {
+		const gametime = new Date('2026-10-20T23:00:00Z')
+		const card = matchPostEmbed(
+			{
+				home_team: 'Detroit Pistons',
+				homeTeamShortName: 'Pistons',
+				away_team: 'Boston Celtics',
+				awayTeamShortName: 'Celtics',
+				bettingChanId: '300',
+				header: '',
+				sport: 'nba',
+				gameStatus: 'live',
+				bettingAvailable: false,
+				gametime,
+				scheduleChange: {
+					status: 'rescheduled',
+					reason: null,
+					effective_start_time: gametime.toISOString(),
+					original_start_time: '2026-10-18T23:00:00.000Z',
+				},
+			},
+			undefined,
+		).toJSON()
+
+		expect(card.description).toBe(
+			'# Celtics @ Pistons\n\n**Live**\n\n<t:1792537200:F>',
+		)
+	})
+
+	it('does not call equal times written differently a move', () => {
+		const card = matchPostEmbed(
+			{
+				home_team: 'Detroit Pistons',
+				homeTeamShortName: 'Pistons',
+				away_team: 'Boston Celtics',
+				awayTeamShortName: 'Celtics',
+				bettingChanId: '300',
+				header: '',
+				sport: 'nba',
+				gameStatus: 'scheduled',
+				bettingAvailable: false,
+				gametime: new Date('2026-10-20T23:00:00Z'),
+				scheduleChange: {
+					status: 'rescheduled',
+					reason: null,
+					effective_start_time: '2026-10-20T23:00:00Z',
+					original_start_time: '2026-10-21T01:00:00+02:00',
+				},
+			},
+			undefined,
+		).toJSON()
+
+		expect(card.description).toBe(
+			'# Celtics @ Pistons\n\n**Rescheduled**\n\n<t:1792537200:F>',
+		)
+	})
+
 	it('ignores a stored change the card itself contradicts', () => {
 		const gametime = new Date('2026-10-20T23:00:00Z')
 		const card = matchPostEmbed(

@@ -80,7 +80,8 @@ export const channelAggregatedV2Schema = z
 		schedule_observed_at: z.string().datetime({ offset: true }).optional(),
 		schedule_snapshot_ref: z.string().trim().min(1).optional(),
 		initial_odds_completion: initialOddsCompletionSchema.optional(),
-		schedule_change: scheduleChangeSchema.optional(),
+		// A shape this mirror does not understand drops the detail, never the card.
+		schedule_change: scheduleChangeSchema.optional().catch(undefined),
 		metadata: matchMetadataSchema.nullable().optional(),
 	})
 	.superRefine((channel, context) => {
