@@ -1,76 +1,73 @@
-<!-- Fill each section in a line or two. Keep the headings. If one does not apply, write N/A: and the reason.
-Lead with the result. No "This PR...", recaps, or filler. Image layouts and formatting rules:
-https://github.com/charyon/repository-kit/blob/main/docs/pr-bodies.md -->
-<!-- Service buttons appear between the two markers below only when this PR touches that service (kit job or agent).
-Leave the markers; anything you write outside them is never changed. -->
+<!-- Fill top to bottom. Two or three short sentences per visible section; anything longer goes in a toggle.
+Write what changed and what to check, not how the work went.
+Rules, examples and the title format: https://github.com/charyon/repository-kit/blob/main/docs/pr-bodies.md -->
+<!-- Service buttons appear between these markers only when the PR touches that service. Leave the markers. -->
 <!-- kit:services:start -->
 <!-- kit:services:end -->
 
-## Outcome (required)
+## Summary
 
-<!-- What is different after this merges, for users or maintainers, in 1-3 sentences.
-Link the issue or ticket. One concern per PR: if you need "and also", split it.
-If it could break something, add one sentence: what, and how to undo it. -->
+<!-- One or two sentences. What is different after this merges, for whom, and why. Link the issue here. -->
 
-## Screenshots (required for visual changes)
+## Guided tour
 
-<!-- Show the result as it renders: UI, Discord messages and embeds, reports, documents.
-Label each image desktop or mobile, and fixture, preview, or production. Caption with <sub>.
-Pick one layout (snippets in docs/pr-bodies.md):
-  Before / After: the table below.
-  1-3 views: one <details name="shots"> per view, first one open. They act as tabs.
-  4+ images: a <table> grid, two per row, img width="100%"; past six, collapse the rest.
-Host images, videos and GIFs on R2. Repo blob links and GitHub attachments fail the pr-media check.
-A recording adds to screenshots; it does not replace them.
-For a nonvisual change, delete the Before / After block and write N/A: and the reason. -->
+<!-- Where to look, in the order to look. Three stops at most, one clause each on why it matters.
+Delete this section when the diff is one file. -->
 
-<details open>
-<summary>Before / After</summary>
+1. `path/to/file:line` — 
+2. `path/to/file:line` — 
 
-| Before | After |
-| --- | --- |
-|  |  |
+## Verified
 
-</details>
+<!-- One line per check: the command, an arrow, the result. Name what you did not run. -->
 
-## Validation (required)
+- 
 
-<!-- The exact checks you ran and what they showed: local, CI, live.
-Name anything you did not verify. Raw output goes in the logs block below. -->
+## Risk
 
--
+<!-- One line: what it touches and how to undo it. -->
 
-## Docs impact
+Low: revert the commit.
 
-<!-- Tick exactly one and edit the text after the dash.
-none takes one of: behavior-preserving, test-only, dependency-only.
-exception needs a maintainer's docs-exception label. -->
-
-- [ ] none — behavior-preserving
-- [ ] updated — (paths)
-- [ ] exception — (reason)
+---
 
 <details>
-<summary>How to review (optional)</summary>
+<summary>Evidence</summary>
 
-<!-- Where to start, the riskiest part, and numbered steps a reviewer can follow. -->
+<!-- What a reviewer or an agent needs to re-check the claim. Fill every line or write n/a. -->
 
-</details>
-
-<details>
-<summary>Full results and logs (optional)</summary>
-
-<!-- Paste long output in the text block. Keep the Validation summary readable without opening this. -->
+- Issue: 
+- Spec or decision: 
+- Related PRs: 
+- Not verified: 
 
 ```text
-
+<the commands, and the output that matters>
 ```
 
 </details>
 
 <details>
-<summary>Demo and rollout notes (optional)</summary>
+<summary>Scope and rollout</summary>
 
-<!-- Recording for multi-step interactions, migrations, compatibility, deploy and rollback steps. -->
+- Covers: 
+- Leaves out: 
+- Tradeoff taken: 
+- Rollout and rollback: 
 
 </details>
+
+<!-- Screenshots, only when a reviewer must see the result: paste the block below above ## Verified. Desktop and mobile, each labelled with its surface and source, hosted on R2. -->
+<!--
+<details name="shots" open>
+<summary><b>Desktop</b> · preview</summary>
+
+</details>
+
+<details name="shots">
+<summary><b>Mobile</b> · preview</summary>
+
+</details>
+-->
+
+<!-- Docs, only when the change touches documentation: paste one ticked line here, none (behavior-preserving), updated (paths), or exception (reason). -->

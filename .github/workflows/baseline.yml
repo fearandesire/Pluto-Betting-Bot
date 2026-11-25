@@ -3,7 +3,7 @@
 name: baseline
 on:
   pull_request:
-    types: [opened, synchronize, reopened, edited, labeled, unlabeled]   # edited: pr-context acts on title edits only (its `if`); pr-media re-checks body edits
+    types: [opened, synchronize, reopened, edited, labeled, unlabeled]   # edited: pr-media re-checks body edits; pr-context skips it
   push:
     branches: [main]            # sync.mjs renders the repo override sync.target_branch here
     paths: [".github/**", "AGENTS.md", "CLAUDE.md", "REVIEW.md"]
@@ -17,10 +17,11 @@ jobs:
   # into this file by the sync, and the PR's changed files come from the API. Writes only between the kit:services markers.
   # Its own body edit (GITHUB_TOKEN) does not trigger another run.
   pr-context:
-    # Body-only edits skip without a runner (no minutes); a title edit can add or remove a Linear key.
+    # Edited skips without a runner (no minutes): the buttons read paths, labels and the head branch, none of which
+    # an edit changes. PR titles carry no issue key (docs/pr-bodies.md#titles).
     if: >-
       github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository &&
-      (github.event.action != 'edited' || github.event.changes.title != null)
+      github.event.action != 'edited'
     runs-on: ubicloud-standard-2-ubuntu-2404
     timeout-minutes: 2
     permissions:
@@ -86,7 +87,7 @@ jobs:
               })
             }
 
-            // pr: { repo, number, headSha, headRef, title, labels: [names], files: [{filename, previous_filename?}] }
+            // pr: { repo, number, headSha, headRef, labels: [names], files: [{filename, previous_filename?}] }
             function selectServices(rules, pr) {
               const paths = pr.files.flatMap((f) => [f.filename, f.previous_filename].filter(Boolean))
               const out = []
@@ -99,8 +100,9 @@ jobs:
                 if (lab) why.push(`label ${lab}`)
                 let ref = null
                 if (r.refs) {
+                  // The head branch only: PR titles carry no issue key (docs/pr-bodies.md#titles).
                   const re = new RegExp(`\\b(?:${r.refs})\\b`, 'i')
-                  const m = re.exec(pr.title ?? '') ?? re.exec(pr.headRef ?? '')
+                  const m = re.exec(pr.headRef ?? '')
                   if (m) { ref = m[0].toUpperCase(); why.push(`ref ${ref}`) }
                 }
                 if (!why.length) continue
@@ -138,7 +140,7 @@ jobs:
               const files = await github.paginate(github.rest.pulls.listFiles, { owner, repo, pull_number: number, per_page: 100 })
               const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: number })   // fresh body, not the event copy
               const selected = selectServices(config.rules, {
-                repo: `${owner}/${repo}`, number, headSha: pr.head.sha, headRef: pr.head.ref, title: pr.title,
+                repo: `${owner}/${repo}`, number, headSha: pr.head.sha, headRef: pr.head.ref,
                 labels: pr.labels.map((l) => l.name), files })
               const result = applyBlock(pr.body, renderButtons(selected, config.assetsBase))
               core.info(`services: ${selected.map((s) => `${s.id} (${s.why.join(', ')})`).join('; ') || 'none'}; body: ${result.reason}`)
@@ -154,7 +156,7 @@ jobs:
 
             return await run({ github, context, core, config: JSON.parse(process.env.KIT_SERVICES) })
 
-  # Media hosting (docs/pr-bodies.md#media): fails when an embed is not on R2 (older ImgBB images still pass).
+  # Media hosting (docs/pr-bodies.md#screenshots): fails when an embed is not on R2 (older ImgBB images still pass).
   # Reads the event's body, so it needs no token scope; it runs again on every body edit.
   pr-media:
     if: github.event_name == 'pull_request'
@@ -168,12 +170,14 @@ jobs:
       - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
-            // Media hosting for PR bodies (docs/pr-bodies.md#media). Images, videos and GIFs load from the R2 agent-media bucket.
+            // Media hosting for PR bodies (docs/pr-bodies.md#screenshots). Images, videos and GIFs load from the R2 agent-media bucket.
             // Private-repo links (blob/...?raw=true, raw.githubusercontent, user-attachments) show as empty squares in the
             // GitHub mobile app, and other hosts drift. Pure functions plus run(); the sync inlines this file into baseline.yml.
             const VIDEO_HOSTS = ['pub-d2ec45ebfe5f4142847cc16da3ae409b.r2.dev']
             const IMAGE_HOSTS = [...VIDEO_HOSTS, 'i.ibb.co']   // i.ibb.co: older PR bodies still pass when edited; upload new images to R2
-            const DECOR_HOSTS = ['img.shields.io']   // badges, not evidence
+            // Badges and platform footers, not evidence. The PR tooling appends them after the body, outside the diff, so the
+            // author cannot remove them: the kit badge block on capy.ai and the proof image on pr-comments-assets.blacksmith.sh.
+            const DECOR_HOSTS = ['img.shields.io', 'capy.ai', 'pr-comments-assets.blacksmith.sh']
             const VIDEO = /\.(mp4|webm|mov|gif)$/i
             const MEDIA = /\.(png|jpe?g|webp|avif|svg|mp4|webm|mov|gif)$/i
             const ATTACHMENT = /\/user-attachments\/assets\/|user-images\.githubusercontent\.com|private-user-images/
@@ -232,7 +236,7 @@ jobs:
             function report(problems) {
               if (!problems.length) return 'PR media: every embed is on an approved host.'
               return [
-                `PR media: ${problems.length} embed(s) on the wrong host (repository-kit docs/pr-bodies.md#media).`,
+                `PR media: ${problems.length} embed(s) on the wrong host (repository-kit docs/pr-bodies.md#screenshots).`,
                 ...problems.map((p) => `- ${p.url}\n  ${p.why}. Host it on ${p.want}.`),
                 `Put images, videos and GIFs in the R2 bucket agent-media and link https://${VIDEO_HOSTS[0]}/<key>.`,
                 'Edit the PR body; this check re-runs on the edit.',
