@@ -1,6 +1,6 @@
 # Recaps and leaderboard posts
 
-Pluto posts three kinds of scheduled summary: the weekly recap, weekly and monthly period winners, and the weekly and monthly props leaderboard. Each scheduler matches its five-field cron in UTC and runs once per matching slot. When the bot starts later on a scheduled UTC day, each scheduler makes one catch-up attempt for that day. A scheduler whose cron is invalid is disabled and logs an error.
+Pluto posts three kinds of scheduled summary: the weekly recap, weekly and monthly period winners, and the weekly and monthly props leaderboard. Each scheduler matches its five-field cron in UTC and runs at most once per matching minute in each process; the posting services deduplicate delivery across replicas separately. When the bot starts later on a scheduled UTC day, each scheduler makes one catch-up attempt for that day. A scheduler whose cron is invalid is disabled and logs an error.
 
 ## Weekly recap
 
@@ -13,7 +13,7 @@ Targets are re-read from Khronos recap settings on every run, so changes need no
 
 ## Period winners
 
-`PERIOD_WINNERS_ENABLED` (off by default) posts weekly winners on `PERIOD_WINNERS_WEEKLY_CRON` and monthly winners on `PERIOD_WINNERS_MONTHLY_CRON` to `RECAP_GUILD_IDS` (or `GUILD_ID`), in `RECAP_CHANNEL_ID` when set and otherwise the guild's betting channel. These posts do not read Khronos recap settings rows. It needs the Khronos period-winners API. NFL is always included and NBA only with `RECAP_NBA_ENABLED`. It does not start with `USE_MOCK_DATA` on or with no guilds configured.
+`PERIOD_WINNERS_ENABLED` (off by default) posts weekly winners on `PERIOD_WINNERS_WEEKLY_CRON` and monthly winners on `PERIOD_WINNERS_MONTHLY_CRON` to `RECAP_GUILD_IDS` (or `GUILD_ID`), in `RECAP_CHANNEL_ID` when set and otherwise the guild's betting channel. These posts do not read Khronos recap settings rows. It needs the Khronos period-winners API. Each run covers the previous closed week or month, and a sport with no winners for that period is skipped. NFL is always included and NBA only with `RECAP_NBA_ENABLED`. It does not start with `USE_MOCK_DATA` on or with no guilds configured.
 
 ## Leaderboard auto-posts
 

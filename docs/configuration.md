@@ -92,7 +92,7 @@ An invalid value in any of the three cron variables disables that scheduler and 
 
 ## Test-only variables
 
-The deployment workflow's test job sets `PLUTO_REQUIRE_REDIS_TESTS=1` and `PLUTO_TEST_REDIS_URL` so the Redis contract tests run against a real Redis instead of skipping. Elsewhere they skip unless you set both. `PLUTO_SHARED_CONTRACT_MODULE` points one contract test at a shared contract module and skips it when unset.
+The deployment workflow's test job sets `PLUTO_REQUIRE_REDIS_TESTS=1` and `PLUTO_TEST_REDIS_URL` so the Redis contract tests run against a real Redis. Setting `PLUTO_TEST_REDIS_URL` alone enables them; without it they skip. `PLUTO_REQUIRE_REDIS_TESTS=1` turns a missing URL into a test failure instead of a skip. `PLUTO_SHARED_CONTRACT_MODULE` points one contract test at a shared contract module and skips it when unset.
 
 ## Guild settings stored in Khronos
 
@@ -102,5 +102,5 @@ Some behaviour is configured per guild rather than per process. These settings l
 | --- | --- | --- |
 | `PROPS_ENABLED` and the predictions channel | `/props enable` and `/props disable` | Whether the guild receives daily props, and where. With no predictions channel the guild is not set up; with a channel, a missing `PROPS_ENABLED` row means enabled. Khronos's own props scheduler settings, such as the post time, are separate. |
 | Props strategy | `/props strategy` | `default` or `smart`. See [Player props](features/props.md). |
-| `LOGS_ENABLED` | `/config set` | Only `false` stops posts to the guild's log channel. A missing row or any other value keeps them on. |
+| `LOGS_ENABLED` | `/config set` | Only `false` stops posts to the guild's log channel. A missing row or any other value keeps them on, but posts also need a valid log channel configured for the guild. |
 | Recap settings (`guild_recap_settings`) | Khronos staff tooling | Weekly recap target and NBA inclusion (overriding the environment fallback when rows exist), and the weekly and monthly leaderboard auto-posts. |

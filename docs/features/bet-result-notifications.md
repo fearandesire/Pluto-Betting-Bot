@@ -1,19 +1,19 @@
 # Bet result notifications
 
-Khronos tells Pluto when a single bet settles, and Pluto tries to send the bettor a direct message. Won and lost bets get a result DM. A refunded bet gets a refund DM that says why the stake came back.
+Khronos tells Pluto when a single bet settles, and Pluto tries to send the bettor a direct message. Won and lost bets get a result DM. A refunded bet gets a refund DM that gives a reason for the refund.
 
 ## Routes
 
 `POST /notifications/bets/results` accepts two shapes.
 
-- A durable delivery envelope with `kind: "h2h_result"` answers `202` once it is accepted: either stored and queued, or matched to an existing delivery with the same payload, which is returned without being queued again. See [Durable notification receiver](durable-notification-receiver.md). This kind carries one bet whose `result` is `won` or `lost`; it has no refund shape.
+- A durable delivery envelope with `kind: "h2h_result"` answers `202` once it is accepted: either stored and queued, or matched to an existing delivery with the same payload, which is returned and, while still pending, enqueued again under the same job id. See [Durable notification receiver](durable-notification-receiver.md). This kind carries one bet whose `result` is `won` or `lost`; it has no refund shape.
 - A legacy batch with `winners`, `losers` and `pushes` is processed before the route answers. `winners` and `losers` may be null and `pushes` may be omitted. It answers `200` with `{ "success": true }` when processing finishes, `422` when validation fails, and `500` when processing throws. A DM that fails for one user is logged and does not fail the request, so a `200` means Pluto attempted the DMs, not that each one arrived. A body that has a `delivery_id` but is not a valid envelope answers `422` and is not treated as a legacy batch.
 
 On this endpoint, refunds reach users only through the legacy batch, as entries in `pushes`.
 
 ## Refund reasons
 
-A legacy batch may carry a top-level `refund_reason`, which applies to every entry in its `pushes`. Pluto reads it with its own schema in `notification-utils.ts`, so it works whether or not the installed `@pluto-khronos/types` keeps the field. An absent or unknown value uses the tie wording, and the refund is still delivered. The DM names a void reason only when Khronos supplies one Pluto recognizes.
+A legacy batch may carry a top-level `refund_reason`, which applies to every entry in its `pushes`. Pluto reads it with its own schema in `notification-utils.ts`, so it works whether or not the installed `@pluto-khronos/types` keeps the field. An absent or unknown value does not stop Pluto from attempting the DM; it uses the tie wording, which may not be the real reason. The DM names a void reason only when Khronos supplies one Pluto recognizes.
 
 | `refund_reason` | DM title | Reason line |
 | --- | --- | --- |

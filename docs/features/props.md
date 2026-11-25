@@ -10,7 +10,7 @@ Khronos selects the day's player props and asks Pluto to post them. Pluto posts 
 | --- | --- |
 | `/props enable channel:<text channel>` | Checks that Pluto can View Channel, Send Messages, Embed Links and Read Message History in the channel, turns posting off, saves the channel as the guild's predictions channel, then sets `PROPS_ENABLED` to true. Posting stays off until the channel save succeeds. Within one Pluto process, enable and disable writes for a guild run one at a time. |
 | `/props disable` | Sets `PROPS_ENABLED` to false. |
-| `/props status` | Shows whether props are not set up (no predictions channel), enabled or disabled, the channel, the strategy, and the daily post time. A guild without a settings row shows the `default` strategy and the default schedule. |
+| `/props status` | Shows the guild's props toggle: not set up (no predictions channel), enabled or disabled. Khronos makes its own scheduling decision, so enabled does not guarantee a post. It also shows the channel, the strategy, and the daily post time. A guild without a settings row shows the `default` strategy and the default schedule. |
 | `/props strategy strategy:<default\|smart>` | Saves the selection strategy in Khronos. A `400` from Khronos answers "That strategy is not available for this server yet", a `401` or `403` says Pluto is not allowed to change settings, and a timeout says the save could not be confirmed and points to `/props status`. |
 
 Whether `smart` actually changes selection, and which guilds may use it, is decided in Khronos. The daily post time is stored in Khronos as `HH:MM` UTC; Pluto displays it but has no command to change it.
@@ -21,7 +21,7 @@ Khronos sends the day's props to `POST /props/daily` as a durable `prop_post` en
 
 This build posts one message per pair. When a payload carries a `boards` field, Pluto validates it (an invalid one answers `422`) and includes it in the payload hash, but still posts the pairs one message each.
 
-When a prop settles, Khronos sends a `prop_settled` envelope to `POST /notifications/props/settled` and Pluto edits the messages it has a tracked post and message reference for.
+When a tracked posted prop settles, Khronos sends a `prop_settled` envelope to `POST /notifications/props/settled` and Pluto edits the referenced messages. Khronos sends nothing for outcomes it has no tracked post for.
 
 ## Staff commands
 
