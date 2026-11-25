@@ -213,7 +213,13 @@ export function classifyDeliveryError(error: unknown): {
 	const candidate = error as { code?: number | string; status?: number }
 	const code = String(candidate?.code ?? '')
 	const status = candidate?.status
-	const permanentCodes = new Set(['50007', '10003', '50001', '10004'])
+	const permanentCodes = new Set([
+		'50007',
+		'10003',
+		'50001',
+		'10004',
+		'PROP_SETTLEMENT_ROW_MISSING',
+	])
 	const message = error instanceof Error ? error.message : String(error)
 	return {
 		classification:

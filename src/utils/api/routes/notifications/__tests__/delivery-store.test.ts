@@ -68,6 +68,13 @@ describe('durable notification delivery contract', () => {
 		expect(classifyDeliveryError(new Error('timeout'))).toMatchObject({
 			classification: 'transient',
 		})
+		expect(
+			classifyDeliveryError(
+				Object.assign(new Error('row missing'), {
+					code: 'PROP_SETTLEMENT_ROW_MISSING',
+				}),
+			),
+		).toMatchObject({ classification: 'permanent' })
 	})
 
 	it('derives delivered and permanent terminal states from destinations', async () => {

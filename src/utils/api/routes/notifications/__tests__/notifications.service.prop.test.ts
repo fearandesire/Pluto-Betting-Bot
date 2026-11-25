@@ -454,39 +454,60 @@ describe('NotificationService.processPropSettled', () => {
 	})
 
 	it('refuses to start a second edit while the message lock is held', async () => {
-		const message = createMessage()
-		const channel = {
-			guildId: 'guild-1',
-			isTextBased: () => true,
-			messages: { fetch: vi.fn().mockResolvedValue(message) },
-		}
-		mocks.fetchChannel.mockResolvedValue(channel)
-		mocks.redisSet.mockResolvedValueOnce(null)
+		vi.useFakeTimers()
+		try {
+			const message = createMessage()
+			const channel = {
+				guildId: 'guild-1',
+				isTextBased: () => true,
+				messages: { fetch: vi.fn().mockResolvedValue(message) },
+			}
+			mocks.fetchChannel.mockResolvedValue(channel)
+			mocks.redisSet.mockResolvedValue(null)
 
-		await expect(
-			new NotificationService().deliverPropSettlementMessage(
-				payload,
-				payload.messages[0],
-			),
-		).rejects.toMatchObject({ code: 'PROP_SETTLEMENT_BUSY' })
-		expect(message.edit).not.toHaveBeenCalled()
-		expect(mocks.redisCompareAndRemove).not.toHaveBeenCalled()
+			const delivery =
+				new NotificationService().deliverPropSettlementMessage(
+					payload,
+					payload.messages[0],
+				)
+			const outcome = expect(delivery).rejects.toMatchObject({
+				code: 'PROP_SETTLEMENT_BUSY',
+			})
+			await vi.advanceTimersByTimeAsync(21_000)
+			await outcome
+
+			expect(message.edit).not.toHaveBeenCalled()
+			expect(mocks.redisCompareAndRemove).not.toHaveBeenCalled()
+		} finally {
+			vi.useRealTimers()
+		}
 	})
 
 	it('lets the route retry when a settlement loses the message lock', async () => {
-		const message = createMessage()
-		const channel = {
-			guildId: 'guild-1',
-			isTextBased: () => true,
-			messages: { fetch: vi.fn().mockResolvedValue(message) },
-		}
-		mocks.fetchChannel.mockResolvedValue(channel)
-		mocks.redisSet.mockResolvedValueOnce(null)
+		vi.useFakeTimers()
+		try {
+			const message = createMessage()
+			const channel = {
+				guildId: 'guild-1',
+				isTextBased: () => true,
+				messages: { fetch: vi.fn().mockResolvedValue(message) },
+			}
+			mocks.fetchChannel.mockResolvedValue(channel)
+			mocks.redisSet.mockResolvedValue(null)
 
-		await expect(
-			new NotificationService().processPropSettled(payload),
-		).rejects.toMatchObject({ code: 'PROP_SETTLEMENT_BUSY' })
-		expect(message.edit).not.toHaveBeenCalled()
+			const delivery = new NotificationService().processPropSettled(
+				payload,
+			)
+			const outcome = expect(delivery).rejects.toMatchObject({
+				code: 'PROP_SETTLEMENT_BUSY',
+			})
+			await vi.advanceTimersByTimeAsync(21_000)
+			await outcome
+
+			expect(message.edit).not.toHaveBeenCalled()
+		} finally {
+			vi.useRealTimers()
+		}
 	})
 
 	it('releases the message lock after a successful edit', async () => {
@@ -554,6 +575,99 @@ describe('NotificationService.processPropSettled', () => {
 				payload.messages[0],
 			),
 		).rejects.toMatchObject({ code: 'PROP_SETTLEMENT_BUSY' })
+
+		expect(message.edit).not.toHaveBeenCalled()
+	})
+
+	it('waits for the current holder and edits once the lock is free', async () => {
+		const message = createMessage()
+		const channel = {
+			guildId: 'guild-1',
+			isTextBased: () => true,
+			messages: { fetch: vi.fn().mockResolvedValue(message) },
+		}
+		mocks.fetchChannel.mockResolvedValue(channel)
+		mocks.redisSet.mockResolvedValueOnce(null).mockResolvedValueOnce('OK')
+
+		await new NotificationService().deliverPropSettlementMessage(
+			payload,
+			payload.messages[0],
+		)
+
+		expect(mocks.redisSet).toHaveBeenCalledTimes(2)
+		expect(message.edit).toHaveBeenCalledOnce()
+	})
+
+	it('fails the delivery when the holder keeps the lock past the wait budget', async () => {
+		vi.useFakeTimers()
+		try {
+			const message = createMessage()
+			const channel = {
+				guildId: 'guild-1',
+				isTextBased: () => true,
+				messages: { fetch: vi.fn().mockResolvedValue(message) },
+			}
+			mocks.fetchChannel.mockResolvedValue(channel)
+			mocks.redisSet.mockResolvedValue(null)
+
+			const delivery =
+				new NotificationService().deliverPropSettlementMessage(
+					payload,
+					payload.messages[0],
+				)
+			const outcome = expect(delivery).rejects.toMatchObject({
+				code: 'PROP_SETTLEMENT_BUSY',
+			})
+			await vi.advanceTimersByTimeAsync(21_000)
+			await outcome
+
+			expect(message.edit).not.toHaveBeenCalled()
+		} finally {
+			vi.useRealTimers()
+		}
+	})
+
+	it('fails a settlement whose row is missing from the board', async () => {
+		const boardProp = {
+			commence_time: '2026-10-04T20:25:00Z',
+			market_key: 'player_pass_yds',
+			description: 'Patrick Mahomes',
+			point: 274.5,
+			over: { outcome_uuid: 'over-1', outcome_name: 'Over', price: -115 },
+			under: {
+				outcome_uuid: 'under-1',
+				outcome_name: 'Under',
+				price: 105,
+			},
+		}
+		const payloadV2 = propBoardPayload({
+			props: [boardProp] as never,
+			sport: 'nfl',
+			teams: {
+				homeAbbrev: ['KC'],
+				awayAbbrev: ['BUF'],
+				homeColor: 0xe31837,
+			},
+		})
+		const message = {
+			embeds: [],
+			components: payloadV2.components,
+			flags: { has: () => true },
+			edit: vi.fn(),
+		} as any
+		const channel = {
+			guildId: 'guild-1',
+			isTextBased: () => true,
+			messages: { fetch: vi.fn().mockResolvedValue(message) },
+		}
+		mocks.fetchChannel.mockResolvedValue(channel)
+
+		await expect(
+			new NotificationService().processPropSettled({
+				...payload,
+				outcome_uuid: 'not-on-the-board',
+			}),
+		).rejects.toMatchObject({ code: 'PROP_SETTLEMENT_ROW_MISSING' })
 
 		expect(message.edit).not.toHaveBeenCalled()
 	})

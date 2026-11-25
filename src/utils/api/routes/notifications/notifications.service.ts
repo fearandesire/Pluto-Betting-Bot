@@ -279,7 +279,7 @@ export default class NotificationService {
 	 */
 	async processPropSettled(data: PropSettledNotification): Promise<void> {
 		const processedMessages = new Set<string>()
-		let busy: unknown
+		let fatal: unknown
 		for (const reference of data.messages) {
 			const messageKey = `${reference.guild_id}:${reference.channel_id}:${reference.message_id}`
 			if (processedMessages.has(messageKey)) continue
@@ -287,14 +287,16 @@ export default class NotificationService {
 			try {
 				await this.deliverPropSettlementMessage(data, reference)
 			} catch (error) {
+				const code = (error as { code?: string } | undefined)?.code
 				if (
-					(error as { code?: string } | undefined)?.code ===
-					'PROP_SETTLEMENT_BUSY'
+					code === 'PROP_SETTLEMENT_BUSY' ||
+					code === 'PROP_SETTLEMENT_ROW_MISSING'
 				) {
-					// Another delivery is editing this message. Keep going with
-					// the rest, then answer 500 so the caller retries instead of
-					// reporting a settlement that did not land.
-					busy ??= error
+					// Another delivery is editing this message, or the board no
+					// longer carries this outcome's row. Keep going with the
+					// rest, then fail the delivery so the caller retries instead
+					// of reporting a settlement that did not land.
+					fatal ??= error
 					continue
 				}
 				logger.warn({
@@ -311,7 +313,7 @@ export default class NotificationService {
 				})
 			}
 		}
-		if (busy) throw busy
+		if (fatal) throw fatal
 	}
 
 	/** Deliver exactly one prop message, allowing the durable worker to retry it. */
@@ -332,7 +334,11 @@ export default class NotificationService {
 			reference.message_id,
 		].join(':')
 		const lockToken = randomUUID()
-		const lock = await this.claimPropSettlementLock(lockKey, lockToken)
+		const claimed = await this.claimPropSettlementLock(lockKey, lockToken)
+		const lock =
+			claimed === 'busy'
+				? await this.waitForPropSettlementLock(lockKey, lockToken)
+				: claimed
 		if (lock !== 'acquired') {
 			throw propSettlementBusy(
 				lock === 'busy'
@@ -383,15 +389,9 @@ export default class NotificationService {
 		if (isV2Message(message)) {
 			const settled = settleV2BoardComponents(components, data)
 			if (!settled.touched) {
-				logger.warn({
-					method: this.deliverPropSettlementMessage.name,
-					event: 'prop.settlement.row_missing',
-					guild_id: reference.guild_id,
-					channel_id: reference.channel_id,
-					message_id: reference.message_id,
-					outcome_uuid: data.outcome_uuid,
-				})
-				return
+				throw propSettlementRowMissing(
+					`Board ${reference.message_id} has no row for outcome ${data.outcome_uuid}`,
+				)
 			}
 			await assertLease()
 			await message.edit({
@@ -448,6 +448,32 @@ export default class NotificationService {
 			})
 			return 'unavailable'
 		}
+	}
+
+	/**
+	 * A board's outcomes settle within moments of each other, so a busy lock is
+	 * the normal case rather than a failure. Wait for the holder with jittered
+	 * polls instead of spending a queue attempt on a one-minute backoff, where
+	 * every loser would come back together and collide again.
+	 */
+	private async waitForPropSettlementLock(
+		key: string,
+		token: string,
+	): Promise<'acquired' | 'busy' | 'unavailable'> {
+		const deadline = Date.now() + PROP_SETTLEMENT_LOCK_WAIT_MS
+		while (Date.now() < deadline) {
+			const delay =
+				PROP_SETTLEMENT_LOCK_POLL_MIN_MS +
+				Math.floor(
+					Math.random() *
+						(PROP_SETTLEMENT_LOCK_POLL_MAX_MS -
+							PROP_SETTLEMENT_LOCK_POLL_MIN_MS),
+				)
+			await new Promise((resolve) => setTimeout(resolve, delay))
+			const attempt = await this.claimPropSettlementLock(key, token)
+			if (attempt !== 'busy') return attempt
+		}
+		return 'busy'
 	}
 
 	/**
@@ -721,3 +747,15 @@ export default class NotificationService {
 function propSettlementBusy(message: string): Error {
 	return Object.assign(new Error(message), { code: 'PROP_SETTLEMENT_BUSY' })
 }
+
+function propSettlementRowMissing(message: string): Error {
+	return Object.assign(new Error(message), {
+		code: 'PROP_SETTLEMENT_ROW_MISSING',
+	})
+}
+
+/** Long enough for a board's outcomes to queue behind one editor, short enough
+ * to stay far under the worker's one-minute job lock. */
+const PROP_SETTLEMENT_LOCK_WAIT_MS = 20_000
+const PROP_SETTLEMENT_LOCK_POLL_MIN_MS = 120
+const PROP_SETTLEMENT_LOCK_POLL_MAX_MS = 320
