@@ -91,6 +91,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Check configured source with Biome
+        run: pnpm lint:check
+
       - name: Verify generated team registry
         run: node scripts/matchup-assets/generate-registry.mjs --check
 

@@ -18,12 +18,13 @@ Thanks for helping improve Pluto. This repository contains an open-source Discor
 5. Run the checks below before opening a pull request.
 
 ```bash
+pnpm lint:check
 pnpm typecheck
 pnpm test:run
 pnpm build
 ```
 
-Use `pnpm lint` to apply the repository's formatting and lint checks. Do not commit generated output, local environment files, dependency links, or build artifacts.
+`pnpm lint:check` runs Biome's configured formatting, lint, and import checks without modifying files, matching CI. Its scope is the maintained source and scripts included by `biome.json`; it excludes generated files and other configured exclusions. Use `pnpm lint` to apply fixes locally; that command also enables unsafe fixes, so review its diff before committing. Do not commit generated output, local environment files, dependency links, or build artifacts.
 
 ## Pull requests
 
