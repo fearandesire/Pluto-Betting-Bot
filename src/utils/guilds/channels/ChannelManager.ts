@@ -345,6 +345,8 @@ export default class ChannelManager {
 			gametime:
 				'betting' in channel ? new Date(channel.gametime) : undefined,
 			gameStatus: 'betting' in channel ? channel.status : undefined,
+			scheduleChange:
+				'betting' in channel ? channel.schedule_change : undefined,
 			home_team: channel.home_team,
 			homeTeamShortName: new StringUtils().getShortName(
 				channel.home_team,

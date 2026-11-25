@@ -54,18 +54,75 @@ export function scheduleGameLine(
 	return `**${awayTeamEmoji} ${awayTeamShort} *(${game.teamRecords[1]})*** *\`at\`* **${homeTeamEmoji} ${homeTeamShort} *(${game.teamRecords[0]})*** @ *<t:${unixTimestamp}:t>*`
 }
 
+/**
+ * A stored change is shown only while it agrees with the card's own facts: a
+ * move only on a game that has not started, and a status only on a card that
+ * already says the same thing.
+ */
+const agreedScheduleChange = (args: PrepareMatchEmbed) => {
+	const change = args.scheduleChange
+	if (!change) return undefined
+	if (change.status === 'rescheduled' || change.status === 'delayed') {
+		if (args.gameStatus !== 'scheduled') return undefined
+		const tipoff = args.gametime ? new Date(args.gametime).getTime() : NaN
+		return Math.abs(
+			new Date(change.effective_start_time).getTime() - tipoff,
+		) < 1000
+			? change
+			: undefined
+	}
+	return change.status === args.gameStatus ? change : undefined
+}
+
+const SCHEDULE_CHANGE_LABELS: Record<
+	NonNullable<PrepareMatchEmbed['scheduleChange']>['status'],
+	string
+> = {
+	postponed: 'Postponed',
+	cancelled: 'Cancelled',
+	rescheduled: 'Rescheduled',
+	delayed: 'Delayed',
+}
+
+const unixSeconds = (value: Date | string) =>
+	Math.floor(new Date(value).getTime() / 1000)
+
 /** Game-channel match post (surface B3). `teamEmoji` is the favored team's. */
 export function matchPostEmbed(args: PrepareMatchEmbed, teamEmoji: EmojiLike) {
 	const matchVersus = `${args.awayTeamShortName} @ ${args.homeTeamShortName}`
 	const recordsStr = buildRecordsStr(args)
 	const bettingAvailable = args.bettingAvailable ?? Boolean(args.favored)
-	const status =
-		args.gameStatus && args.gameStatus !== 'scheduled'
-			? `\n\n**${{ live: 'Live', final: 'Final', postponed: 'Postponed', cancelled: 'Cancelled' }[args.gameStatus]}**`
+	const change = agreedScheduleChange(args)
+	const label = change
+		? SCHEDULE_CHANGE_LABELS[change.status]
+		: args.gameStatus && args.gameStatus !== 'scheduled'
+			? {
+					live: 'Live',
+					final: 'Final',
+					postponed: 'Postponed',
+					cancelled: 'Cancelled',
+				}[args.gameStatus]
 			: ''
+	const reason =
+		change?.reason && change.reason !== change.status
+			? ` · ${change.reason}`
+			: ''
+	const status = label ? `\n\n**${label}${reason}**` : ''
 	const tipoff =
 		args.gametime && !['postponed', 'cancelled'].includes(args.gameStatus)
-			? `\n\n<t:${Math.floor(new Date(args.gametime).getTime() / 1000)}:F>`
+			? `\n\n<t:${unixSeconds(args.gametime)}:F>`
+			: ''
+	// The line names the time the card would otherwise still show, so it appears
+	// only when that time differs from the one printed above it.
+	const movedFrom =
+		change &&
+		(change.status === 'rescheduled' || change.status === 'delayed') &&
+		args.gametime &&
+		Math.abs(
+			new Date(change.original_start_time).getTime() -
+				new Date(args.gametime).getTime(),
+		) >= 1000
+			? `\n*Was <t:${unixSeconds(change.original_start_time)}:F>*`
 			: ''
 	const favorite =
 		bettingAvailable && args.favored
@@ -79,7 +136,7 @@ export function matchPostEmbed(args: PrepareMatchEmbed, teamEmoji: EmojiLike) {
 			args.favoredTeamClr ?? (embedColors.PlutoRed as ColorResolvable),
 		)
 		.setDescription(
-			`# ${matchVersus}${status}${tipoff}${favorite}${recordsStr}${betting}`,
+			`# ${matchVersus}${status}${tipoff}${movedFrom}${favorite}${recordsStr}${betting}`,
 		)
 		.setFooter({
 			text: 'Pluto | Created by fenixforever',
