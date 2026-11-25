@@ -12,13 +12,23 @@ import {
 	MessageFlags,
 	SeparatorSpacingSize,
 } from 'discord.js'
+import { z } from 'zod'
 import embedColors from '../../../../lib/colorsConfig.js'
 import {
 	buildMyBetsNavCustomId,
 	mybetsNavPageId,
 } from '../../../../lib/interfaces/interaction-handlers/interaction-handlers.interface.js'
+import {
+	BET_REFUND_REASONS,
+	type BetRefundReason,
+} from '../../routes/notifications/notifications.interface.js'
 import type { UserParlay } from '../parlays/ParlayApiWrapper.js'
 import type { BetsByDate, HistoryPage } from './mybets-pagination.service.js'
+
+// The published 3.20.x betslip contract has no refund_reason, so read it alone.
+const REFUND_REASON = z.object({
+	refund_reason: z.enum(BET_REFUND_REASONS).nullish(),
+})
 
 export interface MyBetsDisplayData {
 	userId: string
@@ -69,6 +79,34 @@ export class MyBetsFormatterService {
 				return 0x95a5a6
 			default:
 				return 0xd8b21a
+		}
+	}
+
+	/**
+	 * The result line for a refunded bet. A tied game is still a push; a voided
+	 * one names why. Null for every other result, so a stray reason on a won or
+	 * lost bet cannot rewrite it.
+	 */
+	private refundedResultText(
+		bet: PlacedBetslip,
+		amount: string,
+	): string | null {
+		if (bet.betresult !== PlacedBetslipBetresultEnum.Push) return null
+		const parsed = REFUND_REASON.safeParse(bet)
+		const reason: BetRefundReason | null = parsed.success
+			? (parsed.data.refund_reason ?? null)
+			: null
+		switch (reason) {
+			case 'postponed':
+				return `Game postponed, bet voided (refunded \`${amount}\`)`
+			case 'cancelled':
+				return `Game cancelled, bet voided (refunded \`${amount}\`)`
+			case 'abandoned':
+				return `Game abandoned, bet voided (refunded \`${amount}\`)`
+			case 'void':
+				return `Bet voided (refunded \`${amount}\`)`
+			default:
+				return null
 		}
 	}
 
@@ -143,9 +181,11 @@ export class MyBetsFormatterService {
 	}
 
 	formatHistoryBetLine(bet: PlacedBetslip, guild?: Guild): string {
-		const emoji = this.getBetResultEmoji(bet.betresult)
 		const team = this.formatTeamName(bet.team ?? 'Unknown', guild)
 		const amount = this.formatMoney(bet.amount)
+		const refunded = this.refundedResultText(bet, amount)
+		const emoji =
+			refunded !== null ? '➖' : this.getBetResultEmoji(bet.betresult)
 		const payout = this.formatMoney(bet.payout)
 		const profit = this.formatMoney(bet.profit)
 		const date = this.formatDate(bet.dateofbet)
@@ -159,7 +199,7 @@ export class MyBetsFormatterService {
 				resultText = `Lost \`${amount}\``
 				break
 			case PlacedBetslipBetresultEnum.Push:
-				resultText = `Push (refunded \`${amount}\`)`
+				resultText = refunded ?? `Push (refunded \`${amount}\`)`
 				break
 			default:
 				resultText = 'Pending'
