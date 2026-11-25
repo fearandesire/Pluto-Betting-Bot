@@ -1,27 +1,24 @@
-<!-- Docs-only PR. Select with ?template=docs.md on the compare URL. Keep the headings.
-Lead with the result. Formatting and image rules: https://github.com/charyon/repository-kit/blob/main/docs/pr-bodies.md -->
-<!-- Service buttons appear between the two markers below only when this PR touches that service (kit job or agent).
-Leave the markers; anything you write outside them is never changed. -->
+<!-- Docs-only PR. Select it with ?template=docs.md on the compare URL.
+Rules and the title format: https://github.com/charyon/repository-kit/blob/main/docs/pr-bodies.md -->
 <!-- kit:services:start -->
 <!-- kit:services:end -->
 
-## Outcome (required)
+## Summary
 
-<!-- What a reader can now find or do, in 1-2 sentences. Link the issue or ticket. -->
+<!-- One or two sentences: what a reader can now find or do. Link the issue. -->
 
-## Screenshots (required for visual changes)
+## Verified
 
-<!-- For rendered docs (site pages, diagrams), show the rendered page or link the preview.
-For plain Markdown, write N/A: and the reason. -->
+<!-- The build, link check or preview you looked at, and its result. -->
 
-N/A: Markdown only; GitHub renders it in the diff.
+- 
 
-## Validation (required)
+<details>
+<summary>Evidence</summary>
 
-<!-- Link checks, docs build, or preview you looked at. -->
+- Issue: 
+- Rendered preview: 
 
--
+</details>
 
-## Docs impact
-
-- [ ] updated — (paths)
+<!-- Docs, only when the change touches documentation: paste one ticked line here, none (behavior-preserving), updated (paths), or exception (reason). -->
