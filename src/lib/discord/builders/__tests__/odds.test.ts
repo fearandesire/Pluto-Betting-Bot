@@ -130,4 +130,88 @@ describe('odds builders (classic, pre-migration)', () => {
 			)
 		},
 	)
+
+	it('shows a rescheduled game with its new tipoff and the time it left', () => {
+		const card = matchPostEmbed(
+			{
+				home_team: 'Detroit Pistons',
+				homeTeamShortName: 'Pistons',
+				away_team: 'Boston Celtics',
+				awayTeamShortName: 'Celtics',
+				bettingChanId: '300',
+				header: '',
+				sport: 'nba',
+				gameStatus: 'scheduled',
+				bettingAvailable: false,
+				gametime: new Date('2026-10-22T23:00:00Z'),
+				scheduleChange: {
+					status: 'rescheduled',
+					reason: null,
+					effective_start_time: '2026-10-22T23:00:00.000Z',
+					original_start_time: '2026-10-20T23:00:00.000Z',
+				},
+			},
+			undefined,
+		).toJSON()
+
+		expect(card.description).toBe(
+			'# Celtics @ Pistons\n\n**Rescheduled**\n\n<t:1792710000:F>\n*Was <t:1792537200:F>*',
+		)
+	})
+
+	it('names a stored reason that differs from the status', () => {
+		const gametime = new Date('2026-10-20T23:00:00Z')
+		const card = matchPostEmbed(
+			{
+				home_team: 'Detroit Pistons',
+				homeTeamShortName: 'Pistons',
+				away_team: 'Boston Celtics',
+				awayTeamShortName: 'Celtics',
+				bettingChanId: '300',
+				header: '',
+				sport: 'nba',
+				gameStatus: 'postponed',
+				bettingAvailable: false,
+				gametime,
+				scheduleChange: {
+					status: 'postponed',
+					reason: 'abandoned',
+					effective_start_time: gametime.toISOString(),
+					original_start_time: gametime.toISOString(),
+				},
+			},
+			undefined,
+		).toJSON()
+
+		expect(card.description).toBe(
+			'# Celtics @ Pistons\n\n**Postponed · abandoned**',
+		)
+	})
+
+	it('ignores a stored change the card itself contradicts', () => {
+		const gametime = new Date('2026-10-20T23:00:00Z')
+		const card = matchPostEmbed(
+			{
+				home_team: 'Detroit Pistons',
+				homeTeamShortName: 'Pistons',
+				away_team: 'Boston Celtics',
+				awayTeamShortName: 'Celtics',
+				bettingChanId: '300',
+				header: '',
+				sport: 'nba',
+				gameStatus: 'scheduled',
+				bettingAvailable: false,
+				gametime,
+				scheduleChange: {
+					status: 'postponed',
+					reason: 'postponed',
+					effective_start_time: gametime.toISOString(),
+					original_start_time: gametime.toISOString(),
+				},
+			},
+			undefined,
+		).toJSON()
+
+		expect(card.description).toBe('# Celtics @ Pistons\n\n<t:1792537200:F>')
+	})
 })

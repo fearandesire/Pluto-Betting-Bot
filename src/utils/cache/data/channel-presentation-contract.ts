@@ -48,6 +48,17 @@ export const channelBettingSchema = z.discriminatedUnion('state', [
 	}),
 ])
 
+/** Mirrors Khronos `scheduleChangeSchema`; suspended stages no presentation. */
+export const scheduleChangeSchema = z.object({
+	status: z.enum(['postponed', 'cancelled', 'rescheduled', 'delayed']),
+	reason: z
+		.enum(['postponed', 'cancelled', 'abandoned', 'delayed', 'suspended'])
+		.nullable(),
+	effective_start_time: z.string().datetime({ offset: true }),
+	original_start_time: z.string().datetime({ offset: true }),
+	void_after: z.string().datetime({ offset: true }).optional(),
+})
+
 export const channelAggregatedV2Schema = z
 	.object({
 		id: z.guid().toLowerCase(),
@@ -69,6 +80,7 @@ export const channelAggregatedV2Schema = z
 		schedule_observed_at: z.string().datetime({ offset: true }).optional(),
 		schedule_snapshot_ref: z.string().trim().min(1).optional(),
 		initial_odds_completion: initialOddsCompletionSchema.optional(),
+		schedule_change: scheduleChangeSchema.optional(),
 		metadata: matchMetadataSchema.nullable().optional(),
 	})
 	.superRefine((channel, context) => {
@@ -158,6 +170,7 @@ export const channelPresentationStateSchema = z
 	})
 
 export type ChannelBetting = z.infer<typeof channelBettingSchema>
+export type ScheduleChange = z.infer<typeof scheduleChangeSchema>
 export type ChannelAggregatedV2 = z.infer<typeof channelAggregatedV2Schema>
 export type ChannelCreationEventV2 = z.infer<
 	typeof channelCreationEventV2Schema

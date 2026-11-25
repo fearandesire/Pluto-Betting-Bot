@@ -31,8 +31,12 @@ A game with no card yet and no live price also waits for Khronos's initial odds 
 
 A new tip-off time arrives as a new presentation revision. If the game has no channel yet, the one-hour window is checked against the new time, so a game moved to a later date is deferred until its new window opens. If the channel and its card exist, Pluto edits the card in place with the new time.
 
+A presentation may also carry `schedule_change`: the status Khronos stored for the game, the reason when it has one, and both the effective and the original start time. For `rescheduled` and `delayed`, the card says **Rescheduled** or **Delayed** above the new time and adds the time it left as *Was <t:old:F>*. Pluto prints that detail only while its effective start matches the tip-off on the card, so a lifecycle row Khronos has not caught up with is ignored instead of appearing next to a contradictory time.
+
 ## Postponed and cancelled games
 
-When an existing card's status becomes `postponed` or `cancelled`, the card shows **Postponed** or **Cancelled** and drops the tip-off time. A status change does not delete the channel. Deletion is a separate request. Pluto accepts it either as `DELETE /channels/delete` with the channel names or as a job on `channel-deletion-queue`.
+When an existing card's status becomes `postponed` or `cancelled`, the card shows **Postponed** or **Cancelled** and drops the tip-off time. A `schedule_change` for either status is shown only when it matches the card's own status, and a stored reason that differs from the status is appended, such as **Postponed · abandoned**. A status change does not delete the channel. Deletion is a separate request. Pluto accepts it either as `DELETE /channels/delete` with the channel names or as a job on `channel-deletion-queue`.
 
-Bets on a voided game are refunded by Khronos. When Khronos supplies a refund reason Pluto recognizes, the refund DM names it, such as Game Postponed or Game Cancelled. See [Bet result notifications](bet-result-notifications.md).
+Bets on a voided game are refunded by Khronos. When Khronos supplies a refund reason Pluto recognizes, the refund DM names it, such as Game Postponed or Game Cancelled. See [Bet result notifications](bet-result-notifications.md). `/mybets` shows such a bet as a push, because Khronos stores a voided game as a push and its bets response carries no refund reason.
+
+A suspended game is not a status the card carries: ESPN reports a suspension mid-game, so the presentation says `live`, the card keeps that status, and Khronos keeps `suspended` for its dashboard.

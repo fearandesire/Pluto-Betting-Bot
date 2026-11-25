@@ -1,6 +1,7 @@
 import type { SportsServing } from '@pluto-khronos/types'
 import type { ColorResolvable } from 'discord.js'
 import { z } from 'zod'
+import { scheduleChangeSchema } from './channel-presentation-contract.js'
 
 const channelDeletionJobDataSchema = z.object({
 	channelName: z.string(),
@@ -185,6 +186,7 @@ export const prepareMatchEmbedSchema = z
 		gameStatus: z
 			.enum(['scheduled', 'live', 'final', 'postponed', 'cancelled'])
 			.optional(),
+		scheduleChange: scheduleChangeSchema.optional(),
 		favoredTeamClr: z
 			.custom<ColorResolvable>()
 			.optional()

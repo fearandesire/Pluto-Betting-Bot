@@ -75,6 +75,26 @@ const cases = [
 		...core,
 		initial_odds_completion: { ...completed, completed: false },
 	},
+	{
+		...core,
+		status: 'postponed',
+		schedule_change: {
+			status: 'postponed',
+			reason: 'abandoned',
+			effective_start_time: '2099-10-20T23:00:00Z',
+			original_start_time: '2099-10-18T23:00:00Z',
+			void_after: '2099-10-23T23:00:00Z',
+		},
+	},
+	{
+		...core,
+		schedule_change: {
+			status: 'suspended',
+			reason: 'suspended',
+			effective_start_time: '2099-10-20T23:00:00Z',
+			original_start_time: '2099-10-18T23:00:00Z',
+		},
+	},
 ]
 describe('additive channel contracts', () => {
 	it('accepts independent schedules and rejects invalid identities and market state', () => {
@@ -97,7 +117,20 @@ describe('additive channel contracts', () => {
 			true,
 			false,
 			false,
+			true,
+			false,
 		])
+	})
+	it('keeps a stored schedule change and rejects a status it cannot carry', () => {
+		const change = cases[13] as Record<string, unknown>
+		const parsed = contracts.channelAggregatedV2Schema.parse(change)
+		expect(parsed.schedule_change).toEqual({
+			status: 'postponed',
+			reason: 'abandoned',
+			effective_start_time: '2099-10-20T23:00:00Z',
+			original_start_time: '2099-10-18T23:00:00Z',
+			void_after: '2099-10-23T23:00:00Z',
+		})
 	})
 	it.skipIf(!process.env.PLUTO_SHARED_CONTRACT_MODULE)(
 		'matches the producer shared-package build for the full fixture corpus',
