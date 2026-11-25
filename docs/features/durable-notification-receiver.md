@@ -20,6 +20,7 @@ Durable receivers expect `schema_version: 1`, a UUID `delivery_id`, an RFC 3339 
 
 Supported durable kinds:
 
+- `h2h_result`
 - `parlay_result`
 - `prop_settled`
 - `prop_post`
@@ -30,13 +31,26 @@ A stable payload hash is computed from `schema_version`, `kind`, `occurred_at`, 
 
 All mounted endpoints can return `401` from the app-level API-key middleware when `X-API-Key` or `apiKey` is missing or invalid.
 
+### `POST /notifications/bets/results`
+
+Accepts durable `h2h_result` envelopes, one settled single bet whose `result` is `won` or `lost`.
+
+| Status | Meaning |
+| --- | --- |
+| `202` | Delivery was accepted: stored and queued, or matched to an existing delivery with the same payload, which is returned as is. If that delivery is still `queued` or `retryable_failed`, it is submitted to the queue again under the same job id, which deduplicates the submission. Retries are separate: a delivery job gets up to eight attempts. Response body includes `delivery_id` and `status`. |
+| `409` | The same `delivery_id` already exists for a different payload (`DELIVERY_PAYLOAD_MISMATCH`). |
+| `422` | A request containing `delivery_id` failed delivery envelope validation. Legacy non-envelope validation failures also return `422`. |
+| `503` | Pluto could not persist or enqueue the delivery. |
+
+Legacy `winners`/`losers`/`pushes` batches are still processed synchronously by the route, and on this endpoint refunds use only that shape. See [Bet result notifications](bet-result-notifications.md).
+
 ### `POST /notifications/parlays/results`
 
 Accepts durable `parlay_result` envelopes.
 
 | Status | Meaning |
 | --- | --- |
-| `202` | Delivery was stored and queued. Response body includes `delivery_id` and `status`. |
+| `202` | Delivery was accepted: stored and queued, or matched to an existing delivery with the same payload, which is returned as is. If that delivery is still `queued` or `retryable_failed`, it is submitted to the queue again under the same job id, which deduplicates the submission. Retries are separate: a delivery job gets up to eight attempts. Response body includes `delivery_id` and `status`. |
 | `409` | The same `delivery_id` already exists for a different payload (`DELIVERY_PAYLOAD_MISMATCH`). |
 | `422` | A request containing `delivery_id` failed delivery envelope validation. Legacy non-envelope validation failures also return `422`. |
 | `503` | Pluto could not persist or enqueue the delivery. |
@@ -49,7 +63,7 @@ Accepts durable `prop_settled` envelopes and has a route-local API-key guard in 
 
 | Status | Meaning |
 | --- | --- |
-| `202` | Delivery was stored and queued. Response body includes `delivery_id` and `status`. |
+| `202` | Delivery was accepted: stored and queued, or matched to an existing delivery with the same payload, which is returned as is. If that delivery is still `queued` or `retryable_failed`, it is submitted to the queue again under the same job id, which deduplicates the submission. Retries are separate: a delivery job gets up to eight attempts. Response body includes `delivery_id` and `status`. |
 | `409` | The same `delivery_id` already exists for a different payload (`DELIVERY_PAYLOAD_MISMATCH`). |
 | `422` | A request containing `delivery_id` failed delivery envelope validation. Legacy non-envelope validation failures also return `422`. |
 | `503` | Pluto could not persist or enqueue the delivery. |
@@ -58,11 +72,11 @@ Legacy non-envelope prop settlement payloads are still processed synchronously b
 
 ### `POST /props/daily`
 
-Accepts durable `prop_post` envelopes for daily prop posting.
+Accepts durable `prop_post` envelopes for daily prop posting. Each guild and over/under pair is one destination and one Discord message. A `boards` field is validated when present but does not change that; see [Player props](props.md).
 
 | Status | Meaning |
 | --- | --- |
-| `202` | Delivery was stored and queued. Response body includes `accepted`, `duplicate`, `delivery_id`, `kind`, `status`, and any prop-post `receipts` already present. |
+| `202` | Delivery was accepted: stored and queued, or matched to an existing delivery with the same payload (`duplicate: true`), which is submitted to the queue again under the same job id if it is still `queued` or `retryable_failed`. Response body includes `accepted`, `duplicate`, `delivery_id`, `kind`, `status`, and any prop-post `receipts` already present. |
 | `409` | The same `delivery_id` already exists for a different payload (`DELIVERY_PAYLOAD_MISMATCH`). |
 | `422` | Envelope or daily props payload validation failed, props/guilds were empty, or a guild sport was unsupported. |
 | `503` | Pluto could not persist or enqueue the prop-post delivery. |
@@ -91,6 +105,7 @@ Delivery records and destinations use the same state vocabulary:
 
 Destination ids are derived by kind:
 
+- `h2h_result`: `dm:<user_id>`
 - `parlay_result`: `dm:<user_id>`
 - `prop_settled`: `prop:<guild_id>:<channel_id>:<message_id>`
 - `prop_post`: `prop-post:<guild_id>:<channel_id>:<over_outcome_uuid>:<under_outcome_uuid>`

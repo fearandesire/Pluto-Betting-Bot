@@ -13,7 +13,7 @@
 
 *Virtual sports betting for the world's largest sports communities*
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-7.1_beta-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Discord.js](https://img.shields.io/badge/Discord.js-14-5865F2?style=flat-square&logo=discord&logoColor=white)](https://discord.js.org/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 [![Version](https://img.shields.io/github/package-json/v/fearandesire/Pluto-Betting-Bot?style=flat-square&color=blue&label=Version)](https://github.com/fearandesire/Pluto-Betting-Bot/releases)
@@ -147,8 +147,8 @@ Architecture references:
 
 | Category | Technologies |
 |----------|-------------|
-| **Language** | TypeScript 5.9+ |
-| **Runtime** | Node.js 20+ |
+| **Language** | TypeScript 7.1 (beta) |
+| **Runtime** | Node.js 22+ |
 | **Framework** | Discord.js 14, Sapphire Framework |
 | **Database** | PostgreSQL, Redis |
 | **Queue** | BullMQ |
@@ -165,7 +165,7 @@ Architecture references:
 ### Prerequisites
 
 - Node.js 22.x or higher
-- pnpm 8.x or higher
+- pnpm 10 or higher
 - Redis instance
 - PostgreSQL database
 - Discord Bot Token
@@ -186,15 +186,15 @@ pnpm install
 cp .env.example .env
 # Edit .env with your configuration
 
-> [!TIP]
-> Ensure all required environment variables are configured in `.env` before building. See the documentation for a complete list of configuration options.
-
 # Build the project
 pnpm build
 
 # Start the bot
 pnpm start
 ```
+
+> [!TIP]
+> Ensure all required environment variables are configured in `.env` before starting the bot. The [configuration reference](docs/configuration.md) lists the runtime variables and feature flags.
 
 <details>
 <summary>Development Commands</summary>
@@ -242,15 +242,17 @@ A pre-commit hook aborts the commit if `yalc.lock` is present — prevents accid
 
 ## CI/CD — zero-touch cascade
 
-The Khronos → Pluto → deploy path is automated end to end. Human review is only
-required when something is red.
+The Khronos → Pluto path is automated up to the release batch. A maintainer
+approves each release, and otherwise steps in only when something is red.
 
 | Stage | Workflow | Behavior |
 |-------|----------|----------|
 | Khronos bump | `khronos-client-update.yml` | On a Khronos release, bumps `@pluto-khronos/*`, runs verify, opens the `deps/khronos-update` PR. **Verify green → GitHub auto-merge (squash).** Verify red → stays a draft for a human. |
-| Release | `release.yml` | release-please opens a `release-please--*` PR on `main`. |
-| Auto-merge release | `auto-merge-release-pr.yml` | Enables auto-merge (squash) on `release-please--*` PRs; they merge once `Verify` passes. |
+| Release | `release.yml` | release-please keeps one `release-please--*` PR on `main` that batches releasable merges. Merging it publishes the release. |
 | Deploy | `ci-cd-deployment.yml` | On the published release, builds and pushes the Docker image to GHCR. |
+
+A merge to `main`, including a Khronos bump, is not a deployment. It ships with
+the next release batch once a maintainer approves it.
 
 **Auth (App token).** The git-writing steps in `khronos-client-update.yml` and
 `release.yml` authenticate with a short-lived token minted from the
@@ -273,6 +275,7 @@ Matchup images under `assets/matchupimages/` are not committed to git (`assets/`
 ## Documentation
 
 - [Pluto docs hub](docs/README.md)
+- [Configuration reference](docs/configuration.md)
 - [ADR 001: Durable notification receiver](docs/architecture/decisions/001-durable-notification-receiver.md)
 - [ADR 002: Atomic cache operations](docs/architecture/decisions/002-atomic-cache-operations.md)
 - [Durable notification receiver feature guide](docs/features/durable-notification-receiver.md)
