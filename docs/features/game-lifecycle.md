@@ -1,6 +1,6 @@
 # Game channels and postponed games
 
-Khronos owns every game's schedule and status. Pluto creates a channel for a game, keeps the match card in it current, and reflects status changes Khronos sends. Pluto never decides on its own that a game is postponed, rescheduled or cancelled.
+Pluto takes each game's desired presentation, including its schedule and status, from Khronos. Pluto creates a channel for a game, keeps the match card in it current, and reflects status changes Khronos sends. Pluto never decides on its own that a game is postponed, rescheduled or cancelled.
 
 This page describes the opt-in presentation path, used when Khronos sends channel-creation jobs with `schemaVersion: 2`. Jobs without a `schemaVersion` still go through the older channel manager, which this page does not cover.
 
@@ -17,12 +17,13 @@ For a job that passed its schema, `creationBlock` in `ChannelPresentationService
 | Condition | Result |
 | --- | --- |
 | Status is anything other than `scheduled` | Skipped (`not_scheduled`). A postponed or cancelled game never gets a new channel. |
-| Tip-off does not parse to a valid time | Skipped (`invalid_gametime`). |
 | Tip-off has passed | Skipped (`tipoff_passed`). |
 | Tip-off is more than one hour away | Deferred (`creation_window_not_open`). |
 | No `schedule_provider` or `schedule_snapshot_ref` | Held (`missing_schedule_evidence`). |
 | `schedule_observed_at` is missing or in the future | Held (`invalid_schedule_evidence`). |
 | `schedule_observed_at` is more than six hours old | Held (`stale_schedule_evidence`). |
+
+`creationBlock` also has a defensive `invalid_gametime` skip for a tip-off that does not parse, but the queue schema already rejects such jobs.
 
 A game with no card yet and no live price also waits for Khronos's initial odds completion proof (`awaiting_initial_odds`). That check can hold channel creation as well as the first post. A card that already exists, or a presentation whose betting is already available, does not need the proof. Each decision is logged as a `game_channel.stage` event with the game, guild, stage, outcome and reason.
 

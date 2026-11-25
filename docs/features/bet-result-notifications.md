@@ -6,7 +6,7 @@ Khronos tells Pluto when a single bet settles, and Pluto tries to send the betto
 
 `POST /notifications/bets/results` accepts two shapes.
 
-- A durable delivery envelope with `kind: "h2h_result"` answers `202` once it is accepted: either stored and queued, or matched to an existing delivery with the same payload, which is returned and, while still pending, enqueued again under the same job id. See [Durable notification receiver](durable-notification-receiver.md). This kind carries one bet whose `result` is `won` or `lost`; it has no refund shape.
+- A durable delivery envelope with `kind: "h2h_result"` answers `202` once it is accepted: either stored and queued, or matched to an existing delivery with the same payload, which is returned and, if it is still `queued` or `retryable_failed`, submitted to the queue again under the same job id. See [Durable notification receiver](durable-notification-receiver.md). This kind carries one bet whose `result` is `won` or `lost`; it has no refund shape.
 - A legacy batch with `winners`, `losers` and `pushes` is processed before the route answers. `winners` and `losers` may be null and `pushes` may be omitted. It answers `200` with `{ "success": true }` when processing finishes, `422` when validation fails, and `500` when processing throws. A DM that fails for one user is logged and does not fail the request, so a `200` means Pluto attempted the DMs, not that each one arrived. A body that has a `delivery_id` but is not a valid envelope answers `422` and is not treated as a legacy batch.
 
 On this endpoint, refunds reach users only through the legacy batch, as entries in `pushes`.
