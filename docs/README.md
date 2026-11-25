@@ -4,7 +4,7 @@ This docs tree captures Pluto client architecture notes, operational guides, and
 
 ## Reference
 
-- [Configuration reference](configuration.md): every environment variable and feature flag, with defaults and dependencies
+- [Configuration reference](configuration.md): runtime environment variables and feature flags, with defaults and dependencies
 
 ## Architecture decisions
 
@@ -24,7 +24,6 @@ This docs tree captures Pluto client architecture notes, operational guides, and
 
 ## CI/CD
 
-- [Release process](release-process.md)
 - [Khronos client update workflow](ci-cd-khronos-client-update.md)
 
 ## Cross-service context

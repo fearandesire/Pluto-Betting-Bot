@@ -2,13 +2,17 @@
 
 Khronos owns every game's schedule and status. Pluto creates a channel for a game, keeps the match card in it current, and reflects status changes Khronos sends. Pluto never decides on its own that a game is postponed, rescheduled or cancelled.
 
+This page describes the opt-in presentation path, used when Khronos sends channel-creation jobs with `schemaVersion: 2`. Jobs without a `schemaVersion` still go through the older channel manager, which this page does not cover.
+
 ## Status values
 
-A game presentation carries one of `scheduled`, `live`, `final`, `postponed` or `cancelled`. Khronos sends presentations on the channel-creation queue and on the `channel-presentation-update` queue, each update with a revision number. Pluto applies a revision once, under a per-game lock, and skips a revision it has already applied.
+A game presentation carries one of `scheduled`, `live`, `final`, `postponed` or `cancelled`. Khronos sends presentations on the channel-creation queue and on the `channel-presentation-update` queue, each with a revision number. A presentation that fails the queue schema, for example one with a malformed tip-off time, is rejected before any of the checks below run.
+
+Pluto stores the latest desired revision per guild and game. Each job wakes a worker that applies whatever revision is latest at that moment, so several quick updates can collapse into one Discord edit. The work runs under a per-guild, per-game lock. A revision already acknowledged is skipped. Pluto writes to Discord first and records the revision as applied afterwards, so a failure between the two can repeat the same edit on retry.
 
 ## When a channel is created
 
-On the schema-version-2 creation path, `creationBlock` in `ChannelPresentationService.ts` decides whether a game may get a channel now:
+`creationBlock` in `ChannelPresentationService.ts` decides whether a game may get a channel now:
 
 | Condition | Result |
 | --- | --- |
@@ -20,7 +24,7 @@ On the schema-version-2 creation path, `creationBlock` in `ChannelPresentationSe
 | `schedule_observed_at` is invalid or in the future | Held (`invalid_schedule_evidence`). |
 | `schedule_observed_at` is more than six hours old | Held (`stale_schedule_evidence`). |
 
-A card also waits for Khronos's initial odds completion before it is first posted (`awaiting_initial_odds`). Each decision is logged as a `game_channel.stage` event with the game, guild, stage, outcome and reason.
+A game with no card yet and no live price also waits for Khronos's initial odds completion proof (`awaiting_initial_odds`). That check can hold channel creation as well as the first post. A card that already exists, or a presentation whose betting is already available, does not need the proof. Each decision is logged as a `game_channel.stage` event with the game, guild, stage, outcome and reason.
 
 ## Rescheduled games
 
@@ -28,6 +32,6 @@ A new tip-off time arrives as a new presentation revision. If the game has no ch
 
 ## Postponed and cancelled games
 
-When an existing card's status becomes `postponed` or `cancelled`, the card shows **Postponed** or **Cancelled** and drops the tip-off time. A status change does not delete the channel. Deletion is a separate request from Khronos, either `DELETE /channels/delete` with the channel names or a job on `channel-deletion-queue`.
+When an existing card's status becomes `postponed` or `cancelled`, the card shows **Postponed** or **Cancelled** and drops the tip-off time. A status change does not delete the channel. Deletion is a separate request. Pluto accepts it either as `DELETE /channels/delete` with the channel names or as a job on `channel-deletion-queue`.
 
-Bets on a voided game are refunded by Khronos. The refund DM names the reason, such as Game Postponed or Game Cancelled. See [Bet result notifications](bet-result-notifications.md).
+Bets on a voided game are refunded by Khronos. When Khronos supplies a refund reason Pluto recognizes, the refund DM names it, such as Game Postponed or Game Cancelled. See [Bet result notifications](bet-result-notifications.md).

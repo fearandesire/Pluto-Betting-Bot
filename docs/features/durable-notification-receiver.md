@@ -37,12 +37,12 @@ Accepts durable `h2h_result` envelopes, one settled single bet whose `result` is
 
 | Status | Meaning |
 | --- | --- |
-| `202` | Delivery was stored and queued. Response body includes `delivery_id` and `status`. |
+| `202` | Delivery was accepted: stored and queued, or matched to an existing delivery with the same payload, which is returned without being queued again. Response body includes `delivery_id` and `status`. |
 | `409` | The same `delivery_id` already exists for a different payload (`DELIVERY_PAYLOAD_MISMATCH`). |
 | `422` | A request containing `delivery_id` failed delivery envelope validation. Legacy non-envelope validation failures also return `422`. |
 | `503` | Pluto could not persist or enqueue the delivery. |
 
-Legacy `winners`/`losers`/`pushes` batches are still processed synchronously by the route, and refunds use only that shape. See [Bet result notifications](bet-result-notifications.md).
+Legacy `winners`/`losers`/`pushes` batches are still processed synchronously by the route, and on this endpoint refunds use only that shape. See [Bet result notifications](bet-result-notifications.md).
 
 ### `POST /notifications/parlays/results`
 
@@ -50,7 +50,7 @@ Accepts durable `parlay_result` envelopes.
 
 | Status | Meaning |
 | --- | --- |
-| `202` | Delivery was stored and queued. Response body includes `delivery_id` and `status`. |
+| `202` | Delivery was accepted: stored and queued, or matched to an existing delivery with the same payload, which is returned without being queued again. Response body includes `delivery_id` and `status`. |
 | `409` | The same `delivery_id` already exists for a different payload (`DELIVERY_PAYLOAD_MISMATCH`). |
 | `422` | A request containing `delivery_id` failed delivery envelope validation. Legacy non-envelope validation failures also return `422`. |
 | `503` | Pluto could not persist or enqueue the delivery. |
@@ -63,7 +63,7 @@ Accepts durable `prop_settled` envelopes and has a route-local API-key guard in 
 
 | Status | Meaning |
 | --- | --- |
-| `202` | Delivery was stored and queued. Response body includes `delivery_id` and `status`. |
+| `202` | Delivery was accepted: stored and queued, or matched to an existing delivery with the same payload, which is returned without being queued again. Response body includes `delivery_id` and `status`. |
 | `409` | The same `delivery_id` already exists for a different payload (`DELIVERY_PAYLOAD_MISMATCH`). |
 | `422` | A request containing `delivery_id` failed delivery envelope validation. Legacy non-envelope validation failures also return `422`. |
 | `503` | Pluto could not persist or enqueue the delivery. |
@@ -72,11 +72,11 @@ Legacy non-envelope prop settlement payloads are still processed synchronously b
 
 ### `POST /props/daily`
 
-Accepts durable `prop_post` envelopes for daily prop posting. Each guild and over/under pair is one destination and one Discord message; see [Player props](props.md).
+Accepts durable `prop_post` envelopes for daily prop posting. Each guild and over/under pair is one destination and one Discord message. A `boards` field is validated when present but does not change that; see [Player props](props.md).
 
 | Status | Meaning |
 | --- | --- |
-| `202` | Delivery was stored and queued. Response body includes `accepted`, `duplicate`, `delivery_id`, `kind`, `status`, and any prop-post `receipts` already present. |
+| `202` | Delivery was accepted: stored and queued, or matched to an existing delivery with the same payload (`duplicate: true`). Response body includes `accepted`, `duplicate`, `delivery_id`, `kind`, `status`, and any prop-post `receipts` already present. |
 | `409` | The same `delivery_id` already exists for a different payload (`DELIVERY_PAYLOAD_MISMATCH`). |
 | `422` | Envelope or daily props payload validation failed, props/guilds were empty, or a guild sport was unsupported. |
 | `503` | Pluto could not persist or enqueue the prop-post delivery. |

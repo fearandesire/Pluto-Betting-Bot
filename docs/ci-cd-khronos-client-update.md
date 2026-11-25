@@ -114,13 +114,13 @@ Review checklist:
 ## Shipping a landed bump
 
 A merged bump is on `main` but is not deployed yet. It ships with the next
-release batch, when the open release-please pull request is approved with the
-`release-ready` label and merges. See [Release process](release-process.md).
+release batch once a maintainer approves it.
 
-For a manual bump outside the workflow, move both packages together:
+For a manual bump outside the workflow, move both packages to the same version:
 
 ```bash
-pnpm add @pluto-khronos/api-client@<version> @pluto-khronos/types@<version>
+VERSION=3.20.1
+pnpm add "@pluto-khronos/api-client@$VERSION" "@pluto-khronos/types@$VERSION"
 ```
 
 ## Release-please commit override
@@ -133,7 +133,7 @@ fix(khronos): bump @pluto-khronos/* to <version>
 END_COMMIT_OVERRIDE
 ```
 
-This tells release-please to classify the eventual squash merge as `fix(khronos)` instead of `deps(khronos)`, so the bump counts as a fix: a patch version and a changelog entry under the fixes section.
+This tells release-please to classify the eventual squash merge as `fix(khronos)` instead of `deps(khronos)`, so the bump counts as a fix: it is listed under Bug Fixes in the changelog and contributes a patch bump unless the release batch calls for a larger one.
 
 ## Recovery
 
