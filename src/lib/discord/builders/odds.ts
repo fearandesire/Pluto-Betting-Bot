@@ -112,11 +112,16 @@ export function matchPostEmbed(args: PrepareMatchEmbed, teamEmoji: EmojiLike) {
 		args.gametime && !['postponed', 'cancelled'].includes(args.gameStatus)
 			? `\n\n<t:${unixSeconds(args.gametime)}:F>`
 			: ''
+	// The line names the time the card would otherwise still show, so it appears
+	// only when that time differs from the one printed above it.
 	const movedFrom =
 		change &&
 		(change.status === 'rescheduled' || change.status === 'delayed') &&
-		new Date(change.original_start_time).getTime() !==
-			new Date(change.effective_start_time).getTime()
+		args.gametime &&
+		Math.abs(
+			new Date(change.original_start_time).getTime() -
+				new Date(args.gametime).getTime(),
+		) >= 1000
 			? `\n*Was <t:${unixSeconds(change.original_start_time)}:F>*`
 			: ''
 	const favorite =
