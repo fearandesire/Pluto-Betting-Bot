@@ -4,6 +4,7 @@ import type {
 	BetslipWithAggregationDTO,
 	DoubleDownDto,
 	InitBetslipRespDTO,
+	OddsChangedDetailsDto,
 	PlaceBetDto,
 	PlacedBetslip,
 } from '@pluto-khronos/api-client'
@@ -21,6 +22,7 @@ import {
 	betConfirmedEmbed,
 	betPlacedAnnouncementEmbed,
 	formatMatchDate,
+	oddsChangedNotice,
 	parlayPlacedAnnouncementEmbed,
 	pendingBetslip,
 } from '../../../../lib/discord/builders/betting.js'
@@ -43,6 +45,11 @@ import PatreonFacade from '../../patreon/Patreon-Facade.js'
 import { ApiErrorHandler } from '../error-handling/ApiErrorHandler.js'
 import GuildWrapper from '../guild/guild-wrapper.js'
 import BetslipWrapper from './betslip-wrapper.js'
+import {
+	formatAmericanOdds,
+	parseOddsChanged,
+	StaleDoubleDownError,
+} from './odds-changed.js'
 
 interface InitializeParams {
 	team: string
@@ -204,6 +211,15 @@ export class BetslipManager {
 				)
 			}
 		} catch (error) {
+			const oddsChanged = await parseOddsChanged(error)
+			if (oddsChanged) {
+				return this.repromptOddsChanged(
+					interaction,
+					betDetails,
+					matchInfo,
+					oddsChanged,
+				)
+			}
 			logger.error('Failed to place bet', { error })
 			reportBettingFailure({
 				key: `bet.placement_failed:${error instanceof Error ? error.name : 'unknown'}`,
@@ -222,6 +238,91 @@ export class BetslipManager {
 				},
 			)
 		}
+	}
+
+	/**
+	 * Khronos wrote nothing and kept the pending slip. Store the new price so the
+	 * next confirm sends it, and show the new payout with the same buttons.
+	 */
+	private async repromptOddsChanged(
+		interaction: CommandInteraction | ButtonInteraction,
+		betDetails: PlaceBetDto,
+		matchInfo: IMatchInfoArgs,
+		details: OddsChangedDetailsDto,
+	) {
+		logger.warn('Bet price changed before confirm', {
+			event: 'betslip.price.odds_changed',
+			user_id: betDetails.userid,
+			team: details.team,
+			expected_odds: details.expected_odds,
+			current_odds: details.current_odds,
+		})
+		const placementId = (
+			betDetails as PlaceBetDto & { placement_id?: string }
+		).placement_id
+		try {
+			const cached = await this.betCacheService.getUserBet(
+				betDetails.userid,
+			)
+			if (!placementId || cached?.placement_id !== placementId) {
+				return this.replyStaleQuote(interaction)
+			}
+			const { betAmount, profit, payout } =
+				await MoneyFormatter.formatAmounts({
+					amount: details.amount,
+					profit: details.profit,
+					payout: details.payout,
+				})
+			const chosenTeam = (await findEmoji(details.team)) || details.team
+			const opponent =
+				(await findEmoji(matchInfo.opponent)) ||
+				_.last(matchInfo.opponent.split(' '))!
+			const repriced = await this.betCacheService.repriceIfCurrent(
+				betDetails.userid,
+				placementId,
+				{
+					selected_odds: details.current_odds,
+					profit: details.profit,
+					payout: details.payout,
+				},
+			)
+			if (!repriced) return this.replyStaleQuote(interaction)
+			return await interaction.editReply(
+				pendingBetslip({
+					chosenTeam,
+					opponent,
+					teamLabel: _.upperFirst(details.team),
+					date: formatMatchDate(matchInfo.dateofmatchup),
+					amounts: { betAmount, payout, profit },
+					avatarUrl: interaction.user.displayAvatarURL(),
+					notice: oddsChangedNotice(
+						formatAmericanOdds(details.expected_odds),
+						formatAmericanOdds(details.current_odds),
+					),
+					quotedOdds: details.current_odds,
+				}),
+			)
+		} catch (error) {
+			logger.error('Failed to re-prompt a changed price', {
+				event: 'betslip.price.reprompt_failed',
+				user_id: betDetails.userid,
+				error,
+			})
+			return sendBettingNotice(interaction, {
+				title: 'Your bet was not placed',
+				description:
+					'The odds changed and Pluto could not show the new price. Start the bet again with `/bet`.',
+			})
+		}
+	}
+
+	private async replyStaleQuote(
+		interaction: CommandInteraction | ButtonInteraction,
+	) {
+		const errEmbed = await ErrorEmbeds.internalErr(
+			'The odds changed and this betslip is no longer current. Start the bet again with `/bet`.',
+		)
+		return interaction.editReply({ embeds: [errEmbed], components: [] })
 	}
 
 	private isDefinitiveBusinessFailure(value: unknown): boolean {
@@ -465,15 +566,51 @@ export class BetslipManager {
 				date: formatMatchDate(dateofmatchup, betslip),
 				amounts: { betAmount, payout, profit },
 				avatarUrl: interaction.user.displayAvatarURL(),
+				// The confirm sends the price this prompt shows, not whatever
+				// the cache holds when the click lands, so a click that races a
+				// re-priced slip cannot place the bet at a price never shown.
+				quotedOdds: betslip.selected_odds,
 			}),
 		)
 		return message
 	}
 
-	async doubleDown(userId: string, betId: number): Promise<DoubleDownDto> {
+	/**
+	 * Doubles a bet at the price the user last confirmed (`offered_price`), or at
+	 * `expectedOdds` when they re-confirm after a 409 ODDS_CHANGED.
+	 */
+	async doubleDown(
+		userId: string,
+		betId: number,
+		expectedOdds?: number,
+		expectedStakeCents?: number,
+	): Promise<DoubleDownDto> {
+		if (expectedStakeCents !== undefined) {
+			const stake = await this.betslipInstance.betAmount(betId)
+			if (
+				stake !== undefined &&
+				Math.round(stake * 100) !== expectedStakeCents
+			) {
+				throw new StaleDoubleDownError()
+			}
+		}
+		const odds =
+			expectedOdds ??
+			(await this.betslipInstance.offeredPrice(betId).catch((error) => {
+				logger.warn(
+					'Confirmed price lookup failed; doubling down without it',
+					{
+						event: 'betslip.price.lookup_failed',
+						bet_id: betId,
+						error,
+					},
+				)
+				return undefined
+			}))
 		const response = await this.betslipInstance.doubleDown({
 			userId,
 			betId,
+			...(odds === undefined ? {} : { expectedOdds: odds }),
 		})
 		handleNewUser(response)
 		return response

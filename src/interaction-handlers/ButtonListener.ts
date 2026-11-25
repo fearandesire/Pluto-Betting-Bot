@@ -7,7 +7,10 @@ import type { ButtonInteraction } from 'discord.js'
 import _ from 'lodash'
 import {
 	betCanceledEmbed,
+	doubleDownBtnPrefix,
 	formatPredictionConfirmation,
+	parseDoubleDownButton,
+	parsePlaceConfirm,
 	predictionPlacedEmbed,
 } from '../lib/discord/builders/betting.js'
 import { ApiModules } from '../lib/interfaces/api/api.interface.js'
@@ -18,6 +21,12 @@ import {
 } from '../utils/api/common/bets/BetsCacheService.js'
 import { BetslipManager } from '../utils/api/Khronos/bets/BetslipsManager.js'
 import BetslipWrapper from '../utils/api/Khronos/bets/betslip-wrapper.js'
+import {
+	claimDoubleDown,
+	doubleDownGateError,
+	replyDoubleDownInProgress,
+	runDoubleDown,
+} from '../utils/api/Khronos/bets/doubledown-flow.js'
 import { ApiErrorHandler } from '../utils/api/Khronos/error-handling/ApiErrorHandler.js'
 import PredictionApiWrapper from '../utils/api/Khronos/prediction/predictionApiWrapper.js'
 import PropsApiWrapper from '../utils/api/Khronos/props/props-api-wrapper.js'
@@ -56,6 +65,52 @@ export class ButtonHandler extends InteractionHandler {
 			// ? Extract outcome UUID from button ID (format: prop_{uuid})
 			const outcomeUuid = interaction.customId.replace('prop_', '')
 			return this.some({ outcomeUuid })
+		}
+
+		// ? Double down re-prompt after a moved price
+		if (_.startsWith(interaction.customId, doubleDownBtnPrefix)) {
+			const button = parseDoubleDownButton(interaction.customId)
+			if (button.kind !== 'confirm') {
+				await interaction.deferUpdate()
+				await interaction.editReply({
+					content:
+						button.kind === 'cancel'
+							? 'Double down cancelled.'
+							: 'This prompt has expired. Run `/doubledown` again.',
+					embeds: [],
+					components: [],
+				})
+				return this.none()
+			}
+			const release = claimDoubleDown(interaction.user.id, button.betId)
+			if (!release) {
+				await interaction.deferUpdate()
+				await replyDoubleDownInProgress(interaction)
+				return this.none()
+			}
+			try {
+				await interaction.deferUpdate()
+				// Remove the buttons first so a second click has nothing to press.
+				await interaction.editReply({ components: [] })
+				const blocked = await doubleDownGateError(interaction.user.id)
+				if (blocked) {
+					await interaction.editReply({
+						embeds: [blocked],
+						components: [],
+					})
+					return this.none()
+				}
+				await runDoubleDown(
+					interaction,
+					button.betId,
+					button.expectedOdds,
+					button.stakeCents,
+					release,
+				)
+				return this.none()
+			} finally {
+				release()
+			}
 		}
 
 		// Handle matchup buttons
@@ -112,7 +167,7 @@ export class ButtonHandler extends InteractionHandler {
 			}
 
 			// Confirm button
-			if (interaction.customId === btnIds.matchup_btn_confirm) {
+			if (parsePlaceConfirm(interaction.customId)) {
 				// Defer update to modify the original ephemeral message in-place
 				await interaction.deferUpdate()
 				try {
@@ -176,13 +231,18 @@ export class ButtonHandler extends InteractionHandler {
 		}
 
 		// ? Handle Confirming A Betslip
-		if (interaction.customId === btnIds.matchup_btn_confirm) {
+		const placeConfirm = parsePlaceConfirm(interaction.customId)
+		if (placeConfirm) {
 			if ('betslip' in payload) {
 				const { betslip } = payload
 
 				// Sanitize and place the bet - all data is already in the cached betslip
-				const sanitizedBetslip =
-					await this.betsCacheService.sanitize(betslip)
+				const sanitizedBetslip = {
+					...(await this.betsCacheService.sanitize(betslip)),
+					...(placeConfirm.quotedOdds === undefined
+						? {}
+						: { expected_odds: placeConfirm.quotedOdds }),
+				}
 
 				return new BetslipManager(
 					new BetslipWrapper(),

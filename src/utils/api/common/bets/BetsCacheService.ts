@@ -29,6 +29,11 @@ export interface CachedBetData {
 	dateofmatchup: string
 	profit: number
 	payout: number
+	/**
+	 * American odds behind the shown profit and payout. Sent back as
+	 * `expected_odds` so Khronos can refuse a moved price with 409 ODDS_CHANGED.
+	 */
+	selected_odds?: number
 	guild_id: string
 	market_key: PlaceBetDtoMarketKeyEnum
 	betresult: string
@@ -74,6 +79,7 @@ export class BetsCacheService {
 			dateofmatchup: betData.dateofmatchup,
 			profit: betData.profit ?? 0,
 			payout: betData.payout ?? 0,
+			selected_odds: betData.selected_odds,
 			guild_id: betData.guild_id,
 			market_key: ((betData as any).market_key ??
 				'h2h') as PlaceBetDtoMarketKeyEnum,
@@ -104,6 +110,25 @@ export class BetsCacheService {
 			return currentBet ? (currentBet as CachedBetData) : null
 		}
 		return betData
+	}
+
+	/**
+	 * Writes a new quote into the cached slip only while it is still the slip
+	 * with this placement. Returns false when another slip replaced it.
+	 */
+	async repriceIfCurrent(
+		userId: string,
+		placementId: string,
+		quote: Pick<CachedBetData, 'selected_odds' | 'profit' | 'payout'>,
+	): Promise<boolean> {
+		const existingBet = await this.getUserBet(userId)
+		if (existingBet?.placement_id !== placementId) return false
+		return this.cache.transitionIfValue(
+			this.cachePrefix + userId,
+			existingBet,
+			{ ...existingBet, ...quote },
+			this.BET_CACHE_TTL,
+		)
 	}
 
 	/**
@@ -160,6 +185,7 @@ export class BetsCacheService {
 			matchup_id: betData.matchup_id,
 			guild_id: betData.guild_id,
 			market_key: betData.market_key,
+			expected_odds: betData.selected_odds,
 		}
 	}
 

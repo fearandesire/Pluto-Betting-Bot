@@ -68,6 +68,28 @@ export function formatMatchDate(
 	return dateInput || 'TBD'
 }
 
+/**
+ * Place confirm IDs: `matchup_btn_confirm` for a fresh slip, and
+ * `matchup_btn_confirm.<odds>` for a re-prompt, so the click sends the price
+ * the user saw rather than whatever the cache holds.
+ */
+const PLACE_CONFIRM_ID = 'matchup_btn_confirm'
+
+export function placeConfirmId(quotedOdds?: number) {
+	return quotedOdds === undefined
+		? PLACE_CONFIRM_ID
+		: `${PLACE_CONFIRM_ID}.${quotedOdds}`
+}
+
+/** Null when the ID is not a place confirm. */
+export function parsePlaceConfirm(
+	customId: string,
+): { quotedOdds?: number } | null {
+	if (customId === PLACE_CONFIRM_ID) return {}
+	const match = /^matchup_btn_confirm\.(-?\d+)$/.exec(customId)
+	return match ? { quotedOdds: Number(match[1]) } : null
+}
+
 /** A1: ephemeral "Pending Betslip" with confirm/cancel buttons. */
 export function pendingBetslip(d: {
 	chosenTeam: string
@@ -76,17 +98,22 @@ export function pendingBetslip(d: {
 	date: string
 	amounts: BetAmounts
 	avatarUrl: string
+	/** Shown above the matchup, e.g. after Khronos refused a moved price. */
+	notice?: string
+	/** The price this prompt shows; its confirm sends exactly this price. */
+	quotedOdds?: number
 }) {
+	const notice = d.notice ? `${d.notice}\n` : ''
 	const embed = new EmbedBuilder()
 		.setTitle('Pending Betslip')
 		.setDescription(
-			`## ${d.chosenTeam} *vs.* ${d.opponent}\n**${d.teamLabel}** | **${d.date}**\n${formatBetStr(d.amounts)}\n*Confirm your bet via the buttons below*\n*${ODDS_CHANGE_NOTICE}*`,
+			`${notice}## ${d.chosenTeam} *vs.* ${d.opponent}\n**${d.teamLabel}** | **${d.date}**\n${formatBetStr(d.amounts)}\n*Confirm your bet via the buttons below*\n*${ODDS_CHANGE_NOTICE}*`,
 		)
 		.setThumbnail(d.avatarUrl)
 		.setColor(embedColors.PlutoYellow)
 	const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
 		new ButtonBuilder()
-			.setCustomId('matchup_btn_confirm')
+			.setCustomId(placeConfirmId(d.quotedOdds))
 			.setLabel('Confirm Bet')
 			.setStyle(ButtonStyle.Success),
 		new ButtonBuilder()
@@ -187,6 +214,87 @@ export function doubleDownEmbed(d: {
 		)
 		.setColor(embedColors.success)
 		.setThumbnail(d.avatarUrl)
+}
+
+/** Double down success, replacing any re-prompt buttons. */
+export function doubleDownResult(d: Parameters<typeof doubleDownEmbed>[0]) {
+	return { embeds: [doubleDownEmbed(d)], components: [] }
+}
+
+/** The price moved since the user saw it; the caller asks them to confirm again. */
+export function oddsChangedNotice(previous: string, current: string) {
+	return `**The odds changed from ${previous} to ${current}.** Review the new payout and confirm again.`
+}
+
+/**
+ * Versioned double-down re-prompt IDs:
+ * `dd.v1.confirm.<betId>.<odds>.<stakeCents>` and
+ * `dd.v1.cancel`. An unknown version parses as `stale`.
+ */
+export const doubleDownBtnPrefix = 'dd.' as const
+export const doubleDownCancelId = 'dd.v1.cancel' as const
+
+export function doubleDownConfirmId(
+	betId: number,
+	expectedOdds: number,
+	stakeCents: number,
+) {
+	return `dd.v1.confirm.${betId}.${expectedOdds}.${stakeCents}`
+}
+
+export type DoubleDownButton =
+	| {
+			kind: 'confirm'
+			betId: number
+			expectedOdds: number
+			stakeCents: number
+	  }
+	| { kind: 'cancel' }
+	| { kind: 'stale' }
+
+export function parseDoubleDownButton(customId: string): DoubleDownButton {
+	if (customId === doubleDownCancelId) return { kind: 'cancel' }
+	const match = /^dd\.v1\.confirm\.(\d+)\.(-?\d+)\.(\d+)$/.exec(customId)
+	if (!match) return { kind: 'stale' }
+	return {
+		kind: 'confirm',
+		betId: Number(match[1]),
+		expectedOdds: Number(match[2]),
+		stakeCents: Number(match[3]),
+	}
+}
+
+/** Double down re-prompt after Khronos refused a moved price. Amounts are the whole bet after confirming. */
+export function doubleDownReprompt(d: {
+	betId: number
+	notice: string
+	amount: string
+	payout: string
+	profit: string
+	currentOdds: number
+	stakeCents: number
+	avatarUrl: string
+}) {
+	const embed = new EmbedBuilder()
+		.setTitle('Confirm Double Down')
+		.setDescription(
+			`${d.notice}\n\n**Bet:** \`${d.amount}\` | **Payout:** \`${d.payout}\`\n**Profit:** \`${d.profit}\``,
+		)
+		.setColor(embedColors.PlutoYellow)
+		.setThumbnail(d.avatarUrl)
+	const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+		new ButtonBuilder()
+			.setCustomId(
+				doubleDownConfirmId(d.betId, d.currentOdds, d.stakeCents),
+			)
+			.setLabel('Confirm Double Down')
+			.setStyle(ButtonStyle.Success),
+		new ButtonBuilder()
+			.setCustomId(doubleDownCancelId)
+			.setLabel('Cancel')
+			.setStyle(ButtonStyle.Danger),
+	)
+	return { embeds: [embed], components: [row] }
 }
 
 /** C3: prediction placed confirmation. */
