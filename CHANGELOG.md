@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.20.3](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.20.2...v4.20.3) (2026-11-25)
+
+
+### Bug Fixes
+
+* **khronos:** bump @pluto-khronos/* to 3.20.1 ([7c64c4f](https://github.com/fearandesire/Pluto-Betting-Bot/commit/7c64c4fe6ec61333a6f0b8eabb5bbd16ce3c2da0))
+* **notifications:** name voided-game refunds instead of calling them ties ([#818](https://github.com/fearandesire/Pluto-Betting-Bot/issues/818)) ([4fe1e21](https://github.com/fearandesire/Pluto-Betting-Bot/commit/4fe1e21c297a495eb523cdce5debdb5983de9e4c))
+
 ## [4.20.2](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.20.1...v4.20.2) (2026-11-18)
 
 
