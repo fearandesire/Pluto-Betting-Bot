@@ -78,6 +78,10 @@ New and changed Discord messages use Components V2. The full guide is `docs/comp
 
 `REVIEW.md` maps paths to their blast radius and lists the checks for each area. Read it before you review a pull request or change a hot path.
 
+## Verification before a pull request
+
+Run `node scripts/verify.mjs` on the final source before saying a task is finished and before opening or updating a pull request. It builds the app and drives its compiled dashboard through the checks in `scripts/verification/config.json`. Read the resulting `.verification/<run>/manifest.json`: every required check must pass, the source fingerprint must be unchanged, and skipped external journeys must be disclosed. Run it again after the final commit so the manifest records that SHA. `.agents/skills/verify/SKILL.md` lists the journeys and their limits.
+
 ## Pull requests
 
 - Branch from `main`. Pull request titles follow Conventional Commits, and `.github/workflows/pr-title.yml` lists the allowed types.
