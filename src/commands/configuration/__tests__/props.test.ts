@@ -431,7 +431,7 @@ describe('/props', () => {
 		it('shows the strategy and post time from the settings row', async () => {
 			mockGetSettings.mockResolvedValue({
 				guild_id: GUILD_ID,
-				strategy: 'smart',
+				strategy: 'default',
 				enabled: true,
 				post_time: '17:30',
 			})
@@ -441,7 +441,47 @@ describe('/props', () => {
 
 			expect(mockGetSettings).toHaveBeenCalledWith(GUILD_ID)
 			const text = replyText(interaction)
-			expect(text).toContain('**Strategy:** Smart')
+			expect(text).toContain('Daily props: enabled')
+			expect(text).toContain('**Strategy:** Default')
+			expect(text).toContain('**Post time:** 17:30 UTC')
+		})
+
+		it('says a saved smart strategy posts as Default while smart is gated', async () => {
+			mockGetSettings.mockResolvedValue({
+				guild_id: GUILD_ID,
+				strategy: 'smart',
+				enabled: true,
+				post_time: null,
+			})
+			const interaction = makeInteraction()
+
+			await command.handleStatus(interaction as never)
+
+			const text = replyText(interaction)
+			expect(text).toContain('**Strategy:** Smart (saved;')
+			expect(text).toContain('posts as Default while')
+			expect(text).toContain('**Post time:** Shared schedule')
+		})
+
+		it('reports paused when the settings row turns the autopost off', async () => {
+			mockGetSettings.mockResolvedValue({
+				guild_id: GUILD_ID,
+				strategy: 'smart',
+				enabled: false,
+				post_time: '17:30',
+			})
+			const interaction = makeInteraction()
+
+			await command.handleStatus(interaction as never)
+
+			expectSingleV2Reply(interaction)
+			const text = replyText(interaction)
+			expect(text).toContain('Daily props: paused')
+			expect(text).not.toContain('Daily props: enabled')
+			expect(text).toContain(
+				'props autopost settings turn posting off, even though /props is on',
+			)
+			expect(text).toContain(`**Channel:** <#${CHANNEL_ID}>`)
 			expect(text).toContain('**Post time:** 17:30 UTC')
 		})
 
@@ -453,7 +493,7 @@ describe('/props', () => {
 
 			const text = replyText(interaction)
 			expect(text).toContain('**Strategy:** Default')
-			expect(text).toContain('**Post time:** Default schedule')
+			expect(text).toContain('**Post time:** Shared schedule')
 		})
 
 		it('keeps the existing status and notes settings are unavailable when the call fails', async () => {
@@ -501,6 +541,17 @@ describe('/props', () => {
 				)
 			},
 		)
+
+		it('does not promise smart ranking while smart is gated', async () => {
+			const interaction = strategyInteraction('smart')
+
+			await command.handleStrategy(interaction as never)
+
+			const text = replyText(interaction)
+			expect(text).toContain('Smart is saved for this server')
+			expect(text).toContain('posts as the Default strategy while')
+			expect(text).not.toContain('will use the **Smart** strategy')
+		})
 
 		it.each([
 			['rejected', 'not available for this server yet'],

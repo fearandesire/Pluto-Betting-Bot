@@ -14,7 +14,7 @@
 				},
 				{
 					"type": 10,
-					"content": "Daily props will use the **Smart** strategy."
+					"content": "Smart is saved for this server. It posts as the Default strategy while AI props are off or this server is not on the AI list."
 				},
 				{
 					"type": 14,

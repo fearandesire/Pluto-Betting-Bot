@@ -10,10 +10,10 @@ Khronos selects the day's player props and asks Pluto to post them. Pluto posts 
 | --- | --- |
 | `/props enable channel:<text channel>` | Checks that Pluto can View Channel, Send Messages, Embed Links and Read Message History in the channel, turns posting off, saves the channel as the guild's predictions channel, then sets `PROPS_ENABLED` to true. Posting stays off until the channel save succeeds. Within one Pluto process, enable and disable writes for a guild run one at a time. |
 | `/props disable` | Sets `PROPS_ENABLED` to false. |
-| `/props status` | Shows the guild's props toggle: not set up (no predictions channel), enabled or disabled. Khronos makes its own scheduling decision, so enabled does not guarantee a post. It also shows the channel, the strategy, and the daily post time. A guild without a settings row shows the `default` strategy and the default schedule. |
-| `/props strategy strategy:<default\|smart>` | Saves the selection strategy in Khronos. A `400` from Khronos answers "That strategy is not available for this server yet", a `401` or `403` says Pluto is not allowed to change settings, and a timeout says the save could not be confirmed and points to `/props status`. |
+| `/props status` | Shows the effective posting state: not set up (no predictions channel), enabled, disabled, or paused when Khronos' props autopost settings turn this server's posting off even though `/props` is on. It also shows the channel, the saved strategy, and the post time: `HH:MM UTC` for a server with its own daily time, otherwise the shared schedule. A guild without a settings row shows the `default` strategy and the shared schedule. |
+| `/props strategy strategy:<default\|smart>` | Saves the selection strategy in Khronos. Saving `smart` replies that it is saved and posts as `default` while AI props are off or the server is not on the AI list. A `400` from Khronos answers "That strategy is not available for this server yet", a `401` or `403` says Pluto is not allowed to change settings, and a timeout says the save could not be confirmed and points to `/props status`. |
 
-Whether `smart` actually changes selection, and which guilds may use it, is decided in Khronos. The daily post time is stored in Khronos as `HH:MM` UTC; Pluto displays it but has no command to change it.
+Whether `smart` actually changes selection, and which guilds may use it, is decided in Khronos. `GET /props/settings` returns the saved strategy, the server's autopost toggle and its post time, but no effective strategy, so Pluto reports the saved value with the fallback condition instead of guessing which one runs. The daily post time is stored in Khronos as `HH:MM` UTC; Pluto displays it but has no command to change it.
 
 ## Daily posting
 

@@ -22,8 +22,25 @@ const fixtures: ClusterFixtures = {
 					propsStatusPayload(
 						{ kind: 'enabled', channelId: FIXED.channelId },
 						{
-							kind: 'loaded',
+							kind: 'row',
 							strategy: 'smart',
+							enabled: true,
+							postTime: '17:30',
+						},
+					),
+				),
+		},
+		{
+			id: 'S1b',
+			name: '/props status paused by autopost settings',
+			after: () =>
+				withoutFiles(
+					propsStatusPayload(
+						{ kind: 'enabled', channelId: FIXED.channelId },
+						{
+							kind: 'row',
+							strategy: 'smart',
+							enabled: false,
 							postTime: '17:30',
 						},
 					),
