@@ -28,8 +28,9 @@ export const messageToMsg = winston.format((info) => {
 
 /**
  * Fills `component: 'bot'` only when neither the call site nor a child
- * logger set one. It cannot live on `defaultMeta`: Winston assigns
- * `defaultMeta` over the merged child and per-call meta, so it would win.
+ * logger set one. It cannot live on `defaultMeta`: Winston copies
+ * `defaultMeta` onto the record in the level method, before the child's
+ * `write()` merges its own fields, so the record's `bot` shadowed them.
  */
 const defaultComponent = winston.format((info) => {
 	info.component ??= 'bot'
