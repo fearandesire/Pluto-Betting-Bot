@@ -1,5 +1,18 @@
 # Changelog
 
+## [4.21.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.20.3...v4.21.0) (2026-11-25)
+
+
+### Features
+
+* **channels:** show a game's stored schedule change on its card ([#823](https://github.com/fearandesire/Pluto-Betting-Bot/issues/823)) ([3c1a75d](https://github.com/fearandesire/Pluto-Betting-Bot/commit/3c1a75d23dc030c9b354d86df2cbe7689796393b))
+
+
+### Bug Fixes
+
+* **mybets:** show a voided game as voided with its reason ([#825](https://github.com/fearandesire/Pluto-Betting-Bot/issues/825)) ([68407a9](https://github.com/fearandesire/Pluto-Betting-Bot/commit/68407a9c4b97db2f8ab56ade3343d0a63801cb27))
+* **props:** report the effective posting state and smart's fallback ([#826](https://github.com/fearandesire/Pluto-Betting-Bot/issues/826)) ([8b93f4c](https://github.com/fearandesire/Pluto-Betting-Bot/commit/8b93f4ca49592bebc7c9a8671f352a66c9318c9c))
+
 ## [4.20.3](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.20.2...v4.20.3) (2026-11-25)
 
 
