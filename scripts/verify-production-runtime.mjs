@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { readdir, readFile, stat } from 'node:fs/promises'
+import { readdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { createServer } from 'node:http'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -18,7 +18,12 @@ if (!process.execArgv.includes('--experimental-vm-modules')) {
 		],
 		{
 			stdio: 'inherit',
-			env: { PATH: process.env.PATH, NODE_ENV: 'production' },
+			env: {
+				PATH: process.env.PATH,
+				NODE_ENV: 'production',
+				VERIFY_RECEIPT_PATH: process.env.VERIFY_RECEIPT_PATH,
+				VERIFY_SOURCE_JSON: process.env.VERIFY_SOURCE_JSON,
+			},
 			timeout: 60000,
 		},
 	)
@@ -225,4 +230,36 @@ try {
 } finally {
 	server.closeAllConnections()
 	await new Promise((resolve) => server.close(resolve))
+}
+
+// Emit only after every assertion and server cleanup succeeds. The coordinator
+// supplies this run's source stamp and rejects missing or stale receipts.
+if (process.env.VERIFY_RECEIPT_PATH) {
+	await writeFile(
+		process.env.VERIFY_RECEIPT_PATH,
+		JSON.stringify(
+			{
+				schemaVersion: 1,
+				status: 'passed',
+				source: JSON.parse(process.env.VERIFY_SOURCE_JSON),
+				completedAt: new Date().toISOString(),
+				scope: 'Compiled Koa/BullBoard with isolated configuration and synthetic queue I/O',
+				checks: {
+					unauthenticatedStatus: 401,
+					authenticatedHtmlStatus: 200,
+					authenticatedQueueStatus: 200,
+					queues: [...queues.keys()].sort(),
+					queueReads: reads,
+					serverClosed: true,
+				},
+				skipped: [
+					'Live Discord betting',
+					'Real queue I/O',
+					'Khronos settlement',
+				],
+			},
+			null,
+			2,
+		) + '\n',
+	)
 }

@@ -26,3 +26,5 @@ assets/*
 !assets/matchupimages/
 !assets/matchupimages/**
 generated/
+
+.verification
