@@ -1,5 +1,20 @@
 # Changelog
 
+## [4.22.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.21.0...v4.22.0) (2026-11-25)
+
+
+### Features
+
+* **props:** add a V2 board and row-only settlement edits ([#802](https://github.com/fearandesire/Pluto-Betting-Bot/issues/802)) ([e3e63dd](https://github.com/fearandesire/Pluto-Betting-Bot/commit/e3e63dddbff2eb099d95ac87307792c086aa29f5))
+* **props:** post per-game boards and a Browse more view ([#803](https://github.com/fearandesire/Pluto-Betting-Bot/issues/803)) ([4d373ed](https://github.com/fearandesire/Pluto-Betting-Bot/commit/4d373eda409ab5d29522629c4fc962dc6f517935))
+
+
+### Bug Fixes
+
+* **betting:** send the quoted price on place and doubledown ([#797](https://github.com/fearandesire/Pluto-Betting-Bot/issues/797)) ([836f247](https://github.com/fearandesire/Pluto-Betting-Bot/commit/836f24731931a8fe9ba14ba8b1247fecaf62e990))
+* **khronos:** bump @pluto-khronos/* to 3.21.0 ([97e6f7d](https://github.com/fearandesire/Pluto-Betting-Bot/commit/97e6f7d1d3ea4264a1db78e0c8f45bd10e32af8a))
+* **logging:** let child-logger component override the default ([#778](https://github.com/fearandesire/Pluto-Betting-Bot/issues/778)) ([e41e3ef](https://github.com/fearandesire/Pluto-Betting-Bot/commit/e41e3ef8a5feef5576c6a7b611372f42be2e5698))
+
 ## [4.21.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.20.3...v4.21.0) (2026-11-25)
 
 
