@@ -45,7 +45,8 @@ PR state depends on the verify outcome:
 - Verify failed: open or update the PR as a **draft**. Draft PRs are never
   auto-merged — a human fixes the consumers in the branch, marks it ready, and
   merges manually.
-- Verify green: open or update the PR and **enable GitHub auto-merge (squash)**.
+- Verify green: open or update the PR, mark it ready if an earlier failed
+  dispatch left it as a draft, and **enable GitHub auto-merge (squash)**.
   The PR merges itself once the required checks pass (`Verify` and
   `Validate PR title`). This is the zero-touch happy path — no human click.
 
@@ -110,6 +111,18 @@ Review checklist:
    to a draft before the checks finish. Only a **draft** (verify-failed) PR
    requires a manual merge after you fix the consumers.
 
+## Shipping a landed bump
+
+A merged bump is on `main` but is not deployed yet. It ships with the next
+release batch, when the open release-please pull request is approved with the
+`release-ready` label and merges. See [Release process](release-process.md).
+
+For a manual bump outside the workflow, move both packages together:
+
+```bash
+pnpm add @pluto-khronos/api-client@<version> @pluto-khronos/types@<version>
+```
+
 ## Release-please commit override
 
 The generated PR body includes:
@@ -120,7 +133,7 @@ fix(khronos): bump @pluto-khronos/* to <version>
 END_COMMIT_OVERRIDE
 ```
 
-This tells release-please to classify the eventual squash merge as `fix(khronos)` instead of `deps(khronos)`, producing a patch release and a changelog entry under fixes/updates.
+This tells release-please to classify the eventual squash merge as `fix(khronos)` instead of `deps(khronos)`, so the bump counts as a fix: a patch version and a changelog entry under the fixes section.
 
 ## Recovery
 
