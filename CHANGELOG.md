@@ -1,5 +1,18 @@
 # Changelog
 
+## [4.23.0](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.22.1...v4.23.0) (2026-11-26)
+
+
+### Features
+
+* **props:** announce a corrected prop result in its own message ([#834](https://github.com/fearandesire/Pluto-Betting-Bot/issues/834)) ([1f4ef47](https://github.com/fearandesire/Pluto-Betting-Bot/commit/1f4ef4790d95401c4ce9b1a8589de8d189023e6a))
+* **props:** team emojis and game lines on props boards ([#833](https://github.com/fearandesire/Pluto-Betting-Bot/issues/833)) ([15eb71a](https://github.com/fearandesire/Pluto-Betting-Bot/commit/15eb71ac2502d7ef748371caa0971fb354e3f082))
+
+
+### Bug Fixes
+
+* **khronos:** bump @pluto-khronos/* to 3.24.0 ([4f707fb](https://github.com/fearandesire/Pluto-Betting-Bot/commit/4f707fbad4f730c51e47133bdd3732a28d52aac7))
+
 ## [4.22.1](https://github.com/fearandesire/Pluto-Betting-Bot/compare/v4.22.0...v4.22.1) (2026-11-26)
 
 
