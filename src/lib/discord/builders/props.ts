@@ -24,6 +24,7 @@ import {
 } from '../../../utils/predictions/streak-display.js'
 import embedColors from '../../colorsConfig.js'
 import { LEADERBOARD_SCORING } from '../../scoring-constants.js'
+import { accent, text, type V2MessagePayload, v2Payload } from '../v2/kit.js'
 
 // ---------------------------------------------------------------- C1 prop post
 
@@ -165,32 +166,30 @@ const PROP_RESULT_ICONS: Record<PropSettledNotification['result'], string> = {
 
 /**
  * Correction notice (surface C2b). A corrected prop result is announced as its
- * own message that names the result it replaces, so a reader who saw the first
- * grade learns it changed instead of the board silently rewriting itself.
+ * own Components V2 message that names the result it replaces, so a reader who
+ * saw the first grade learns it changed instead of the board silently rewriting
+ * itself.
  */
-export function propCorrectionEmbed(
+export function propCorrectionPayload(
 	data: PropSettledNotification,
-): EmbedBuilder {
+): V2MessagePayload {
 	const superseded = data.supersedes_result
-	const descriptionLines = [
-		`### **${data.description}**${formatPropPoint(data)}`,
+	const lines = [
+		'## 📝 Corrected prop result',
+		`**${data.description}**${formatPropPoint(data)}`,
 		`**Market:** ${MarketKeyTranslations[data.market_key] || data.market_key}`,
 	]
 	if (superseded) {
-		descriptionLines.push(
-			`Previously graded **${PROP_RESULT_LABELS[superseded]} ${PROP_RESULT_ICONS[superseded]}**.`,
+		lines.push(
+			`-# Previously graded **${PROP_RESULT_LABELS[superseded]} ${PROP_RESULT_ICONS[superseded]}**`,
 		)
 	}
+	lines.push('', formatPropResult(data), `📊 ${formatPropTallies(data)}`)
 
-	return new EmbedBuilder()
-		.setTitle('📝 Corrected prop result')
-		.setDescription(descriptionLines.join('\n'))
-		.addFields(
-			{ name: '🎯 Corrected result', value: formatPropResult(data) },
-			{ name: '📊 Prediction results', value: formatPropTallies(data) },
-		)
-		.setColor(embedColors.warning)
-		.setTimestamp()
+	return v2Payload({
+		blocks: [text(lines.join('\n'))],
+		accent: accent('warning'),
+	})
 }
 
 function formatPropPoint(data: PropSettledNotification): string {
