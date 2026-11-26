@@ -111,6 +111,9 @@ const fallbackPropSettledNotificationSchema = z.object({
 			}),
 		)
 		.min(1),
+	correction: z.literal(true).optional(),
+	supersedes_result: z.enum(['won', 'lost', 'push', 'void']).optional(),
+	revision: z.number().int().positive().optional(),
 })
 
 const fallbackParlayLegNotificationSchema = z.object({
