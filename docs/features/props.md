@@ -23,7 +23,7 @@ This build posts one message per pair. When a payload carries a `boards` field, 
 
 When a tracked posted prop settles, Khronos sends a `prop_settled` envelope to `POST /notifications/props/settled` and Pluto edits the referenced messages. Khronos sends nothing for outcomes it has no tracked post for.
 
-A corrected result (`correction: true`, `supersedes_result`, `revision`) re-grades the post like any settlement and also posts a correction notice in the same channel, as a reply to the settled message, that names the result it replaces. The notice carries the corrected result and the predictor tally, and it is idempotent per revision: its nonce is derived from the outcome, the revision and the message it replies to. A failed notice fails the delivery so the queue retries it; the re-grade edit that already landed is not repeated twice over.
+A corrected result (`correction: true`, `supersedes_result`, `revision`) re-grades the post like any settlement and also posts a correction notice in the same channel, as a reply to the settled message, that names the result it replaces. The notice carries the corrected result and the predictor tally. It posts once per outcome, revision and message: a Redis marker claimed before the send and released if the send fails keeps a retry from posting it twice, and Discord's nonce covers the same window in the message itself. A pair whose over and under outcomes are both corrected gets one notice per corrected outcome. When the notice cannot be sent the queued delivery fails and retries; the legacy non-envelope request path logs and returns, so its notice is not retried.
 
 ## Staff commands
 

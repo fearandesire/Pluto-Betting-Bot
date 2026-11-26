@@ -435,8 +435,9 @@ export default class NotificationService {
 	 * message is still edited above: the board has to show the grade that counts.
 	 *
 	 * The post follows the edit because a failed post must fail the delivery and
-	 * retry, and repeating the edit is harmless. The nonce keeps a retry of the
-	 * same revision from posting the notice twice.
+	 * retry, and repeating the edit is harmless. Discord's nonce only dedupes for
+	 * a few minutes, shorter than the queue's retry backoff, so the durable
+	 * marker below is what keeps a retry of one revision from posting twice.
 	 */
 	private async announcePropCorrection(
 		channel: SendableChannels,
@@ -445,17 +446,34 @@ export default class NotificationService {
 	): Promise<void> {
 		if (data.correction !== true) return
 		const revision = data.revision ?? 0
-		const nonce = createHash('sha256')
+		const marker = createHash('sha256')
 			.update(`${data.outcome_uuid}:${revision}:${original.id}`)
 			.digest('hex')
 			.slice(0, 18)
-		const posted = await channel.send({
-			embeds: [propCorrectionEmbed(data)],
-			reply: { messageReference: original.id, failIfNotExists: false },
-			nonce: `pcorr:${nonce}`,
-			enforceNonce: true,
-			allowedMentions: { repliedUser: false },
-		})
+		const markerKey = `props:correction-notice:${marker}`
+		const claimed = await this.claimCorrectionNotice(markerKey)
+		if (claimed === 'announced') return
+		if (claimed === 'unavailable') {
+			throw propSettlementBusy(
+				'Prop correction notice store is unavailable; retry later',
+			)
+		}
+		let posted: Message
+		try {
+			posted = await channel.send({
+				embeds: [propCorrectionEmbed(data)],
+				reply: {
+					messageReference: original.id,
+					failIfNotExists: false,
+				},
+				nonce: `pcorr:${marker}`,
+				enforceNonce: true,
+				allowedMentions: { repliedUser: false },
+			})
+		} catch (error) {
+			await this.releaseCorrectionNotice(markerKey)
+			throw error
+		}
 		logger.info({
 			method: this.announcePropCorrection.name,
 			event: 'prop.notification.correction_posted',
@@ -469,6 +487,53 @@ export default class NotificationService {
 			original_message_id: original.id,
 			correction_message_id: posted.id,
 		})
+	}
+
+	/**
+	 * `announced` means another attempt at this revision already posted its
+	 * notice; `unavailable` keeps the delivery retryable instead of risking a
+	 * duplicate.
+	 */
+	private async claimCorrectionNotice(
+		key: string,
+	): Promise<'acquired' | 'announced' | 'unavailable'> {
+		try {
+			const { default: redisCache } = await import(
+				'../../../cache/redis-instance.js'
+			)
+			const result = await redisCache.set(
+				key,
+				Date.now().toString(),
+				'EX',
+				CORRECTION_NOTICE_MARKER_TTL_SECONDS,
+				'NX',
+			)
+			return result === 'OK' ? 'acquired' : 'announced'
+		} catch (error) {
+			logger.warn({
+				method: this.claimCorrectionNotice.name,
+				event: 'prop.correction.marker_unavailable',
+				key,
+				error: error instanceof Error ? error.message : String(error),
+			})
+			return 'unavailable'
+		}
+	}
+
+	private async releaseCorrectionNotice(key: string): Promise<void> {
+		try {
+			const { default: redisCache } = await import(
+				'../../../cache/redis-instance.js'
+			)
+			await redisCache.del(key)
+		} catch (error) {
+			logger.warn({
+				method: this.releaseCorrectionNotice.name,
+				event: 'prop.correction.marker_release_failed',
+				key,
+				error: error instanceof Error ? error.message : String(error),
+			})
+		}
 	}
 
 	/**
@@ -807,3 +872,7 @@ function propSettlementRowMissing(message: string): Error {
 const PROP_SETTLEMENT_LOCK_WAIT_MS = 20_000
 const PROP_SETTLEMENT_LOCK_POLL_MIN_MS = 120
 const PROP_SETTLEMENT_LOCK_POLL_MAX_MS = 320
+
+/** A correction notice posts once per outcome, revision and message; the marker
+ * outlives every retry of that revision. */
+const CORRECTION_NOTICE_MARKER_TTL_SECONDS = 30 * 24 * 60 * 60
