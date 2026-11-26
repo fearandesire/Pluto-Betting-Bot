@@ -49,17 +49,17 @@ describe('BetslipWrapper.getUserBetslips', () => {
 		vi.clearAllMocks()
 	})
 
-	it('keeps the refund reason the published client drops', async () => {
+	it('returns the refund reason Khronos sends', async () => {
 		respondWith([betslip({ refund_reason: 'cancelled' })])
 
 		const [bet] = await new BetslipWrapper().getUserBetslips({
 			userid: 'user-1',
 		})
 
-		expect(bet).toMatchObject({ betresult: 'push' })
-		expect(
-			(bet as unknown as { refund_reason?: string }).refund_reason,
-		).toBe('cancelled')
+		expect(bet).toMatchObject({
+			betresult: 'push',
+			refund_reason: 'cancelled',
+		})
 	})
 
 	it('adds nothing for a betslip written before the reason existed', async () => {
@@ -69,6 +69,6 @@ describe('BetslipWrapper.getUserBetslips', () => {
 			userid: 'user-1',
 		})
 
-		expect('refund_reason' in (bet as object)).toBe(false)
+		expect(bet.refund_reason).toBeUndefined()
 	})
 })
