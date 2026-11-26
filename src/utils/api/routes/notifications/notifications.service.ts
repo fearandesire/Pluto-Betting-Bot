@@ -303,6 +303,12 @@ export default class NotificationService {
 					fatal ??= error
 					continue
 				}
+				if (data.correction === true) {
+					// A corrected grade is only announced once, so a notice that
+					// did not post must fail the request and be retried.
+					fatal ??= error
+					continue
+				}
 				logger.warn({
 					method: this.processPropSettled.name,
 					event: 'prop.notification.message_update_failed',

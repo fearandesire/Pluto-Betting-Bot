@@ -869,6 +869,26 @@ describe('NotificationService.processPropSettled', () => {
 		)
 	})
 
+	it('fails a legacy request whose correction notice could not post', async () => {
+		const message = createMessage()
+		const channel = {
+			guildId: 'guild-1',
+			isTextBased: () => true,
+			send: vi.fn().mockRejectedValue(new Error('Missing Permissions')),
+			messages: { fetch: vi.fn().mockResolvedValue(message) },
+		}
+		mocks.fetchChannel.mockResolvedValue(channel)
+
+		await expect(
+			new NotificationService().processPropSettled({
+				...payload,
+				correction: true,
+				supersedes_result: 'lost',
+				revision: 1,
+			}),
+		).rejects.toThrow('Missing Permissions')
+	})
+
 	it('leaves a newer grade in place when an older revision retries', async () => {
 		const message = createMessage()
 		const send = vi.fn()
