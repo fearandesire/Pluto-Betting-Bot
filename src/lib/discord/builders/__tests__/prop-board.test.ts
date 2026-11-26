@@ -5,6 +5,7 @@ import {
 	expectV2Payload,
 	toJsonComponents,
 } from '../../v2/__tests__/v2-assert.js'
+import { assertV2Budget } from '../../v2/kit.js'
 import {
 	boardBrowseLines,
 	decodePropsBrowseCustomId,
@@ -112,6 +113,157 @@ describe('propBoardPayload', () => {
 		}>
 		expect(container.components[1].content).toContain('Player props')
 		expect(container.components[1].content).not.toContain('<t:')
+	})
+})
+
+describe('board header emojis and game lines', () => {
+	type Node = {
+		type: number
+		content?: string
+		items?: Array<{ media: { url: string } }>
+		components?: Array<{ custom_id?: string; label?: string }>
+	}
+	const nodes = (payload: ReturnType<typeof propBoardPayload>) =>
+		(toJsonComponents(payload) as Array<{ components: Node[] }>)[0]
+			.components
+	const game = {
+		h2h: {
+			away: {
+				outcome_uuid: 'h2h-away',
+				outcome_name: 'Buffalo Bills',
+				price: 150,
+			},
+			home: {
+				outcome_uuid: 'h2h-home',
+				outcome_name: 'Kansas City Chiefs',
+				price: -180,
+			},
+		},
+		totals: {
+			point: 47.5,
+			over: {
+				outcome_uuid: 'total-over',
+				outcome_name: 'Over',
+				price: -110,
+			},
+			under: {
+				outcome_uuid: 'total-under',
+				outcome_name: 'Under',
+				price: -105,
+			},
+		},
+	}
+
+	it('puts a real team emoji next to each abbreviation, and plain text otherwise', () => {
+		const withEmojis = propBoardPayload({
+			props: [prop],
+			sport: 'nfl',
+			teams: {
+				...teams,
+				awayEmoji: '<:bills:1>',
+				homeEmoji: '<:chiefs:2>',
+			},
+		})
+		expect(nodes(withEmojis)[1].content).toMatch(
+			/^### 🏈 <:bills:1> BUF vs\. <:chiefs:2> KC\n/,
+		)
+		const oneEmoji = propBoardPayload({
+			props: [prop],
+			sport: 'nfl',
+			teams: { ...teams, homeEmoji: '<:chiefs:2>' },
+		})
+		expect(nodes(oneEmoji)[1].content).toMatch(
+			/^### 🏈 BUF vs\. <:chiefs:2> KC\n/,
+		)
+	})
+
+	it('renders both logos, then the winner and total rows above the props', () => {
+		const payload = propBoardPayload({
+			props: [prop],
+			sport: 'nfl',
+			teams,
+			game,
+		})
+		// container + heading + matchup + gallery + 2×(text + row + 2 buttons)
+		// + divider + pair (text + row + 2 buttons) + footer
+		expectV2Payload(payload, {
+			flags: MessageFlags.IsComponentsV2,
+			components: 18,
+		})
+		const [
+			,
+			header,
+			logos,
+			winner,
+			winnerRow,
+			total,
+			totalRow,
+			,
+			propText,
+		] = nodes(payload)
+		expect(header.content).toContain('Game lines and player props')
+		expect(logos.items?.map((item) => item.media.url)).toEqual([
+			'https://a.espncdn.com/i/teamlogos/nfl/500/buf.png',
+			'https://a.espncdn.com/i/teamlogos/nfl/500/kc.png',
+		])
+		expect(winner.content).toBe('**Game winner**\nBUF +150 • KC -180')
+		expect(
+			winnerRow.components?.map((button) => [
+				button.custom_id,
+				button.label,
+			]),
+		).toEqual([
+			['prop_h2h-away', 'BUF'],
+			['prop_h2h-home', 'KC'],
+		])
+		expect(total.content).toBe(
+			'**Game total** • O/U `47.5`\nOver -110 • Under -105',
+		)
+		expect(totalRow.components?.map((button) => button.custom_id)).toEqual([
+			'prop_total-over',
+			'prop_total-under',
+		])
+		expect(propText.content).toContain('Patrick Mahomes')
+	})
+
+	it('keeps a full four-pair board with game lines inside the V2 budget', () => {
+		const pairs = [0, 1, 2, 3].map((n) => ({
+			...prop,
+			description: 'P'.repeat(700),
+			over: { ...prop.over, outcome_uuid: `over-${n}` },
+			under: { ...prop.under, outcome_uuid: `under-${n}` },
+		}))
+		const payload = propBoardPayload({
+			props: pairs,
+			sport: 'nfl',
+			teams,
+			game,
+			browseToken: 'a'.repeat(16),
+		})
+		expectV2Payload(payload, {
+			flags: MessageFlags.IsComponentsV2,
+			components: 32,
+		})
+		assertV2Budget(payload)
+		const ids = nodes(payload).flatMap(
+			(node) => node.components?.map((button) => button.custom_id) ?? [],
+		)
+		expect(ids).toContain('prop_over-3')
+		expect(ids).toContain('props.browse.v1.aaaaaaaaaaaaaaaa')
+	})
+
+	it('shows only the market it has, and drops logos it cannot resolve', () => {
+		const payload = propBoardPayload({
+			props: [prop],
+			sport: 'nfl',
+			teams: { ...teams, awayAbbrev: [] },
+			game: { totals: game.totals },
+		})
+		const types = nodes(payload).map((node) => node.type)
+		expect(types).not.toContain(12)
+		expect(nodes(payload).map((node) => node.content ?? '')).not.toContain(
+			expect.stringContaining('Game winner'),
+		)
 	})
 })
 

@@ -189,6 +189,32 @@ describe('betting builders (classic, pre-migration)', () => {
 		)
 	})
 
+	it('C3 board game lines name the matchup and the line', async () => {
+		const eventContext = {
+			home_team: 'Boston Celtics',
+			away_team: 'Los Angeles Lakers',
+			commence_time: '2026-10-05T23:30:00.000Z',
+		}
+		expect(
+			await formatPredictionConfirmation(
+				{ name: 'Boston Celtics' },
+				'h2h',
+				eventContext,
+			),
+		).toBe(
+			'**⏳ LAL vs. BOS**\nGame Winner • **BOSTON CELTICS**\n*<t:1791243000:d>*',
+		)
+		expect(
+			await formatPredictionConfirmation(
+				{ name: 'Over', point: 221.5 },
+				'totals',
+				eventContext,
+			),
+		).toBe(
+			'**⏳ LAL vs. BOS**\nGame Total • **OVER 221.5**\n*<t:1791243000:d>*',
+		)
+	})
+
 	it('formatMatchDate forces Eastern Time', () => {
 		expect(formatMatchDate('2026-10-05T23:30:00.000Z')).toBe(
 			'10/5/2026 - 7:30 PM EDT',

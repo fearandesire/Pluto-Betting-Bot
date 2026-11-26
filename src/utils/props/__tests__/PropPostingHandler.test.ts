@@ -476,6 +476,63 @@ describe('PropPostingHandler message references and idempotency', () => {
 			).toBe(true)
 		})
 
+		it('renders the game block and team emojis, and receipts every game outcome', async () => {
+			mocks.getTeamInfo.mockImplementation(async (team: string) => ({
+				color: 0x123456,
+				resolvedTeamData: {
+					abbrev: [team === prop.home_team ? 'OKC' : 'MIN'],
+				},
+				emoji:
+					team === prop.home_team
+						? 'Thunder'
+						: { toString: () => '<:timberwolves:42>' },
+			}))
+			const game = {
+				h2h: {
+					away: {
+						outcome_uuid: '660e8400-e29b-41d4-a716-446655440010',
+						outcome_name: prop.away_team,
+						price: 150,
+					},
+					home: {
+						outcome_uuid: '660e8400-e29b-41d4-a716-446655440011',
+						outcome_name: prop.home_team,
+						price: -180,
+					},
+				},
+			}
+
+			const receipt = await new PropPostingHandler().postPropBoard(
+				'guild-1',
+				'channel-1',
+				props,
+				'nba',
+				'delivery-1',
+				'prop-board:guild-1:channel-1:0',
+				props,
+				game,
+			)
+
+			expect(receipt.map((ref) => ref.outcome_uuid)).toEqual([
+				prop.over.outcome_uuid,
+				prop.under.outcome_uuid,
+				second.over.outcome_uuid,
+				second.under.outcome_uuid,
+				game.h2h.away.outcome_uuid,
+				game.h2h.home.outcome_uuid,
+			])
+			const options = mocks.sendToChannel.mock.calls[0][1] as never
+			expect(buttonIds(options)).toContain(
+				`prop_${game.h2h.home.outcome_uuid}`,
+			)
+			const header = toJsonComponents(options)[0].components?.[1] as {
+				content: string
+			}
+			expect(header.content).toMatch(
+				/^### 🏀 <:timberwolves:42> MIN vs\. OKC\n/,
+			)
+		})
+
 		it('caches the whole post list for Browse more before sending', async () => {
 			await new PropPostingHandler().postPropBoard(
 				'guild-1',

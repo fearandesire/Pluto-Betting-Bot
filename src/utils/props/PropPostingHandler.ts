@@ -10,8 +10,10 @@ import {
 	propPostEmbed,
 } from '../../lib/discord/builders/props.js'
 import GuildWrapper from '../api/Khronos/guild/guild-wrapper.js'
+import { boardGameOutcomeUuids } from '../api/routes/notifications/delivery-contract.js'
+import type { BoardGameMarkets } from '../api/routes/shared-payload-schemas.js'
 import redisCache from '../cache/redis-instance.js'
-import TeamInfo from '../common/TeamInfo.js'
+import TeamInfo, { type GetTeamInfoResponse } from '../common/TeamInfo.js'
 import { logger } from '../logging/WinstonLogger.js'
 import { savePropBrowse } from './PropBrowseCache.js'
 
@@ -243,9 +245,10 @@ export class PropPostingHandler {
 	}
 
 	/**
-	 * Posts one game's board for the durable prop-post worker. Every pair on
-	 * the board shares the returned message id, and the Browse more list is
-	 * cached before the send so the button never points at missing state.
+	 * Posts one game's board for the durable prop-post worker. Every pair and
+	 * game line on the board shares the returned message id, and the Browse
+	 * more list is cached before the send so the button never points at
+	 * missing state.
 	 */
 	async postPropBoard(
 		guildId: string,
@@ -255,6 +258,7 @@ export class PropPostingHandler {
 		deliveryId: string,
 		destinationId: string,
 		allProps: readonly ProcessedPropDto[],
+		game?: BoardGameMarkets,
 	): Promise<PostedPropReference[]> {
 		const first = props[0]
 		if (!first) throw new Error('A prop board needs at least one pair')
@@ -278,7 +282,10 @@ export class PropPostingHandler {
 				homeAbbrev: homeTeamInfo.resolvedTeamData.abbrev,
 				awayAbbrev: awayTeamInfo.resolvedTeamData.abbrev,
 				homeColor: homeTeamInfo.color,
+				homeEmoji: customEmoji(homeTeamInfo),
+				awayEmoji: customEmoji(awayTeamInfo),
 			},
+			game,
 			browseToken: browseSaved ? token : undefined,
 		})
 		const message = await this.guildWrapper.sendToChannel(
@@ -290,16 +297,18 @@ export class PropPostingHandler {
 			},
 			guildId,
 		)
-		return props.flatMap((prop) =>
-			[prop.over.outcome_uuid, prop.under.outcome_uuid].map(
-				(outcome_uuid) => ({
-					outcome_uuid,
-					guild_id: guildId,
-					channel_id: channelId,
-					message_id: message.id,
-				}),
-			),
-		)
+		return [
+			...props.flatMap((prop) => [
+				prop.over.outcome_uuid,
+				prop.under.outcome_uuid,
+			]),
+			...boardGameOutcomeUuids(game),
+		].map((outcome_uuid) => ({
+			outcome_uuid,
+			guild_id: guildId,
+			channel_id: channelId,
+			message_id: message.id,
+		}))
 	}
 
 	/**
@@ -559,6 +568,13 @@ export class PropPostingHandler {
 	): ActionRowBuilder<ButtonBuilder> {
 		return propPostButtons(prop)
 	}
+}
+
+/** TeamInfo falls back to the team's short name; only a real emoji renders. */
+function customEmoji(info: GetTeamInfoResponse): string | undefined {
+	return typeof info.emoji === 'object' && info.emoji !== null
+		? String(info.emoji)
+		: undefined
 }
 
 function isPostedPropReference(value: unknown): value is PostedPropReference {

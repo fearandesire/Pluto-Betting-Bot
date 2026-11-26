@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import { z } from 'zod'
 import {
+	type BoardGameMarkets,
 	type DailyPropsPayload,
 	dailyPropsPayloadSchema,
 	type H2hResultNotification,
@@ -167,32 +168,62 @@ export function deliveryReceipts(
 	})
 }
 
-/** A prop-post is terminally delivered only when every expected receipt exists exactly once. */
+/**
+ * A prop-post is terminally delivered only when every prop receipt exists
+ * exactly once. Board game-block receipts are allowed once each but never
+ * required, matching the Khronos contract.
+ */
 export function hasExactPropPostReceipts(
 	payload: DailyPropsPayload,
 	receipts: readonly PropPostReceipt[],
 ): boolean {
-	const expected = new Set<string>()
-	for (const prop of payload.props) {
-		for (const outcomeUuid of [
-			prop.over.outcome_uuid,
-			prop.under.outcome_uuid,
-		]) {
-			for (const guild of payload.guilds) {
-				expected.add(
+	const destinations = (outcomeUuids: string[]) =>
+		outcomeUuids.flatMap((outcomeUuid) =>
+			payload.guilds.map(
+				(guild) =>
 					`${outcomeUuid}:${guild.guild_id}:${guild.channel_id}`,
-				)
-			}
-		}
-	}
-	if (receipts.length !== expected.size) return false
+			),
+		)
+	const expected = new Set(
+		destinations(
+			payload.props.flatMap((prop) => [
+				prop.over.outcome_uuid,
+				prop.under.outcome_uuid,
+			]),
+		),
+	)
+	const optional = new Set(
+		destinations(
+			(payload.boards ?? []).flatMap((board) =>
+				boardGameOutcomeUuids(board.game),
+			),
+		),
+	)
 	const actual = new Set<string>()
+	let required = 0
 	for (const receipt of receipts) {
 		const key = `${receipt.outcome_uuid}:${receipt.guild_id}:${receipt.channel_id}`
-		if (actual.has(key) || !expected.has(key)) return false
+		if (actual.has(key)) return false
+		if (expected.has(key)) required += 1
+		else if (!optional.has(key)) return false
 		actual.add(key)
 	}
-	return actual.size === expected.size
+	return required === expected.size
+}
+
+/** Every outcome in a board's game block, in display order. */
+export function boardGameOutcomeUuids(
+	game: BoardGameMarkets | undefined,
+): string[] {
+	if (!game) return []
+	return [
+		...(game.h2h
+			? [game.h2h.away.outcome_uuid, game.h2h.home.outcome_uuid]
+			: []),
+		...(game.totals
+			? [game.totals.over.outcome_uuid, game.totals.under.outcome_uuid]
+			: []),
+	]
 }
 
 function isPropPostReceipt(value: unknown): value is PropPostReceipt {

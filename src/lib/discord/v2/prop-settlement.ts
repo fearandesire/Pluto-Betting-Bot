@@ -16,10 +16,11 @@ const TALLY_PREFIX = '-# 📊'
 
 /**
  * One board row's share of the message text budget, before and after its
- * result is added. Four rows plus headings and footer stay under Discord's
- * 4000-character limit, and the result lines always survive the clamp.
+ * result is added. Four prop rows, the two game rows, headings and footer stay
+ * under Discord's 4000-character limit, and the result lines always survive
+ * the clamp.
  */
-export const PROP_ROW_TEXT_MAX_CHARS = 900
+export const PROP_ROW_TEXT_MAX_CHARS = 800
 
 export type ComponentJson = {
 	type?: number

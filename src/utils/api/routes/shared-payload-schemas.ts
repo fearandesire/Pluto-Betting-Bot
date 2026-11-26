@@ -58,9 +58,23 @@ const dailyPropOutcomeSchema = z.object({
 	price: z.number().int(),
 })
 
+const boardGameMarketsSchema = z.object({
+	h2h: z
+		.object({ away: dailyPropOutcomeSchema, home: dailyPropOutcomeSchema })
+		.optional(),
+	totals: z
+		.object({
+			point: z.number(),
+			over: dailyPropOutcomeSchema,
+			under: dailyPropOutcomeSchema,
+		})
+		.optional(),
+})
+
 const propBoardSchema = z.object({
 	event_id: z.string().min(1),
 	over_outcome_uuids: z.array(z.string().uuid()).min(1).max(4),
+	game: boardGameMarketsSchema.optional(),
 })
 
 const fallbackDailyPropsPayloadSchema = z.object({
@@ -88,6 +102,59 @@ const fallbackDailyPropsPayloadSchema = z.object({
 	),
 	boards: z.array(propBoardSchema).min(1).optional(),
 })
+
+/**
+ * Mirrors the published board rules: every pair sits on exactly one board of
+ * its own game, and a game block's outcomes repeat nothing else in the post.
+ */
+function refineBoards(payload: DailyPropsPayload, ctx: z.RefinementCtx) {
+	if (!payload.boards) return
+	const byOver = new Map(
+		payload.props.map((prop) => [prop.over.outcome_uuid, prop]),
+	)
+	const seen = new Set<string>()
+	const outcomes = new Set(
+		payload.props.flatMap((prop) => [
+			prop.over.outcome_uuid,
+			prop.under.outcome_uuid,
+		]),
+	)
+	const issue = (path: (string | number)[], message: string) =>
+		ctx.addIssue({ code: 'custom', path, message })
+	payload.boards.forEach((board, boardIndex) => {
+		board.over_outcome_uuids.forEach((outcomeUuid, pairIndex) => {
+			const path = ['boards', boardIndex, 'over_outcome_uuids', pairIndex]
+			const prop = byOver.get(outcomeUuid)
+			if (!prop)
+				return issue(
+					path,
+					'Board outcome is not an over outcome in props',
+				)
+			if (prop.event_id !== board.event_id)
+				issue(path, 'Board outcome belongs to another game')
+			if (seen.has(outcomeUuid))
+				issue(path, 'Board outcome appears on more than one board')
+			seen.add(outcomeUuid)
+		})
+		const game = board.game
+		if (!game) return
+		if (!game.h2h && !game.totals)
+			issue(['boards', boardIndex, 'game'], 'Game block is empty')
+		for (const outcomeUuid of [
+			game.h2h?.away.outcome_uuid,
+			game.h2h?.home.outcome_uuid,
+			game.totals?.over.outcome_uuid,
+			game.totals?.under.outcome_uuid,
+		]) {
+			if (!outcomeUuid) continue
+			if (outcomes.has(outcomeUuid))
+				issue(['boards', boardIndex, 'game'], 'Game outcome repeats')
+			outcomes.add(outcomeUuid)
+		}
+	})
+	if (seen.size !== payload.props.length)
+		issue(['boards'], 'Every prop must belong to exactly one board')
+}
 
 const fallbackPropSettledNotificationSchema = z.object({
 	outcome_uuid: z.string().uuid(),
@@ -161,6 +228,7 @@ export type NotificationBetResults = z.infer<
 	typeof fallbackNotificationBetResultsSchema
 >
 export type DailyPropsPayload = z.infer<typeof fallbackDailyPropsPayloadSchema>
+export type BoardGameMarkets = z.infer<typeof boardGameMarketsSchema>
 export type PropSettledNotification = z.infer<
 	typeof fallbackPropSettledNotificationSchema
 >
@@ -213,11 +281,58 @@ export const notificationBetResultsSchema = supportsLegacyNotificationPushes(
 	? sharedPayloadExports.notificationBetResultsSchema
 	: fallbackNotificationBetResultsSchema
 
-export const dailyPropsPayloadSchema = isUsableSchema(
+const probeOutcome = (suffix: string, name: string) => ({
+	outcome_uuid: `00000000-0000-4000-8000-0000000000${suffix}`,
+	outcome_name: name,
+	price: -110,
+})
+
+const boardGameProbe: DailyPropsPayload = {
+	props: [
+		{
+			event_id: 'probe',
+			commence_time: '2026-01-01T00:00:00Z',
+			home_team: 'Home',
+			away_team: 'Away',
+			sport_title: 'NBA',
+			market_key: 'player_points',
+			bookmaker_key: 'probe',
+			description: 'Probe',
+			point: 1.5,
+			over: probeOutcome('01', 'Over'),
+			under: probeOutcome('02', 'Under'),
+		},
+	],
+	guilds: [{ guild_id: 'probe', channel_id: 'probe', sport: 'nba' }],
+	boards: [
+		{
+			event_id: 'probe',
+			over_outcome_uuids: [probeOutcome('01', 'Over').outcome_uuid],
+			game: {
+				totals: {
+					point: 200.5,
+					over: probeOutcome('03', 'Over'),
+					under: probeOutcome('04', 'Under'),
+				},
+			},
+		},
+	],
+}
+
+/** Published schemas before board game blocks strip `boards[].game`. */
+function keepsBoardGames(
+	schema: z.ZodType<DailyPropsPayload> | undefined,
+): schema is z.ZodType<DailyPropsPayload> {
+	if (!isUsableSchema(schema)) return false
+	const parsed = schema.safeParse(boardGameProbe)
+	return parsed.success && parsed.data.boards?.[0]?.game !== undefined
+}
+
+export const dailyPropsPayloadSchema = keepsBoardGames(
 	sharedPayloadExports.dailyPropsPayloadSchema,
 )
 	? sharedPayloadExports.dailyPropsPayloadSchema
-	: fallbackDailyPropsPayloadSchema
+	: fallbackDailyPropsPayloadSchema.superRefine(refineBoards)
 
 export const propSettledNotificationSchema = isUsableSchema(
 	sharedPayloadExports.propSettledNotificationSchema,
