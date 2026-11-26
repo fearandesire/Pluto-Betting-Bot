@@ -23,6 +23,8 @@ This build posts one message per pair. When a payload carries a `boards` field, 
 
 When a tracked posted prop settles, Khronos sends a `prop_settled` envelope to `POST /notifications/props/settled` and Pluto edits the referenced messages. Khronos sends nothing for outcomes it has no tracked post for.
 
+A corrected result (`correction: true`, `supersedes_result`, `revision`) re-grades the post like any settlement and also posts a correction notice in the same channel, as a reply to the settled message, that names the result it replaces. The notice carries the corrected result and the predictor tally, and it is idempotent per revision: its nonce is derived from the outcome, the revision and the message it replies to. A failed notice fails the delivery so the queue retries it; the re-grade edit that already landed is not repeated twice over.
+
 ## Staff commands
 
 `/admin` needs the Administrator permission by default and runs only in a server.

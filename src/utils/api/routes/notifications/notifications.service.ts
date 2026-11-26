@@ -5,13 +5,17 @@ import {
 	EmbedBuilder,
 	type Message,
 	type MessageCreateOptions,
+	type SendableChannels,
 } from 'discord.js'
 import {
 	betResultEmbed,
 	parlayResultEmbeds,
 	refundResultPayload,
 } from '../../../../lib/discord/builders/notifications.js'
-import { propSettlementEmbed } from '../../../../lib/discord/builders/props.js'
+import {
+	propCorrectionEmbed,
+	propSettlementEmbed,
+} from '../../../../lib/discord/builders/props.js'
 import { isV2Message } from '../../../../lib/discord/v2/edit.js'
 import { v2EditFlags } from '../../../../lib/discord/v2/kit.js'
 import {
@@ -398,6 +402,7 @@ export default class NotificationService {
 				components: settled.components as never,
 				flags: v2EditFlags(),
 			})
+			await this.announcePropCorrection(channel, message, data)
 			return
 		}
 
@@ -420,6 +425,49 @@ export default class NotificationService {
 		await message.edit({
 			embeds: updatedEmbeds,
 			components: settled.components as never,
+		})
+		await this.announcePropCorrection(channel, message, data)
+	}
+
+	/**
+	 * A corrected result posts its own notice that names the grade it replaces,
+	 * so a reader who saw the first result sees that it changed. The addressee
+	 * message is still edited above: the board has to show the grade that counts.
+	 *
+	 * The post follows the edit because a failed post must fail the delivery and
+	 * retry, and repeating the edit is harmless. The nonce keeps a retry of the
+	 * same revision from posting the notice twice.
+	 */
+	private async announcePropCorrection(
+		channel: SendableChannels,
+		original: Message,
+		data: PropSettledNotification,
+	): Promise<void> {
+		if (data.correction !== true) return
+		const revision = data.revision ?? 0
+		const nonce = createHash('sha256')
+			.update(`${data.outcome_uuid}:${revision}:${original.id}`)
+			.digest('hex')
+			.slice(0, 18)
+		const posted = await channel.send({
+			embeds: [propCorrectionEmbed(data)],
+			reply: { messageReference: original.id, failIfNotExists: false },
+			nonce: `pcorr:${nonce}`,
+			enforceNonce: true,
+			allowedMentions: { repliedUser: false },
+		})
+		logger.info({
+			method: this.announcePropCorrection.name,
+			event: 'prop.notification.correction_posted',
+			message: 'Posted a prop correction notice',
+			outcome_uuid: data.outcome_uuid,
+			revision,
+			supersedes_result: data.supersedes_result,
+			result: data.result,
+			guild_id: original.guildId ?? undefined,
+			channel_id: original.channelId ?? undefined,
+			original_message_id: original.id,
+			correction_message_id: posted.id,
 		})
 	}
 

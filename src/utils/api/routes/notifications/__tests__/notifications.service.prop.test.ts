@@ -85,6 +85,9 @@ const voidPayload = {
 
 function createMessage() {
 	const message = {
+		id: 'message-1',
+		guildId: 'guild-1',
+		channelId: 'channel-1',
 		embeds: [
 			new EmbedBuilder().setTitle('🎯 Accuracy Challenge').addFields({
 				name: 'Match',
@@ -670,5 +673,86 @@ describe('NotificationService.processPropSettled', () => {
 		).rejects.toMatchObject({ code: 'PROP_SETTLEMENT_ROW_MISSING' })
 
 		expect(message.edit).not.toHaveBeenCalled()
+	})
+
+	it('announces a corrected result in its own message and still re-grades the post', async () => {
+		const message = createMessage()
+		const send = vi.fn().mockResolvedValue({ id: 'correction-1' })
+		const channel = {
+			guildId: 'guild-1',
+			isTextBased: () => true,
+			send,
+			messages: { fetch: vi.fn().mockResolvedValue(message) },
+		}
+		mocks.fetchChannel.mockResolvedValue(channel)
+
+		await new NotificationService().processPropSettled({
+			...payload,
+			correction: true,
+			supersedes_result: 'lost',
+			revision: 1,
+		})
+
+		expect(message.edit).toHaveBeenCalledOnce()
+		expect(send).toHaveBeenCalledOnce()
+		const notice = send.mock.calls[0][0] as {
+			embeds: Array<{
+				toJSON: () => {
+					title?: string
+					description?: string
+					fields?: Array<{ name: string; value: string }>
+				}
+			}>
+			reply: { messageReference: string }
+			nonce: string
+			enforceNonce: boolean
+		}
+		const embed = notice.embeds[0].toJSON()
+		expect(embed.title).toBe('📝 Corrected prop result')
+		expect(embed.description).toContain('Previously graded **Lost ❌**')
+		expect(embed.fields).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({
+					name: '🎯 Corrected result',
+					value: '**Result: Over ✅ — 37**',
+				}),
+				expect.objectContaining({
+					name: '📊 Prediction results',
+					value: '41% of 27 predictors got it right (11 correct, 16 incorrect).',
+				}),
+			]),
+		)
+		expect(notice.reply).toEqual({
+			messageReference: 'message-1',
+			failIfNotExists: false,
+		})
+		expect(notice.enforceNonce).toBe(true)
+		expect(notice.nonce).toMatch(/^pcorr:[0-9a-f]{18}$/)
+		expect(mocks.logger.info).toHaveBeenCalledWith(
+			expect.objectContaining({
+				event: 'prop.notification.correction_posted',
+				outcome_uuid: payload.outcome_uuid,
+				revision: 1,
+				supersedes_result: 'lost',
+				correction_message_id: 'correction-1',
+			}),
+		)
+	})
+
+	it('posts no correction message for an original settlement', async () => {
+		const message = createMessage()
+		const send = vi.fn()
+		const channel = {
+			guildId: 'guild-1',
+			isTextBased: () => true,
+			send,
+			messages: { fetch: vi.fn().mockResolvedValue(message) },
+		}
+		mocks.fetchChannel.mockResolvedValue(channel)
+
+		await new NotificationService().processPropSettled(payload)
+
+		expect(message.edit).toHaveBeenCalledOnce()
+		expect(send).not.toHaveBeenCalled()
 	})
 })

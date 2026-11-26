@@ -139,28 +139,64 @@ export function propSettlementEmbed(
 }
 
 function formatPropResult(data: PropSettledNotification): string {
-	const iconByResult: Record<PropSettledNotification['result'], string> = {
-		won: '✅',
-		lost: '❌',
-		push: '➖',
-		void: '🚫',
-	}
 	const label =
-		data.winning_side_display?.trim() ||
-		(
-			{
-				won: 'Won',
-				lost: 'Lost',
-				push: 'Push',
-				void: 'Voided',
-			} satisfies Record<PropSettledNotification['result'], string>
-		)[data.result]
+		data.winning_side_display?.trim() || PROP_RESULT_LABELS[data.result]
 	const actualValue =
 		data.actual_value === null || data.actual_value === undefined
 			? ''
 			: ` — ${data.actual_value}`
 
-	return `**Result: ${label} ${iconByResult[data.result]}${actualValue}**`
+	return `**Result: ${label} ${PROP_RESULT_ICONS[data.result]}${actualValue}**`
+}
+
+const PROP_RESULT_LABELS: Record<PropSettledNotification['result'], string> = {
+	won: 'Won',
+	lost: 'Lost',
+	push: 'Push',
+	void: 'Voided',
+}
+
+const PROP_RESULT_ICONS: Record<PropSettledNotification['result'], string> = {
+	won: '✅',
+	lost: '❌',
+	push: '➖',
+	void: '🚫',
+}
+
+/**
+ * Correction notice (surface C2b). A corrected prop result is announced as its
+ * own message that names the result it replaces, so a reader who saw the first
+ * grade learns it changed instead of the board silently rewriting itself.
+ */
+export function propCorrectionEmbed(
+	data: PropSettledNotification,
+): EmbedBuilder {
+	const superseded = data.supersedes_result
+	const descriptionLines = [
+		`### **${data.description}**${formatPropPoint(data)}`,
+		`**Market:** ${MarketKeyTranslations[data.market_key] || data.market_key}`,
+	]
+	if (superseded) {
+		descriptionLines.push(
+			`Previously graded **${PROP_RESULT_LABELS[superseded]} ${PROP_RESULT_ICONS[superseded]}**.`,
+		)
+	}
+
+	return new EmbedBuilder()
+		.setTitle('📝 Corrected prop result')
+		.setDescription(descriptionLines.join('\n'))
+		.addFields(
+			{ name: '🎯 Corrected result', value: formatPropResult(data) },
+			{ name: '📊 Prediction results', value: formatPropTallies(data) },
+		)
+		.setColor(embedColors.warning)
+		.setTimestamp()
+}
+
+function formatPropPoint(data: PropSettledNotification): string {
+	return data.point === null || data.point === undefined
+		? ''
+		: ` • O/U **\`${data.point}\`**`
 }
 
 function formatPropTallies(data: PropSettledNotification): string {
