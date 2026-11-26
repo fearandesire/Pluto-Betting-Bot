@@ -320,6 +320,12 @@ const lastWord = (name: string) => _.last(name.split(' ')) as string
  * Player format: **⏳ Player Name** (ABBREV vs. ABBREV)\nProp Type • **PICK Line**\n*<t:TIMESTAMP:d>*
  * Team format: **⏳ Team Name**\nProp Type • **PICK Line**\n*<t:TIMESTAMP:d>*
  */
+/** Board game lines, named the way the board names them. */
+const GAME_LINE_LABELS: Record<string, string> = {
+	h2h: 'Game Winner',
+	totals: 'Game Total',
+}
+
 export async function formatPredictionConfirmation(
 	outcome: {
 		name: string
@@ -352,14 +358,24 @@ export async function formatPredictionConfirmation(
 		const homeAbbrev =
 			homeTeamData?.abbrev || lastWord(eventContext.home_team)
 		entityLine = `**⏳ ${playerName}** (${awayAbbrev} vs. ${homeAbbrev})`
+	} else if (marketKey === 'h2h' || marketKey === 'totals') {
+		const [awayTeamData, homeTeamData] = await Promise.all([
+			teamResolver.resolve(eventContext.away_team, { full: true }),
+			teamResolver.resolve(eventContext.home_team, { full: true }),
+		])
+		const awayAbbrev =
+			awayTeamData?.abbrev || lastWord(eventContext.away_team)
+		const homeAbbrev =
+			homeTeamData?.abbrev || lastWord(eventContext.home_team)
+		entityLine = `**⏳ ${awayAbbrev} vs. ${homeAbbrev}**`
 	} else {
 		// Handle spreads market - choice is team name
 		entityLine = `**⏳ ${lastWord(outcome.name)}**`
 	}
 
-	const propType = _.startCase(
-		marketKey.replace('player_', '').replace('_', ' '),
-	)
+	const propType =
+		GAME_LINE_LABELS[marketKey] ??
+		_.startCase(marketKey.replace('player_', '').replace('_', ' '))
 
 	const pick = outcome.name.toUpperCase()
 	const line =

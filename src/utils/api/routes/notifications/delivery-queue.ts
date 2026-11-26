@@ -11,6 +11,7 @@ import {
 } from '../../../../services/alerts/alert-reporter.js'
 import { ConsecutiveFailureTracker } from '../../../../services/alerts/failure-trackers.js'
 import {
+	boardGameOutcomeUuids,
 	classifyDeliveryError,
 	type DeliveryEnvelope,
 	type DeliveryRecord,
@@ -89,6 +90,8 @@ class DiscordDeliveryDispatcher implements DeliveryDispatcher {
 				)
 				this.propPostingHandler = new module.PropPostingHandler()
 			}
+			const game =
+				envelope.payload.boards?.[destination.board_index]?.game
 			const receipt = await this.propPostingHandler.postPropBoard(
 				destination.guild_id,
 				destination.channel_id,
@@ -97,8 +100,9 @@ class DiscordDeliveryDispatcher implements DeliveryDispatcher {
 				envelope.delivery_id,
 				destinationId,
 				envelope.payload.props,
+				game,
 			)
-			assertBoardReceipts(receipt, destination, props)
+			assertBoardReceipts(receipt, destination, props, game)
 			return receipt
 		}
 
@@ -201,16 +205,20 @@ export class SystemDiscordDeliveryDispatcher implements DeliveryDispatcher {
 			const messageId =
 				fakeDiscordMessageId(response) ??
 				`fake-board-${envelope.delivery_id}-${destination.channel_id}`
-			return props.flatMap((prop) =>
-				[prop.over.outcome_uuid, prop.under.outcome_uuid].map(
-					(outcome_uuid) => ({
-						outcome_uuid,
-						guild_id: destination.guild_id,
-						channel_id: destination.channel_id,
-						message_id: messageId,
-					}),
+			return [
+				...props.flatMap((prop) => [
+					prop.over.outcome_uuid,
+					prop.under.outcome_uuid,
+				]),
+				...boardGameOutcomeUuids(
+					envelope.payload.boards?.[destination.board_index]?.game,
 				),
-			)
+			].map((outcome_uuid) => ({
+				outcome_uuid,
+				guild_id: destination.guild_id,
+				channel_id: destination.channel_id,
+				message_id: messageId,
+			}))
 		}
 
 		if (envelope.kind === 'prop_post') {
@@ -810,28 +818,33 @@ type PropPostPayload = Extract<
 	{ kind: 'prop_post' }
 >['payload']
 
-/** A board posts one message, so its destination expects two receipts per pair. */
+/**
+ * A board posts one message, so its destination expects two receipts per
+ * pair, plus one per game-block outcome when a build that renders game
+ * blocks posted it.
+ */
 function hasExpectedPropPostReceipts(
 	destination: DeliveryRecord['destinations'][number],
 	payload: DeliveryEnvelope['payload'],
 ): boolean {
 	if (!Array.isArray(destination.receipt)) return false
-	const expected = expectedPropPostReceipts(
+	return expectedPropPostReceipts(
 		destination.id,
 		payload as PropPostPayload,
-	)
-	return expected !== null && destination.receipt.length === expected
+	).includes(destination.receipt.length)
 }
 
 function expectedPropPostReceipts(
 	destinationId: string,
 	payload: PropPostPayload,
-): number | null {
-	if (destinationId.startsWith('prop-post:')) return 2
-	if (!destinationId.startsWith('prop-board:')) return null
+): number[] {
+	if (destinationId.startsWith('prop-post:')) return [2]
+	if (!destinationId.startsWith('prop-board:')) return []
 	const index = Number(destinationId.split(':')[3])
 	const board = payload.boards?.[index]
-	return board ? board.over_outcome_uuids.length * 2 : null
+	if (!board) return []
+	const pairs = board.over_outcome_uuids.length * 2
+	return [pairs, pairs + boardGameOutcomeUuids(board.game).length]
 }
 
 interface PropBoardDestination {
@@ -897,15 +910,19 @@ function assertBoardReceipts(
 	}[],
 	destination: PropBoardDestination,
 	props: PropPostPayload['props'],
+	game?: NonNullable<PropPostPayload['boards']>[number]['game'],
 ): void {
-	const expected = new Set(
-		props.flatMap((prop) => [
+	const expected = new Set([
+		...props.flatMap((prop) => [
 			prop.over.outcome_uuid,
 			prop.under.outcome_uuid,
 		]),
-	)
+		...boardGameOutcomeUuids(game),
+	])
 	if (
 		receipt.length !== expected.size ||
+		new Set(receipt.map((reference) => reference.outcome_uuid)).size !==
+			receipt.length ||
 		receipt.some(
 			(reference) =>
 				!expected.has(reference.outcome_uuid) ||

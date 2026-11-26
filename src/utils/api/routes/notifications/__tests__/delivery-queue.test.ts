@@ -333,6 +333,86 @@ describe('notification delivery queue', () => {
 		expect(body.props).toHaveLength(2)
 	})
 
+	describe('board game blocks', () => {
+		const away = '660e8400-e29b-41d4-a716-446655440010'
+		const home = '660e8400-e29b-41d4-a716-446655440011'
+		const gameEnvelope = deliveryEnvelopeSchema.parse({
+			...boardEnvelope,
+			delivery_id: '550e8400-e29b-41d4-a716-446655440099',
+			payload: {
+				...boardEnvelope.payload,
+				boards: (
+					boardEnvelope.payload as { boards: Array<object> }
+				).boards.map((board, index) =>
+					index === 0
+						? {
+								...board,
+								game: {
+									h2h: {
+										away: {
+											outcome_uuid: away,
+											outcome_name: 'Away',
+											price: 150,
+										},
+										home: {
+											outcome_uuid: home,
+											outcome_name: 'Home',
+											price: -180,
+										},
+									},
+								},
+							}
+						: board,
+				),
+			},
+		})
+
+		it('keeps the game block through payload validation', () => {
+			expect(
+				(gameEnvelope.payload as { boards: Array<{ game?: unknown }> })
+					.boards[0].game,
+			).toBeDefined()
+		})
+
+		it('delivers a board with game receipts, and one without them', async () => {
+			const fetchMock = vi.fn<typeof fetch>(
+				async () =>
+					new Response(JSON.stringify({ id: 'fake-board-2' }), {
+						status: 200,
+						headers: { 'content-type': 'application/json' },
+					}),
+			)
+			vi.stubGlobal('fetch', fetchMock)
+			const withGame =
+				(await new SystemDiscordDeliveryDispatcher().deliver(
+					gameEnvelope,
+					'prop-board:guild-1:channel-1:0',
+				)) as Array<{ outcome_uuid: string }>
+			expect(withGame.map((ref) => ref.outcome_uuid)).toEqual(
+				expect.arrayContaining([away, home]),
+			)
+			expect(withGame).toHaveLength(6)
+
+			for (const receipts of [withGame, withGame.slice(0, 4)]) {
+				const store = new RedisDeliveryStore(fakeRedis())
+				queue = new NotificationDeliveryQueue({
+					store,
+					dispatcher: { deliver: vi.fn(async () => receipts) },
+					queue: {
+						add: vi.fn(async () => undefined),
+						close: vi.fn(async () => undefined),
+					} satisfies DeliveryQueuePort,
+					startWorker: false,
+				})
+				await queue.accept(gameEnvelope)
+				await queue.processJob({ data: gameEnvelope } as never)
+				expect((await store.get(gameEnvelope.delivery_id))?.state).toBe(
+					'delivered',
+				)
+			}
+		})
+	})
+
 	it('refuses a board destination that names a missing board', async () => {
 		await expect(
 			new SystemDiscordDeliveryDispatcher().deliver(

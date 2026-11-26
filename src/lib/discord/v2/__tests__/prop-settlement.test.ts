@@ -198,3 +198,67 @@ describe('disableSettledPropRow', () => {
 		expect(rows[1].components[0].disabled).toBeUndefined()
 	})
 })
+
+describe('settling a board game line in place', () => {
+	const game = {
+		h2h: {
+			away: {
+				outcome_uuid: 'h2h-away',
+				outcome_name: 'Buffalo Bills',
+				price: 150,
+			},
+			home: {
+				outcome_uuid: 'h2h-home',
+				outcome_name: 'Kansas City Chiefs',
+				price: -180,
+			},
+		},
+		totals: {
+			point: 47.5,
+			over: {
+				outcome_uuid: 'total-over',
+				outcome_name: 'Over',
+				price: -110,
+			},
+			under: {
+				outcome_uuid: 'total-under',
+				outcome_name: 'Under',
+				price: -105,
+			},
+		},
+	}
+	type Node = {
+		type: number
+		content?: string
+		components?: Array<{ custom_id?: string; disabled?: boolean }>
+	}
+
+	it('adds the result under the game row and disables only its buttons', () => {
+		const components = toComponentJsonList(
+			propBoardPayload({ props: [prop], sport: 'nfl', teams, game })
+				.components,
+		)
+		const settled = settleV2BoardComponents(components, {
+			...settlement,
+			outcome_uuid: 'total-over',
+			market_key: 'totals',
+			winning_side_display: 'Over',
+			actual_value: 51,
+			description: 'Prop outcome',
+			point: 47.5,
+		})
+		expect(settled.touched).toBe(true)
+		const nodes = (settled.components[0] as { components: Node[] })
+			.components
+		const total = nodes.find((node) =>
+			node.content?.startsWith('**Game total**'),
+		)
+		expect(total?.content).toContain('**Result: Over ✅ — 51**')
+		const disabled = nodes
+			.flatMap((node) => node.components ?? [])
+			.filter((button) => button.disabled)
+			.map((button) => button.custom_id)
+		expect(disabled).toEqual(['prop_total-over', 'prop_total-under'])
+		assertV2Budget({ components: settled.components })
+	})
+})

@@ -6,15 +6,19 @@ import {
 	type MessageActionRowComponentBuilder,
 } from 'discord.js'
 import { MarketKeyTranslations } from '../../../utils/api/common/interfaces/market-translations.js'
+import type { BoardGameMarkets } from '../../../utils/api/routes/shared-payload-schemas.js'
 import StringUtils from '../../../utils/common/string-utils.js'
 import {
+	divider,
 	footer,
+	gallery,
 	text,
 	type V2Item,
 	type V2MessagePayload,
 	v2Payload,
 } from '../v2/kit.js'
 import { PROP_ROW_TEXT_MAX_CHARS } from '../v2/prop-settlement.js'
+import { espnTeamLogoUrl } from './team-logos.js'
 
 /** One board holds at most four pairs so a settlement row stays readable. */
 export const PROP_BOARD_MAX_PAIRS = 4
@@ -26,41 +30,124 @@ export type PropBoardTeams = {
 	awayAbbrev: string | string[]
 	/** Home team colour as an integer. */
 	homeColor: number
+	/** Custom emoji markup (`<:name:id>`) when the bot can see one. */
+	homeEmoji?: string
+	awayEmoji?: string
 }
 
 /**
- * One game's props as a Components V2 board: a heading, then each pair's text
- * followed by its own Over/Under row. The button custom IDs stay
- * `prop_<outcome_uuid>`, so existing handlers keep working.
+ * One game's props as a Components V2 board: a heading, the optional game
+ * lines, then each pair's text followed by its own Over/Under row. Every pick
+ * button's custom ID is `prop_<outcome_uuid>`, so the prop handler and the
+ * in-place settlement patch serve game lines and player props alike.
  */
 export function propBoardPayload(args: {
 	props: readonly ProcessedPropDto[]
 	sport: 'nfl' | 'nba'
 	teams: PropBoardTeams
+	/** Game winner and game total, on the game's first board only. */
+	game?: BoardGameMarkets
 	/** Scope token for the ephemeral Browse more list; omitted when unavailable. */
 	browseToken?: string
 }): V2MessagePayload {
-	const { props, sport, teams, browseToken } = args
+	const { props, sport, teams, game, browseToken } = args
 	const pairs = props.slice(0, PROP_BOARD_MAX_PAIRS)
 	const sportEmoji = sport === 'nfl' ? '🏈' : '🏀'
 	const kickoff = kickoffStamp(pairs[0]?.commence_time)
+	const away = withEmoji(teams.awayEmoji, teams.awayAbbrev)
+	const home = withEmoji(teams.homeEmoji, teams.homeAbbrev)
+	const subtitle = game ? 'Game lines and player props' : 'Player props'
 
 	const blocks: V2Item[] = [
 		text('## 🎯 Accuracy Challenge'),
 		text(
 			[
-				`### ${sportEmoji} ${teams.awayAbbrev} vs. ${teams.homeAbbrev}`,
-				kickoff ? `${kickoff} • Player props` : 'Player props',
+				`### ${sportEmoji} ${away} vs. ${home}`,
+				kickoff ? `${kickoff} • ${subtitle}` : subtitle,
 			].join('\n'),
 		),
 	]
+	if (game) blocks.push(...gameBlock(game, sport, teams), divider())
 	for (const prop of pairs) {
 		blocks.push(text(propLine(prop)), choiceRow(prop))
 	}
 	if (browseToken) blocks.push(browseRow(browseToken))
-	blocks.push(footer('Tap Over or Under to pick. Each prop grades in place.'))
+	blocks.push(
+		footer(
+			game
+				? 'Tap a button to pick. Each row grades in place.'
+				: 'Tap Over or Under to pick. Each prop grades in place.',
+		),
+	)
 
 	return v2Payload({ blocks, accent: teams.homeColor })
+}
+
+function withEmoji(emoji: string | undefined, abbrev: string | string[]) {
+	return emoji ? `${emoji} ${abbrev}` : String(abbrev)
+}
+
+/** Both logos, then the winner and total rows, each text above its buttons. */
+function gameBlock(
+	game: BoardGameMarkets,
+	sport: 'nfl' | 'nba',
+	teams: PropBoardTeams,
+): V2Item[] {
+	const items: V2Item[] = []
+	const logos = [
+		espnTeamLogoUrl(sport, teams.awayAbbrev),
+		espnTeamLogoUrl(sport, teams.homeAbbrev),
+	]
+	if (logos.every(Boolean)) items.push(gallery(logos as string[]))
+	if (game.h2h) {
+		const { away, home } = game.h2h
+		items.push(
+			text(
+				[
+					'**Game winner**',
+					`${teams.awayAbbrev} ${formatPrice(away.price)} • ${teams.homeAbbrev} ${formatPrice(home.price)}`,
+				].join('\n'),
+			),
+			new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
+				teamButton(away.outcome_uuid, String(teams.awayAbbrev)),
+				teamButton(home.outcome_uuid, String(teams.homeAbbrev)),
+			),
+		)
+	}
+	if (game.totals) {
+		const { point, over, under } = game.totals
+		items.push(
+			text(
+				[
+					`**Game total** • O/U \`${point}\``,
+					`Over ${formatPrice(over.price)} • Under ${formatPrice(under.price)}`,
+				].join('\n'),
+			),
+			new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
+				choiceButton(
+					over.outcome_uuid,
+					'Over',
+					'⬆️',
+					ButtonStyle.Success,
+				),
+				choiceButton(
+					under.outcome_uuid,
+					'Under',
+					'⬇️',
+					ButtonStyle.Danger,
+				),
+			),
+		)
+	}
+	return items
+}
+
+function teamButton(outcomeUuid: string, label: string): ButtonBuilder {
+	return new ButtonBuilder()
+		.setCustomId(`prop_${outcomeUuid}`)
+		.setLabel(label)
+		.setEmoji('🏆')
+		.setStyle(ButtonStyle.Primary)
 }
 
 /** Discord timestamp so every viewer reads the tip-off in their own zone. */
