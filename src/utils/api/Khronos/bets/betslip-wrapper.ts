@@ -10,7 +10,6 @@ import {
 	type PlaceBetslipRequest,
 	type PlacedBetslip,
 	type PlacedBetslipDto,
-	PlacedBetslipFromJSON,
 } from '@pluto-khronos/api-client'
 import { isMockEnabled, MockBackend } from '../../../dev/index.js'
 import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js'
@@ -18,9 +17,6 @@ import { type IKH_API_CONFIG, KH_API_CONFIG } from '../KhronosInstances.js'
 type CancelRequestWithGuild = CancelBetslipRequest & {
 	guildId: string
 }
-
-/** A betslip plus the refund reason a newer Khronos returns but 3.20.x drops. */
-type PlacedBetslipWithRefund = PlacedBetslip & { refund_reason?: string }
 
 export default class BetslipWrapper {
 	private betslipApi: BetslipsApi
@@ -95,22 +91,9 @@ export default class BetslipWrapper {
 	 */
 	async getUserBetslips(
 		payload: GetUserBetslipsRequest,
-	): Promise<PlacedBetslipWithRefund[]> {
+	): Promise<PlacedBetslip[]> {
 		if (this.mock) return this.mock.getUserBetslips(payload)
-		// The published client rebuilds each betslip from the fields it declares,
-		// so refund_reason is gone by the time it returns. Read the raw body and
-		// keep the field until a Khronos release types it.
-		const response = await this.betslipApi.getUserBetslipsRaw(payload)
-		const bodies = (await response.raw.json()) as Array<
-			Record<string, unknown>
-		>
-		return bodies.map((body) => {
-			const bet = PlacedBetslipFromJSON(body) as PlacedBetslipWithRefund
-			if (typeof body.refund_reason === 'string') {
-				bet.refund_reason = body.refund_reason
-			}
-			return bet
-		})
+		return await this.betslipApi.getUserBetslips(payload)
 	}
 
 	async clearPending(userId: string) {
