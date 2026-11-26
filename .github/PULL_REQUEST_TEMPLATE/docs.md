@@ -11,14 +11,12 @@ Rules and the title format: https://github.com/charyon/repository-kit/blob/main/
 
 <!-- The build, link check or preview you looked at, and its result. -->
 
-- 
+-
 
 <details>
 <summary>Evidence</summary>
 
-- Issue: 
-- Rendered preview: 
+- Issue:
+- Rendered preview:
 
 </details>
-
-<!-- Docs, only when the change touches documentation: paste one ticked line here, none (behavior-preserving), updated (paths), or exception (reason). -->

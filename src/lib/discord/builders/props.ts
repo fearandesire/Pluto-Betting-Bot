@@ -24,6 +24,7 @@ import {
 } from '../../../utils/predictions/streak-display.js'
 import embedColors from '../../colorsConfig.js'
 import { LEADERBOARD_SCORING } from '../../scoring-constants.js'
+import { accent, text, type V2MessagePayload, v2Payload } from '../v2/kit.js'
 
 // ---------------------------------------------------------------- C1 prop post
 
@@ -139,28 +140,62 @@ export function propSettlementEmbed(
 }
 
 function formatPropResult(data: PropSettledNotification): string {
-	const iconByResult: Record<PropSettledNotification['result'], string> = {
-		won: '✅',
-		lost: '❌',
-		push: '➖',
-		void: '🚫',
-	}
 	const label =
-		data.winning_side_display?.trim() ||
-		(
-			{
-				won: 'Won',
-				lost: 'Lost',
-				push: 'Push',
-				void: 'Voided',
-			} satisfies Record<PropSettledNotification['result'], string>
-		)[data.result]
+		data.winning_side_display?.trim() || PROP_RESULT_LABELS[data.result]
 	const actualValue =
 		data.actual_value === null || data.actual_value === undefined
 			? ''
 			: ` — ${data.actual_value}`
 
-	return `**Result: ${label} ${iconByResult[data.result]}${actualValue}**`
+	return `**Result: ${label} ${PROP_RESULT_ICONS[data.result]}${actualValue}**`
+}
+
+const PROP_RESULT_LABELS: Record<PropSettledNotification['result'], string> = {
+	won: 'Won',
+	lost: 'Lost',
+	push: 'Push',
+	void: 'Voided',
+}
+
+const PROP_RESULT_ICONS: Record<PropSettledNotification['result'], string> = {
+	won: '✅',
+	lost: '❌',
+	push: '➖',
+	void: '🚫',
+}
+
+/**
+ * Correction notice (surface C2b). A corrected prop result is announced as its
+ * own Components V2 message that names the result it replaces, so a reader who
+ * saw the first grade learns it changed instead of the board silently rewriting
+ * itself.
+ */
+export function propCorrectionPayload(
+	data: PropSettledNotification,
+): V2MessagePayload {
+	const superseded = data.supersedes_result
+	const lines = [
+		'## 📝 Corrected prop result',
+		`**${data.description}**${formatPropPoint(data)}`,
+		`**Market:** ${MarketKeyTranslations[data.market_key] || data.market_key}`,
+	]
+	if (superseded) {
+		lines.push(
+			`-# Previously graded **${PROP_RESULT_LABELS[superseded]} ${PROP_RESULT_ICONS[superseded]}**`,
+		)
+	}
+	lines.push('', formatPropResult(data), `📊 ${formatPropTallies(data)}`)
+
+	return v2Payload({
+		blocks: [text(lines.join('\n'))],
+		accent: accent('warning'),
+	})
+}
+
+function formatPropPoint(data: PropSettledNotification): string {
+	return data.point === null || data.point === undefined
+		? ''
+		: ` • O/U **\`${data.point}\`**`
 }
 
 function formatPropTallies(data: PropSettledNotification): string {

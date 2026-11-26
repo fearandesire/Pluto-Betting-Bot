@@ -1,9 +1,9 @@
 # fearandesire/Pluto-Betting-Bot: .github/workflows/baseline.yml (kit-managed; do not edit here; change the kit or the repo override)
-# Pilot form: pr-context and pr-media. The baseline gate job joins this file in phase 2.
+# Jobs: pr-context, pr-media, pr-body and pr-title. The baseline gate job joins this file in phase 2.
 name: baseline
 on:
   pull_request:
-    types: [opened, synchronize, reopened, edited, labeled, unlabeled]   # edited: pr-media re-checks body edits; pr-context skips it
+    types: [opened, synchronize, reopened, edited, labeled, unlabeled]   # edited: pr-media and pr-body re-check body edits, pr-title title edits; pr-context skips it
   push:
     branches: [main]            # sync.mjs renders the repo override sync.target_branch here
     paths: [".github/**", "AGENTS.md", "CLAUDE.md", "REVIEW.md"]
@@ -253,3 +253,145 @@ jobs:
             }
 
             return await run({ context, core })
+
+  # Body shape (docs/pr-bodies.md#sections): the template's sections in order, and screenshots inside the
+  # <details name="shots"> group. API-opened PRs never see the template, so this is what holds them to it.
+  # Reads the PR's changed files to know whether a Guided Tour is required; bot-authored PRs are skipped.
+  pr-body:
+    if: github.event_name == 'pull_request' && github.event.pull_request.user.type != 'Bot'
+    runs-on: ubicloud-standard-2-ubuntu-2404
+    timeout-minutes: 2
+    permissions:
+      pull-requests: read       # list the PR's files; nothing else
+    concurrency:
+      group: kit-pr-body-${{ github.event.pull_request.number }}
+      cancel-in-progress: true  # pull_request only (see `if`)
+    steps:
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            // PR body shape (docs/pr-bodies.md#sections). Agents open PRs through the API with their own body, so the template
+            // alone never reaches them; this check holds every body to the template's sections and screenshot layout.
+            // Pure functions plus run(); the sync inlines this file into baseline.yml like pr-media.mjs.
+            const DOCS_URL = 'https://github.com/charyon/repository-kit/blob/main/docs/pr-bodies.md'
+            const DECOR_HOSTS = ['img.shields.io', 'capy.ai', 'pr-comments-assets.blacksmith.sh']   // the footers pr-media allows
+            const CORE = ['Summary', 'Guided Tour', 'Verified', 'Risk']
+            const OPTIONAL = ['Screenshots', 'Docs']
+            const RENAMED = {
+              'tour': 'Guided Tour', 'what': 'Summary', 'what changed': 'Summary', 'why': 'Summary', 'outcome': 'Summary',
+              'outcome (required)': 'Summary', 'validation': 'Verified', 'validation (required)': 'Verified', 'verification': 'Verified',
+              'test run': 'Verified', 'blast radius': 'Risk', 'docs impact': 'Docs', 'checklist': 'Verified',
+              'screenshots (required for visual changes)': 'Screenshots',
+            }
+            const DOC_FILE = /(^|\/)docs?\/|\.(md|mdx|markdown|rst|txt)$/i
+
+            const visible = (body) => String(body ?? '').replace(/\r\n?/g, '\n')
+              .replace(/<!-- kit:services:start -->[\s\S]*?<!-- kit:services:end -->/g, '')
+              .replace(/<!--[\s\S]*?(-->|$)/g, '')
+            const withoutCode = (text) => text
+              .replace(/^[ \t]*(`{3,}|~{3,})[^\n]*\n[\s\S]*?^[ \t]*\1[ \t]*$/gm, '')
+              .replace(/`[^`\n]*`/g, '')
+
+            function headings(body) {
+              const out = []
+              for (const line of withoutCode(visible(body)).split('\n')) {
+                const m = /^ {0,3}#{1,2}[ \t]+(.+?)[ \t#]*$/.exec(line)
+                if (m) out.push(m[1].trim())
+              }
+              return out
+            }
+
+            function imagesOutsideShots(body) {
+              const text = withoutCode(visible(body)).replace(/<details\b[^>]*\bname\s*=\s*["']?shots["']?[^>]*>[\s\S]*?<\/details>/gi, '')
+              const urls = [
+                ...[...text.matchAll(/<(?:img|video|source)\b[^>]*?\bsrc\s*=\s*["']?([^"'\s>]+)/gi)].map((m) => m[1]),
+                ...[...text.matchAll(/!\[[^\]]*\]\(\s*<?([^)\s>]+)/g)].map((m) => m[1]),
+              ]
+              const host = (u) => { try { return new URL(u).host.toLowerCase() } catch { return '' } }
+              return [...new Set(urls)].filter((u) => !DECOR_HOSTS.includes(host(u)))
+            }
+
+            // files: the PR's changed paths. More than one file needs a Guided Tour; a PR that changes only documentation may use
+            // the docs variant (Summary, Verified), which has no Tour or Risk.
+            function checkBody(body, files = []) {
+              const first = visible(body).split('\n').map((l) => l.trim()).find(Boolean)
+              if (first == null) return [`the body is empty; fill the template: ${CORE.map((h) => `## ${h}`).join(', ')}`]
+              const problems = []
+              const opensWrong = !/^##[ \t]+Summary$/i.test(first)
+              if (opensWrong) problems.push(`the body must open with ## Summary (after the kit:services markers); it opens with "${first.slice(0, 80)}"`)
+              const docsOnly = files.length > 0 && files.every((f) => DOC_FILE.test(f))
+              const required = docsOnly ? ['Summary', 'Verified'] : ['Summary', ...(files.length > 1 ? ['Guided Tour'] : []), 'Verified', 'Risk']
+              const canon = (h) => [...CORE, ...OPTIONAL].find((c) => c.toLowerCase() === h.toLowerCase())
+              const found = headings(body)
+              const core = found.map(canon).filter((h) => CORE.includes(h))
+              for (const h of CORE) if (core.filter((c) => c === h).length > 1) problems.push(`## ${h} appears more than once`)
+              for (const h of required) if (!core.includes(h) && !(h === 'Summary' && opensWrong)) problems.push(`missing ## ${h}${h === 'Guided Tour' ? ' (required when the PR changes more than one file)' : ''}`)
+              const order = CORE.filter((h) => core.includes(h))
+              const seen = [...new Set(core)]
+              if (seen.join() !== order.join()) problems.push(`sections are out of order (${seen.map((h) => `## ${h}`).join(', ')}); the order is ${CORE.map((h) => `## ${h}`).join(', ')}`)
+              const lastCore = order.length ? found.map(canon).lastIndexOf(order.at(-1)) : -1
+              found.forEach((h, i) => {
+                if (canon(h)) return
+                const renamed = RENAMED[h.toLowerCase()]
+                if (renamed) problems.push(`## ${h} is not a template heading; use ## ${renamed}`)
+                else if (i < lastCore) problems.push(`## ${h} sits between the template sections; move it into the Evidence or Scope toggle, or after ## ${order.at(-1)}`)
+              })
+              const loose = imagesOutsideShots(body)
+              if (loose.length) problems.push(`${loose.length} image(s) sit outside a <details name="shots"> group: ${loose.join(', ')}`)
+              return problems
+            }
+
+            function report(problems) {
+              if (!problems.length) return 'PR body: matches the template.'
+              return [`PR body: ${problems.length} problem(s) with the template shape.`, ...problems.map((p) => `- ${p}.`),
+                `Sections, order and the screenshot layout: ${DOCS_URL}`, 'Edit the PR body; this check re-runs on the edit.'].join('\n')
+            }
+
+            async function run({ github, context, core }) {
+              const pr = context.payload.pull_request
+              if (pr.user?.type === 'Bot') { core.info('PR body: bot-authored PR, skipped'); return [] }
+              const { owner, repo } = context.repo
+              const files = await github.paginate(github.rest.pulls.listFiles, { owner, repo, pull_number: pr.number, per_page: 100 })
+              const problems = checkBody(pr.body, files.map((f) => f.filename))
+              if (problems.length) core.setFailed(report(problems))
+              else core.info(report(problems))
+              return problems
+            }
+
+            return await run({ github, context, core })
+
+  # Title (docs/pr-bodies.md#titles): commitlint with the kit's release/commitlint.config.mjs, the same rule the kit's
+  # own CI applies. The packages are pinned to the kit's versions; body-only edits skip without a runner.
+  pr-title:
+    if: >-
+      github.event_name == 'pull_request' && github.event.pull_request.user.type != 'Bot' &&
+      (github.event.action != 'edited' || github.event.changes.title != null)
+    runs-on: ubicloud-standard-2-ubuntu-2404
+    timeout-minutes: 5
+    permissions: {}
+    concurrency:
+      group: kit-pr-title-${{ github.event.pull_request.number }}
+      cancel-in-progress: true  # pull_request only (see `if`)
+    steps:
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24.14.0'
+      - env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          dir="$RUNNER_TEMP/kit-commitlint"
+          mkdir -p "$dir" && cd "$dir"
+          npm install --no-save --no-audit --no-fund --ignore-scripts --loglevel=error @commitlint/cli@21.2.2 @commitlint/config-conventional@21.2.2
+          cat > commitlint.config.mjs <<'KIT_COMMITLINT_CONFIG'
+          // Squash titles for this repo and every kit consumer: `type(scope): imperative subject`, one clause, the whole
+          // header under 72 characters (docs/pr-bodies.md#titles). The conventional type set stays as it ships; the issue-key
+          // rule is a review criterion, not a lint rule.
+          export default {
+            extends: ['@commitlint/config-conventional'],
+            rules: { 'header-max-length': [2, 'always', 72] },
+          };
+          KIT_COMMITLINT_CONFIG
+          printf '%s\n' "$PR_TITLE" | ./node_modules/.bin/commitlint --config commitlint.config.mjs || {
+            echo "::error::PR title must be type(scope): imperative subject, 72 characters at most. Rules: https://github.com/charyon/repository-kit/blob/main/docs/pr-bodies.md#titles"
+            exit 1
+          }

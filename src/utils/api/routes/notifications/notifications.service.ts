@@ -5,13 +5,17 @@ import {
 	EmbedBuilder,
 	type Message,
 	type MessageCreateOptions,
+	type SendableChannels,
 } from 'discord.js'
 import {
 	betResultEmbed,
 	parlayResultEmbeds,
 	refundResultPayload,
 } from '../../../../lib/discord/builders/notifications.js'
-import { propSettlementEmbed } from '../../../../lib/discord/builders/props.js'
+import {
+	propCorrectionPayload,
+	propSettlementEmbed,
+} from '../../../../lib/discord/builders/props.js'
 import { isV2Message } from '../../../../lib/discord/v2/edit.js'
 import { v2EditFlags } from '../../../../lib/discord/v2/kit.js'
 import {
@@ -299,6 +303,12 @@ export default class NotificationService {
 					fatal ??= error
 					continue
 				}
+				if (data.correction === true) {
+					// A corrected grade is only announced once, so a notice that
+					// did not post must fail the request and be retried.
+					fatal ??= error
+					continue
+				}
 				logger.warn({
 					method: this.processPropSettled.name,
 					event: 'prop.notification.message_update_failed',
@@ -384,6 +394,21 @@ export default class NotificationService {
 			message: reference.message_id,
 			force: true,
 		})
+		const revision = data.revision ?? 0
+		if ((await this.readAppliedRevision(reference)) > revision) {
+			// A newer correction already owns this message and its notice. A retry
+			// of an older revision must not put the superseded grade back.
+			logger.info({
+				method: this.updatePropSettlementMessage.name,
+				event: 'prop.settlement.stale_revision_skipped',
+				message: 'Skipped a settlement superseded on this message',
+				outcome_uuid: data.outcome_uuid,
+				revision,
+				channel_id: reference.channel_id,
+				message_id: reference.message_id,
+			})
+			return
+		}
 		const components = toComponentJsonList(message.components)
 
 		if (isV2Message(message)) {
@@ -398,6 +423,8 @@ export default class NotificationService {
 				components: settled.components as never,
 				flags: v2EditFlags(),
 			})
+			await this.recordAppliedRevision(reference, revision)
+			await this.announcePropCorrection(channel, message, data)
 			return
 		}
 
@@ -421,6 +448,177 @@ export default class NotificationService {
 			embeds: updatedEmbeds,
 			components: settled.components as never,
 		})
+		await this.recordAppliedRevision(reference, revision)
+		await this.announcePropCorrection(channel, message, data)
+	}
+
+	/**
+	 * A corrected result posts its own notice that names the grade it replaces,
+	 * so a reader who saw the first result sees that it changed. The addressee
+	 * message is still edited above: the board has to show the grade that counts.
+	 *
+	 * The post follows the edit because a failed post must fail the delivery and
+	 * retry, and repeating the edit is harmless. Discord's nonce only dedupes for
+	 * a few minutes, shorter than the queue's retry backoff, so the durable
+	 * marker below is what keeps a retry of one revision from posting twice.
+	 */
+	private async announcePropCorrection(
+		channel: SendableChannels,
+		original: Message,
+		data: PropSettledNotification,
+	): Promise<void> {
+		if (data.correction !== true) return
+		const revision = data.revision ?? 0
+		const marker = createHash('sha256')
+			.update(`${data.outcome_uuid}:${revision}:${original.id}`)
+			.digest('hex')
+			.slice(0, 18)
+		const markerKey = `props:correction-notice:${marker}`
+		const claimed = await this.claimCorrectionNotice(markerKey)
+		if (claimed === 'announced') return
+		if (claimed === 'unavailable') {
+			throw propSettlementBusy(
+				'Prop correction notice store is unavailable; retry later',
+			)
+		}
+		let posted: Message
+		try {
+			posted = await channel.send({
+				...propCorrectionPayload(data),
+				reply: {
+					messageReference: original.id,
+					failIfNotExists: false,
+				},
+				nonce: `pcorr:${marker}`,
+				enforceNonce: true,
+				allowedMentions: { repliedUser: false },
+			})
+		} catch (error) {
+			await this.releaseCorrectionNotice(markerKey)
+			throw error
+		}
+		logger.info({
+			method: this.announcePropCorrection.name,
+			event: 'prop.notification.correction_posted',
+			message: 'Posted a prop correction notice',
+			outcome_uuid: data.outcome_uuid,
+			revision,
+			supersedes_result: data.supersedes_result,
+			result: data.result,
+			guild_id: original.guildId ?? undefined,
+			channel_id: original.channelId ?? undefined,
+			original_message_id: original.id,
+			correction_message_id: posted.id,
+		})
+	}
+
+	/**
+	 * The highest revision this message carries. A correction that arrives after
+	 * its retry window reopened must not overwrite the newer grade, and its notice
+	 * must not announce a grade the board no longer shows.
+	 */
+	private async readAppliedRevision(
+		reference: PropSettledNotification['messages'][number],
+	): Promise<number> {
+		let raw: string | null
+		try {
+			const { default: redisCache } = await import(
+				'../../../cache/redis-instance.js'
+			)
+			raw = await redisCache.get(this.settlementRevisionKey(reference))
+		} catch (error) {
+			logger.warn({
+				method: this.readAppliedRevision.name,
+				event: 'prop.settlement.revision_unavailable',
+				error: error instanceof Error ? error.message : String(error),
+			})
+			throw propSettlementBusy(
+				'Prop settlement revision store is unavailable; retry later',
+			)
+		}
+		const revision = Number(raw ?? 0)
+		return Number.isFinite(revision) ? revision : 0
+	}
+
+	private async recordAppliedRevision(
+		reference: PropSettledNotification['messages'][number],
+		revision: number,
+	): Promise<void> {
+		try {
+			const { default: redisCache } = await import(
+				'../../../cache/redis-instance.js'
+			)
+			await redisCache.set(
+				this.settlementRevisionKey(reference),
+				String(revision),
+				'EX',
+				CORRECTION_NOTICE_MARKER_TTL_SECONDS,
+			)
+		} catch (error) {
+			logger.warn({
+				method: this.recordAppliedRevision.name,
+				event: 'prop.settlement.revision_record_failed',
+				error: error instanceof Error ? error.message : String(error),
+			})
+		}
+	}
+
+	private settlementRevisionKey(
+		reference: PropSettledNotification['messages'][number],
+	): string {
+		return [
+			'props:settlement-revision',
+			reference.guild_id,
+			reference.channel_id,
+			reference.message_id,
+		].join(':')
+	}
+
+	/**
+	 * `announced` means another attempt at this revision already posted its
+	 * notice; `unavailable` keeps the delivery retryable instead of risking a
+	 * duplicate.
+	 */
+	private async claimCorrectionNotice(
+		key: string,
+	): Promise<'acquired' | 'announced' | 'unavailable'> {
+		try {
+			const { default: redisCache } = await import(
+				'../../../cache/redis-instance.js'
+			)
+			const result = await redisCache.set(
+				key,
+				Date.now().toString(),
+				'EX',
+				CORRECTION_NOTICE_MARKER_TTL_SECONDS,
+				'NX',
+			)
+			return result === 'OK' ? 'acquired' : 'announced'
+		} catch (error) {
+			logger.warn({
+				method: this.claimCorrectionNotice.name,
+				event: 'prop.correction.marker_unavailable',
+				key,
+				error: error instanceof Error ? error.message : String(error),
+			})
+			return 'unavailable'
+		}
+	}
+
+	private async releaseCorrectionNotice(key: string): Promise<void> {
+		try {
+			const { default: redisCache } = await import(
+				'../../../cache/redis-instance.js'
+			)
+			await redisCache.del(key)
+		} catch (error) {
+			logger.warn({
+				method: this.releaseCorrectionNotice.name,
+				event: 'prop.correction.marker_release_failed',
+				key,
+				error: error instanceof Error ? error.message : String(error),
+			})
+		}
 	}
 
 	/**
@@ -759,3 +957,7 @@ function propSettlementRowMissing(message: string): Error {
 const PROP_SETTLEMENT_LOCK_WAIT_MS = 20_000
 const PROP_SETTLEMENT_LOCK_POLL_MIN_MS = 120
 const PROP_SETTLEMENT_LOCK_POLL_MAX_MS = 320
+
+/** A correction notice posts once per outcome, revision and message; the marker
+ * outlives every retry of that revision. */
+const CORRECTION_NOTICE_MARKER_TTL_SECONDS = 30 * 24 * 60 * 60

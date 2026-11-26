@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
 	fetchChannel: vi.fn(),
 	redisSet: vi.fn(),
 	redisDel: vi.fn(),
+	redisGet: vi.fn(),
 	redisCompareAndRemove: vi.fn(),
 	redisRefreshIfOwned: vi.fn(),
 	logger: {
@@ -34,12 +35,14 @@ vi.mock('../../../../cache/redis-instance.js', () => ({
 	default: {
 		set: mocks.redisSet,
 		del: mocks.redisDel,
+		get: mocks.redisGet,
 		compareAndRemove: mocks.redisCompareAndRemove,
 		refreshIfOwned: mocks.redisRefreshIfOwned,
 	},
 }))
 
 import { propBoardPayload } from '../../../../../lib/discord/builders/prop-board.js'
+import { expectV2Payload } from '../../../../../lib/discord/v2/__tests__/v2-assert.js'
 import { deliveryEnvelopeSchema } from '../delivery-contract.js'
 import {
 	type DeliveryDispatcher,
@@ -85,6 +88,9 @@ const voidPayload = {
 
 function createMessage() {
 	const message = {
+		id: 'message-1',
+		guildId: 'guild-1',
+		channelId: 'channel-1',
 		embeds: [
 			new EmbedBuilder().setTitle('🎯 Accuracy Challenge').addFields({
 				name: 'Match',
@@ -127,6 +133,7 @@ describe('NotificationService.processPropSettled', () => {
 		vi.clearAllMocks()
 		mocks.redisSet.mockResolvedValue('OK')
 		mocks.redisDel.mockResolvedValue(1)
+		mocks.redisGet.mockResolvedValue(null)
 		mocks.redisCompareAndRemove.mockResolvedValue(true)
 		mocks.redisRefreshIfOwned.mockResolvedValue(true)
 	})
@@ -594,7 +601,11 @@ describe('NotificationService.processPropSettled', () => {
 			payload.messages[0],
 		)
 
-		expect(mocks.redisSet).toHaveBeenCalledTimes(2)
+		expect(
+			mocks.redisSet.mock.calls.filter(([key]) =>
+				String(key).startsWith('props:settlement-lock:'),
+			),
+		).toHaveLength(2)
 		expect(message.edit).toHaveBeenCalledOnce()
 	})
 
@@ -670,5 +681,240 @@ describe('NotificationService.processPropSettled', () => {
 		).rejects.toMatchObject({ code: 'PROP_SETTLEMENT_ROW_MISSING' })
 
 		expect(message.edit).not.toHaveBeenCalled()
+	})
+
+	it('announces a corrected result in its own message and still re-grades the post', async () => {
+		const message = createMessage()
+		const send = vi.fn().mockResolvedValue({ id: 'correction-1' })
+		const channel = {
+			guildId: 'guild-1',
+			isTextBased: () => true,
+			send,
+			messages: { fetch: vi.fn().mockResolvedValue(message) },
+		}
+		mocks.fetchChannel.mockResolvedValue(channel)
+
+		await new NotificationService().processPropSettled({
+			...payload,
+			correction: true,
+			supersedes_result: 'lost',
+			revision: 1,
+		})
+
+		expect(message.edit).toHaveBeenCalledOnce()
+		expect(send).toHaveBeenCalledOnce()
+		const notice = send.mock.calls[0][0] as {
+			components: unknown[]
+			flags: number
+			reply: { messageReference: string; failIfNotExists: boolean }
+			nonce: string
+			enforceNonce: boolean
+		}
+		expectV2Payload(notice as never, {
+			flags: MessageFlags.IsComponentsV2,
+			components: 2,
+		})
+		const body = JSON.stringify(notice.components)
+		expect(body).toContain('📝 Corrected prop result')
+		expect(body).toContain('Previously graded **Lost ❌**')
+		expect(body).toContain('**Result: Over ✅ — 37**')
+		expect(body).toContain(
+			'% of 27 predictors got it right (11 correct, 16 incorrect).',
+		)
+		expect(notice.reply).toEqual({
+			messageReference: 'message-1',
+			failIfNotExists: false,
+		})
+		expect(notice.enforceNonce).toBe(true)
+		expect(notice.nonce).toMatch(/^pcorr:[0-9a-f]{18}$/)
+		expect(mocks.redisSet).toHaveBeenCalledWith(
+			`props:correction-notice:${notice.nonce.slice('pcorr:'.length)}`,
+			expect.any(String),
+			'EX',
+			2_592_000,
+			'NX',
+		)
+		expect(mocks.logger.info).toHaveBeenCalledWith(
+			expect.objectContaining({
+				event: 'prop.notification.correction_posted',
+				outcome_uuid: payload.outcome_uuid,
+				revision: 1,
+				supersedes_result: 'lost',
+				correction_message_id: 'correction-1',
+			}),
+		)
+	})
+
+	it('posts no correction message for an original settlement', async () => {
+		const message = createMessage()
+		const send = vi.fn()
+		const channel = {
+			guildId: 'guild-1',
+			isTextBased: () => true,
+			send,
+			messages: { fetch: vi.fn().mockResolvedValue(message) },
+		}
+		mocks.fetchChannel.mockResolvedValue(channel)
+
+		await new NotificationService().processPropSettled(payload)
+
+		expect(message.edit).toHaveBeenCalledOnce()
+		expect(send).not.toHaveBeenCalled()
+	})
+
+	it('does not post a second notice for a revision that already announced it', async () => {
+		const message = createMessage()
+		const send = vi.fn()
+		const channel = {
+			guildId: 'guild-1',
+			isTextBased: () => true,
+			send,
+			messages: { fetch: vi.fn().mockResolvedValue(message) },
+		}
+		mocks.fetchChannel.mockResolvedValue(channel)
+		mocks.redisSet.mockImplementation(async (key: string) =>
+			key.startsWith('props:correction-notice:') ? null : 'OK',
+		)
+
+		await new NotificationService().processPropSettled({
+			...payload,
+			correction: true,
+			supersedes_result: 'lost',
+			revision: 1,
+		})
+
+		expect(message.edit).toHaveBeenCalledOnce()
+		expect(send).not.toHaveBeenCalled()
+	})
+
+	it('announces the correction for a Components V2 board too', async () => {
+		const boardMessage = {
+			id: 'board-1',
+			guildId: 'guild-1',
+			channelId: 'channel-1',
+			embeds: [],
+			components: propBoardPayload({
+				props: [
+					{
+						commence_time: '2026-10-04T20:25:00Z',
+						market_key: payload.market_key,
+						description: payload.description,
+						point: payload.point,
+						over: {
+							outcome_uuid: payload.outcome_uuid,
+							outcome_name: 'Over',
+							price: -115,
+						},
+						under: {
+							outcome_uuid: 'under-1',
+							outcome_name: 'Under',
+							price: 105,
+						},
+					},
+				] as never,
+				sport: 'nba',
+				teams: {
+					homeAbbrev: ['GSW'],
+					awayAbbrev: ['LAL'],
+					homeColor: 0x1d428a,
+				},
+			}).components,
+			flags: { has: () => true },
+			edit: vi.fn(),
+		} as any
+		const send = vi.fn().mockResolvedValue({ id: 'correction-1' })
+		const channel = {
+			guildId: 'guild-1',
+			isTextBased: () => true,
+			send,
+			messages: { fetch: vi.fn().mockResolvedValue(boardMessage) },
+		}
+		mocks.fetchChannel.mockResolvedValue(channel)
+
+		await new NotificationService().processPropSettled({
+			...payload,
+			correction: true,
+			supersedes_result: 'lost',
+			revision: 1,
+		})
+
+		expect(boardMessage.edit).toHaveBeenCalledOnce()
+		expect(send).toHaveBeenCalledOnce()
+	})
+
+	it('releases the marker and fails the delivery when the notice cannot be sent', async () => {
+		const message = createMessage()
+		const channel = {
+			guildId: 'guild-1',
+			isTextBased: () => true,
+			send: vi.fn().mockRejectedValue(new Error('Missing Permissions')),
+			messages: { fetch: vi.fn().mockResolvedValue(message) },
+		}
+		mocks.fetchChannel.mockResolvedValue(channel)
+
+		await expect(
+			new NotificationService().deliverPropSettlementMessage(
+				{
+					...payload,
+					correction: true,
+					supersedes_result: 'lost',
+					revision: 1,
+				},
+				payload.messages[0],
+			),
+		).rejects.toThrow('Missing Permissions')
+
+		expect(mocks.redisDel).toHaveBeenCalledWith(
+			expect.stringMatching(/^props:correction-notice:[0-9a-f]{18}$/),
+		)
+	})
+
+	it('fails a legacy request whose correction notice could not post', async () => {
+		const message = createMessage()
+		const channel = {
+			guildId: 'guild-1',
+			isTextBased: () => true,
+			send: vi.fn().mockRejectedValue(new Error('Missing Permissions')),
+			messages: { fetch: vi.fn().mockResolvedValue(message) },
+		}
+		mocks.fetchChannel.mockResolvedValue(channel)
+
+		await expect(
+			new NotificationService().processPropSettled({
+				...payload,
+				correction: true,
+				supersedes_result: 'lost',
+				revision: 1,
+			}),
+		).rejects.toThrow('Missing Permissions')
+	})
+
+	it('leaves a newer grade in place when an older revision retries', async () => {
+		const message = createMessage()
+		const send = vi.fn()
+		const channel = {
+			guildId: 'guild-1',
+			isTextBased: () => true,
+			send,
+			messages: { fetch: vi.fn().mockResolvedValue(message) },
+		}
+		mocks.fetchChannel.mockResolvedValue(channel)
+		mocks.redisGet.mockResolvedValue('2')
+
+		await new NotificationService().processPropSettled({
+			...payload,
+			correction: true,
+			supersedes_result: 'lost',
+			revision: 1,
+		})
+
+		expect(message.edit).not.toHaveBeenCalled()
+		expect(send).not.toHaveBeenCalled()
+		expect(mocks.logger.info).toHaveBeenCalledWith(
+			expect.objectContaining({
+				event: 'prop.settlement.stale_revision_skipped',
+				revision: 1,
+			}),
+		)
 	})
 })
