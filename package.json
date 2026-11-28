@@ -94,7 +94,7 @@
 		"@sapphire/discord.js-utilities": "^8.0.0",
 		"@sapphire/fetch": "^4.0.0",
 		"@sapphire/framework": "^5.5.1",
-		"@sapphire/pieces": "^4.3.1",
+		"@sapphire/pieces": "^5.0.1",
 		"@sapphire/plugin-api": "^8.0.0",
 		"@sapphire/plugin-editable-commands": "^4.0.4",
 		"@sapphire/plugin-hmr": "^3.0.2",
